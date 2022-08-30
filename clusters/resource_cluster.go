@@ -241,6 +241,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	var clusterInfo ClusterInfo
 	var err error
+
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
 		if err := cluster.Validate(); err != nil {
@@ -248,10 +249,68 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 		cluster.ModifyRequestOnInstancePool()
 		fixInstancePoolChangeIfAny(d, &cluster)
-		clusterInfo, err = clusters.Edit(cluster)
+
+		// We can only call the resize api if the cluster is in the running state
+		// and only the cluster size (ie num_workers OR autoscale) is being changed
+		hasNumWorkersChanged := d.HasChange("num_workers")
+		hasAutoscaleChanged := d.HasChange("autoscale")
+		hasOnlyResizeClusterConfigChanged := true
+		for k := range clusterSchema {
+			if k == "library" ||
+				k == "is_pinned" ||
+				k == "num_workers" ||
+				k == "autoscale" {
+				continue
+			}
+			if d.HasChange(k) {
+				hasOnlyResizeClusterConfigChanged = false
+			}
+		}
+		clusterInfo, err = clusters.Get(clusterID)
 		if err != nil {
 			return err
 		}
+
+		isNumWorkersResizeForNonAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
+			hasNumWorkersChanged &&
+			!hasAutoscaleChanged &&
+			clusterInfo.State == ClusterStateRunning
+		isAutoScalingToNonAutoscalingResize := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			hasNumWorkersChanged &&
+			cluster.Autoscale == nil &&
+			clusterInfo.State == ClusterStateRunning
+		isAutoscaleConfigResizeForAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			!hasNumWorkersChanged &&
+			clusterInfo.State == ClusterStateRunning
+		isNonAutoScalingToAutoscalingResize := hasOnlyResizeClusterConfigChanged &&
+			hasAutoscaleChanged &&
+			hasNumWorkersChanged &&
+			cluster.Autoscale != nil &&
+			clusterInfo.State == ClusterStateRunning
+
+		// We prefer to use the resize API in cases when only the number of
+		// workers is changed because a resizing cluster can still serve queries
+		if isNumWorkersResizeForNonAutoscalingCluster ||
+			isAutoScalingToNonAutoscalingResize {
+			clusterInfo, err = clusters.Resize(ResizeRequest{
+				ClusterID:  clusterID,
+				NumWorkers: cluster.NumWorkers,
+			})
+		} else if isAutoscaleConfigResizeForAutoscalingCluster ||
+			isNonAutoScalingToAutoscalingResize {
+			clusterInfo, err = clusters.Resize(ResizeRequest{
+				ClusterID: clusterID,
+				AutoScale: cluster.Autoscale,
+			})
+		} else {
+			clusterInfo, err = clusters.Edit(cluster)
+		}
+		if err != nil {
+			return err
+		}
+
 	} else {
 		clusterInfo, err = clusters.Get(clusterID)
 		if err != nil {

@@ -1,21 +1,26 @@
 Contributing to Databricks Terraform Provider
 ---
 
+- [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
+- [Installing for Terraform 0.12](#installing-for-terraform-012)
 - [Installing from source](#installing-from-source)
 - [Contributing documentation](#contributing-documentation)
 - [Developing provider](#developing-provider)
+- [Debugging](#debugging)
 - [Adding a new resource](#adding-a-new-resource)
+- [Testing](#testing)
 - [Code conventions](#code-conventions)
 - [Linting](#linting)
+- [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
 
-We happily welcome contributions to databricks-terraform. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
+We happily welcome contributions to the Databricks Terraform Provider. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
 ## Installing for Terraform 0.12
 
 If you use Terraform 0.12, please execute the following curl command in your shell:
 
 ```bash
-curl https://raw.githubusercontent.com/databricks/databricks-terraform/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
 ## Installing from source
@@ -66,12 +71,12 @@ go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 
 Installing `gotestsum`:
 ```bash
-go install gotest.tools/gotestsum
+go install gotest.tools/gotestsum@latest
 ```
 
 Installing `goimports`:
 ```bash
-go install golang.org/x/tools/cmd/goimports
+go install golang.org/x/tools/cmd/goimports@latest
 ```
 
 After this, you should be able to run `make coverage` to run the tests and see the coverage.
@@ -285,7 +290,9 @@ So please run `make lint` instead.
 
 ## Developing with Visual Studio Code Devcontainers
 
-This project has configuration for working with [Visual Studio Code Devcontainers](https://code.visualstudio.com/docs/remote/containers) - this allows you to containerise your development prerequisites (e.g. golang, terraform). To use this you will need [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/products/docker-desktop).
+NOTE: This use of devcontainers for terraform-provider-databricks development is **experimental** and not officially supported by Databricks
+
+This project has configuration for working with [Visual Studio Code Devcontainers](https://code.visualstudio.com/docs/remote/containers) - this allows you to containerise your development rerequisites (e.g. golang, terraform). To use this you will need [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/products/docker-desktop).
 
 To get started, clone this repo and open the folder with Visual Studio Code. If you don't have the [Remote Development extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack) then you should be prompted to install it.
 

@@ -105,6 +105,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_permission_assignment":       access.ResourcePermissionAssignment(),
 			"databricks_permissions":                 permissions.ResourcePermissions(),
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
+			"databricks_recipient":                   catalog.ResourceRecipient(),
 			"databricks_repo":                        repos.ResourceRepo(),
 			"databricks_schema":                      catalog.ResourceSchema(),
 			"databricks_secret":                      secrets.ResourceSecret(),

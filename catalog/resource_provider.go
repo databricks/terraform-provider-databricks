@@ -27,10 +27,10 @@ type Providers struct {
 	Providers []ProviderInfo `json:"providers"`
 }
 
-func (a ProvidersAPI) list() (Providers Providers, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/providers", nil, &Providers)
-	return
-}
+//func (a ProvidersAPI) list() (Providers Providers, err error) {
+//	err = a.client.Get(a.context, "/unity-catalog/providers", nil, &Providers)
+//	return
+//}
 
 func (a ProvidersAPI) createProvider(ci *ProviderInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/providers", ci, ci)

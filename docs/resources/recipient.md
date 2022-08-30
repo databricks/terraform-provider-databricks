@@ -1,9 +1,9 @@
 ---
 subcategory: "Unity Catalog"
 ---
-# databricks_share Resource
+# databricks_recipient Resource
 
-Within a metastore, Unity Catalog provides the ability to create a recipient to attach delta shares to..
+Within a metastore, Unity Catalog provides the ability to create a recipient to attach delta shares to.
 
 A `databricks_recipient` is contained within [databricks_metastore](metastore.md) and can contain a list of shares.
 
@@ -32,7 +32,7 @@ resource "databricks_recipient" "db2db" {
 
 The following arguments are required:
 
-* `name` - Name of share. Change forces creation of a new resource.
+* `name` - Name of recipient. Change forces creation of a new resource.
 * `comment` - (Optional) Description about the recipient.
 * `sharing_code` - (Optional) The one-time sharing code provided by the data recipient.
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN` and `DATABRICKS`.

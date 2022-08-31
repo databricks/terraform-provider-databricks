@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -254,6 +255,17 @@ func (a PipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 		})
 }
 
+func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
+	defaultStorageRegex := regexp.MustCompile(
+		`^dbfs:/pipelines/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+	res := defaultStorageRegex.MatchString(old)
+	if new == "" && res {
+		log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
+		return true
+	}
+	return false
+}
+
 func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
 	cluster, _ := m["cluster"].Elem.(*schema.Resource)
 	clustersSchema := cluster.Schema
@@ -283,6 +295,8 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	}
 	m["channel"].ValidateFunc = validation.StringInSlice([]string{"current", "preview"}, true)
 	m["edition"].ValidateFunc = validation.StringInSlice([]string{"pro", "core", "advanced"}, true)
+
+	m["storage"].DiffSuppressFunc = suppressStorageDiff
 
 	return m
 }

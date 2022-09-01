@@ -85,7 +85,7 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	force := fmt.Sprintf("User with username %s already exists.", userName)
+	force := fmt.Sprintf("User with email %s already exists in this account", userName)
 	force_account := "User already exists in another account"
 	if (err.Error() != force) && (err.Error() != force_account) {
 		return err

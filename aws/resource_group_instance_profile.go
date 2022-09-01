@@ -33,6 +33,6 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},
 	})
-	r.DeprecationMessage = "Please migrate to `databricks_group_role`. This resource will be removed in v1.2.x"
+	r.DeprecationMessage = "Please migrate to `databricks_group_role`"
 	return r
 }

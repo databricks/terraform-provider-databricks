@@ -44,11 +44,6 @@ type Recipients struct {
 	Recipients []RecipientInfo `json:"recipients"`
 }
 
-//func (a RecipientsAPI) list() (recipients Recipients, err error) {
-//	err = a.client.Get(a.context, "/unity-catalog/recipients", nil, &recipients)
-//	return
-//}
-
 func (a RecipientsAPI) createRecipient(ci *RecipientInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/recipients", ci, ci)
 }

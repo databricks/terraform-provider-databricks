@@ -9,22 +9,54 @@ A `databricks_recipient` is contained within [databricks_metastore](metastore.md
 
 ## Example Usage
 
+### Databricks Sharing with non databricks recipient
+
+Setting `authentication_type` type to `TOKEN` creates a temporary url to download a credentials file. This is used to 
+authenticate to the sharing server to access data. This is for when the recipient is not using Databricks. 
+
 ```hcl
+resource "random_password" "db2opensharecode" {
+  length           = 16
+  special          = true
+}
+
+data databricks_current_user "current" {}
+
 resource "databricks_recipient" "db2open" {
-  name = "db2open-recipient"
+  name = "${data.databricks_current_user.current.alphanumeric}-recipient"
   comment = "made by terraform"
   authentication_type = "TOKEN"
-  sharing_code = "my code "
+  sharing_code = random_password.db2opensharecode.result
   ip_access_list {
     allowed_ip_addresses = ["0.0.0.0/0"]
   }
 }
+```
+
+### Databricks to Databricks Sharing
+
+Setting `authentication_type` type to `DATABRICKS` allows you to automatically create a provider for a recipient who 
+is using Databricks. To do this they would need to provide the global metastore id that you will be sharing with. The 
+global metastore usually the format: `<cloud>:<region>:<guid>` 
+
+```hcl
+data databricks_current_user "current" {}
+
+resource "databricks_metastore" "recipient_metastore" {
+  name = "recipient"
+  storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
+    azurerm_storage_account.unity_catalog.name,
+    azurerm_storage_container.unity_catalog.name)
+  delta_sharing_scope = "INTERNAL"
+  delta_sharing_recipient_token_lifetime_in_seconds = "60000000"
+  force_destroy = true
+}
 
 resource "databricks_recipient" "db2db" {
-  name = "sri-terraform-test-db2db-recipient"
+  name = "${data.databricks_current_user.current.alphanumeric}-recipient"
   comment = "made by terraform"
   authentication_type = "DATABRICKS"
-  data_recipient_global_metastore_id = "<cloud>:<region>:<guid>"
+  data_recipient_global_metastore_id = databricks_metastore.recipient_metastore.global_metastore_id
 }
 ```
 
@@ -56,11 +88,3 @@ Exactly one of the below arguments is required:
 ## Attribute Reference:
 
 * `tokens` - (Optional) List of Recipient Tokens.
-
-## Related Resources
-
-The following resources are used in the same context:
-
-* [databricks_table](../data-sources/tables.md) data to list tables within Unity Catalog.
-* [databricks_schema](../data-sources/schemas.md) data to list schemas within Unity Catalog.
-* [databricks_catalog](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.

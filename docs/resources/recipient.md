@@ -28,7 +28,7 @@ resource "databricks_recipient" "db2open" {
   authentication_type = "TOKEN"
   sharing_code = random_password.db2opensharecode.result
   ip_access_list {
-    allowed_ip_addresses = ["0.0.0.0/0"]
+    allowed_ip_addresses = [...] // .. fill in allowed IPv4 addresses (CIDR notation allowed)
   }
 }
 ```

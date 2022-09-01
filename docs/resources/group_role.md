@@ -3,8 +3,6 @@ subcategory: "Security"
 ---
 # databricks_group_role Resource
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider.
-
 This resource allows you to attach Role ARN (AWS) to [databricks_group](group.md).
 
 ## Example Usage
@@ -16,7 +14,7 @@ resource "databricks_group" "my_group" {
 
 resource "databricks_group_role" "my_group_role" {
   group_id  = databricks_group.my_group.id
-  role_arn  = "arn:aws:iam::000000000000:role/my-role"
+  role  = "arn:aws:iam::000000000000:role/my-role"
 }
 ```
 
@@ -25,13 +23,13 @@ resource "databricks_group_role" "my_group_role" {
 The following arguments are supported:
 
 * `group_id` - (Required) This is the id of the [group](group.md) resource.
-* `role_arn` - (Required) This is the AWS role ARN.
+* `role` - (Required) This is the AWS role ARN.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The id for the `databricks_group_role` object which is in the format `<group_id>|<role_arn>`.
+* `id` - The id for the `databricks_group_role` object which is in the format `<group_id>|<role>`.
 
 ## Import
 

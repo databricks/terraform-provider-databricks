@@ -6,11 +6,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestResourceGroupRoleCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
@@ -38,16 +37,14 @@ func TestResourceGroupRoleCreate(t *testing.T) {
 		Resource: ResourceGroupRole(),
 		State: map[string]any{
 			"group_id": "abc",
-			"role_arn": "arn:aws:iam::000000000000:role/test-role",
+			"role":     "arn:aws:iam::000000000000:role/test-role",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc|arn:aws:iam::000000000000:role/test-role", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{"id": "abc|arn:aws:iam::000000000000:role/test-role"})
 }
 
 func TestResourceGroupRoleCreate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -62,16 +59,14 @@ func TestResourceGroupRoleCreate_Error(t *testing.T) {
 		Resource: ResourceGroupRole(),
 		State: map[string]any{
 			"group_id": "abc",
-			"role_arn": "arn:aws:iam::000000000000:role/test-role",
+			"role":     "arn:aws:iam::000000000000:role/test-role",
 		},
 		Create: true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceGroupRoleRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -91,9 +86,7 @@ func TestResourceGroupRoleRead(t *testing.T) {
 		Resource: ResourceGroupRole(),
 		Read:     true,
 		ID:       "abc|arn:aws:iam::000000000000:role/test-role",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc|arn:aws:iam::000000000000:role/test-role", d.Id(), "Id should not be empty")
+	}.ApplyAndExpectData(t, map[string]any{"id": "abc|arn:aws:iam::000000000000:role/test-role"})
 }
 
 func TestResourceGroupRoleRead_NoRole(t *testing.T) {
@@ -137,7 +130,7 @@ func TestResourceGroupRoleRead_NotFound(t *testing.T) {
 }
 
 func TestResourceGroupRoleRead_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -152,13 +145,11 @@ func TestResourceGroupRoleRead_Error(t *testing.T) {
 		Resource: ResourceGroupRole(),
 		Read:     true,
 		ID:       "abc|arn:aws:iam::000000000000:role/test-role",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc|arn:aws:iam::000000000000:role/test-role", d.Id(), "Id should not be empty for error reads")
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceGroupRoleDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -172,13 +163,11 @@ func TestResourceGroupRoleDelete(t *testing.T) {
 		Resource: ResourceGroupRole(),
 		Delete:   true,
 		ID:       "abc|arn:aws:iam::000000000000:role/test-role",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc|arn:aws:iam::000000000000:role/test-role", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceGroupRoleDelete_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -193,7 +182,5 @@ func TestResourceGroupRoleDelete_Error(t *testing.T) {
 		Resource: ResourceGroupRole(),
 		Delete:   true,
 		ID:       "abc|arn:aws:iam::000000000000:role/test-role",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc|arn:aws:iam::000000000000:role/test-role", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }

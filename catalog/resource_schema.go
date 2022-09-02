@@ -47,16 +47,18 @@ func (a SchemasAPI) getSchema(name string) (si SchemaInfo, err error) {
 	return
 }
 
-func (a SchemasAPI) deleteSchema(name string, force bool) error {
-	if force {
-		tablesAPI := NewTablesAPI(a.context, a.client)
-		tables, err := tablesAPI.listTables(strings.Split(name, ".")[0], strings.Split(name, ".")[1])
-		if err != nil {
-			return err
-		}
-		for _, v := range tables.Tables {
-			tablesAPI.deleteTable(v.FullName())
-		}
+func (a SchemasAPI) deleteSchema(name string) error {
+	return a.client.Delete(a.context, "/unity-catalog/schemas/"+name, nil)
+}
+
+func (a SchemasAPI) forceDeleteSchema(name string) error {
+	tablesAPI := NewTablesAPI(a.context, a.client)
+	tables, err := tablesAPI.listTables(strings.Split(name, ".")[0], strings.Split(name, ".")[1])
+	if err != nil {
+		return err
+	}
+	for _, v := range tables.Tables {
+		tablesAPI.deleteTable(v.FullName())
 	}
 	return a.client.Delete(a.context, "/unity-catalog/schemas/"+name, nil)
 }
@@ -94,7 +96,10 @@ func ResourceSchema() *schema.Resource {
 		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			return NewSchemasAPI(ctx, c).deleteSchema(d.Id(), force)
+			if force {
+				return NewSchemasAPI(ctx, c).forceDeleteSchema(d.Id())
+			}
+			return NewSchemasAPI(ctx, c).deleteSchema(d.Id())
 		},
 	}.ToResource()
 }

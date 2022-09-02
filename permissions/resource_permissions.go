@@ -129,7 +129,7 @@ func urlPathForObjectID(objectID string) string {
 // permissions when POSTing permissions changes through the REST API, to avoid accidentally
 // revoking the calling user's ability to manage the current object.
 func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
-	for _, prefix := range [...]string{"/registered-models/"} {
+	for _, prefix := range [...]string{"/registered-models/", "/clusters/"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
 		}

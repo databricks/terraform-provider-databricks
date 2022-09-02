@@ -33,7 +33,7 @@
 | [databricks_instance_profile](docs/resources/instance_profile.md)
 | [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
-| [databricks_queryable_job](docs/data-sources/job.md) data
+| [databricks_job](docs/data-sources/job.md)
 | [databricks_jobs](docs/data-sources/jobs.md)
 | [databricks_library](docs/resources/library.md)
 | [databricks_metastore](docs/resources/metastore.md)

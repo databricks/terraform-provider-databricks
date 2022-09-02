@@ -20,7 +20,7 @@ resource "random_password" "db2opensharecode" {
   special          = true
 }
 
-data databricks_current_user "current" {}
+data "databricks_current_user" "current" {}
 
 resource "databricks_recipient" "db2open" {
   name = "${data.databricks_current_user.current.alphanumeric}-recipient"
@@ -37,10 +37,10 @@ resource "databricks_recipient" "db2open" {
 
 Setting `authentication_type` type to `DATABRICKS` allows you to automatically create a provider for a recipient who 
 is using Databricks. To do this they would need to provide the global metastore id that you will be sharing with. The 
-global metastore usually the format: `<cloud>:<region>:<guid>` 
+global metastore id follows the format: `<cloud>:<region>:<guid>` 
 
 ```hcl
-data databricks_current_user "current" {}
+data "databricks_current_user" "current" {}
 
 resource "databricks_metastore" "recipient_metastore" {
   name = "recipient"

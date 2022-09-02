@@ -51,7 +51,7 @@ func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
-		HCL:         `job_name= "First"`,
+		HCL:         `job_name = "First"`,
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
 		"job_id":                         "123",
@@ -60,25 +60,23 @@ func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 }
 
 func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures:    commonFixtures(),
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
 		HCL:         `job_name= "Third"`,
 		ID:          "_",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "no job found with specified name or id")
+	}.ExpectError(t, "no job found with specified name or id")
 }
 
 func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures:    commonFixtures(),
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
 		HCL:         `job_id= "567"`,
 		ID:          "_",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "no job found with specified name or id")
+	}.ExpectError(t, "no job found with specified name or id")
 }

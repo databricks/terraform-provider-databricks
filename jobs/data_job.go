@@ -28,6 +28,7 @@ func DataSourceJob() *schema.Resource {
 				data.Job = &currentJob
 				data.Name = currentJobName
 				data.Id = currentJobId
+				return nil // break the loop after we found the job
 			}
 		}
 		if data.Job == nil {

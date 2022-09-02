@@ -55,7 +55,7 @@ func TestAccDataSourceQueryableJob(t *testing.T) {
 			}
 
 			data "databricks_job" "this" {
-				name = "job-datasource-acceptance-test"
+				job_name = databricks_job.this.name
 			}
 			
 			output "cluster_workers" {

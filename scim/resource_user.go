@@ -10,6 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func userExistsErrorMessage(userName string, isAccount bool) string {
+	if isAccount {
+		return fmt.Sprintf("User with email %s already exists in this account", userName)
+	} else {
+		return fmt.Sprintf("User with username %s already exists.", userName)
+	}
+}
+
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
 	type entity struct {
@@ -85,9 +93,7 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	force := fmt.Sprintf("User with email %s already exists in this account", userName)
-	force_account := "User already exists in another account"
-	if (err.Error() != force) && (err.Error() != force_account) {
+	if (err.Error() != userExistsErrorMessage(userName, false)) && (err.Error() != userExistsErrorMessage(userName, true)) {
 		return err
 	}
 	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName))

@@ -33,7 +33,7 @@ func commonFixtures() []qa.HTTPFixture {
 func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    commonFixtures(),
-		Resource:    DataSourceQueryableJob(),
+		Resource:    DataSourceJob(),
 		Read:        true,
 		New:         true,
 		NonWritable: true,
@@ -48,7 +48,7 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    commonFixtures(),
-		Resource:    DataSourceQueryableJob(),
+		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
 		HCL:         `job_name= "First"`,
@@ -62,7 +62,7 @@ func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures:    commonFixtures(),
-		Resource:    DataSourceQueryableJob(),
+		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
 		HCL:         `job_name= "Third"`,
@@ -74,7 +74,7 @@ func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures:    commonFixtures(),
-		Resource:    DataSourceQueryableJob(),
+		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
 		HCL:         `job_id= "567"`,

@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceQueryableJob() *schema.Resource {
+func DataSourceJob() *schema.Resource {
 	type queryableJobData struct {
 		Id   string `json:"job_id,omitempty" tf:"computed"`
 		Name string `json:"job_name,omitempty" tf:"computed"`

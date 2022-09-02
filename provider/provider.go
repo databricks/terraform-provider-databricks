@@ -79,6 +79,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_group":                       scim.ResourceGroup(),
 			"databricks_group_instance_profile":      aws.ResourceGroupInstanceProfile(),
 			"databricks_group_member":                scim.ResourceGroupMember(),
+			"databricks_group_role":                  scim.ResourceGroupRole(),
 			"databricks_instance_pool":               pools.ResourceInstancePool(),
 			"databricks_instance_profile":            aws.ResourceInstanceProfile(),
 			"databricks_ip_access_list":              access.ResourceIPAccessList(),

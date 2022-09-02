@@ -591,3 +591,11 @@ func TestListPipelinesWithFilter(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(data))
 }
+
+func TestStorageSuppressDiff(t *testing.T) {
+	k := "storage"
+	generated := "dbfs:/pipelines/c609bbb0-2e42-4bc8-bb4e-a1c26d6e9403"
+	require.True(t, suppressStorageDiff(k, generated, "", nil))
+	require.False(t, suppressStorageDiff(k, generated, "/tmp/abc", nil))
+	require.False(t, suppressStorageDiff(k, "/tmp/abc", "", nil))
+}

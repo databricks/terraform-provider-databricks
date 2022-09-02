@@ -193,3 +193,67 @@ func TestUpdateCatalog(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestForceDeleteCatalog(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/schemas?catalog_name=b",
+				Response: Schemas{
+					Schemas: []SchemaInfo{
+						{
+							Name:     "a",
+							FullName: "b.a",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=b&schema_name=a",
+				Response: Tables{
+					Tables: []TableInfo{
+						{
+							CatalogName: "b",
+							SchemaName:  "a",
+							Name:        "c",
+							TableType:   "MANAGED",
+						},
+						{
+							CatalogName: "b",
+							SchemaName:  "a",
+							Name:        "d",
+							TableType:   "VIEW",
+						},
+					},
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/tables/b.a.c",
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/tables/b.a.d",
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/catalogs/b",
+			},
+		},
+		Resource: ResourceCatalog(),
+		Delete:   true,
+		ID:       "b",
+		HCL: `
+		name = "b"
+		comment = "c"
+		owner = "administrators"
+		force_destroy = true
+		`,
+	}.ApplyNoError(t)
+}

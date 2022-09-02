@@ -9,9 +9,9 @@ import (
 
 func DataSourceQueryableJob() *schema.Resource {
 	type queryableJobData struct {
-		Id       string `json:"job_id,omitempty"`
-		Name     string `json:"job_name,omitempty"`
-		Settings *Job   `json:"job_settings,omitempty" tf:"computed"`
+		Id   string `json:"job_id,omitempty" tf:"computed"`
+		Name string `json:"job_name,omitempty" tf:"computed"`
+		Job  *Job   `json:"job_settings,omitempty" tf:"computed"`
 	}
 	return common.DataResource(queryableJobData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*queryableJobData)
@@ -20,12 +20,17 @@ func DataSourceQueryableJob() *schema.Resource {
 		if err != nil {
 			return err
 		}
-		for _, currentJob := range list.Jobs {
-			if currentJob.Settings.Name == data.Name || currentJob.ID() == data.Id {
-				data.Settings = &currentJob
+		for _, job := range list.Jobs {
+			currentJob := job // De-referencing the temp variable used by the loop
+			currentJobId := currentJob.ID()
+			currentJobName := currentJob.Settings.Name
+			if currentJobName == data.Name || currentJobId == data.Id {
+				data.Job = &currentJob
+				data.Name = currentJobName
+				data.Id = currentJobId
 			}
 		}
-		if data.Settings == nil {
+		if data.Job == nil {
 			return fmt.Errorf("no job found with specified name or id")
 		}
 		return nil

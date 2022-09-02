@@ -35,12 +35,13 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 		Fixtures:    commonFixtures(),
 		Resource:    DataSourceQueryableJob(),
 		Read:        true,
+		New:         true,
 		NonWritable: true,
 		HCL:         `job_id = "234"`,
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
-		"job_id":              "234",
-		"job_settings.0.name": "Second",
+		"job_id":                         "234",
+		"job_settings.0.settings.0.name": "Second",
 	})
 }
 
@@ -53,12 +54,8 @@ func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 		HCL:         `job_name= "First"`,
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
-		"job_info": Job{
-			JobID: 123,
-			Settings: &JobSettings{
-				Name: "First",
-			},
-		},
+		"job_id":                         "123",
+		"job_settings.0.settings.0.name": "First",
 	})
 }
 

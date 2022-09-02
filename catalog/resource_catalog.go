@@ -51,7 +51,9 @@ func (a CatalogsAPI) deleteCatalog(name string, force bool) error {
 			return err
 		}
 		for _, s := range schemas.Schemas {
-			schemasAPI.deleteSchema(s.Name, true)
+			if s.Name != name+".information_schema" {
+				schemasAPI.deleteSchema(s.FullName, true)
+			}
 		}
 	}
 	return a.client.Delete(a.context, "/unity-catalog/catalogs/"+name, nil)

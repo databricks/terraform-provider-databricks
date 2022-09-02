@@ -203,7 +203,8 @@ func TestForceDeleteCatalog(t *testing.T) {
 				Response: Schemas{
 					Schemas: []SchemaInfo{
 						{
-							Name: "b.a",
+							Name:     "a",
+							FullName: "b.a",
 						},
 					},
 				},

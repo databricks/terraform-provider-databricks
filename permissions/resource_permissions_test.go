@@ -567,9 +567,16 @@ func TestResourcePermissionsDelete(t *testing.T) {
 				},
 			},
 			{
-				Method:          http.MethodPut,
-				Resource:        "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: ObjectACL{},
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/clusters/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
 			},
 		},
 		Resource: ResourcePermissions(),
@@ -613,9 +620,16 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 				},
 			},
 			{
-				Method:          http.MethodPut,
-				Resource:        "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: ObjectACL{},
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/clusters/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -696,6 +710,10 @@ func TestResourcePermissionsCreate(t *testing.T) {
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_ATTACH_TO",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
 						},
 					},
 				},

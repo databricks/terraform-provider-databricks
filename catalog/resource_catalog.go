@@ -43,14 +43,28 @@ func (a CatalogsAPI) getCatalog(name string) (ci CatalogInfo, err error) {
 	return
 }
 
-func (a CatalogsAPI) deleteCatalog(name string) error {
-	// TODO: force_destroy attribute
-	return a.client.Delete(a.context, "/unity-catalog/catalogs/"+name+"?force=true", nil)
+func (a CatalogsAPI) deleteCatalog(name string, force bool) error {
+	if force {
+		schemasAPI := NewSchemasAPI(a.context, a.client)
+		schemas, err := schemasAPI.listByCatalog(name)
+		if err != nil {
+			return err
+		}
+		for _, s := range schemas.Schemas {
+			schemasAPI.deleteSchema(s.Name, true)
+		}
+	}
+	return a.client.Delete(a.context, "/unity-catalog/catalogs/"+name, nil)
 }
 
 func ResourceCatalog() *schema.Resource {
 	catalogSchema := common.StructToSchema(CatalogInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["force_destroy"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			}
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/catalogs", []string{"owner", "comment", "properties"})
@@ -62,7 +76,7 @@ func ResourceCatalog() *schema.Resource {
 			if err := NewCatalogsAPI(ctx, c).createCatalog(&ci); err != nil {
 				return err
 			}
-			if err := NewSchemasAPI(ctx, c).deleteSchema(ci.Name + ".default"); err != nil {
+			if err := NewSchemasAPI(ctx, c).deleteSchema(ci.Name+".default", false); err != nil {
 				return fmt.Errorf("cannot remove new catalog default schema: %w", err)
 			}
 			d.SetId(ci.Name)
@@ -77,7 +91,8 @@ func ResourceCatalog() *schema.Resource {
 		},
 		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewCatalogsAPI(ctx, c).deleteCatalog(d.Id())
+			force := d.Get("force_destroy").(bool)
+			return NewCatalogsAPI(ctx, c).deleteCatalog(d.Id(), force)
 		},
 	}.ToResource()
 }

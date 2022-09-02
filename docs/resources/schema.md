@@ -38,6 +38,7 @@ The following arguments are required:
 * `owner` - (Optional) Username/groupname/sp application_id of the schema owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Schema properties.
+* `force_destroy` - (Optional) Delete schema regardless of its contents.
 
 ## Import
 

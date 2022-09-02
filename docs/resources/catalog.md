@@ -28,6 +28,7 @@ The following arguments are required:
 * `owner` - (Optional) Username/groupname/sp application_id of the catalog owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Catalog properties.
+* `force_destroy` - (Optional) Delete catalog regardless of its contents.
 
 ## Import
 

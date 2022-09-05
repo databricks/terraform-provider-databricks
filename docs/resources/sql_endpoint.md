@@ -39,6 +39,7 @@ The following arguments are supported:
 * `enable_serverless_compute` - Whether this SQL endpoint is a Serverless endpoint. To use a Serverless SQL endpoint, you must enable Serverless SQL endpoints for the workspace.
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
+* `disable_unity` - Whether to enable Unity Catalog. This field is optional and is disabled by default.
  
 ## Attribute Reference
 

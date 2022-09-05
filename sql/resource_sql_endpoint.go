@@ -37,7 +37,7 @@ type SQLEndpoint struct {
 	Tags                    *Tags           `json:"tags,omitempty" tf:"suppress_diff"`
 	SpotInstancePolicy      string          `json:"spot_instance_policy,omitempty" tf:"default:COST_OPTIMIZED"`
 	Channel                 *ReleaseChannel `json:"channel,omitempty" tf:"suppress_diff"`
-	DisableUnity            bool            `json:"disable_unity" tf:"optional,default:false"`
+	DisableUC               bool            `json:"disable_uc" tf:"optional,default:false"`
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources

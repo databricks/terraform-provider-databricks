@@ -87,3 +87,17 @@ func (a UsersAPI) Delete(userID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 	return a.client.Scim(a.context, http.MethodDelete, userPath, nil, nil)
 }
+
+func (a UsersAPI) UpdateEntitlements(userID string, e entitlements) error {
+	u, err := a.Read(userID)
+	if err != nil {
+		return err
+	}
+	return a.client.Scim(a.context, http.MethodPut,
+		fmt.Sprintf("/preview/scim/v2/Users/%v", userID),
+		User{
+			UserName:     u.UserName,
+			Entitlements: e,
+			Schemas:      []URN{UserSchema},
+		}, nil)
+}

@@ -71,6 +71,20 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest Us
 		updateRequest, nil)
 }
 
+func (a ServicePrincipalsAPI) UpdateEntitlements(servicePrincipalID string, e entitlements) error {
+	servicePrincipal, err := a.Read(servicePrincipalID)
+	if err != nil {
+		return err
+	}
+	return a.client.Scim(a.context, http.MethodPut,
+		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
+		User{
+			UserName:     servicePrincipal.UserName,
+			Entitlements: e,
+			Schemas:      []URN{ServicePrincipalSchema},
+		}, nil)
+}
+
 // Delete will delete the servicePrincipal given the servicePrincipal id
 func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)

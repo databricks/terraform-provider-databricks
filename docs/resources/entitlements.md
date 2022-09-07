@@ -24,12 +24,12 @@ resource "databricks_entitlements" "me" {
 Setting entitlements for a service principal:
 
 ```hcl
-data "databricks_service_principal" "service_principal" {
+data "databricks_service_principal" "this" {
   application_id = "11111111-2222-3333-4444-555666777888"
 }
 
-resource "databricks_entitlements" "service_principal" {
-  service_principal_id       = data.databricks_service_principal.service_principal.sp_id
+resource "databricks_entitlements" "this" {
+  service_principal_id       = data.databricks_service_principal.this.sp_id
   allow_cluster_create       = true
   allow_instance_pool_create = true
 }

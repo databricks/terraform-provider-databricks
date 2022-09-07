@@ -127,6 +127,28 @@ func TestResourceEntitlementsGroupRead(t *testing.T) {
 		"allow_cluster_create": true,
 	})
 }
+
+func TestResourceEntitlementsGroupRead_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Status:   400,
+				Response: common.APIErrorBody{
+					ScimDetail: "Something",
+					ScimStatus: "Else",
+				},
+			},
+		},
+		Resource: ResourceEntitlements(),
+		New:      true,
+		Read:     true,
+		ID:       "group/abc",
+		HCL:      `group_id = "abc"`,
+	}.ExpectError(t, "Something")
+}
+
 func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -323,6 +345,66 @@ func TestResourceEntitlementsUserRead(t *testing.T) {
 		"user_id":              "abc",
 		"allow_cluster_create": true,
 	})
+}
+
+func TestResourceEntitlementsUserRead_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Status:   400,
+				Response: common.APIErrorBody{
+					ScimDetail: "Something",
+					ScimStatus: "Else",
+				},
+			},
+		},
+		Resource: ResourceEntitlements(),
+		New:      true,
+		Read:     true,
+		ID:       "user/abc",
+		HCL:      `user_id = "abc"`,
+	}.ExpectError(t, "Something")
+}
+
+func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Status:   400,
+				Response: common.APIErrorBody{
+					ScimDetail: "Something",
+					ScimStatus: "Else",
+				},
+			},
+			{
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
+				ExpectedRequest: []patchRequest{removeAllRequest, addRequest},
+				Status:          400,
+				Response: common.APIErrorBody{
+					ScimDetail: "Something",
+					ScimStatus: "Else",
+				},
+			},
+		},
+		Resource: ResourceEntitlements(),
+		Update:   true,
+		ID:       "user/abc",
+		InstanceState: map[string]string{
+			"user_id":              "abc",
+			"allow_cluster_create": "true",
+		},
+		HCL: `
+		user_id    = "abc"
+		allow_cluster_create = true
+		allow_instance_pool_create = true
+		databricks_sql_access = true
+		`,
+	}.ExpectError(t, "Something")
 }
 
 func TestResourceEntitlementsUserUpdate(t *testing.T) {

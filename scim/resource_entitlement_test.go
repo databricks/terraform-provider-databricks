@@ -81,7 +81,7 @@ func TestResourceEntitlementsGroupCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: addRequest,
+				ExpectedRequest: []patchRequest{addRequest},
 				Response: Group{
 					ID: "abc",
 				},
@@ -138,15 +138,7 @@ func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: removeAllRequest,
-				Response: Group{
-					ID: "abc",
-				},
-			},
-			{
-				Method:          "PATCH",
-				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: addRequest,
+				ExpectedRequest: []patchRequest{removeAllRequest, addRequest},
 				Response: Group{
 					ID: "abc",
 				},
@@ -189,7 +181,7 @@ func TestResourceEntitlementsGroupDelete(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: deleteRequest,
+				ExpectedRequest: []patchRequest{deleteRequest},
 				Response: Group{
 					ID: "abc",
 				},
@@ -202,6 +194,10 @@ func TestResourceEntitlementsGroupDelete(t *testing.T) {
 			"group_id":             "abc",
 			"allow_cluster_create": "true",
 		},
+		HCL: `
+		group_id    = "abc"
+		allow_cluster_create = true
+		`,
 	}.Apply(t)
 }
 
@@ -282,7 +278,7 @@ func TestResourceEntitlementsUserCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: addRequest,
+				ExpectedRequest: []patchRequest{addRequest},
 				Response: User{
 					ID: "abc",
 				},
@@ -340,16 +336,8 @@ func TestResourceEntitlementsUserUpdate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: removeAllRequest,
+				ExpectedRequest: []patchRequest{removeAllRequest, addRequest},
 				Response: User{
-					ID: "abc",
-				},
-			},
-			{
-				Method:          "PATCH",
-				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: addRequest,
-				Response: Group{
 					ID: "abc",
 				},
 			},
@@ -391,7 +379,7 @@ func TestResourceEntitlementsUserDelete(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: deleteRequest,
+				ExpectedRequest: []patchRequest{deleteRequest},
 				Response: User{
 					ID: "abc",
 				},
@@ -404,6 +392,10 @@ func TestResourceEntitlementsUserDelete(t *testing.T) {
 			"user_id":              "abc",
 			"allow_cluster_create": "true",
 		},
+		HCL: `
+		user_id    = "abc"
+		allow_cluster_create = true
+		`,
 	}.ApplyNoError(t)
 }
 
@@ -418,7 +410,7 @@ func TestResourceEntitlementsSPNCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: addRequest,
+				ExpectedRequest: []patchRequest{addRequest},
 				Response: User{
 					ID: "abc",
 				},
@@ -525,16 +517,8 @@ func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: removeAllRequest,
+				ExpectedRequest: []patchRequest{removeAllRequest, addRequest},
 				Response: Group{
-					ID: "abc",
-				},
-			},
-			{
-				Method:          "PATCH",
-				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: addRequest,
-				Response: User{
 					ID: "abc",
 				},
 			},
@@ -552,10 +536,10 @@ func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 			"allow_cluster_create": "true",
 		},
 		HCL: `
-		service_principal_id    = "abc"
-		allow_cluster_create = true
+		service_principal_id       = "abc"
+		allow_cluster_create       = true
 		allow_instance_pool_create = true
-		databricks_sql_access = true
+		databricks_sql_access      = true
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)
@@ -576,7 +560,7 @@ func TestResourceEntitlementsSPNDelete(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: deleteRequest,
+				ExpectedRequest: []patchRequest{deleteRequest},
 				Response: User{
 					ID: "abc",
 				},
@@ -586,8 +570,12 @@ func TestResourceEntitlementsSPNDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "spn/abc",
 		InstanceState: map[string]string{
-			"spn_id":               "abc",
+			"service_principal_id": "abc",
 			"allow_cluster_create": "true",
 		},
+		HCL: `
+		service_principal_id = "abc"
+		allow_cluster_create = true
+		`,
 	}.ApplyNoError(t)
 }

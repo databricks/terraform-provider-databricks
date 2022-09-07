@@ -58,7 +58,7 @@ func ResourceEntitlements() *schema.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return enforceEntitlement(ctx, d, c)
+			return enforceEntitlements(ctx, d, c)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return patchEntitlements(ctx, d, c, "remove")
@@ -71,9 +71,10 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	groupId := d.Get("group_id").(string)
 	userId := d.Get("user_id").(string)
 	spnId := d.Get("service_principal_id").(string)
+	request := []patchRequest{PatchRequestComplexValue(op, "entitlements", readEntitlementsFromData(d))}
 	if groupId != "" {
 		groupsAPI := NewGroupsAPI(ctx, c)
-		err := groupsAPI.UpdateEntitlements(groupId, op, readEntitlementsFromData(d))
+		err := groupsAPI.UpdateEntitlements(groupId, request)
 		if err != nil {
 			return err
 		}
@@ -81,7 +82,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	}
 	if userId != "" {
 		usersAPI := NewUsersAPI(ctx, c)
-		err := usersAPI.UpdateEntitlements(userId, op, readEntitlementsFromData(d))
+		err := usersAPI.UpdateEntitlements(userId, request)
 		if err != nil {
 			return err
 		}
@@ -89,7 +90,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	}
 	if spnId != "" {
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
-		err := spnAPI.UpdateEntitlements(spnId, op, readEntitlementsFromData(d))
+		err := spnAPI.UpdateEntitlements(spnId, request)
 		if err != nil {
 			return err
 		}
@@ -98,23 +99,24 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	return nil
 }
 
-func enforceEntitlement(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+func enforceEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	split := strings.SplitN(d.Id(), "/", 2)
 	if len(split) != 2 {
 		return fmt.Errorf("ID must be two elements: %s", d.Id())
 	}
 	identity := strings.ToLower(split[0])
 	id := strings.ToLower(split[1])
+	request := []patchRequest{
+		PatchRequestComplexValue("remove", "entitlements", generateFullEntitlements()),
+		PatchRequestComplexValue("add", "entitlements", readEntitlementsFromData(d)),
+	}
 	switch identity {
 	case "group":
-		NewGroupsAPI(ctx, c).UpdateEntitlements(id, "remove", generateFullEntitlements())
-		NewGroupsAPI(ctx, c).UpdateEntitlements(id, "add", readEntitlementsFromData(d))
+		NewGroupsAPI(ctx, c).UpdateEntitlements(id, request)
 	case "user":
-		NewUsersAPI(ctx, c).UpdateEntitlements(id, "remove", generateFullEntitlements())
-		NewUsersAPI(ctx, c).UpdateEntitlements(id, "add", readEntitlementsFromData(d))
+		NewUsersAPI(ctx, c).UpdateEntitlements(id, request)
 	case "spn":
-		NewServicePrincipalsAPI(ctx, c).UpdateEntitlements(id, "remove", generateFullEntitlements())
-		NewServicePrincipalsAPI(ctx, c).UpdateEntitlements(id, "add", readEntitlementsFromData(d))
+		NewServicePrincipalsAPI(ctx, c).UpdateEntitlements(id, request)
 	}
 	return nil
 }

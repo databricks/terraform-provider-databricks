@@ -71,10 +71,9 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest Us
 		updateRequest, nil)
 }
 
-func (a ServicePrincipalsAPI) UpdateEntitlements(servicePrincipalID, op string, e entitlements) error {
+func (a ServicePrincipalsAPI) UpdateEntitlements(servicePrincipalID string, entitlements []patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch,
-		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
-		PatchRequestComplexValue(op, "entitlements", e), nil)
+		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), entitlements, nil)
 }
 
 // Delete will delete the servicePrincipal given the servicePrincipal id

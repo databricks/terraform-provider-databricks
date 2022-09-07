@@ -1,40 +1,35 @@
 ---
 subcategory: "Security"
 ---
-# databricks_group_instance_profile Resource
+# databricks_group_role Resource
 
--> **Deprecated** Please migrate to [databricks_group_role](group_role.md).
-
-This resource allows you to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_group](group.md).
+This resource allows you to attach Role ARN (AWS) to [databricks_group](group.md).
 
 ## Example Usage
 
 ```hcl
-resource "databricks_instance_profile" "instance_profile" {
-  instance_profile_arn = "my_instance_profile_arn"
-}
-
 resource "databricks_group" "my_group" {
   display_name = "my_group_name"
 }
 
-resource "databricks_group_instance_profile" "my_group_instance_profile" {
-  group_id            = databricks_group.my_group.id
-  instance_profile_id = databricks_instance_profile.instance_profile.id
+resource "databricks_group_role" "my_group_role" {
+  group_id  = databricks_group.my_group.id
+  role  = "arn:aws:iam::000000000000:role/my-role"
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `group_id` - (Required) This is the id of the [group](group.md) resource.
-* `instance_profile_id` -  (Required) This is the id of the [instance profile](instance_profile.md) resource.
+* `role` - (Required) This is the AWS role ARN.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-*  `id` - The id in the format `<group_id>|<instance_profile_id>`.
+* `id` - The id for the `databricks_group_role` object which is in the format `<group_id>|<role>`.
 
 ## Import
 

@@ -37,7 +37,40 @@ var newGroup = Group{
 	},
 }
 
-func TestResourceEntitlementGroupCreate(t *testing.T) {
+var addRequest = PatchRequestComplexValue("add", "entitlements", []ComplexValue{
+	{
+		Value: "allow-cluster-create",
+	},
+	{
+		Value: "allow-instance-pool-create",
+	},
+	{
+		Value: "databricks-sql-access",
+	},
+})
+
+var removeAllRequest = PatchRequestComplexValue("remove", "entitlements", []ComplexValue{
+	{
+		Value: "allow-cluster-create",
+	},
+	{
+		Value: "allow-instance-pool-create",
+	},
+	{
+		Value: "databricks-sql-access",
+	},
+	{
+		Value: "workspace-access",
+	},
+})
+
+var deleteRequest = PatchRequestComplexValue("remove", "entitlements", []ComplexValue{
+	{
+		Value: "allow-cluster-create",
+	},
+})
+
+func TestResourceEntitlementsGroupCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -46,23 +79,9 @@ func TestResourceEntitlementGroupCreate(t *testing.T) {
 				Response: oldGroup,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: Group{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					Entitlements: []ComplexValue{
-						{
-							Value: "allow-cluster-create",
-						},
-						{
-							Value: "allow-instance-pool-create",
-						},
-						{
-							Value: "databricks-sql-access",
-						},
-					},
-				},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
+				ExpectedRequest: addRequest,
 				Response: Group{
 					ID: "abc",
 				},
@@ -73,7 +92,7 @@ func TestResourceEntitlementGroupCreate(t *testing.T) {
 				Response: newGroup,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		HCL: `
 		group_id = "abc"
 		allow_instance_pool_create = true
@@ -89,7 +108,7 @@ func TestResourceEntitlementGroupCreate(t *testing.T) {
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
 }
 
-func TestResourceEntitlementGroupRead(t *testing.T) {
+func TestResourceEntitlementsGroupRead(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -98,7 +117,7 @@ func TestResourceEntitlementGroupRead(t *testing.T) {
 				Response: oldGroup,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		HCL:      `group_id = "abc"`,
 		New:      true,
 		Read:     true,
@@ -108,7 +127,7 @@ func TestResourceEntitlementGroupRead(t *testing.T) {
 		"allow_cluster_create": true,
 	})
 }
-func TestResourceEntitlementGroupUpdate(t *testing.T) {
+func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -117,23 +136,17 @@ func TestResourceEntitlementGroupUpdate(t *testing.T) {
 				Response: oldGroup,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: Group{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					Entitlements: []ComplexValue{
-						{
-							Value: "allow-cluster-create",
-						},
-						{
-							Value: "allow-instance-pool-create",
-						},
-						{
-							Value: "databricks-sql-access",
-						},
-					},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
+				ExpectedRequest: removeAllRequest,
+				Response: Group{
+					ID: "abc",
 				},
+			},
+			{
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
+				ExpectedRequest: addRequest,
 				Response: Group{
 					ID: "abc",
 				},
@@ -144,7 +157,7 @@ func TestResourceEntitlementGroupUpdate(t *testing.T) {
 				Response: newGroup,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		Update:   true,
 		ID:       "group/abc",
 		InstanceState: map[string]string{
@@ -164,7 +177,8 @@ func TestResourceEntitlementGroupUpdate(t *testing.T) {
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
 }
-func TestResourceEntitlementGroupDelete(t *testing.T) {
+
+func TestResourceEntitlementsGroupDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -173,21 +187,21 @@ func TestResourceEntitlementGroupDelete(t *testing.T) {
 				Response: oldGroup,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: Group{
-					Schemas:      []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName:  "Data Scientists",
-					Entitlements: []ComplexValue{},
-				},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
+				ExpectedRequest: deleteRequest,
 				Response: Group{
 					ID: "abc",
 				},
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		Delete:   true,
 		ID:       "group/abc",
+		InstanceState: map[string]string{
+			"group_id":             "abc",
+			"allow_cluster_create": "true",
+		},
 	}.Apply(t)
 }
 
@@ -228,6 +242,9 @@ var newUser = User{
 	ID:          "abc",
 	Entitlements: []ComplexValue{
 		{
+			Value: "allow-cluster-create",
+		},
+		{
 			Value: "allow-instance-pool-create",
 		},
 		{
@@ -254,7 +271,7 @@ var newUser = User{
 	},
 }
 
-func TestResourceEntitlementUserCreate(t *testing.T) {
+func TestResourceEntitlementsUserCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -263,20 +280,9 @@ func TestResourceEntitlementUserCreate(t *testing.T) {
 				Response: oldUser,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: User{
-					Entitlements: entitlements{
-						{
-							Value: "allow-instance-pool-create",
-						},
-						{
-							Value: "databricks-sql-access",
-						},
-					},
-					UserName: "me@example.com",
-					Schemas:  []URN{UserSchema},
-				},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
+				ExpectedRequest: addRequest,
 				Response: User{
 					ID: "abc",
 				},
@@ -287,22 +293,23 @@ func TestResourceEntitlementUserCreate(t *testing.T) {
 				Response: newUser,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		HCL: `
 		user_id = "abc"
 		allow_instance_pool_create = true
+		allow_cluster_create = true
 		databricks_sql_access = true
 		`,
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "user/abc", d.Id())
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
 }
 
-func TestResourceEntitlementUserRead(t *testing.T) {
+func TestResourceEntitlementsUserRead(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -311,7 +318,7 @@ func TestResourceEntitlementUserRead(t *testing.T) {
 				Response: oldUser,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		HCL:      `user_id = "abc"`,
 		New:      true,
 		Read:     true,
@@ -322,7 +329,7 @@ func TestResourceEntitlementUserRead(t *testing.T) {
 	})
 }
 
-func TestResourceEntitlementUserUpdate(t *testing.T) {
+func TestResourceEntitlementsUserUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -331,21 +338,18 @@ func TestResourceEntitlementUserUpdate(t *testing.T) {
 				Response: oldUser,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: User{
-					Entitlements: entitlements{
-						{
-							Value: "allow-instance-pool-create",
-						},
-						{
-							Value: "databricks-sql-access",
-						},
-					},
-					UserName: "me@example.com",
-					Schemas:  []URN{UserSchema},
-				},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
+				ExpectedRequest: removeAllRequest,
 				Response: User{
+					ID: "abc",
+				},
+			},
+			{
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
+				ExpectedRequest: addRequest,
+				Response: Group{
 					ID: "abc",
 				},
 			},
@@ -355,7 +359,7 @@ func TestResourceEntitlementUserUpdate(t *testing.T) {
 				Response: newUser,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		Update:   true,
 		ID:       "user/abc",
 		InstanceState: map[string]string{
@@ -364,19 +368,19 @@ func TestResourceEntitlementUserUpdate(t *testing.T) {
 		},
 		HCL: `
 		user_id    = "abc"
-		allow_cluster_create = false
+		allow_cluster_create = true
 		allow_instance_pool_create = true
 		databricks_sql_access = true
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "user/abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
 }
 
-func TestResourceEntitlementUserDelete(t *testing.T) {
+func TestResourceEntitlementsUserDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -385,25 +389,25 @@ func TestResourceEntitlementUserDelete(t *testing.T) {
 				Response: oldUser,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: User{
-					Entitlements: entitlements{},
-					UserName:     "me@example.com",
-					Schemas:      []URN{UserSchema},
-				},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
+				ExpectedRequest: deleteRequest,
 				Response: User{
 					ID: "abc",
 				},
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		Delete:   true,
 		ID:       "user/abc",
+		InstanceState: map[string]string{
+			"user_id":              "abc",
+			"allow_cluster_create": "true",
+		},
 	}.ApplyNoError(t)
 }
 
-func TestResourceEntitlementSPNCreate(t *testing.T) {
+func TestResourceEntitlementsSPNCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -412,20 +416,9 @@ func TestResourceEntitlementSPNCreate(t *testing.T) {
 				Response: oldUser,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: User{
-					Entitlements: entitlements{
-						{
-							Value: "allow-instance-pool-create",
-						},
-						{
-							Value: "databricks-sql-access",
-						},
-					},
-					UserName: "me@example.com",
-					Schemas:  []URN{ServicePrincipalSchema},
-				},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				ExpectedRequest: addRequest,
 				Response: User{
 					ID: "abc",
 				},
@@ -436,9 +429,10 @@ func TestResourceEntitlementSPNCreate(t *testing.T) {
 				Response: newUser,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		HCL: `
-		spn_id = "abc"
+		service_principal_id = "abc"
+		allow_cluster_create = true
 		allow_instance_pool_create = true
 		databricks_sql_access = true
 		`,
@@ -446,12 +440,12 @@ func TestResourceEntitlementSPNCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "spn/abc", d.Id())
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
 }
 
-func TestResourceEntitlementSPNRead(t *testing.T) {
+func TestResourceEntitlementsSPNRead(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -470,18 +464,18 @@ func TestResourceEntitlementSPNRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceEntitlement(),
-		HCL:      `spn_id = "abc"`,
+		Resource: ResourceEntitlements(),
+		HCL:      `service_principal_id = "abc"`,
 		New:      true,
 		Read:     true,
 		ID:       "spn/abc",
 	}.ApplyAndExpectData(t, map[string]any{
-		"spn_id":               "abc",
+		"service_principal_id": "abc",
 		"allow_cluster_create": true,
 	})
 }
 
-func TestResourceEntitlementSPNRead_NotFound(t *testing.T) {
+func TestResourceEntitlementsSPNRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -490,16 +484,16 @@ func TestResourceEntitlementSPNRead_NotFound(t *testing.T) {
 				Status:   404,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		New:      true,
 		Read:     true,
 		Removed:  true,
 		ID:       "spn/abc",
-		HCL:      `spn_id = "abc"`,
+		HCL:      `service_principal_id = "abc"`,
 	}.ApplyNoError(t)
 }
 
-func TestResourceEntitlementSPNRead_Error(t *testing.T) {
+func TestResourceEntitlementsSPNRead_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -512,15 +506,15 @@ func TestResourceEntitlementSPNRead_Error(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		New:      true,
 		Read:     true,
 		ID:       "spn/abc",
-		HCL:      `spn_id = "abc"`,
+		HCL:      `service_principal_id = "abc"`,
 	}.ExpectError(t, "Something")
 }
 
-func TestResourceEntitlementSPNUpdate(t *testing.T) {
+func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -529,20 +523,17 @@ func TestResourceEntitlementSPNUpdate(t *testing.T) {
 				Response: oldUser,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: User{
-					Entitlements: entitlements{
-						{
-							Value: "allow-instance-pool-create",
-						},
-						{
-							Value: "databricks-sql-access",
-						},
-					},
-					UserName: "me@example.com",
-					Schemas:  []URN{ServicePrincipalSchema},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				ExpectedRequest: removeAllRequest,
+				Response: Group{
+					ID: "abc",
 				},
+			},
+			{
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				ExpectedRequest: addRequest,
 				Response: User{
 					ID: "abc",
 				},
@@ -553,28 +544,28 @@ func TestResourceEntitlementSPNUpdate(t *testing.T) {
 				Response: newUser,
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		Update:   true,
 		ID:       "spn/abc",
 		InstanceState: map[string]string{
-			"spn_id":               "abc",
+			"service_principal_id": "abc",
 			"allow_cluster_create": "true",
 		},
 		HCL: `
-		spn_id    = "abc"
-		allow_cluster_create = false
+		service_principal_id    = "abc"
+		allow_cluster_create = true
 		allow_instance_pool_create = true
 		databricks_sql_access = true
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)
 	assert.Equal(t, "spn/abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
 }
 
-func TestResourceEntitlementSPNDelete(t *testing.T) {
+func TestResourceEntitlementsSPNDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -583,20 +574,20 @@ func TestResourceEntitlementSPNDelete(t *testing.T) {
 				Response: oldUser,
 			},
 			{
-				Method:   "PUT",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: User{
-					Entitlements: entitlements{},
-					UserName:     "me@example.com",
-					Schemas:      []URN{ServicePrincipalSchema},
-				},
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				ExpectedRequest: deleteRequest,
 				Response: User{
 					ID: "abc",
 				},
 			},
 		},
-		Resource: ResourceEntitlement(),
+		Resource: ResourceEntitlements(),
 		Delete:   true,
 		ID:       "spn/abc",
+		InstanceState: map[string]string{
+			"spn_id":               "abc",
+			"allow_cluster_create": "true",
+		},
 	}.ApplyNoError(t)
 }

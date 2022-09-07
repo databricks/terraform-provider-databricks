@@ -88,16 +88,8 @@ func (a UsersAPI) Delete(userID string) error {
 	return a.client.Scim(a.context, http.MethodDelete, userPath, nil, nil)
 }
 
-func (a UsersAPI) UpdateEntitlements(userID string, e entitlements) error {
-	u, err := a.Read(userID)
-	if err != nil {
-		return err
-	}
-	return a.client.Scim(a.context, http.MethodPut,
+func (a UsersAPI) UpdateEntitlements(userID, op string, e entitlements) error {
+	return a.client.Scim(a.context, http.MethodPatch,
 		fmt.Sprintf("/preview/scim/v2/Users/%v", userID),
-		User{
-			UserName:     u.UserName,
-			Entitlements: e,
-			Schemas:      []URN{UserSchema},
-		}, nil)
+		PatchRequestComplexValue(op, "entitlements", e), nil)
 }

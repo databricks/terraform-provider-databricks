@@ -65,6 +65,16 @@ func (e entitlements) readIntoData(d *schema.ResourceData) error {
 	return nil
 }
 
+func generateFullEntitlements() entitlements {
+	var e entitlements
+	for _, entitlement := range possibleEntitlements {
+		e = append(e, ComplexValue{
+			Value: entitlement,
+		})
+	}
+	return e
+}
+
 func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 	var e entitlements
 	for _, entitlement := range possibleEntitlements {
@@ -153,12 +163,17 @@ type patchRequest struct {
 }
 
 func PatchRequest(op, path, value string) patchRequest {
-	o := patchOperation{
-		Op:   op,
-		Path: path,
-	}
 	if value != "" {
-		o.Value = []ComplexValue{{Value: value}}
+		return PatchRequestComplexValue(op, path, []ComplexValue{{Value: value}})
+	}
+	return PatchRequestComplexValue(op, path, []ComplexValue{})
+}
+
+func PatchRequestComplexValue(op, path string, value []ComplexValue) patchRequest {
+	o := patchOperation{
+		Op:    op,
+		Path:  path,
+		Value: value,
 	}
 	return patchRequest{
 		Schemas:    []URN{PatchOp},

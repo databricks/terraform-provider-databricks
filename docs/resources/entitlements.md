@@ -7,17 +7,35 @@ This resource allows you to set entitlements to existing [databricks_users](user
 
 ## Example Usage
 
-Set entitlements for a regular user:
+Setting entitlements for a regular user:
 
 ```hcl
+data "databricks_user" "me" {
+  user_name = "me@example.com"
+}
+
 resource "databricks_entitlements" "me" {
-  user_id                    = "123456"
+  user_id                    = data.databricks_user.me.id
   allow_cluster_create       = true
   allow_instance_pool_create = true
 }
 ```
 
-Granting entitlements to all users in a workspace - referencing special `users` [databricks_group](../data-sources/group.md)
+Setting entitlements for a service principal:
+
+```hcl
+data "databricks_service_principal" "service_principal" {
+  application_id = "11111111-2222-3333-4444-555666777888"
+}
+
+resource "databricks_entitlements" "service_principal" {
+  service_principal_id       = data.databricks_service_principal.service_principal.sp_id
+  allow_cluster_create       = true
+  allow_instance_pool_create = true
+}
+```
+
+Setting entitlements to all users in a workspace - referencing special `users` [databricks_group](../data-sources/group.md)
 
 ```hcl
 data "databricks_group" "users" {
@@ -37,7 +55,7 @@ The following arguments are available to specify the identity you need to enforc
 
 * `user_id` -  Canonical unique identifier for the user.
 * `group_id` - Canonical unique identifier for the group.
-* `spn_id` - Canonical unique identifier for the service principal.
+* `service_principal_id` - Canonical unique identifier for the service principal.
 
 The following entitlements are available.
 
@@ -51,10 +69,10 @@ The resource can be imported using a synthetic identifier. Examples of valid syn
 
 * `user/user_id` - user `user_id`.
 * `group/group_id` - group `group_id`.
-* `spn/spn_id` - service principal `spn_id.
+* `spn/spn_id` - service principal `spn_id`.
 
 ```bash
-$ terraform import databricks_entitlements.me user/<user-id>
+terraform import databricks_entitlements.me user/<user-id>
 ```
 
 ## Related Resources

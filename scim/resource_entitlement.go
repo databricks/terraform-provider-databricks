@@ -10,17 +10,16 @@ import (
 )
 
 // ResourceGroup manages user groups
-func ResourceEntitlement() *schema.Resource {
+func ResourceEntitlements() *schema.Resource {
 	type entity struct {
 		GroupId string `json:"group_id,omitempty" tf:"force_new"`
 		UserId  string `json:"user_id,omitempty" tf:"force_new"`
-		SpnId   string `json:"spn_id,omitempty" tf:"force_new"`
+		SpnId   string `json:"service_principal_id,omitempty" tf:"force_new"`
 	}
 	entitlementSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(&m)
-			// https://github.com/databricks/terraform-provider-databricks/issues/1089
-			alof := []string{"group_id", "user_id", "spn_id"}
+			alof := []string{"group_id", "user_id", "service_principal_id"}
 			for _, field := range alof {
 				m[field].AtLeastOneOf = alof
 			}
@@ -29,7 +28,7 @@ func ResourceEntitlement() *schema.Resource {
 	addEntitlementsToSchema(&entitlementSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return createEntitlement(ctx, d, c)
+			return patchEntitlements(ctx, d, c, "add")
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			split := strings.SplitN(d.Id(), "/", 2)
@@ -62,21 +61,19 @@ func ResourceEntitlement() *schema.Resource {
 			return enforceEntitlement(ctx, d, c)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var e entitlements
-			e.readIntoData(d)
-			return enforceEntitlement(ctx, d, c)
+			return patchEntitlements(ctx, d, c, "remove")
 		},
 		Schema: entitlementSchema,
 	}.ToResource()
 }
 
-func createEntitlement(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, op string) error {
 	groupId := d.Get("group_id").(string)
 	userId := d.Get("user_id").(string)
-	spnId := d.Get("spn_id").(string)
+	spnId := d.Get("service_principal_id").(string)
 	if groupId != "" {
 		groupsAPI := NewGroupsAPI(ctx, c)
-		err := groupsAPI.UpdateEntitlements(groupId, readEntitlementsFromData(d))
+		err := groupsAPI.UpdateEntitlements(groupId, op, readEntitlementsFromData(d))
 		if err != nil {
 			return err
 		}
@@ -84,7 +81,7 @@ func createEntitlement(ctx context.Context, d *schema.ResourceData, c *common.Da
 	}
 	if userId != "" {
 		usersAPI := NewUsersAPI(ctx, c)
-		err := usersAPI.UpdateEntitlements(userId, readEntitlementsFromData(d))
+		err := usersAPI.UpdateEntitlements(userId, op, readEntitlementsFromData(d))
 		if err != nil {
 			return err
 		}
@@ -92,7 +89,7 @@ func createEntitlement(ctx context.Context, d *schema.ResourceData, c *common.Da
 	}
 	if spnId != "" {
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
-		err := spnAPI.UpdateEntitlements(spnId, readEntitlementsFromData(d))
+		err := spnAPI.UpdateEntitlements(spnId, op, readEntitlementsFromData(d))
 		if err != nil {
 			return err
 		}
@@ -106,13 +103,18 @@ func enforceEntitlement(ctx context.Context, d *schema.ResourceData, c *common.D
 	if len(split) != 2 {
 		return fmt.Errorf("ID must be two elements: %s", d.Id())
 	}
-	switch strings.ToLower(split[0]) {
+	identity := strings.ToLower(split[0])
+	id := strings.ToLower(split[1])
+	switch identity {
 	case "group":
-		return NewGroupsAPI(ctx, c).UpdateEntitlements(split[1], readEntitlementsFromData(d))
+		NewGroupsAPI(ctx, c).UpdateEntitlements(id, "remove", generateFullEntitlements())
+		NewGroupsAPI(ctx, c).UpdateEntitlements(id, "add", readEntitlementsFromData(d))
 	case "user":
-		return NewUsersAPI(ctx, c).UpdateEntitlements(split[1], readEntitlementsFromData(d))
+		NewUsersAPI(ctx, c).UpdateEntitlements(id, "remove", generateFullEntitlements())
+		NewUsersAPI(ctx, c).UpdateEntitlements(id, "add", readEntitlementsFromData(d))
 	case "spn":
-		return NewServicePrincipalsAPI(ctx, c).UpdateEntitlements(split[1], readEntitlementsFromData(d))
+		NewServicePrincipalsAPI(ctx, c).UpdateEntitlements(id, "remove", generateFullEntitlements())
+		NewServicePrincipalsAPI(ctx, c).UpdateEntitlements(id, "add", readEntitlementsFromData(d))
 	}
 	return nil
 }

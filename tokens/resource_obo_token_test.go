@@ -22,6 +22,7 @@ func TestAccAwsOboFlow(t *testing.T) {
 
 	sp, err := spAPI.Create(scim.User{
 		DisplayName: qa.RandomName("tf"),
+		Active:      true,
 	})
 	require.NoError(t, err)
 	defer spAPI.Delete(sp.ID)

@@ -18,10 +18,14 @@ func TestAccEntitlementResource(t *testing.T) {
 	resource "databricks_user" "first" {
 		user_name = "tf-eerste+{var.RANDOM}@example.com"
 		display_name = "Eerste {var.RANDOM}"
+		allow_cluster_create       = true
+		allow_instance_pool_create = true		
 	}
 
 	resource "databricks_group" "second" {
 		display_name = "{var.RANDOM} group"
+		allow_cluster_create       = true
+		allow_instance_pool_create = true		
 	}
 	
 	resource "databricks_entitlements" "first_entitlements" {
@@ -64,6 +68,8 @@ func TestAccServicePrincipalEntitlementsResourceOnAzure(t *testing.T) {
 			Template: `resource "databricks_service_principal" "this" {
 				application_id = "00000000-1234-5678-0000-000000000001"
 				display_name = "SPN {var.RANDOM}"
+				allow_cluster_create       = true
+				allow_instance_pool_create = true				
 			}
 
 			resource "databricks_entitlements" "service_principal" {
@@ -84,6 +90,8 @@ func TestAccServicePrincipalEntitlementsResourceOnAws(t *testing.T) {
 		{
 			Template: `resource "databricks_service_principal" "this" {
 				display_name = "SPN {var.RANDOM}"
+				allow_cluster_create       = true
+				allow_instance_pool_create = true				
 			}
 
 			resource "databricks_entitlements" "service_principal" {

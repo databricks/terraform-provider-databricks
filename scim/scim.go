@@ -163,21 +163,15 @@ type patchRequest struct {
 }
 
 func PatchRequest(op, path, value string) patchRequest {
-	var operation patchOperation
-	if value != "" {
-		operation = patchOperation{
-			Op:    op,
-			Path:  path,
-			Value: value,
-		}
-	} else {
-		operation = patchOperation{
-			Op:    op,
-			Path:  path,
-			Value: []ComplexValue{},
-		}
+	o := patchOperation{
+		Op:    op,
+		Path:  path,
+		Value: value,
 	}
-	return PatchRequestComplexValue([]patchOperation{operation})
+	if value != "" {
+		o.Value = []ComplexValue{{Value: value}}
+	}
+	return PatchRequestComplexValue([]patchOperation{o})
 }
 
 func PatchRequestComplexValue(operations []patchOperation) patchRequest {

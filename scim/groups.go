@@ -84,6 +84,11 @@ func (a GroupsAPI) UpdateNameAndEntitlements(groupID string, name string, extern
 		}, nil)
 }
 
+func (a GroupsAPI) UpdateEntitlements(groupID string, entitlements patchRequest) error {
+	return a.client.Scim(a.context, http.MethodPatch,
+		fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), entitlements, nil)
+}
+
 // Delete deletes a group given a group id
 func (a GroupsAPI) Delete(groupID string) error {
 	return a.client.Scim(a.context, http.MethodDelete,

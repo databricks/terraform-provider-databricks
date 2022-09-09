@@ -7,8 +7,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func TestAccCreateRecipientDb2Open(t *testing.T) {
-	qa.RequireCloudEnv(t, "aws-uc-prod")
+func TestUcAccCreateRecipientDb2Open(t *testing.T) {
+	qa.RequireCloudEnv(t, "ucws")
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -18,25 +18,29 @@ func TestAccCreateRecipientDb2Open(t *testing.T) {
 			  authentication_type = "TOKEN"
 			  sharing_code = "{var.RANDOM}"
 			  ip_access_list {
-				allowed_ip_addresses = ["10.0.0.0/16"] // using private ip for acc testing
+				// using private ip for acc testing
+				allowed_ip_addresses = ["10.0.0.0/16"]
 			  }
 			}`,
 		},
 	})
 }
 
-func TestAccCreateRecipientDb2DbAws(t *testing.T) {
-	qa.RequireCloudEnv(t, "aws-uc-prod")
+func TestUcAccCreateRecipientDb2DbAws(t *testing.T) {
+	qa.RequireCloudEnv(t, "ucws")
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
 			resource "databricks_metastore" "recipient_metastore" {
 			  name = "{var.RANDOM}-terraform-recipient-metastore"
-			  storage_root = format("s3a://%s/%s", "{var.RANDOM}", "{var.RANDOM}")
+			  storage_root = "s3://{env.TEST_BUCKET}/test{var.RANDOM}"
 			  delta_sharing_scope = "INTERNAL"
 			  delta_sharing_recipient_token_lifetime_in_seconds = "60000"
 			  force_destroy = true
-			  lifecycle { ignore_changes = [storage_root] } // fake storage root is causing issues
+			  lifecycle {
+				// fake storage root is causing issues
+				ignore_changes = [storage_root] 
+			  }
 			}
 			
 			resource "databricks_recipient" "db2db" {

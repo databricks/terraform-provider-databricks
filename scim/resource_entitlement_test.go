@@ -37,38 +37,59 @@ var newGroup = Group{
 	},
 }
 
-var addRequest = PatchRequestComplexValue("add", "entitlements", []ComplexValue{
+var addRequest = PatchRequestComplexValue([]patchOperation{
 	{
-		Value: "allow-cluster-create",
-	},
-	{
-		Value: "allow-instance-pool-create",
-	},
-	{
-		Value: "databricks-sql-access",
-	},
-})
-
-var removeAllRequest = PatchRequestComplexValue("remove", "entitlements", []ComplexValue{
-	{
-		Value: "allow-cluster-create",
-	},
-	{
-		Value: "allow-instance-pool-create",
-	},
-	{
-		Value: "databricks-sql-access",
-	},
-	{
-		Value: "workspace-access",
+		"add", "entitlements", []ComplexValue{
+			{
+				Value: "allow-cluster-create",
+			},
+			{
+				Value: "allow-instance-pool-create",
+			},
+			{
+				Value: "databricks-sql-access",
+			},
+		},
 	},
 })
 
-var deleteRequest = PatchRequestComplexValue("remove", "entitlements", []ComplexValue{
+var updateRequest = PatchRequestComplexValue([]patchOperation{
+	{
+		"remove", "entitlements", []ComplexValue{
+			{
+				Value: "allow-cluster-create",
+			},
+			{
+				Value: "allow-instance-pool-create",
+			},
+			{
+				Value: "databricks-sql-access",
+			},
+			{
+				Value: "workspace-access",
+			},
+		},
+	},
+	{
+		"add", "entitlements", []ComplexValue{
+			{
+				Value: "allow-cluster-create",
+			},
+			{
+				Value: "allow-instance-pool-create",
+			},
+			{
+				Value: "databricks-sql-access",
+			},
+		},
+	},
+})
+
+var deleteRequest = PatchRequestComplexValue([]patchOperation{{"remove", "entitlements", []ComplexValue{
 	{
 		Value: "allow-cluster-create",
 	},
-})
+}}})
 
 func TestResourceEntitlementsGroupCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -81,7 +102,7 @@ func TestResourceEntitlementsGroupCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: []patchRequest{addRequest},
+				ExpectedRequest: addRequest,
 				Response: Group{
 					ID: "abc",
 				},
@@ -160,7 +181,7 @@ func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: []patchRequest{removeAllRequest, addRequest},
+				ExpectedRequest: updateRequest,
 				Response: Group{
 					ID: "abc",
 				},
@@ -203,7 +224,7 @@ func TestResourceEntitlementsGroupDelete(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: []patchRequest{deleteRequest},
+				ExpectedRequest: deleteRequest,
 				Response: Group{
 					ID: "abc",
 				},
@@ -300,7 +321,7 @@ func TestResourceEntitlementsUserCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: []patchRequest{addRequest},
+				ExpectedRequest: addRequest,
 				Response: User{
 					ID: "abc",
 				},
@@ -383,7 +404,7 @@ func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: []patchRequest{removeAllRequest, addRequest},
+				ExpectedRequest: updateRequest,
 				Status:          400,
 				Response: common.APIErrorBody{
 					ScimDetail: "Something",
@@ -418,7 +439,7 @@ func TestResourceEntitlementsUserUpdate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: []patchRequest{removeAllRequest, addRequest},
+				ExpectedRequest: updateRequest,
 				Response: User{
 					ID: "abc",
 				},
@@ -461,7 +482,7 @@ func TestResourceEntitlementsUserDelete(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: []patchRequest{deleteRequest},
+				ExpectedRequest: deleteRequest,
 				Response: User{
 					ID: "abc",
 				},
@@ -492,7 +513,7 @@ func TestResourceEntitlementsSPNCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: []patchRequest{addRequest},
+				ExpectedRequest: addRequest,
 				Response: User{
 					ID: "abc",
 				},
@@ -599,7 +620,7 @@ func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: []patchRequest{removeAllRequest, addRequest},
+				ExpectedRequest: updateRequest,
 				Response: Group{
 					ID: "abc",
 				},
@@ -642,7 +663,7 @@ func TestResourceEntitlementsSPNDelete(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: []patchRequest{deleteRequest},
+				ExpectedRequest: deleteRequest,
 				Response: User{
 					ID: "abc",
 				},

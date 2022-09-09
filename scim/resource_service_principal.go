@@ -71,7 +71,7 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest Us
 		updateRequest, nil)
 }
 
-func (a ServicePrincipalsAPI) UpdateEntitlements(servicePrincipalID string, entitlements []patchRequest) error {
+func (a ServicePrincipalsAPI) UpdateEntitlements(servicePrincipalID string, entitlements patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch,
 		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), entitlements, nil)
 }

@@ -71,7 +71,13 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	groupId := d.Get("group_id").(string)
 	userId := d.Get("user_id").(string)
 	spnId := d.Get("service_principal_id").(string)
-	request := []patchRequest{PatchRequestComplexValue(op, "entitlements", readEntitlementsFromData(d))}
+	request := PatchRequestComplexValue([]patchOperation{
+		{
+			op,
+			"entitlements",
+			readEntitlementsFromData(d),
+		},
+	})
 	if groupId != "" {
 		groupsAPI := NewGroupsAPI(ctx, c)
 		err := groupsAPI.UpdateEntitlements(groupId, request)
@@ -106,10 +112,16 @@ func enforceEntitlements(ctx context.Context, d *schema.ResourceData, c *common.
 	}
 	identity := strings.ToLower(split[0])
 	id := strings.ToLower(split[1])
-	request := []patchRequest{
-		PatchRequestComplexValue("remove", "entitlements", generateFullEntitlements()),
-		PatchRequestComplexValue("add", "entitlements", readEntitlementsFromData(d)),
-	}
+	request := PatchRequestComplexValue(
+		[]patchOperation{
+			{
+				"remove", "entitlements", generateFullEntitlements(),
+			},
+			{
+				"add", "entitlements", readEntitlementsFromData(d),
+			},
+		},
+	)
 	switch identity {
 	case "group":
 		NewGroupsAPI(ctx, c).UpdateEntitlements(id, request)

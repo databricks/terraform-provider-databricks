@@ -1,5 +1,28 @@
 # Version changelog
 
+## 1.3.0
+
+ * Added `force_destroy` flag to [databricks_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/schema) & [databricks_catalog](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/catalog) ([#1578](https://github.com/databricks/terraform-provider-databricks/pull/1578)).
+ * Added [databricks_entitlements](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/entitlements) resource ([#1583](https://github.com/databricks/terraform-provider-databricks/pull/1583)).
+ * Added [databricks_group_role](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_role) resource ([#1575](https://github.com/databricks/terraform-provider-databricks/pull/1575)).
+ * Added [databricks_recipient](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/recipient) resource for Delta Sharing ([#1571](https://github.com/databricks/terraform-provider-databricks/pull/1571)).
+ * Added `dbt_task` field to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#1537](https://github.com/databricks/terraform-provider-databricks/pull/1537)).
+ * Fixed drift in `storage` for [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) ([#1574](https://github.com/databricks/terraform-provider-databricks/pull/1574)).
+ * Fixed [databricks_mws_private_access_settings](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_private_access_settings) defaults ([#1567](https://github.com/databricks/terraform-provider-databricks/pull/1567)).
+ * Fixed [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) creation with `force` on account ([#1577](https://github.com/databricks/terraform-provider-databricks/pull/1577)).
+ * Fixed [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) for calling user to `CAN_MANAGE` on [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#1579](https://github.com/databricks/terraform-provider-databricks/pull/1579)).
+ 
+ Documentation improvements:
+ * Added `sql_task` configuration block in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#1589](https://github.com/databricks/terraform-provider-databricks/pull/1589)).
+ * Added supported languages in Unity Shared clusters ([#1587](https://github.com/databricks/terraform-provider-databricks/pull/1587)).
+ * Removed "Public Preview" marker from Unity Catalog resources docs ([#1570](https://github.com/databricks/terraform-provider-databricks/pull/1570)).
+ * Fixed instance pool docs ([#1581](https://github.com/databricks/terraform-provider-databricks/pull/1581)).
+
+Updated dependency versions:
+
+ * Bump github.com/hashicorp/hcl/v2 from 2.13.0 to 2.14.0 ([#1582](https://github.com/databricks/terraform-provider-databricks/pull/1582)).
+ * Bump google.golang.org/api from 0.93.0 to 0.94.0 ([#1569](https://github.com/databricks/terraform-provider-databricks/pull/1569)).
+
 ## 1.2.1
 
 * Use resize API to scale `databricks_cluster` while it's running ([#1541](https://github.com/databricks/terraform-provider-databricks/pull/1541)).

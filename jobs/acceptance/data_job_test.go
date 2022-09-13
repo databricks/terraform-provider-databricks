@@ -59,7 +59,7 @@ func TestAccDataSourceQueryableJob(t *testing.T) {
 			}
 			
 			output "cluster_workers" {
-				value = data.databricks_job.this.job_settings.settings.new_cluster.num_workers
+				value = data.databricks_job.this.job_settings[0].settings.new_cluster.num_workers
             }`,
 		},
 	})

@@ -925,6 +925,11 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 									Dashboard: &jobs.SqlDashboardTask{
 										DashboardID: "123",
 									},
+									WarehouseID: "123",
+								},
+								DbtTask: &jobs.DbtTask{
+									WarehouseId: "123",
+									Commands:    []string{"dbt init"},
 								},
 							},
 							{
@@ -1506,12 +1511,16 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			emptyIpAccessLIst,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?filter=name%20LIKE%20%27%25test%25%27&max_results=50",
+				Resource: "/api/2.0/pipelines?max_results=50",
 
 				Response: pipelines.PipelineListResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
 							PipelineID: "123",
+							Name:       "Pipeline1 test",
+						},
+						{
+							PipelineID: "124",
 							Name:       "Pipeline1",
 						},
 					},

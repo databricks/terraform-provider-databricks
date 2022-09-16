@@ -16,19 +16,19 @@ authenticate to the sharing server to access data. This is for when the recipien
 
 ```hcl
 resource "random_password" "db2opensharecode" {
-  length           = 16
-  special          = true
+  length  = 16
+  special = true
 }
 
 data "databricks_current_user" "current" {}
 
 resource "databricks_recipient" "db2open" {
-  name = "${data.databricks_current_user.current.alphanumeric}-recipient"
-  comment = "made by terraform"
+  name                = "${data.databricks_current_user.current.alphanumeric}-recipient"
+  comment             = "made by terraform"
   authentication_type = "TOKEN"
-  sharing_code = random_password.db2opensharecode.result
+  sharing_code        = random_password.db2opensharecode.result
   ip_access_list {
-    allowed_ip_addresses = [...] // .. fill in allowed IPv4 addresses (CIDR notation allowed)
+    allowed_ip_addresses = [] // .. fill in allowed IPv4 addresses (CIDR notation allowed)
   }
 }
 ```
@@ -46,16 +46,16 @@ resource "databricks_metastore" "recipient_metastore" {
   name = "recipient"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
     azurerm_storage_account.unity_catalog.name,
-    azurerm_storage_container.unity_catalog.name)
-  delta_sharing_scope = "INTERNAL"
+  azurerm_storage_container.unity_catalog.name)
+  delta_sharing_scope                               = "INTERNAL"
   delta_sharing_recipient_token_lifetime_in_seconds = "60000000"
-  force_destroy = true
+  force_destroy                                     = true
 }
 
 resource "databricks_recipient" "db2db" {
-  name = "${data.databricks_current_user.current.alphanumeric}-recipient"
-  comment = "made by terraform"
-  authentication_type = "DATABRICKS"
+  name                               = "${data.databricks_current_user.current.alphanumeric}-recipient"
+  comment                            = "made by terraform"
+  authentication_type                = "DATABRICKS"
   data_recipient_global_metastore_id = databricks_metastore.recipient_metastore.global_metastore_id
 }
 ```
@@ -75,9 +75,9 @@ The following arguments are required:
 Only one `ip_access_list` blocks is allowed in a recipient. It conflicts with authentication type DATABRICKS.
 
 ```hcl
-  ip_access_list {
-    allowed_ip_addresses = ["0.0.0.0/0"]
-  }
+ip_access_list {
+  allowed_ip_addresses = ["0.0.0.0/0"]
+}
 ```
 
 Arguments for the `ip_access_list` block are:

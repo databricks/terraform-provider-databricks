@@ -4,8 +4,6 @@ page_title: "Unity Catalog set up on Azure"
 
 # Deploying pre-requisite resources and enabling Unity Catalog (Azure Preview)
 
--> **Public Preview** This feature is in [Public Preview](https://docs.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog). Contact your Databricks representative to request access.
-
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
 This guide uses the following variables in configurations:

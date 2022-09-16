@@ -56,12 +56,13 @@ type DatabricksClient struct {
 	GoogleServiceAccount string `name:"google_service_account" env:"DATABRICKS_GOOGLE_SERVICE_ACCOUNT" auth:"google"`
 	GoogleCredentials    string `name:"google_credentials" env:"GOOGLE_CREDENTIALS" auth:"google,sensitive"`
 
-	AzureResourceID    string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_RESOURCE_ID" auth:"azure"`
-	AzureUseMSI        bool   `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
-	AzureClientSecret  string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure,sensitive"`
-	AzureClientID      string `name:"azure_client_id" env:"ARM_CLIENT_ID" auth:"azure"`
-	AzureTenantID      string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
-	AzurermEnvironment string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
+	AzureResourceID           string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_RESOURCE_ID" auth:"azure"`
+	AzureUseMSI               bool   `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
+	AzureClientSecret         string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure,sensitive"`
+	AzureClientID             string `name:"azure_client_id" env:"ARM_CLIENT_ID" auth:"azure"`
+	AzureTenantID             string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
+	AzurermEnvironment        string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
+	AzureDatabricksResourceId string `name:"azure_resource_id" env:"ARM_RESOURCE_ID"`
 
 	// When multiple auth attributes are available in the environment, use the auth type
 	// specified by this argument. This argument also holds currently selected auth.

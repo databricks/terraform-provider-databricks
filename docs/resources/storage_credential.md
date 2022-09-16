@@ -34,7 +34,7 @@ For Azure
 
 ```hcl
 data "azurerm_resource_group" "this" {
-  name     = "example-rg"
+  name = "example-rg"
 }
 
 resource "azapi_resource" "access_connector" {

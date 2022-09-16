@@ -13,8 +13,8 @@ resource "databricks_group" "my_group" {
 }
 
 resource "databricks_group_role" "my_group_role" {
-  group_id  = databricks_group.my_group.id
-  role  = "arn:aws:iam::000000000000:role/my-role"
+  group_id = databricks_group.my_group.id
+  role     = "arn:aws:iam::000000000000:role/my-role"
 }
 ```
 

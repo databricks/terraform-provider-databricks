@@ -313,7 +313,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "existing_cluster_id", Resource: "databricks_cluster"},
-			{Path: "task.existing_cluster_id", Resource: "databricks_cluster"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -330,6 +329,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.notebook_task.notebook_path", Resource: "databricks_notebook"},
 			{Path: "task.pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
+			{Path: "task.sql_task.query.query_id", Resource: "databricks_sql_query"},
+			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
+			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
 			{Path: "task.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
@@ -431,6 +434,20 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       task.SqlTask.Dashboard.DashboardID,
 						})
 					}
+					if task.SqlTask.WarehouseID != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_sql_endpoint",
+							ID:       task.SqlTask.WarehouseID,
+						})
+					}
+				}
+				if task.DbtTask != nil {
+					if task.SqlTask.WarehouseID != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_sql_endpoint",
+							ID:       task.SqlTask.WarehouseID,
+						})
+					}
 				}
 				ic.importCluster(task.NewCluster)
 				ic.Emit(&resource{
@@ -499,7 +516,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_group": {
 		Service: "groups",
 		Name: func(d *schema.ResourceData) string {
-			return d.Get("display_name").(string)
+			return d.Get("display_name").(string) + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
 			if err := ic.cacheGroups(); err != nil {
@@ -575,7 +592,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
 							ID:       fmt.Sprintf("%s|%s", parent.Value, g.ID),
-							Name:     fmt.Sprintf("%s_%s", parent.Display, g.DisplayName),
+							Name:     fmt.Sprintf("%s_%s_%s", parent.Display, parent.Value, g.DisplayName),
 						})
 					}
 				}
@@ -594,7 +611,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
 							ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
-							Name:     fmt.Sprintf("%s_%s", g.DisplayName, x.Display),
+							Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, x.Value, x.Display),
 						})
 					}
 					if len(g.Members) > 10 {
@@ -654,10 +671,14 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_group",
 					ID:       g.Value,
 				})
+				userName := u.DisplayName
+				if userName == "" {
+					userName = u.UserName
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_group_member",
 					ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-					Name:     fmt.Sprintf("%s_%s", g.Display, u.DisplayName),
+					Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, userName),
 				})
 			}
 			return nil
@@ -1249,15 +1270,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			filter := ""
-			if ic.match != "" {
-				filter = "name LIKE '%" + strings.ReplaceAll(ic.match, "'", "") + "%'"
-			}
-			pipelinesList, err := pipelines.NewPipelinesAPI(ic.Context, ic.Client).List(50, filter)
+			pipelinesList, err := pipelines.NewPipelinesAPI(ic.Context, ic.Client).List(50, "")
 			if err != nil {
 				return err
 			}
 			for i, q := range pipelinesList {
+				if !ic.MatchesName(q.Name) {
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_pipeline",
 					ID:       q.PipelineID,

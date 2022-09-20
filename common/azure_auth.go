@@ -17,13 +17,13 @@ import (
 )
 
 // List of management information
-const armDatabricksProdResourceID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+const azureDatabricksProdLoginAppID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 
-func (aa *DatabricksClient) GetArmDatabricksResourceID() string {
-	res := armDatabricksProdResourceID
+func (aa *DatabricksClient) GetAzureDatabricksLoginAppId() string {
+	res := azureDatabricksProdLoginAppID
 	if strings.Contains(aa.Host, ".staging.") || strings.Contains(aa.Host, ".dev.") {
-		if aa.AzureDatabricksResourceId != "" {
-			res = aa.AzureDatabricksResourceId
+		if aa.AzureDatabricksLoginAppId != "" {
+			res = aa.AzureDatabricksLoginAppId
 		}
 	}
 	return res
@@ -155,7 +155,7 @@ func (aa *DatabricksClient) simpleAADRequestVisitor(
 	if err != nil {
 		return nil, fmt.Errorf("cannot get workspace: %w", err)
 	}
-	armDatabricksResourceID := aa.GetArmDatabricksResourceID()
+	armDatabricksResourceID := aa.GetAzureDatabricksLoginAppId()
 	platformAuthorizer, err := authorizerFactory(armDatabricksResourceID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authorize databricks: %w", err)
@@ -227,7 +227,7 @@ func (aa *DatabricksClient) getClientSecretAuthorizer(resource string) (autorest
 	if aa.azureAuthorizer != nil {
 		return aa.azureAuthorizer, nil
 	}
-	armDatabricksResourceID := aa.GetArmDatabricksResourceID()
+	armDatabricksResourceID := aa.GetAzureDatabricksLoginAppId()
 	if resource != armDatabricksResourceID {
 		es := auth.EnvironmentSettings{
 			Values: map[string]string{

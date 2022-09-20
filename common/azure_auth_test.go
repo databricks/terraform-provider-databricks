@@ -585,6 +585,23 @@ func TestSimpleAADRequestVisitor_Staging(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestSimpleAADRequestVisitor_Staging_NoOverride(t *testing.T) {
+	_, err := (&DatabricksClient{
+		Host: "abc.staging.azuredatabricks.net",
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+	}).simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			if resource == "x" {
+				return autorest.NullAuthorizer{}, nil
+			}
+			assert.Equal(t, armDatabricksProdResourceID, resource)
+			return autorest.NullAuthorizer{}, nil
+		})
+	assert.Nil(t, err)
+}
+
 func TestSimpleAADRequestVisitor_Dev(t *testing.T) {
 	_, err := (&DatabricksClient{
 		Host: "abc.dev.azuredatabricks.net",
@@ -598,6 +615,23 @@ func TestSimpleAADRequestVisitor_Dev(t *testing.T) {
 				return autorest.NullAuthorizer{}, nil
 			}
 			assert.Equal(t, "z", resource)
+			return autorest.NullAuthorizer{}, nil
+		})
+	assert.Nil(t, err)
+}
+
+func TestSimpleAADRequestVisitor_Dev_NoOverride(t *testing.T) {
+	_, err := (&DatabricksClient{
+		Host: "abc.dev.azuredatabricks.net",
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+	}).simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			if resource == "x" {
+				return autorest.NullAuthorizer{}, nil
+			}
+			assert.Equal(t, armDatabricksProdResourceID, resource)
 			return autorest.NullAuthorizer{}, nil
 		})
 	assert.Nil(t, err)

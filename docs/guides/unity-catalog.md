@@ -187,8 +187,8 @@ resource "aws_iam_policy" "unity_metastore" {
           "s3:GetBucketLocation"
         ],
         "Resource" : [
-          aws_s3_bucket.unity_metastore.arn,
-          "${aws_s3_bucket.unity_metastore.arn}/*"
+          aws_s3_bucket.metastore.arn,
+          "${aws_s3_bucket.metastore.arn}/*"
         ],
         "Effect" : "Allow"
       }

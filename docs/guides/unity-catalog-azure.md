@@ -2,7 +2,7 @@
 page_title: "Unity Catalog set up on Azure"
 ---
 
-# Deploying pre-requisite resources and enabling Unity Catalog (Azure Preview)
+# Deploying pre-requisite resources and enabling Unity Catalog
 
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
@@ -14,7 +14,7 @@ This guide is provided as-is and you can use this guide as the basis for your cu
 
 To get started with Unity Catalog, this guide takes you throw the following high-level steps:
 
-- [Deploying pre-requisite resources and enabling Unity Catalog (Azure Preview)](#deploying-pre-requisite-resources-and-enabling-unity-catalog-azure-preview)
+- [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)
   - [Configure Azure objects](#configure-azure-objects)
   - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore-and-link-it-to-workspaces)
@@ -276,8 +276,9 @@ resource "databricks_grants" "external_creds" {
 resource "databricks_external_location" "some" {
   name = "external"
   url = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_account.ext_storage.name,
-  azurerm_storage_container.ext_storage.name)
+    azurerm_storage_container.ext_storage.name,
+    azurerm_storage_account.ext_storage.name)
+  
   credential_name = databricks_storage_credential.external.id
   comment         = "Managed by TF"
   depends_on = [

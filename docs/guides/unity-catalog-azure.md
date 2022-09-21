@@ -351,10 +351,9 @@ resource "databricks_cluster" "dev" {
   spark_version           = data.databricks_spark_version.latest.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 10
-  enable_elastic_disk     = false
   num_workers             = 2
   azure_attributes {
-    availability = "SPOT"
+    availability = "SPOT_AZURE"
   }
   data_security_mode = "SINGLE_USER"
   single_user_name   = each.value.user_name

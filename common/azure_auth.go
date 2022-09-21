@@ -20,13 +20,10 @@ import (
 const azureDatabricksProdLoginAppID string = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 
 func (aa *DatabricksClient) GetAzureDatabricksLoginAppId() string {
-	res := azureDatabricksProdLoginAppID
-	if strings.Contains(aa.Host, ".staging.") || strings.Contains(aa.Host, ".dev.") {
-		if aa.AzureDatabricksLoginAppId != "" {
-			res = aa.AzureDatabricksLoginAppId
-		}
+	if aa.AzureDatabricksLoginAppId != "" {
+		return aa.AzureDatabricksLoginAppId
 	}
-	return res
+	return azureDatabricksProdLoginAppID
 }
 
 func (aa *DatabricksClient) GetAzureJwtProperty(key string) (any, error) {

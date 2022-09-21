@@ -549,7 +549,7 @@ func TestSimpleAADRequestVisitor_FailPlatformAuth(t *testing.T) {
 	assert.EqualError(t, err, "cannot authorize databricks: 🤨")
 }
 
-func TestSimpleAADRequestVisitor_Production(t *testing.T) {
+func TestSimpleAADRequestVisitor_ProdLoginAppId(t *testing.T) {
 	aa := DatabricksClient{
 		Host: "abc.azuredatabricks.net",
 		AzureEnvironment: &azure.Environment{
@@ -567,9 +567,9 @@ func TestSimpleAADRequestVisitor_Production(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestSimpleAADRequestVisitor_Staging(t *testing.T) {
+func TestSimpleAADRequestVisitor_LoginAppIdOverride(t *testing.T) {
 	_, err := (&DatabricksClient{
-		Host: "abc.staging.azuredatabricks.net",
+		Host: "abc.azuredatabricks.net",
 		AzureEnvironment: &azure.Environment{
 			ServiceManagementEndpoint: "x",
 		},
@@ -580,58 +580,6 @@ func TestSimpleAADRequestVisitor_Staging(t *testing.T) {
 				return autorest.NullAuthorizer{}, nil
 			}
 			assert.Equal(t, "y", resource)
-			return autorest.NullAuthorizer{}, nil
-		})
-	assert.Nil(t, err)
-}
-
-func TestSimpleAADRequestVisitor_Staging_NoOverride(t *testing.T) {
-	_, err := (&DatabricksClient{
-		Host: "abc.staging.azuredatabricks.net",
-		AzureEnvironment: &azure.Environment{
-			ServiceManagementEndpoint: "x",
-		},
-	}).simpleAADRequestVisitor(context.Background(),
-		func(resource string) (autorest.Authorizer, error) {
-			if resource == "x" {
-				return autorest.NullAuthorizer{}, nil
-			}
-			assert.Equal(t, azureDatabricksProdLoginAppID, resource)
-			return autorest.NullAuthorizer{}, nil
-		})
-	assert.Nil(t, err)
-}
-
-func TestSimpleAADRequestVisitor_Dev(t *testing.T) {
-	_, err := (&DatabricksClient{
-		Host: "abc.dev.azuredatabricks.net",
-		AzureEnvironment: &azure.Environment{
-			ServiceManagementEndpoint: "x",
-		},
-		AzureDatabricksLoginAppId: "z",
-	}).simpleAADRequestVisitor(context.Background(),
-		func(resource string) (autorest.Authorizer, error) {
-			if resource == "x" {
-				return autorest.NullAuthorizer{}, nil
-			}
-			assert.Equal(t, "z", resource)
-			return autorest.NullAuthorizer{}, nil
-		})
-	assert.Nil(t, err)
-}
-
-func TestSimpleAADRequestVisitor_Dev_NoOverride(t *testing.T) {
-	_, err := (&DatabricksClient{
-		Host: "abc.dev.azuredatabricks.net",
-		AzureEnvironment: &azure.Environment{
-			ServiceManagementEndpoint: "x",
-		},
-	}).simpleAADRequestVisitor(context.Background(),
-		func(resource string) (autorest.Authorizer, error) {
-			if resource == "x" {
-				return autorest.NullAuthorizer{}, nil
-			}
-			assert.Equal(t, azureDatabricksProdLoginAppID, resource)
 			return autorest.NullAuthorizer{}, nil
 		})
 	assert.Nil(t, err)

@@ -48,7 +48,7 @@ resource "databricks_metastore_assignment" "this" {
 The following arguments are required:
 
 * `name` - Name of metastore.
-* `storage_root` - Path on cloud storage account, where managed [databricks_table](table.md) are stored. Change forces creation of a new resource.
+* `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource.
 * `owner` - (Optional) Username/groupname/sp application_id of the metastore owner.
 * `delta_sharing_scope` - (Optional) Required along with `delta_sharing_recipient_token_lifetime_in_seconds`. Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
 * `delta_sharing_recipient_token_lifetime_in_seconds` - (Optional) Required along with `delta_sharing_scope`. Used to set expiration duration in seconds on recipient data access tokens. Set to 0 for unlimited duration.

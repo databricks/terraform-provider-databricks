@@ -84,7 +84,7 @@ resource "databricks_grants" "things" {
 
 ## Table grants
 
-You can grant `MODIFY` and `SELECT` privileges to [*`catalog`*.*`schema`*.*`table`*](table.md) specified in the `table` attribute. You can define a table through [databricks_table](table.md) resource.
+You can grant `MODIFY` and `SELECT` privileges to [*`catalog`*.*`schema`*.*`table`*](tables.md) specified in the `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customers" {
@@ -122,7 +122,7 @@ resource "databricks_grants" "things" {
 
 ## View grants
 
-You can grant `SELECT` privileges to [*`catalog`*.*`schema`*.*`view`*](table.md) specified in `table` attribute. You can define a view through [databricks_table](table.md) resource.
+You can grant `SELECT` privileges to [*`catalog`*.*`schema`*.*`view`*](views.md) specified in `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customer360" {

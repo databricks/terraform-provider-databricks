@@ -353,7 +353,7 @@ resource "databricks_cluster" "dev" {
   autotermination_minutes = 10
   num_workers             = 2
   azure_attributes {
-    availability = "SPOT_AZURE"
+    availability = "SPOT_WITH_FALLBACK_AZURE"
   }
   data_security_mode = "SINGLE_USER"
   single_user_name   = each.value.user_name

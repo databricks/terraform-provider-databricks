@@ -4,8 +4,6 @@ page_title: "Unity Catalog set up on AWS"
 
 # Deploying pre-requisite resources and enabling Unity Catalog (AWS Preview)
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/data-governance/unity-catalog/index.html). Contact your Databricks representative to request access.
-
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
 This guide uses the following variables in configurations:
@@ -189,8 +187,8 @@ resource "aws_iam_policy" "unity_metastore" {
           "s3:GetBucketLocation"
         ],
         "Resource" : [
-          aws_s3_bucket.unity_metastore.arn,
-          "${aws_s3_bucket.unity_metastore.arn}/*"
+          aws_s3_bucket.metastore.arn,
+          "${aws_s3_bucket.metastore.arn}/*"
         ],
         "Effect" : "Allow"
       }

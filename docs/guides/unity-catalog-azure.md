@@ -4,8 +4,6 @@ page_title: "Unity Catalog set up on Azure"
 
 # Deploying pre-requisite resources and enabling Unity Catalog (Azure Preview)
 
--> **Public Preview** This feature is in [Public Preview](https://docs.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog). Contact your Databricks representative to request access.
-
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
 This guide uses the following variables in configurations:
@@ -250,6 +248,7 @@ resource "azurerm_role_assignment" "ext_storage" {
   scope                = azurerm_storage_account.ext_storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azapi_resource.ext_access_connector.identity[0].principal_id
+}
 ```
 
 Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.

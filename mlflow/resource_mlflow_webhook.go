@@ -12,7 +12,7 @@ import (
 type HttpUrlSpec struct {
 	URL                   string `json:"url"`
 	EnableSslVerification bool   `json:"enable_ssl_verification" tf:"optional,default:true"`
-	Secret                string `json:"string,omitempty"`
+	Secret                string `json:"secret,omitempty"`
 	Authorization         string `json:"authorization,omitempty" tf:"sensitive"`
 }
 

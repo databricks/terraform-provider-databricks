@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,6 +20,13 @@ import (
 // DefaultTimeout is the default amount of time that Terraform will wait when creating, updating and deleting pipelines.
 const DefaultTimeout = 20 * time.Minute
 
+// dltAutoScale is a struct the describes auto scaling for DLT clusters
+type dltAutoScale struct {
+	MinWorkers int32  `json:"min_workers,omitempty"`
+	MaxWorkers int32  `json:"max_workers,omitempty"`
+	Mode       string `json:"mode,omitempty"`
+}
+
 // We separate this struct from Cluster for two reasons:
 // 1. Pipeline clusters include a `Label` field.
 // 2. Spark version is not required (and shouldn't be specified) for pipeline clusters.
@@ -26,8 +34,8 @@ const DefaultTimeout = 20 * time.Minute
 type pipelineCluster struct {
 	Label string `json:"label,omitempty"` // used only by pipelines
 
-	NumWorkers int32               `json:"num_workers,omitempty" tf:"group:size"`
-	Autoscale  *clusters.AutoScale `json:"autoscale,omitempty" tf:"group:size"`
+	NumWorkers int32         `json:"num_workers,omitempty" tf:"group:size"`
+	Autoscale  *dltAutoScale `json:"autoscale,omitempty" tf:"group:size"`
 
 	NodeTypeID           string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
 	DriverNodeTypeID     string                  `json:"driver_node_type_id,omitempty" tf:"computed"`
@@ -266,12 +274,21 @@ func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
+func AutoscaleModeDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	if strings.EqualFold(old, new) {
+		log.Printf("[INFO] Suppressing diff on autoscale mode")
+		return true
+	}
+	return false
+}
+
 func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
 	cluster, _ := m["cluster"].Elem.(*schema.Resource)
 	clustersSchema := cluster.Schema
 	clustersSchema["spark_conf"].DiffSuppressFunc = clusters.SparkConfDiffSuppressFunc
 	common.MustSchemaPath(clustersSchema,
 		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
+	common.MustSchemaPath(clustersSchema, "autoscale", "mode").DiffSuppressFunc = AutoscaleModeDiffSuppress
 
 	awsAttributes, _ := clustersSchema["aws_attributes"].Elem.(*schema.Resource)
 	awsAttributesSchema := awsAttributes.Schema

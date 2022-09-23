@@ -79,8 +79,7 @@
 | [databricks_sql_warehouses](docs/data-sources/sql_warehouses.md) data
 | [databricks_sql_widget](docs/resources/sql_widget.md)
 | [databricks_storage_credential](docs/resources/storage_credential.md)
-| [databricks_table](docs/resources/table.md)
-| [databricks_tables](docs/data-sources/table.md) data
+| [databricks_tables](docs/data-sources/tables.md) data
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_role](docs/resources/user_role.md)

@@ -4,7 +4,7 @@ page_title: "Provisioning Databricks on AWS with PrivateLink"
 
 # Deploying pre-requisite resources and enabling PrivateLink connections (AWS Preview)
 
--> **Private Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access.
 
 Databricks PrivateLink support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically, using a programmatic approach. This guide assumes you are deploying into an existing VPC and you have set up credentials and storage configurations as per prior examples, notably here.
 
@@ -29,6 +29,7 @@ This guide uses the following variables in configurations:
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
 To get started with AWS PrivateLink integration, this guide takes you throw the following high-level steps:
+
 - Initialize the required providers
 - Configure AWS objects
   - A subnet dedicated to your VPC relay and workspace endpoints
@@ -80,7 +81,7 @@ variable "subnet_ids" { type = list(string) }
 variable "workspace_vpce_service" {}
 variable "relay_vpce_service" {}
 variable "vpce_subnet_cidr" {}
-variable "private_dns_enabled" { default = false }
+variable "private_dns_enabled" { default = true }
 variable "tags" { default = {} }
 
 locals {
@@ -88,8 +89,10 @@ locals {
 }
 ```
 
-## Root bucket 
+## Root bucket
+
 Create new storage configuration with [databricks_mws_storage_configurations](../resources/mws_storage_configurations.md):
+
 ```hcl
 resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
@@ -100,7 +103,9 @@ resource "databricks_mws_storage_configurations" "this" {
 ```
 
 ## Cross-account IAM role
+
 Create new cross-account credentials with [databricks_mws_credentials](../resources/mws_credentials.md):
+
 ```hcl
 resource "databricks_mws_credentials" "this" {
   provider         = databricks.mws
@@ -111,13 +116,16 @@ resource "databricks_mws_credentials" "this" {
 ```
 
 ## Configure networking
+
 In this section, the goal is to create the two back-end VPC endpoints:
+
 - Back-end VPC endpoint for SSC relay
 - Back-end VPC endpoint for REST APIs
 
 -> **Note** If you want to implement the front-end VPC endpoint as well for the connections from the user to the workspace front-end, use the transit (bastion) VPC that terminates your AWS Direct Connect or VPN gateway connection or one that is routable from such a transit (bastion) VPC. Once the front-end endpoint is created, it can be supplied to [databricks_mws_networks](../resources/mws_networks.md) resource using vpc_endpoints argument. Use the [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource to control which VPC endpoints can connect to the UI or API of any workspace that attaches this private access settings object.
 
 The first step is to create the required AWS objects:
+
 - A subnet dedicated to your VPC endpoints.
 - A security group dedicated to your VPC endpoints and satisfying required inbound/outbound TCP/HTTPS traffic rules on ports 443 and 6666, respectively.
 
@@ -208,10 +216,6 @@ resource "aws_security_group" "dataplane_vpce" {
 }
 ```
 
-Run terraform apply twice when configuring PrivateLink: see an [outstanding issue](https://github.com/hashicorp/terraform-provider-aws/issues/7148) for more information.
-* Run 1 - comment the `private_dns_enabled` lines.
-* Run 2 - uncomment the `private_dns_enabled` lines.
-
 ```hcl
 resource "aws_vpc_endpoint" "backend_rest" {
   vpc_id             = var.vpc_id
@@ -219,7 +223,7 @@ resource "aws_vpc_endpoint" "backend_rest" {
   vpc_endpoint_type  = "Interface"
   security_group_ids = [aws_security_group.dataplane_vpce.id]
   subnet_ids         = [aws_subnet.dataplane_vpce.id]
-  // private_dns_enabled = var.private_dns_enabled
+  private_dns_enabled = var.private_dns_enabled
   depends_on = [aws_subnet.dataplane_vpce]
 }
 
@@ -229,7 +233,7 @@ resource "aws_vpc_endpoint" "relay" {
   vpc_endpoint_type  = "Interface"
   security_group_ids = [aws_security_group.dataplane_vpce.id]
   subnet_ids         = [aws_subnet.dataplane_vpce.id]
-  // private_dns_enabled = var.private_dns_enabled
+  private_dns_enabled = var.private_dns_enabled
   depends_on = [aws_subnet.dataplane_vpce]
 }
 
@@ -251,8 +255,6 @@ resource "databricks_mws_vpc_endpoint" "relay" {
   depends_on          = [aws_vpc_endpoint.relay]
 }
 ```
-
-Once the VPC endpoints are created, they can be supplied in the [databricks_mws_networks](../resources/mws_networks.md) resource for workspace creation with AWS PrivateLink. After the `terraform apply` is run once (see the comment in the `aws_vpc_endpoint` resource above), run the terraform apply a second time with the line for `private_dns_enabled` set to true uncommented to set the proper DNS settings for PrivateLink. For understanding the reason that this needs to be applied twice, see this existing [issue](https://github.com/hashicorp/terraform-provider-aws/issues/7148) in the underlying AWS provider.
 
 ```hcl
 resource "databricks_mws_networks" "this" {

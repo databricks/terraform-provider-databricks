@@ -346,7 +346,7 @@ resource "databricks_cluster" "this" {
     max_workers = 50
   }
   azure_attributes {
-    availability       = "SPOT_AZURE"
+    availability       = "SPOT_WITH_FALLBACK_AZURE"
     first_on_demand    = 1
     spot_bid_max_price = 100
   }

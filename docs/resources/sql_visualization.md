@@ -64,6 +64,8 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
 - resource definitions
   
     ```hcl
+    ##q1vx.tf
+
     resource "databricks_sql_visualization" "q1v1" {
       query_id    = databricks_sql_query.q1.id
       type        = "table"
@@ -87,8 +89,8 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
 
 As of 2022-09, databricks sql visualization backend API does not validate the content of what is passed via `options`, couple that with `options` being outputted as string in the module, it can lead to configurations which succeed `terraform plan` but do fail at `terraform apply`.
 
-In some instances, incorrect definitions within `options` can [lead to broken terraform states](https://github.com/databricks/terraform-provider-databricks/issues/1615).
-
+In some instances, incorrect definitions within `options` can [lead to stuck terraform states](https://github.com/databricks/terraform-provider-databricks/issues/1615).
+In preparation for this operational scenario; you should be familiar with, and have sufficient access for, manual inspection and modification of your deployed [terraform state](https://www.terraform.io/language/state).
 
 ## Import
 

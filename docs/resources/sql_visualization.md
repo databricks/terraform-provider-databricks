@@ -42,6 +42,54 @@ resource "databricks_sql_visualization" "q1v1" {
 }
 ```
 
+
+## Separating `visualization definition` from IAC configuration
+
+Since `options` field contains the full JSON encoded string definition of how to render a visualization for the backend API - `sql/api/visualizations`, they can get quite verbose.
+
+If you have lots of visualizations to declare, it might be cleaner to separate the `options` field and store them as separate `.json` files to be referenced.
+
+### Example Usage
+
+-  directory tree
+
+    ```bash
+    .
+    ├── q1vx.tf
+    └── visualizations
+        ├── q1v1.json
+        └── q1v2.json
+    ```
+
+- resource definitions
+  
+    ```hcl
+    resource "databricks_sql_visualization" "q1v1" {
+      query_id    = databricks_sql_query.q1.id
+      type        = "table"
+      name        = "My Table"
+      description = "Some Description"
+      options     = file("${path.module}/visualizations/q1v1.json")
+      )
+    }
+
+    resource "databricks_sql_visualization" "q1v2" {
+      query_id    = databricks_sql_query.q1.id
+      type        = "chart"
+      name        = "My Chart"
+      description = "Some Description"
+      options     = file("${path.module}/visualizations/q1v2.json")
+      )
+    }
+    ```
+
+## Known Issues
+
+As of 2022-09, databricks sql visualization backend API does not validate the content of what is passed via `options`, couple that with `options` being outputted as string in the module, it can lead to configurations which succeed `terraform plan` but do fail at `terraform apply`.
+
+In some instances, incorrect definitions within `options` can [lead to broken terraform states](https://github.com/databricks/terraform-provider-databricks/issues/1615).
+
+
 ## Import
 
 You can import a `databricks_sql_visualization` resource with ID like the following:

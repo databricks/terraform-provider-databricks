@@ -61,6 +61,7 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 	s := common.StructToSchema(PrivateAccessSettings{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)
+		s["private_access_level"].ValidateFunc = validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true)
 		return s
 	})
 	p := common.NewPairSeparatedID("account_id", "private_access_settings_id", "/")

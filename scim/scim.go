@@ -65,6 +65,16 @@ func (e entitlements) readIntoData(d *schema.ResourceData) error {
 	return nil
 }
 
+func generateFullEntitlements() entitlements {
+	var e entitlements
+	for _, entitlement := range possibleEntitlements {
+		e = append(e, ComplexValue{
+			Value: entitlement,
+		})
+	}
+	return e
+}
+
 func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 	var e entitlements
 	for _, entitlement := range possibleEntitlements {
@@ -121,7 +131,7 @@ type User struct {
 	ID            string            `json:"id,omitempty"`
 	Emails        []email           `json:"emails,omitempty"`
 	DisplayName   string            `json:"displayName,omitempty" tf:"alias:display_name"`
-	Active        bool              `json:"active,omitempty"`
+	Active        bool              `json:"active"`
 	Schemas       []URN             `json:"schemas,omitempty"`
 	UserName      string            `json:"userName,omitempty" tf:"alias:user_name"`
 	ApplicationID string            `json:"applicationId,omitempty" tf:"alias:application_id"`
@@ -154,14 +164,19 @@ type patchRequest struct {
 
 func PatchRequest(op, path, value string) patchRequest {
 	o := patchOperation{
-		Op:   op,
-		Path: path,
+		Op:    op,
+		Path:  path,
+		Value: value,
 	}
 	if value != "" {
 		o.Value = []ComplexValue{{Value: value}}
 	}
+	return PatchRequestComplexValue([]patchOperation{o})
+}
+
+func PatchRequestComplexValue(operations []patchOperation) patchRequest {
 	return patchRequest{
 		Schemas:    []URN{PatchOp},
-		Operations: []patchOperation{o},
+		Operations: operations,
 	}
 }

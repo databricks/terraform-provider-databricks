@@ -46,10 +46,12 @@
 | [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)
 | [databricks_mws_log_delivery](docs/resources/mws_log_delivery.md)
 | [databricks_mws_networks](docs/resources/mws_networks.md)
+| [databricks_mws_permission_assignment](docs/resources/mws_permission_assignment.md)
 | [databricks_mws_private_access_settings](docs/resources/mws_private_access_settings.md)
 | [databricks_mws_storage_configurations](docs/resources/mws_storage_configurations.md)
 | [databricks_mws_vpc_endpoint](docs/resources/mws_vpc_endpoint.md)
 | [databricks_mws_workspaces](docs/resources/mws_workspaces.md)
+| [databricks_mws_workspaces](docs/data-sources/mws_workspaces.md) data
 | [databricks_node_type](docs/data-sources/node_type.md) data
 | [databricks_notebook](docs/resources/notebook.md)
 | [databricks_notebook](docs/data-sources/notebook.md) data
@@ -77,8 +79,7 @@
 | [databricks_sql_warehouses](docs/data-sources/sql_warehouses.md) data
 | [databricks_sql_widget](docs/resources/sql_widget.md)
 | [databricks_storage_credential](docs/resources/storage_credential.md)
-| [databricks_table](docs/resources/table.md)
-| [databricks_tables](docs/data-sources/table.md) data
+| [databricks_tables](docs/data-sources/tables.md) data
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_role](docs/resources/user_role.md)
@@ -97,7 +98,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databricks/databricks"
-      version = "1.0.2"
+      version = "1.3.1"
     }
   }
 }

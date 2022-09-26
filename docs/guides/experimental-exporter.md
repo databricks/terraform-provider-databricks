@@ -85,7 +85,7 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_notebook](../resources/notebook.md) | Yes |
 | [databricks_obo_token](../resources/obo_token.md) | Not Applicable |
 | [databricks_permissions](../resources/permissions.md) | Yes |
-| [databricks_pipeline](../resources/pipeline.md) | No |
+| [databricks_pipeline](../resources/pipeline.md) | Yes |
 | [databricks_repo](../resources/repo.md) | Yes |
 | [databricks_secret](../resources/secret.md) | Yes |
 | [databricks_secret_acl](../resources/secret_acl.md) | Yes |
@@ -100,4 +100,4 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_token](../resources/token.md) | Not Applicable |
 | [databricks_user](../resources/user.md) | Yes |
 | [databricks_user_instance_profile](../resources/user_instance_profile.md) | No (Deprecated) |
-| [databricks_workspace_conf](../resources/workspace_conf.md) | Not Applicable |
+| [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) |

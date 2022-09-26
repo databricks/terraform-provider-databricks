@@ -56,24 +56,24 @@ type PipelineTask struct {
 	PipelineID string `json:"pipeline_id"`
 }
 
-type sqlQuery struct {
+type SqlQueryTask struct {
 	QueryID string `json:"query_id"`
 }
 
-type sqlDashboard struct {
+type SqlDashboardTask struct {
 	DashboardID string `json:"dashboard_id"`
 }
 
-type sqlAlert struct {
+type SqlAlertTask struct {
 	AlertID string `json:"alert_id"`
 }
 
 // SqlTask contains information about DBSQL task
 // TODO: add validation & conflictsWith
 type SqlTask struct {
-	Query       *sqlQuery         `json:"query,omitempty"`
-	Dashboard   *sqlDashboard     `json:"dashboard,omitempty"`
-	Alert       *sqlAlert         `json:"alert,omitempty"`
+	Query       *SqlQueryTask     `json:"query,omitempty"`
+	Dashboard   *SqlDashboardTask `json:"dashboard,omitempty"`
+	Alert       *SqlAlertTask     `json:"alert,omitempty"`
 	WarehouseID string            `json:"warehouse_id,omitempty"`
 	Parameters  map[string]string `json:"parameters,omitempty"`
 }
@@ -81,9 +81,11 @@ type SqlTask struct {
 // DbtTask contains information about DBT task
 // TODO: add validation for non-empty commands
 type DbtTask struct {
-	ProjectDirectory string   `json:"project_directory,omitempty"`
-	Commands         []string `json:"commands"`
-	Schema           string   `json:"schema,omitempty" tf:"default:default"`
+	Commands          []string `json:"commands"`
+	ProfilesDirectory string   `json:"profiles_directory,omitempty"`
+	ProjectDirectory  string   `json:"project_directory,omitempty"`
+	Schema            string   `json:"schema,omitempty" tf:"default:default"`
+	WarehouseId       string   `json:"warehouse_id,omitempty"`
 }
 
 // EmailNotifications contains the information for email notifications after job completion
@@ -159,6 +161,7 @@ type JobSettings struct {
 	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`

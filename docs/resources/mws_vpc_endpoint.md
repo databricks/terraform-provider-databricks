@@ -23,6 +23,7 @@ resource "aws_vpc_endpoint" "workspace" {
   security_group_ids = [module.vpc.default_security_group_id]
   subnet_ids         = [aws_subnet.pl_subnet.id]
   depends_on         = [aws_subnet.pl_subnet]
+  private_dns_enabled = true  
 }
 
 resource "aws_vpc_endpoint" "relay" {
@@ -32,6 +33,7 @@ resource "aws_vpc_endpoint" "relay" {
   security_group_ids = [module.vpc.default_security_group_id]
   subnet_ids         = [aws_subnet.pl_subnet.id]
   depends_on         = [aws_subnet.pl_subnet]
+  private_dns_enabled = true  
 }
 ```
 
@@ -85,30 +87,6 @@ resource "databricks_mws_vpc_endpoint" "relay" {
   vpc_endpoint_name   = "VPC Relay for ${module.vpc.vpc_id}"
   region              = var.region
   depends_on          = [aws_vpc_endpoint.relay]
-}
-```
-
-Private DNS for the VPC Endpoints cannot be configured until the Endpoints have been accepted on both sides, which is after they have been registered via this resource. You can either do this [manually via the Account Console](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-4-enable-private-dns-names-on-aws-vpc-endpoints-using-the-aws-console) or by running a subsequent ```terraform apply``` after you have added ```private_dns_enabled = true``` to the configuration. For example:
-
-```hcl
-resource "aws_vpc_endpoint" "workspace" {
-  vpc_id              = module.vpc.vpc_id
-  service_name        = local.private_link.workspace_service
-  vpc_endpoint_type   = "Interface"
-  security_group_ids  = [module.vpc.default_security_group_id]
-  subnet_ids          = [aws_subnet.pl_subnet.id]
-  depends_on          = [aws_subnet.pl_subnet]
-  private_dns_enabled = true
-}
-
-resource "aws_vpc_endpoint" "relay" {
-  vpc_id              = module.vpc.vpc_id
-  service_name        = local.private_link.relay_service
-  vpc_endpoint_type   = "Interface"
-  security_group_ids  = [module.vpc.default_security_group_id]
-  subnet_ids          = [aws_subnet.pl_subnet.id]
-  depends_on          = [aws_subnet.pl_subnet]
-  private_dns_enabled = true
 }
 ```
 

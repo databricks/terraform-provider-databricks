@@ -38,7 +38,7 @@ func RandomLongName() string {
 
 // RandomEmail generates random email
 func RandomEmail() string {
-	return fmt.Sprintf("%s@example.com", RandomName("tf"))
+	return fmt.Sprintf("%s@example.com", RandomName("tf-"))
 }
 
 // RandomName gives random name with optional prefix. e.g. qa.RandomName("tf-")
@@ -85,6 +85,7 @@ type ResourceFixture struct {
 	Azure       bool
 	AzureSPN    bool
 	Gcp         bool
+	AccountID   string
 	Token       string
 	// new resource
 	New bool
@@ -167,6 +168,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.Gcp {
 		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
+	}
+	if f.AccountID != "" {
+		client.AccountID = f.AccountID
 	}
 	if len(f.HCL) > 0 {
 		var out any
@@ -300,6 +304,10 @@ func CornerCaseSkipCRUD(method string) CornerCase {
 	return CornerCase{"skip_crud", method}
 }
 
+func CornerCaseAccountID(id string) CornerCase {
+	return CornerCase{"account_id", id}
+}
+
 var HTTPFailures = []HTTPFixture{
 	{
 		MatchAny:     true,
@@ -318,6 +326,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 	config := map[string]string{
 		"id":           "x",
 		"expect_error": "I'm a teapot",
+		"account_id":   "",
 	}
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
 		"create": resource.CreateContext,
@@ -333,11 +342,12 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
-		validData.SetId(config["id"])
+		client.AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue
 			}
+			validData.SetId(config["id"])
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
 				assert.Equalf(t, config["expect_error"], diags[0].Summary,
@@ -534,4 +544,18 @@ func GetEnvOrSkipTest(t *testing.T, name string) string {
 		t.Skipf("Environment variable %s is missing", name)
 	}
 	return value
+}
+
+func RequireAnyCloudEnv(t *testing.T) {
+	value := os.Getenv("CLOUD_ENV")
+	if value == "" {
+		t.Skip("CLOUD_ENV is required to run this test")
+	}
+}
+
+func RequireCloudEnv(t *testing.T, cloudEnv string) {
+	value := os.Getenv("CLOUD_ENV")
+	if value != cloudEnv {
+		t.Skipf("CLOUD_ENV=%s is required to run this test", cloudEnv)
+	}
 }

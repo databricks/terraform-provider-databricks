@@ -3,8 +3,6 @@ subcategory: "Unity Catalog"
 ---
 # databricks_schema Resource
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
-
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
 
 A `databricks_schema` is contained within [databricks_catalog](catalog.md) and can contain tables & views.
@@ -37,9 +35,10 @@ The following arguments are required:
 
 * `name` - Name of Schema relative to parent catalog. Change forces creation of a new resource.
 * `catalog_name` - Name of parent catalog
-* `owner` - (Optional) Username/groupname/sp application_id schema owner.
+* `owner` - (Optional) Username/groupname/sp application_id of the schema owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Schema properties.
+* `force_destroy` - (Optional) Delete schema regardless of its contents.
 
 ## Import
 

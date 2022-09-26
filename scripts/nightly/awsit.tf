@@ -261,7 +261,7 @@ resource "azurerm_container_group" "aws" {
     cpu    = "2"
     memory = "2"
     environment_variables = {
-      CLOUD_ENV                 = "AWS"
+      CLOUD_ENV                 = "aws"
       TEST_FILTER               = "TestAcc"
       DATABRICKS_HOST           = databricks_mws_workspaces.this.workspace_url
       TEST_S3_BUCKET            = aws_s3_bucket.ds.bucket

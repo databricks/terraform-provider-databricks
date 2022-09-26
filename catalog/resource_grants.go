@@ -188,9 +188,10 @@ var mapping = securableMapping{
 		"CREATE_MATERIALIZED_VIEW": true,
 	},
 	"storage_credential": {
-		"CREATE_TABLE": true,
-		"READ_FILES":   true,
-		"WRITE_FILES":  true,
+		"CREATE_TABLE":             true,
+		"READ_FILES":               true,
+		"WRITE_FILES":              true,
+		"CREATE_EXTERNAL_LOCATION": true,
 
 		// v1.0
 		"ALL_PRIVILEGES":        true,
@@ -213,6 +214,9 @@ var mapping = securableMapping{
 		"CREATE_SHARE":              true,
 		"CREATE_RECIPIENT":          true,
 		"CREATE_PROVIDER":           true,
+	},
+	"function": {
+		"EXECUTE": true,
 	},
 }
 

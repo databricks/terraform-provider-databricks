@@ -12,7 +12,7 @@ import (
 
 // ResourceGroupInstanceProfile defines group role resource
 func ResourceGroupInstanceProfile() *schema.Resource {
-	return common.NewPairID("group_id", "instance_profile_id").Schema(func(
+	r := common.NewPairID("group_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["instance_profile_id"].ValidateDiagFunc = ValidInstanceProfile
 		return m
@@ -33,4 +33,6 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},
 	})
+	r.DeprecationMessage = "Please migrate to `databricks_group_role`"
+	return r
 }

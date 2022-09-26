@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -29,7 +30,8 @@ func TestAddSpManagementTokenVisitor(t *testing.T) {
 
 func TestAddSpManagementTokenVisitor_Refreshed(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 
 	aa := DatabricksClient{}
 	r := httptest.NewRequest("GET", "/a/b/c", http.NoBody)
@@ -45,7 +47,8 @@ func TestAddSpManagementTokenVisitor_Refreshed(t *testing.T) {
 
 func TestAddSpManagementTokenVisitor_RefreshedError(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("FAIL", "yes")
 
 	aa := DatabricksClient{}
@@ -67,14 +70,14 @@ func TestGetClientSecretAuthorizer(t *testing.T) {
 	env, err := aa.getAzureEnvironment()
 	require.NoError(t, err)
 	aa.AzureEnvironment = &env
-	auth, err := aa.getClientSecretAuthorizer(armDatabricksResourceID)
+	auth, err := aa.getClientSecretAuthorizer(azureDatabricksProdLoginAppID)
 	require.Nil(t, auth)
 	require.EqualError(t, err, "parameter 'clientID' cannot be empty")
 
 	aa.AzureTenantID = "a"
 	aa.AzureClientID = "b"
 	aa.AzureClientSecret = "c"
-	auth, err = aa.getClientSecretAuthorizer(armDatabricksResourceID)
+	auth, err = aa.getClientSecretAuthorizer(azureDatabricksProdLoginAppID)
 	require.NotNil(t, auth)
 	require.NoError(t, err)
 
@@ -274,7 +277,8 @@ func TestMaybeExtendError(t *testing.T) {
 
 func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 
 	aa := DatabricksClient{
 		AzureClientID:     "a",
@@ -289,7 +293,8 @@ func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
 
 func TestGetJWTProperty_NonAzure(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 
 	aa := DatabricksClient{
 		Host:  "https://abc.cloud.databricks.com",
@@ -301,7 +306,8 @@ func TestGetJWTProperty_NonAzure(t *testing.T) {
 
 func TestGetJWTProperty_AzureCli_Error(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 
 	// token without expiry in this case
 	client, server := singleRequestServer(t, "POST", "/api/2.0/token/create", `{
@@ -350,7 +356,8 @@ func newTestJwt(t *testing.T, claims jwt.MapClaims) string {
 
 func TestGetJWTProperty_AzureCli(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("TF_AAD_TOKEN", newTestJwt(t, jwt.MapClaims{
 		"tid": "some-tenant",
 	}))
@@ -367,7 +374,8 @@ func TestGetJWTProperty_AzureCli(t *testing.T) {
 
 func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("FAIL", "yes")
 
 	client := &DatabricksClient{
@@ -383,7 +391,8 @@ func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 
 func TestGetJWTProperty_makeGetRequest_Fail(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("TF_AAD_TOKEN", newTestJwt(t, jwt.MapClaims{
 		"tid": "some-tenant",
 	}))
@@ -400,7 +409,8 @@ func TestGetJWTProperty_makeGetRequest_Fail(t *testing.T) {
 
 func TestGetJWTProperty_authVisitor_Fail(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 
 	client := &DatabricksClient{
 		Host: "https://adb-1232.azuredatabricks.net",
@@ -414,7 +424,8 @@ func TestGetJWTProperty_authVisitor_Fail(t *testing.T) {
 
 func TestGetJWTProperty_AzureCli_Error_DB_PAT(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("TF_AAD_TOKEN", "dapi123")
 
 	srv, client := setupJwtTestClient()
@@ -428,7 +439,8 @@ func TestGetJWTProperty_AzureCli_Error_DB_PAT(t *testing.T) {
 
 func TestGetJWTProperty_AzureCli_Error_No_TenantID(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("TF_AAD_TOKEN", newTestJwt(t, jwt.MapClaims{
 		"something": "else",
 	}))
@@ -444,7 +456,8 @@ func TestGetJWTProperty_AzureCli_Error_No_TenantID(t *testing.T) {
 
 func TestGetJWTProperty_AzureCli_Error_EmptyToken(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("TF_AAD_TOKEN", "   ")
 
 	srv, client := setupJwtTestClient()
@@ -528,10 +541,46 @@ func TestSimpleAADRequestVisitor_FailPlatformAuth(t *testing.T) {
 		},
 	}).simpleAADRequestVisitor(context.Background(),
 		func(resource string) (autorest.Authorizer, error) {
-			if resource == armDatabricksResourceID {
+			if resource == azureDatabricksProdLoginAppID {
 				return nil, fmt.Errorf("🤨")
 			}
 			return autorest.NullAuthorizer{}, nil
 		})
 	assert.EqualError(t, err, "cannot authorize databricks: 🤨")
+}
+
+func TestSimpleAADRequestVisitor_ProdLoginAppId(t *testing.T) {
+	aa := DatabricksClient{
+		Host: "abc.azuredatabricks.net",
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+	}
+	_, err := aa.simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			if resource == "x" {
+				return autorest.NullAuthorizer{}, nil
+			}
+			assert.Equal(t, azureDatabricksProdLoginAppID, resource)
+			return autorest.NullAuthorizer{}, nil
+		})
+	assert.Nil(t, err)
+}
+
+func TestSimpleAADRequestVisitor_LoginAppIdOverride(t *testing.T) {
+	_, err := (&DatabricksClient{
+		Host: "abc.azuredatabricks.net",
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+		AzureDatabricksLoginAppId: "y",
+	}).simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			if resource == "x" {
+				return autorest.NullAuthorizer{}, nil
+			}
+			assert.Equal(t, "y", resource)
+			return autorest.NullAuthorizer{}, nil
+		})
+	assert.Nil(t, err)
 }

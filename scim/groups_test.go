@@ -25,23 +25,17 @@ func TestAccGroup(t *testing.T) {
 
 	user, err := usersAPI.Create(User{UserName: qa.RandomEmail()})
 	require.NoError(t, err, err)
+	defer usersAPI.Delete(user.ID)
 
 	user2, err := usersAPI.Create(User{UserName: qa.RandomEmail()})
 	require.NoError(t, err, err)
+	defer usersAPI.Delete(user2.ID)
 
 	group, err := groupsAPI.Create(Group{
 		DisplayName: qa.RandomName("tf-"),
 	})
 	require.NoError(t, err, err)
-
-	defer func() {
-		err := groupsAPI.Delete(group.ID)
-		assert.NoError(t, err, err)
-		err = usersAPI.Delete(user.ID)
-		assert.NoError(t, err, err)
-		err = usersAPI.Delete(user2.ID)
-		assert.NoError(t, err, err)
-	}()
+	defer groupsAPI.Delete(group.ID)
 
 	group, err = groupsAPI.Read(group.ID)
 	require.NoError(t, err, err)

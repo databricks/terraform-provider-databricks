@@ -3,7 +3,6 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -21,11 +20,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAwsAccJobsCreate(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-
+func TestAccAwsJobsCreate(t *testing.T) {
+	qa.RequireCloudEnv(t, "aws")
 	client := common.NewClientFromEnvironment()
 	jobsAPI := jobs.NewJobsAPI(context.Background(), client)
 	clustersAPI := clusters.NewClustersAPI(context.Background(), client)
@@ -175,9 +171,7 @@ func TestAccJobTasks(t *testing.T) {
 }
 
 func TestAccJobResource(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
+	qa.RequireAnyCloudEnv(t)
 	t.Parallel()
 	clustersAPI := clusters.NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
 	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{Latest: true, LongTermSupport: true})
@@ -230,10 +224,8 @@ func TestAccJobResource(t *testing.T) {
 	})
 }
 
-func TestAwsAccJobResource_NoInstancePool(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
+func TestAccAwsJobResource_NoInstancePool(t *testing.T) {
+	qa.RequireCloudEnv(t, "aws")
 	clustersAPI := clusters.NewClustersAPI(context.Background(), common.CommonEnvironmentClient())
 	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{Latest: true, LongTermSupport: true})
 	randomStr := acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum)

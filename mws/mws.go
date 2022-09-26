@@ -93,6 +93,6 @@ type PrivateAccessSettings struct {
 	Region                string   `json:"region"`
 	Status                string   `json:"status,omitempty" tf:"computed"`
 	PublicAccessEnabled   bool     `json:"public_access_enabled,omitempty"`
-	PrivateAccessLevel    string   `json:"private_access_level,omitempty" tf:"default:ANY"`
+	PrivateAccessLevel    string   `json:"private_access_level,omitempty" tf:"default:ACCOUNT"`
 	AllowedVpcEndpointIDS []string `json:"allowed_vpc_endpoint_ids,omitempty"`
 }

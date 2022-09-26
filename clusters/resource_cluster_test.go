@@ -480,6 +480,336 @@ func TestResourceClusterRead_Error(t *testing.T) {
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
 }
 
+// resize api should be called when autoscaling cluster is converted to a non autoscaling one
+func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: ClusterInfo{
+					ClusterID: "abc",
+					AutoScale: &AutoScale{
+						MinWorkers: 1,
+						MaxWorkers: 4,
+					},
+					ClusterName:            "Non Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/resize",
+				ExpectedRequest: ResizeRequest{
+					ClusterID:  "abc",
+					NumWorkers: 3,
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Non Autoscaling Cluster"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		num_workers = 3
+		`,
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Non Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"autoscale": `"{
+				min_workers = 1
+				max_workers = 4
+			}"`,
+		},
+	}.ApplyNoError(t)
+}
+
+// resize api should be called when non autoscaling cluster is converted to a autoscaling one
+func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					NumWorkers:             150,
+					ClusterName:            "Non Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/resize",
+				ExpectedRequest: ResizeRequest{
+					ClusterID: "abc",
+					AutoScale: &AutoScale{
+						MinWorkers: 4,
+						MaxWorkers: 10,
+					},
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Non Autoscaling Cluster"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		autoscale = {
+			min_workers = 4
+			max_workers = 10
+		},
+		`,
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Non Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "150",
+		},
+	}.ApplyNoError(t)
+}
+
+// provider should call the edit api and not the resize api when the cluster is not running
+func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					NumWorkers:             150,
+					ClusterName:            "Non Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/edit",
+				ExpectedRequest: Cluster{
+					AutoterminationMinutes: 15,
+					ClusterID:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Non Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Non Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Non Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "150",
+		},
+	}.ApplyNoError(t)
+}
+
+func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: ClusterInfo{
+					ClusterID: "abc",
+					AutoScale: &AutoScale{
+						MaxWorkers: 4,
+					},
+					ClusterName:  "Shared Autoscaling",
+					SparkVersion: "7.1-scala12",
+					NodeTypeID:   "i3.xlarge",
+					State:        ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/resize",
+				ExpectedRequest: ResizeRequest{
+					ClusterID: "abc",
+					AutoScale: &AutoScale{
+						MinWorkers: 4,
+						MaxWorkers: 10,
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"autoscale": `
+			{
+				min_workers = 0
+				max_workers = 4
+			}`,
+		},
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Autoscaling Cluster"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		autoscale = {
+			min_workers = 4
+			max_workers = 10
+		}
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					NumWorkers:             150,
+					ClusterName:            "Non Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/resize",
+				ExpectedRequest: ResizeRequest{
+					ClusterID:  "abc",
+					NumWorkers: 100,
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Non Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Non Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "150",
+		},
+	}.ApplyNoError(t)
+}
+
 func TestResourceClusterUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -17,7 +18,8 @@ import (
 
 func TestAzureCliAuth(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	// fake expiration date for az mock cli
 	os.Setenv("EXPIRE", "15M")
 
@@ -67,7 +69,8 @@ func TestOAuthToken_CornerCases(t *testing.T) {
 
 func TestEnsureFreshWithContext(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 
 	rct := refreshableCliToken{
 		token: &adal.Token{
@@ -81,7 +84,8 @@ func TestEnsureFreshWithContext(t *testing.T) {
 
 func TestRefreshWithContext(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 
 	rct := refreshableCliToken{
 		token: &adal.Token{
@@ -95,7 +99,8 @@ func TestRefreshWithContext(t *testing.T) {
 
 func TestRefreshExchangeWithContext(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 
 	rct := refreshableCliToken{
 		token: &adal.Token{
@@ -109,7 +114,8 @@ func TestRefreshExchangeWithContext(t *testing.T) {
 
 func TestInternalRefresh_ExitError(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("FAIL", "yes")
 
 	rct := refreshableCliToken{
@@ -138,7 +144,8 @@ func TestInternalRefresh_OtherError(t *testing.T) {
 
 func TestInternalRefresh_Corrupt(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("FAIL", "corrupt")
 
 	rct := refreshableCliToken{
@@ -153,7 +160,8 @@ func TestInternalRefresh_Corrupt(t *testing.T) {
 
 func TestInternalRefresh_CorruptExpire(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
 	os.Setenv("EXPIRE", "corrupt")
 
 	rct := refreshableCliToken{

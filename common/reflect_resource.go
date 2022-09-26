@@ -97,6 +97,16 @@ func isOptional(typeField reflect.StructField) bool {
 	return false
 }
 
+func isIgnoreRefresh(typeField reflect.StructField) bool {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	for _, tag := range tfTags {
+		if tag == "skip_refresh" {
+			return true
+		}
+	}
+	return false
+}
+
 func handleOptional(typeField reflect.StructField, schema *schema.Schema) {
 	if isOptional(typeField) {
 		schema.Optional = true
@@ -408,12 +418,27 @@ func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
 	return false
 }
 
+func fieldsToSkipRefresh(result any) map[string]bool {
+	value := reflect.ValueOf(result)
+	res := make(map[string]bool)
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Type().Field(i)
+		tag, ok := field.Tag.Lookup("json")
+		if ok {
+			jsonTags := strings.Split(tag, ",")
+			res[jsonTags[0]] = isIgnoreRefresh(field)
+		}
+	}
+	return res
+}
+
 // StructToData reads result using schema onto resource data
 func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceData) error {
 	v := reflect.ValueOf(result)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
+	skipFields := fieldsToSkipRefresh(result)
 	return iterFields(v, []string{}, s, func(
 		fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
 		fieldValue := valueField.Interface()
@@ -430,6 +455,14 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 				fieldPath, fieldValue)
 			return nil
 		}
+
+		skipRefresh, ok := skipFields[fieldPath]
+		if !d.IsNewResource() && skipRefresh {
+			log.Printf("[DEBUG] Removing skip refresh fields sent back by server: ok: %v skip: %v, %s - %#v",
+				ok, skipRefresh, fieldPath, fieldValue)
+			return nil
+		}
+
 		switch fieldSchema.Type {
 		case schema.TypeList, schema.TypeSet:
 			es, ok := fieldSchema.Elem.(*schema.Schema)

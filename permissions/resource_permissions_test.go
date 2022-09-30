@@ -1400,3 +1400,126 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
+
+// when caller does not specify CAN_MANAGE permission during create, it should be explictly added
+func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
+				Response: ObjectACL{
+					ObjectID:   "/sql/queries/id111",
+					ObjectType: "query",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"sql_query_id": "id111",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_RUN",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
+}
+
+// when caller does not specify CAN_MANAGE permission during update, it should be explictly added
+func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
+				Response: ObjectACL{
+					ObjectID:   "/sql/queries/id111",
+					ObjectType: "query",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		InstanceState: map[string]string{
+			"sql_query_id": "id111",
+		},
+		HCL: `
+		sql_query_id = "id111",
+
+		access_control = {
+			user_name = "ben",
+			permission_level = "CAN_RUN",
+			}
+		`,
+		Resource: ResourcePermissions(),
+		Update:   true,
+		ID:       "/sql/queries/id111",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
+}

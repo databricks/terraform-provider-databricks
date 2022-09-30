@@ -177,6 +177,26 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 * `parameters` - (Optional) Parameters for the task
 * `named_parameters` - (Optional) Named parameters for the task
 
+### dbt_task Configuration Block
+
+* `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
+* `project_directory` - (Optional) The relative path to the directory in the repository specified in `git_source` where dbt should look in for the `dbt_project.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--project-dir` to a dbt command.
+* `profiles_directory` - (Optional) The relative path to the directory in the repository specified by `git_source` where dbt should look in for the `profiles.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--profile-dir` to a dbt command.
+* `schema` - (Optional) The name of the schema dbt should run in. Defaults to `default`.
+* `warehouse_id` - (Optional) The ID of the SQL warehouse that dbt should execute against.
+
+You also need to include a `git_source` block to configure the repository that contains the dbt project.
+
+### sql_task Configuration Block
+
+One of the `query`, `dashboard` or `alert` needs to be provided.
+
+* `warehouse_id` - (Required) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only serverless warehouses are supported right now.
+* `parameters` - (Optional) (Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters.
+* `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
+* `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
+* `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
+
 ### email_notifications Configuration Block
 
 * `on_failure` - (Optional) (List) list of emails to notify on failure

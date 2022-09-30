@@ -311,6 +311,12 @@ type ClusterSize struct {
 	AutoScale  *AutoScale `json:"autoscale"`
 }
 
+type ResizeRequest struct {
+	ClusterID  string     `json:"cluster_id"`
+	NumWorkers int32      `json:"num_workers"`
+	AutoScale  *AutoScale `json:"autoscale,omitempty"`
+}
+
 // ResizeCause holds reason for resizing
 type ResizeCause string
 
@@ -531,6 +537,24 @@ func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 		}
 	}
 	return
+}
+
+// Resize api can only be used when the cluster is in Running State
+func (a ClustersAPI) Resize(resizeRequest ResizeRequest) (info ClusterInfo, err error) {
+	info, err = a.Get(resizeRequest.ClusterID)
+	if err != nil {
+		return info, err
+	}
+	if info.State != ClusterStateRunning {
+		return info, fmt.Errorf("resize: Cluster %v is in %v state. RUNNING state required to use resize API", info.ClusterID, info.State)
+	}
+
+	err = a.client.Post(a.context, "/clusters/resize", resizeRequest, &info)
+	if err != nil {
+		return info, fmt.Errorf("resize: %w", err)
+	}
+	info, err = a.waitForClusterStatus(resizeRequest.ClusterID, ClusterStateRunning)
+	return info, err
 }
 
 // Edit edits the configuration of a cluster to match the provided attributes and size

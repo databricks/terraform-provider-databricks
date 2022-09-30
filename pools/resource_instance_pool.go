@@ -27,7 +27,7 @@ type InstancePoolAzureAttributes struct {
 // InstancePoolGcpAttributes contains aws attributes for GCP Databricks deployments for instance pools
 // https://docs.gcp.databricks.com/dev-tools/api/latest/instance-pools.html#instancepoolgcpattributes
 type InstancePoolGcpAttributes struct {
-	Availability clusters.Availability `json:"availability,omitempty" tf:"force_new"`
+	Availability clusters.Availability `json:"gcp_availability,omitempty" tf:"force_new"`
 }
 
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers
@@ -190,7 +190,7 @@ func ResourceInstancePool() *schema.Resource {
 				clusters.AzureAvailabilityOnDemand,
 			}, false)
 		}
-		if v, err := common.SchemaPath(s, "gcp_attributes", "availability"); err == nil {
+		if v, err := common.SchemaPath(s, "gcp_attributes", "gcp_availability"); err == nil {
 			v.Default = clusters.GcpAvailabilityOnDemand
 			v.ValidateFunc = validation.StringInSlice([]string{
 				clusters.GcpAvailabilityOnDemand,

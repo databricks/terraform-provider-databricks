@@ -290,6 +290,7 @@ When a workspace is created using a service principal account, that service prin
 
 This section covers configuration parameters not related to authentication. They could be used when debugging problems, or do an additional tuning of provider's behaviour:
 
+* `http_timeout_seconds` - the amount of time Terraform waits for a response from Databricks REST API. Default is *60*.
 * `rate_limit` - defines maximum number of requests per second made to Databricks REST API by Terraform. Default is *15*.
 * `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.
 * `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*. We recommend turning this flag on only under exceptional circumstances, when troubleshooting authentication issues. Turning this flag on will log first `debug_truncate_bytes` of any HTTP header value in cleartext.

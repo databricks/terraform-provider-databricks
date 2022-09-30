@@ -15,8 +15,14 @@ A query may have one or more [visualizations](sql_visualization.md).
 resource "databricks_sql_query" "q1" {
   data_source_id = databricks_sql_endpoint.example.data_source_id
   name           = "My Query Name"
-  query          = "SELECT {{ p1 }} AS p1, 2 as p2"
-  run_as_role    = "viewer"
+  query          = <<EOT
+                        SELECT {{ p1 }} AS p1
+                        WHERE 1=1
+                        AND p2 in ({{ p2 }})
+                        AND event_date > date '{{ p3 }}'
+                    EOT
+
+  run_as_role = "viewer"
 
   schedule {
     continuous {
@@ -31,6 +37,31 @@ resource "databricks_sql_query" "q1" {
       value = "default"
     }
   }
+
+  parameter {
+    name  = "p2"
+    title = "Title for p2"
+    enum {
+      options = ["default", "foo", "bar"]
+      value   = "default"
+      // passes to sql query as string `"foo", "bar"` if foo and bar are both selected in the front end
+      multiple {
+        prefix    = "\""
+        suffix    = "\""
+        separator = ","
+      }
+
+    }
+  }
+
+  parameter {
+    name  = "p3"
+    title = "Title for p3"
+    date {
+      value = "2022-01-01"
+    }
+  }
+
 
   tags = [
     "t1",
@@ -65,6 +96,10 @@ You can import a `databricks_sql_query` resource with ID like the following:
 ```bash
 $ terraform import databricks_sql_query.this <query-id>
 ```
+
+## Troubleshooting
+
+In case you see `Error: cannot create sql query: Internal Server Error` during `terraform apply`; double check that you are using the correct [`data_source_id`](sql_endpoint.md)
 
 ## Related Resources
 

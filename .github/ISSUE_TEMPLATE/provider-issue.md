@@ -29,7 +29,7 @@ Thank you for opening an issue. Please note that we try to keep the Databricks P
 <!-- Please paste the output of `terraform version`. If version of `databricks` provider is not the latest (https://github.com/databricks/terraform-provider-databricks/releases), please make sure to use the latest one. -->
 
 ### Debug Output
-<!-- Please add turn on logging, e.g. `TF_LOG=DEBUG terraform apply` and run command again, paste it to gist & provide the link to gist. If you're still willing to paste in log output, make sure you provide only relevant log lines with requests. It would make it more readable, if you pipe the log through `| grep databricks | sed -E 's/^.* plugin[^:]+: (.*)$/\1/'`, e.g.: `TF_LOG=DEBUG terraform plan 2>&1 | grep databricks | sed -E 's/^.* plugin[^:]+: (.*)$/\1/'`. If Terraform produced a panic, please provide a link to a GitHub Gist containing the output of the `crash.log`. -->
+<!-- Please add turn on logging, e.g. `TF_LOG=DEBUG terraform apply -no-color` and run command again, paste it to gist & provide the link to gist. If you're still willing to paste in log output, make sure you provide only relevant log lines with requests. It would make it more readable, if you pipe the log through `| grep databricks | sed -E 's/^.* plugin[^:]+: (.*)$/\1/'`, e.g.: `TF_LOG=DEBUG terraform apply -no-color 2>&1 | grep databricks | sed -E 's/^.* plugin[^:]+: (.*)$/\1/' 2>&1 |tee tf-debug.log`. If Terraform produced a panic, please provide a link to a GitHub Gist containing the output of the `crash.log`. -->
 
 ### Important Factoids
 <!-- Are there anything atypical about your accounts that we should know? -->

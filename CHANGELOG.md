@@ -1,5 +1,22 @@
 # Version changelog
 
+## 1.4.0
+
+ * Added [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/job) data resource ([#1509](https://github.com/databricks/terraform-provider-databricks/pull/1509)).
+ * Fixed handling of references in [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) resource exporter ([#1631](https://github.com/databricks/terraform-provider-databricks/pull/1631)).
+ * Fixed stripping of `CAN_MANAGE` permission from caller of [databricks_sql_query](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_query) resource ([#1644](https://github.com/databricks/terraform-provider-databricks/pull/1644)).
+ * Fixed provider debug mode ([#1560](https://github.com/databricks/terraform-provider-databricks/pull/1560)).
+
+Documentation improvements:
+
+ * Expanded documentation for [databricks_sql_visualization](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_visualization) resource ([#1630](https://github.com/databricks/terraform-provider-databricks/pull/1630)).
+
+Updated dependency versions:
+
+ * Bump github.com/hashicorp/hcl/v2 from 2.14.0 to 2.14.1 ([#1634](https://github.com/databricks/terraform-provider-databricks/pull/1634)).
+ * Bump google.golang.org/api from 0.96.0 to 0.97.0 ([#1633](https://github.com/databricks/terraform-provider-databricks/pull/1633)).
+
+
 ## 1.3.1
 
  * Added autoscale `mode` configuration to [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) resource ([#1600](https://github.com/databricks/terraform-provider-databricks/pull/1600)).

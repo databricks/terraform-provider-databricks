@@ -38,12 +38,11 @@ resource "databricks_grants" "things" {
 
 This data source exports the following attributes:
 
-* `ids` - set of [databricks_table](../resources/table.md) full names: *`catalog`.`schema`.`view`*
+* `ids` - set of databricks_view full names: *`catalog`.`schema`.`view`*
 
 ## Related Resources
 
 The following resources are used in the same context:
 
-* [databricks_table](../resources/table.md) to manage tables within Unity Catalog.
 * [databricks_schema](../resources/schema.md) to manage schemas within Unity Catalog.
 * [databricks_catalog](../resources/catalog.md) to manage catalogs within Unity Catalog.

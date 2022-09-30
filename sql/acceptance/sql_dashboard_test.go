@@ -12,12 +12,12 @@ func TestAccDashboard(t *testing.T) {
 		{
 			Template: `
 				resource "databricks_sql_dashboard" "d1" {
-					name = "tf-{var.RANDOM}"
+					name = "tf-{var.RANDOM}-dashboard"
 
 					// The SQLA API doesn't save tags on create, only on update.
 					// Uncomment the following when this is fixed.
 					// tags = [
-					// "tf-{var.RANDOM}",
+					// "tf-{var.RANDOM}-dashboard",
 					// ]
 				}
 
@@ -47,7 +47,7 @@ func TestAccDashboard(t *testing.T) {
 
 				resource "databricks_sql_query" "q1" {
 					data_source_id = databricks_sql_endpoint.this.data_source_id
-					name = "tf-{var.RANDOM}"
+					name = "tf-{var.RANDOM}-query"
 					query = "SELECT 1"
 				}
 
@@ -60,7 +60,7 @@ func TestAccDashboard(t *testing.T) {
 				}
 
 				resource "databricks_sql_endpoint" "this" {
-					name = "tf-{var.RANDOM}"
+					name = "tf-{var.RANDOM}-endpoint"
 					cluster_size = "Small"
 					max_num_clusters = 1
 				}

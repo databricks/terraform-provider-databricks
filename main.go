@@ -28,7 +28,7 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "debug" {
 		debug = true
 	}
-	log.Printf(`Databricks Terraform Provider (experimental)
+	log.Printf(`Databricks Terraform Provider
 
 Version %s
 
@@ -37,6 +37,7 @@ https://registry.terraform.io/providers/databricks/databricks/latest/docs
 `, common.Version())
 	plugin.Serve(&plugin.ServeOpts{
 		ProviderFunc: provider.DatabricksProvider,
+		ProviderAddr: "registry.terraform.io/databricks/databricks",
 		Debug:        debug,
 	})
 }

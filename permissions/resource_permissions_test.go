@@ -1401,7 +1401,7 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
-//when caller does not specify CAN_MANAGE permission during create, it should be explictly added
+// when caller does not specify CAN_MANAGE permission during create, it should be explictly added
 func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1461,7 +1461,7 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
 }
 
-//when caller does not specify CAN_MANAGE permission during update, it should be explictly added
+// when caller does not specify CAN_MANAGE permission during update, it should be explictly added
 func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1505,11 +1505,12 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 			"sql_query_id": "id111",
 		},
 		HCL: `
-		"sql_query_id" = "id111",
-		"access_control" = {
-				"user_name"			= "ben",
-				"permission_level"	= "CAN_RUN",
-				}
+		sql_query_id = "id111",
+
+		access_control = {
+			user_name = "ben",
+			permission_level = "CAN_RUN",
+			}
 		`,
 		Resource: ResourcePermissions(),
 		Update:   true,

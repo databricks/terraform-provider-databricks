@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAccDataSourceQueryableJob(t *testing.T) {
+func TestAccDataSourceJob(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -59,7 +59,7 @@ func TestAccDataSourceQueryableJob(t *testing.T) {
 			}
 			
 			output "cluster_workers" {
-				value = data.databricks_job.this.job_settings[0].settings[0].new_cluster[0].num_workers
+				value = data.databricks_job.this.job_settings
             }`,
 		},
 	})

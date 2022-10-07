@@ -182,6 +182,7 @@ var mapping = securableMapping{
 		"EXECUTE":                  true,
 		"MODIFY":                   true,
 		"SELECT":                   true,
+		"REFRESH":                  true,
 	},
 	"schema": {
 		"CREATE": true,
@@ -197,6 +198,7 @@ var mapping = securableMapping{
 		"EXECUTE":                  true,
 		"MODIFY":                   true,
 		"SELECT":                   true,
+		"REFRESH":                  true,
 	},
 	"storage_credential": {
 		"CREATE_TABLE":             true,
@@ -229,6 +231,11 @@ var mapping = securableMapping{
 	"function": {
 		"ALL_PRIVILEGES": true,
 		"EXECUTE":        true,
+	},
+	"materialized_view": {
+		"ALL_PRIVILEGES": true,
+		"SELECT":         true,
+		"REFRESH":        true,
 	},
 }
 

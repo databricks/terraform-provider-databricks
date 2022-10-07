@@ -25,9 +25,6 @@ The securable objects are:
 - `EXTERNAL LOCATION`: An object that contains a reference to a storage credential and a cloud storage path that is contained within a metatore.
 - `STORAGE CREDENTIAL`: An object that encapsulates a long-term cloud credential that provides access to cloud storage that is contained within a metatore.
 - `FUNCTION`: A user defined function that is contained within a schema.
-- `SHARE`: A logical grouping for the tables you intend to share using Delta Sharing. A share is contained within a metastore.
-- `RECIPIENT`: An object that identifies an organization or group of users that can have data shared with them using Delta Sharing. These objects are contained within a metastore.
-- `PROVIDER`: An object that represents an organization that has made data available for sharing using Delta Sharing. These objects are contained within a metastore.
 
 Below summarizes which privilege types apply to each securable object in the catalog:
 
@@ -45,9 +42,6 @@ Below summarizes which privilege types apply to each securable object in the cat
 - External location: `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES`, `WRITE_FILES`
 - Storage credential: `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `READ_FILES`, `WRITE_FILES`
 - Function: `ALL_PRIVILEGES`, `EXECUTE`
-- Share: `SELECT` (can be granted to `RECIPIENT`)
-- Recipient: None.
-- Provider: None.
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
 

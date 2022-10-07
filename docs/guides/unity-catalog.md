@@ -297,7 +297,7 @@ resource "databricks_metastore_assignment" "default_metastore" {
   provider             = databricks.workspace
   for_each             = toset(var.databricks_workspace_ids)
   workspace_id         = each.key
-  metastore_id         = databricks_metastore.unity.id
+  metastore_id         = databricks_metastore.this.id
   default_catalog_name = "hive_metastore"
 }
 ```

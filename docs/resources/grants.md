@@ -24,32 +24,34 @@ The securable objects are:
 - `VIEW`: A read-only object created from one or more tables that is contained within a schema.
 - `EXTERNAL LOCATION`: An object that contains a reference to a storage credential and a cloud storage path that is contained within a metatore.
 - `STORAGE CREDENTIAL`: An object that encapsulates a long-term cloud credential that provides access to cloud storage that is contained within a metatore.
-- `FUNCTION`: A user defined function that is contained within a schema.
-
-Below summarizes which privilege types apply to each securable object in the catalog:
-
-- Metastore: `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_RECIPIENT`, `CREATE_SHARE`
-- Catalog: `ALL_PRIVILEGES`, `CREATE_SCHEMA`, `USE_CATALOG`
-
-  The following privilege types apply to securable objects within a catalog. You can grant these privileges at the catalog level to apply them to the pertinent current and future objects within the catalog.
-
-  `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VIEW`, `EXECUTE`, `MODIFY`, `SELECT`, `USE_SCHEMA`
-- Schema: `ALL_PRIVILEGES`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VIEW`, `USE_SCHEMA`
-  The following privilege types apply to securable objects within a schema. You can grant these privileges at the schema level to apply them to the pertinent current and future objects within the schema.
-  `EXECUTE`, `MODIFY`, `SELECT`
-- Table: `ALL_PRIVILEGES`, `SELECT`, `MODIFY`
-- View: `ALL_PRIVILEGES`, `SELECT`
-- External location: `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES`, `WRITE_FILES`
-- Storage credential: `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `READ_FILES`, `WRITE_FILES`
-- Function: `ALL_PRIVILEGES`, `EXECUTE`
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
 
 It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
+Below summarizes which privilege types apply to each securable object in the catalog:
+
+## Metastore grants
+
+You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_SHARE`, `CREATE_RECIPIENT` and `CREATE_PROVIDER` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
+
+```hcl
+resource "databricks_grants" "sandbox" {
+  metastore = databricks_metastore.this.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
+  }
+  grant {
+    principal  = "Data Sharer"
+    privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
+  }  
+}
+```
+
 ## Catalog grants
 
-You can grant `CREATE` and `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_SCHEMA`, `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VIEW`, `EXECUTE`, `MODIFY`, `SELECT` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -65,18 +67,22 @@ resource "databricks_grants" "sandbox" {
   catalog = databricks_catalog.sandbox.name
   grant {
     principal  = "Data Scientists"
-    privileges = ["USE_CATALOG", "CREATE"]
+    privileges = ["USE_CATALOG", "USE_SCHEMA", "CREATE_TABLE", "SELECT"]
   }
   grant {
     principal  = "Data Engineers"
-    privileges = ["USE_CATALOG"]
+    privileges = ["USE_CATALOG", "USE_SCHEMA", "CREATE_SCHEMA", "CREATE_TABLE", "MODIFY"]
   }
+  grant {
+    principal  = "Data Analyst"
+    privileges = ["USE_CATALOG", "USE_SCHEMA", "SELECT"]
+  }  
 }
 ```
 
 ## Schema grants
 
-You can grant `CREATE` and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VIEW` and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY` and `SELECT` at the schema level to apply them to the pertinent current and future securable objects within the schema:
 
 ```hcl
 resource "databricks_schema" "things" {
@@ -92,14 +98,14 @@ resource "databricks_grants" "things" {
   schema = databricks_schema.things.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["USAGE"]
+    privileges = ["USE_SCHEMA", "MODIFY"]
   }
 }
 ```
 
 ## Table grants
 
-You can grant `MODIFY` and `SELECT` privileges to [_`catalog.schema.table`_](tables.md) specified in the `table` attribute.
+You can grant `ALL_PRIVILEGES`, `SELECT` and `MODIFY` privileges to [_`catalog.schema.table`_](tables.md) specified in the `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customers" {
@@ -137,7 +143,7 @@ resource "databricks_grants" "things" {
 
 ## View grants
 
-You can grant `SELECT` privileges to [_`catalog.schema.view`_](views.md) specified in `table` attribute.
+You can grant `ALL_PRIVILEGES` and `SELECT` privileges to [_`catalog.schema.view`_](views.md) specified in `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customer360" {
@@ -171,7 +177,7 @@ resource "databricks_grants" "customers" {
 
 ## Storage credential grants
 
-You can grant `CREATE_TABLE`, `READ_FILES`, `WRITE_FILES` and `CREATE_EXTERNAL_LOCATION` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -193,7 +199,7 @@ resource "databricks_grants" "external_creds" {
 
 ## Storage location grants
 
-You can grant `CREATE_TABLE`, `READ_FILES`, and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
 
 ```hcl
 resource "databricks_external_location" "some" {
@@ -211,10 +217,6 @@ resource "databricks_grants" "some" {
   }
 }
 ```
-
-## Metastore grants
-
-You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_STORAGE_CREDENTIAL`, `CREATE_SHARE`, `CREATE_RECIPIENT`, and `CREATE_PROVIDER` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
 
 ## Other access control
 

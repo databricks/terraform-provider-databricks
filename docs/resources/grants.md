@@ -6,7 +6,7 @@ subcategory: "Unity Catalog"
 -> **Note**
   This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
 
-In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive all privileges on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
+In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive ALL_PRIVILEGES on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
 
 Securable objects are hierarchical and privileges are inherited downward. The highest level object that privileges are inherited from is the catalog. This means that granting a privilege on a catalog or schema automatically grants the privilege to all current and future objects within the catalog or schema. Privileges that are granted on a metastore are not inherited.
 
@@ -31,20 +31,20 @@ The securable objects are:
 
 Below summarizes which privilege types apply to each securable object in the catalog:
 
-- Metastore: `CREATE CATALOG`, `CREATE EXTERNAL LOCATION`, `CREATE RECIPIENT`, `CREATE SHARE`
-- Catalog: `ALL PRIVILEGES`, `CREATE SCHEMA`, `USE CATALOG`
+- Metastore: `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_RECIPIENT`, `CREATE_SHARE`
+- Catalog: `ALL_PRIVILEGES`, `CREATE_SCHEMA`, `USE_CATALOG`
 
   The following privilege types apply to securable objects within a catalog. You can grant these privileges at the catalog level to apply them to the pertinent current and future objects within the catalog.
 
-  `CREATE FUNCTION`, `CREATE TABLE`, `CREATE VIEW`, `EXECUTE`, `MODIFY`, `SELECT`, `USE SCHEMA`
-- Schema: `ALL PRIVILEGES`, `CREATE FUNCTION`, `CREATE TABLE`, `CREATE VIEW`, `USE SCHEMA`
+  `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VIEW`, `EXECUTE`, `MODIFY`, `SELECT`, `USE_SCHEMA`
+- Schema: `ALL_PRIVILEGES`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VIEW`, `USE_SCHEMA`
   The following privilege types apply to securable objects within a schema. You can grant these privileges at the schema level to apply them to the pertinent current and future objects within the schema.
   `EXECUTE`, `MODIFY`, `SELECT`
-- Table: `ALL PRIVILEGES`, `SELECT`, `MODIFY`
-- View: `ALL PRIVILEGES`, `SELECT`
-- External location: `ALL PRIVILEGES`, `CREATE EXTERNAL TABLE`, `READ FILES`, `WRITE FILES`
-- Storage credential: `ALL PRIVILEGES`, `CREATE EXTERNAL LOCATION`, `CREATE EXTERNAL TABLE`, `READ FILES`, `WRITE FILES`
-- Function: `ALL PRIVILEGES`, `EXECUTE`
+- Table: `ALL_PRIVILEGES`, `SELECT`, `MODIFY`
+- View: `ALL_PRIVILEGES`, `SELECT`
+- External location: `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES`, `WRITE_FILES`
+- Storage credential: `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `READ_FILES`, `WRITE_FILES`
+- Function: `ALL_PRIVILEGES`, `EXECUTE`
 - Share: `SELECT` (can be granted to `RECIPIENT`)
 - Recipient: None.
 - Provider: None.
@@ -55,7 +55,7 @@ It is required to define all permissions for a securable in a single resource, o
 
 ## Catalog grants
 
-You can grant `CREATE` and `USE CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute:
+You can grant `CREATE` and `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute:
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -71,18 +71,18 @@ resource "databricks_grants" "sandbox" {
   catalog = databricks_catalog.sandbox.name
   grant {
     principal  = "Data Scientists"
-    privileges = ["USE CATALOG", "CREATE"]
+    privileges = ["USE_CATALOG", "CREATE"]
   }
   grant {
     principal  = "Data Engineers"
-    privileges = ["USE CATALOG"]
+    privileges = ["USE_CATALOG"]
   }
 }
 ```
 
 ## Schema grants
 
-You can grant `CREATE` and `USE SCHEMA` privileges to [*`catalog`*.*`schema`*](schema.md) specified in the `schema` attribute:
+You can grant `CREATE` and `USE_SCHEMA` privileges to [*`catalog`*.*`schema`*](schema.md) specified in the `schema` attribute:
 
 ```hcl
 resource "databricks_schema" "things" {

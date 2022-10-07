@@ -171,9 +171,17 @@ var mapping = securableMapping{
 		"USAGE":  true,
 
 		// v1.0
-		"ALL_PRIVILEGES": true,
-		"USE_CATALOG":    true,
-		"CREATE_SCHEMA":  true,
+		"ALL_PRIVILEGES":           true,
+		"USE_CATALOG":              true,
+		"USE_SCHEMA":               true,
+		"CREATE_SCHEMA":            true,
+		"CREATE_TABLE":             true,
+		"CREATE_VIEW":              true,
+		"CREATE_FUNCTION":          true,
+		"CREATE_MATERIALIZED_VIEW": true,
+		"EXECUTE":                  true,
+		"MODIFY":                   true,
+		"SELECT":                   true,
 	},
 	"schema": {
 		"CREATE": true,
@@ -186,6 +194,9 @@ var mapping = securableMapping{
 		"CREATE_VIEW":              true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"EXECUTE":                  true,
+		"MODIFY":                   true,
+		"SELECT":                   true,
 	},
 	"storage_credential": {
 		"CREATE_TABLE":             true,
@@ -216,7 +227,8 @@ var mapping = securableMapping{
 		"CREATE_PROVIDER":           true,
 	},
 	"function": {
-		"EXECUTE": true,
+		"ALL_PRIVILEGES": true,
+		"EXECUTE":        true,
 	},
 }
 

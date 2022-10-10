@@ -116,6 +116,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_secret_acl":                  secrets.ResourceSecretACL(),
 			"databricks_service_principal":           scim.ResourceServicePrincipal(),
 			"databricks_service_principal_role":      aws.ResourceServicePrincipalRole(),
+			"databricks_service_principal_secret":    tokens.ResourceServicePrincipalSecret(),
 			"databricks_sql_dashboard":               sql.ResourceSqlDashboard(),
 			"databricks_sql_endpoint":                sql.ResourceSqlEndpoint(),
 			"databricks_sql_global_config":           sql.ResourceSqlGlobalConfig(),

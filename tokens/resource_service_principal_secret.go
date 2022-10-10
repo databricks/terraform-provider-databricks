@@ -10,9 +10,9 @@ import (
 )
 
 type ServicePrincipalSecret struct {
-	ID           string `json:"id,omitempty"`
-	ClientSecret string `json:"client_secret,omitempty" tf:"computed,sensitive"`
-	Status       string `json:"status,omitempty" tf:"computed"`
+	ID     string `json:"id,omitempty"`
+	Secret string `json:"secret,omitempty" tf:"computed,sensitive"`
+	Status string `json:"status,omitempty" tf:"computed"`
 }
 
 type ListServicePrincipalSecrets struct {
@@ -89,7 +89,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 				}
 				d.SetId(v.ID)
 			}
-			return d.Set("client_secret", secret.ClientSecret)
+			return d.Set("secret", secret.Secret)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.AccountID == "" {
@@ -105,7 +105,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 				if v.ID != d.Id() {
 					continue
 				}
-				return common.StructToData(v, spnSecretSchema, d)
+				return d.Set("status", v.Status)
 			}
 			return common.NotFound("client secret not found")
 		},

@@ -385,7 +385,7 @@ func (c *DatabricksClient) recursiveMask(requestMap map[string]any) any {
 			requestMap[k] = "**REDACTED**"
 			continue
 		}
-		if k == "client_secret" {
+		if k == "secret" {
 			requestMap[k] = "**REDACTED**"
 			continue
 		}

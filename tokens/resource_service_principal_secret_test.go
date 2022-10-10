@@ -24,7 +24,7 @@ func TestServicePrincipalSecretCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/xyz/servicePrincipals/abc/credentials/secrets",
 				Response: ServicePrincipalSecret{
-					ClientSecret: "qwe",
+					Secret: "qwe",
 				},
 			},
 			{
@@ -66,8 +66,8 @@ func TestServicePrincipalSecretCreate(t *testing.T) {
 		`,
 		New: true,
 	}.ApplyAndExpectData(t, map[string]any{
-		"client_secret": "qwe",
-		"status":        "bar",
+		"secret": "qwe",
+		"status": "bar",
 	})
 }
 
@@ -90,6 +90,6 @@ func TestServicePrincipalSecretDelete(t *testing.T) {
 }
 
 func TestServicePrincipalSecretFuzz(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceServicePrincipalSecret(), 
+	qa.ResourceCornerCases(t, ResourceServicePrincipalSecret(),
 		qa.CornerCaseExpectError("must have `account_id` on provider"))
 }

@@ -549,6 +549,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			if r.Name == "admins" || r.Name == "users" {
 				// admins & users are to be imported through "data block"
+				// TODO: it doesn't work, fix it...
 				r.Mode = "data"
 				r.Data.State().Set(&terraform.InstanceState{
 					ID: r.ID,
@@ -556,6 +557,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						"display_name": r.Name,
 					},
 				})
+			} else if r.Data != nil {
+				r.Data.Set("force", true)
 			}
 			if err := ic.cacheGroups(); err != nil {
 				return err
@@ -658,6 +661,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			username := r.Data.Get("user_name").(string)
+			r.Data.Set("force", true)
 			u, err := ic.findUserByName(username)
 			if err != nil {
 				return err

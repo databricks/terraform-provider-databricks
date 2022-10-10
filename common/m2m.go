@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -17,6 +18,8 @@ type oauthAuthorizationServer struct {
 	TokenEndpoint         string `json:"token_endpoint"`
 }
 
+var errNotAvailable = errors.New("not available")
+
 func (c *DatabricksClient) getOAuthEndpoints() (*oauthAuthorizationServer, error) {
 	err := c.fixHost()
 	if err != nil {
@@ -25,7 +28,7 @@ func (c *DatabricksClient) getOAuthEndpoints() (*oauthAuthorizationServer, error
 	oidc := fmt.Sprintf("%s/oidc/.well-known/oauth-authorization-server", c.Host)
 	oidcResponse, err := http.Get(oidc)
 	if err != nil {
-		return nil, fmt.Errorf("fetch .well-known: %w", err)
+		return nil, errNotAvailable
 	}
 	if oidcResponse.Body == nil {
 		return nil, fmt.Errorf("fetch .well-known: empty body")
@@ -51,6 +54,9 @@ func (c *DatabricksClient) configureWithOAuthM2M(
 	// workaround for accounts endpoint not having yet a well-known OIDC alias
 	if c.TokenEndpoint == "" {
 		endpoints, err := c.getOAuthEndpoints()
+		if err == errNotAvailable {
+			return nil, nil
+		}
 		if err != nil {
 			return nil, fmt.Errorf("databricks oauth: %w", err)
 		}

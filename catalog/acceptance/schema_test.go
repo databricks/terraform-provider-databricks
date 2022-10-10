@@ -28,11 +28,11 @@ func TestUcAccSchema(t *testing.T) {
 				catalog = databricks_catalog.sandbox.name
 				grant {
 					principal  = "{env.TEST_DATA_SCI_GROUP}"
-					privileges = ["USAGE", "CREATE"]
+					privileges = ["USE_CATALOG", "CREATE_SCHEMA"]
 				}
 				grant {
 					principal  = "{env.TEST_DATA_ENG_GROUP}"
-					privileges = ["USAGE"]
+					privileges = ["USE_CATALOG"]
 				}
 			}
 			
@@ -54,7 +54,7 @@ func TestUcAccSchema(t *testing.T) {
 				schema = databricks_schema.things.id
 				grant {
 				  principal  = "{env.TEST_DATA_ENG_GROUP}"
-				  privileges = ["USAGE"]
+				  privileges = ["USE_SCHEMA"]
 				}
 			}`,
 		},

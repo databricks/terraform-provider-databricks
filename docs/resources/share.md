@@ -22,9 +22,8 @@ resource "databricks_share" "some" {
   dynamic "object" {
     for_each = data.databricks_tables.things.ids
     content {
-      namespace = setting.value["namespace"]
-      name = setting.value["name"]
-      value = setting.value["value"]
+      name = object.value
+      data_object_type = "TABLE"
     }
   }  
 }

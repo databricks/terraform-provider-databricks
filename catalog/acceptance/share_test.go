@@ -52,6 +52,25 @@ func TestUcAccCreateShare(t *testing.T) {
 					data_object_type = "TABLE"
 				}				
 			}
+
+			resource "databricks_recipient" "db2open" {
+			  name = "{var.RANDOM}-terraform-db2open-recipient"
+			  comment = "made by terraform"
+			  authentication_type = "TOKEN"
+			  sharing_code = "{var.RANDOM}"
+			  ip_access_list {
+				// using private ip for acc testing
+				allowed_ip_addresses = ["10.0.0.0/16"]
+			  }
+			}
+
+			resource "databricks_grants" "some" {
+				share = databricks_share.myshare.name
+				grant {
+					principal  = databricks_recipient.db2open.name
+					privileges = ["SELECT"]
+				}
+			}			
 			`,
 		},
 	})

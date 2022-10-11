@@ -218,6 +218,28 @@ resource "databricks_grants" "some" {
 }
 ```
 
+## Delta Sharing share grants
+
+You can grant `SELECT` to [databricks_recipient](recipient.md) on [databricks_share](share.md) name specified in `share` attribute:
+
+```hcl
+resource "databricks_share" "some" {
+  name            = "my_share"
+}
+
+resource "databricks_recipient" "some" {
+  name            = "my_recipient"
+}
+
+resource "databricks_grants" "some" {
+  share = databricks_share.some.name
+  grant {
+    principal  = databricks_recipient.some.name
+    privileges = ["SELECT"]
+  }
+}
+```
+
 ## Other access control
 
 You can control Databricks General Permissions through [databricks_permissions](permissions.md) resource.

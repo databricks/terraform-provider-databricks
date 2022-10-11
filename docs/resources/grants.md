@@ -24,6 +24,7 @@ The securable objects are:
 - `VIEW`: A read-only object created from one or more tables that is contained within a schema.
 - `EXTERNAL LOCATION`: An object that contains a reference to a storage credential and a cloud storage path that is contained within a metatore.
 - `STORAGE CREDENTIAL`: An object that encapsulates a long-term cloud credential that provides access to cloud storage that is contained within a metatore.
+- `SHARE`: A logical grouping for the tables you intend to share using Delta Sharing. A share is contained within a Unity Catalog metastore.
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
 

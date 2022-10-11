@@ -91,4 +91,12 @@ Exactly one of the below arguments is required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `tokens` - (Optional) List of Recipient Tokens.
+* `tokens` - List of Recipient Tokens.
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [databricks_share](share.md) to create Delta Sharing shares.
+* [databricks_grants](grants.md) to manage Delta Sharing permissions.
+* [databricks_shares](../data-sources/shares.md) to read existing Delta Sharing shares.

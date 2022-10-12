@@ -272,7 +272,7 @@ resource "databricks_user_role" "metastore_admin" {
 
 ## Create a Unity Catalog metastore and link it to workspaces
 
-A [databricks_metastore](../resources/metastore.md) is the top level container for data in Unity Catalog. A single metastore can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. Databricks recommends using a small number of metastores, except when organizations wish to have hard isolation boundaries between data. Data cannot be easily joined/queried across metastores.
+A [databricks_metastore](../resources/metastore.md) is the top level container for data in Unity Catalog. You can only create a single metastore for each region in which your organization operates, and attach workspaces to the metastore. Each workspace will have the same view of the data you manage in Unity Catalog.
 
 ```hcl
 resource "databricks_metastore" "this" {

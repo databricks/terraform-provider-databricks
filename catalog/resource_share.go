@@ -75,7 +75,7 @@ func (a SharesAPI) delete(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/shares/"+name, nil)
 }
 
-func shareObjectsToShareChange(si ShareInfo, action string) ShareUpdates {
+func (si ShareInfo) shareChanges(action string) ShareUpdates {
 	var changes []ShareDataChange
 	for _, obj := range si.Objects {
 		changes = append(changes, ShareDataChange{
@@ -88,7 +88,7 @@ func shareObjectsToShareChange(si ShareInfo, action string) ShareUpdates {
 	}
 }
 
-func getResourceShareMap(si ShareInfo) map[string]SharedDataObject {
+func (si ShareInfo) resourceShareMap() map[string]SharedDataObject {
 	m := make(map[string]SharedDataObject, len(si.Objects))
 	for _, sdo := range si.Objects {
 		m[sdo.Name] = sdo
@@ -97,8 +97,8 @@ func getResourceShareMap(si ShareInfo) map[string]SharedDataObject {
 }
 
 func (si ShareInfo) Diff(other ShareInfo) []ShareDataChange {
-	beforeMap := getResourceShareMap(si)
-	afterMap := getResourceShareMap(other)
+	beforeMap := si.resourceShareMap()
+	afterMap := other.resourceShareMap()
 	changes := []ShareDataChange{}
 	// not in after so remove
 	for _, beforeSdo := range si.Objects {
@@ -139,8 +139,12 @@ func ResourceShare() *schema.Resource {
 				return err
 			}
 			//can only create empty share, objects have to be added using update API
-			shareChanges := shareObjectsToShareChange(si, ShareAdd)
+			shareChanges := si.shareChanges(ShareAdd)
 			if err := NewSharesAPI(ctx, c).update(si.Name, shareChanges); err != nil {
+				//delete orphaned share if update fails
+				if u_err := NewSharesAPI(ctx, c).delete(si.Name); err != nil {
+					return u_err
+				}
 				return err
 			}
 			d.SetId(si.Name)

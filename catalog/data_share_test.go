@@ -4,10 +4,12 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestShareDetailsData(t *testing.T) {
-	qa.ResourceFixture{
+func TestShareData(t *testing.T) {
+	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -29,25 +31,33 @@ func TestShareDetailsData(t *testing.T) {
 				},
 			},
 		},
-		Resource:    DataSourceShareDetails(),
+		Resource:    DataSourceShare(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
 		HCL: `
 		name = "a"
 		`,
-	}.ApplyAndExpectData(t, map[string]any{
-		"name":       "a",
-		"created_by": "bob",
-		"created_at": 1921321,
-	},
-	)
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "bob", d.Get("created_by"))
+	assert.Equal(t, 1921321, d.Get("created_at"))
+	assert.Equal(t,
+		map[string]interface{}{
+			"added_at":         0,
+			"added_by":         "",
+			"comment":          "c",
+			"data_object_type": "TABLE",
+			"name":             "a",
+			"shared_as":        "",
+		},
+		d.Get("object").(*schema.Set).List()[0])
 }
 
-func TestShareDetailsData_Error(t *testing.T) {
+func TestShareData_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,
-		Resource:    DataSourceShareDetails(),
+		Resource:    DataSourceShare(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",

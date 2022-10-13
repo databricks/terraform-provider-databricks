@@ -55,7 +55,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_schemas":                 catalog.DataSourceSchemas(),
 			"databricks_service_principal":       scim.DataSourceServicePrincipal(),
 			"databricks_service_principals":      scim.DataSourceServicePrincipals(),
-			"databricks_share_details":           catalog.DataSourceShareDetails(),
+			"databricks_share":                   catalog.DataSourceShare(),
 			"databricks_shares":                  catalog.DataSourceShares(),
 			"databricks_spark_version":           clusters.DataSourceSparkVersion(),
 			"databricks_sql_warehouse":           sql.DataSourceWarehouse(),

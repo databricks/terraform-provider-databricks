@@ -1,7 +1,7 @@
 ---
 subcategory: "Unity Catalog"
 ---
-# databricks_share_details Data Source
+# databricks_share Data Source
 
 Retrieves details about a [databricks_share](../resources/share.md) that were created by Terraform or manually.
 
@@ -10,12 +10,12 @@ Retrieves details about a [databricks_share](../resources/share.md) that were cr
 Getting details of an existing share in the metastore
 
 ```hcl
-data "databricks_share_details" "this" {
+data "databricks_share" "this" {
   name = "this
 }
 
 output "created_by" {
-  value     = data.databricks_share_details.this.created_by
+  value     = data.databricks_share.this.created_by
   sensitive = false
 }
 ```

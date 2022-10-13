@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceShareDetails() *schema.Resource {
+func DataSourceShare() *schema.Resource {
 	type ShareDetail struct {
 		Name      string             `json:"name,omitempty" tf:"computed"`
 		Objects   []SharedDataObject `json:"objects,omitempty" tf:"computed,slice_set,alias:object"`

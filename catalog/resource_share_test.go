@@ -429,3 +429,83 @@ func TestCreateShare_ThrowError(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
+
+func TestCreateShareButPatchFails(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/shares",
+				ExpectedRequest: ShareInfo{
+					Name: "a",
+					Objects: []SharedDataObject{
+						{
+							Name:           "main.b",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+						},
+						{
+							Name:           "main.a",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+						},
+					},
+				},
+				Response: RecipientInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/a",
+				ExpectedRequest: ShareUpdates{
+					Updates: []ShareDataChange{
+						{
+							Action: "ADD",
+							DataObject: SharedDataObject{
+								Name:           "main.b",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+							},
+						},
+						{
+							Action: "ADD",
+							DataObject: SharedDataObject{
+								Name:           "main.a",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+							},
+						},
+					},
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/shares/a",
+			},
+		},
+		Resource: ResourceShare(),
+		Create:   true,
+		HCL: `
+			name = "a"
+			object {
+				name = "main.a"
+				comment = "c"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = "main.b"
+				comment = "c"
+				data_object_type = "TABLE"
+			}
+		`,
+	}.Apply(t)
+
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}

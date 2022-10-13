@@ -97,13 +97,20 @@ func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
+func getPermissionEndpoint(securable, name string) string {
+	if securable == "share" {
+		return fmt.Sprintf("/unity-catalog/shares/%s/permissions", name)
+	}
+	return fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name)
+}
+
 func (a PermissionsAPI) getPermissions(securable, name string) (list PermissionsList, err error) {
-	err = a.client.Get(a.context, fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name), nil, &list)
+	err = a.client.Get(a.context, getPermissionEndpoint(securable, name), nil, &list)
 	return
 }
 
 func (a PermissionsAPI) updatePermissions(securable, name string, diff permissionsDiff) error {
-	return a.client.Patch(a.context, fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name), diff)
+	return a.client.Patch(a.context, getPermissionEndpoint(securable, name), diff)
 }
 
 // replacePermissions merges removal diff of existing permissions on the platform
@@ -236,6 +243,9 @@ var mapping = securableMapping{
 		"ALL_PRIVILEGES": true,
 		"SELECT":         true,
 		"REFRESH":        true,
+	},
+	"share": {
+		"SELECT": true,
 	},
 }
 

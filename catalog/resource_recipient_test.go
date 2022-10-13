@@ -15,7 +15,7 @@ func TestCreateRecipient(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/unity-catalog/recipients",
+				Resource: "/api/2.1/unity-catalog/recipients",
 				ExpectedRequest: RecipientInfo{
 					Name:               "a",
 					Comment:            "b",
@@ -32,7 +32,7 @@ func TestCreateRecipient(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/unity-catalog/recipients/a",
+				Resource: "/api/2.1/unity-catalog/recipients/a",
 				Response: RecipientInfo{
 					Name:               "a",
 					Comment:            "b",

@@ -31,9 +31,9 @@ This data source exports the following attributes:
 * `created_at` - Time when the share was created.
 * `created_by` - The principal that created the share.
 * `object` - arrays containing details of each object in the share.
-  * `name` (Required) - Full name of the object being shared.
-  * `data_object_type` (Required) - Type of the object.
-  * `comment` (Optional) -  Description about the object.
+  * `name` - Full name of the object being shared.
+  * `data_object_type` - Type of the object.
+  * `comment` -  Description about the object.
 
 ## Related Resources
 

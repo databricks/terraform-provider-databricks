@@ -33,7 +33,7 @@ resource "databricks_share" "some" {
 
 The following arguments are required:
 
-* `name` - Name of share. Change forces creation of a new resource.
+* `name` (Required) - Name of share. Change forces creation of a new resource.
 
 ### object Configuration Block
 

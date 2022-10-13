@@ -142,8 +142,8 @@ func ResourceShare() *schema.Resource {
 			shareChanges := si.shareChanges(ShareAdd)
 			if err := NewSharesAPI(ctx, c).update(si.Name, shareChanges); err != nil {
 				//delete orphaned share if update fails
-				if u_err := NewSharesAPI(ctx, c).delete(si.Name); err != nil {
-					return u_err
+				if d_err := NewSharesAPI(ctx, c).delete(si.Name); d_err != nil {
+					return d_err
 				}
 				return err
 			}

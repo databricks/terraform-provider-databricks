@@ -376,33 +376,6 @@ func TestCreateShare_ThrowError(t *testing.T) {
 						},
 					},
 				},
-				Response: RecipientInfo{
-					Name: "a",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/shares/a",
-				ExpectedRequest: ShareUpdates{
-					Updates: []ShareDataChange{
-						{
-							Action: "ADD",
-							DataObject: SharedDataObject{
-								Name:           "main.b",
-								DataObjectType: "TABLE",
-								Comment:        "c",
-							},
-						},
-						{
-							Action: "ADD",
-							DataObject: SharedDataObject{
-								Name:           "main.a",
-								DataObjectType: "TABLE",
-								Comment:        "c",
-							},
-						},
-					},
-				},
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

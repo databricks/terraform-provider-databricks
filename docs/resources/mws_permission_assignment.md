@@ -1,5 +1,5 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Security"
 ---
 # databricks_mws_permission_assignment Resource
 

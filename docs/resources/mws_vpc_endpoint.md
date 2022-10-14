@@ -114,7 +114,6 @@ The following arguments are required:
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `aws_vpc_endpoint_id` - ID of configured [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint)
 * `vpc_endpoint_name` - Name of VPC Endpoint in Databricks Account
-* `aws_endpoint_service_id` - ID of Databricks VPC endpoint service to connect to. Please contact your Databricks representative to request mapping
 * `region` - Region of AWS VPC
 
 ## Attribute Reference
@@ -122,6 +121,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `vpc_endpoint_id` - Canonical unique identifier of VPC Endpoint in Databricks Account
+* `aws_endpoint_service_id` - The ID of the Databricks endpoint service that this VPC endpoint is connected to. Please find the list of endpoint service IDs for each supported region in the [Databricks PrivateLink documentation](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html)
 * `state` - State of VPC Endpoint
 
 ## Import

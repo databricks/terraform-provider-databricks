@@ -33,6 +33,7 @@ type MetastoreInfo struct {
 	CreatedBy                                   string  `json:"created_by,omitempty" tf:"computed"`
 	UpdatedAt                                   int64   `json:"updated_at,omitempty" tf:"computed"`
 	UpdatedBy                                   string  `json:"updated_by,omitempty" tf:"computed"`
+	DeltaSharingEnabled                         bool    `json:"delta_sharing_enabled,omitempty" tf:"default:false"`
 	DeltaSharingScope                           string  `json:"delta_sharing_scope,omitempty" tf:"suppress_diff"`
 	DeltaSharingRecipientTokenLifetimeInSeconds int64   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
 	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
@@ -77,7 +78,7 @@ func ResourceMetastore() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			m["delta_sharing_scope"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds"}
+			m["delta_sharing_scope"].RequiredWith = []string{"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_enabled"}
 			m["delta_sharing_scope"].ValidateFunc = validation.StringInSlice([]string{"INTERNAL", "INTERNAL_AND_EXTERNAL"}, false)
 			m["delta_sharing_recipient_token_lifetime_in_seconds"].RequiredWith = []string{"delta_sharing_scope"}
 			m["storage_root"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
@@ -90,7 +91,7 @@ func ResourceMetastore() *schema.Resource {
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/metastores", []string{"owner", "name", "delta_sharing_scope",
-		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name"})
+		"delta_sharing_recipient_token_lifetime_in_seconds", "delta_sharing_organization_name", "delta_sharing_enabled"})
 
 	return common.Resource{
 		Schema: s,

@@ -26,7 +26,6 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 			if d.IsNewResource() && !contains([]string{
 				"owner",
 				"delta_sharing_scope",
-				"delta_sharing_enabled",
 				"delta_sharing_recipient_token_lifetime_in_seconds",
 				"delta_sharing_organization_name",
 			}, field) {
@@ -53,10 +52,12 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")
 			}
 
-			// certain fields e.g. storage creds are nested in an array with single element
-			new_array, test := new.([]any)
-			if test && len(new_array) == 1 {
-				patch[field] = new_array[0]
+			if contains([]string{
+				"aws_iam_role",
+				"azure_service_principal",
+				"azure_managed_identity",
+			}, field) {
+				patch[field] = d.Get(field).([]any)[0]
 				continue
 			}
 

@@ -109,9 +109,8 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: map[string]any{
-					"owner":                 "administrators",
-					"delta_sharing_enabled": true,
-					"delta_sharing_scope":   "INTERNAL_AND_EXTERNAL",
+					"owner":               "administrators",
+					"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
 					"delta_sharing_recipient_token_lifetime_in_seconds": 0,
 					"delta_sharing_organization_name":                   "acme",
 				},
@@ -123,7 +122,6 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 		name = "a"
 		storage_root = "s3://b"
 		owner = "administrators"
-		delta_sharing_enabled = true
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
 		delta_sharing_recipient_token_lifetime_in_seconds = 0
 		delta_sharing_organization_name = "acme"
@@ -192,18 +190,16 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 		Update:      true,
 		RequiresNew: true,
 		InstanceState: map[string]string{
-			"name":                  "abc",
-			"storage_root":          "s3:/a",
-			"owner":                 "admin",
-			"delta_sharing_enabled": "true",
-			"delta_sharing_scope":   "INTERNAL_AND_EXTERNAL",
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
 			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
 		},
 		HCL: `
 		name = "abc"
 		storage_root = "s3:/a"
 		owner = "admin"
-		delta_sharing_enabled = true
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
 		delta_sharing_recipient_token_lifetime_in_seconds = 1002
 		`,
@@ -235,18 +231,16 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 		Update:      true,
 		RequiresNew: true,
 		InstanceState: map[string]string{
-			"name":                  "abc",
-			"storage_root":          "s3:/a",
-			"owner":                 "admin",
-			"delta_sharing_enabled": "true",
-			"delta_sharing_scope":   "INTERNAL",
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL",
 			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
 		},
 		HCL: `
 		name = "abc"
 		storage_root = "s3:/a"
 		owner = "admin"
-		delta_sharing_enabled = true
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
 		delta_sharing_recipient_token_lifetime_in_seconds = 1002
 		`,

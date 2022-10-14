@@ -253,9 +253,7 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		// The ID of the workspace's network configuration object. Used only if you already use a customer-managed VPC.
 		// This change is supported only if you specified a network configuration ID when the workspace was created.
 		// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
-		// is available for updating both failed and running workspaces. Note: You cannot use a network configuration
-		// update in this API to add support for PrivateLink (in Public Preview). To add PrivateLink to an existing
-		// workspace, contact your Databricks representative.
+		// is available for updating both failed and running workspaces.
 		"network_id": ws.NetworkID,
 	}
 	if ws.PrivateAccessSettingsID != "" {

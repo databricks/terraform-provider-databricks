@@ -502,6 +502,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 					"credentials_id":                  "bcd",
 					"network_id":                      "fgh",
 					"storage_customer_managed_key_id": "def",
+					"private_access_settings_id":      "pas",
 				},
 			},
 			{
@@ -518,6 +519,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 					NetworkID:                           "fgh",
 					ManagedServicesCustomerManagedKeyID: "def",
 					StorageCustomerManagedKeyID:         "def",
+					PrivateAccessSettingsID:             "pas",
 					AccountID:                           "abc",
 					WorkspaceID:                         1234,
 				},
@@ -548,6 +550,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 			"is_no_public_ip_enabled":                  true,
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
+			"private_access_settings_id":               "pas",
 			"workspace_id":                             1234,
 		},
 		Update: true,

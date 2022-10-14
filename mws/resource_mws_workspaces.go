@@ -243,7 +243,7 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
@@ -257,6 +257,9 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		// update in this API to add support for PrivateLink (in Public Preview). To add PrivateLink to an existing
 		// workspace, contact your Databricks representative.
 		"network_id": ws.NetworkID,
+	}
+	if ws.PrivateAccessSettingsID != "" {
+		request["private_access_settings_id"] = ws.PrivateAccessSettingsID
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID

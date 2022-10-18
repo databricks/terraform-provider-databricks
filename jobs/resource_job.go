@@ -105,6 +105,19 @@ type WebhookNotifications struct {
 	OnFailure []Webhook `json:"on_failure,omitempty"`
 }
 
+func (wn *WebhookNotifications) Sort() {
+	if wn == nil {
+		return
+	}
+
+	notifs := [][]Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
+	for _, ns := range notifs {
+		sort.Slice(ns, func(i, j int) bool {
+			return ns[i].ID < ns[j].ID
+		})
+	}
+}
+
 // Webhook contains a reference by id to one of the centrally configured webhooks.
 type Webhook struct {
 	ID string `json:"id"`
@@ -210,16 +223,7 @@ func (js *JobSettings) sortTasksByKey() {
 }
 
 func (js *JobSettings) sortWebhooksByID() {
-	if js.WebhookNotifications == nil {
-		return
-	}
-
-	notifs := [][]Webhook{js.WebhookNotifications.OnStart, js.WebhookNotifications.OnFailure, js.WebhookNotifications.OnSuccess}
-	for _, ns := range notifs {
-		sort.Slice(ns, func(i, j int) bool {
-			return ns[i].ID < ns[j].ID
-		})
-	}
+	js.WebhookNotifications.Sort()
 }
 
 // JobList returns a list of all jobs

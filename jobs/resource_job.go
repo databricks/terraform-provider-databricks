@@ -210,6 +210,10 @@ func (js *JobSettings) sortTasksByKey() {
 }
 
 func (js *JobSettings) sortWebhooksByID() {
+	if js.WebhookNotifications == nil {
+		return
+	}
+
 	notifs := [][]Webhook{js.WebhookNotifications.OnStart, js.WebhookNotifications.OnFailure, js.WebhookNotifications.OnSuccess}
 	for _, ns := range notifs {
 		sort.Slice(ns, func(i, j int) bool {

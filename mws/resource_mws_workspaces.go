@@ -243,7 +243,7 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
@@ -255,9 +255,10 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
 		// is available for updating both failed and running workspaces.
 		"network_id": ws.NetworkID,
-	}
-	if ws.PrivateAccessSettingsID != "" {
-		request["private_access_settings_id"] = ws.PrivateAccessSettingsID
+		// The ID of the workspace's private access settings. Used only if you already enable PrivateLink.
+		// This change is supported if you are adding/updating a private access setting.
+		// In other words, you cannot remove the private access setting from a workspace
+		"private_access_settings_id": ws.PrivateAccessSettingsID,
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
@@ -545,6 +546,13 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				return err
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
+			old, new := d.GetChange("private_access_settings_id")
+			if old != "" && new == "" {
+				return fmt.Errorf("cannot remove private access setting from workspace")
+			}
+			return nil
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),

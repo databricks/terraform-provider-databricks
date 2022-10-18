@@ -602,8 +602,9 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
 				ExpectedRequest: map[string]any{
-					"credentials_id": "bcd",
-					"network_id":     "fgh",
+					"credentials_id":             "bcd",
+					"network_id":                 "fgh",
+					"private_access_settings_id": "",
 				},
 			},
 			{
@@ -1236,4 +1237,41 @@ func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
 			NetworkID: "abc",
 		}), "failed to start workspace. Cannot read network: 🐜")
 	})
+}
+
+func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+			"private_access_settings_id":               "pas",
+		},
+		State: map[string]any{
+			"account_id": "abc",
+
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             1234,
+			"private_access_settings_id":               "",
+		},
+		Update: true,
+		ID:     "abc/1234",
+	}.ExpectError(t, "cannot remove private access setting from workspace")
 }

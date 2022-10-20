@@ -572,7 +572,7 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Dashboard usage
 
-[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have two possible permissions: `CAN_RUN` and `CAN_MANAGE`:
+[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -600,7 +600,7 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Query usage
 
-[SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have two possible permissions: `CAN_RUN` and `CAN_MANAGE`:
+[SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 
 
 -> **Note** If you do not define an `access_control` block granting `CAN_MANAGE` explictly for the user calling this provider, Databricks Terraform Provider will add `CAN_MANAGE` permission for the caller. This is a failsafe to prevent situations where the caller is locked out from making changes to the targeted `databricks_sql_query` resource when backend API do not apply permission inheritance correctly.
@@ -631,7 +631,7 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Alert usage
 
-[SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have two possible permissions: `CAN_RUN` and `CAN_MANAGE`:
+[SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 
 ```hcl
 resource "databricks_group" "auto" {

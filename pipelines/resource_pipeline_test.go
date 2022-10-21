@@ -326,7 +326,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 			Include: []string{"com.databricks.include"},
 		},
 		Channel: "CURRENT",
-		Edition: "advanced",
+		Edition: "ADVANCED",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -428,7 +428,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 			Include: []string{"com.databricks.include"},
 		},
 		Channel: "CURRENT",
-		Edition: "advanced",
+		Edition: "ADVANCED",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.8.0
-	github.com/zclconf/go-cty v1.11.0
+	github.com/zclconf/go-cty v1.11.1
 	golang.org/x/mod v0.5.1
 	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac

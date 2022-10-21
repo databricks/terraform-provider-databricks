@@ -85,7 +85,7 @@ type PipelineSpec struct {
 	AllowDuplicateNames bool              `json:"allow_duplicate_names,omitempty"`
 	Target              string            `json:"target,omitempty"`
 	Photon              bool              `json:"photon,omitempty"`
-	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:advanced"`
+	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:ADVANCED"`
 	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
 }
 

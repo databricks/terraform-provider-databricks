@@ -208,7 +208,6 @@ The following arguments are available and cannot be changed after workspace is c
 * `workspace_name` - name of the workspace, will appear on UI
 * `aws_region` - AWS region of VPC
 * `storage_configuration_id` - `storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
-* `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account
 
 ## token block
 
@@ -225,7 +224,7 @@ The following arguments could be modified after the workspace is running:
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md). Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
 * `credentials_id` - `credentials_id` from [credentials](mws_credentials.md)
 * `storage_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster EBS Volumes.
-
+* `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account
 
 ## Attribute Reference
 

@@ -243,7 +243,7 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
@@ -253,10 +253,11 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		// The ID of the workspace's network configuration object. Used only if you already use a customer-managed VPC.
 		// This change is supported only if you specified a network configuration ID when the workspace was created.
 		// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
-		// is available for updating both failed and running workspaces. Note: You cannot use a network configuration
-		// update in this API to add support for PrivateLink (in Public Preview). To add PrivateLink to an existing
-		// workspace, contact your Databricks representative.
+		// is available for updating both failed and running workspaces.
 		"network_id": ws.NetworkID,
+	}
+	if ws.PrivateAccessSettingsID != "" {
+		request["private_access_settings_id"] = ws.PrivateAccessSettingsID
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
@@ -544,6 +545,13 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				return err
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
+			old, new := d.GetChange("private_access_settings_id")
+			if old != "" && new == "" {
+				return fmt.Errorf("cannot remove private access setting from workspace")
+			}
+			return nil
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),

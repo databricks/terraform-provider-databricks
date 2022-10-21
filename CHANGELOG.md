@@ -1,5 +1,19 @@
 # Version changelog
 
+## 1.6.1
+
+ * Added `CAN_VIEW` permissions for [databricks_sql_dashboard](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_dashboard) and [databricks_sql_query](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_query) ([#1682](https://github.com/databricks/terraform-provider-databricks/pull/1682)).
+ * Added `webhook_notifications` support to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#1674](https://github.com/databricks/terraform-provider-databricks/pull/1674)).
+ * Allow updating `private_access_settings_id` for [databricks_mws_workspaces](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_workspaces) ([#1668](https://github.com/databricks/terraform-provider-databricks/pull/1668)).
+ * Changed [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) edition default value from `advanced` to `ADVANCED` ([#1683](https://github.com/databricks/terraform-provider-databricks/pull/1683)).
+ * Fixed reference to `display_name_contains` in docs example ([#1677](https://github.com/databricks/terraform-provider-databricks/pull/1677)).
+
+Updated dependency versions:
+
+ * Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.23.0 to 2.24.0 ([#1671](https://github.com/databricks/terraform-provider-databricks/pull/1671)).
+ * Bump github.com/zclconf/go-cty from 1.11.0 to 1.11.1 ([#1672](https://github.com/databricks/terraform-provider-databricks/pull/1672)).
+ * Bump google.golang.org/api from 0.98.0 to 0.99.0 ([#1673](https://github.com/databricks/terraform-provider-databricks/pull/1673)).
+
 ## 1.6.0
 
  * Added [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/share) resource, [databricks_shares](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/shares) data source, and [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/share) data source ([#1664](https://github.com/databricks/terraform-provider-databricks/pull/1664)).

@@ -255,10 +255,9 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
 		// is available for updating both failed and running workspaces.
 		"network_id": ws.NetworkID,
-		// The ID of the workspace's private access settings. Used only if you already enable PrivateLink.
-		// This change is supported if you are adding/updating a private access setting.
-		// In other words, you cannot remove the private access setting from a workspace
-		"private_access_settings_id": ws.PrivateAccessSettingsID,
+	}
+	if ws.PrivateAccessSettingsID != "" {
+		request["private_access_settings_id"] = ws.PrivateAccessSettingsID
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID

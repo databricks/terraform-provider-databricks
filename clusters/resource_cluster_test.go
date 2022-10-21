@@ -359,6 +359,78 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceClusterCreatePhoton(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/create",
+				ExpectedRequest: Cluster{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					RuntimeEngine:          "PHOTON",
+				},
+				Response: ClusterInfo{
+					ClusterID: "abc",
+					State:     ClusterStateRunning,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeID:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateRunning,
+					RuntimeEngine:          "PHOTON",
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: libraries.ClusterLibraryStatuses{
+					LibraryStatuses: []libraries.LibraryStatus{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+			"is_pinned":               false,
+			"runtime_engine":          "PHOTON",
+		},
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestResourceClusterCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

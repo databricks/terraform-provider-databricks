@@ -397,6 +397,7 @@ type Cluster struct {
 	SingleUserName   string        `json:"single_user_name,omitempty"`
 	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
+	RuntimeEngine    string        `json:"runtime_engine,omitempty"`
 }
 
 func (cluster Cluster) Validate() error {
@@ -489,6 +490,7 @@ type ClusterInfo struct {
 	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason         *TerminationReason `json:"termination_reason,omitempty"`
 	DataSecurityMode          string             `json:"data_security_mode,omitempty"`
+	RuntimeEngine             string             `json:"runtime_engine,omitempty"`
 }
 
 // IsRunningOrResizing returns true if cluster is running or resizing

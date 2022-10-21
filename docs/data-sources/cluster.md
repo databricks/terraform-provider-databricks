@@ -29,9 +29,11 @@ data "databricks_cluster" "all" {
 ## Attribute Reference
 
 This data source exports the following attributes:
+
 * `cluster_info` block, consisting of following fields:
   * `cluster_name` - Cluster name, which doesn’t have to be unique.
   * `spark_version` - [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster.
+  * `runtime_engine` - The type of runtime of the cluster
   * `driver_node_type_id` - The node type of the Spark driver.
   * `node_type_id` - Any supported [databricks_node_type](../data-sources/node_type.md) id.
   * `instance_pool_id` The [pool of idle instances](instance_pool.md) the cluster is attached to.
@@ -58,4 +60,4 @@ The following resources are often used in the same context:
 * [databricks_instance_pool](../resources/instance_pool.md) to manage [instance pools](https://docs.databricks.com/clusters/instance-pools/index.html) to reduce [cluster](../resources/cluster.md) start and auto-scaling times by maintaining a set of idle, ready-to-use instances.
 * [databricks_job](../resources/job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](../resources/cluster.md).
 * [databricks_library](../resources/library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](../resources/cluster.md).
-* [databricks_pipeline](../resources/pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+* [databricks_pipeline](../resources/pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).

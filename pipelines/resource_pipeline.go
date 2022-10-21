@@ -47,9 +47,9 @@ type pipelineCluster struct {
 	PolicyID                 string `json:"policy_id,omitempty"`
 	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
 
-	SparkConf    map[string]string `json:"spark_conf,omitempty"`
-	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
-	CustomTags   map[string]string `json:"custom_tags,omitempty"`
+	SparkConf    map[string]string `json:"spark_conf,omitempty" tf:"suppress_diff"`
+	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty" tf:"suppress_diff"`
+	CustomTags   map[string]string `json:"custom_tags,omitempty" tf:"suppress_diff"`
 
 	SSHPublicKeys  []string                         `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
 	InitScripts    []clusters.InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias

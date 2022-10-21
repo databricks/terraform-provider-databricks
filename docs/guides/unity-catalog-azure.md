@@ -89,7 +89,7 @@ The first step is to create the required Azure objects:
 ```hcl
 resource "azurerm_databricks_access_connector" "unity" {
   name                = "${local.prefix}-databricks-mi"
-  parent_id           = data.azurerm_resource_group.this.id
+  resource_group_name = data.azurerm_resource_group.this.name
   location            = data.azurerm_resource_group.this.location
   identity {
     type = "SystemAssigned"
@@ -206,7 +206,7 @@ First, create the required objects in Azure.
 ```hcl
 resource "azurerm_databricks_access_connector" "ext_access_connector" {
   name                = "ext-databricks-mi"
-  parent_id           = data.azurerm_resource_group.this.id
+  resource_group_name = data.azurerm_resource_group.this.name
   location            = data.azurerm_resource_group.this.location
   identity {
     type = "SystemAssigned"

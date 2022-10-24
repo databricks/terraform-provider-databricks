@@ -648,8 +648,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			// TODO: if I have 2 users from different domains: test@domain1.com & test@domain2.com - then I'll generate the same name
 			// use another algorithm for name generation, like, just replace non-word characters with '_'
-			s := strings.Split(d.Get("user_name").(string), "@")
-			return s[0]
+			//s := strings.Split(d.Get("user_name").(string), "@")
+			//return s[0]
+			s := d.Get("user_name").(string)
+			return regexp.MustCompile(`[^a-zA-Z0-9]+`).ReplaceAllString(s, "_")
 		},
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findUserByName(r.Value)

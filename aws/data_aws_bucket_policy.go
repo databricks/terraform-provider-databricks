@@ -36,6 +36,11 @@ func DataAwsBucketPolicy() *schema.Resource {
 						Principal: map[string]string{
 							"AWS": fmt.Sprintf("arn:aws:iam::%s:root", d.Get("databricks_account_id").(string)),
 						},
+						Condition: map[string]map[string]string{
+							"StringEquals": {
+								"aws:PrincipalTag/DatabricksAccountId": d.Get("databricks_account_id").(string),
+							},
+						},
 					},
 				},
 			}

@@ -19,7 +19,7 @@ func TestDataAwsBucketPolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 440, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 571, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsBucketPolicy_FullAccessRole(t *testing.T) {
@@ -35,5 +35,5 @@ func TestDataAwsBucketPolicy_FullAccessRole(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 413, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 544, "Strange length for policy: %s", j)
 }

@@ -88,13 +88,38 @@ type DbtTask struct {
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
 }
 
-// EmailNotifications contains the information for email notifications after job completion
+// EmailNotifications contains the information for email notifications after job or task run start or completion
 type EmailNotifications struct {
 	OnStart               []string `json:"on_start,omitempty"`
 	OnSuccess             []string `json:"on_success,omitempty"`
 	OnFailure             []string `json:"on_failure,omitempty"`
 	NoAlertForSkippedRuns bool     `json:"no_alert_for_skipped_runs,omitempty"`
 	AlertOnLastAttempt    bool     `json:"alert_on_last_attempt,omitempty"`
+}
+
+// WebhookNotifications contains the information for webhook notifications sent after job start or completion.
+type WebhookNotifications struct {
+	OnStart   []Webhook `json:"on_start,omitempty"`
+	OnSuccess []Webhook `json:"on_success,omitempty"`
+	OnFailure []Webhook `json:"on_failure,omitempty"`
+}
+
+func (wn *WebhookNotifications) Sort() {
+	if wn == nil {
+		return
+	}
+
+	notifs := [][]Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
+	for _, ns := range notifs {
+		sort.Slice(ns, func(i, j int) bool {
+			return ns[i].ID < ns[j].ID
+		})
+	}
+}
+
+// Webhook contains a reference by id to one of the centrally configured webhooks.
+type Webhook struct {
+	ID string `json:"id"`
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -179,10 +204,11 @@ type JobSettings struct {
 	GitSource *GitSource `json:"git_source,omitempty"`
 	// END Jobs + Repo integration preview
 
-	Schedule           *CronSchedule       `json:"schedule,omitempty"`
-	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`
-	EmailNotifications *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
-	Tags               map[string]string   `json:"tags,omitempty"`
+	Schedule             *CronSchedule         `json:"schedule,omitempty"`
+	MaxConcurrentRuns    int32                 `json:"max_concurrent_runs,omitempty"`
+	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	Tags                 map[string]string     `json:"tags,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -193,6 +219,10 @@ func (js *JobSettings) sortTasksByKey() {
 	sort.Slice(js.Tasks, func(i, j int) bool {
 		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
 	})
+}
+
+func (js *JobSettings) sortWebhooksByID() {
+	js.WebhookNotifications.Sort()
 }
 
 // JobList returns a list of all jobs
@@ -381,6 +411,7 @@ func (a JobsAPI) Restart(id string, timeout time.Duration) error {
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
 	jobSettings.sortTasksByKey()
+	jobSettings.sortWebhooksByID()
 	var gitSource *GitSource = jobSettings.GitSource
 	if gitSource != nil && gitSource.Provider == "" {
 		gitSource.Provider = repos.GetGitProviderFromUrl(gitSource.Url)
@@ -418,6 +449,7 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 	}, &job), id)
 	if job.Settings != nil {
 		job.Settings.sortTasksByKey()
+		job.Settings.sortWebhooksByID()
 	}
 	return
 }

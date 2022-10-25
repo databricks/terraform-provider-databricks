@@ -7,8 +7,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func TestAccAssignGroupToWorkspace(t *testing.T) {
-	qa.RequireCloudEnv(t, "unity-catalog-account")
+func TestUcAccAssignGroupToWorkspace(t *testing.T) {
+	qa.RequireCloudEnv(t, "ucacct")
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -16,7 +16,7 @@ func TestAccAssignGroupToWorkspace(t *testing.T) {
 				display_name = "TF {var.RANDOM}"
 			}
 			resource "databricks_mws_permission_assignment" "this" {
-				workspace_id = {env.TEST_UC_WORKSPACE_ID}
+				workspace_id = {env.TEST_WORKSPACE_ID}
 				principal_id = databricks_group.this.id
 				permissions  = ["USER"]
 			}`,
@@ -27,7 +27,7 @@ func TestAccAssignGroupToWorkspace(t *testing.T) {
 				display_name = "TF {var.RANDOM}"
 			}
 			resource "databricks_mws_permission_assignment" "this" {
-				workspace_id = {env.TEST_UC_WORKSPACE_ID}
+				workspace_id = {env.TEST_WORKSPACE_ID}
 				principal_id = databricks_group.this.id
 				permissions  = ["ADMIN"]
 			}`,
@@ -38,7 +38,7 @@ func TestAccAssignGroupToWorkspace(t *testing.T) {
 				display_name = "TF {var.RANDOM}"
 			}
 			resource "databricks_mws_permission_assignment" "this" {
-				workspace_id = {env.TEST_UC_WORKSPACE_ID}
+				workspace_id = {env.TEST_WORKSPACE_ID}
 				principal_id = databricks_group.this.id
 				permissions  = ["USER"]
 			}`,
@@ -55,7 +55,7 @@ func TestAccAssignSpnToWorkspace(t *testing.T) {
 				display_name = "TF {var.RANDOM}"
 			}
 			resource "databricks_mws_permission_assignment" "this" {
-				workspace_id = {env.TEST_UC_WORKSPACE_ID}
+				workspace_id = {env.TEST_WORKSPACE_ID}
 				principal_id = databricks_service_principal.this.id
 				permissions  = ["USER"]
 			}`,

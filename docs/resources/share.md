@@ -18,14 +18,14 @@ data "databricks_tables" "things" {
 }
 
 resource "databricks_share" "some" {
-  name            = "my_share"
+  name = "my_share"
   dynamic "object" {
     for_each = data.databricks_tables.things.ids
     content {
-      name = object.value
+      name             = object.value
       data_object_type = "TABLE"
     }
-  }  
+  }
 }
 ```
 

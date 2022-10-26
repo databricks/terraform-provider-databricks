@@ -46,7 +46,7 @@ resource "databricks_grants" "sandbox" {
   grant {
     principal  = "Data Sharer"
     privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
-  }  
+  }
 }
 ```
 
@@ -77,7 +77,7 @@ resource "databricks_grants" "sandbox" {
   grant {
     principal  = "Data Analyst"
     privileges = ["USE_CATALOG", "USE_SCHEMA", "SELECT"]
-  }  
+  }
 }
 ```
 
@@ -225,11 +225,11 @@ You can grant `SELECT` to [databricks_recipient](recipient.md) on [databricks_sh
 
 ```hcl
 resource "databricks_share" "some" {
-  name            = "my_share"
+  name = "my_share"
 }
 
 resource "databricks_recipient" "some" {
-  name            = "my_recipient"
+  name = "my_recipient"
 }
 
 resource "databricks_grants" "some" {

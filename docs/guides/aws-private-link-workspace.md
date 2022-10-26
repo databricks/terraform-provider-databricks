@@ -216,23 +216,23 @@ resource "aws_security_group" "dataplane_vpce" {
 
 ```hcl
 resource "aws_vpc_endpoint" "backend_rest" {
-  vpc_id             = var.vpc_id
-  service_name       = var.workspace_vpce_service
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [aws_security_group.dataplane_vpce.id]
-  subnet_ids         = [aws_subnet.dataplane_vpce.id]
+  vpc_id              = var.vpc_id
+  service_name        = var.workspace_vpce_service
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [aws_security_group.dataplane_vpce.id]
+  subnet_ids          = [aws_subnet.dataplane_vpce.id]
   private_dns_enabled = var.private_dns_enabled
-  depends_on = [aws_subnet.dataplane_vpce]
+  depends_on          = [aws_subnet.dataplane_vpce]
 }
 
 resource "aws_vpc_endpoint" "relay" {
-  vpc_id             = var.vpc_id
-  service_name       = var.relay_vpce_service
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [aws_security_group.dataplane_vpce.id]
-  subnet_ids         = [aws_subnet.dataplane_vpce.id]
+  vpc_id              = var.vpc_id
+  service_name        = var.relay_vpce_service
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [aws_security_group.dataplane_vpce.id]
+  subnet_ids          = [aws_subnet.dataplane_vpce.id]
   private_dns_enabled = var.private_dns_enabled
-  depends_on = [aws_subnet.dataplane_vpce]
+  depends_on          = [aws_subnet.dataplane_vpce]
 }
 
 resource "databricks_mws_vpc_endpoint" "backend_rest_vpce" {

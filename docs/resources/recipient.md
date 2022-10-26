@@ -45,8 +45,8 @@ data "databricks_current_user" "current" {}
 resource "databricks_metastore" "recipient_metastore" {
   name = "recipient"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_account.unity_catalog.name,
-  azurerm_storage_container.unity_catalog.name)
+    azurerm_storage_container.unity_catalog.name,
+  azurerm_storage_account.unity_catalog.name)
   delta_sharing_scope                               = "INTERNAL"
   delta_sharing_recipient_token_lifetime_in_seconds = "60000000"
   force_destroy                                     = true

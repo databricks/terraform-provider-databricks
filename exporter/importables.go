@@ -527,9 +527,15 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
 					continue
 				}
+				hclblockMode := "resource"
+				genDataBlock := map[string]bool{"admins": true, "users": true}
+				if genDataBlock[g.DisplayName] {
+					hclblockMode = "data"
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_group",
 					ID:       g.ID,
+					Mode:     hclblockMode,
 				})
 			}
 			return nil
@@ -547,10 +553,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if r.Name == "admins" || r.Name == "users" {
+			if r.Mode == "data" {
 				// admins & users are to be imported through "data block"
-				// TODO: it doesn't work, fix it...
-				r.Mode = "data"
+				r.Data.Set("workspace_access", false)
+				r.Data.Set("databricks_sql_access", false)
+				r.Data.Set("allow_instance_pool_create", false)
+				r.Data.Set("allow_cluster_create", false)
 				r.Data.State().Set(&terraform.InstanceState{
 					ID: r.ID,
 					Attributes: map[string]string{
@@ -646,10 +654,6 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_user": {
 		Service: "users",
 		Name: func(d *schema.ResourceData) string {
-			// TODO: if I have 2 users from different domains: test@domain1.com & test@domain2.com - then I'll generate the same name
-			// use another algorithm for name generation, like, just replace non-word characters with '_'
-			//s := strings.Split(d.Get("user_name").(string), "@")
-			//return s[0]
 			s := d.Get("user_name").(string)
 			return regexp.MustCompile(`[^a-zA-Z0-9]+`).ReplaceAllString(s, "_")
 		},
@@ -673,10 +677,6 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("Skipping non-direct group %s/%s for user %s", g.Value, g.Display, username)
 					continue
 				}
-				ic.Emit(&resource{
-					Resource: "databricks_group",
-					ID:       g.Value,
-				})
 				userName := u.DisplayName
 				if userName == "" {
 					userName = u.UserName

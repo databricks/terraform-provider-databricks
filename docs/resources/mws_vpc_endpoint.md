@@ -15,23 +15,23 @@ Before using this resource, you will need to create the necessary VPC Endpoints 
 
 ```hcl
 resource "aws_vpc_endpoint" "workspace" {
-  vpc_id             = module.vpc.vpc_id
-  service_name       = local.private_link.workspace_service
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [module.vpc.default_security_group_id]
-  subnet_ids         = [aws_subnet.pl_subnet.id]
-  depends_on         = [aws_subnet.pl_subnet]
-  private_dns_enabled = true  
+  vpc_id              = module.vpc.vpc_id
+  service_name        = local.private_link.workspace_service
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [module.vpc.default_security_group_id]
+  subnet_ids          = [aws_subnet.pl_subnet.id]
+  depends_on          = [aws_subnet.pl_subnet]
+  private_dns_enabled = true
 }
 
 resource "aws_vpc_endpoint" "relay" {
-  vpc_id             = module.vpc.vpc_id
-  service_name       = local.private_link.relay_service
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [module.vpc.default_security_group_id]
-  subnet_ids         = [aws_subnet.pl_subnet.id]
-  depends_on         = [aws_subnet.pl_subnet]
-  private_dns_enabled = true  
+  vpc_id              = module.vpc.vpc_id
+  service_name        = local.private_link.relay_service
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [module.vpc.default_security_group_id]
+  subnet_ids          = [aws_subnet.pl_subnet.id]
+  depends_on          = [aws_subnet.pl_subnet]
+  private_dns_enabled = true
 }
 ```
 

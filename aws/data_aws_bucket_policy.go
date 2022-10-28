@@ -36,13 +36,16 @@ func DataAwsBucketPolicy() *schema.Resource {
 						Principal: map[string]string{
 							"AWS": fmt.Sprintf("arn:aws:iam::%s:root", d.Get("databricks_account_id").(string)),
 						},
-						Condition: map[string]map[string]string{
-							"StringEquals": {
-								"aws:PrincipalTag/DatabricksAccountId": d.Get("databricks_account_id").(string),
-							},
-						},
 					},
 				},
+			}
+			e2AccountId := d.Get("databricks_e2_account_id").(string)
+			if e2AccountId != "" {
+				policy.Statements[0].Condition = map[string]map[string]string{
+					"StringEquals": {
+						"aws:PrincipalTag/DatabricksAccountId": e2AccountId,
+					},
+				}
 			}
 			if v, ok := d.GetOk("full_access_role"); ok {
 				policy.Statements[0].Principal["AWS"] = v.(string)
@@ -60,6 +63,10 @@ func DataAwsBucketPolicy() *schema.Resource {
 			"databricks_account_id": {
 				Type:     schema.TypeString,
 				Default:  "414351767826",
+				Optional: true,
+			},
+			"databricks_e2_account_id": {
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"full_access_role": {

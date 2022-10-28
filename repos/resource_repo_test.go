@@ -18,7 +18,6 @@ func TestGetGitProviderFromUrl(t *testing.T) {
 	assert.Equal(t, "bitbucketCloud", GetGitProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
 	assert.Equal(t, "gitHub", GetGitProviderFromUrl("https://github.com//user/repo.git"))
 	assert.Equal(t, "azureDevOpsServices", GetGitProviderFromUrl("https://user@dev.azure.com/user/project/_git/repo"))
-	//	assert.Equal(t, "bitbucketCloud", GetGitProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
 	assert.Equal(t, "", GetGitProviderFromUrl("https://abc/user/repo.git"))
 	assert.Equal(t, "", GetGitProviderFromUrl("ewfgwergfwe"))
 }
@@ -206,7 +205,18 @@ func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
 			"path": "/NotRepos/Production/test/",
 		},
 		Create: true,
-	}.ExpectError(t, "path should start with /Repos/")
+	}.ExpectError(t, "invalid config supplied. [path] should start with /Repos/, got '/NotRepos/Production/test/'")
+}
+
+func TestResourceRepoCreateCustomDirectoryWrongPath(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceRepo(),
+		State: map[string]any{
+			"url":  "https://github.com/user/test.git",
+			"path": "/Repos/test/",
+		},
+		Create: true,
+	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 2")
 }
 
 func TestResourceRepoCreateWithBranch(t *testing.T) {

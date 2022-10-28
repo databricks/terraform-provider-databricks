@@ -21,6 +21,7 @@ func TestGetGitProviderFromUrl(t *testing.T) {
 	//	assert.Equal(t, "bitbucketCloud", GetGitProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
 	assert.Equal(t, "", GetGitProviderFromUrl("https://abc/user/repo.git"))
 	assert.Equal(t, "", GetGitProviderFromUrl("ewfgwergfwe"))
+	assert.Equal(t, "awsCodeCommit", GetGitProviderFromUrl("https://git-codecommit.us-east-2.amazonaws.com/v1/repos/MyDemoRepo"))
 }
 
 func TestResourceRepoRead(t *testing.T) {

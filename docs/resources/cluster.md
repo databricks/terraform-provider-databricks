@@ -90,7 +90,7 @@ When you [create a Databricks cluster](https://docs.databricks.com/clusters/conf
 
 When using a [Single Node cluster](https://docs.databricks.com/clusters/single-node.html), `num_workers` needs to be `0`. It can be set to `0` explicitly, or simply not specified, as it defaults to `0`.  When `num_workers` is `0`, provider checks for presence of the required Spark configurations:
 
-* `spark.master` must has prefix `local`, like `local[*]`
+* `spark.master` must have prefix `local`, like `local[*]`
 * `spark.databricks.cluster.profile` must have value `singleNode`
 
 and also `custom_tag` entry:

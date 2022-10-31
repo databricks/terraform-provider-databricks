@@ -11,7 +11,7 @@ Getting details of an existing share in the metastore
 
 ```hcl
 data "databricks_share" "this" {
-  name = "this
+  name = "this"
 }
 
 output "created_by" {

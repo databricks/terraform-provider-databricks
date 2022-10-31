@@ -17,7 +17,7 @@ Every `databricks_grants` resource must have exactly one securable identifier an
 
 The securable objects are:
 
-- `METATORE`: The top-level container for metadata. Each metastore exposes a three-level namespace (`catalog`.`schema`.`table`) that organizes your data.
+- `METASTORE`: The top-level container for metadata. Each metastore exposes a three-level namespace (`catalog`.`schema`.`table`) that organizes your data.
 - `CATALOG`: The first layer of the object hierarchy, used to organize your data assets.
 - `SCHEMA`: Also known as databases, schemas are the second layer of the object hierarchy and contain tables and views.
 - `TABLE`: The lowest level in the object hierarchy, tables can be  _external_ (stored in external locations in your cloud storage of choice) or _managed_ tables (stored in a storage container in your cloud storage that you create expressly for UC).
@@ -46,7 +46,7 @@ resource "databricks_grants" "sandbox" {
   grant {
     principal  = "Data Sharer"
     privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
-  }  
+  }
 }
 ```
 
@@ -77,7 +77,7 @@ resource "databricks_grants" "sandbox" {
   grant {
     principal  = "Data Analyst"
     privileges = ["USE_CATALOG", "USE_SCHEMA", "SELECT"]
-  }  
+  }
 }
 ```
 
@@ -225,11 +225,11 @@ You can grant `SELECT` to [databricks_recipient](recipient.md) on [databricks_sh
 
 ```hcl
 resource "databricks_share" "some" {
-  name            = "my_share"
+  name = "my_share"
 }
 
 resource "databricks_recipient" "some" {
-  name            = "my_recipient"
+  name = "my_recipient"
 }
 
 resource "databricks_grants" "some" {

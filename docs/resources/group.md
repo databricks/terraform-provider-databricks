@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to manage [groups in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/groups.html), [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net). You can also [associate](group_member.md) Databricks users and [service principals](service_principal.md) to groups. This is useful if you are using an application to sync users & groups with SCIM API.
 
+-> **Note** To assign account level groups to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
+
 To create groups in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments
 
 Recommended to use along with Identity Provider SCIM provisioning to populate users into those groups:

@@ -60,9 +60,6 @@ data "azurerm_databricks_workspace" "this" {
 ```hcl
 terraform {
   required_providers {
-    azapi = {
-      source = "azure/azapi"
-    }
     azurerm = {
       source = "hashicorp/azurerm"
     }
@@ -70,10 +67,6 @@ terraform {
       source = "databricks/databricks"
     }
   }
-}
-
-provider "azapi" {
-  subscription_id = local.subscription_id
 }
 
 provider "azurerm" {
@@ -94,17 +87,13 @@ The first step is to create the required Azure objects:
 - A Databricks Access Connector that provides Unity Catalog permissions to access and manage data in the storage account.
 
 ```hcl
-resource "azapi_resource" "access_connector" {
-  type      = "Microsoft.Databricks/accessConnectors@2022-04-01-preview"
-  name      = "${local.prefix}-databricks-mi"
-  location  = data.azurerm_resource_group.this.location
-  parent_id = data.azurerm_resource_group.this.id
+resource "azurerm_databricks_access_connector" "unity" {
+  name                = "${local.prefix}-databricks-mi"
+  resource_group_name = data.azurerm_resource_group.this.name
+  location            = data.azurerm_resource_group.this.location
   identity {
     type = "SystemAssigned"
   }
-  body = jsonencode({
-    properties = {}
-  })
 }
 
 resource "azurerm_storage_account" "unity_catalog" {
@@ -126,7 +115,7 @@ resource "azurerm_storage_container" "unity_catalog" {
 resource "azurerm_role_assignment" "example" {
   scope                = azurerm_storage_account.unity_catalog.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azapi_resource.access_connector.identity[0].principal_id
+  principal_id         = azurerm_databricks_access_connector.unity.identity[0].principal_id
 }
 ```
 
@@ -147,7 +136,7 @@ resource "databricks_metastore_data_access" "first" {
   metastore_id = databricks_metastore.this.id
   name         = "the-keys"
   azure_managed_identity {
-    access_connector_id = azapi_resource.access_connector.id
+    access_connector_id = azurerm_databricks_access_connector.unity.id
   }
 
   is_default = true
@@ -215,17 +204,13 @@ To work with external tables, Unity Catalog introduces two new objects to access
 First, create the required objects in Azure.
 
 ```hcl
-resource "azapi_resource" "ext_access_connector" {
-  type      = "Microsoft.Databricks/accessConnectors@2022-04-01-preview"
-  name      = "ext-databricks-mi"
-  location  = data.azurerm_resource_group.this.location
-  parent_id = data.azurerm_resource_group.this.id
+resource "azurerm_databricks_access_connector" "ext_access_connector" {
+  name                = "ext-databricks-mi"
+  resource_group_name = data.azurerm_resource_group.this.name
+  location            = data.azurerm_resource_group.this.location
   identity {
     type = "SystemAssigned"
   }
-  body = jsonencode({
-    properties = {}
-  })
 }
 
 resource "azurerm_storage_account" "ext_storage" {
@@ -247,7 +232,7 @@ resource "azurerm_storage_container" "ext_storage" {
 resource "azurerm_role_assignment" "ext_storage" {
   scope                = azurerm_storage_account.ext_storage.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azapi_resource.ext_access_connector.identity[0].principal_id
+  principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
 }
 ```
 
@@ -255,9 +240,9 @@ Then create the [databricks_storage_credential](../resources/storage_credential.
 
 ```hcl
 resource "databricks_storage_credential" "external" {
-  name = azapi_resource.ext_access_connector.name
+  name = azurerm_databricks_access_connector.ext_access_connector.name
   azure_managed_identity {
-    access_connector_id = azapi_resource.ext_access_connector.id
+    access_connector_id = azurerm_databricks_access_connector.ext_access_connector.id
   }
   comment = "Managed by TF"
   depends_on = [
@@ -277,8 +262,8 @@ resource "databricks_external_location" "some" {
   name = "external"
   url = format("abfss://%s@%s.dfs.core.windows.net/",
     azurerm_storage_container.ext_storage.name,
-    azurerm_storage_account.ext_storage.name)
-  
+  azurerm_storage_account.ext_storage.name)
+
   credential_name = databricks_storage_credential.external.id
   comment         = "Managed by TF"
   depends_on = [

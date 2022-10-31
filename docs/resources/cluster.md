@@ -32,15 +32,16 @@ resource "databricks_cluster" "shared_autoscaling" {
 
 * `cluster_name` - (Optional) Cluster name, which doesn’t have to be unique. If not specified at creation, the cluster name will be an empty string.
 * `spark_version` - (Required) [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster. Any supported [databricks_spark_version](../data-sources/spark_version.md) id.  We advise using [Cluster Policies](cluster_policy.md) to restrict the list of versions for simplicity while maintaining enough control.
+* `runtime_engine` - (Optional) The type of runtime engine to use. If not specified, the runtime engine type is inferred based on the spark_version value. Allowed values include: `PHOTON`, `STANDARD`.
 * `driver_node_type_id` - (Optional) The node type of the Spark driver. This field is optional; if unset, API will set the driver node type to the same value as `node_type_id` defined above.
 * `node_type_id` - (Required - optional if `instance_pool_id` is given) Any supported [databricks_node_type](../data-sources/node_type.md) id. If `instance_pool_id` is specified, this field is not needed.
 * `instance_pool_id` (Optional - required if `node_type_id` is not given) - To reduce cluster start time, you can attach a cluster to a [predefined pool of idle instances](instance_pool.md). When attached to a pool, a cluster allocates its driver and worker nodes from the pool. If the pool does not have sufficient idle resources to accommodate the cluster’s request, it expands by allocating new instances from the instance provider. When an attached cluster changes its state to `TERMINATED`, the instances it used are returned to the pool and reused by a different cluster.
 * `driver_instance_pool_id` (Optional) - similar to `instance_pool_id`, but for driver node. If omitted, and `instance_pool_id` is specified, then the driver will be allocated from that pool.
 * `policy_id` - (Optional) Identifier of [Cluster Policy](cluster_policy.md) to validate cluster and preset certain defaults. *The primary use for cluster policies is to allow users to create policy-scoped clusters via UI rather than sharing configuration for API-created clusters.* For example, when you specify `policy_id` of [external metastore](https://docs.databricks.com/administration-guide/clusters/policies.html#external-metastore-policy) policy, you still have to fill in relevant keys for `spark_conf`.
 * `apply_policy_default_values` - (Optional) Whether to use policy default values for missing cluster attributes.
-* `autotermination_minutes` - (Optional) Automatically terminate the cluster after being inactive for this time in minutes. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly disable automatic termination. Defaults to `60`.  _We highly recommend having this setting present for Interactive/BI clusters._
+* `autotermination_minutes` - (Optional) Automatically terminate the cluster after being inactive for this time in minutes. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly disable automatic termination. Defaults to `60`.  *We highly recommend having this setting present for Interactive/BI clusters.*
 * `enable_elastic_disk` - (Optional) If you don’t want to allocate a fixed number of EBS volumes at cluster creation time, use autoscaling local storage. With autoscaling local storage, Databricks monitors the amount of free disk space available on your cluster’s Spark workers. If a worker begins to run too low on disk, Databricks automatically attaches a new EBS volume to the worker before it runs out of disk space. EBS volumes are attached up to a limit of 5 TB of total disk space per instance (including the instance’s local storage). To scale down EBS usage, make sure you have `autotermination_minutes` and `autoscale` attributes set. More documentation available at [cluster configuration page](https://docs.databricks.com/clusters/configure.html#autoscaling-local-storage-1).
-* `enable_local_disk_encryption` - (Optional) Some instance types you use to run clusters may have locally attached disks. Databricks may store shuffle data or temporary data on these locally attached disks. To ensure that all data at rest is encrypted for all storage types, including shuffle data stored temporarily on your cluster’s local disks, you can enable local disk encryption. When local disk encryption is enabled, Databricks generates an encryption key locally unique to each cluster node and uses it to encrypt all data stored on local disks. The scope of the key is local to each cluster node and is destroyed along with the cluster node itself. During its lifetime, the key resides in memory for encryption and decryption and is stored encrypted on the disk. _Your workloads may run more slowly because of the performance impact of reading and writing encrypted data to and from local volumes. This feature is not available for all Azure Databricks subscriptions. Contact your Microsoft or Databricks account representative to request access._
+* `enable_local_disk_encryption` - (Optional) Some instance types you use to run clusters may have locally attached disks. Databricks may store shuffle data or temporary data on these locally attached disks. To ensure that all data at rest is encrypted for all storage types, including shuffle data stored temporarily on your cluster’s local disks, you can enable local disk encryption. When local disk encryption is enabled, Databricks generates an encryption key locally unique to each cluster node and uses it to encrypt all data stored on local disks. The scope of the key is local to each cluster node and is destroyed along with the cluster node itself. During its lifetime, the key resides in memory for encryption and decryption and is stored encrypted on the disk. *Your workloads may run more slowly because of the performance impact of reading and writing encrypted data to and from local volumes. This feature is not available for all Azure Databricks subscriptions. Contact your Microsoft or Databricks account representative to request access.*
 * `data_security_mode` - (Optional) Select the security features of the cluster. Unity Catalog requires `SINGLE_USER` or `USER_ISOLATION` mode. `LEGACY_PASSTHROUGH` for passthrough cluster and `LEGACY_TABLE_ACL` for Table ACL cluster. Default to `NONE`, i.e. no security feature enabled.
 * `single_user_name` - (Optional) The optional user name of the user to assign to an interactive cluster. This field is required when using standard AAD Passthrough for Azure Data Lake Storage (ADLS) with a single-user cluster (i.e., not high-concurrency clusters).
 * `idempotency_token` - (Optional) An optional token to guarantee the idempotency of cluster creation requests. If an active cluster with the provided token already exists, the request will not create a new cluster, but it will return the existing running cluster's ID instead. If you specify the idempotency token, upon failure, you can retry until the request succeeds. Databricks platform guarantees to launch exactly one cluster with that idempotency token. This token should have at most 64 characters.
@@ -88,10 +89,12 @@ When you [create a Databricks cluster](https://docs.databricks.com/clusters/conf
 * `max_workers` - (Optional) The maximum number of workers to which the cluster can scale up when overloaded. max_workers must be strictly greater than min_workers.
 
 When using a [Single Node cluster](https://docs.databricks.com/clusters/single-node.html), `num_workers` needs to be `0`. It can be set to `0` explicitly, or simply not specified, as it defaults to `0`.  When `num_workers` is `0`, provider checks for presence of the required Spark configurations:
+
 * `spark.master` must have prefix `local`, like `local[*]`
 * `spark.databricks.cluster.profile` must have value `singleNode`
 
 and also `custom_tag` entry:
+
 * `"ResourceClass" = "SingleNode"`
 
 The following example demonstrates how to create an single node cluster:
@@ -134,8 +137,8 @@ To create High-Concurrency cluster, following settings should be provided:
 
 For example:
 
-```
-esource "databricks_cluster" "cluster_with_table_access_control" {
+```hcl
+resource "databricks_cluster" "cluster_with_table_access_control" {
   cluster_name            = "Shared High-Concurrency"
   spark_version           = data.databricks_spark_version.latest_lts.id
   node_type_id            = data.databricks_node_type.smallest.id
@@ -152,7 +155,6 @@ esource "databricks_cluster" "cluster_with_table_access_control" {
 }
 ```
 
-
 ### library Configuration Block
 
 To install libraries, one must specify each library in a separate configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.
@@ -160,6 +162,7 @@ To install libraries, one must specify each library in a separate configuration 
 -> **Note** Please consider using [databricks_library](library.md) resource for a more flexible setup.
 
 Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
+
 ```hcl
 library {
   jar = "dbfs:/FileStore/app-0.0.1.jar"
@@ -167,6 +170,7 @@ library {
 ```
 
 Installing Python EGG artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
+
 ```hcl
 library {
   egg = "dbfs:/FileStore/foo.egg"
@@ -174,6 +178,7 @@ library {
 ```
 
 Installing Python Wheel artifacts. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
+
 ```hcl
 library {
   whl = "dbfs:/FileStore/baz.whl"
@@ -181,6 +186,7 @@ library {
 ```
 
 Installing Python PyPI artifacts. You can optionally also specify the `repo` parameter for a custom PyPI mirror, which should be accessible without any authentication for the network that cluster runs in.
+
 ```hcl
 library {
   pypi {
@@ -191,6 +197,7 @@ library {
 ```
 
 Installing artifacts from Maven repository. You can also optionally specify a `repo` parameter for a custom Maven-style repository, that should be accessible without any authentication. Maven libraries are resolved in Databricks Control Plane, so repo should be accessible from it. It can even be properly configured [maven s3 wagon](https://github.com/seahen/maven-s3-wagon), [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) or [Azure Artifacts](https://azure.microsoft.com/en-us/services/devops/artifacts/).
+
 ```hcl
 library {
   maven {
@@ -202,6 +209,7 @@ library {
 ```
 
 Installing artifacts from CRan. You can also optionally specify a `repo` parameter for a custom cran mirror.
+
 ```hcl
 library {
   cran {
@@ -213,6 +221,7 @@ library {
 ## cluster_log_conf
 
 Example of pushing all cluster logs to DBFS:
+
 ```hcl
 cluster_log_conf {
   dbfs {
@@ -222,6 +231,7 @@ cluster_log_conf {
 ```
 
 Example of pushing all cluster logs to S3:
+
 ```hcl
 cluster_log_conf {
   s3 {
@@ -235,7 +245,7 @@ There are a few more advanced attributes for S3 log delivery:
 
 * `destination` - S3 destination, e.g., `s3://my-bucket/some-prefix` You must configure the cluster with an instance profile, and the instance profile must have write access to the destination. You cannot use AWS keys.
 * `region` - (Optional) S3 region, e.g. `us-west-2`. Either `region` or `endpoint` must be set. If both are set, the endpoint is used.
-* `endpoint` - (Optional) S3 endpoint, e.g. https://s3-us-west-2.amazonaws.com. Either `region` or `endpoint` needs to be set. If both are set, the endpoint is used.
+* `endpoint` - (Optional) S3 endpoint, e.g. <https://s3-us-west-2.amazonaws.com>. Either `region` or `endpoint` needs to be set. If both are set, the endpoint is used.
 * `enable_encryption` - (Optional) Enable server-side encryption, false by default.
 * `encryption_type` - (Optional) The encryption type, it could be `sse-s3` or `sse-kms`. It is used only when encryption is enabled, and the default type is `sse-s3`.
 * `kms_key` - (Optional) KMS key used if encryption is enabled and encryption type is set to `sse-kms`.
@@ -245,9 +255,10 @@ There are a few more advanced attributes for S3 log delivery:
 
 To run a particular init script on all clusters within the same workspace, both automated/job and interactive/all-purpose cluster types, please consider the [databricks_global_init_script](global_init_script.md) resource.
 
-It is possible to specify up to 10 different cluster-scoped init scripts per cluster.  Like the `cluster_log_conf` configuration block, init scripts support DBFS and cloud storage locations. 
+It is possible to specify up to 10 different cluster-scoped init scripts per cluster.  Like the `cluster_log_conf` configuration block, init scripts support DBFS and cloud storage locations.
 
 Example of taking init script from DBFS:
+
 ```hcl
 init_scripts {
   dbfs {
@@ -257,6 +268,7 @@ init_scripts {
 ```
 
 Example of taking init script from S3:
+
 ```hcl
 init_scripts {
   s3 {
@@ -267,6 +279,7 @@ init_scripts {
 ```
 
 Similarly, for an init script stored in GCS:
+
 ```hcl
 init_scripts {
   gcs {
@@ -321,7 +334,7 @@ The following options are available:
 * `first_on_demand` - (Optional) The first `first_on_demand` nodes of the cluster will be placed on on-demand instances. If this value is greater than 0, the cluster driver node will be placed on an on-demand instance. If this value is greater than or equal to the current cluster size, all nodes will be placed on on-demand instances. If this value is less than the current cluster size, `first_on_demand` nodes will be placed on on-demand instances, and the remainder will be placed on availability instances. This value does not affect cluster size and cannot be mutated over the lifetime of a cluster.
 * `spot_bid_price_percent` - (Optional) The max price for AWS spot instances, as a percentage of the corresponding instance type’s on-demand price. For example, if this field is set to 50, and the cluster needs a new `i3.xlarge` spot instance, then the max price is half of the price of on-demand `i3.xlarge` instances. Similarly, if this field is set to 200, the max price is twice the price of on-demand `i3.xlarge` instances. If not specified, the default value is `100`. When spot instances are requested for this cluster, only spot instances whose max price percentage matches this field will be considered. For safety, we enforce this field to be no more than `10000`.
 * `instance_profile_arn` - (Optional) Nodes for this cluster will only be placed on AWS instances with this instance profile. Please see [databricks_instance_profile](instance_profile.md) resource documentation for extended examples on adding a valid instance profile using Terraform.
-* `ebs_volume_type` - (Optional) The type of EBS volumes that will be launched with this cluster. Valid values are `GENERAL_PURPOSE_SSD` or `THROUGHPUT_OPTIMIZED_HDD`. Use this option only if you're not picking _Delta Optimized `i3.*`_ node types.
+* `ebs_volume_type` - (Optional) The type of EBS volumes that will be launched with this cluster. Valid values are `GENERAL_PURPOSE_SSD` or `THROUGHPUT_OPTIMIZED_HDD`. Use this option only if you're not picking *Delta Optimized `i3.*`* node types.
 * `ebs_volume_count` - (Optional) The number of volumes launched for each instance. You can choose up to 10 volumes. This feature is only enabled for supported node types. Legacy node types cannot specify custom EBS volumes. For node types with no instance store, at least one EBS volume needs to be specified; otherwise, cluster creation will fail. These EBS volumes will be mounted at /ebs0, /ebs1, and etc. Instance store volumes will be mounted at /local_disk0, /local_disk1, and etc. If EBS volumes are attached, Databricks will configure Spark to use only the EBS volumes for scratch storage because heterogeneously sized scratch devices can lead to inefficient disk utilization. If no EBS volumes are attached, Databricks will configure Spark to use instance store volumes. If EBS volumes are specified, then the Spark configuration spark.local.dir will be overridden.
 * `ebs_volume_size` - (Optional) The size of each EBS volume (in GiB) launched for each instance. For general purpose SSD, this value must be within the range 100 - 4096. For throughput optimized HDD, this value must be within the range 500 - 4096. Custom EBS volumes cannot be specified for the legacy node types (memory-optimized and compute-optimized).
 
@@ -445,7 +458,7 @@ In addition to all arguments above, the following attributes are exported:
 The resource cluster can be imported using cluster id.
 
 ```bash
-$ terraform import databricks_cluster.this <cluster-id>
+terraform import databricks_cluster.this <cluster-id>
 ```
 
 ## Related Resources
@@ -464,6 +477,6 @@ The following resources are often used in the same context:
 * [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).
 * [databricks_mount](mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.
 * [databricks_node_type](../data-sources/node_type.md) data to get the smallest node type for [databricks_cluster](cluster.md) that fits search criteria, like amount of RAM or number of cores.
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 * [databricks_spark_version](../data-sources/spark_version.md) data to get [Databricks Runtime (DBR)](https://docs.databricks.com/runtime/dbr.html) version that could be used for `spark_version` parameter in [databricks_cluster](cluster.md) and other resources.
 * [databricks_zones](../data-sources/zones.md) data to fetch all available AWS availability zones on your workspace on AWS.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -127,18 +128,25 @@ func (a ReposAPI) ListAll() ([]ReposInformation, error) {
 	return a.List("")
 }
 
-var gitProvidersMap = map[string]string{
-	"github.com":    "gitHub",
-	"dev.azure.com": "azureDevOpsServices",
-	"gitlab.com":    "gitLab",
-	"bitbucket.org": "bitbucketCloud",
-}
+var (
+	gitProvidersMap = map[string]string{
+		"github.com":    "gitHub",
+		"dev.azure.com": "azureDevOpsServices",
+		"gitlab.com":    "gitLab",
+		"bitbucket.org": "bitbucketCloud",
+	}
+	awsCodeCommitRegex = regexp.MustCompile(`^git-codecommit\.[^.]+\.amazonaws\.com$`)
+)
 
 func GetGitProviderFromUrl(uri string) string {
 	provider := ""
 	u, err := url.Parse(uri)
 	if err == nil {
-		provider = gitProvidersMap[strings.ToLower(u.Host)]
+		lhost := strings.ToLower(u.Host)
+		provider = gitProvidersMap[lhost]
+		if provider == "" && awsCodeCommitRegex.FindStringSubmatch(lhost) != nil {
+			provider = "awsCodeCommit"
+		}
 	}
 	return provider
 }

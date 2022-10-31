@@ -5,6 +5,8 @@ subcategory: "Security"
 
 Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) in Databricks workspace or account.
 
+-> **Note** To assign account level service principals to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
+
 To create service principals in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments
 
 ## Example Usage

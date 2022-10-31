@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -38,6 +39,8 @@ var (
 	gsRegex                 = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
 	globalWorkspaceConfName = "global_workspace_conf"
 	notebookPathToIdRegex   = regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	jobClustersRegex        = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
+	dltClusterRegex         = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 )
 
 type dbsqlListResponse struct {
@@ -171,6 +174,58 @@ func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) erro
 	return nil
 }
 
+func defaultShouldOmitFieldFunc(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if as.Computed {
+		log.Printf("[DEBUG] path=%s is ignored because it's computed", pathString)
+		return true
+	} else if as.Default != nil && d.Get(pathString) == as.Default {
+		log.Printf("[DEBUG] path=%s is ignored because it's equal to default", pathString)
+		return true
+	}
+
+	return false
+}
+
+func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+		prefix := ""
+		if regex != nil {
+			if res := regex.FindStringSubmatch(pathString); res != nil {
+				prefix = res[0]
+				// log.Printf("[DEBUG] path='%s' extracted prefix: '%s'", pathString, prefix)
+			} else {
+				return false
+			}
+		}
+		raw := d.Get(pathString)
+		log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
+		if raw != nil {
+			v := reflect.ValueOf(raw)
+			if as.Optional && v.IsZero() {
+				log.Printf("[DEBUG] path=%s is ignored because it's optional & has zero value '%v'", pathString, raw)
+				return true
+			}
+		}
+		workerInstPoolID := d.Get(prefix + "instance_pool_id").(string)
+		switch pathString {
+		case prefix + "node_type_id":
+			return workerInstPoolID != ""
+		case prefix + "driver_node_type_id":
+			driverInstPoolID := d.Get(prefix + "driver_instance_pool_id").(string)
+			nodeTypeID := d.Get(prefix + "node_type_id").(string)
+			return workerInstPoolID != "" || driverInstPoolID != "" || raw.(string) == nodeTypeID
+		case prefix + "driver_instance_pool_id":
+			return raw.(string) == workerInstPoolID
+		case prefix + "enable_elastic_disk", prefix + "aws_attributes", prefix + "azure_attributes", prefix + "gcp_attributes":
+			return workerInstPoolID != ""
+		case prefix + "enable_local_disk_encryption":
+			return false
+		}
+
+		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	}
+}
+
 var resourcesMap map[string]importable = map[string]importable{
 	"databricks_dbfs_file": {
 		Service: "storage",
@@ -297,6 +352,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return ic.importLibraries(r.Data, s)
 		},
+		ShouldOmitField: makeShouldOmitFieldForCluster(nil),
 	},
 	"databricks_job": {
 		ApiVersion: common.API_2_1,
@@ -471,6 +527,19 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.importJobs(l)
 			}
 			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "url", "format":
+				return true
+			}
+			if makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d) {
+				return true
+			}
+			if res := jobClustersRegex.FindStringSubmatch(pathString); res != nil { // we already analyzed job clusters
+				return false
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 	},
 	"databricks_cluster_policy": {
@@ -1349,7 +1418,17 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return nil
-		}, Depends: []reference{
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if makeShouldOmitFieldForCluster(dltClusterRegex)(ic, pathString, as, d) {
+				return true
+			}
+			if res := dltClusterRegex.FindStringSubmatch(pathString); res != nil { // we already analyzed job clusters
+				return false
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
 			{Path: "creator_user_name", Resource: "databricks_user", Match: "user_name"},
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},

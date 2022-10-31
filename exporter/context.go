@@ -533,11 +533,16 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 	})
 	for _, tuple := range ss {
 		a, as := tuple.Field, tuple.Schema
-		if as.Computed {
-			continue
-		}
 		pathString := strings.Join(append(path, a), ".")
 		raw, ok := d.GetOk(pathString)
+		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
+			log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
+			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
+				continue
+			}
+		} else if i.ShouldOmitField(ic, pathString, as, d) {
+			continue
+		}
 		for _, r := range i.Depends {
 			if r.Path == pathString && r.Variable {
 				// sensitive fields are moved to variable depends

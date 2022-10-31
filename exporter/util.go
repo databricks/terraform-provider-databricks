@@ -26,6 +26,8 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
+	// TODO: Remove PYSPARK_PYTHON from spark_env_vars & spark.databricks.delta.preview.enabled from spark_conf
+	// but don't forget to convert back from structure to data
 	for _, is := range c.InitScripts {
 		if is.Dbfs != nil {
 			ic.Emit(&resource{
@@ -41,6 +43,7 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 		})
 	}
 	if c.InstancePoolID != "" {
+		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
 		ic.Emit(&resource{
 			Resource: "databricks_instance_pool",
 			ID:       c.InstancePoolID,

@@ -83,6 +83,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["driver_node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
 		s["node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
 
+		s["runtime_engine"].ValidateFunc = validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false)
+
 		s["is_pinned"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,

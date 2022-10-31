@@ -74,6 +74,7 @@ resource "aws_s3_bucket_policy" "ds" {
 
 * `bucket` - (Required) AWS S3 Bucket name for which to generate the policy document.
 * `full_access_role` - (Optional) Data access role that can have full access for this bucket
+* `databricks_e2_account_id` - (Optional) Your Databricks E2 account ID. Used to generate  restrictive IAM policies that will increase the security of your root bucket 
 
 ## Attribute Reference
 

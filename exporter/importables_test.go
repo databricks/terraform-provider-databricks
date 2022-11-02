@@ -39,15 +39,16 @@ func importContextForTest() *importContext {
 func TestInstancePool(t *testing.T) {
 	d := pools.ResourceInstancePool().TestResourceData()
 	d.Set("instance_pool_name", "blah-bah")
-	name := resourcesMap["databricks_instance_pool"].Name(d)
+	ic := importContextForTest()
+
+	name := resourcesMap["databricks_instance_pool"].Name(ic, d)
 	assert.Equal(t, "blah-bah", name)
 
 	d = pools.ResourceInstancePool().TestResourceData()
 	d.SetId("abc-bcd-def")
-	name = resourcesMap["databricks_instance_pool"].Name(d)
+	name = resourcesMap["databricks_instance_pool"].Name(ic, d)
 	assert.Equal(t, "def", name)
 
-	ic := importContextForTest()
 	ic.meAdmin = true
 	err := resourcesMap["databricks_instance_pool"].Import(ic, &resource{
 		ID:   "abc",
@@ -137,7 +138,7 @@ func TestPermissions(t *testing.T) {
 	d := p.TestResourceData()
 	d.SetId("abc")
 	ic := importContextForTest()
-	name := ic.Importables["databricks_permissions"].Name(d)
+	name := ic.Importables["databricks_permissions"].Name(ic, d)
 	assert.Equal(t, "abc", name)
 
 	d.MarkNewResource()
@@ -166,21 +167,23 @@ func TestSecretScope(t *testing.T) {
 	d := secrets.ResourceSecretScope().TestResourceData()
 	d.Set("name", "abc")
 	ic := importContextForTest()
-	name := ic.Importables["databricks_secret_scope"].Name(d)
+	name := ic.Importables["databricks_secret_scope"].Name(ic, d)
 	assert.Equal(t, "abc", name)
 }
 
 func TestInstancePoolNameFromID(t *testing.T) {
+	ic := importContextForTest()
 	d := pools.ResourceInstancePool().TestResourceData()
 	d.SetId("a-b-c")
 	d.Set("instance_pool_name", "")
-	assert.Equal(t, "c", resourcesMap["databricks_instance_pool"].Name(d))
+	assert.Equal(t, "c", resourcesMap["databricks_instance_pool"].Name(ic, d))
 }
 
 func TestClusterNameFromID(t *testing.T) {
+	ic := importContextForTest()
 	d := clusters.ResourceCluster().TestResourceData()
 	d.SetId("a-b-c")
-	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(d))
+	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(ic, d))
 }
 
 func TestClusterListFails(t *testing.T) {
@@ -455,9 +458,10 @@ func TestAwsS3MountProfile(t *testing.T) {
 }
 
 func TestGlobalInitScriptNameFromId(t *testing.T) {
+	ic := importContextForTest()
 	d := workspace.ResourceGlobalInitScript().TestResourceData()
 	d.SetId("abc")
-	assert.Equal(t, "abc", resourcesMap["databricks_global_init_script"].Name(d))
+	assert.Equal(t, "abc", resourcesMap["databricks_global_init_script"].Name(ic, d))
 }
 
 func TestGlobalInitScriptsErrors(t *testing.T) {
@@ -519,7 +523,8 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 func TestRepoIdForName(t *testing.T) {
 	d := repos.ResourceRepo().TestResourceData()
 	d.SetId("x")
-	assert.Equal(t, "x", resourcesMap["databricks_repo"].Name(d))
+	ic := importContextForTest()
+	assert.Equal(t, "x", resourcesMap["databricks_repo"].Name(ic, d))
 }
 
 func TestRepoListFails(t *testing.T) {

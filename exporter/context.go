@@ -67,6 +67,7 @@ type importContext struct {
 	sqlDatasources    map[string]string
 	sqlVisualizations map[string]string
 
+	includeUserDomains  bool
 	debug               bool
 	mounts              bool
 	services            string
@@ -374,7 +375,7 @@ func (ic *importContext) regexFix(s string, fixes []regexFix) string {
 func (ic *importContext) ResourceName(r *resource) string {
 	name := r.Name
 	if name == "" && ic.Importables[r.Resource].Name != nil {
-		name = ic.Importables[r.Resource].Name(r.Data)
+		name = ic.Importables[r.Resource].Name(ic, r.Data)
 	}
 	if name == "" {
 		name = r.ID
@@ -545,7 +546,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		for _, r := range i.Depends {
 			if r.Path == pathString && r.Variable {
 				// sensitive fields are moved to variable depends
-				raw = i.Name(d)
+				raw = i.Name(ic, d)
 				ok = true
 			}
 		}

@@ -1,5 +1,22 @@
 # Version changelog
 
+## 1.6.2
+
+ * Added `runtime_engine` to [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#1686](https://github.com/databricks/terraform-provider-databricks/pull/1686)).
+ * Added validation for `path` in [databricks_repo](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/repo) ([#1702](https://github.com/databricks/terraform-provider-databricks/pull/1702)).
+ * Added auto-detection of AWS CodeCommit URLs in [databricks_repo](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/repo) ([#1704](https://github.com/databricks/terraform-provider-databricks/pull/1704)).
+ * Restricting access to S3 bucket by custom tag on the IAM identity according to security email in [databricks_aws_bucket_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/aws_bucket_policy) data resource ([#1694](https://github.com/databricks/terraform-provider-databricks/pull/1694)).
+ * Update Azure Unity Catalog guide to use `azurerm_databricks_access_connector` ([#1685](https://github.com/databricks/terraform-provider-databricks/pull/1685)).
+ * Clarify that [databricks_mws_permission_assignment](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_permission_assignment) should be used for assigning account-level users/groups ([#1706](https://github.com/databricks/terraform-provider-databricks/pull/1706)).
+ * Other documentation fixes ([#1696](https://github.com/databricks/terraform-provider-databricks/pull/1696), [#1692](https://github.com/databricks/terraform-provider-databricks/pull/1692)).
+
+Updated dependency versions:
+
+ * Bump github.com/stretchr/testify from 1.8.0 to 1.8.1 ([#1689](https://github.com/databricks/terraform-provider-databricks/pull/1689)).
+ * Bump github.com/zclconf/go-cty from 1.11.1 to 1.12.0 ([#1714](https://github.com/databricks/terraform-provider-databricks/pull/1714)).
+ * Bump golang.org/x/mod from 0.5.1 to 0.6.0 ([#1690](https://github.com/databricks/terraform-provider-databricks/pull/1690)).
+ * Bump google.golang.org/api from 0.99.0 to 0.101.0 ([#1713](https://github.com/databricks/terraform-provider-databricks/pull/1713), [#1691](https://github.com/databricks/terraform-provider-databricks/pull/1691)).
+
 ## 1.6.1
 
  * Added `CAN_VIEW` permissions for [databricks_sql_dashboard](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_dashboard) and [databricks_sql_query](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_query) ([#1682](https://github.com/databricks/terraform-provider-databricks/pull/1682)).

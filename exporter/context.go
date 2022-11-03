@@ -536,7 +536,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		pathString := strings.Join(append(path, a), ".")
 		raw, ok := d.GetOk(pathString)
 		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
-			log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
+			// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
 			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
 				continue
 			}

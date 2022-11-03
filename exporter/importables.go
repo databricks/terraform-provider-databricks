@@ -192,17 +192,16 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 		if regex != nil {
 			if res := regex.FindStringSubmatch(pathString); res != nil {
 				prefix = res[0]
-				// log.Printf("[DEBUG] path='%s' extracted prefix: '%s'", pathString, prefix)
 			} else {
 				return false
 			}
 		}
 		raw := d.Get(pathString)
-		log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
+		// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
 		if raw != nil {
 			v := reflect.ValueOf(raw)
 			if as.Optional && v.IsZero() {
-				log.Printf("[DEBUG] path=%s is ignored because it's optional & has zero value '%v'", pathString, raw)
+				// log.Printf("[DEBUG] path=%s is ignored because it's optional & has zero value '%v'", pathString, raw)
 				return true
 			}
 		}
@@ -533,11 +532,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			case "url", "format":
 				return true
 			}
-			if makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d) {
-				return true
-			}
-			if res := jobClustersRegex.FindStringSubmatch(pathString); res != nil { // we already analyzed job clusters
-				return false
+			if res := jobClustersRegex.FindStringSubmatch(pathString); res != nil { // analyze job clusters
+				return makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d)
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
@@ -1420,11 +1416,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if makeShouldOmitFieldForCluster(dltClusterRegex)(ic, pathString, as, d) {
-				return true
-			}
-			if res := dltClusterRegex.FindStringSubmatch(pathString); res != nil { // we already analyzed job clusters
-				return false
+			if res := dltClusterRegex.FindStringSubmatch(pathString); res != nil { // analyze DLT clusters
+				return makeShouldOmitFieldForCluster(dltClusterRegex)(ic, pathString, as, d)
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},

@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"path"
+	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -344,4 +346,55 @@ func (ic *importContext) createFileIn(dir, name string, content []byte) (string,
 	}
 	relativeName := strings.Replace(localFileName, ic.Directory+"/", "", 1)
 	return relativeName, nil
+}
+
+func defaultShouldOmitFieldFunc(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if as.Computed {
+		// log.Printf("[DEBUG] path=%s is ignored because it's computed", pathString)
+		return true
+	} else if as.Default != nil && d.Get(pathString) == as.Default {
+		// log.Printf("[DEBUG] path=%s is ignored because it's equal to default", pathString)
+		return true
+	}
+
+	return false
+}
+
+func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+		prefix := ""
+		if regex != nil {
+			if res := regex.FindStringSubmatch(pathString); res != nil {
+				prefix = res[0]
+			} else {
+				return false
+			}
+		}
+		raw := d.Get(pathString)
+		// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
+		if raw != nil {
+			v := reflect.ValueOf(raw)
+			if as.Optional && v.IsZero() {
+				// log.Printf("[DEBUG] path=%s is ignored because it's optional & has zero value '%v'", pathString, raw)
+				return true
+			}
+		}
+		workerInstPoolID := d.Get(prefix + "instance_pool_id").(string)
+		switch pathString {
+		case prefix + "node_type_id":
+			return workerInstPoolID != ""
+		case prefix + "driver_node_type_id":
+			driverInstPoolID := d.Get(prefix + "driver_instance_pool_id").(string)
+			nodeTypeID := d.Get(prefix + "node_type_id").(string)
+			return workerInstPoolID != "" || driverInstPoolID != "" || raw.(string) == nodeTypeID
+		case prefix + "driver_instance_pool_id":
+			return raw.(string) == workerInstPoolID
+		case prefix + "enable_elastic_disk", prefix + "aws_attributes", prefix + "azure_attributes", prefix + "gcp_attributes":
+			return workerInstPoolID != ""
+		case prefix + "enable_local_disk_encryption":
+			return false
+		}
+
+		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	}
 }

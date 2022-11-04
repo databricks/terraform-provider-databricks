@@ -50,7 +50,7 @@ func (ta *SqlPermissions) typeAndKey() (string, string) {
 		return "VIEW", fmt.Sprintf("`%s`.`%s`", ta.actualDatabase(), ta.View)
 	}
 	if ta.Database != "" {
-		return "DATABASE", ta.Database
+		return "DATABASE", fmt.Sprintf("`%s`", ta.Database)
 	}
 	if ta.Catalog {
 		return "CATALOG", ""

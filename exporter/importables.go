@@ -38,6 +38,8 @@ var (
 	gsRegex                 = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
 	globalWorkspaceConfName = "global_workspace_conf"
 	notebookPathToIdRegex   = regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	jobClustersRegex        = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
+	dltClusterRegex         = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 )
 
 type dbsqlListResponse struct {
@@ -297,6 +299,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return ic.importLibraries(r.Data, s)
 		},
+		ShouldOmitField: makeShouldOmitFieldForCluster(nil),
 	},
 	"databricks_job": {
 		ApiVersion: common.API_2_1,
@@ -471,6 +474,16 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.importJobs(l)
 			}
 			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "url", "format":
+				return true
+			}
+			if res := jobClustersRegex.FindStringSubmatch(pathString); res != nil { // analyze job clusters
+				return makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d)
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 	},
 	"databricks_cluster_policy": {
@@ -1349,7 +1362,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return nil
-		}, Depends: []reference{
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if res := dltClusterRegex.FindStringSubmatch(pathString); res != nil { // analyze DLT clusters
+				return makeShouldOmitFieldForCluster(dltClusterRegex)(ic, pathString, as, d)
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
 			{Path: "creator_user_name", Resource: "databricks_user", Match: "user_name"},
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},

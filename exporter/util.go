@@ -28,8 +28,6 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
-	// TODO: Remove PYSPARK_PYTHON from spark_env_vars & spark.databricks.delta.preview.enabled from spark_conf
-	// but don't forget to convert back from structure to data
 	for _, is := range c.InitScripts {
 		if is.Dbfs != nil {
 			ic.Emit(&resource{
@@ -350,10 +348,8 @@ func (ic *importContext) createFileIn(dir, name string, content []byte) (string,
 
 func defaultShouldOmitFieldFunc(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 	if as.Computed {
-		// log.Printf("[DEBUG] path=%s is ignored because it's computed", pathString)
 		return true
 	} else if as.Default != nil && d.Get(pathString) == as.Default {
-		// log.Printf("[DEBUG] path=%s is ignored because it's equal to default", pathString)
 		return true
 	}
 
@@ -371,11 +367,9 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 			}
 		}
 		raw := d.Get(pathString)
-		// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
 		if raw != nil {
 			v := reflect.ValueOf(raw)
 			if as.Optional && v.IsZero() {
-				// log.Printf("[DEBUG] path=%s is ignored because it's optional & has zero value '%v'", pathString, raw)
 				return true
 			}
 		}

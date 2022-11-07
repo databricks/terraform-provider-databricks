@@ -1,5 +1,11 @@
 # Version changelog
 
+### 1.6.3
+
+ * Added `warehouse_type` parameter to [databricks_sql_endpoint](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_endpoint) to support PRO SKU ([#1728](https://github.com/databricks/terraform-provider-databricks/pull/1728)).
+ * Correct exporting of the computed attributes for [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#1711](https://github.com/databricks/terraform-provider-databricks/pull/1711)).
+ * Escape database name in [databricks_sql_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_permissions) resource ([#1730](https://github.com/databricks/terraform-provider-databricks/pull/1730)).
+
 ## 1.6.2
 
  * Added `runtime_engine` to [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#1686](https://github.com/databricks/terraform-provider-databricks/pull/1686)).

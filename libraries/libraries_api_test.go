@@ -2,7 +2,6 @@ package libraries
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -28,6 +27,15 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			Status:       500,
 			Response: common.APIError{
 				Message: "internal error",
+			},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=1005-abcd",
+			ReuseRequest: true,
+			Status:       400,
+			Response: common.APIError{
+				Message: "Cluster 1005-abcd does not exist",
 			},
 		},
 		{
@@ -115,6 +123,12 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			"failed-wheel", 50 * time.Millisecond, true, true,
 		})
 		assert.NoError(t, err, "library should have been uninstalled and work proceeded")
+
+		// Cluster not available or doesn't exist
+		_, err = libs.WaitForLibrariesInstalled(Wait{
+			"1005-abcd", 50 * time.Millisecond, false, false,
+		})
+		assert.EqualError(t, err, "Cluster 1005-abcd does not exist")
 	})
 }
 
@@ -350,21 +364,4 @@ func TestNewLibraryFromInstanceState(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestWrapClusterStatusAPIError(t *testing.T) {
-	assert.EqualError(t, wrapClusterStatusAPIError(fmt.Errorf("x"), "abc"), "x")
-	assert.EqualError(t, wrapClusterStatusAPIError(common.APIError{
-		Message: "Cluster abc does not exist",
-	}, "abc"), "Cluster abc does not exist")
-	assert.EqualValues(t, common.APIError{Message: "Cluster abc does not exist",
-		StatusCode: 404, ErrorCode: "INVALID_PARAMETER_VALUE"},
-		wrapClusterStatusAPIError(common.APIError{Message: "Cluster abc does not exist",
-			StatusCode: 400, ErrorCode: "INVALID_PARAMETER_VALUE"}, "1232"))
-	assert.EqualValues(t, common.APIError{Message: "Cluster abc does not exist",
-		StatusCode: 404, ErrorCode: "INVALID_STATE"},
-		wrapClusterStatusAPIError(common.APIError{Message: "Cluster abc does not exist",
-			StatusCode: 400, ErrorCode: "INVALID_STATE"}, "1232"))
-	assert.EqualValues(t, common.APIError{StatusCode: 404},
-		wrapClusterStatusAPIError(common.APIError{StatusCode: 404}, "1232"))
 }

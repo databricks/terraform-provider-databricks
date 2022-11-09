@@ -78,12 +78,16 @@ func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibra
 func (a LibrariesAPI) WaitForLibrariesInstalled(wait Wait) (result *ClusterLibraryStatuses, err error) {
 	err = resource.RetryContext(a.context, wait.Timeout, func() *resource.RetryError {
 		libsClusterStatus, err := a.ClusterStatus(wait.ClusterID)
-		if common.IsMissing(err) {
-			// eventual consistency error
-			return resource.RetryableError(err)
-		}
 		if err != nil {
-			return resource.NonRetryableError(wrapClusterStatusAPIError(err, wait.ClusterID))
+			apiErr, ok := err.(common.APIError)
+			if !ok {
+				return resource.NonRetryableError(err)
+			}
+			if apiErr.StatusCode != 404 && strings.Contains(apiErr.Message,
+				fmt.Sprintf("Cluster %s does not exist", wait.ClusterID)) {
+				apiErr.StatusCode = 404
+			}
+			return resource.NonRetryableError(apiErr)
 		}
 		if !wait.IsRunning {
 			log.Printf("[INFO] Cluster %s is currently not running, so just returning list of %d libraries",
@@ -354,35 +358,4 @@ func (cls ClusterLibraryStatuses) IsRetryNeeded(refresh bool) (bool, error) {
 		return false, fmt.Errorf("%s", strings.Join(errors, "\n"))
 	}
 	return false, nil
-}
-
-// wrapClusterStatusAPIError returns the wrapped error response when the requested cluster doesn't exist.
-// Wraps up the error messages of cluster status API (/api/2.0/libraries/cluster-status) like INVALID_STATE and INVALID_PARAMETER_VALUE
-func wrapClusterStatusAPIError(err error, id string) error {
-
-	apiErr, ok := err.(common.APIError)
-	if !ok {
-		return err
-	}
-	if apiErr.IsMissing() {
-		return err
-	}
-
-	if apiErr.ErrorCode == "INVALID_STATE" {
-		log.Printf("[WARN] assuming that cluster is removed on backend: %s", apiErr)
-		apiErr.StatusCode = 404
-		return apiErr
-	}
-	if apiErr.ErrorCode == "INVALID_PARAMETER_VALUE" {
-		log.Printf("[WARN] assuming that cluster is not created or removed on backend: %s", apiErr)
-		apiErr.StatusCode = 404
-		return apiErr
-	}
-	// fix non-compliant error code
-	if strings.Contains(apiErr.Message,
-		fmt.Sprintf("Cluster %s does not exist", id)) {
-		apiErr.StatusCode = 404
-		return apiErr
-	}
-	return err
 }

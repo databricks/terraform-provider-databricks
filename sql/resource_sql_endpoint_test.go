@@ -81,7 +81,6 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 					NumClusters:        1,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
-					WarehouseType:      "PRO",
 				},
 				Response: SQLEndpoint{
 					ID: "abc",
@@ -129,7 +128,6 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 					NumClusters:        1,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
-					WarehouseType:      "PRO",
 				},
 				Response: SQLEndpoint{
 					ID: "abc",
@@ -230,7 +228,6 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 					NumClusters:        1,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
-					WarehouseType:      "PRO",
 				},
 			},
 			{

@@ -2,6 +2,7 @@ package libraries
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -349,4 +350,21 @@ func TestNewLibraryFromInstanceState(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWrapClusterStatusAPIError(t *testing.T) {
+	assert.EqualError(t, wrapClusterStatusAPIError(fmt.Errorf("x"), "abc"), "x")
+	assert.EqualError(t, wrapClusterStatusAPIError(common.APIError{
+		Message: "Cluster abc does not exist",
+	}, "abc"), "Cluster abc does not exist")
+	assert.EqualValues(t, common.APIError{Message: "Cluster abc does not exist",
+		StatusCode: 404, ErrorCode: "INVALID_PARAMETER_VALUE"},
+		wrapClusterStatusAPIError(common.APIError{Message: "Cluster abc does not exist",
+			StatusCode: 400, ErrorCode: "INVALID_PARAMETER_VALUE"}, "1232"))
+	assert.EqualValues(t, common.APIError{Message: "Cluster abc does not exist",
+		StatusCode: 404, ErrorCode: "INVALID_STATE"},
+		wrapClusterStatusAPIError(common.APIError{Message: "Cluster abc does not exist",
+			StatusCode: 400, ErrorCode: "INVALID_STATE"}, "1232"))
+	assert.EqualValues(t, common.APIError{StatusCode: 404},
+		wrapClusterStatusAPIError(common.APIError{StatusCode: 404}, "1232"))
 }

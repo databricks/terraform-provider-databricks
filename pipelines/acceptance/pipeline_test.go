@@ -69,7 +69,7 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 				}
 
 				cluster {
-					instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
+					instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 					label = "default"
 					num_workers = 2
 					custom_tags = {
@@ -78,7 +78,7 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 				}
 
 				cluster {
-					instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
+					instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 					label = "maintenance"
 					num_workers = 1
 					custom_tags = {
@@ -117,7 +117,7 @@ func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 				}
 
 				cluster {
-					instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
+					instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 					label = "default"
 					num_workers = 2
 					custom_tags = {
@@ -128,7 +128,7 @@ func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 					}
 				}
 				cluster {
-					instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
+					instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 					label = "maintenance"
 					num_workers = 1
 					custom_tags = {
@@ -158,7 +158,7 @@ func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 				}
 
 				cluster {
-					instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
+					instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 					label = "default"
 					num_workers = 3
 					custom_tags = {
@@ -169,7 +169,7 @@ func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 					}
 				}
 				cluster {
-					instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
+					instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 					label = "maintenance"
 					num_workers = 1
 					custom_tags = {

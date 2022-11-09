@@ -46,7 +46,7 @@ func TestAccDashboard(t *testing.T) {
 				}
 
 				resource "databricks_sql_query" "q1" {
-					data_source_id = databricks_sql_endpoint.this.data_source_id
+					data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
 					name = "tf-{var.RANDOM}-query"
 					query = "SELECT 1"
 				}
@@ -57,12 +57,6 @@ func TestAccDashboard(t *testing.T) {
 					name = "My Table"
 
 					options = jsonencode({})
-				}
-
-				resource "databricks_sql_endpoint" "this" {
-					name = "tf-{var.RANDOM}-endpoint"
-					cluster_size = "Small"
-					max_num_clusters = 1
 				}
 			`,
 		},

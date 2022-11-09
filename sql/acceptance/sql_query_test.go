@@ -12,7 +12,7 @@ func TestAccQuery(t *testing.T) {
 		{
 			Template: `
 				resource "databricks_sql_query" "q1" {
-					data_source_id = databricks_sql_endpoint.this.data_source_id
+					data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
 					name = "tf-{var.RANDOM}"
 					query = "SELECT {{ p1 }} AS p1, 2 as p2"
 
@@ -42,12 +42,6 @@ func TestAccQuery(t *testing.T) {
 							"p2" = "y"
 						}
 					})
-				}
-
-				resource "databricks_sql_endpoint" "this" {
-					name = "tf-{var.RANDOM}"
-					cluster_size = "Small"
-					max_num_clusters = 1
 				}
 			`,
 		},

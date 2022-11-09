@@ -128,9 +128,10 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 		_, err = libs.WaitForLibrariesInstalled(Wait{
 			"1005-abcd", 50 * time.Millisecond, false, false,
 		})
-		assert.EqualError(t, err, "Cluster 1005-abcd does not exist")
+
 		ae, _ := err.(common.APIError)
 		assert.Equal(t, 404, ae.StatusCode)
+		assert.Equal(t, "Cluster 1005-abcd does not exist", ae.Message)
 	})
 }
 

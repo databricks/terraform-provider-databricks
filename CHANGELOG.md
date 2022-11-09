@@ -1,5 +1,14 @@
 # Version changelog
 
+### 1.6.4
+
+ * Reverted `PRO` as default `warehouse_type` in [databricks_sql_endpoint](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_endpoint) ([#1741](https://github.com/databricks/terraform-provider-databricks/pull/1741)).
+ * Moved testing of clusters, instance pools, and SQL Warehouses to internally configured test environment variables ([#1739](https://github.com/databricks/terraform-provider-databricks/pull/1739)).
+
+Updated dependency versions:
+
+ * Bump google.golang.org/api from 0.101.0 to 0.102.0 ([#1736](https://github.com/databricks/terraform-provider-databricks/pull/1736)).
+
 ### 1.6.3
 
  * Added `warehouse_type` parameter to [databricks_sql_endpoint](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_endpoint) to support PRO SKU ([#1728](https://github.com/databricks/terraform-provider-databricks/pull/1728)).

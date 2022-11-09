@@ -24,6 +24,10 @@ func CommonInstancePoolID() string {
 	if commonInstancePool != nil {
 		return commonInstancePool.InstancePoolID
 	}
+	configured := os.Getenv("TEST_INSTANCE_POOL_ID")
+	if configured != "" {
+		return configured
+	}
 	client := common.CommonEnvironmentClient()
 	oncePool.Do(func() { // atomic
 		log.Printf("[INFO] Initializing common instance pool")
@@ -92,7 +96,6 @@ func NewTinyClusterInCommonPool() (c clusters.ClusterInfo, err error) {
 		ClusterName: "Terraform " + randomName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
 			Latest:          true,
-			LongTermSupport: true,
 		}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "tf-" + randomName,
@@ -112,7 +115,6 @@ func NewTinyClusterInCommonPoolPossiblyReused() (c clusters.ClusterInfo) {
 		ClusterName: currentCluster,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
 			Latest:          true,
-			LongTermSupport: true,
 		}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "tf-" + randomName,

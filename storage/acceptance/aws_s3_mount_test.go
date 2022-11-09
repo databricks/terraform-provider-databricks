@@ -52,7 +52,7 @@ func TestAccAwsS3IamMount_WithCluster(t *testing.T) {
 		resource "databricks_cluster" "this" {
 			cluster_name = "ready-{var.RANDOM}"
 			spark_version = data.databricks_spark_version.latest.id
-			instance_pool_id = "{var.COMMON_INSTANCE_POOL_ID}"
+			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 			autotermination_minutes = 5
 			num_workers = 1
 			aws_attributes {

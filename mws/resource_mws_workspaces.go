@@ -55,20 +55,20 @@ type CloudResourceBucket struct {
 }
 
 type GCPManagedNetworkConfig struct {
-	SubnetCIDR               string `json:"subnet_cidr"`
-	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range"`
-	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range"`
+	SubnetCIDR               string `json:"subnet_cidr"  tf:"force_new"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range"  tf:"force_new"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range"  tf:"force_new"`
 }
 
 type GCPCommonNetworkConfig struct {
-	GKEConnectivityType     string `json:"gke_connectivity_type"`
-	GKEClusterMasterIPRange string `json:"gke_cluster_master_ip_range"`
+	GKEConnectivityType     string `json:"gke_connectivity_type"  tf:"force_new"`
+	GKEClusterMasterIPRange string `json:"gke_cluster_master_ip_range"  tf:"force_new"`
 }
 
 type GCPNetwork struct {
-	NetworkID               string                   `json:"network_id,omitempty"`
-	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty"`
-	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config"`
+	NetworkID               string                   `json:"network_id,omitempty"  tf:"force_new"`
+	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty"  tf:"force_new"`
+	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config,omitempty"  tf:"force_new"`
 }
 
 type externalCustomerInfo struct {

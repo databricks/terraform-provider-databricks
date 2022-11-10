@@ -227,12 +227,10 @@ func TestClusterList_NoNameMatch(t *testing.T) {
 func TestJobListNoNameMatch(t *testing.T) {
 	ic := importContextForTest()
 	ic.match = "bcd"
-	ic.importJobs(jobs.JobList{
-		Jobs: []jobs.Job{
-			{
-				Settings: &jobs.JobSettings{
-					Name: "abc",
-				},
+	ic.importJobs([]jobs.Job{
+		{
+			Settings: &jobs.JobSettings{
+				Name: "abc",
 			},
 		},
 	})
@@ -251,13 +249,11 @@ func TestJobList_FailGetRuns(t *testing.T) {
 		ic := importContextForTest()
 		ic.Client = client
 		ic.Context = ctx
-		ic.importJobs(jobs.JobList{
-			Jobs: []jobs.Job{
-				{
-					JobID: 1,
-					Settings: &jobs.JobSettings{
-						Name: "abc",
-					},
+		ic.importJobs([]jobs.Job{
+			{
+				JobID: 1,
+				Settings: &jobs.JobSettings{
+					Name: "abc",
 				},
 			},
 		})

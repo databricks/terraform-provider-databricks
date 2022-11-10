@@ -445,10 +445,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 				if task.DbtTask != nil {
-					if task.SqlTask.WarehouseID != "" {
+					if task.DbtTask.WarehouseId != "" {
 						ic.Emit(&resource{
 							Resource: "databricks_sql_endpoint",
-							ID:       task.SqlTask.WarehouseID,
+							ID:       task.DbtTask.WarehouseId,
 						})
 					}
 				}

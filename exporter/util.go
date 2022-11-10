@@ -281,12 +281,12 @@ func eitherString(a any, b any) string {
 	return ""
 }
 
-func (ic *importContext) importJobs(l jobs.JobList) {
+func (ic *importContext) importJobs(l []jobs.Job) {
 	nowSeconds := time.Now().Unix()
 	a := jobs.NewJobsAPI(ic.Context, ic.Client)
 	starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
 	i := 0
-	for _, job := range l.Jobs {
+	for _, job := range l {
 		if !ic.MatchesName(job.Settings.Name) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
@@ -317,7 +317,7 @@ func (ic *importContext) importJobs(l jobs.JobList) {
 			ID:       job.ID(),
 		})
 		i++
-		log.Printf("[INFO] Imported %d of total %d jobs", i, len(l.Jobs))
+		log.Printf("[INFO] Imported %d of total %d jobs", i, len(l))
 	}
 }
 

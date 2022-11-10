@@ -225,9 +225,10 @@ func (js *JobSettings) sortWebhooksByID() {
 	js.WebhookNotifications.Sort()
 }
 
-// JobList returns a list of all jobs
-type JobList struct {
-	Jobs []Job `json:"jobs"`
+// JobListResponse returns a list of all jobs
+type JobListResponse struct {
+	Jobs    []Job `json:"jobs"`
+	HasMore bool  `json:"has_more,omitempty"`
 }
 
 // Job contains the information when using a GET request from the Databricks Jobs api
@@ -307,9 +308,38 @@ type JobsAPI struct {
 	context context.Context
 }
 
+// List all jobs matching the name. If name is empty, returns all jobs
+func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
+	jobs := []Job{}
+	params := map[string]interface{}{
+		"limit":        25,
+		"expand_tasks": expandTasks,
+	}
+	if name != "" {
+		params["name"] = name
+	}
+	offset := 0
+
+	ctx := context.WithValue(a.context, common.Api, common.API_2_1)
+	for {
+		var resp JobListResponse
+		params["offset"] = offset
+		err := a.client.Get(ctx, "/jobs/list", params, &resp)
+		if err != nil {
+			return nil, err
+		}
+		jobs = append(jobs, resp.Jobs...)
+		if !resp.HasMore {
+			break
+		}
+		offset += len(resp.Jobs)
+	}
+	return jobs, nil
+}
+
 // List all jobs
-func (a JobsAPI) List() (l JobList, err error) {
-	err = a.client.Get(a.context, "/jobs/list", nil, &l)
+func (a JobsAPI) List() (l []Job, err error) {
+	l, err = a.ListByName("", false)
 	return
 }
 

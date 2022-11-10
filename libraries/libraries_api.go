@@ -78,12 +78,16 @@ func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibra
 func (a LibrariesAPI) WaitForLibrariesInstalled(wait Wait) (result *ClusterLibraryStatuses, err error) {
 	err = resource.RetryContext(a.context, wait.Timeout, func() *resource.RetryError {
 		libsClusterStatus, err := a.ClusterStatus(wait.ClusterID)
-		if common.IsMissing(err) {
-			// eventual consistency error
-			return resource.RetryableError(err)
-		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			apiErr, ok := err.(common.APIError)
+			if !ok {
+				return resource.NonRetryableError(err)
+			}
+			if apiErr.StatusCode != 404 && strings.Contains(apiErr.Message,
+				fmt.Sprintf("Cluster %s does not exist", wait.ClusterID)) {
+				apiErr.StatusCode = 404
+			}
+			return resource.NonRetryableError(apiErr)
 		}
 		if !wait.IsRunning {
 			log.Printf("[INFO] Cluster %s is currently not running, so just returning list of %d libraries",

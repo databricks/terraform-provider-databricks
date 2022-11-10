@@ -627,7 +627,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
 							ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
-							Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, x.Value, x.Display),
+							Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
 						})
 					}
 					if len(g.Members) > 10 {

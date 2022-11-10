@@ -341,8 +341,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/list",
-				Response: jobs.JobList{},
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Response: jobs.JobListResponse{},
 			},
 			{
 				Method:   "GET",
@@ -441,8 +441,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/list",
-				Response: jobs.JobList{},
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Response: jobs.JobListResponse{},
 			},
 			{
 				Method:   "GET",
@@ -484,8 +484,8 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/list",
-				Response: jobs.JobList{},
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Response: jobs.JobListResponse{},
 			},
 			{
 				Method:   "GET",
@@ -628,8 +628,8 @@ func TestImportingJobs_JobList(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/list",
-				Response: jobs.JobList{
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Response: jobs.JobListResponse{
 					Jobs: []jobs.Job{
 						{
 							JobID: 14,
@@ -842,8 +842,8 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/list",
-				Response: jobs.JobList{
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Response: jobs.JobListResponse{
 					Jobs: []jobs.Job{
 						{
 							JobID: 14,
@@ -1085,8 +1085,8 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/list",
-				Response: jobs.JobList{},
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Response: jobs.JobListResponse{},
 			},
 			{
 				Method:   "GET",

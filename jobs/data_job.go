@@ -3,6 +3,7 @@ package jobs
 import (
 	"context"
 	"fmt"
+
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -16,11 +17,17 @@ func DataSourceJob() *schema.Resource {
 	return common.DataResource(queryableJobData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*queryableJobData)
 		jobsAPI := NewJobsAPI(ctx, c)
-		list, err := jobsAPI.List()
+		var list []Job
+		var err error
+		if data.Name != "" {
+			list, err = jobsAPI.ListByName(data.Name, false)
+		} else {
+			list, err = jobsAPI.List()
+		}
 		if err != nil {
 			return err
 		}
-		for _, job := range list.Jobs {
+		for _, job := range list {
 			currentJob := job // De-referencing the temp variable used by the loop
 			currentJobId := currentJob.ID()
 			currentJobName := currentJob.Settings.Name

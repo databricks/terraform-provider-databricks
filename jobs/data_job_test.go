@@ -1,16 +1,22 @@
 package jobs
 
 import (
-	"github.com/databricks/terraform-provider-databricks/qa"
+	"fmt"
 	"testing"
+
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func commonFixtures() []qa.HTTPFixture {
+func commonFixtures(name string) []qa.HTTPFixture {
+	resource := "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0"
+	if name != "" {
+		resource = fmt.Sprintf("/api/2.1/jobs/list?expand_tasks=false&limit=25&name=%s&offset=0", name)
+	}
 	return []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/jobs/list",
-			Response: JobList{
+			Resource: resource,
+			Response: JobListResponse{
 				Jobs: []Job{
 					{
 						JobID: 123,
@@ -32,7 +38,7 @@ func commonFixtures() []qa.HTTPFixture {
 }
 func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+		Fixtures:    commonFixtures(""),
 		Resource:    DataSourceJob(),
 		Read:        true,
 		New:         true,
@@ -47,7 +53,7 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 
 func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+		Fixtures:    commonFixtures("First"),
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
@@ -61,7 +67,15 @@ func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 
 func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&name=Third&offset=0",
+				Response: JobListResponse{
+					Jobs: []Job{},
+				},
+			},
+		},
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
@@ -72,7 +86,7 @@ func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 
 func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+		Fixtures:    commonFixtures(""),
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,

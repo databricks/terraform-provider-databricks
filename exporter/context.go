@@ -498,11 +498,10 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 			Attribute: attr,
 			Value:     value,
 		}, attr)
-
-		if traversal == nil {
-			break
+		//at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
+		if traversal != nil {
+			return hclwrite.TokensForTraversal(traversal)
 		}
-		return hclwrite.TokensForTraversal(traversal)
 	}
 	return hclwrite.TokensForValue(cty.StringVal(value))
 }

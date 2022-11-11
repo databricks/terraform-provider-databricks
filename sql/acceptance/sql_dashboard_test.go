@@ -57,6 +57,18 @@ func TestAccDashboard(t *testing.T) {
 					name = "My Table"
 
 					options = jsonencode({})
+				}
+
+				resource "databricks_sql_visualization" "q1v2" {
+					query_id = databricks_sql_query.q1.id
+					type = "table"
+					name = "My Table (1)"
+
+					options = jsonencode({})
+
+					# Note: this resource differs from the one above in that
+					# the query plan is set. This tests that it can either
+					# be unset or set and in both cases yield a consistent result.
 					query_plan = jsonencode({})
 				}
 			`,

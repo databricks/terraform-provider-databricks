@@ -69,7 +69,12 @@ func TestAccDashboard(t *testing.T) {
 					# Note: this resource differs from the one above in that
 					# the query plan is set. This tests that it can either
 					# be unset or set and in both cases yield a consistent result.
-					query_plan = jsonencode({})
+					query_plan = jsonencode({
+						# The value should be non-empty to check we don't have
+						# plan changes due to whitespace changes in JSON serialization.
+						groups = [
+						]
+					})
 				}
 			`,
 		},

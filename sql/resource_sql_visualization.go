@@ -134,26 +134,28 @@ func jsonRemarshal(in []byte) ([]byte, error) {
 	return out, nil
 }
 
+func suppressWhitespaceChangesInJSON(_, old, new string, d *schema.ResourceData) bool {
+	oldp, err := jsonRemarshal([]byte(old))
+	if err != nil {
+		log.Printf("[WARN] Unable to remarshal value %#v", old)
+		return false
+	}
+	newp, err := jsonRemarshal([]byte(new))
+	if err != nil {
+		log.Printf("[WARN] Unable to remarshal value %#v", new)
+		return false
+	}
+	return bytes.Equal(oldp, newp)
+}
+
 func ResourceSqlVisualization() *schema.Resource {
 	p := common.NewPairSeparatedID("query_id", "visualization_id", "/")
 	s := common.StructToSchema(
 		VisualizationEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			// We care only about logical changes to the JSON payload in `options`.
-			m["options"].DiffSuppressFunc = func(_, old, new string, d *schema.ResourceData) bool {
-				oldp, err := jsonRemarshal([]byte(old))
-				if err != nil {
-					log.Printf("[WARN] Unable to remarshal value %#v", old)
-					return false
-				}
-				newp, err := jsonRemarshal([]byte(new))
-				if err != nil {
-					log.Printf("[WARN] Unable to remarshal value %#v", new)
-					return false
-				}
-				return bytes.Equal(oldp, newp)
-			}
-
+			// We care only about logical changes to the JSON payload in `options` and `query_plan`.
+			m["options"].DiffSuppressFunc = suppressWhitespaceChangesInJSON
+			m["query_plan"].DiffSuppressFunc = suppressWhitespaceChangesInJSON
 			return m
 		})
 

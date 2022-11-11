@@ -52,7 +52,9 @@ func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[st
 	v.Name = av.Name
 	v.Description = av.Description
 	v.Options = string(av.Options)
-	if av.QueryPlan != nil {
+
+	// If the query plan attribute is not set; it may come back as `null` from the API.
+	if av.QueryPlan != nil && !bytes.Equal(av.QueryPlan, []byte("null")) {
 		v.QueryPlan = string(av.QueryPlan)
 	}
 

@@ -15,6 +15,7 @@ func TestVisualizationMarshalUnmarshal(t *testing.T) {
 		Name:        "name",
 		Description: "description",
 		Options:     json.RawMessage("{}"),
+		QueryPlan:   json.RawMessage(`{"foo":"bar"}`),
 	}
 
 	out, err := json.Marshal(v)

@@ -23,6 +23,7 @@ type VisualizationEntity struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	Options     string `json:"options"`
+	QueryPlan   string `json:"query_plan,omitempty"`
 }
 
 func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Visualization, error) {
@@ -37,6 +38,9 @@ func (v *VisualizationEntity) toAPIObject(schema map[string]*schema.Schema, data
 	av.Name = v.Name
 	av.Description = v.Description
 	av.Options = json.RawMessage(v.Options)
+	if v.QueryPlan != "" {
+		av.QueryPlan = json.RawMessage(v.QueryPlan)
+	}
 	return &av, nil
 }
 
@@ -48,6 +52,9 @@ func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[st
 	v.Name = av.Name
 	v.Description = av.Description
 	v.Options = string(av.Options)
+	if av.QueryPlan != nil {
+		v.QueryPlan = string(av.QueryPlan)
+	}
 
 	// Transform to ResourceData.
 	return common.StructToData(*v, schema, data)

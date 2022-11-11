@@ -57,6 +57,7 @@ func TestAccDashboard(t *testing.T) {
 					name = "My Table"
 
 					options = jsonencode({})
+					query_plan = jsonencode({})
 				}
 			`,
 		},

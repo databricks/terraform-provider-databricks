@@ -182,6 +182,7 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 * `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
 * `project_directory` - (Optional) The relative path to the directory in the repository specified in `git_source` where dbt should look in for the `dbt_project.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--project-dir` to a dbt command.
 * `profiles_directory` - (Optional) The relative path to the directory in the repository specified by `git_source` where dbt should look in for the `profiles.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--profile-dir` to a dbt command.
+* `catalog` - (Optional) The name of the catalog to use inside Unity Catalog.
 * `schema` - (Optional) The name of the schema dbt should run in. Defaults to `default`.
 * `warehouse_id` - (Optional) The ID of the SQL warehouse that dbt should execute against.
 

@@ -12,7 +12,7 @@ Securable objects are hierarchical and privileges are inherited downward. The hi
 
 Every `databricks_grants` resource must have exactly one securable identifier and one or more `grant` blocks with the following arguments:
 
-- `principal` - User or group name.
+- `principal` - User name, group name or service principal application ID.
 - `privileges` - One or more privileges that are specific to a securable type.
 
 The securable objects are:

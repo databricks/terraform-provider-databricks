@@ -158,7 +158,7 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 
 ### spark_python_task Configuration Block
 
-* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path) and S3 paths are supported. This field is required.
+* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (`s3:/`, `adls:/`, `gcs:/`) and workspace paths are supported. For python files stored in the Databricks workspace, the path must be absolute and begin with `/Repos`. This field is required.
 * `parameters` - (Optional) (List) Command line parameters passed to the Python file.
 
 ### notebook_task Configuration Block

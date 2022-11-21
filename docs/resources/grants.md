@@ -200,7 +200,7 @@ resource "databricks_grants" "external_creds" {
 
 ## Storage location grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `CREATE MANAGED STORAGE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
 
 ```hcl
 resource "databricks_external_location" "some" {

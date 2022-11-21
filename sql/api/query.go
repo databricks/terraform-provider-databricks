@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 )
 
 // Query ...
@@ -68,7 +67,6 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 	type localQueryOptions QueryOptions
 	err := json.Unmarshal(b, (*localQueryOptions)(o))
 	if err != nil {
-		log.Printf("[DEBUG] Can't unmarshal bytes '%v'", b)
 		return err
 	}
 
@@ -79,7 +77,6 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 		// Unmarshal into base parameter type to figure out the right type.
 		err = json.Unmarshal(rp, &qp)
 		if err != nil {
-			log.Printf("[DEBUG] Can't unmarshal base parameter into query parameter '%v', value='%v'", rp, qp)
 			return err
 		}
 
@@ -113,7 +110,6 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 		// Unmarshal into correct parameter type.
 		err = json.Unmarshal(rp, &i)
 		if err != nil {
-			log.Printf("[DEBUG] Can't unmarshal field '%s', value='%v'", string(rp), i)
 			return err
 		}
 

@@ -97,25 +97,31 @@ func TestQueryMarshalUnmarshal(t *testing.T) {
 					Value: "xyz",
 				},
 				&QueryParameterDateRange{
-					QueryParameter: QueryParameter{
-						Name:  "n10",
-						Title: "t10",
+					QueryParameterRangeBase: QueryParameterRangeBase{
+						QueryParameter: QueryParameter{
+							Name:  "n10",
+							Title: "t10",
+						},
+						StringValue: "xyz",
 					},
-					StringValue: "xyz",
 				},
 				&QueryParameterDateTimeRange{
-					QueryParameter: QueryParameter{
-						Name:  "n11",
-						Title: "t11",
+					QueryParameterRangeBase: QueryParameterRangeBase{
+						QueryParameter: QueryParameter{
+							Name:  "n11",
+							Title: "t11",
+						},
+						StringValue: "xyz",
 					},
-					StringValue: "xyz",
 				},
 				&QueryParameterDateTimeSecRange{
-					QueryParameter: QueryParameter{
-						Name:  "n12",
-						Title: "t12",
+					QueryParameterRangeBase: QueryParameterRangeBase{
+						QueryParameter: QueryParameter{
+							Name:  "n12",
+							Title: "t12",
+						},
+						StringValue: "xyz",
 					},
-					StringValue: "xyz",
 				},
 			},
 		},
@@ -148,11 +154,13 @@ func TestQueryMarshalUnmarshalRanges(t *testing.T) {
 		Options: &QueryOptions{
 			Parameters: []any{
 				&QueryParameterDateRange{
-					QueryParameter: QueryParameter{
-						Name:  "n13",
-						Title: "t13",
+					QueryParameterRangeBase: QueryParameterRangeBase{
+						QueryParameter: QueryParameter{
+							Name:  "n13",
+							Title: "t13",
+						},
+						RangeValue: &DateTimeRange{Start: "2022-11-20", End: "2022-11-22"},
 					},
-					StringValue: "2022-11-20|2022-11-22",
 				},
 			},
 		},
@@ -164,7 +172,7 @@ func TestQueryMarshalUnmarshalRanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Contains(t, string(out), `"value":{"end":"2022-11-22","start":"2022-11-20"`)
+	assert.Contains(t, string(out), `"value":{"start":"2022-11-20","end":"2022-11-22"`)
 
 	var qp Query
 	if err := json.Unmarshal(out, &qp); err != nil {

@@ -112,7 +112,8 @@ type QueryParameterDateLike struct {
 
 // QueryParameterDateRangeLike ...
 type QueryParameterDateRangeLike struct {
-	Value string `json:"value"`
+	Value string             `json:"value,omitempty"`
+	Range *api.DateTimeRange `json:"range,omitempty"`
 }
 
 // QueryParameterAllowMultiple ...
@@ -249,18 +250,27 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 				}
 			case p.DateRange != nil:
 				iface = api.QueryParameterDateRange{
-					QueryParameter: ap,
-					StringValue:    p.DateRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateRange.Value,
+						RangeValue:     p.DateRange.Range,
+					},
 				}
 			case p.DateTimeRange != nil:
 				iface = api.QueryParameterDateTimeRange{
-					QueryParameter: ap,
-					StringValue:    p.DateTimeRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateTimeRange.Value,
+						RangeValue:     p.DateTimeRange.Range,
+					},
 				}
 			case p.DateTimeSecRange != nil:
 				iface = api.QueryParameterDateTimeSecRange{
-					QueryParameter: ap,
-					StringValue:    p.DateTimeSecRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateTimeSecRange.Value,
+						RangeValue:     p.DateTimeSecRange.Range,
+					},
 				}
 			default:
 				log.Fatalf("Don't know what to do for QueryParameter...")

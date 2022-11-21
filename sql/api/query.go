@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 )
 
 // Query ...
@@ -405,37 +404,45 @@ func (p *QueryParameterDateTimeSec) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func toParameterObject(s string) any {
-	splits := strings.Split(s, "|")
-	if len(splits) == 2 {
-		return map[string]string{"start": splits[0], "end": splits[1]}
+type DateTimeRange struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+type QueryParameterRangeBase struct {
+	QueryParameter
+
+	Value       any            `json:"value"`
+	StringValue string         `json:"-"`
+	RangeValue  *DateTimeRange `json:"-"`
+}
+
+func (p *QueryParameterRangeBase) toParameterObject() {
+	if p.RangeValue != nil {
+		p.Value = p.RangeValue
 	} else {
-		return s
+		p.Value = p.StringValue
 	}
 }
 
-func queryParameterToString(i any) string {
-	if v, ok := i.(string); ok {
-		return v
-	} else if v, ok := i.(map[string]any); ok {
-		return fmt.Sprintf("%v|%v", v["start"], v["end"])
+func (p *QueryParameterRangeBase) decodeQueryParameter() {
+	if v, ok := p.Value.(map[string]any); ok {
+		p.RangeValue = &DateTimeRange{Start: v["start"].(string), End: v["end"].(string)}
+	} else {
+		p.StringValue = fmt.Sprintf("%v", p.Value)
 	}
-	return fmt.Sprintf("%v", i)
 }
 
 // QueryParameterDateRange ...
 type QueryParameterDateRange struct {
-	QueryParameter
-
-	Value       any    `json:"value"`
-	StringValue string `json:"-"`
+	QueryParameterRangeBase
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateRange) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = queryParameterDateRangeTypeName
 	type localQueryParameter QueryParameterDateRange
-	p.Value = toParameterObject(p.StringValue)
+	p.QueryParameter.Type = queryParameterDateRangeTypeName
+	p.toParameterObject()
 	return json.Marshal((localQueryParameter)(p))
 }
 
@@ -445,7 +452,7 @@ func (p *QueryParameterDateRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
-	p.StringValue = queryParameterToString(p.Value)
+	p.decodeQueryParameter()
 	p.Value = nil
 	p.Type = ""
 	return nil
@@ -453,17 +460,14 @@ func (p *QueryParameterDateRange) UnmarshalJSON(b []byte) error {
 
 // QueryParameterDateTimeRange ...
 type QueryParameterDateTimeRange struct {
-	QueryParameter
-
-	Value       any    `json:"value"`
-	StringValue string `json:"-"`
+	QueryParameterRangeBase
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateTimeRange) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = queryParameterDateTimeRangeTypeName
-	p.Value = toParameterObject(p.StringValue)
 	type localQueryParameter QueryParameterDateTimeRange
+	p.QueryParameter.Type = queryParameterDateTimeRangeTypeName
+	p.toParameterObject()
 	return json.Marshal((localQueryParameter)(p))
 }
 
@@ -473,7 +477,7 @@ func (p *QueryParameterDateTimeRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
-	p.StringValue = queryParameterToString(p.Value)
+	p.decodeQueryParameter()
 	p.Value = nil
 	p.Type = ""
 	return nil
@@ -481,17 +485,14 @@ func (p *QueryParameterDateTimeRange) UnmarshalJSON(b []byte) error {
 
 // QueryParameterDateTimeSecRange ...
 type QueryParameterDateTimeSecRange struct {
-	QueryParameter
-
-	Value       any    `json:"value"`
-	StringValue string `json:"-"`
+	QueryParameterRangeBase
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateTimeSecRange) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = queryParameterDateTimeSecRangeTypeName
-	p.Value = toParameterObject(p.StringValue)
 	type localQueryParameter QueryParameterDateTimeSecRange
+	p.QueryParameter.Type = queryParameterDateTimeSecRangeTypeName
+	p.toParameterObject()
 	return json.Marshal((localQueryParameter)(p))
 }
 
@@ -501,7 +502,7 @@ func (p *QueryParameterDateTimeSecRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
-	p.StringValue = queryParameterToString(p.Value)
+	p.decodeQueryParameter()
 	p.Value = nil
 	p.Type = ""
 	return nil

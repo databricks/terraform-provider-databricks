@@ -252,14 +252,14 @@ var emptySqlEndpoints = qa.HTTPFixture{
 
 var emptySqlDashboards = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/sql/dashboards",
+	Resource:     "/api/2.0/preview/sql/dashboards?page_size=100",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
 
 var emptySqlQueries = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/sql/queries",
+	Resource:     "/api/2.0/preview/sql/queries?page_size=100",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
@@ -1433,7 +1433,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/sql/dashboards",
+				Resource:     "/api/2.0/preview/sql/dashboards?page_size=100",
 				Response:     getJSONObject("test-data/get-sql-dashboards.json"),
 				ReuseRequest: true,
 			},
@@ -1445,7 +1445,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/sql/queries",
+				Resource:     "/api/2.0/preview/sql/queries?page_size=100",
 				Response:     getJSONObject("test-data/get-sql-queries.json"),
 				ReuseRequest: true,
 			},
@@ -1472,8 +1472,8 @@ func TestImportingSqlObjects(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.listing = "sql,access"
-			ic.services = "sql,access"
+			ic.listing = "sql-dashboards,sql-queries,sql-endpoints,access"
+			ic.services = "sql-dashboards,sql-queries,sql-endpoints,access"
 
 			err := ic.Run()
 			assert.NoError(t, err)

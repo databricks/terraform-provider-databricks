@@ -101,21 +101,21 @@ func TestQueryMarshalUnmarshal(t *testing.T) {
 						Name:  "n10",
 						Title: "t10",
 					},
-					Value: "xyz",
+					StringValue: "xyz",
 				},
 				&QueryParameterDateTimeRange{
 					QueryParameter: QueryParameter{
 						Name:  "n11",
 						Title: "t11",
 					},
-					Value: "xyz",
+					StringValue: "xyz",
 				},
 				&QueryParameterDateTimeSecRange{
 					QueryParameter: QueryParameter{
 						Name:  "n12",
 						Title: "t12",
 					},
-					Value: "xyz",
+					StringValue: "xyz",
 				},
 			},
 		},
@@ -126,6 +126,45 @@ func TestQueryMarshalUnmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	var qp Query
+	if err := json.Unmarshal(out, &qp); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, q, qp)
+}
+
+func TestQueryMarshalUnmarshalRanges(t *testing.T) {
+	q := Query{
+		ID:           "id",
+		DataSourceID: "data_source_id",
+		Name:         "name",
+		Description:  "description",
+		Query:        "SELECT 1",
+		Schedule: &QuerySchedule{
+			Interval: 1000,
+		},
+		Options: &QueryOptions{
+			Parameters: []any{
+				&QueryParameterDateRange{
+					QueryParameter: QueryParameter{
+						Name:  "n13",
+						Title: "t13",
+					},
+					StringValue: "2022-11-20|2022-11-22",
+				},
+			},
+		},
+		Tags: []string{"tag1", "tag2"},
+	}
+
+	out, err := json.Marshal(q)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Contains(t, string(out), `"value":{"end":"2022-11-22","start":"2022-11-20"`)
 
 	var qp Query
 	if err := json.Unmarshal(out, &qp); err != nil {

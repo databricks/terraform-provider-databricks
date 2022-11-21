@@ -20,10 +20,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	"github.com/databricks/terraform-provider-databricks/sql"
-	"github.com/databricks/terraform-provider-databricks/sql/api"
-	"github.com/databricks/terraform-provider-databricks/workspace"
-
+	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -42,6 +41,7 @@ var (
 	dltClusterRegex         = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 )
 
+// todo: generic with go1.18
 type dbsqlListResponse struct {
 	Results    []map[string]any `json:"results"`
 	Page       int64            `json:"page"`
@@ -50,39 +50,32 @@ type dbsqlListResponse struct {
 }
 
 // Generic function to list objects related to the DBSQL
-func dbsqlListObjects(ic *importContext, path string) ([]map[string]any, error) {
+func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, err error) {
+	// TODO: create API method & use it also for data resource
 	var listResponse dbsqlListResponse
-	err := ic.Client.Get(ic.Context, path, nil, &listResponse)
+	page_size := 100
+	err = ic.Client.Get(ic.Context, path, map[string]any{"page_size": page_size}, &listResponse)
 	if err != nil {
 		return nil, err
 	}
-
 	totalCount := int(listResponse.TotalCount)
-	events := make([]map[string]any, totalCount)
 	if totalCount == 0 {
 		return events, nil
 	}
-	startPos := 0
-	curPos := len(listResponse.Results)
-	copy(events[startPos:curPos], listResponse.Results)
-	for curPos < totalCount {
+	events = append(events, listResponse.Results...)
+	page := 2
+	for len(events) < totalCount {
+		var listResponse dbsqlListResponse
 		err := ic.Client.Get(ic.Context, path,
-			map[string]any{"page_size": listResponse.PageSize, "page": listResponse.Page + 1},
+			map[string]any{"page_size": page_size, "page": page},
 			&listResponse)
 		if err != nil {
 			return nil, err
 		}
-		startPos = curPos
-		curLen := len(listResponse.Results)
-		restItems := totalCount - startPos
-		if restItems < curLen {
-			curLen = restItems
-		}
-		curPos += curLen
-		copy(events[startPos:curPos], listResponse.Results[0:curLen])
+		events = append(events, listResponse.Results...)
+		page++
 	}
-
-	return events[0:curPos], err
+	return events, err
 }
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -535,6 +528,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err := ic.cacheGroups(); err != nil {
 				return err
 			}
+			// TODO: don't export users and admins group
 			for _, g := range ic.allGroups {
 				if !ic.MatchesName(g.DisplayName) {
 					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
@@ -1095,7 +1089,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_query": {
-		Service: "sql",
+		Service: "sql-queries",
 		Name: func(d *schema.ResourceData) string {
 			return d.Get("name").(string) + "_" + d.Id()
 		},
@@ -1106,6 +1100,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			data_sources := map[string]struct{}{}
 			for i, q := range qs {
+				name := q["name"].(string)
+				if !ic.MatchesName(name) {
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_sql_query",
 					ID:       q["id"].(string),
@@ -1142,7 +1140,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_endpoint": {
-		Service: "sql",
+		Service: "sql-endpoints",
 		Name: func(d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -1156,6 +1154,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for i, q := range endpointsList.Endpoints {
+				if !ic.MatchesName(q.Name) {
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_sql_endpoint",
 					ID:       q.ID,
@@ -1175,34 +1176,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 	},
-	"databricks_sql_visualization": {
-		Service: "sql",
-		Name: func(d *schema.ResourceData) string {
-			name := d.Get("name").(string) + "_" + d.Id()
-			return name
-		},
-		List: func(ic *importContext) error {
-			allVis, err := ic.getSqlVisualizations()
-			if err != nil {
-				return err
-			}
-			i := 1
-			for _, visID := range allVis {
-				ic.Emit(&resource{
-					Resource: "databricks_sql_visualization",
-					ID:       visID,
-				})
-				log.Printf("[INFO] Imported %d of %d SQL Visualizations", i, len(allVis))
-				i++
-			}
-			return nil
-		},
-		Depends: []reference{
-			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
-		},
-	},
 	"databricks_sql_dashboard": {
-		Service: "sql",
+		Service: "sql-dashboards",
 		Name: func(d *schema.ResourceData) string {
 			return d.Get("name").(string) + "_" + d.Id()
 		},
@@ -1212,13 +1187,16 @@ var resourcesMap map[string]importable = map[string]importable{
 				return nil
 			}
 			for i, q := range qs {
+				name := q["name"].(string)
+				if !ic.MatchesName(name) {
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_sql_dashboard",
 					ID:       q["id"].(string),
 				})
 				log.Printf("[INFO] Imported %d of %d SQL dashboards", i+1, len(qs))
 			}
-
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
@@ -1229,79 +1207,66 @@ var resourcesMap map[string]importable = map[string]importable{
 					Name:     "sql_dashboard_" + ic.Importables["databricks_sql_dashboard"].Name(r.Data),
 				})
 			}
+			dashboardID := r.ID
+			dashboardAPI := sql.NewDashboardAPI(ic.Context, ic.Client)
+			dashboard, err := dashboardAPI.Read(dashboardID)
+			if err != nil {
+				return err
+			}
+			allVis, err := ic.getSqlVisualizations()
+			if err != nil {
+				return err
+			}
+			for _, rv := range dashboard.Widgets {
+				var widget sql_api.Widget
+				err = json.Unmarshal(rv, &widget)
+				if err != nil {
+					log.Printf("[WARN] Problems decoding widget for dashboard with ID: %s", dashboardID)
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_sql_widget",
+					ID:       dashboardID + "/" + widget.ID.String(),
+				})
+				if widget.VisualizationID != nil {
+					info, ok := allVis[widget.VisualizationID.String()]
+					if ok {
+						ic.Emit(&resource{
+							Resource: "databricks_sql_visualization",
+							ID:       info.visResourceID,
+						})
+						ic.Emit(&resource{
+							Resource: "databricks_sql_query",
+							ID:       info.queryResourceID,
+						})
+						ic.Emit(&resource{
+							Resource: "databricks_sql_endpoint",
+							ID:       info.endpointResourceID,
+						})
+					}
+				}
+			}
 			return nil
 		},
 	},
 	"databricks_sql_widget": {
-		Service: "sql",
+		Service: "sql-dashboards",
 		Name: func(d *schema.ResourceData) string {
 			return d.Id()
-		},
-		List: func(ic *importContext) error {
-			visualizations := map[string]struct{}{}
-			dashboards := map[string]struct{}{}
-			dashboardList, err := dbsqlListObjects(ic, "/preview/sql/dashboards")
-			if err != nil {
-				return err
-			}
-			dashboardAPI := sql.NewDashboardAPI(ic.Context, ic.Client)
-			cnt := 1
-			for i, d := range dashboardList {
-				dashboardID := d["id"].(string)
-				dashboards[dashboardID] = struct{}{}
-				dashboard, err := dashboardAPI.Read(dashboardID)
-				if err != nil {
-					log.Printf("[WARN] Error getting dashboard with ID %s", dashboardID)
-					continue
-				}
-				for _, rv := range dashboard.Widgets {
-					var widget api.Widget
-					err = json.Unmarshal(rv, &widget)
-					if err != nil {
-						log.Printf("[WARN] Problems decoding widget for dashboard with ID: %s", dashboardID)
-						continue
-					}
-					ic.Emit(&resource{
-						Resource: "databricks_sql_widget",
-						ID:       dashboardID + "/" + widget.ID.String(),
-					})
-					if widget.VisualizationID != nil {
-						visualizations[widget.VisualizationID.String()] = struct{}{}
-					}
-					log.Printf("[DEBUG] Emitted %d widgets for %d of %d dashboards", cnt, i+1, len(dashboardList))
-					cnt++
-				}
-			}
-
-			allVis, err := ic.getSqlVisualizations()
-			if err == nil {
-				for vis := range visualizations {
-					visID, ok := allVis[vis]
-					if ok {
-						ic.Emit(&resource{
-							Resource: "databricks_sql_visualization",
-							ID:       visID,
-						})
-					} else {
-						log.Printf("[WARN] Error finding visualization for ID %s", vis)
-					}
-				}
-			} else {
-				log.Printf("[WARN] Error retrieving all visualizations")
-			}
-
-			for dashboard := range dashboards {
-				ic.Emit(&resource{
-					Resource: "databricks_sql_dashboard",
-					ID:       dashboard,
-				})
-			}
-
-			return nil
 		},
 		Depends: []reference{
 			{Path: "visualization_id", Resource: "databricks_sql_visualization", Match: "visualization_id"},
 			{Path: "dashboard_id", Resource: "databricks_sql_dashboard", Match: "id"},
+		},
+	},
+	"databricks_sql_visualization": {
+		Service: "sql-dashboards",
+		Name: func(d *schema.ResourceData) string {
+			name := d.Get("name").(string) + "_" + d.Id()
+			return name
+		},
+		Depends: []reference{
+			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
 		},
 	},
 	"databricks_pipeline": {
@@ -1344,6 +1309,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.emitIfDbfsFile(lib.Jar)
 				ic.emitIfDbfsFile(lib.Whl)
 			}
+			// TODO: check if storage is like dbfs:/pipelines/uuid, then remove it from data
 			for _, cluster := range pipeline.Clusters {
 				if cluster.AwsAttributes != nil && cluster.AwsAttributes.InstanceProfileArn != "" {
 					ic.Emit(&resource{

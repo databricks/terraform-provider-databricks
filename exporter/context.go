@@ -65,8 +65,8 @@ type importContext struct {
 	variables         map[string]string
 	testEmits         map[string]bool
 	sqlDatasources    map[string]string
-	sqlVisualizations map[string]string
 	workspaceConfKeys map[string]any
+	sqlVisualizations map[string]sqlVisInfo
 
 	debug               bool
 	mounts              bool

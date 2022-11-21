@@ -2,6 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
+	"strings"
 )
 
 // Query ...
@@ -66,6 +69,7 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 	type localQueryOptions QueryOptions
 	err := json.Unmarshal(b, (*localQueryOptions)(o))
 	if err != nil {
+		log.Printf("[DEBUG] Can't unmarshal bytes '%v'", b)
 		return err
 	}
 
@@ -76,6 +80,7 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 		// Unmarshal into base parameter type to figure out the right type.
 		err = json.Unmarshal(rp, &qp)
 		if err != nil {
+			log.Printf("[DEBUG] Can't unmarshal base parameter into query parameter '%v', value='%v'", rp, qp)
 			return err
 		}
 
@@ -109,6 +114,7 @@ func (o *QueryOptions) UnmarshalJSON(b []byte) error {
 		// Unmarshal into correct parameter type.
 		err = json.Unmarshal(rp, &i)
 		if err != nil {
+			log.Printf("[DEBUG] Can't unmarshal field '%s', value='%v'", string(rp), i)
 			return err
 		}
 
@@ -354,7 +360,8 @@ func (p *QueryParameterDate) UnmarshalJSON(b []byte) error {
 type QueryParameterDateTime struct {
 	QueryParameter
 
-	Value string `json:"value"`
+	Value       any    `json:"value"`
+	StringValue string `json:"-"`
 }
 
 // MarshalJSON sets the type before marshaling.
@@ -398,17 +405,37 @@ func (p *QueryParameterDateTimeSec) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func toParameterObject(s string) any {
+	splits := strings.Split(s, "|")
+	if len(splits) == 2 {
+		return map[string]string{"start": splits[0], "end": splits[1]}
+	} else {
+		return s
+	}
+}
+
+func queryParameterToString(i any) string {
+	if v, ok := i.(string); ok {
+		return v
+	} else if v, ok := i.(map[string]any); ok {
+		return fmt.Sprintf("%v|%v", v["start"], v["end"])
+	}
+	return fmt.Sprintf("%v", i)
+}
+
 // QueryParameterDateRange ...
 type QueryParameterDateRange struct {
 	QueryParameter
 
-	Value string `json:"value"`
+	Value       any    `json:"value"`
+	StringValue string `json:"-"`
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateRange) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterDateRangeTypeName
 	type localQueryParameter QueryParameterDateRange
+	p.Value = toParameterObject(p.StringValue)
 	return json.Marshal((localQueryParameter)(p))
 }
 
@@ -418,6 +445,8 @@ func (p *QueryParameterDateRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
+	p.StringValue = queryParameterToString(p.Value)
+	p.Value = nil
 	p.Type = ""
 	return nil
 }
@@ -426,12 +455,14 @@ func (p *QueryParameterDateRange) UnmarshalJSON(b []byte) error {
 type QueryParameterDateTimeRange struct {
 	QueryParameter
 
-	Value string `json:"value"`
+	Value       any    `json:"value"`
+	StringValue string `json:"-"`
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateTimeRange) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterDateTimeRangeTypeName
+	p.Value = toParameterObject(p.StringValue)
 	type localQueryParameter QueryParameterDateTimeRange
 	return json.Marshal((localQueryParameter)(p))
 }
@@ -442,6 +473,8 @@ func (p *QueryParameterDateTimeRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
+	p.StringValue = queryParameterToString(p.Value)
+	p.Value = nil
 	p.Type = ""
 	return nil
 }
@@ -450,12 +483,14 @@ func (p *QueryParameterDateTimeRange) UnmarshalJSON(b []byte) error {
 type QueryParameterDateTimeSecRange struct {
 	QueryParameter
 
-	Value string `json:"value"`
+	Value       any    `json:"value"`
+	StringValue string `json:"-"`
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateTimeSecRange) MarshalJSON() ([]byte, error) {
 	p.QueryParameter.Type = queryParameterDateTimeSecRangeTypeName
+	p.Value = toParameterObject(p.StringValue)
 	type localQueryParameter QueryParameterDateTimeSecRange
 	return json.Marshal((localQueryParameter)(p))
 }
@@ -466,6 +501,8 @@ func (p *QueryParameterDateTimeSecRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
+	p.StringValue = queryParameterToString(p.Value)
+	p.Value = nil
 	p.Type = ""
 	return nil
 }

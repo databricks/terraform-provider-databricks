@@ -86,7 +86,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 func ResourceServicePrincipal() *schema.Resource {
 	type entity struct {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
-		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
+		DisplayName   string `json:"display_name,omitempty" tf:"computed,force_new"`
 		Active        bool   `json:"active,omitempty"`
 		ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
 	}

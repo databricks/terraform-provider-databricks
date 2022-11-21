@@ -224,7 +224,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 					// application ID is not allowed to be modified by client side on AWS
 
 					Schemas:     []URN{ServicePrincipalSchema},
-					DisplayName: "Changed Name",
+					DisplayName: "Example Service Principal",
 					Active:      true,
 					Entitlements: entitlements{
 						{
@@ -249,7 +249,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 				Response: User{
 					Schemas:       []URN{ServicePrincipalSchema},
 					ApplicationID: "existing-application-id",
-					DisplayName:   "Changed Name",
+					DisplayName:   "Example Service Principal",
 					Active:        true,
 					Entitlements: entitlements{
 						{
@@ -270,15 +270,18 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
-		Update:   true,
-		ID:       "abc",
+		InstanceState: map[string]string{
+			"display_name": "Example Service Principal",
+		},
+		Update: true,
+		ID:     "abc",
 		HCL: `
-		display_name = "Changed Name"
+		display_name = "Example Service Principal"
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"display_name":               "Changed Name",
+		"display_name":               "Example Service Principal",
 		"allow_cluster_create":       false,
 		"allow_instance_pool_create": true,
 	})
@@ -309,8 +312,13 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 					ApplicationID: "existing-application-id",
 
 					Schemas:     []URN{ServicePrincipalSchema},
-					DisplayName: "Changed Name",
-					Active:      true,
+					DisplayName: "Example Service Principal",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					Active: true,
 				},
 			},
 			{
@@ -319,8 +327,13 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 				Response: User{
 					Schemas:       []URN{ServicePrincipalSchema},
 					ApplicationID: "existing-application-id",
-					DisplayName:   "Changed Name",
-					Active:        true,
+					DisplayName:   "Example Service Principal",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					Active: true,
 				},
 			},
 		},
@@ -333,7 +346,8 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 		},
 		HCL: `
 		application_id = "existing-application-id"
-		display_name = "Changed Name"
+		display_name = "Example Service Principal"
+		allow_cluster_create = true
 		`,
 	}.ApplyNoError(t)
 }
@@ -342,8 +356,11 @@ func TestResourceServicePrincipalUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: qa.HTTPFailures,
 		Resource: ResourceServicePrincipal(),
-		Update:   true,
-		ID:       "abc",
+		InstanceState: map[string]string{
+			"display_name": "Changed Name",
+		},
+		Update: true,
+		ID:     "abc",
 		HCL: `
 		display_name = "Changed Name"
 		allow_cluster_create = false
@@ -372,8 +389,11 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 			qa.HTTPFailures[0],
 		},
 		Resource: ResourceServicePrincipal(),
-		Update:   true,
-		ID:       "abc",
+		InstanceState: map[string]string{
+			"display_name": "Changed Name",
+		},
+		Update: true,
+		ID:     "abc",
 		HCL: `
 		display_name = "Changed Name"
 		allow_cluster_create = false

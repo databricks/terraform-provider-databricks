@@ -41,43 +41,6 @@ var (
 	dltClusterRegex         = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 )
 
-// todo: generic with go1.18
-type dbsqlListResponse struct {
-	Results    []map[string]any `json:"results"`
-	Page       int64            `json:"page"`
-	TotalCount int64            `json:"count"`
-	PageSize   int64            `json:"page_size"`
-}
-
-// Generic function to list objects related to the DBSQL
-func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, err error) {
-	// TODO: create API method & use it also for data resource
-	var listResponse dbsqlListResponse
-	page_size := 100
-	err = ic.Client.Get(ic.Context, path, map[string]any{"page_size": page_size}, &listResponse)
-	if err != nil {
-		return nil, err
-	}
-	totalCount := int(listResponse.TotalCount)
-	if totalCount == 0 {
-		return events, nil
-	}
-	events = append(events, listResponse.Results...)
-	page := 2
-	for len(events) < totalCount {
-		var listResponse dbsqlListResponse
-		err := ic.Client.Get(ic.Context, path,
-			map[string]any{"page_size": page_size, "page": page},
-			&listResponse)
-		if err != nil {
-			return nil, err
-		}
-		events = append(events, listResponse.Results...)
-		page++
-	}
-	return events, err
-}
-
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
 	mount := ic.mountMap[r.ID]
 

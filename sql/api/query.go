@@ -427,6 +427,7 @@ func (p *QueryParameterRangeBase) decodeQueryParameter() {
 	} else {
 		p.StringValue = fmt.Sprintf("%v", p.Value)
 	}
+	p.Value = nil
 }
 
 // QueryParameterDateRange ...
@@ -449,7 +450,6 @@ func (p *QueryParameterDateRange) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	p.decodeQueryParameter()
-	p.Value = nil
 	p.Type = ""
 	return nil
 }
@@ -474,7 +474,6 @@ func (p *QueryParameterDateTimeRange) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	p.decodeQueryParameter()
-	p.Value = nil
 	p.Type = ""
 	return nil
 }
@@ -499,7 +498,6 @@ func (p *QueryParameterDateTimeSecRange) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	p.decodeQueryParameter()
-	p.Value = nil
 	p.Type = ""
 	return nil
 }

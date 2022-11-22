@@ -45,6 +45,8 @@ func TestResourceUserRead(t *testing.T) {
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
+	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
@@ -146,6 +148,8 @@ func TestResourceUserCreate(t *testing.T) {
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
+	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
 }
 
 func TestResourceUserCreateInactive(t *testing.T) {

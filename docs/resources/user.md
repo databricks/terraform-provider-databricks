@@ -99,6 +99,8 @@ The following arguments are available:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the user.
+- `home` - Home folder of the user, e.g. `/Users/mr.foo@example.com`.
+- `repos` - Personal Repos location of the user, e.g. `/Repos/mr.foo@example.com`.
 
 ## Import
 

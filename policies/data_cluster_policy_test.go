@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDataSourceInstnacePool(t *testing.T) {
+func TestDataSourceClusterPolicy(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -38,7 +38,7 @@ func TestDataSourceInstnacePool(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
-func TestDataSourceInstancePoolsGetPool(t *testing.T) {
+func TestDataSourceClusterPolicyNotFound(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",

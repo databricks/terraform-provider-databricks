@@ -10,7 +10,7 @@ Retrieves information about [databricks_cluster_policy](../resources/cluster_pol
 
 ## Example Usage
 
-Referring to an instance pool by name:
+Referring to a cluster policy by name:
 
 ```hcl
 data "databricks_cluster_policy" "personal" {
@@ -25,7 +25,7 @@ resource "databricks_cluster" "my_cluster" {
 
 ## Argument Reference
 
-Data source allows you to pick instance pool by the following attribute
+Data source allows you to pick a cluster policy by the following attribute
 
 - `name` - Name of the cluster policy. The cluster policy must exist before this resource can be planned.
 

@@ -22,7 +22,7 @@ func getPolicy(ClusterPoliciesAPI ClusterPoliciesAPI, name string) (*ClusterPoli
 	return nil, fmt.Errorf("cluster policy '%s' wasn't found", name)
 }
 
-// DataSourceInstancePool returns information about instance pool specified by name
+// DataSourceClusterPolicy returns information about cluster policy specified by name
 func DataSourceClusterPolicy() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{

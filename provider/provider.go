@@ -41,6 +41,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_aws_bucket_policy":       aws.DataAwsBucketPolicy(),
 			"databricks_cluster":                 clusters.DataSourceCluster(),
 			"databricks_clusters":                clusters.DataSourceClusters(),
+			"databricks_cluster_policy":          policies.DataSourceClusterPolicy(),
 			"databricks_catalogs":                catalog.DataSourceCatalogs(),
 			"databricks_current_user":            scim.DataSourceCurrentUser(),
 			"databricks_dbfs_file":               storage.DataSourceDbfsFile(),

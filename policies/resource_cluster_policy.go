@@ -23,6 +23,10 @@ type ClusterPolicyCreate struct {
 	Definition string `json:"definition"`
 }
 
+type ClusterPolicyList struct {
+	Policies []ClusterPolicy `json:"policies"`
+}
+
 // NewClusterPoliciesAPI creates ClusterPoliciesAPI instance from provider meta
 // Creation and editing is available to admins only.
 func NewClusterPoliciesAPI(ctx context.Context, m any) ClusterPoliciesAPI {
@@ -67,6 +71,16 @@ func (a ClusterPoliciesAPI) Get(policyID string) (policy ClusterPolicy, err erro
 // Delete removes cluster policy
 func (a ClusterPoliciesAPI) Delete(policyID string) error {
 	return a.client.Post(a.context, "/policies/clusters/delete", policyIDWrapper{policyID}, nil)
+}
+
+// Get returns cluster policy
+func (a ClusterPoliciesAPI) List() ([]ClusterPolicy, error) {
+	var lst ClusterPolicyList
+	err := a.client.Get(a.context, "/policies/clusters/list", nil, &lst)
+	if err != nil {
+		return []ClusterPolicy{}, err
+	}
+	return lst.Policies, nil
 }
 
 func parsePolicyFromData(d *schema.ResourceData) (*ClusterPolicy, error) {

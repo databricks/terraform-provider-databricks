@@ -43,6 +43,7 @@ All arguments are optional and they tune what code is being generated.
 * `-generateProviderDeclaration` - flag that toggles generation of `databricks.tf` file with declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
 * `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources multiple workspaces for merging into a single one.
 * `-skip-interactive` - optionally run in a non-interactive mode.
+* `-includeUserDomains` - optionally include domain name into generated resource name for `databricks_user` resource.
 
 ## Services
 

@@ -79,6 +79,8 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 		"display_name":         "Example Service Principal",
 		"application_id":       "bcd",
 		"allow_cluster_create": true,
+		"home":                 "/Users/bcd",
+		"repos":                "/Repos/bcd",
 	})
 }
 

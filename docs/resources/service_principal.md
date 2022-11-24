@@ -100,6 +100,8 @@ The following arguments are available:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the service principal.
+- `home` - Home folder of the service principal, e.g. `/Users/00000000-0000-0000-0000-000000000000`.
+- `repos` - Personal Repos location of the service principal, e.g. `/Repos/00000000-0000-0000-0000-000000000000`.
 
 ## Import
 

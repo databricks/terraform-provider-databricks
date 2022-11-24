@@ -34,6 +34,16 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
+			m["home"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
+			m["repos"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
 			return m
 		})
 	scimUserFromData := func(d *schema.ResourceData) (user User, err error) {
@@ -71,6 +81,8 @@ func ResourceUser() *schema.Resource {
 			d.Set("display_name", user.DisplayName)
 			d.Set("active", user.Active)
 			d.Set("external_id", user.ExternalID)
+			d.Set("home", fmt.Sprintf("/Users/%s", user.UserName))
+			d.Set("repos", fmt.Sprintf("/Repos/%s", user.UserName))
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

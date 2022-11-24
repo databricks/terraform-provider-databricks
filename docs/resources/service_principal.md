@@ -47,6 +47,7 @@ resource "databricks_service_principal" "sp" {
 ```
 
 Creating service principal in AWS Databricks account:
+
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
@@ -64,6 +65,7 @@ resource "databricks_service_principal" "sp" {
 ```
 
 Creating group in Azure Databricks account:
+
 ```hcl
 // initialize provider at Azure account-level
 provider "databricks" {
@@ -85,7 +87,7 @@ resource "databricks_service_principal" "sp" {
 
 The following arguments are available:
 
-* `application_id` - This is the application id of the given service principal and will be their form of access and identity. On other clouds than Azure this value is auto-generated.
+* `application_id` - This is the Azure Application ID of the given Azure service principal and will be their form of access and identity. On other clouds than Azure this value is auto-generated.
 * `display_name` - (Required) This is an alias for the service principal and can be the full name of the service principal.
 * `external_id` - (Optional) ID of the service principal in an external identity provider.
 * `allow_cluster_create` -  (Optional) Allow the service principal to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within the boundaries of that specific policy.
@@ -105,10 +107,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource scim service principal can be imported using id:
+The resource scim service principal can be imported using its id, for example `2345678901234567`. To get the service principal ID, call [Get service principals](https://docs.databricks.com/dev-tools/api/latest/scim/scim-sp.html#get-service-principals).
 
 ```bash
-$ terraform import databricks_service_principal.me <service-principal-id>
+terraform import databricks_service_principal.me <service-principal-id>
 ```
 
 ## Related Resources
@@ -120,4 +122,4 @@ The following resources are often used in the same context:
 * [databricks_group](../data-sources/group.md) data to retrieve information about [databricks_group](group.md) members, entitlements and instance profiles.
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
-* [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.
+* [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](<https://docs.databricks>.

@@ -49,6 +49,28 @@ func TestCommonErrorFromWorkspaceClientToE2(t *testing.T) {
 	assert.Nil(t, workspaceAPIFromWorkspaceClient)
 }
 
+func TestCommonErrorFromWorkspaceClientToAccountSCIM(t *testing.T) {
+	ws := DatabricksClient{
+		Host: "https://qwerty.cloud.databricks.com/",
+	}
+	accountsAPIForWorkspaceClient := ws.commonErrorClarity(&http.Response{
+		Request: httptest.NewRequest(
+			"GET", "https://accounts.cloud.databricks.com/api/2.0/preview/accounts/a/scim/v2/Groups",
+			nil),
+	})
+	require.Error(t, accountsAPIForWorkspaceClient)
+	assert.True(t, strings.HasPrefix(accountsAPIForWorkspaceClient.Error(),
+		"Accounts API (/api/2.0/preview/accounts/a/scim/v2/Groups) requires you to set accounts.cloud.databricks.com"),
+		"Actual message: %s", accountsAPIForWorkspaceClient.Error())
+
+	workspaceAPIFromWorkspaceClient := ws.commonErrorClarity(&http.Response{
+		Request: httptest.NewRequest(
+			"GET", "https://qwerty.cloud.databricks.com/api/2.0/clusters/list",
+			nil),
+	})
+	assert.Nil(t, workspaceAPIFromWorkspaceClient)
+}
+
 func TestCommonErrorFromE2ClientToWorkspace(t *testing.T) {
 	ws := DatabricksClient{
 		Host: "accounts.cloud.databricks.com",

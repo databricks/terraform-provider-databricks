@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -58,7 +59,18 @@ func commonFixtures(name string) []qa.HTTPFixture {
 }
 func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    append(commonFixtures(""), commonFixtures("Second")...),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=234",
+				Response: Job{
+					JobID: 234,
+					Settings: &JobSettings{
+						Name: "Second",
+					},
+				},
+			},
+		},
 		Resource:    DataSourceJob(),
 		Read:        true,
 		New:         true,
@@ -101,16 +113,26 @@ func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 		NonWritable: true,
 		HCL:         `job_name= "Third"`,
 		ID:          "_",
-	}.ExpectError(t, "no job found with specified name or id")
+	}.ExpectError(t, "no job found with specified name")
 }
 
 func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    commonFixtures(""),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=567",
+				Response: common.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Job 567 does not exist.",
+				},
+				Status: 400,
+			},
+		},
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
 		HCL:         `job_id= "567"`,
 		ID:          "_",
-	}.ExpectError(t, "no job found with specified id")
+	}.ExpectError(t, "Job 567 does not exist.")
 }

@@ -20,29 +20,17 @@ func DataSourceJob() *schema.Resource {
 		var list []Job
 		var err error
 		if data.Name != "" {
+			// if name is provided, need to list all jobs ny name
 			list, err = jobsAPI.ListByName(data.Name, true)
 		} else {
-			// if name is not provided, need to list all the jobs and search by id
-			// does not expand tasks to limit the results size
-			list, err = jobsAPI.List()
+			// otherwise, just read the job
+			var job Job
+			job, err = jobsAPI.Read(data.Id)
 			if err != nil {
 				return err
 			}
-			jobName := ""
-			for _, job := range list {
-				currentJob := job // De-referencing the temp variable used by the loop
-				currentJobId := currentJob.ID()
-				if currentJobId == data.Id {
-					jobName = currentJob.Settings.Name
-					break // break the loop after we found the job
-				}
-			}
-			if jobName == "" {
-				return fmt.Errorf("no job found with specified id")
-			}
-
-			// if a matching job id is found, list it by name with expandTasks
-			list, err = jobsAPI.ListByName(jobName, true)
+			data.Job = &job
+			data.Name = job.Settings.Name
 		}
 		if err != nil {
 			return err
@@ -59,7 +47,7 @@ func DataSourceJob() *schema.Resource {
 			}
 		}
 		if data.Job == nil {
-			return fmt.Errorf("no job found with specified name or id")
+			return fmt.Errorf("no job found with specified name")
 		}
 		return nil
 	})

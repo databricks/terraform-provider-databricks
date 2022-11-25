@@ -147,7 +147,7 @@ func (c *DatabricksClient) isAccountsClient() bool {
 }
 
 func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
-	isAccountsAPI := strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/accounts")
+	isAccountsAPI := strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/accounts") || strings.HasPrefix(resp.Request.URL.Path, "/api/2.0/preview/accounts")
 	isAccountsClient := c.isAccountsClient()
 	isTesting := strings.HasPrefix(resp.Request.URL.Host, "127.0.0.1")
 	if !isTesting && isAccountsClient && !isAccountsAPI {

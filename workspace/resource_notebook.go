@@ -21,6 +21,7 @@ const (
 	Python    string = "PYTHON"
 	SQL       string = "SQL"
 	R         string = "R"
+	Jupyter   string = "JUPYTER"
 )
 
 type notebookLanguageFormat struct {
@@ -34,6 +35,7 @@ var extMap = map[string]notebookLanguageFormat{
 	".py":    {"PYTHON", "SOURCE", true},
 	".sql":   {"SQL", "SOURCE", true},
 	".r":     {"R", "SOURCE", true},
+	".ipynb": {"", "JUPYTER", true},
 	".dbc":   {"", "DBC", false},
 }
 
@@ -209,6 +211,7 @@ func ResourceNotebook() *schema.Resource {
 			ValidateFunc: validation.StringInSlice([]string{
 				"SOURCE",
 				"DBC",
+				"JUPYTER",
 			}, false),
 		},
 		"url": {

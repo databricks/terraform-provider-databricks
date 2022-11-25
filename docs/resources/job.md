@@ -7,51 +7,9 @@ The `databricks_job` resource allows you to manage [Databricks Jobs](https://doc
 
 ## Example Usage
 
-```hcl
-data "databricks_current_user" "me" {}
-data "databricks_spark_version" "latest" {}
-data "databricks_node_type" "smallest" {
-  local_disk = true
-}
+-> **Note** In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
-resource "databricks_notebook" "this" {
-  path     = "${data.databricks_current_user.me.home}/Terraform"
-  language = "PYTHON"
-  content_base64 = base64encode(<<-EOT
-    # created from ${abspath(path.module)}
-    display(spark.range(10))
-    EOT
-  )
-}
-
-resource "databricks_job" "this" {
-  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
-
-  new_cluster {
-    num_workers   = 1
-    spark_version = data.databricks_spark_version.latest.id
-    node_type_id  = data.databricks_node_type.smallest.id
-  }
-
-  notebook_task {
-    notebook_path = databricks_notebook.this.path
-  }
-}
-
-output "notebook_url" {
-  value = databricks_notebook.this.url
-}
-
-output "job_url" {
-  value = databricks_job.this.url
-}
-```
-
-## Jobs with Multiple Tasks
-
--> **Note** In terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
-
-It is possible to create [jobs with multiple tasks](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks:
+It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. Every `task` block can have almost all available arguments with the addition of `task_key` attribute and `depends_on` blocks to define cross-task dependencies.
 
 ```hcl
 resource "databricks_job" "this" {
@@ -114,7 +72,49 @@ resource "databricks_job" "this" {
 }
 ```
 
-Every `task` block can have almost all available arguments with the addition of `task_key` attribute and `depends_on` blocks to define cross-task dependencies.
+### Single-task (legacy) syntax
+
+This syntax uses Jobs API 2.0 to create a job with a single task. Only `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` are supported
+
+```hcl
+data "databricks_current_user" "me" {}
+data "databricks_spark_version" "latest" {}
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
+
+resource "databricks_notebook" "this" {
+  path     = "${data.databricks_current_user.me.home}/Terraform"
+  language = "PYTHON"
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
+}
+
+resource "databricks_job" "this" {
+  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
+
+  new_cluster {
+    num_workers   = 1
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
+  }
+
+  notebook_task {
+    notebook_path = databricks_notebook.this.path
+  }
+}
+
+output "notebook_url" {
+  value = databricks_notebook.this.url
+}
+
+output "job_url" {
+  value = databricks_job.this.url
+}
+```
 
 ## Argument Reference
 
@@ -135,7 +135,9 @@ The following arguments are required:
 * `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
 
 ### job_cluster Configuration Block
-[Shared job cluster](https://docs.databricks.com/jobs.html#use-shared-job-clusters) specification. Allows multiple tasks in the same job run to reuse the cluster. 
+
+[Shared job cluster](https://docs.databricks.com/jobs.html#use-shared-job-clusters) specification. Allows multiple tasks in the same job run to reuse the cluster.
+
 * `job_cluster_key` - (Required) Identifier that can be referenced in `task` block, so that cluster is shared between tasks
 * `new_cluster` - Same set of parameters as for [databricks_cluster](cluster.md) resource.
 
@@ -169,6 +171,8 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 ### pipeline_task Configuration Block
 
 * `pipeline_id` - (Required) The pipeline's unique ID.
+
+-> **Note** The following configuration blocks are only supported inside a `task` block
 
 ### python_wheel_task Configuration Block
 
@@ -223,7 +227,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Access Control
 
-By default, all users can create and modify jobs unless an administrator [enables jobs access control](https://docs.databricks.com/administration-guide/access-control/jobs-acl.html). With jobs access control, individual permissions determine a user’s abilities. 
+By default, all users can create and modify jobs unless an administrator [enables jobs access control](https://docs.databricks.com/administration-guide/access-control/jobs-acl.html). With jobs access control, individual permissions determine a user’s abilities.
 
 * [databricks_permissions](permissions.md#Job-usage) can control which groups or individual users can *Can View*, *Can Manage Run*, and *Can Manage*.
 * [databricks_cluster_policy](cluster_policy.md) can control which kinds of clusters users can create for jobs.
@@ -232,7 +236,7 @@ By default, all users can create and modify jobs unless an administrator [enable
 
 The `timeouts` block allows you to specify `create` and `update` timeouts if you have an `always_running` job. Please launch `TF_LOG=DEBUG terraform apply` whenever you observe timeout issues.
 
-```
+```hcl
 timeouts {
   create = "20m"
   update = "20m
@@ -244,7 +248,7 @@ timeouts {
 The resource job can be imported using the id of the job
 
 ```bash
-$ terraform import databricks_job.this <job-id>
+terraform import databricks_job.this <job-id>
 ```
 
 ## Related Resources
@@ -265,7 +269,7 @@ The following resources are often used in the same context:
 * [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).
 * [databricks_node_type](../data-sources/node_type.md) data to get the smallest node type for [databricks_cluster](cluster.md) that fits search criteria, like amount of RAM or number of cores.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 * [databricks_spark_version](../data-sources/spark_version.md) data to get [Databricks Runtime (DBR)](https://docs.databricks.com/runtime/dbr.html) version that could be used for `spark_version` parameter in [databricks_cluster](cluster.md) and other resources.
 * [databricks_workspace_conf](workspace_conf.md) to manage workspace configuration for expert usage.

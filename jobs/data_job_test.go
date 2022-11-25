@@ -112,5 +112,5 @@ func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 		NonWritable: true,
 		HCL:         `job_id= "567"`,
 		ID:          "_",
-	}.ExpectError(t, "no job found with specified name or id")
+	}.ExpectError(t, "no job found with specified id")
 }

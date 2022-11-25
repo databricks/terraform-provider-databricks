@@ -414,18 +414,21 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 				p.Title = apv.Title
 				p.DateRange = &QueryParameterDateRangeLike{
 					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			case *api.QueryParameterDateTimeRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTimeRange = &QueryParameterDateRangeLike{
 					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			case *api.QueryParameterDateTimeSecRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTimeSecRange = &QueryParameterDateRangeLike{
 					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			default:
 				log.Fatalf("Don't know what to do for type: %#v", reflect.TypeOf(apv).String())

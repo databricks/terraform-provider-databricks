@@ -36,7 +36,7 @@ var (
 	s3Regex                 = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
 	gsRegex                 = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
 	globalWorkspaceConfName = "global_workspace_conf"
-	notebookPathToIdRegex   = regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	nameNormalizationRegex  = regexp.MustCompile(`\W+`)
 	jobClustersRegex        = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex         = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 )
@@ -629,13 +629,12 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_user": {
 		Service: "users",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			//this checks CLI argument includeUserDomains,
-			//and in the case of users from multiple domains, it names resources differently
 			s := d.Get("user_name").(string)
+			// if CLI argument includeUserDomains is set then it includes domain portion as well
 			if ic.includeUserDomains {
-				return regexp.MustCompile(`\W+`).ReplaceAllString(s, "_")
+				return nameNormalizationRegex.ReplaceAllString(s, "_")
 			}
-			return regexp.MustCompile(`\W+`).ReplaceAllString(strings.Split(s, "@")[0], "_")
+			return nameNormalizationRegex.ReplaceAllString(strings.Split(s, "@")[0], "_")
 		},
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findUserByName(r.Value)
@@ -1049,7 +1048,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if name == "" {
 				return d.Id()
 			} else {
-				name = notebookPathToIdRegex.ReplaceAllString(name[1:], "_") + "_" +
+				name = nameNormalizationRegex.ReplaceAllString(name[1:], "_") + "_" +
 					strconv.FormatInt(int64(d.Get("object_id").(int)), 10)
 			}
 			return name

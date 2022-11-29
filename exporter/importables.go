@@ -1176,10 +1176,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			allVis, err := ic.getSqlVisualizations()
-			if err != nil {
-				return err
-			}
+			log.Printf("[DEBUG] widgets len=%d", len(dashboard.Widgets))
 			for _, rv := range dashboard.Widgets {
 				var widget sql_api.Widget
 				err = json.Unmarshal(rv, &widget)
@@ -1187,25 +1184,50 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[WARN] Problems decoding widget for dashboard with ID: %s", dashboardID)
 					continue
 				}
+				widgetID := dashboardID + "/" + widget.ID.String()
+				log.Printf("[DEBUG] Emitting widget '%s'", widgetID)
 				ic.Emit(&resource{
 					Resource: "databricks_sql_widget",
-					ID:       dashboardID + "/" + widget.ID.String(),
+					ID:       widgetID,
 				})
+
 				if widget.VisualizationID != nil {
-					info, ok := allVis[widget.VisualizationID.String()]
-					if ok {
+					var visualization sql_api.Visualization
+					err = json.Unmarshal(widget.Visualization, &visualization)
+					if err != nil {
+						log.Printf("[WARN] Problems decoding visualization for widget with ID: %s", widget.ID.String())
+						continue
+					}
+					if len(visualization.Query) > 0 {
+						var query sql_api.Query
+						err = json.Unmarshal(visualization.Query, &query)
+						if err != nil {
+							log.Printf("[WARN] Problems decoding query for visualization with ID: %s", visualization.ID.String())
+							continue
+						}
+						visualizationID := query.ID + "/" + visualization.ID.String()
+						log.Printf("[DEBUG] Emitting visualization '%s'", visualizationID)
 						ic.Emit(&resource{
 							Resource: "databricks_sql_visualization",
-							ID:       info.visResourceID,
+							ID:       visualizationID,
 						})
+						log.Printf("[DEBUG] Emitting query '%s'", query.ID)
 						ic.Emit(&resource{
 							Resource: "databricks_sql_query",
-							ID:       info.queryResourceID,
+							ID:       query.ID,
 						})
-						ic.Emit(&resource{
-							Resource: "databricks_sql_endpoint",
-							ID:       info.endpointResourceID,
-						})
+						log.Printf("[DEBUG] Query data source: '%s'", query.DataSourceID)
+						sqlEndpointID, err := ic.getSqlEndpoint(query.DataSourceID)
+						if err != nil {
+							log.Printf("[WARN] Can't find SQL endpoint for data source id %s", query.DataSourceID)
+						} else {
+							ic.Emit(&resource{
+								Resource: "databricks_sql_endpoint",
+								ID:       sqlEndpointID,
+							})
+						}
+					} else {
+						log.Printf("[DEBUG] Empty query in visualization %v", visualization)
 					}
 				}
 			}

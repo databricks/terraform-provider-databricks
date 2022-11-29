@@ -13,5 +13,6 @@ type Visualization struct {
 	Name        string          `json:"name"`
 	Description string          `json:"description,omitempty"`
 	Options     json.RawMessage `json:"options,omitempty"`
+	Query       json.RawMessage `json:"query,omitempty"`
 	QueryPlan   json.RawMessage `json:"query_plan,omitempty"`
 }

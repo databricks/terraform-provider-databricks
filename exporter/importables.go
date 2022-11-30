@@ -966,16 +966,24 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			return globalWorkspaceConfName
 		},
+		List: func(ic *importContext) error {
+			ic.Emit(&resource{
+				Resource: "databricks_workspace_conf",
+				ID:       globalWorkspaceConfName,
+			})
+			return nil
+		},
 		Import: func(ic *importContext, r *resource) error {
 			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
-			keys := map[string]any{
-				"enableIpAccessLists":  false,
-				"maxTokenLifetimeDays": 0,
-				"enableTokensConfig":   false,
-			}
+			keys := ic.workspaceConfKeys
 			err := wsConfAPI.Read(&keys)
 			if err != nil {
 				return err
+			}
+			for k, v := range keys {
+				if v == nil {
+					delete(keys, k)
+				}
 			}
 			r.Data.Set("custom_config", keys)
 			return nil

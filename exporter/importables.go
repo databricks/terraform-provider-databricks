@@ -1061,7 +1061,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
-			data_sources := map[string]struct{}{}
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
@@ -1071,24 +1070,33 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_sql_query",
 					ID:       q["id"].(string),
 				})
-				data_sources[q["data_source_id"].(string)] = struct{}{}
 				log.Printf("[INFO] Imported %d of %d SQL queries", i+1, len(qs))
-			}
-			for data_source := range data_sources {
-				endpoint_id, err := ic.getSqlEndpoint(data_source)
-				if err == nil {
-					ic.Emit(&resource{
-						Resource: "databricks_sql_endpoint",
-						ID:       endpoint_id,
-					})
-				} else {
-					log.Printf("[WARN] Error finding SQL Endpoint for data source %s", data_source)
-				}
 			}
 
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
+			var query sql.QueryEntity
+			s := ic.Resources["databricks_sql_query"].Schema
+			common.DataToStructPointer(r.Data, s, &query)
+			sqlEndpointID, err := ic.getSqlEndpoint(query.DataSourceID)
+			if err == nil {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_endpoint",
+					ID:       sqlEndpointID,
+				})
+			} else {
+				log.Printf("[WARN] Can't find SQL endpoint for data source '%s'", query.DataSourceID)
+			}
+			// emit queries specified as parameters
+			for _, p := range query.Parameter {
+				if p.Query != nil {
+					ic.Emit(&resource{
+						Resource: "databricks_sql_query",
+						ID:       p.Query.QueryID,
+					})
+				}
+			}
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
@@ -1100,6 +1108,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "data_source_id", Resource: "databricks_sql_endpoint", Match: "data_source_id"},
+			{Path: "parameter.query.query_id", Resource: "databricks_sql_query", Match: "id"},
 		},
 	},
 	"databricks_sql_endpoint": {
@@ -1176,7 +1185,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			log.Printf("[DEBUG] widgets len=%d", len(dashboard.Widgets))
 			for _, rv := range dashboard.Widgets {
 				var widget sql_api.Widget
 				err = json.Unmarshal(rv, &widget)
@@ -1185,7 +1193,6 @@ var resourcesMap map[string]importable = map[string]importable{
 					continue
 				}
 				widgetID := dashboardID + "/" + widget.ID.String()
-				log.Printf("[DEBUG] Emitting widget '%s'", widgetID)
 				ic.Emit(&resource{
 					Resource: "databricks_sql_widget",
 					ID:       widgetID,
@@ -1206,17 +1213,14 @@ var resourcesMap map[string]importable = map[string]importable{
 							continue
 						}
 						visualizationID := query.ID + "/" + visualization.ID.String()
-						log.Printf("[DEBUG] Emitting visualization '%s'", visualizationID)
 						ic.Emit(&resource{
 							Resource: "databricks_sql_visualization",
 							ID:       visualizationID,
 						})
-						log.Printf("[DEBUG] Emitting query '%s'", query.ID)
 						ic.Emit(&resource{
 							Resource: "databricks_sql_query",
 							ID:       query.ID,
 						})
-						log.Printf("[DEBUG] Query data source: '%s'", query.DataSourceID)
 						sqlEndpointID, err := ic.getSqlEndpoint(query.DataSourceID)
 						if err != nil {
 							log.Printf("[WARN] Can't find SQL endpoint for data source id %s", query.DataSourceID)

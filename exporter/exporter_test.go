@@ -273,6 +273,12 @@ var emptyWorkspaceConf = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var dummyWorkspaceConf = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/workspace-conf?keys=zDummyKey",
+	Response: map[string]any{},
+}
+
 var allKnownWorkspaceConfs = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     fmt.Sprintf("/api/2.0/workspace-conf?keys=%s", workspaceConfKeysToURL()),
@@ -293,6 +299,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlQueries,
 			emptyPipelines,
 			emptyWorkspaceConf,
+			dummyWorkspaceConf,
 			allKnownWorkspaceConfs,
 			{
 				Method:   "GET",
@@ -448,7 +455,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			meAdminFixture,
 			emptyRepos,
 			emptyWorkspaceConf,
-			allKnownWorkspaceConfs,
+			dummyWorkspaceConf,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -1187,6 +1194,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			meAdminFixture,
 			emptyRepos,
 			emptyWorkspaceConf,
+			dummyWorkspaceConf,
 			allKnownWorkspaceConfs,
 			{
 				Method:       "GET",
@@ -1333,6 +1341,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 			meAdminFixture,
 			emptyRepos,
 			emptyWorkspaceConf,
+			dummyWorkspaceConf,
 			allKnownWorkspaceConfs,
 			{
 				Method:   "GET",

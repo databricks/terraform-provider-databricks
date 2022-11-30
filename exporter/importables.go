@@ -135,7 +135,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			fileNameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(d.Id())))
 			s := strings.Split(d.Id(), "/")
-			name := "_" + s[len(s)-1] + "_" + fileNameMd5
+			name := "_" + fileNameMd5 + "_" + s[len(s)-1]
 			return name
 		},
 		Import: func(ic *importContext, r *resource) error {

@@ -685,8 +685,8 @@ func TestDbfsFileGen(t *testing.T) {
 
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
-		resource "databricks_dbfs_file" "_a_0cc175b9c0f1b6a831c399e269772661" {
-		  source = "${path.module}/files/_a_0cc175b9c0f1b6a831c399e269772661"
+		resource "databricks_dbfs_file" "_0cc175b9c0f1b6a831c399e269772661_a" {
+		  source = "${path.module}/files/_0cc175b9c0f1b6a831c399e269772661_a"
 		  path   = "a"
 		}`), string(ic.Files["storage"].Bytes()))
 	})

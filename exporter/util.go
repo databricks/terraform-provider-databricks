@@ -18,7 +18,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/sql"
-	"github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -111,54 +110,68 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 	}
 }
 
-func (ic *importContext) getSqlEndpoint(dataSourceId string) (string, error) {
+// todo: generic with go1.18
+type dbsqlListResponse struct {
+	Results    []map[string]any `json:"results"`
+	Page       int64            `json:"page"`
+	TotalCount int64            `json:"count"`
+	PageSize   int64            `json:"page_size"`
+}
+
+// Generic function to list objects related to the DBSQL
+func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, err error) {
+	// TODO: create API method & use it also for data resource
+	var listResponse dbsqlListResponse
+	page_size := 100
+	err = ic.Client.Get(ic.Context, path, map[string]any{"page_size": page_size}, &listResponse)
+	if err != nil {
+		return nil, err
+	}
+	totalCount := int(listResponse.TotalCount)
+	if totalCount == 0 {
+		return events, nil
+	}
+	events = append(events, listResponse.Results...)
+	page := 2
+	for len(events) < totalCount {
+		var listResponse dbsqlListResponse
+		err := ic.Client.Get(ic.Context, path,
+			map[string]any{"page_size": page_size, "page": page},
+			&listResponse)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, listResponse.Results...)
+		page++
+	}
+	return events, err
+}
+
+func (ic *importContext) getSqlDataSources() (map[string]string, error) {
 	if ic.sqlDatasources == nil {
 		var dss []sql.DataSource
 		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		ic.sqlDatasources = make(map[string]string, len(dss))
 		for _, ds := range dss {
 			ic.sqlDatasources[ds.ID] = ds.EndpointID
 		}
 	}
-	endpointID, ok := ic.sqlDatasources[dataSourceId]
+	return ic.sqlDatasources, nil
+}
+
+func (ic *importContext) getSqlEndpoint(dataSourceId string) (string, error) {
+	sources, err := ic.getSqlDataSources()
+	if err != nil {
+		return "", err
+	}
+	endpointID, ok := sources[dataSourceId]
 	if !ok {
 		return "", fmt.Errorf("can't find data source for SQL endpoint %s", dataSourceId)
 	}
-
 	return endpointID, nil
-}
-
-func (ic *importContext) getSqlVisualizations() (map[string]string, error) {
-	if ic.sqlVisualizations == nil {
-		ic.sqlVisualizations = make(map[string]string)
-		qs, err := dbsqlListObjects(ic, "/preview/sql/queries")
-		if err != nil {
-			return nil, err
-		}
-		queryApi := sql.NewQueryAPI(ic.Context, ic.Client)
-		for _, q := range qs {
-			queryID := q["id"].(string)
-			fullQuery, err := queryApi.Read(queryID)
-			if err != nil {
-				log.Printf("[WARN] Problems getting query with ID: %s", queryID)
-				continue
-			}
-			for _, rv := range fullQuery.Visualizations {
-				var vis api.Visualization
-				err = json.Unmarshal(rv, &vis)
-				if err != nil {
-					log.Printf("[WARN] Problems decoding visualization for query with ID: %s", queryID)
-					continue
-				}
-				ic.sqlVisualizations[vis.ID.String()] = queryID + "/" + vis.ID.String()
-			}
-		}
-	}
-
-	return ic.sqlVisualizations, nil
 }
 
 func (ic *importContext) refreshMounts() error {

@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -40,6 +42,14 @@ func getJSONObject(filename string) any {
 		fmt.Printf("[ERROR] data=%s\n", string(data))
 	}
 	return obj
+}
+func workspaceConfKeysToURL() string {
+	keys := make([]string, 0, len(workspaceConfKeys))
+	for k := range workspaceConfKeys {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, "%2C")
 }
 
 func TestImportingMounts(t *testing.T) {
@@ -254,6 +264,28 @@ var emptySqlQueries = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyWorkspaceConf = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/workspace-conf?",
+	Response: map[string]any{
+		"maxUserInactiveDays": '0',
+	},
+	ReuseRequest: true,
+}
+
+var dummyWorkspaceConf = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/workspace-conf?keys=zDummyKey",
+	Response: map[string]any{},
+}
+
+var allKnownWorkspaceConfs = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     fmt.Sprintf("/api/2.0/workspace-conf?keys=%s", workspaceConfKeysToURL()),
+	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
@@ -266,6 +298,9 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlEndpoints,
 			emptySqlQueries,
 			emptyPipelines,
+			emptyWorkspaceConf,
+			dummyWorkspaceConf,
+			allKnownWorkspaceConfs,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -419,6 +454,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
+			emptyWorkspaceConf,
+			dummyWorkspaceConf,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -1156,6 +1193,9 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
+			emptyWorkspaceConf,
+			dummyWorkspaceConf,
+			allKnownWorkspaceConfs,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -1300,6 +1340,9 @@ func TestImportingIPAccessLists(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
+			emptyWorkspaceConf,
+			dummyWorkspaceConf,
+			allKnownWorkspaceConfs,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",

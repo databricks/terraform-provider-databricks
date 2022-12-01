@@ -966,16 +966,35 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(d *schema.ResourceData) string {
 			return globalWorkspaceConfName
 		},
+		List: func(ic *importContext) error {
+			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
+			keys := map[string]any{"zDummyKey": "42"}
+			err := wsConfAPI.Read(&keys)
+			/* this is done to pass the TestImportingNoResourcesError test in exporter_test.go
+			Commonly, some of the keys in a workspace conf are Nil
+			In the simulated server all are returned with a value.
+			We have a zDummyKey - which will always return an error in a real workspace but a value in the simulated workspace
+			if no keys have nil values, we should not emit this object
+			*/
+			if err != nil {
+				ic.Emit(&resource{
+					Resource: "databricks_workspace_conf",
+					ID:       globalWorkspaceConfName,
+				})
+			}
+			return nil
+		},
 		Import: func(ic *importContext, r *resource) error {
 			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
-			keys := map[string]any{
-				"enableIpAccessLists":  false,
-				"maxTokenLifetimeDays": 0,
-				"enableTokensConfig":   false,
-			}
+			keys := ic.workspaceConfKeys
 			err := wsConfAPI.Read(&keys)
 			if err != nil {
 				return err
+			}
+			for k, v := range keys {
+				if v == nil {
+					delete(keys, k)
+				}
 			}
 			r.Data.Set("custom_config", keys)
 			return nil

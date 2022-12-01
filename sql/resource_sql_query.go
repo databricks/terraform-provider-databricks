@@ -112,7 +112,8 @@ type QueryParameterDateLike struct {
 
 // QueryParameterDateRangeLike ...
 type QueryParameterDateRangeLike struct {
-	Value string `json:"value"`
+	Value string             `json:"value,omitempty"`
+	Range *api.DateTimeRange `json:"range,omitempty"`
 }
 
 // QueryParameterAllowMultiple ...
@@ -249,18 +250,27 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 				}
 			case p.DateRange != nil:
 				iface = api.QueryParameterDateRange{
-					QueryParameter: ap,
-					Value:          p.DateRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateRange.Value,
+						RangeValue:     p.DateRange.Range,
+					},
 				}
 			case p.DateTimeRange != nil:
 				iface = api.QueryParameterDateTimeRange{
-					QueryParameter: ap,
-					Value:          p.DateTimeRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateTimeRange.Value,
+						RangeValue:     p.DateTimeRange.Range,
+					},
 				}
 			case p.DateTimeSecRange != nil:
 				iface = api.QueryParameterDateTimeSecRange{
-					QueryParameter: ap,
-					Value:          p.DateTimeSecRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateTimeSecRange.Value,
+						RangeValue:     p.DateTimeSecRange.Range,
+					},
 				}
 			default:
 				log.Fatalf("Don't know what to do for QueryParameter...")
@@ -391,7 +401,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTime = &QueryParameterDateLike{
-					Value: apv.Value,
+					Value: apv.StringValue,
 				}
 			case *api.QueryParameterDateTimeSec:
 				p.Name = apv.Name
@@ -403,19 +413,22 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateRange = &QueryParameterDateRangeLike{
-					Value: apv.Value,
+					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			case *api.QueryParameterDateTimeRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTimeRange = &QueryParameterDateRangeLike{
-					Value: apv.Value,
+					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			case *api.QueryParameterDateTimeSecRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTimeSecRange = &QueryParameterDateRangeLike{
-					Value: apv.Value,
+					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			default:
 				log.Fatalf("Don't know what to do for type: %#v", reflect.TypeOf(apv).String())

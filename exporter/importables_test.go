@@ -149,6 +149,9 @@ func TestPermissions(t *testing.T) {
 			{
 				GroupName: "b",
 			},
+			{
+				ServicePrincipalName: "123",
+			},
 		},
 	}, p.Schema, d)
 	assert.NoError(t, err)
@@ -157,9 +160,10 @@ func TestPermissions(t *testing.T) {
 		Data: d,
 	})
 	assert.NoError(t, err)
-	assert.Len(t, ic.testEmits, 2)
+	assert.Len(t, ic.testEmits, 3)
 	assert.True(t, ic.testEmits["databricks_user[<unknown>] (user_name: a)"])
 	assert.True(t, ic.testEmits["databricks_group[<unknown>] (display_name: b)"])
+	assert.True(t, ic.testEmits["databricks_service_principal[<unknown>] (application_id: 123)"])
 }
 
 func TestSecretScope(t *testing.T) {
@@ -369,6 +373,71 @@ func TestUserSearchFails(t *testing.T) {
 
 		err = resourcesMap["databricks_user"].Import(ic, r)
 		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestSpnSearchFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27dbc%27",
+			Status:       404,
+			Response:     common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+
+		d := scim.ResourceServicePrincipal().TestResourceData()
+		d.Set("application_id", "dbc")
+		r := &resource{
+			Attribute: "application_id",
+			Value:     "dbc",
+			Data:      d,
+		}
+		err := resourcesMap["databricks_service_principal"].Search(ic, r)
+		assert.EqualError(t, err, "nope")
+
+		err = resourcesMap["databricks_service_principal"].Import(ic, r)
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestSpnSearchSuccess(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27dbc%27",
+			Response: scim.UserList{Resources: []scim.User{
+				{ID: "321", DisplayName: "spn", ApplicationID: "dbc"},
+			}},
+		},
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/dbc",
+			Response:     scim.User{ID: "321", DisplayName: "spn", ApplicationID: "dbc"},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+
+		d := scim.ResourceServicePrincipal().TestResourceData()
+		d.Set("application_id", "dbc")
+		r := &resource{
+			Attribute: "application_id",
+			Value:     "dbc",
+			Data:      d,
+		}
+		err := resourcesMap["databricks_service_principal"].Search(ic, r)
+		assert.NoError(t, err)
+
+		err = resourcesMap["databricks_service_principal"].Import(ic, r)
+		assert.NoError(t, err)
 	})
 }
 

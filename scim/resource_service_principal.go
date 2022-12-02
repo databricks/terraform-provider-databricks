@@ -37,7 +37,7 @@ func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (sp User, err erro
 	return
 }
 
-func (a ServicePrincipalsAPI) filter(filter string) (u []User, err error) {
+func (a ServicePrincipalsAPI) Filter(filter string) (u []User, err error) {
 	var sps UserList
 	req := map[string]string{}
 	if filter != "" {
@@ -175,7 +175,7 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 	if err.Error() != force {
 		return err
 	}
-	spList, err := spAPI.filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")))
+	spList, err := spAPI.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")))
 	if err != nil {
 		return err
 	}

@@ -4,15 +4,36 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func commonFixtures(name string) []qa.HTTPFixture {
 	resource := "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0"
 	if name != "" {
-		resource = fmt.Sprintf("/api/2.1/jobs/list?expand_tasks=false&limit=25&name=%s&offset=0", name)
+		resource = fmt.Sprintf("/api/2.1/jobs/list?expand_tasks=true&limit=25&name=%s&offset=0", name)
 	}
 	return []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: resource,
+			Response: JobListResponse{
+				Jobs: []Job{
+					{
+						JobID: 123,
+						Settings: &JobSettings{
+							Name: "First",
+						},
+					},
+					{
+						JobID: 234,
+						Settings: &JobSettings{
+							Name: "Second",
+						},
+					},
+				},
+			},
+		},
 		{
 			Method:   "GET",
 			Resource: resource,
@@ -38,7 +59,18 @@ func commonFixtures(name string) []qa.HTTPFixture {
 }
 func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    commonFixtures(""),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=234",
+				Response: Job{
+					JobID: 234,
+					Settings: &JobSettings{
+						Name: "Second",
+					},
+				},
+			},
+		},
 		Resource:    DataSourceJob(),
 		Read:        true,
 		New:         true,
@@ -70,7 +102,7 @@ func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&name=Third&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=true&limit=25&name=Third&offset=0",
 				Response: JobListResponse{
 					Jobs: []Job{},
 				},
@@ -81,16 +113,26 @@ func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 		NonWritable: true,
 		HCL:         `job_name= "Third"`,
 		ID:          "_",
-	}.ExpectError(t, "no job found with specified name or id")
+	}.ExpectError(t, "no job found with specified name")
 }
 
 func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    commonFixtures(""),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=567",
+				Response: common.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Job 567 does not exist.",
+				},
+				Status: 400,
+			},
+		},
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
 		HCL:         `job_id= "567"`,
 		ID:          "_",
-	}.ExpectError(t, "no job found with specified name or id")
+	}.ExpectError(t, "Job 567 does not exist.")
 }

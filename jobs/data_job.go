@@ -20,9 +20,17 @@ func DataSourceJob() *schema.Resource {
 		var list []Job
 		var err error
 		if data.Name != "" {
-			list, err = jobsAPI.ListByName(data.Name, false)
+			// if name is provided, need to list all jobs ny name
+			list, err = jobsAPI.ListByName(data.Name, true)
 		} else {
-			list, err = jobsAPI.List()
+			// otherwise, just read the job
+			var job Job
+			job, err = jobsAPI.Read(data.Id)
+			if err != nil {
+				return err
+			}
+			data.Job = &job
+			data.Name = job.Settings.Name
 		}
 		if err != nil {
 			return err
@@ -39,7 +47,7 @@ func DataSourceJob() *schema.Resource {
 			}
 		}
 		if data.Job == nil {
-			return fmt.Errorf("no job found with specified name or id")
+			return fmt.Errorf("no job found with specified name")
 		}
 		return nil
 	})

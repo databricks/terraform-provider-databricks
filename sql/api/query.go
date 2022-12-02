@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // Query ...
@@ -354,7 +355,8 @@ func (p *QueryParameterDate) UnmarshalJSON(b []byte) error {
 type QueryParameterDateTime struct {
 	QueryParameter
 
-	Value string `json:"value"`
+	Value       any    `json:"value"`
+	StringValue string `json:"-"`
 }
 
 // MarshalJSON sets the type before marshaling.
@@ -398,17 +400,46 @@ func (p *QueryParameterDateTimeSec) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// QueryParameterDateRange ...
-type QueryParameterDateRange struct {
+type DateTimeRange struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+type QueryParameterRangeBase struct {
 	QueryParameter
 
-	Value string `json:"value"`
+	Value       any            `json:"value"`
+	StringValue string         `json:"-"`
+	RangeValue  *DateTimeRange `json:"-"`
+}
+
+func (p *QueryParameterRangeBase) toParameterObject() {
+	if p.RangeValue != nil {
+		p.Value = p.RangeValue
+	} else {
+		p.Value = p.StringValue
+	}
+}
+
+func (p *QueryParameterRangeBase) decodeQueryParameter() {
+	if v, ok := p.Value.(map[string]any); ok {
+		p.RangeValue = &DateTimeRange{Start: v["start"].(string), End: v["end"].(string)}
+	} else {
+		p.StringValue = fmt.Sprintf("%v", p.Value)
+	}
+	p.Value = nil
+}
+
+// QueryParameterDateRange ...
+type QueryParameterDateRange struct {
+	QueryParameterRangeBase
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateRange) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = queryParameterDateRangeTypeName
 	type localQueryParameter QueryParameterDateRange
+	p.QueryParameter.Type = queryParameterDateRangeTypeName
+	p.toParameterObject()
 	return json.Marshal((localQueryParameter)(p))
 }
 
@@ -418,21 +449,21 @@ func (p *QueryParameterDateRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
+	p.decodeQueryParameter()
 	p.Type = ""
 	return nil
 }
 
 // QueryParameterDateTimeRange ...
 type QueryParameterDateTimeRange struct {
-	QueryParameter
-
-	Value string `json:"value"`
+	QueryParameterRangeBase
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateTimeRange) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = queryParameterDateTimeRangeTypeName
 	type localQueryParameter QueryParameterDateTimeRange
+	p.QueryParameter.Type = queryParameterDateTimeRangeTypeName
+	p.toParameterObject()
 	return json.Marshal((localQueryParameter)(p))
 }
 
@@ -442,21 +473,21 @@ func (p *QueryParameterDateTimeRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
+	p.decodeQueryParameter()
 	p.Type = ""
 	return nil
 }
 
 // QueryParameterDateTimeSecRange ...
 type QueryParameterDateTimeSecRange struct {
-	QueryParameter
-
-	Value string `json:"value"`
+	QueryParameterRangeBase
 }
 
 // MarshalJSON sets the type before marshaling.
 func (p QueryParameterDateTimeSecRange) MarshalJSON() ([]byte, error) {
-	p.QueryParameter.Type = queryParameterDateTimeSecRangeTypeName
 	type localQueryParameter QueryParameterDateTimeSecRange
+	p.QueryParameter.Type = queryParameterDateTimeSecRangeTypeName
+	p.toParameterObject()
 	return json.Marshal((localQueryParameter)(p))
 }
 
@@ -466,6 +497,7 @@ func (p *QueryParameterDateTimeSecRange) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, (*localQueryParameter)(p)); err != nil {
 		return err
 	}
+	p.decodeQueryParameter()
 	p.Type = ""
 	return nil
 }

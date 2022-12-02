@@ -1144,8 +1144,40 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       fmt.Sprintf("/sql/warehouses/%s", r.ID),
 					Name:     "sql_endpoint_" + ic.Importables["databricks_sql_endpoint"].Name(r.Data),
 				})
+				ic.Emit(&resource{
+					Resource: "databricks_sql_global_config",
+					ID:       sql.GlobalSqlConfigResourceID,
+				})
 			}
 			return nil
+		},
+	},
+	"databricks_sql_global_config": {
+		Service: "sql-endpoints",
+		Name: func(d *schema.ResourceData) string {
+			return "sql_global_config"
+		},
+		List: func(ic *importContext) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_global_config",
+					ID:       sql.GlobalSqlConfigResourceID,
+				})
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			arn := r.Data.Get("instance_profile_arn").(string)
+			if arn != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_instance_profile",
+					ID:       arn,
+				})
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "instance_profile_arn", Resource: "databricks_instance_profile"},
 		},
 	},
 	"databricks_sql_dashboard": {

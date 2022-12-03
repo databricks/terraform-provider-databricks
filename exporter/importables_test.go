@@ -428,6 +428,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 
 		d := scim.ResourceServicePrincipal().TestResourceData()
 		d.Set("application_id", "dbc")
+		d.Set("display_name", "dbc")
 		r := &resource{
 			Attribute: "application_id",
 			Value:     "dbc",
@@ -438,6 +439,12 @@ func TestSpnSearchSuccess(t *testing.T) {
 
 		err = resourcesMap["databricks_service_principal"].Import(ic, r)
 		assert.NoError(t, err)
+
+		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
+			scim.ResourceServicePrincipal().Schema["application_id"], d))
+		ic.Client.Host = "https://abc.azuredatabricks.net"
+		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
+			scim.ResourceServicePrincipal().Schema["display_name"], d))
 	})
 }
 

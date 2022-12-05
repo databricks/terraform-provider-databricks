@@ -204,6 +204,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -271,6 +272,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
 			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "new_cluster.policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "existing_cluster_id", Resource: "databricks_cluster"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -296,11 +298,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
 			{Path: "task.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "task.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "task.existing_cluster_id", Resource: "databricks_cluster"},
-			{Path: "job_clusters.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "job_clusters.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
-			{Path: "job_clusters.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
-			{Path: "job_clusters.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "job_cluster.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
+			{Path: "job_cluster.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
+			{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var job jobs.JobSettings

@@ -184,7 +184,7 @@ func (ic *importContext) Run() error {
 	}
 	defer sh.Close()
 	// nolint
-	sh.WriteString("#!/bin/sh\n\n")
+	sh.WriteString("#!/bin/sh\n\nset -e\n\n")
 
 	if ic.generateDeclaration {
 		dcfile, err := os.Create(fmt.Sprintf("%s/databricks.tf", ic.Directory))

@@ -90,9 +90,10 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_secret](../resources/secret.md) | Yes |
 | [databricks_secret_acl](../resources/secret_acl.md) | Yes |
 | [databricks_secret_scope](../resources/secret_scope.md) | Yes |
+| [databricks_service_principal](../resources/service_principal.md) | Yes |
 | [databricks_sql_dashboard](../resources/sql_dashboard.md) | Yes |
 | [databricks_sql_endpoint](../resources/sql_endpoint.md) | Yes |
-| [databricks_sql_global_config](../resources/sql_global_config.md) | No |
+| [databricks_sql_global_config](../resources/sql_global_config.md) | Yes |
 | [databricks_sql_permissions](../resources/sql_permissions.md) | No |
 | [databricks_sql_query](../resources/sql_query.md) | Yes |
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes |

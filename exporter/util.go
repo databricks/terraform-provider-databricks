@@ -60,6 +60,44 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitUserOrServicePrincipal(c.SingleUserName)
+}
+
+func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
+	if userOrSPName == "" {
+		return
+	}
+	if strings.Contains(userOrSPName, "@") {
+		ic.Emit(&resource{
+			Resource:  "databricks_user",
+			Attribute: "user_name",
+			Value:     userOrSPName,
+		})
+	} else {
+		ic.Emit(&resource{
+			Resource:  "databricks_service_principal",
+			Attribute: "application_id",
+			Value:     userOrSPName,
+		})
+	}
+}
+
+func (ic *importContext) emitGroups(u scim.User, principal string) {
+	for _, g := range u.Groups {
+		if g.Type != "direct" {
+			log.Printf("Skipping non-direct group %s/%s for %s", g.Value, g.Display, principal)
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_group",
+			ID:       g.Value,
+		})
+		ic.Emit(&resource{
+			Resource: "databricks_group_member",
+			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
+			Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, principal),
+		})
+	}
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
@@ -95,6 +133,20 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	}
 	if len(users) == 0 {
 		err = fmt.Errorf("user %s not found", name)
+		return
+	}
+	u = users[0]
+	return
+}
+
+func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
+	a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
+	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")))
+	if err != nil {
+		return
+	}
+	if len(users) == 0 {
+		err = fmt.Errorf("service principal %s not found", applicationID)
 		return
 	}
 	u = users[0]

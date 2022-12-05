@@ -22,7 +22,7 @@ func DataSourceServicePrincipal() *schema.Resource {
 	return common.DataResource(spnData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		response := e.(*spnData)
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
-		spList, err := spnAPI.filter(fmt.Sprintf("applicationId eq '%s'", response.ApplicationID))
+		spList, err := spnAPI.Filter(fmt.Sprintf("applicationId eq '%s'", response.ApplicationID))
 		if err != nil {
 			return err
 		}

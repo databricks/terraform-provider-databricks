@@ -317,12 +317,31 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 							Members: []scim.ComplexValue{
 								{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 								{Display: "Test group", Value: "f", Ref: "Groups/f"},
+								{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
 							},
 						},
 						{ID: "b", DisplayName: "users"},
 						{ID: "c", DisplayName: "test"},
 					},
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn",
+				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
+					Groups: []scim.ComplexValue{
+						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
+					}},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27spn%27",
+				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
+					Groups: []scim.ComplexValue{
+						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
+					}},
+				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
@@ -339,6 +358,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					Members: []scim.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
+						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
 					},
 				},
 				ReuseRequest: true,

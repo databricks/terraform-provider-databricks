@@ -210,6 +210,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "policy_id", Resource: "databricks_cluster_policy"},
+			{Path: "single_user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "single_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 		List: func(ic *importContext) error {
 			clusters, err := clusters.NewClustersAPI(ic.Context, ic.Client).List()
@@ -580,6 +582,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       x.Value,
 						})
 					}
+					if strings.Contains(x.Ref, "ServicePrincipals/") {
+						ic.Emit(&resource{
+							Resource: "databricks_service_principal",
+							ID:       x.Value,
+						})
+					}
 					if strings.Contains(x.Ref, "Groups/") {
 						ic.Emit(&resource{
 							Resource: "databricks_group",
@@ -615,6 +623,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "group_id", Resource: "databricks_group"},
 			{Path: "member_id", Resource: "databricks_user"},
 			{Path: "member_id", Resource: "databricks_group"},
+			{Path: "member_id", Resource: "databricks_service_principal"},
 		},
 	},
 	"databricks_user": {
@@ -640,25 +649,55 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			for _, g := range u.Groups {
-				if g.Type != "direct" {
-					log.Printf("Skipping non-direct group %s/%s for user %s", g.Value, g.Display, username)
-					continue
-				}
-				ic.Emit(&resource{
-					Resource: "databricks_group",
-					ID:       g.Value,
-				})
-				userName := u.DisplayName
-				if userName == "" {
-					userName = u.UserName
-				}
-				ic.Emit(&resource{
-					Resource: "databricks_group_member",
-					ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-					Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, userName),
-				})
+			userName := u.DisplayName
+			if userName == "" {
+				userName = u.UserName
 			}
+			ic.emitGroups(u, userName)
+			return nil
+		},
+	},
+	"databricks_service_principal": {
+		Service: "users",
+		Name: func(d *schema.ResourceData) string {
+			name := d.Get("display_name").(string)
+			if name == "" {
+				name = d.Get("application_id").(string)
+				if len(name) > 8 {
+					name = name[0:8]
+				}
+			}
+			return name + "_" + d.Id()
+		},
+		Search: func(ic *importContext, r *resource) error {
+			u, err := ic.findSpnByAppID(r.Value)
+			if err != nil {
+				return err
+			}
+			r.ID = u.ID
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			// application_id should be provided only on Azure
+			if pathString == "display_name" && ic.Client.IsAzure() {
+				applicationID := d.Get("application_id").(string)
+				displayName := d.Get("display_name").(string)
+				return applicationID == displayName
+			}
+			return pathString == "home" || pathString == "repos" || (pathString == "application_id" && !ic.Client.IsAzure())
+		},
+		Import: func(ic *importContext, r *resource) error {
+			applicationID := r.Data.Get("application_id").(string)
+			r.Data.Set("force", true)
+			u, err := ic.findSpnByAppID(applicationID)
+			if err != nil {
+				return err
+			}
+			spnName := u.DisplayName
+			if spnName == "" {
+				spnName = u.ApplicationID
+			}
+			ic.emitGroups(u, spnName)
 			return nil
 		},
 	},
@@ -684,6 +723,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "notebook_path", Resource: "databricks_notebook"},
 			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name"},
 			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
+			{Path: "access_control.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
 			var permissions permissions.PermissionsEntity
@@ -705,6 +745,11 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource:  "databricks_group",
 					Attribute: "display_name",
 					Value:     ac.GroupName,
+				})
+				ic.Emit(&resource{
+					Resource:  "databricks_service_principal",
+					Attribute: "application_id",
+					Value:     ac.ServicePrincipalName,
 				})
 			}
 			return nil
@@ -777,6 +822,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "scope", Resource: "databricks_secret_scope"},
 			{Path: "principal", Resource: "databricks_group", Match: "display_name"},
 			{Path: "principal", Resource: "databricks_user", Match: "user_name"},
+			{Path: "principal", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 	},
 	"databricks_mount": {
@@ -1377,10 +1423,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			if res := dltClusterRegex.FindStringSubmatch(pathString); res != nil { // analyze DLT clusters
 				return makeShouldOmitFieldForCluster(dltClusterRegex)(ic, pathString, as, d)
 			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+			return pathString == "creator_user_name" || defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Depends: []reference{
-			{Path: "creator_user_name", Resource: "databricks_user", Match: "user_name"},
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
 			{Path: "cluster.instance_pool_id", Resource: "databricks_instance_pool"},

@@ -83,7 +83,7 @@ func TestClusterPolicy(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, ic.testEmits, 4)
-	assert.True(t, ic.testEmits["databricks_permissions[clust_policy_bcd] (id: /cluster-policies/abc)"])
+	assert.True(t, ic.testEmits["databricks_permissions[cluster_policy_bcd] (id: /cluster-policies/abc)"])
 	assert.True(t, ic.testEmits["databricks_instance_pool[<unknown>] (id: efg)"])
 	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: def)"])
 	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/init-script.sh)"])

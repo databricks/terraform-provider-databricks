@@ -461,7 +461,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
-					Name:     "cluster_policy_" + ic.Importables["databricks_cluster_policy"].Name(r.Data),
+					Name:     "cluster_policy_" + ic.Importables["databricks_cluster_policy"].Name(ic, r.Data),
 				})
 			}
 			var definition map[string]map[string]any
@@ -472,30 +472,34 @@ var resourcesMap map[string]importable = map[string]importable{
 			for k, policy := range definition {
 				value, vok := policy["value"]
 				defaultValue, dok := policy["defaultValue"]
-				typ, tok := policy["type"]
-				if !vok && !dok && !tok {
+				typ := policy["type"]
+				if !vok && !dok {
+					log.Printf("[INFO] Skipping policy element as it doesn't have both value and defaultValue")
 					continue
 				}
-				stringValue := eitherString(value, defaultValue)
 				if k == "aws_attributes.instance_profile_arn" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_profile",
-						ID:       stringValue,
+						ID:       eitherString(value, defaultValue),
 					})
 				}
 				if k == "instance_pool_id" || k == "driver_instance_pool_id" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_pool",
-						ID:       stringValue,
+						ID:       eitherString(value, defaultValue),
 					})
 				}
-				if typ == "fixed" && strings.HasPrefix(k, "init_scripts.") && strings.HasSuffix(k, ".dbfs.destination") {
-					ic.emitIfDbfsFile(stringValue)
+				if typ == "fixed" &&
+					strings.HasPrefix(k, "init_scripts.") &&
+					strings.HasSuffix(k, ".dbfs.destination") {
+					ic.emitIfDbfsFile(eitherString(value, defaultValue))
 				}
 			}
 			policyName := r.Data.Get("name").(string)
 			if slices.Contains(predefinedClusterPolicies, policyName) {
 				r.Mode = "data"
+				// we need to set definition to empty value because otherwise it will be put into
+				// generated HCL code for data source, and it only supports the `name` attribute
 				r.Data.Set("definition", "")
 			}
 			return nil

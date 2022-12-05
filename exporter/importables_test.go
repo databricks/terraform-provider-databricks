@@ -445,6 +445,17 @@ func TestSpnSearchSuccess(t *testing.T) {
 		ic.Client.Host = "https://abc.azuredatabricks.net"
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
 			scim.ResourceServicePrincipal().Schema["display_name"], d))
+
+		// test for different branches in Name function
+		d2 := scim.ResourceServicePrincipal().TestResourceData()
+		d2.SetId("123")
+		d2.Set("application_id", "dbc")
+		assert.Equal(t, "dbc_123", resourcesMap["databricks_service_principal"].Name(d2))
+		d2.Set("application_id", "60622399-fd3f-4faf-8810-bf08b225cf3b")
+		assert.Equal(t, "60622399_123", resourcesMap["databricks_service_principal"].Name(d2))
+
+		d2.Set("display_name", "abc")
+		assert.Equal(t, "abc_123", resourcesMap["databricks_service_principal"].Name(d2))
 	})
 }
 

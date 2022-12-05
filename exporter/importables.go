@@ -656,7 +656,14 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_service_principal": {
 		Service: "users",
 		Name: func(d *schema.ResourceData) string {
-			return d.Get("display_name").(string) + "_" + d.Id()
+			name := d.Get("display_name").(string)
+			if name == "" {
+				name = d.Get("application_id").(string)
+				if len(name) > 8 {
+					name = name[0:8]
+				}
+			}
+			return name + "_" + d.Id()
 		},
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findSpnByAppID(r.Value)

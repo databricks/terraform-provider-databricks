@@ -64,7 +64,7 @@ resource "databricks_service_principal" "sp" {
 }
 ```
 
-Creating group in Azure Databricks account:
+Creating service principal in Azure Databricks account:
 
 ```hcl
 // initialize provider at Azure account-level

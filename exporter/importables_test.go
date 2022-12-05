@@ -68,19 +68,38 @@ func TestClusterPolicy(t *testing.T) {
 		"instance_pool_id": {
 			"defaultValue": "efg",
 		},
+		"init_scripts.0.dbfs.destination": {
+			"type":  "fixed",
+			"value": "dbfs:/FileStore/init-script.sh",
+		},
 	}
 	policy, _ := json.Marshal(definition)
 	d.Set("definition", string(policy))
 	ic := importContextForTest()
+	ic.meAdmin = true
 	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
 		ID:   "abc",
 		Data: d,
 	})
 	assert.NoError(t, err)
-	assert.Len(t, ic.testEmits, 3)
+	assert.Len(t, ic.testEmits, 4)
 	assert.True(t, ic.testEmits["databricks_permissions[clust_policy_bcd] (id: /cluster-policies/abc)"])
 	assert.True(t, ic.testEmits["databricks_instance_pool[<unknown>] (id: efg)"])
 	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: def)"])
+	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/init-script.sh)"])
+}
+
+func TestPredefinedClusterPolicy(t *testing.T) {
+	d := policies.ResourceClusterPolicy().TestResourceData()
+	d.Set("name", "Job Compute")
+	policy, _ := json.Marshal(map[string]map[string]string{})
+	d.Set("definition", string(policy))
+	ic := importContextForTest()
+	r := resource{ID: "abc", Data: d}
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &r)
+	assert.NoError(t, err)
+	assert.Equal(t, "data", r.Mode)
+	assert.Equal(t, "", r.Data.Get("definition").(string))
 }
 
 func TestGroup(t *testing.T) {
@@ -285,6 +304,7 @@ func TestClusterPolicyNoValues(t *testing.T) {
 	d.Set("name", "abc")
 	d.Set("definition", `{"foo": {}}`)
 	ic := importContextForTest()
+	ic.meAdmin = true
 	err := resourcesMap["databricks_cluster_policy"].Import(ic, &resource{
 		ID:   "x",
 		Data: d,

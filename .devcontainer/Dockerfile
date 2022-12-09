@@ -39,4 +39,4 @@ RUN \
     # # --> Static checker
     && go install honnef.co/go/tools/cmd/staticcheck@v0.3.2 \
     # # --> TF formatter
-    && go get github.com/katbyte/terrafmt
+    && go install github.com/katbyte/terrafmt@latest

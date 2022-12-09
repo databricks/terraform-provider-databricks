@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -30,15 +32,16 @@ import (
 )
 
 var (
-	adlsGen2Regex           = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	adlsGen1Regex           = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
-	wasbsRegex              = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	s3Regex                 = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
-	gsRegex                 = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
-	globalWorkspaceConfName = "global_workspace_conf"
-	nameNormalizationRegex  = regexp.MustCompile(`\W+`)
-	jobClustersRegex        = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
-	dltClusterRegex         = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
+	adlsGen2Regex             = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen1Regex             = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
+	wasbsRegex                = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	s3Regex                   = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
+	gsRegex                   = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
+	globalWorkspaceConfName   = "global_workspace_conf"
+	nameNormalizationRegex    = regexp.MustCompile(`\W+`)
+	jobClustersRegex          = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
+	dltClusterRegex           = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
+	predefinedClusterPolicies = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -454,11 +457,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string)
 		},
 		Import: func(ic *importContext, r *resource) error {
-			ic.Emit(&resource{
-				Resource: "databricks_permissions",
-				ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
-				Name:     "clust_policy_" + ic.Importables["databricks_cluster_policy"].Name(ic, r.Data),
-			})
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
+					Name:     "cluster_policy_" + ic.Importables["databricks_cluster_policy"].Name(ic, r.Data),
+				})
+			}
 			var definition map[string]map[string]any
 			err := json.Unmarshal([]byte(r.Data.Get("definition").(string)), &definition)
 			if err != nil {
@@ -467,7 +472,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			for k, policy := range definition {
 				value, vok := policy["value"]
 				defaultValue, dok := policy["defaultValue"]
+				typ := policy["type"]
 				if !vok && !dok {
+					log.Printf("[INFO] Skipping policy element as it doesn't have both value and defaultValue")
 					continue
 				}
 				if k == "aws_attributes.instance_profile_arn" {
@@ -476,17 +483,30 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       eitherString(value, defaultValue),
 					})
 				}
-				if k == "instance_pool_id" {
+				if k == "instance_pool_id" || k == "driver_instance_pool_id" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_pool",
 						ID:       eitherString(value, defaultValue),
 					})
 				}
+				if typ == "fixed" &&
+					strings.HasPrefix(k, "init_scripts.") &&
+					strings.HasSuffix(k, ".dbfs.destination") {
+					ic.emitIfDbfsFile(eitherString(value, defaultValue))
+				}
+			}
+			policyName := r.Data.Get("name").(string)
+			if slices.Contains(predefinedClusterPolicies, policyName) {
+				r.Mode = "data"
+				// we need to set definition to empty value because otherwise it will be put into
+				// generated HCL code for data source, and it only supports the `name` attribute
+				r.Data.Set("definition", "")
 			}
 			return nil
 		},
 		// TODO: special formatting required, where JSON is written line by line
 		// so that we're able to do the references
+		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group": {
 		Service: "groups",
@@ -523,10 +543,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if r.Name == "admins" || r.Name == "users" {
+			groupName := r.Data.Get("display_name").(string)
+			if groupName == "admins" || groupName == "users" {
 				// admins & users are to be imported through "data block"
-				// TODO: it doesn't work, fix it...
 				r.Mode = "data"
+				r.Data.Set("workspace_access", false)
+				r.Data.Set("databricks_sql_access", false)
+				r.Data.Set("allow_instance_pool_create", false)
+				r.Data.Set("allow_cluster_create", false)
 				r.Data.State().Set(&terraform.InstanceState{
 					ID: r.ID,
 					Attributes: map[string]string{
@@ -607,15 +631,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Body: func(ic *importContext, body *hclwrite.Body, r *resource) error {
-			blockType := "resource"
-			if r.Mode == "data" {
-				blockType = r.Mode
-			}
-			resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
-			return ic.dataToHcl(ic.Importables[r.Resource],
-				[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
-		},
+		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group_member": {
 		Service: "groups",

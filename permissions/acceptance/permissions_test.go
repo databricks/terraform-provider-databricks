@@ -45,7 +45,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 							if err != nil {
 								return err
 							}
-							assert.Len(t, permissions.AccessControlList, 2)
+							assert.Len(t, permissions.AccessControlList, 3)
 							return nil
 						}),
 				),
@@ -80,7 +80,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 						if err != nil {
 							return err
 						}
-						assert.Len(t, permissions.AccessControlList, 3)
+						assert.Len(t, permissions.AccessControlList, 4)
 						return nil
 					}),
 			},

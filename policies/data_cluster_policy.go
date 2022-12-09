@@ -30,6 +30,11 @@ func DataSourceClusterPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"definition": {
+				Type:     schema.TypeString,
+				Computed: true,
+				// Optional: false,
+			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			ClusterPoliciesAPI := NewClusterPoliciesAPI(ctx, m)
@@ -38,6 +43,7 @@ func DataSourceClusterPolicy() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			d.SetId(policy.PolicyID)
+			d.Set("definition", policy.Definition)
 			return nil
 		},
 	}

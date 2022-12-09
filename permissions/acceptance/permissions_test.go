@@ -97,6 +97,7 @@ func TestAccDatabricksReposPermissionsResourceFullLifecycle(t *testing.T) {
 				Config: fmt.Sprintf(`
 				resource "databricks_repo" "this" {
 					url = "https://github.com/databrickslabs/tempo.git"
+					path = "/Repos/terraform-tests/tempo-%[1]s"
 				}
 				resource "databricks_group" "first" {
 					display_name = "First %[1]s"

@@ -197,14 +197,14 @@ By default, all users can create and modify jobs unless an administrator [enable
 * [databricks_permissions](permissions.md#Job-usage) can control which groups or individual users can *Can View*, *Can Manage Run*, and *Can Manage*.
 * [databricks_cluster_policy](cluster_policy.md) can control which kinds of clusters users can create for jobs.
 
-## Single-task (legacy) syntax
+## Single-task syntax (legacy)
 
 This syntax uses Jobs API 2.0 to create a job with a single task. Only a subset of arguments above is supported (`name`, `libraries`, `email_notifications`, `webhook_notifications`, `timeout_seconds`, `max_retries`, `min_retry_interval_millis`, `retry_on_timeout`, `schedule`, `max_concurrent_runs`), and only a single block of `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` can be specified.
 
 The job cluster is specified using either of the below argument:
 
-* `new_cluster` - (Optional) Same set of parameters as for [databricks_cluster](cluster.md) resource. *Legacy syntax*
-* `existing_cluster_id` - (Optional) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability. *Legacy syntax*
+* `new_cluster` - (Optional) Same set of parameters as for [databricks_cluster](cluster.md) resource.
+* `existing_cluster_id` - (Optional) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability.
 
 ```hcl
 data "databricks_current_user" "me" {}

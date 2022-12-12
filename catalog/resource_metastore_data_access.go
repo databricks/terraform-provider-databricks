@@ -66,7 +66,7 @@ func (a DataAccessConfigurationsAPI) Delete(metastoreID, dacID string) error {
 }
 
 func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
-	return !d.HasChanges("gcp_service_account_key.email", "gcp_service_account_key.private_key_id")
+	return d.IsNewResource() && !d.HasChanges("gcp_service_account_key.email", "gcp_service_account_key.private_key_id")
 }
 
 func ResourceMetastoreDataAccess() *schema.Resource {

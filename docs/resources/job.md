@@ -74,7 +74,7 @@ resource "databricks_job" "this" {
 
 ### Single-task (legacy) syntax
 
-This syntax uses Jobs API 2.0 to create a job with a single task. Only `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` are supported
+This syntax uses Jobs API 2.0 to create a job with a single task. Only a single block of `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` is supported
 
 ```hcl
 data "databricks_current_user" "me" {}
@@ -121,16 +121,18 @@ output "job_url" {
 The following arguments are required:
 
 * `name` - (Optional) An optional name for the job. The default value is Untitled.
-* `new_cluster` - (Optional) Same set of parameters as for [databricks_cluster](cluster.md) resource.
-* `existing_cluster_id` - (Optional) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability.
+* `job_clusters` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings.
+* `new_cluster` - (Optional) Same set of parameters as for [databricks_cluster](cluster.md) resource. This is single-task (legacy) syntax
+* `existing_cluster_id` - (Optional) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability. This is single-task (legacy) syntax
 * `always_running` - (Optional) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
-* `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a FAILED result_state or INTERNAL_ERROR life_cycle_state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry.
+* `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a FAILED or INTERNAL_ERROR lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
-* `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begin and complete and when this job is deleted. The default behavior is to not send any emails. This field is a block and is documented below.
+* `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is documented below.
+* `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes and fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
 * `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
 
@@ -146,6 +148,31 @@ The following arguments are required:
 * `quartz_cron_expression` - (Required) A [Cron expression using Quartz syntax](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) that describes the schedule for a job. This field is required.
 * `timezone_id` - (Required) A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required.
 * `pause_status` - (Optional) Indicate whether this schedule is paused or not. Either “PAUSED” or “UNPAUSED”. When the pause_status field is omitted and a schedule is provided, the server will default to using "UNPAUSED" as a value for pause_status.
+
+### git_source Configuration Block
+
+This block is used to specify Git repository information & branch/tag/commit that will be used to pull source code from to execute a job. Supported options are:
+
+* `url` - (Required) URL of the Git repository to use.
+* `provider` - (Optional, if it's possible to detect Git provider by host name) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`.
+* `branch` - name of the Git branch to use. Conflicts with `tag` and `commit`.
+* `tag` - name of the Git branch to use. Conflicts with `branch` and `commit`.
+* `commit` - hash of Git commit to use. Conflicts with `branch` and `tag`.
+
+### email_notifications Configuration Block
+
+* `on_start` - (Optional) (List) list of emails to notify when the run starts.
+* `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
+* `on_failure` - (Optional) (List) list of emails to notify when the run fails.
+* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
+
+### webhook_notifications Configuration Block
+
+* `on_start` - (Optional) (List) list of notification IDs to call when the run starts. A maximum of 3 destinations can be specified.
+* `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
+* `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
+
+-> **Note** The following configuration blocks can be standalone or nested inside a `task` block
 
 ### spark_jar_task Configuration Block
 
@@ -165,8 +192,9 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 
 ### notebook_task Configuration Block
 
+* `notebook_path` - (Required) The path of the [databricks_notebook](notebook.md#path) to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required.
+* `source` - (Optional) Location type of the notebook, can only be `WORKSPACE` or `GIT`. When set to `WORKSPACE`, the notebook will be retrieved from the local Databricks workspace. When set to `GIT`, the notebook will be retrieved from a Git repository defined in git_source. If the value is empty, the task will use `GIT` if `git_source` is defined and `WORKSPACE` otherwise.
 * `base_parameters` - (Optional) (Map) Base parameters to be used for each run of this job. If the run is initiated by a call to run-now with parameters specified, the two parameters maps will be merged. If the same key is specified in base_parameters and in run-now, the value from run-now will be used. If the notebook takes a parameter that is not specified in the job’s base_parameters or the run-now override parameters, the default value from the notebook will be used. Retrieve these parameters in a notebook using `dbutils.widgets.get`.
-* `notebook_path` - (Required) The absolute path of the [databricks_notebook](notebook.md#path) to be run in the Databricks workspace. This path must begin with a slash. This field is required.
 
 ### pipeline_task Configuration Block
 
@@ -201,23 +229,6 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 * `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
 * `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
 * `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
-
-### email_notifications Configuration Block
-
-* `on_failure` - (Optional) (List) list of emails to notify on failure
-* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs
-* `on_start` - (Optional) (List) list of emails to notify on failure
-* `on_success` - (Optional) (List) list of emails to notify on failure
-
-### git_source Configuration Block
-
-This block is used to specify Git repository information & branch/tag/commit that will be used to pull source code from to execute a job. Supported options are:
-
-* `url` - (Required) URL of the Git repository to use.
-* `provider` - (Optional, if it's possible to detect Git provider by host name) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`.
-* `branch` - name of the Git branch to use. Conflicts with `tag` and `commit`.
-* `tag` - name of the Git branch to use. Conflicts with `branch` and `commit`.
-* `commit` - hash of Git commit to use. Conflicts with `branch` and `tag`.
 
 ### Exported attributes
 

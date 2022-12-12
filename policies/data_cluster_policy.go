@@ -33,7 +33,6 @@ func DataSourceClusterPolicy() *schema.Resource {
 			"definition": {
 				Type:     schema.TypeString,
 				Computed: true,
-				// Optional: false,
 			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {

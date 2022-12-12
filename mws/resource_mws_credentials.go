@@ -3,6 +3,9 @@ package mws
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"strings"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -23,17 +26,23 @@ type CredentialsAPI struct {
 // TODO: move mwsAcctID into provider configuration...
 
 // Create creates a set of MWS Credentials for the cross account role
-func (a CredentialsAPI) Create(mwsAcctID, credentialsName string, roleArn string) (Credentials, error) {
+func (a CredentialsAPI) Create(mwsAcctID, credentialsName, roleArn string) (Credentials, error) {
+	return a.CreateWithTimeout(mwsAcctID, credentialsName, roleArn, 0)
+}
+
+func (a CredentialsAPI) CreateWithTimeout(mwsAcctID, credentialsName, roleArn string, timeout time.Duration) (Credentials, error) {
 	var mwsCreds Credentials
 	credentialsAPIPath := fmt.Sprintf("/accounts/%s/credentials", mwsAcctID)
-	err := a.client.Post(a.context, credentialsAPIPath, Credentials{
-		CredentialsName: credentialsName,
-		AwsCredentials: &AwsCredentials{
-			StsRole: &StsRole{
-				RoleArn: roleArn,
+	err := retryOnError(a.context, timeout, isIAMError, func() error {
+		return a.client.Post(a.context, credentialsAPIPath, Credentials{
+			CredentialsName: credentialsName,
+			AwsCredentials: &AwsCredentials{
+				StsRole: &StsRole{
+					RoleArn: roleArn,
+				},
 			},
-		},
-	}, &mwsCreds)
+		}, &mwsCreds)
+	})
 	return mwsCreds, err
 }
 
@@ -62,11 +71,15 @@ func (a CredentialsAPI) List(mwsAcctID string) ([]Credentials, error) {
 func ResourceMwsCredentials() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "credentials_id", "/")
 	return common.Resource{
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID := d.Get("account_id").(string)
 			roleArn := d.Get("role_arn").(string)
 			credentialsName := d.Get("credentials_name").(string)
-			credentials, err := NewCredentialsAPI(ctx, c).Create(accountID, credentialsName, roleArn)
+			credentials, err := NewCredentialsAPI(ctx, c).CreateWithTimeout(accountID, credentialsName, roleArn, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return err
 			}
@@ -126,4 +139,27 @@ func ResourceMwsCredentials() *schema.Resource {
 			},
 		},
 	}.ToResource()
+}
+
+func retryOnError(ctx context.Context, timeout time.Duration, errorCondition func(error) bool, f func() error) error {
+	return resource.RetryContext(ctx, timeout,
+		func() *resource.RetryError {
+			err := f()
+			if errorCondition(err) {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+}
+
+func isIAMError(err error) bool {
+	if e, ok := err.(common.APIError); ok {
+		errMessage := strings.Join(strings.Fields(err.Error()), " ")
+		return e.StatusCode == 400 && strings.Contains(errMessage, "Failed credential validation checks: "+
+			"please use a valid cross account IAM role with permissions setup correctly")
+	}
+	return false
 }

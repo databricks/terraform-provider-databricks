@@ -2,6 +2,9 @@ package catalog
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"strings"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,8 +29,10 @@ type StorageCredentialInfo struct {
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
 }
 
-func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/storage-credentials", sci, &sci)
+func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo, timeout time.Duration) error {
+	return retryOnError(a.context, timeout, isIAMError, func() error {
+		return a.client.Post(a.context, "/unity-catalog/storage-credentials", sci, &sci)
+	})
 }
 
 func (a StorageCredentialsAPI) get(id string) (sci StorageCredentialInfo, err error) {
@@ -48,15 +53,24 @@ func ResourceStorageCredential() *schema.Resource {
 			m["azure_managed_identity"].AtLeastOneOf = alof
 			return m
 		})
-	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{
-		"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity"})
+	update := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		return retryOnError(ctx, d.Timeout(schema.TimeoutUpdate), isIAMError, func() error {
+			return updateFunctionFactory("/unity-catalog/storage-credentials", []string{
+				"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity"})(
+				ctx, d, c)
+		})
+	}
 	return common.Resource{
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+		},
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var sci StorageCredentialInfo
 			common.DataToStructPointer(d, s, &sci)
 			sci.Owner = ""
-			err := NewStorageCredentialsAPI(ctx, c).create(&sci)
+			err := NewStorageCredentialsAPI(ctx, c).create(&sci, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return err
 			}
@@ -75,4 +89,27 @@ func ResourceStorageCredential() *schema.Resource {
 			return NewStorageCredentialsAPI(ctx, c).delete(d.Id())
 		},
 	}.ToResource()
+}
+
+func retryOnError(ctx context.Context, timeout time.Duration, errorCondition func(error) bool, f func() error) error {
+	return resource.RetryContext(ctx, timeout,
+		func() *resource.RetryError {
+			err := f()
+			if errorCondition(err) {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+}
+
+func isIAMError(err error) bool {
+	if e, ok := err.(common.APIError); ok {
+		errMessage := strings.Join(strings.Fields(err.Error()), " ")
+		return e.StatusCode == 403 && strings.Contains(errMessage, "AWS IAM role in the metastore Data Access "+
+			"Configuration is not configured correctly.")
+	}
+	return false
 }

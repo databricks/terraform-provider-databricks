@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/go-querystring/query"
+	"github.com/hashicorp/go-retryablehttp"
 	"io"
 	"log"
 	"net/http"
@@ -14,9 +16,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-
-	"github.com/google/go-querystring/query"
-	"github.com/hashicorp/go-retryablehttp"
 )
 
 var (

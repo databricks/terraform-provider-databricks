@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"github.com/databricks/terraform-provider-databricks/common"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -13,6 +14,66 @@ func TestStorageCredentialsCornerCases(t *testing.T) {
 func TestCreateStorageCredentials(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "def",
+					},
+					Comment: "c",
+				},
+				Response: StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				Response: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "def",
+					},
+					MetastoreID: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		aws_iam_role {
+			role_arn = "def"
+		}
+		comment = "c"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateStorageCredentials_waitForIAMPropagation(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "def",
+					},
+					Comment: "c",
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "PERMISSION_DENIED",
+					Message: "/api/2.1/unity-catalog/storage-credentials/a:403 - \n       Failed to get credentials: " +
+						"AWS IAM role in the metastore Data Access Configuration is not\n       configured correctly. " +
+						"Please contact your account admin to update the configuration.\n    . " +
+						"Using pat auth: host=https://some-workspace.cloud.databricks.com, token=***REDACTED***.",
+				},
+				Status: 403,
+			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
@@ -105,6 +166,64 @@ func TestUpdateStorageCredentials(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: map[string]any{
 					"aws_iam_role": map[string]any{
+						"role_arn": "CHANGED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				Response: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "CHANGED",
+					},
+					MetastoreID: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+		},
+		HCL: `
+		name = "a"
+		aws_iam_role {
+			role_arn = "CHANGED"
+		}
+		comment = "c"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateStorageCredentials_waitForIAMPropagation(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: map[string]interface{}{
+					"aws_iam_role": map[string]interface{}{
+						"role_arn": "CHANGED",
+					},
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "PERMISSION_DENIED",
+					Message: "/api/2.1/unity-catalog/storage-credentials/a:403 - \n       Failed to get credentials: " +
+						"AWS IAM role in the metastore Data Access Configuration is not\n       configured correctly. " +
+						"Please contact your account admin to update the configuration.\n    . " +
+						"Using pat auth: host=https://some-workspace.cloud.databricks.com, token=***REDACTED***.",
+				},
+				Status: 403,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: map[string]interface{}{
+					"aws_iam_role": map[string]interface{}{
 						"role_arn": "CHANGED",
 					},
 				},

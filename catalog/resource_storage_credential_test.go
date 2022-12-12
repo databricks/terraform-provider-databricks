@@ -382,11 +382,11 @@ func TestUpdateGcpSAStorageCredentialNoChange(t *testing.T) {
 		Update:   true,
 		ID:       "a",
 		InstanceState: map[string]string{
-			"name":                                   "a",
-			"gcp_service_account_key.email":          "a@example.com",
-			"gcp_service_account_key.private_key_id": "b",
-			"gcp_service_account_key.private_key":    "",
-			"comment":                                "c",
+			"name":                            "a",
+			"gcp_service_account_key.0.email": "a@example.com",
+			"gcp_service_account_key.0.private_key_id": "b",
+			"gcp_service_account_key.0.private_key":    "",
+			"comment":                                  "c",
 		},
 		HCL: `
 		name = "a"

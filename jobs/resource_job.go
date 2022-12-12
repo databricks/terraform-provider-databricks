@@ -22,7 +22,7 @@ import (
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
-	Source         string            `json:"source"`
+	Source         string            `json:"source,omitempty"`
 	BaseParameters map[string]string `json:"base_parameters,omitempty"`
 }
 
@@ -557,7 +557,6 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
 		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(1))
-		s["source"].ValidateFunc = validation.StringInSlice([]string{"WORKSPACE", "GIT"}, false)
 		s["max_concurrent_runs"].Default = 1
 		s["url"] = &schema.Schema{
 			Type:     schema.TypeString,

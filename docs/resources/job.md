@@ -72,62 +72,16 @@ resource "databricks_job" "this" {
 }
 ```
 
-### Single-task (legacy) syntax
-
-This syntax uses Jobs API 2.0 to create a job with a single task. Only a single block of `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` is supported
-
-```hcl
-data "databricks_current_user" "me" {}
-data "databricks_spark_version" "latest" {}
-data "databricks_node_type" "smallest" {
-  local_disk = true
-}
-
-resource "databricks_notebook" "this" {
-  path     = "${data.databricks_current_user.me.home}/Terraform"
-  language = "PYTHON"
-  content_base64 = base64encode(<<-EOT
-    # created from ${abspath(path.module)}
-    display(spark.range(10))
-    EOT
-  )
-}
-
-resource "databricks_job" "this" {
-  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
-
-  new_cluster {
-    num_workers   = 1
-    spark_version = data.databricks_spark_version.latest.id
-    node_type_id  = data.databricks_node_type.smallest.id
-  }
-
-  notebook_task {
-    notebook_path = databricks_notebook.this.path
-  }
-}
-
-output "notebook_url" {
-  value = databricks_notebook.this.url
-}
-
-output "job_url" {
-  value = databricks_job.this.url
-}
-```
-
 ## Argument Reference
 
 The following arguments are required:
 
 * `name` - (Optional) An optional name for the job. The default value is Untitled.
-* `job_clusters` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings.
-* `new_cluster` - (Optional) Same set of parameters as for [databricks_cluster](cluster.md) resource. This is single-task (legacy) syntax
-* `existing_cluster_id` - (Optional) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability. This is single-task (legacy) syntax
+* `job_clusters` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
 * `always_running` - (Optional) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
-* `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a FAILED or INTERNAL_ERROR lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry.
+* `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a FAILED or INTERNAL_ERROR lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: PENDING, RUNNING, TERMINATING, TERMINATED, SKIPPED or INTERNAL_ERROR
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
@@ -242,6 +196,55 @@ By default, all users can create and modify jobs unless an administrator [enable
 
 * [databricks_permissions](permissions.md#Job-usage) can control which groups or individual users can *Can View*, *Can Manage Run*, and *Can Manage*.
 * [databricks_cluster_policy](cluster_policy.md) can control which kinds of clusters users can create for jobs.
+
+## Single-task (legacy) syntax
+
+This syntax uses Jobs API 2.0 to create a job with a single task. Only a subset of arguments above is supported (`name`, `libraries`, `email_notifications`, `webhook_notifications`, `timeout_seconds`, `max_retries`, `min_retry_interval_millis`, `retry_on_timeout`, `schedule`, `max_concurrent_runs`), and only a single block of `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` can be specified.
+
+The job cluster is specified using either of the below argument:
+
+* `new_cluster` - (Optional) Same set of parameters as for [databricks_cluster](cluster.md) resource. *Legacy syntax*
+* `existing_cluster_id` - (Optional) If existing_cluster_id, the ID of an existing [cluster](cluster.md) that will be used for all runs of this job. When running jobs on an existing cluster, you may need to manually restart the cluster if it stops responding. We strongly suggest to use `new_cluster` for greater reliability. *Legacy syntax*
+
+```hcl
+data "databricks_current_user" "me" {}
+data "databricks_spark_version" "latest" {}
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
+
+resource "databricks_notebook" "this" {
+  path     = "${data.databricks_current_user.me.home}/Terraform"
+  language = "PYTHON"
+  content_base64 = base64encode(<<-EOT
+    # created from ${abspath(path.module)}
+    display(spark.range(10))
+    EOT
+  )
+}
+
+resource "databricks_job" "this" {
+  name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
+
+  new_cluster {
+    num_workers   = 1
+    spark_version = data.databricks_spark_version.latest.id
+    node_type_id  = data.databricks_node_type.smallest.id
+  }
+
+  notebook_task {
+    notebook_path = databricks_notebook.this.path
+  }
+}
+
+output "notebook_url" {
+  value = databricks_notebook.this.url
+}
+
+output "job_url" {
+  value = databricks_job.this.url
+}
+```
 
 ## Timeouts
 

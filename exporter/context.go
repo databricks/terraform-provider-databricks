@@ -95,6 +95,11 @@ var nameFixes = []regexFix{
 	{regexp.MustCompile(`[_]{2,}`), "_"},
 }
 
+// less aggressive name normalization
+var simpleNameFixes = []regexFix{
+	{nameNormalizationRegex, "_"},
+}
+
 var workspaceConfKeys = map[string]any{
 	"enableIpAccessLists":                              false,
 	"enableTokensConfig":                               false,
@@ -555,8 +560,8 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		}
 		for _, r := range i.Depends {
 			if r.Path == pathString && r.Variable {
-				// sensitive fields are moved to variable depends
-				raw = i.Name(ic, d)
+				// sensitive fields are moved to variable depends, variable name is normalized
+				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
 				ok = true
 			}
 		}

@@ -24,11 +24,17 @@ type AwsIamRole struct {
 type AzureServicePrincipal struct {
 	DirectoryID   string `json:"directory_id"`
 	ApplicationID string `json:"application_id"`
-	ClientSecret  string `json:"client_secret"`
+	ClientSecret  string `json:"client_secret" tf:"sensitive"`
 }
 
 type AzureManagedIdentity struct {
 	AccessConnectorID string `json:"access_connector_id"`
+}
+
+type GcpServiceAccountKey struct {
+	Email        string `json:"email"`
+	PrivateKeyId string `json:"private_key_id"`
+	PrivateKey   string `json:"private_key" tf:"sensitive"`
 }
 
 type DataAccessConfiguration struct {
@@ -38,7 +44,10 @@ type DataAccessConfiguration struct {
 	Aws               *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure             *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
 	AzMI              *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
+	GcpSAKey          *GcpServiceAccountKey  `json:"gcp_service_account_key,omitempty" tf:"group:access"`
 }
+
+var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity", "gcp_service_account_key"}
 
 func (a DataAccessConfigurationsAPI) Create(metastoreID string, dac *DataAccessConfiguration) error {
 	path := fmt.Sprintf("/unity-catalog/metastores/%s/data-access-configurations", metastoreID)
@@ -56,6 +65,10 @@ func (a DataAccessConfigurationsAPI) Delete(metastoreID, dacID string) error {
 	return a.client.Delete(a.context, path, nil)
 }
 
+func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
+	return !d.HasChanges("gcp_service_account_key.email", "gcp_service_account_key.private_key_id")
+}
+
 func ResourceMetastoreDataAccess() *schema.Resource {
 	s := common.StructToSchema(DataAccessConfiguration{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -70,10 +83,13 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			alof := []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity"}
-			m["aws_iam_role"].AtLeastOneOf = alof
-			m["azure_service_principal"].AtLeastOneOf = alof
-			m["azure_managed_identity"].AtLeastOneOf = alof
+			m["aws_iam_role"].AtLeastOneOf = alofCred
+			m["azure_service_principal"].AtLeastOneOf = alofCred
+			m["azure_managed_identity"].AtLeastOneOf = alofCred
+			m["gcp_service_account_key"].AtLeastOneOf = alofCred
+
+			// suppress changes for private_key
+			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
 			return m
 		})
 	p := common.NewPairID("metastore_id", "id")

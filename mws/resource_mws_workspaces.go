@@ -248,20 +248,31 @@ var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "s
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
-	request := map[string]string{
-		"credentials_id": ws.CredentialsID,
-		// The ID of the workspace's network configuration object. Used only if you already use a customer-managed VPC.
-		// This change is supported only if you specified a network configuration ID when the workspace was created.
-		// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
-		// is available for updating both failed and running workspaces.
-		"network_id": ws.NetworkID,
+	request := map[string]string{}
+
+	if ws.CredentialsID != "" {
+		request["credentials_id"] = ws.CredentialsID
 	}
+
+	// The ID of the workspace's network configuration object. Used only if you already use a customer-managed VPC.
+	// This change is supported only if you specified a network configuration ID when the workspace was created.
+	// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
+	// is available for updating both failed and running workspaces.
+	if ws.NetworkID != "" {
+		request["network_id"] = ws.NetworkID
+	}
+
 	if ws.PrivateAccessSettingsID != "" {
 		request["private_access_settings_id"] = ws.PrivateAccessSettingsID
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
 	}
+
+	if len(request) == 0 {
+		return nil
+	}
+
 	err := a.client.Patch(a.context, workspacesAPIPath, request)
 	if err != nil {
 		return err
@@ -450,6 +461,12 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old != ""
 			}
+
+			//suppress diff for GCP managed VPC
+			s["network"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				return (strings.HasSuffix(k, ".#") && new == "0") || new == ""
+			}
+
 			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
 			s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
 			s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}

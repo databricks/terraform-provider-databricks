@@ -220,7 +220,7 @@ Each entry in `webhook_notification` block takes a list `webhook` blocks. The fi
 
 ### webhook Confiuration Block
 
-* `id` - ID of the destination that is notified when an event defined in `webhook_notifications` is triggered.
+* `id` - ID of the system notification that is notified when an event defined in `webhook_notifications` is triggered.
 
 ### git_source Configuration Block
 

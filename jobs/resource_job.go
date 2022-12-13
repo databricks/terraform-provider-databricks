@@ -226,9 +226,10 @@ func (js *JobSettings) sortWebhooksByID() {
 	js.WebhookNotifications.Sort()
 }
 
-// JobList returns a list of all jobs
-type JobList struct {
-	Jobs []Job `json:"jobs"`
+// JobListResponse returns a list of all jobs
+type JobListResponse struct {
+	Jobs    []Job `json:"jobs"`
+	HasMore bool  `json:"has_more,omitempty"`
 }
 
 // Job contains the information when using a GET request from the Databricks Jobs api

@@ -131,6 +131,7 @@ The following arguments are required:
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begin and complete and when this job is deleted. The default behavior is to not send any emails. This field is a block and is documented below.
+* `webhook_notifications` - (Optional) A collection of system notification IDs to notify when the run begins or completes. The default behavior is to not send any system notifications. This field is a block and is documented below.
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
 * `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
 
@@ -208,6 +209,18 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs
 * `on_start` - (Optional) (List) list of emails to notify on failure
 * `on_success` - (Optional) (List) list of emails to notify on failure
+
+### webhook_notifications Configuration Block
+
+Each entry in `webhook_notification` block takes a list `webhook` blocks. The field is documented below.
+
+* `on_failure` - (Optional) (List) An optional list of system notification IDs to call when the run fails. A maximum of 3 destinations can be specified for the `on_failure` property.
+* `on_start` - (Optional) (List) An optional list of system notification IDs to call when the run starts. A maximum of 3 destinations can be specified for the `on_start` property.
+* `on_success` - (Optional) (List) An optional list of system notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified for the `on_success` property.
+
+### webhook Confiuration Block
+
+* `id` - ID of the system notification that is notified when an event defined in `webhook_notifications` is triggered.
 
 ### git_source Configuration Block
 

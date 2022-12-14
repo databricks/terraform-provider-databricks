@@ -122,9 +122,15 @@ This block is used to specify Git repository information & branch/tag/commit tha
 
 ### webhook_notifications Configuration Block
 
+Each entry in `webhook_notification` block takes a list `webhook` blocks. The field is documented below.
+
 * `on_start` - (Optional) (List) list of notification IDs to call when the run starts. A maximum of 3 destinations can be specified.
 * `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
 * `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
+
+### webhook Configuration Block
+
+* `id` - ID of the system notification that is notified when an event defined in `webhook_notifications` is triggered.
 
 -> **Note** The following configuration blocks can be standalone or nested inside a `task` block
 

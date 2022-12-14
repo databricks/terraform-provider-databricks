@@ -19,8 +19,9 @@ func TestDataSourceClusterPolicy(t *testing.T) {
 				Response: ClusterPolicyList{
 					Policies: []ClusterPolicy{
 						{
-							PolicyID: "abc",
-							Name:     "policy",
+							PolicyID:   "abc",
+							Name:       "policy",
+							Definition: `{"abc":"123"}`,
 						},
 					},
 				},
@@ -36,6 +37,7 @@ func TestDataSourceClusterPolicy(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, `{"abc":"123"}`, d.Get("definition").(string))
 }
 
 func TestDataSourceClusterPolicyNotFound(t *testing.T) {

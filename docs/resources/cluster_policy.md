@@ -98,7 +98,7 @@ module "engineering_compute_policy" {
 The following arguments are required:
 
 * `name` - (Required) Cluster policy name. This must be unique. Length must be between 1 and 100 characters.
-* `definition` - (Required) Policy definition JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition).
+* `definition` - (Required) Policy definition: JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition).
 
 ## Attribute Reference
 

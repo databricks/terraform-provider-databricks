@@ -288,7 +288,19 @@ init_scripts {
 }
 ```
 
- Clusters with [custom Docker containers](https://docs.databricks.com/clusters/custom-containers.html) also allow a local file location for init scripts as follows:
+Similarly, for an init script stored in ADLS:
+
+```hcl
+init_scripts {
+  abfss {
+    destination = "abfss://container@storage.dfs.core.windows.net/install-elk.sh"
+  }
+}
+```
+
+Please note that you need to provide Spark Hadoop configuration (`spark.hadoop.fs.azure...`) to authenticate to ADLS to get access to the init script.
+
+Clusters with [custom Docker containers](https://docs.databricks.com/clusters/custom-containers.html) also allow a local file location for init scripts as follows:
 
 ```hcl
 init_scripts {

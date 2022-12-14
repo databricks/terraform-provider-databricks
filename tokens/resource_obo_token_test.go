@@ -176,3 +176,40 @@ func TestResourceOboTokenDelete(t *testing.T) {
 		ID:       "abc",
 	}.ApplyNoError(t)
 }
+
+func TestResourceOboTokenCreateNoLifetimeOrComment(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/token-management/on-behalf-of/tokens",
+				ExpectedRequest: OboToken{
+					ApplicationID: "abc",
+				},
+				Response: TokenResponse{
+					TokenValue: "s#Cr3t!11",
+					TokenInfo: &TokenInfo{
+						TokenID: "bcd",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token-management/tokens/bcd",
+				Response: TokenResponse{
+					TokenInfo: &TokenInfo{
+						TokenID: "bcd",
+					},
+				},
+			},
+		},
+		Resource: ResourceOboToken(),
+		Create:   true,
+		HCL: `
+		application_id = "abc"
+		`,
+		New: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "bcd", d.Id(), "Id should not be empty")
+}

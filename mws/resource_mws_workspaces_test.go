@@ -1321,8 +1321,7 @@ func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
 			"private_access_settings_id":               "pas",
 		},
 		State: map[string]any{
-			"account_id": "abc",
-
+			"account_id":     "abc",
 			"aws_region":     "us-east-1",
 			"credentials_id": "bcd",
 			"managed_services_customer_managed_key_id": "def",
@@ -1338,4 +1337,132 @@ func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
 		Update: true,
 		ID:     "abc/1234",
 	}.ExpectError(t, "cannot remove private access setting from workspace")
+}
+
+func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_bucket": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":       "bcd",
+					"workspace_name": "labdata",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+					Network: &GCPNetwork{
+						GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
+							SubnetCIDR:               "a",
+							GKEClusterPodIPRange:     "b",
+							GKEClusterServiceIPRange: "c",
+						},
+						GCPCommonNetworkConfig: &GCPCommonNetworkConfig{
+							GKEConnectivityType:     "d",
+							GKEClusterMasterIPRange: "e",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_bucket {
+			gcp {
+				project_id = "def"
+			}
+		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, []any([]any{}), d.Get("network"), "Network configuration should be ignored")
+}
+
+func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					Cloud:           "gcp",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+					Network: &GCPNetwork{
+						GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
+							SubnetCIDR:               "a",
+							GKEClusterPodIPRange:     "b",
+							GKEClusterServiceIPRange: "c",
+						},
+						GCPCommonNetworkConfig: &GCPCommonNetworkConfig{
+							GKEConnectivityType:     "d",
+							GKEClusterMasterIPRange: "e",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":              "abc",
+			"workspace_name":          "labdata",
+			"deployment_name":         "900150983cd24fb0",
+			"location":                "bcd",
+			"workspace_id":            "1234",
+			"is_no_public_ip_enabled": "false",
+			"cloud_resource_bucket.#": "1",
+			"cloud_resource_bucket.0.gcp.0.project_id": "def",
+			"cloud": "gcp",
+		},
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_bucket {
+			gcp {
+				project_id = "def"
+			}
+		}
+		`,
+		Gcp:    true,
+		Update: true,
+		ID:     "abc/1234",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+	assert.Equal(t, []any([]any{}), d.Get("network"), "Network configuration should be ignored")
 }

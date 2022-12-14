@@ -22,7 +22,7 @@ import (
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
-	Source         string            `json:"source,omitempty"`
+	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
 	BaseParameters map[string]string `json:"base_parameters,omitempty"`
 }
 

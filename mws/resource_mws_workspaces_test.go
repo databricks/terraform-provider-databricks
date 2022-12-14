@@ -1340,7 +1340,7 @@ func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -1375,7 +1375,6 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
 					Network: &GCPNetwork{
-						NetworkID: "net_id_a",
 						GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
 							SubnetCIDR:               "a",
 							GKEClusterPodIPRange:     "b",
@@ -1403,7 +1402,9 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 		`,
 		Gcp:    true,
 		Create: true,
-	}.ApplyNoError(t)
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, []any([]any{}), d.Get("network"), "Network configuration should be ignored")
 }
 
 func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
@@ -1421,7 +1422,6 @@ func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
 					Network: &GCPNetwork{
-						NetworkID: "net_id_a",
 						GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
 							SubnetCIDR:               "a",
 							GKEClusterPodIPRange:     "b",
@@ -1437,16 +1437,13 @@ func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
 		},
 		Resource: ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
-			"account_id":                               "abc",
-			"workspace_name":                           "labdata",
-			"deployment_name":                          "900150983cd24fb0",
-			"location":                                 "bcd",
-			"workspace_id":                             "1234",
-			"is_no_public_ip_enabled":                  "false",
-			"cloud_resource_bucket.#":                  "1",
-			"network.#":                                "1",
-			"network.0.gcp_common_network_config.#":    "1",
-			"network.0.network_id":                     "net_id_a",
+			"account_id":              "abc",
+			"workspace_name":          "labdata",
+			"deployment_name":         "900150983cd24fb0",
+			"location":                "bcd",
+			"workspace_id":            "1234",
+			"is_no_public_ip_enabled": "false",
+			"cloud_resource_bucket.#": "1",
 			"cloud_resource_bucket.0.gcp.0.project_id": "def",
 			"cloud": "gcp",
 		},
@@ -1467,4 +1464,5 @@ func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+	assert.Equal(t, []any([]any{}), d.Get("network"), "Network configuration should be ignored")
 }

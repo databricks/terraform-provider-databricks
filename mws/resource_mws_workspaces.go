@@ -290,6 +290,13 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 		host := generateWorkspaceHostname(a.client, mwsWorkspace)
 		mwsWorkspace.WorkspaceURL = fmt.Sprintf("https://%s", host)
 	}
+
+	if err == nil && mwsWorkspace.Network != nil {
+		//null out all network properties for GCP managed VPC
+		if mwsWorkspace.Network.NetworkID == "" {
+			mwsWorkspace.Network = nil
+		}
+	}
 	return mwsWorkspace, err
 }
 
@@ -460,11 +467,6 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			// Keep diff when creating (i.e. `old` == ""), suppress diff otherwise.
 			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old != ""
-			}
-
-			//suppress diff for GCP managed VPC
-			s["network"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				return (strings.HasSuffix(k, ".#") && new == "0") || new == ""
 			}
 
 			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"

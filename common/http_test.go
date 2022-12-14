@@ -325,34 +325,14 @@ func TestPut(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestUnmarshall(t *testing.T) {
-	ws := DatabricksClient{}
-	err := ws.unmarshall("/a/b/c", nil, nil)
-	require.NoError(t, err)
-	err = ws.unmarshall("/a/b/c", nil, "abc")
-	require.NoError(t, err)
-}
-
-func TestUnmarshallError(t *testing.T) {
-	v := struct {
-		Correct   string `json:"c"`
-		Incorrect int    `json:"i"`
-	}{}
-	ws := DatabricksClient{}
-	err := ws.unmarshall("/a/b/c", []byte(`{"c":"val", "i":"123"}`), &v)
-	require.Error(t, err)
-	require.EqualError(t, err,
-		"json: cannot unmarshal string into Go struct field .i of type int\n{\"c\":\"val\", \"i\":\"123\"}")
-}
-
 func TestAPI2(t *testing.T) {
 	ws := DatabricksClient{Host: "ht_tp://example.com/"}
-	err := ws.completeUrl(&http.Request{})
+	err := ws.addApiPrefix(&http.Request{})
 	require.Error(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(), "no URL found in request"),
 		"Actual message: %s", err.Error())
 
-	err = ws.completeUrl(&http.Request{
+	err = ws.addApiPrefix(&http.Request{
 		Header: http.Header{},
 		URL: &url.URL{
 			Path: "/x/y/x",

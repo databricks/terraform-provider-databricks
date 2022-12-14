@@ -143,7 +143,7 @@ func (c *DatabricksClient) parseUnknownError(
 }
 
 func (c *DatabricksClient) isAccountsClient() bool {
-	return strings.HasPrefix(c.Host, "https://accounts.")
+	return c.Config.IsAccountClient()
 }
 
 func (c *DatabricksClient) commonErrorClarity(resp *http.Response) *APIError {
@@ -259,57 +259,27 @@ func (c *DatabricksClient) checkHTTPRetry(ctx context.Context, resp *http.Respon
 
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
-	body, err := c.authenticatedQuery(ctx, http.MethodGet, path, request, c.completeUrl)
-	if err != nil {
-		return err
-	}
-	return c.unmarshall(path, body, &response)
+	return c.Client.Do(ctx, http.MethodGet, path, request, response, c.addApiPrefix)
 }
 
 // Post on path
 func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
-	body, err := c.authenticatedQuery(ctx, http.MethodPost, path, request, c.completeUrl)
-	if err != nil {
-		return err
-	}
-	return c.unmarshall(path, body, &response)
+	return c.Client.Do(ctx, http.MethodPost, path, request, response, c.addApiPrefix)
 }
 
 // Delete on path
 func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
-	_, err := c.authenticatedQuery(ctx, http.MethodDelete, path, request, c.completeUrl)
-	return err
+	return c.Client.Do(ctx, http.MethodDelete, path, request, nil, c.addApiPrefix)
 }
 
 // Patch on path
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
-	_, err := c.authenticatedQuery(ctx, http.MethodPatch, path, request, c.completeUrl)
-	return err
+	return c.Client.Do(ctx, http.MethodPatch, path, request, nil, c.addApiPrefix)
 }
 
 // Put on path
 func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
-	_, err := c.authenticatedQuery(ctx, http.MethodPut, path, request, c.completeUrl)
-	return err
-}
-
-func (c *DatabricksClient) unmarshall(path string, body []byte, response any) error {
-	if response == nil {
-		return nil
-	}
-	if len(body) == 0 {
-		return nil
-	}
-	err := json.Unmarshal(body, &response)
-	if err == nil {
-		return nil
-	}
-	return APIError{
-		ErrorCode:  "UNKNOWN",
-		StatusCode: 200,
-		Resource:   "..." + path,
-		Message:    fmt.Sprintf("%s\n%s", err.Error(), onlyNBytes(string(body), 32)),
-	}
+	return c.Client.Do(ctx, http.MethodPut, path, request, nil, c.addApiPrefix)
 }
 
 type ApiVersion string
@@ -320,59 +290,34 @@ const (
 	API_2_1 ApiVersion = "2.1"
 )
 
-func (c *DatabricksClient) completeUrl(r *http.Request) error {
+func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 	if r.URL == nil {
 		return fmt.Errorf("no URL found in request")
 	}
-
 	ctx := r.Context()
 	av, ok := ctx.Value(Api).(ApiVersion)
 	if !ok {
 		av = API_2_0
 	}
-
 	r.URL.Path = fmt.Sprintf("/api/%s%s", av, r.URL.Path)
-	r.Header.Set("Content-Type", "application/json")
-
-	url, err := url.Parse(c.Host)
-	if err != nil {
-		return err
-	}
-	r.URL.Host = url.Host
-	r.URL.Scheme = url.Scheme
-
 	return nil
 }
 
 // scimPathVisitorFactory is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
 	r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
-	if c.isAccountsClient() && c.AccountID != "" {
+	if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 		// until `/preview` is there for workspace scim,
 		// `/api/2.0` is added by completeUrl visitor
 		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
-			fmt.Sprintf("/api/2.0/accounts/%s", c.AccountID))
+			fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
 	}
 	return nil
 }
 
 // Scim sets SCIM headers
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
-	body, err := c.authenticatedQuery(ctx, method, path, request, c.completeUrl, c.scimVisitor)
-	if err != nil {
-		return err
-	}
-	return c.unmarshall(path, body, &response)
-}
-
-func (c *DatabricksClient) authenticatedQuery(ctx context.Context, method, requestURL string,
-	data any, visitors ...func(*http.Request) error) (body []byte, err error) {
-	err = c.Authenticate(ctx)
-	if err != nil {
-		return
-	}
-	visitors = append([]func(*http.Request) error{c.authVisitor}, visitors...)
-	return c.genericQuery(ctx, method, requestURL, data, visitors...)
+	return c.Client.Do(ctx, http.MethodPut, path, request, nil, c.addApiPrefix, c.scimVisitor)
 }
 
 func (c *DatabricksClient) recursiveMask(requestMap map[string]any) any {

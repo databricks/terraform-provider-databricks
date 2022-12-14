@@ -17,6 +17,9 @@ import (
 	"golang.org/x/time/rate"
 	"google.golang.org/api/option"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
+
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-retryablehttp"
@@ -37,6 +40,9 @@ const (
 // can hold one or more coma-separated env variable names to find value, if not specified
 // directly. `auth` struct tag describes the type of conflicting authentication used.
 type DatabricksClient struct {
+	Config *config.Config
+	Client *client.DatabricksClient
+
 	Host     string `name:"host" env:"DATABRICKS_HOST"`
 	Token    string `name:"token" env:"DATABRICKS_TOKEN" auth:"token,sensitive"`
 	Username string `name:"username" env:"DATABRICKS_USERNAME" auth:"password"`

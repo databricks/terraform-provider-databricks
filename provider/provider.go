@@ -10,6 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/useragent"
+
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/catalog"
@@ -142,6 +146,7 @@ func DatabricksProvider() *schema.Provider {
 		},
 		Schema: providerSchema(),
 	}
+	useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		ctx = context.WithValue(ctx, common.Provider, p)
 		return configureDatabricksClient(ctx, d)
@@ -158,8 +163,7 @@ func providerSchema() map[string]*schema.Schema {
 		// other values will immediately fail unit tests
 	}
 	ps := map[string]*schema.Schema{}
-	attrs := common.ClientAttributes() // TODO: pass by argument
-	for _, attr := range attrs {
+	for _, attr := range config.ConfigAttributes {
 		fieldSchema := &schema.Schema{
 			Type:      kindMap[attr.Kind],
 			Optional:  true,
@@ -170,6 +174,7 @@ func providerSchema() map[string]*schema.Schema {
 			fieldSchema.DefaultFunc = schema.MultiEnvDefaultFunc(attr.EnvVars, nil)
 		}
 	}
+	// TODO: check if still relevant
 	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT",
 		common.DefaultRateLimitPerSecond)
 	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES",
@@ -179,15 +184,15 @@ func providerSchema() map[string]*schema.Schema {
 
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 	prov := ctx.Value(common.Provider).(*schema.Provider)
-	pc := common.DatabricksClient{
+	pc := &common.DatabricksClient{ // TODO: must be a wrapper
+		Config:   &config.Config{},
 		Provider: prov,
 	}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}
-	attrs := common.ClientAttributes() // todo: pass by argument
-	for _, attr := range attrs {
+	for _, attr := range config.ConfigAttributes {
 		if value, ok := d.GetOk(attr.Name); ok {
-			err := attr.Set(&pc, value)
+			err := attr.Set(pc.Config, value)
 			if err != nil {
 				return nil, diag.FromErr(err)
 			}
@@ -212,11 +217,16 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 		return nil, diag.Errorf("More than one authorization method configured: %s",
 			strings.Join(authorizationMethodsUsed, " and "))
 	}
+	client, err := client.New(pc.Config)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	pc.Client = client
 	if err := pc.Configure(attrsUsed...); err != nil {
 		return nil, diag.FromErr(err)
 	}
 	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, client)
 	})
-	return &pc, nil
+	return pc, nil
 }

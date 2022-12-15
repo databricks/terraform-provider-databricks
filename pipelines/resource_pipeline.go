@@ -37,12 +37,15 @@ type pipelineCluster struct {
 	NumWorkers int32         `json:"num_workers,omitempty" tf:"group:size"`
 	Autoscale  *dltAutoScale `json:"autoscale,omitempty" tf:"group:size"`
 
-	NodeTypeID           string                  `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
-	DriverNodeTypeID     string                  `json:"driver_node_type_id,omitempty" tf:"computed"`
-	InstancePoolID       string                  `json:"instance_pool_id,omitempty" tf:"group:node_type"`
-	DriverInstancePoolID string                  `json:"driver_instance_pool_id,omitempty"`
-	AwsAttributes        *clusters.AwsAttributes `json:"aws_attributes,omitempty"`
-	GcpAttributes        *clusters.GcpAttributes `json:"gcp_attributes,omitempty"`
+	NodeTypeID           string                    `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
+	DriverNodeTypeID     string                    `json:"driver_node_type_id,omitempty" tf:"computed"`
+	InstancePoolID       string                    `json:"instance_pool_id,omitempty" tf:"group:node_type"`
+	DriverInstancePoolID string                    `json:"driver_instance_pool_id,omitempty"`
+	AwsAttributes        *clusters.AwsAttributes   `json:"aws_attributes,omitempty"`
+	GcpAttributes        *clusters.GcpAttributes   `json:"gcp_attributes,omitempty"`
+	AzureAttributes      *clusters.AzureAttributes `json:"azure_attributes,omitempty"`
+
+	EnableLocalDiskEncryption bool `json:"enable_local_disk_encryption,omitempty" tf:"computed"`
 
 	PolicyID                 string `json:"policy_id,omitempty"`
 	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
@@ -292,8 +295,6 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 
 	awsAttributes, _ := clustersSchema["aws_attributes"].Elem.(*schema.Resource)
 	awsAttributesSchema := awsAttributes.Schema
-	delete(awsAttributesSchema, "availability")
-	delete(awsAttributesSchema, "spot_bid_price_percent")
 	delete(awsAttributesSchema, "ebs_volume_type")
 	delete(awsAttributesSchema, "ebs_volume_count")
 	delete(awsAttributesSchema, "ebs_volume_size")
@@ -301,9 +302,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
 	gcpAttributesSchema := gcpAttributes.Schema
 	delete(gcpAttributesSchema, "use_preemptible_executors")
-	delete(gcpAttributesSchema, "availability")
 	delete(gcpAttributesSchema, "boot_disk_size")
-	delete(gcpAttributesSchema, "zone_id")
 
 	m["library"].MinItems = 1
 	m["url"] = &schema.Schema{

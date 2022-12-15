@@ -16,6 +16,7 @@ type NodeTypeRequest struct {
 	MinCores              int32  `json:"min_cores,omitempty"`
 	MinGPUs               int32  `json:"min_gpus,omitempty"`
 	LocalDisk             bool   `json:"local_disk,omitempty"`
+	LocalDiskMinSize      int32  `json:"local_disk_min_size,omitempty"`
 	Category              string `json:"category,omitempty"`
 	PhotonWorkerCapable   bool   `json:"photon_worker_capable,omitempty"`
 	PhotonDriverCapable   bool   `json:"photon_driver_capable,omitempty"`
@@ -33,17 +34,21 @@ type NodeTypeList struct {
 // Sort NodeTypes within this struct
 func (l *NodeTypeList) Sort() {
 	sortByChain(l.NodeTypes, func(i int) sortCmp {
-		var localDisks, localDiskSizeGB int32
+		var localDisks, localDiskSizeGB, localNVMeDisk, localNVMeDiskSizeGB int32
 		if l.NodeTypes[i].NodeInstanceType != nil {
 			localDisks = l.NodeTypes[i].NodeInstanceType.LocalDisks
+			localNVMeDisk = l.NodeTypes[i].NodeInstanceType.LocalNVMeDisks
 			localDiskSizeGB = l.NodeTypes[i].NodeInstanceType.LocalDiskSizeGB
+			localNVMeDiskSizeGB = l.NodeTypes[i].NodeInstanceType.LocalNVMeDiskSizeGB
 		}
 		return sortChain{
 			boolAsc(l.NodeTypes[i].IsDeprecated),
+			intAsc(l.NodeTypes[i].NumCores),
+			intAsc(l.NodeTypes[i].MemoryMB),
 			intAsc(localDisks),
 			intAsc(localDiskSizeGB),
-			intAsc(l.NodeTypes[i].MemoryMB),
-			intAsc(l.NodeTypes[i].NumCores),
+			intAsc(localNVMeDisk),
+			intAsc(localNVMeDiskSizeGB),
 			intAsc(l.NodeTypes[i].NumGPUs),
 			strAsc(l.NodeTypes[i].InstanceTypeID),
 		}
@@ -157,9 +162,13 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.MinGPUs > 0 && nt.NumGPUs < r.MinGPUs {
 			continue
 		}
-		if r.LocalDisk && nt.NodeInstanceType != nil &&
+		if (r.LocalDisk || r.LocalDiskMinSize > 0) && nt.NodeInstanceType != nil &&
 			(nt.NodeInstanceType.LocalDisks < 1 &&
 				nt.NodeInstanceType.LocalNVMeDisks < 1) {
+			continue
+		}
+		if r.LocalDiskMinSize > 0 && nt.NodeInstanceType != nil &&
+			(nt.NodeInstanceType.LocalDiskSizeGB+nt.NodeInstanceType.LocalNVMeDiskSizeGB) < r.LocalDiskMinSize {
 			continue
 		}
 		if r.Category != "" && !strings.EqualFold(nt.Category, r.Category) {

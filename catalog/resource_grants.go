@@ -223,8 +223,9 @@ var mapping = securableMapping{
 		"WRITE_FILES":  true,
 
 		// v1.0
-		"ALL_PRIVILEGES":        true,
-		"CREATE_EXTERNAL_TABLE": true,
+		"ALL_PRIVILEGES":         true,
+		"CREATE_EXTERNAL_TABLE":  true,
+		"CREATE MANAGED STORAGE": true,
 	},
 	"metastore": {
 		// v1.0

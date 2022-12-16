@@ -3,6 +3,8 @@ subcategory: "AWS"
 ---
 # databricks_mws_networks Resource
 
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
+
 -> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
 
 Use this resource to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS. It is essential to understand that this will require you to configure your provider separately for the multiple workspaces resources.

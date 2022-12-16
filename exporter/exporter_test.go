@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -40,6 +42,14 @@ func getJSONObject(filename string) any {
 		fmt.Printf("[ERROR] data=%s\n", string(data))
 	}
 	return obj
+}
+func workspaceConfKeysToURL() string {
+	keys := make([]string, 0, len(workspaceConfKeys))
+	for k := range workspaceConfKeys {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, "%2C")
 }
 
 func TestImportingMounts(t *testing.T) {
@@ -242,15 +252,42 @@ var emptySqlEndpoints = qa.HTTPFixture{
 
 var emptySqlDashboards = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/sql/dashboards",
+	Resource:     "/api/2.0/preview/sql/dashboards?page_size=100",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
 
 var emptySqlQueries = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/sql/queries",
+	Resource:     "/api/2.0/preview/sql/queries?page_size=100",
 	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
+var emptyWorkspaceConf = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/workspace-conf?",
+	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
+var dummyWorkspaceConf = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/workspace-conf?keys=zDummyKey",
+	Response: map[string]any{},
+}
+
+var allKnownWorkspaceConfs = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     fmt.Sprintf("/api/2.0/workspace-conf?keys=%s", workspaceConfKeysToURL()),
+	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
+var emptyGlobalSQLConfig = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/sql/config/warehouses",
+	Response:     sql.GlobalConfigForRead{},
 	ReuseRequest: true,
 }
 
@@ -266,6 +303,10 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlEndpoints,
 			emptySqlQueries,
 			emptyPipelines,
+			emptyWorkspaceConf,
+			allKnownWorkspaceConfs,
+			dummyWorkspaceConf,
+			emptyGlobalSQLConfig,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -276,12 +317,31 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 							Members: []scim.ComplexValue{
 								{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 								{Display: "Test group", Value: "f", Ref: "Groups/f"},
+								{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
 							},
 						},
 						{ID: "b", DisplayName: "users"},
 						{ID: "c", DisplayName: "test"},
 					},
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn",
+				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
+					Groups: []scim.ComplexValue{
+						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
+					}},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27spn%27",
+				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
+					Groups: []scim.ComplexValue{
+						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
+					}},
+				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
@@ -298,6 +358,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					Members: []scim.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
+						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
 					},
 				},
 				ReuseRequest: true,
@@ -417,8 +478,17 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 func TestImportingNoResourcesError(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
-			meAdminFixture,
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Response: scim.User{
+					Groups: []scim.ComplexValue{},
+				},
+			},
 			emptyRepos,
+			emptyWorkspaceConf,
+			dummyWorkspaceConf,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -1156,6 +1226,9 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
+			emptyWorkspaceConf,
+			dummyWorkspaceConf,
+			allKnownWorkspaceConfs,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -1300,6 +1373,9 @@ func TestImportingIPAccessLists(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
+			emptyWorkspaceConf,
+			dummyWorkspaceConf,
+			allKnownWorkspaceConfs,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",
@@ -1357,6 +1433,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			meAdminFixture,
 			emptyRepos,
 			emptyIpAccessLIst,
+			emptyGlobalSQLConfig,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",
@@ -1390,7 +1467,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/sql/dashboards",
+				Resource:     "/api/2.0/preview/sql/dashboards?page_size=100",
 				Response:     getJSONObject("test-data/get-sql-dashboards.json"),
 				ReuseRequest: true,
 			},
@@ -1402,7 +1479,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/sql/queries",
+				Resource:     "/api/2.0/preview/sql/queries?page_size=100",
 				Response:     getJSONObject("test-data/get-sql-queries.json"),
 				ReuseRequest: true,
 			},
@@ -1429,8 +1506,8 @@ func TestImportingSqlObjects(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.listing = "sql,access"
-			ic.services = "sql,access"
+			ic.listing = "sql-dashboards,sql-queries,sql-endpoints,access"
+			ic.services = "sql-dashboards,sql-queries,sql-endpoints,access"
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -1556,3 +1633,38 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			assert.NoError(t, err)
 		})
 }
+
+func TestImportingGlobalSqlConfig(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/sql/warehouses",
+				Response: sql.EndpointList{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/sql/config/warehouses",
+				Response: sql.GlobalConfigForRead{
+					EnableServerlessCompute: true,
+					InstanceProfileARN:      "arn:...",
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "sql-endpoints"
+			ic.services = "sql-endpoints"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+// 			emptyRepos,
+// emptyIpAccessLIst,

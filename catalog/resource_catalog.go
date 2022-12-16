@@ -20,6 +20,7 @@ func NewCatalogsAPI(ctx context.Context, m any) CatalogsAPI {
 type CatalogInfo struct {
 	Name        string            `json:"name" tf:"force_new"`
 	Comment     string            `json:"comment,omitempty"`
+	StorageRoot string            `json:"storage_root,omitempty" tf:"force_new"`
 	Properties  map[string]string `json:"properties,omitempty"`
 	Owner       string            `json:"owner,omitempty" tf:"computed"`
 	MetastoreID string            `json:"metastore_id,omitempty" tf:"computed"`

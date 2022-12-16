@@ -22,6 +22,7 @@ import (
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
+	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
 	BaseParameters map[string]string `json:"base_parameters,omitempty"`
 }
 
@@ -85,6 +86,7 @@ type DbtTask struct {
 	ProfilesDirectory string   `json:"profiles_directory,omitempty"`
 	ProjectDirectory  string   `json:"project_directory,omitempty"`
 	Schema            string   `json:"schema,omitempty" tf:"default:default"`
+	Catalog           string   `json:"catalog,omitempty"`
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
 }
 

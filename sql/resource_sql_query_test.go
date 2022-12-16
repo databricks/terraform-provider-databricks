@@ -522,18 +522,25 @@ func TestQueryUpdateWithParams(t *testing.T) {
 					},
 				},
 				api.QueryParameterDateRange{
-					QueryParameter: api.QueryParameter{
-						Name: "8",
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: api.QueryParameter{
+							Name: "8",
+						},
+						Value: map[string]string{"start": "2022-11-20", "end": "2022-11-22"},
 					},
 				},
 				api.QueryParameterDateTimeRange{
-					QueryParameter: api.QueryParameter{
-						Name: "9",
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: api.QueryParameter{
+							Name: "9",
+						},
 					},
 				},
 				api.QueryParameterDateTimeSecRange{
-					QueryParameter: api.QueryParameter{
-						Name: "10",
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: api.QueryParameter{
+							Name: "10",
+						},
 					},
 				},
 			},
@@ -646,7 +653,10 @@ func TestQueryUpdateWithParams(t *testing.T) {
 			parameter {
 				name = "8"
 				date_range {
-					value = ""
+					range {
+						start = "2022-11-20"
+						end = "2022-11-22"
+					}
 				}
 			}
 

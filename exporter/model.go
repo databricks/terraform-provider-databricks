@@ -37,7 +37,7 @@ type importable struct {
 	// Logical (file) group that resources belong to
 	Service string
 	// Semantic resource block name
-	Name func(d *schema.ResourceData) string
+	Name func(ic *importContext, d *schema.ResourceData) string
 	// Method to perform depth-first search and emit resources
 	List func(ic *importContext) error
 	// Search resource by non-ID attribute

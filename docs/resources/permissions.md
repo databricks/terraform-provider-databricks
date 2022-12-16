@@ -45,7 +45,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 }
 
 resource "databricks_permissions" "cluster_usage" {
-  cluster_id = databricks_cluster.shared_autoscaling.cluster_id
+  cluster_id = databricks_cluster.shared_autoscaling.id
 
   access_control {
     group_name       = databricks_group.auto.display_name

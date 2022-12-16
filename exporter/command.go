@@ -87,6 +87,7 @@ func Run(args ...string) error {
 	}
 	var skipInteractive bool
 	flags.BoolVar(&skipInteractive, "skip-interactive", false, "Skip interactive mode")
+	flags.BoolVar(&ic.includeUserDomains, "includeUserDomains", false, "Include domain portion in `databricks_user` resource name")
 	flags.StringVar(&ic.Directory, "directory", cwd,
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,

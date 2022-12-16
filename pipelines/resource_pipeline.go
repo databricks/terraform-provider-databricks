@@ -293,12 +293,6 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
 	common.MustSchemaPath(clustersSchema, "autoscale", "mode").DiffSuppressFunc = AutoscaleModeDiffSuppress
 
-	awsAttributes, _ := clustersSchema["aws_attributes"].Elem.(*schema.Resource)
-	awsAttributesSchema := awsAttributes.Schema
-	delete(awsAttributesSchema, "ebs_volume_type")
-	delete(awsAttributesSchema, "ebs_volume_count")
-	delete(awsAttributesSchema, "ebs_volume_size")
-
 	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
 	gcpAttributesSchema := gcpAttributes.Schema
 	delete(gcpAttributesSchema, "use_preemptible_executors")

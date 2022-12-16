@@ -19,20 +19,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccRemoveScopes(t *testing.T) {
-	if _, ok := os.LookupEnv("VSCODE_PID"); !ok {
-		t.Skip("Cleaning up tests only from IDE")
-	}
-	t.Parallel()
-	client := common.CommonEnvironmentClient()
-	scopesAPI := secrets.NewSecretScopesAPI(context.Background(), client)
-	scopeList, err := scopesAPI.List()
-	require.NoError(t, err)
-	for _, scope := range scopeList {
-		assert.NoError(t, scopesAPI.Delete(scope.Name))
-	}
-}
-
 func TestAzureAccKeyVaultSimple(t *testing.T) {
 	resourceID := qa.GetEnvOrSkipTest(t, "TEST_KEY_VAULT_RESOURCE_ID")
 	DNSName := qa.GetEnvOrSkipTest(t, "TEST_KEY_VAULT_DNS_NAME")

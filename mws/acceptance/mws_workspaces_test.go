@@ -100,7 +100,7 @@ func TestGcpAccByovpcWorkspaces(t *testing.T) {
 			    network = "{env.TEST_VPC_ID}"
 			}
 			
-			resource "google_compute_router_nat" "nat" {
+			resource "google_compute_router_nat" "this" {
 			    name                               = "{env.TEST_PREFIX}-nat-{var.RANDOM}"
 			    router                             = google_compute_router.this.name
 			    region                             = google_compute_router.this.region

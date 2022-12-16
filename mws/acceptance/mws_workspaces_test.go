@@ -86,7 +86,7 @@ func TestGcpAccaWorkspaces(t *testing.T) {
 	})
 }
 
-func TestGcpAccByovpcWorkspaces(t *testing.T) {
+func TestAccGcpByovpcWorkspaces(t *testing.T) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv != "gcp-accounts" {
 		t.Skip("Acceptance tests skipped unless CLOUD_ENV=gcp-accounts is set")

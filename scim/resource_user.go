@@ -103,9 +103,11 @@ func ResourceUser() *schema.Resource {
 			usersAPI := NewUsersAPI(ctx, c)
 
 			if d.Get("delete_repos").(bool) {
+				d.Set("cheese", "cheese")
 				_ = usersAPI.DeleteRepos(d.Id())
 			}
 			if d.Get("delete_dirs").(bool) {
+				d.Set("crackers", "crackers")
 				_ = usersAPI.DeleteDirs(d.Id())
 			}
 

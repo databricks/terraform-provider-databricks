@@ -442,7 +442,7 @@ func TestResourceUserDelete_Error(t *testing.T) {
 	require.Error(t, err, err)
 }
 
-func TestResourceUserDeleteRepos(t *testing.T) {
+func TestResourceUserDeleteReposAndDirs(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{ // create user
@@ -475,7 +475,7 @@ func TestResourceUserDeleteRepos(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/delete",
 				ExpectedRequest: workspace.DeletePath{
-					Path:      "/Repos/abc",
+					Path:      "/Users/abc",
 					Recursive: true,
 				},
 			},
@@ -489,8 +489,8 @@ func TestResourceUserDeleteRepos(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			delete_repos = false
-
+			delete_repos = true 
+			delete_dirs = true 
 		`,
 	}.Apply(t)
 	require.NoError(t, err, err)

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -43,6 +42,14 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			}
+			m["delete_repos"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["delete_dirs"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
 			}
 			return m
 		})
@@ -93,7 +100,16 @@ func ResourceUser() *schema.Resource {
 			return NewUsersAPI(ctx, c).Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewUsersAPI(ctx, c).Delete(d.Id())
+			usersAPI := NewUsersAPI(ctx, c)
+
+			if d.Get("delete_repos").(bool) {
+				_ = usersAPI.DeleteRepos(d.Id())
+			}
+			if d.Get("delete_dirs").(bool) {
+				_ = usersAPI.DeleteDirs(d.Id())
+			}
+
+			return usersAPI.Delete(d.Id())
 		},
 	}.ToResource()
 }

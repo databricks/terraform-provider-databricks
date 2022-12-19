@@ -10,6 +10,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
 func TestResourceUserRead(t *testing.T) {
@@ -438,6 +440,62 @@ func TestResourceUserDelete_Error(t *testing.T) {
 		ID:       "abc",
 	}.Apply(t)
 	require.Error(t, err, err)
+}
+
+func TestResourceUserDeleteRepos(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{ // create user
+				Method:   "POST",
+				Resource: "/api/2.0/preview/scim/v2/Users",
+				ExpectedRequest: User{
+					DisplayName: "Example user",
+					Active:      true,
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					UserName: "abc",
+					Schemas:  []URN{UserSchema},
+				},
+				Response: User{
+					ID: "abc",
+				},
+			},
+			{ // delete repo
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{ // delete dir
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{ // delete user
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+			delete_repos = false
+
+		`,
+	}.Apply(t)
+	require.NoError(t, err, err)
+	assert.Equal(t, "", d.Get("repos"))
+	assert.Equal(t, "", d.Get("home"))
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {

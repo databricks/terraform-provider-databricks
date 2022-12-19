@@ -56,10 +56,6 @@ type OdbcParams struct {
 	Path     string `json:"path"`
 	Protocol string `json:"protocol"`
 	Port     int32  `json:"port"`
-
-	// TODO: eventually remove this column,
-	// as it doesn't seem to be populated
-	Host string `json:"host,omitempty"`
 }
 
 // Tags ...

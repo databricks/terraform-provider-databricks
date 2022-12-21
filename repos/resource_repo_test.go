@@ -403,6 +403,53 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"branch": "releases"})
 }
 
+func TestResourceReposUpdateSparseCheckout(t *testing.T) {
+	resp := ReposInformation{
+		ID:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitID: "1124323423abc23424",
+	}
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/repos/121232342",
+				ExpectedRequest: map[string]any{"branch": "main",
+					"sparse_checkout": map[string]any{"patterns": []string{"abc", "def"}},
+				},
+				Response: resp,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+		},
+		Resource: ResourceRepo(),
+		InstanceState: map[string]string{
+			"url":                        "https://github.com/user/test.git",
+			"git_provider":               "gitHub",
+			"path":                       "/Repos/user@domain/test",
+			"branch":                     "main",
+			"sparse_checkout.0.patterns": `["abc"]`,
+		},
+		HCL: `
+			url = "https://github.com/user/test.git"
+			git_provider = "gitHub",
+			path = "/Repos/user@domain/test"
+			branch = "main"
+			sparse_checkout{
+				patterns = ["abc", "def"]
+			}
+			`,
+		ID:          "121232342",
+		Update:      true,
+		RequiresNew: true,
+	}.ApplyAndExpectData(t, map[string]any{"branch": "main"})
+}
+
 func TestReposListAll(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,

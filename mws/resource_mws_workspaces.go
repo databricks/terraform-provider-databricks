@@ -612,7 +612,7 @@ func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) 
 			if ok {
 				blocks, ok := unsafeCommonNetworkConfig.([]any)
 				if ok {
-					old, ok := commonNetworkConfig.(map[string]any)
+					old, ok := blocks[0].(map[string]any)
 					if ok {
 						newState["gke_config"] = []any{
 							map[string]any{

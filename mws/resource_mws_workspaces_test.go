@@ -38,7 +38,7 @@ func TestGcpaAccWorkspace(t *testing.T) {
 		AccountID:     acctID,
 		WorkspaceName: qa.RandomName(qa.GetEnvOrSkipTest(t, "TEST_PREFIX") + "-"),
 		Location:      qa.GetEnvOrSkipTest(t, "GOOGLE_REGION"),
-		CloudResourceBucket: &CloudResourceBucket{
+		CloudResourceBucket: &CloudResourceContainer{
 			GCP: &GCP{
 				ProjectID: qa.GetEnvOrSkipTest(t, "GOOGLE_PROJECT"),
 			},
@@ -122,23 +122,21 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 				ExpectedRequest: map[string]any{
 					"account_id": "abc",
 					"cloud":      "gcp",
-					"cloud_resource_bucket": map[string]any{
+					"cloud_resource_container": map[string]any{
 						"gcp": map[string]any{
 							"project_id": "def",
 						},
 					},
-					"location": "bcd",
-					"network": map[string]any{
-						"network_id": "net_id_a",
-						"gcp_common_network_config": map[string]any{
-							"gke_cluster_master_ip_range": "e",
-							"gke_connectivity_type":       "d",
-						},
-						"gcp_managed_network_config": map[string]any{
-							"gke_cluster_pod_ip_range":     "b",
-							"gke_cluster_service_ip_range": "c",
-							"subnet_cidr":                  "a",
-						},
+					"location":   "bcd",
+					"network_id": "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "d",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
 					},
 					"workspace_name": "labdata",
 				},
@@ -168,22 +166,20 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		workspace_name  = "labdata"
 		deployment_name = "900150983cd24fb0"
 		location        = "bcd"
-		cloud_resource_bucket {
+		cloud_resource_container {
 			gcp {
 				project_id = "def"
 			}
 		}
-		network {
-			network_id = "net_id_a"
-			gcp_managed_network_config {
-				subnet_cidr = "a"
-				gke_cluster_pod_ip_range = "b"
-				gke_cluster_service_ip_range = "c"
-			}
-			gcp_common_network_config {
-				gke_connectivity_type = "d"
-				gke_cluster_master_ip_range = "e"
-			}
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "d"
+			master_ip_range = "e"
 		}
 		`,
 		Gcp:    true,
@@ -1349,7 +1345,7 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 				ExpectedRequest: map[string]any{
 					"account_id": "abc",
 					"cloud":      "gcp",
-					"cloud_resource_bucket": map[string]any{
+					"cloud_resource_container": map[string]any{
 						"gcp": map[string]any{
 							"project_id": "def",
 						},
@@ -1374,16 +1370,14 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 					WorkspaceStatus: WorkspaceStatusRunning,
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
-					Network: &GCPNetwork{
-						GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
-							SubnetCIDR:               "a",
-							GKEClusterPodIPRange:     "b",
-							GKEClusterServiceIPRange: "c",
-						},
-						GCPCommonNetworkConfig: &GCPCommonNetworkConfig{
-							GKEConnectivityType:     "d",
-							GKEClusterMasterIPRange: "e",
-						},
+					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
+						SubnetCIDR:               "a",
+						GKEClusterPodIPRange:     "b",
+						GKEClusterServiceIPRange: "c",
+					},
+					GkeConfig: &GkeConfig{
+						ConnectivityType: "d",
+						MasterIPRange:    "e",
 					},
 				},
 			},
@@ -1394,7 +1388,7 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 		workspace_name  = "labdata"
 		deployment_name = "900150983cd24fb0"
 		location        = "bcd"
-		cloud_resource_bucket {
+		cloud_resource_container {
 			gcp {
 				project_id = "def"
 			}
@@ -1421,30 +1415,28 @@ func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
 					WorkspaceStatus: WorkspaceStatusRunning,
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
-					Network: &GCPNetwork{
-						GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
-							SubnetCIDR:               "a",
-							GKEClusterPodIPRange:     "b",
-							GKEClusterServiceIPRange: "c",
-						},
-						GCPCommonNetworkConfig: &GCPCommonNetworkConfig{
-							GKEConnectivityType:     "d",
-							GKEClusterMasterIPRange: "e",
-						},
+					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
+						SubnetCIDR:               "a",
+						GKEClusterPodIPRange:     "b",
+						GKEClusterServiceIPRange: "c",
+					},
+					GkeConfig: &GkeConfig{
+						ConnectivityType: "d",
+						MasterIPRange:    "e",
 					},
 				},
 			},
 		},
 		Resource: ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
-			"account_id":              "abc",
-			"workspace_name":          "labdata",
-			"deployment_name":         "900150983cd24fb0",
-			"location":                "bcd",
-			"workspace_id":            "1234",
-			"is_no_public_ip_enabled": "false",
-			"cloud_resource_bucket.#": "1",
-			"cloud_resource_bucket.0.gcp.0.project_id": "def",
+			"account_id":                 "abc",
+			"workspace_name":             "labdata",
+			"deployment_name":            "900150983cd24fb0",
+			"location":                   "bcd",
+			"workspace_id":               "1234",
+			"is_no_public_ip_enabled":    "false",
+			"cloud_resource_container.#": "1",
+			"cloud_resource_container.0.gcp.0.project_id": "def",
 			"cloud": "gcp",
 		},
 		HCL: `
@@ -1452,7 +1444,7 @@ func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
 		workspace_name  = "labdata"
 		deployment_name = "900150983cd24fb0"
 		location        = "bcd"
-		cloud_resource_bucket {
+		cloud_resource_container {
 			gcp {
 				project_id = "def"
 			}

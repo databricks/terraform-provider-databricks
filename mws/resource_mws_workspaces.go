@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -50,7 +51,7 @@ type GCP struct {
 	ProjectID string `json:"project_id"`
 }
 
-type CloudResourceBucket struct {
+type CloudResourceContainer struct {
 	GCP *GCP `json:"gcp"`
 }
 
@@ -60,15 +61,9 @@ type GCPManagedNetworkConfig struct {
 	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range" tf:"force_new"`
 }
 
-type GCPCommonNetworkConfig struct {
-	GKEConnectivityType     string `json:"gke_connectivity_type" tf:"force_new"`
-	GKEClusterMasterIPRange string `json:"gke_cluster_master_ip_range" tf:"force_new"`
-}
-
-type GCPNetwork struct {
-	NetworkID               string                   `json:"network_id,omitempty" tf:"force_new"`
-	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty" tf:"force_new"`
-	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config,omitempty" tf:"force_new"`
+type GkeConfig struct {
+	ConnectivityType string `json:"connectivity_type" tf:"force_new"`
+	MasterIPRange    string `json:"master_ip_range" tf:"force_new"`
 }
 
 type externalCustomerInfo struct {
@@ -79,29 +74,30 @@ type externalCustomerInfo struct {
 
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
-	AccountID                           string                `json:"account_id"`
-	WorkspaceName                       string                `json:"workspace_name"`
-	DeploymentName                      string                `json:"deployment_name,omitempty"`
-	AwsRegion                           string                `json:"aws_region,omitempty"`               // required for AWS, not allowed for GCP
-	CredentialsID                       string                `json:"credentials_id,omitempty"`           // required for AWS, not allowed for GCP
-	CustomerManagedKeyID                string                `json:"customer_managed_key_id,omitempty"`  // just for compatibility, will be removed
-	StorageConfigurationID              string                `json:"storage_configuration_id,omitempty"` // required for AWS, not allowed for GCP
-	ManagedServicesCustomerManagedKeyID string                `json:"managed_services_customer_managed_key_id,omitempty"`
-	StorageCustomerManagedKeyID         string                `json:"storage_customer_managed_key_id,omitempty"`
-	PricingTier                         string                `json:"pricing_tier,omitempty" tf:"computed"`
-	PrivateAccessSettingsID             string                `json:"private_access_settings_id,omitempty"`
-	NetworkID                           string                `json:"network_id,omitempty" tf:"suppress_diff"`
-	IsNoPublicIPEnabled                 bool                  `json:"is_no_public_ip_enabled" tf:"optional,default:true"`
-	WorkspaceID                         int64                 `json:"workspace_id,omitempty" tf:"computed"`
-	WorkspaceURL                        string                `json:"workspace_url,omitempty" tf:"computed"`
-	WorkspaceStatus                     string                `json:"workspace_status,omitempty" tf:"computed"`
-	WorkspaceStatusMessage              string                `json:"workspace_status_message,omitempty" tf:"computed"`
-	CreationTime                        int64                 `json:"creation_time,omitempty" tf:"computed"`
-	ExternalCustomerInfo                *externalCustomerInfo `json:"external_customer_info,omitempty"`
-	CloudResourceBucket                 *CloudResourceBucket  `json:"cloud_resource_bucket,omitempty"`
-	Network                             *GCPNetwork           `json:"network,omitempty"`
-	Cloud                               string                `json:"cloud,omitempty" tf:"computed"`
-	Location                            string                `json:"location,omitempty"`
+	AccountID                           string                   `json:"account_id"`
+	WorkspaceName                       string                   `json:"workspace_name"`
+	DeploymentName                      string                   `json:"deployment_name,omitempty"`
+	AwsRegion                           string                   `json:"aws_region,omitempty"`               // required for AWS, not allowed for GCP
+	CredentialsID                       string                   `json:"credentials_id,omitempty"`           // required for AWS, not allowed for GCP
+	CustomerManagedKeyID                string                   `json:"customer_managed_key_id,omitempty"`  // just for compatibility, will be removed
+	StorageConfigurationID              string                   `json:"storage_configuration_id,omitempty"` // required for AWS, not allowed for GCP
+	ManagedServicesCustomerManagedKeyID string                   `json:"managed_services_customer_managed_key_id,omitempty"`
+	StorageCustomerManagedKeyID         string                   `json:"storage_customer_managed_key_id,omitempty"`
+	PricingTier                         string                   `json:"pricing_tier,omitempty" tf:"computed"`
+	PrivateAccessSettingsID             string                   `json:"private_access_settings_id,omitempty"`
+	NetworkID                           string                   `json:"network_id,omitempty" tf:"suppress_diff"`
+	IsNoPublicIPEnabled                 bool                     `json:"is_no_public_ip_enabled" tf:"optional,default:true"`
+	WorkspaceID                         int64                    `json:"workspace_id,omitempty" tf:"computed"`
+	WorkspaceURL                        string                   `json:"workspace_url,omitempty" tf:"computed"`
+	WorkspaceStatus                     string                   `json:"workspace_status,omitempty" tf:"computed"`
+	WorkspaceStatusMessage              string                   `json:"workspace_status_message,omitempty" tf:"computed"`
+	CreationTime                        int64                    `json:"creation_time,omitempty" tf:"computed"`
+	ExternalCustomerInfo                *externalCustomerInfo    `json:"external_customer_info,omitempty"`
+	CloudResourceBucket                 *CloudResourceContainer  `json:"cloud_resource_container,omitempty"`
+	GCPManagedNetworkConfig             *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty"`
+	GkeConfig                           *GkeConfig               `json:"gke_config"`
+	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
+	Location                            string                   `json:"location,omitempty"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -115,14 +111,11 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 		return json.Marshal(aWorkspace(*w))
 	}
 	workspaceCreationRequest := map[string]any{
-		"account_id":            w.AccountID,
-		"cloud":                 w.Cloud,
-		"cloud_resource_bucket": w.CloudResourceBucket,
-		"location":              w.Location,
-		"workspace_name":        w.WorkspaceName,
-	}
-	if w.Network != nil {
-		workspaceCreationRequest["network"] = w.Network
+		"account_id":               w.AccountID,
+		"cloud":                    w.Cloud,
+		"cloud_resource_container": w.CloudResourceBucket,
+		"location":                 w.Location,
+		"workspace_name":           w.WorkspaceName,
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -289,13 +282,6 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 		// generate workspace URL based on client's hostname, if response contains no URL
 		host := generateWorkspaceHostname(a.client, mwsWorkspace)
 		mwsWorkspace.WorkspaceURL = fmt.Sprintf("https://%s", host)
-	}
-
-	if err == nil && mwsWorkspace.Network != nil {
-		//null out all network properties for GCP managed VPC
-		if mwsWorkspace.Network.NetworkID == "" {
-			mwsWorkspace.Network = nil
-		}
 	}
 	return mwsWorkspace, err
 }
@@ -498,6 +484,13 @@ func ResourceMwsWorkspaces() *schema.Resource {
 	return common.Resource{
 		Schema:        workspaceSchema,
 		SchemaVersion: 2,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 2,
+				Type:    workspaceSchemaV2(),
+				Upgrade: workspaceMigrateV2,
+			},
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
@@ -578,4 +571,241 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
 	}.ToResource()
+}
+
+func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	newState := map[string]any{}
+	for k, v := range rawState {
+		switch k {
+		case "cloud_resource_bucket":
+			newState["cloud_resource_container"] = v
+			log.Printf("[INFO] cloud_resource_bucket is renamed to cloud_resource_container")
+		case "network":
+			oldNetwork, ok := rawState["network"].(map[string]any)
+			if !ok {
+				log.Printf("[ERROR] how can network not be a map?..")
+			}
+			for nk, nv := range oldNetwork {
+				switch nk {
+				case "network_id":
+					newState["network_id"] = nv
+				case "gcp_common_network_config":
+					commonNetworkConfig := nv.(map[string]any)
+					newState["gke_config"] = map[string]any{
+						"master_ip_range":   commonNetworkConfig["gke_cluster_master_ip_range"],
+						"connectivity_type": commonNetworkConfig["gke_connectivity_type"],
+					}
+				case "gcp_managed_network_config":
+					newState["gcp_managed_network_config"] = nv
+				}
+			}
+			log.Printf("[INFO] network fields are moved to the top level")
+		default:
+			newState[k] = v
+		}
+	}
+	return newState, nil
+}
+
+func workspaceSchemaV2() cty.Type {
+	return (&schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"account_id": {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+			},
+			"aws_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"cloud": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"creation_time": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"credentials_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"customer_managed_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"deployment_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"is_no_public_ip_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"location": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"managed_services_customer_managed_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"network_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"pricing_tier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"private_access_settings_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_configuration_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_customer_managed_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"workspace_id": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"workspace_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"workspace_status": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"workspace_status_message": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"workspace_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"cloud_resource_bucket": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"gcp": {
+							Type: schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"project_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"external_customer_info": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authoritative_user_email": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"authoritative_user_full_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"customer_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"network": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"network_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"gcp_common_network_config": {
+							Type: schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"gke_cluster_master_ip_range": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"gke_connectivity_type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"gcp_managed_network_config": {
+							Type: schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"gke_cluster_pod_ip_range": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"gke_cluster_service_ip_range": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"subnet_cidr": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"token": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"comment": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"lifetime_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"token_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"token_value": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Computed:  true,
+							Sensitive: true,
+						},
+					},
+				},
+			},
+		},
+	}).CoreConfigSchema().ImpliedType()
 }

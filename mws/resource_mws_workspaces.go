@@ -94,8 +94,8 @@ type Workspace struct {
 	CreationTime                        int64                    `json:"creation_time,omitempty" tf:"computed"`
 	ExternalCustomerInfo                *externalCustomerInfo    `json:"external_customer_info,omitempty"`
 	CloudResourceBucket                 *CloudResourceContainer  `json:"cloud_resource_container,omitempty"`
-	GCPManagedNetworkConfig             *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty"`
-	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty"`
+	GCPManagedNetworkConfig             *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty" tf:"suppress_diff"`
+	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
 }
@@ -590,9 +590,19 @@ func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) 
 			newState["cloud_resource_container"] = v
 			log.Printf("[INFO] cloud_resource_bucket is renamed to cloud_resource_container")
 		case "network":
-			oldNetwork, ok := rawState["network"].(map[string]any)
+			block, ok := rawState["network"].([]any)
+			if !ok {
+				log.Printf("[ERROR] how can network not be a single-element list?")
+				continue
+			}
+			if len(block) == 0 {
+				log.Printf("[ERROR] network block is empty")
+				continue
+			}
+			oldNetwork, ok := block[0].(map[string]any)
 			if !ok {
 				log.Printf("[ERROR] how can network not be a map?..")
+				continue
 			}
 			networkId, ok := oldNetwork["network_id"]
 			if ok {

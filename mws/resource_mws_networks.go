@@ -75,6 +75,13 @@ func ResourceMwsNetworks() *schema.Resource {
 		s["subnet_ids"].MinItems = 2
 		s["security_group_ids"].MinItems = 1
 		s["security_group_ids"].MaxItems = 5
+
+		s["vpc_id"].ExactlyOneOf = []string{"vpc_id", "gcp_network_info"}
+		s["subnet_ids"].ExactlyOneOf = []string{"subnet_ids", "gcp_network_info"}
+		s["security_group_ids"].ExactlyOneOf = []string{"security_group_ids", "gcp_network_info"}
+		s["vpc_endpoints"].ConflictsWith = []string{"gcp_network_info"}
+		s["gcp_network_info"].ConflictsWith = []string{"vpc_id", "subnet_ids", "security_group_ids", "vpc_endpoints"}
+
 		return s
 	})
 	p := common.NewPairSeparatedID("account_id", "network_id", "/")

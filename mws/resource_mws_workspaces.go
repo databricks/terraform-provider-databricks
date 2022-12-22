@@ -95,7 +95,7 @@ type Workspace struct {
 	ExternalCustomerInfo                *externalCustomerInfo    `json:"external_customer_info,omitempty"`
 	CloudResourceBucket                 *CloudResourceContainer  `json:"cloud_resource_container,omitempty"`
 	GCPManagedNetworkConfig             *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty"`
-	GkeConfig                           *GkeConfig               `json:"gke_config"`
+	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
 }
@@ -116,6 +116,15 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 		"cloud_resource_container": w.CloudResourceBucket,
 		"location":                 w.Location,
 		"workspace_name":           w.WorkspaceName,
+	}
+	if w.NetworkID != "" {
+		workspaceCreationRequest["network_id"] = w.NetworkID
+	}
+	if w.GkeConfig != nil {
+		workspaceCreationRequest["gke_config"] = w.GkeConfig
+	}
+	if w.GCPManagedNetworkConfig != nil {
+		workspaceCreationRequest["gcp_managed_network_config"] = w.GCPManagedNetworkConfig
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -585,19 +594,22 @@ func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) 
 			if !ok {
 				log.Printf("[ERROR] how can network not be a map?..")
 			}
-			for nk, nv := range oldNetwork {
-				switch nk {
-				case "network_id":
-					newState["network_id"] = nv
-				case "gcp_common_network_config":
-					commonNetworkConfig := nv.(map[string]any)
-					newState["gke_config"] = map[string]any{
-						"master_ip_range":   commonNetworkConfig["gke_cluster_master_ip_range"],
-						"connectivity_type": commonNetworkConfig["gke_connectivity_type"],
-					}
-				case "gcp_managed_network_config":
-					newState["gcp_managed_network_config"] = nv
+			networkId, ok := oldNetwork["network_id"]
+			if ok {
+				newState["network_id"] = networkId
+			}
+			commonNetworkConfig, ok := oldNetwork["gcp_common_network_config"]
+			if ok {
+				old := commonNetworkConfig.(map[string]any)
+				newState["gke_config"] = map[string]any{
+					"master_ip_range":   old["gke_cluster_master_ip_range"],
+					"connectivity_type": old["gke_connectivity_type"],
 				}
+				log.Printf("[INFO] moved network.gcp_common_network_config to gke_config")
+			}
+			managedNetworkConfig, ok := oldNetwork["gcp_managed_network_config"]
+			if ok {
+				newState["gcp_managed_network_config"] = managedNetworkConfig
 			}
 			log.Printf("[INFO] network fields are moved to the top level")
 		default:

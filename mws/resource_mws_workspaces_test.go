@@ -1336,7 +1336,7 @@ func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -1396,65 +1396,5 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 		`,
 		Gcp:    true,
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, []any([]any{}), d.Get("network"), "Network configuration should be ignored")
-}
-
-func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
-				Response: Workspace{
-					AccountID:       "abc",
-					Cloud:           "gcp",
-					WorkspaceID:     1234,
-					WorkspaceStatus: WorkspaceStatusRunning,
-					DeploymentName:  "900150983cd24fb0",
-					WorkspaceName:   "labdata",
-					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
-						SubnetCIDR:               "a",
-						GKEClusterPodIPRange:     "b",
-						GKEClusterServiceIPRange: "c",
-					},
-					GkeConfig: &GkeConfig{
-						ConnectivityType: "d",
-						MasterIPRange:    "e",
-					},
-				},
-			},
-		},
-		Resource: ResourceMwsWorkspaces(),
-		InstanceState: map[string]string{
-			"account_id":                 "abc",
-			"workspace_name":             "labdata",
-			"deployment_name":            "900150983cd24fb0",
-			"location":                   "bcd",
-			"workspace_id":               "1234",
-			"is_no_public_ip_enabled":    "false",
-			"cloud_resource_container.#": "1",
-			"cloud_resource_container.0.gcp.0.project_id": "def",
-			"cloud": "gcp",
-		},
-		HCL: `
-		account_id      = "abc"
-		workspace_name  = "labdata"
-		deployment_name = "900150983cd24fb0"
-		location        = "bcd"
-		cloud_resource_container {
-			gcp {
-				project_id = "def"
-			}
-		}
-		`,
-		Gcp:    true,
-		Update: true,
-		ID:     "abc/1234",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
-	assert.Equal(t, []any([]any{}), d.Get("network"), "Network configuration should be ignored")
+	}.ApplyNoError(t)
 }

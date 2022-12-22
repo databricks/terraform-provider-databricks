@@ -608,16 +608,21 @@ func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) 
 			if ok {
 				newState["network_id"] = networkId
 			}
-			commonNetworkConfig, ok := oldNetwork["gcp_common_network_config"]
+			unsafeCommonNetworkConfig, ok := oldNetwork["gcp_common_network_config"]
 			if ok {
-				old := commonNetworkConfig.(map[string]any)
-				newState["gke_config"] = []any{
-					map[string]any{
-						"master_ip_range":   old["gke_cluster_master_ip_range"],
-						"connectivity_type": old["gke_connectivity_type"],
-					},
+				blocks, ok := unsafeCommonNetworkConfig.([]any)
+				if ok {
+					old, ok := commonNetworkConfig.(map[string]any)
+					if ok {
+						newState["gke_config"] = []any{
+							map[string]any{
+								"master_ip_range":   old["gke_cluster_master_ip_range"],
+								"connectivity_type": old["gke_connectivity_type"],
+							},
+						}
+						log.Printf("[INFO] moved network.gcp_common_network_config to gke_config")
+					}
 				}
-				log.Printf("[INFO] moved network.gcp_common_network_config to gke_config")
 			}
 			managedNetworkConfig, ok := oldNetwork["gcp_managed_network_config"]
 			if ok {

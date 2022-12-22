@@ -483,7 +483,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 	}
 	return common.Resource{
 		Schema:        workspaceSchema,
-		SchemaVersion: 2,
+		SchemaVersion: 3,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 2,

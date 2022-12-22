@@ -13,7 +13,7 @@ Note that Databricks to Databricks sharing automatically creates the provider.
 
 ```hcl
 resource "databricks_provider" "dbprovider" {
-  name = "sri-terraform-test-provider"
+  name = "terraform-test-provider"
   comment = "made by terraform 2"
   authentication_type = "TOKEN"
   recipient_profile_str = jsonencode(
@@ -21,7 +21,7 @@ resource "databricks_provider" "dbprovider" {
         "shareCredentialsVersion":1,
         "bearerToken":"token",
         "endpoint":"endpoint",
-        "expirationTime":"expiration-time"})
+        "expirationTime":"expiration-time"
     }
   )
 }

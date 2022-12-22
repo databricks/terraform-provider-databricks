@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,11 +28,6 @@ type Providers struct {
 	Providers []ProviderInfo `json:"providers"`
 }
 
-//func (a ProvidersAPI) list() (Providers Providers, err error) {
-//	err = a.client.Get(a.context, "/unity-catalog/providers", nil, &Providers)
-//	return
-//}
-
 func (a ProvidersAPI) createProvider(ci *ProviderInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/providers", ci, ci)
 }
@@ -55,15 +51,15 @@ func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
 }
 
 func ResourceProvider() *schema.Resource {
-	providerschema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+	providerSchema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
 		return m
 	})
 	return common.Resource{
-		Schema: providerschema,
+		Schema: providerSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo
-			common.DataToStructPointer(d, providerschema, &ri)
+			common.DataToStructPointer(d, providerSchema, &ri)
 			if err := NewProvidersAPI(ctx, c).createProvider(&ri); err != nil {
 				return err
 			}
@@ -75,11 +71,11 @@ func ResourceProvider() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(ri, providerschema, d)
+			return common.StructToData(ri, providerSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo
-			common.DataToStructPointer(d, providerschema, &ri)
+			common.DataToStructPointer(d, providerSchema, &ri)
 			return NewProvidersAPI(ctx, c).updateProvider(&ri)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

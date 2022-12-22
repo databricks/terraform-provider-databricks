@@ -106,6 +106,7 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 				}
 
 				network_id = databricks_mws_networks.this.network_id
+				
 				gke_config {
 					connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
 					master_ip_range = "10.3.0.0/28"

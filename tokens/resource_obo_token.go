@@ -10,8 +10,8 @@ import (
 
 type OboToken struct {
 	ApplicationID   string `json:"application_id"`
-	LifetimeSeconds int32  `json:"lifetime_seconds"`
-	Comment         string `json:"comment"`
+	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
+	Comment         string `json:"comment,omitempty"`
 }
 
 func NewTokenManagementAPI(ctx context.Context, m any) TokenManagementAPI {

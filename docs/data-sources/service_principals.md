@@ -18,7 +18,7 @@ data "databricks_group" "admins" {
 }
 
 data "databricks_service_principals" "spns" {
-  display_name = "my-spn"
+  display_name_contains = "my-spn"
 }
 
 data "databricks_service_principal" "spn" {

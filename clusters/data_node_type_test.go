@@ -106,10 +106,10 @@ func TestNodeType(t *testing.T) {
 		Resource:    DataSourceNodeType(),
 		NonWritable: true,
 		State: map[string]any{
-			"local_disk":    true,
-			"min_memory_gb": 8,
-			"min_cores":     8,
-			"min_gpus":      1,
+			"local_disk_min_size": 200,
+			"min_memory_gb":       8,
+			"min_cores":           8,
+			"min_gpus":            1,
 		},
 		ID: ".",
 	}.Apply(t)

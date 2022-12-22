@@ -22,6 +22,7 @@ import (
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
+	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
 	BaseParameters map[string]string `json:"base_parameters,omitempty"`
 }
 
@@ -81,18 +82,46 @@ type SqlTask struct {
 // DbtTask contains information about DBT task
 // TODO: add validation for non-empty commands
 type DbtTask struct {
-	ProjectDirectory string   `json:"project_directory,omitempty"`
-	Commands         []string `json:"commands"`
-	Schema           string   `json:"schema,omitempty" tf:"default:default"`
+	Commands          []string `json:"commands"`
+	ProfilesDirectory string   `json:"profiles_directory,omitempty"`
+	ProjectDirectory  string   `json:"project_directory,omitempty"`
+	Schema            string   `json:"schema,omitempty" tf:"default:default"`
+	Catalog           string   `json:"catalog,omitempty"`
+	WarehouseId       string   `json:"warehouse_id,omitempty"`
 }
 
-// EmailNotifications contains the information for email notifications after job completion
+// EmailNotifications contains the information for email notifications after job or task run start or completion
 type EmailNotifications struct {
 	OnStart               []string `json:"on_start,omitempty"`
 	OnSuccess             []string `json:"on_success,omitempty"`
 	OnFailure             []string `json:"on_failure,omitempty"`
 	NoAlertForSkippedRuns bool     `json:"no_alert_for_skipped_runs,omitempty"`
 	AlertOnLastAttempt    bool     `json:"alert_on_last_attempt,omitempty"`
+}
+
+// WebhookNotifications contains the information for webhook notifications sent after job start or completion.
+type WebhookNotifications struct {
+	OnStart   []Webhook `json:"on_start,omitempty"`
+	OnSuccess []Webhook `json:"on_success,omitempty"`
+	OnFailure []Webhook `json:"on_failure,omitempty"`
+}
+
+func (wn *WebhookNotifications) Sort() {
+	if wn == nil {
+		return
+	}
+
+	notifs := [][]Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
+	for _, ns := range notifs {
+		sort.Slice(ns, func(i, j int) bool {
+			return ns[i].ID < ns[j].ID
+		})
+	}
+}
+
+// Webhook contains a reference by id to one of the centrally configured webhooks.
+type Webhook struct {
+	ID string `json:"id"`
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -159,6 +188,7 @@ type JobSettings struct {
 	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`
@@ -176,10 +206,11 @@ type JobSettings struct {
 	GitSource *GitSource `json:"git_source,omitempty"`
 	// END Jobs + Repo integration preview
 
-	Schedule           *CronSchedule       `json:"schedule,omitempty"`
-	MaxConcurrentRuns  int32               `json:"max_concurrent_runs,omitempty"`
-	EmailNotifications *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
-	Tags               map[string]string   `json:"tags,omitempty"`
+	Schedule             *CronSchedule         `json:"schedule,omitempty"`
+	MaxConcurrentRuns    int32                 `json:"max_concurrent_runs,omitempty"`
+	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	Tags                 map[string]string     `json:"tags,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -192,9 +223,14 @@ func (js *JobSettings) sortTasksByKey() {
 	})
 }
 
-// JobList returns a list of all jobs
-type JobList struct {
-	Jobs []Job `json:"jobs"`
+func (js *JobSettings) sortWebhooksByID() {
+	js.WebhookNotifications.Sort()
+}
+
+// JobListResponse returns a list of all jobs
+type JobListResponse struct {
+	Jobs    []Job `json:"jobs"`
+	HasMore bool  `json:"has_more,omitempty"`
 }
 
 // Job contains the information when using a GET request from the Databricks Jobs api
@@ -274,9 +310,38 @@ type JobsAPI struct {
 	context context.Context
 }
 
+// List all jobs matching the name. If name is empty, returns all jobs
+func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
+	jobs := []Job{}
+	params := map[string]interface{}{
+		"limit":        25,
+		"expand_tasks": expandTasks,
+	}
+	if name != "" {
+		params["name"] = name
+	}
+	offset := 0
+
+	ctx := context.WithValue(a.context, common.Api, common.API_2_1)
+	for {
+		var resp JobListResponse
+		params["offset"] = offset
+		err := a.client.Get(ctx, "/jobs/list", params, &resp)
+		if err != nil {
+			return nil, err
+		}
+		jobs = append(jobs, resp.Jobs...)
+		if !resp.HasMore {
+			break
+		}
+		offset += len(resp.Jobs)
+	}
+	return jobs, nil
+}
+
 // List all jobs
-func (a JobsAPI) List() (l JobList, err error) {
-	err = a.client.Get(a.context, "/jobs/list", nil, &l)
+func (a JobsAPI) List() (l []Job, err error) {
+	l, err = a.ListByName("", false)
 	return
 }
 
@@ -378,6 +443,7 @@ func (a JobsAPI) Restart(id string, timeout time.Duration) error {
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
 	jobSettings.sortTasksByKey()
+	jobSettings.sortWebhooksByID()
 	var gitSource *GitSource = jobSettings.GitSource
 	if gitSource != nil && gitSource.Provider == "" {
 		gitSource.Provider = repos.GetGitProviderFromUrl(gitSource.Url)
@@ -415,6 +481,7 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 	}, &job), id)
 	if job.Settings != nil {
 		job.Settings.sortTasksByKey()
+		job.Settings.sortWebhooksByID()
 	}
 	return
 }

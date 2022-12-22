@@ -240,3 +240,110 @@ func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	assert.Equal(t, "a", diff.Changes[0].Add[0])
 	assert.Equal(t, "c", diff.Changes[0].Remove[0])
 }
+
+func TestShareGrantCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
+				ExpectedRequest: permissionsDiff{
+					Changes: []permissionsChange{
+						{
+							Principal: "me",
+							Add:       []string{"SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		share = "myshare"
+
+		grant {
+			principal = "me"
+			privileges = ["SELECT"]
+		}`,
+	}.ApplyNoError(t)
+}
+
+func TestShareGrantUpdate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
+				ExpectedRequest: permissionsDiff{
+					Changes: []permissionsChange{
+						{
+							Principal: "me",
+							Remove:    []string{"SELECT"},
+						},
+						{
+							Principal: "you",
+							Add:       []string{"SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "you",
+							Privileges: []string{"SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Update:   true,
+		ID:       "share/myshare",
+		InstanceState: map[string]string{
+			"share": "myshare",
+		},
+		HCL: `
+		share = "myshare"
+
+		grant {
+			principal = "you"
+			privileges = ["SELECT"]
+		}`,
+	}.ApplyNoError(t)
+}

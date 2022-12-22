@@ -20,6 +20,7 @@ func NewCatalogsAPI(ctx context.Context, m any) CatalogsAPI {
 type CatalogInfo struct {
 	Name        string            `json:"name" tf:"force_new"`
 	Comment     string            `json:"comment,omitempty"`
+	StorageRoot string            `json:"storage_root,omitempty" tf:"force_new"`
 	Properties  map[string]string `json:"properties,omitempty"`
 	Owner       string            `json:"owner,omitempty" tf:"computed"`
 	MetastoreID string            `json:"metastore_id,omitempty" tf:"computed"`
@@ -44,13 +45,32 @@ func (a CatalogsAPI) getCatalog(name string) (ci CatalogInfo, err error) {
 }
 
 func (a CatalogsAPI) deleteCatalog(name string) error {
-	// TODO: force_destroy attribute
-	return a.client.Delete(a.context, "/unity-catalog/catalogs/"+name+"?force=true", nil)
+	return a.client.Delete(a.context, "/unity-catalog/catalogs/"+name, nil)
+}
+
+func (a CatalogsAPI) forceDeleteCatalog(name string) error {
+	schemasAPI := NewSchemasAPI(a.context, a.client)
+	schemas, err := schemasAPI.listByCatalog(name)
+	if err != nil {
+		return err
+	}
+	for _, s := range schemas.Schemas {
+		if s.Name != name+".information_schema" {
+			schemasAPI.forceDeleteSchema(s.FullName)
+		}
+	}
+
+	return a.client.Delete(a.context, "/unity-catalog/catalogs/"+name, nil)
 }
 
 func ResourceCatalog() *schema.Resource {
 	catalogSchema := common.StructToSchema(CatalogInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["force_destroy"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			}
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/catalogs", []string{"owner", "comment", "properties"})
@@ -77,7 +97,12 @@ func ResourceCatalog() *schema.Resource {
 		},
 		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewCatalogsAPI(ctx, c).deleteCatalog(d.Id())
+			force := d.Get("force_destroy").(bool)
+			if force {
+				return NewCatalogsAPI(ctx, c).forceDeleteCatalog(d.Id())
+			} else {
+				return NewCatalogsAPI(ctx, c).deleteCatalog(d.Id())
+			}
 		},
 	}.ToResource()
 }

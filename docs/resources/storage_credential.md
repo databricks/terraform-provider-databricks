@@ -3,8 +3,6 @@ subcategory: "Unity Catalog"
 ---
 # databricks_storage_credential Resource
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access.
-
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
 
 - `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal/managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
@@ -36,30 +34,25 @@ For Azure
 
 ```hcl
 data "azurerm_resource_group" "this" {
-  name     = "example-rg"
+  name = "example-rg"
 }
 
-resource "azapi_resource" "access_connector" {
-  type      = "Microsoft.Databricks/accessConnectors@2022-04-01-preview"
-  name      = "example-databricks-mi"
-  location  = data.azurerm_resource_group.this.location
-  parent_id = data.azurerm_resource_group.this.id
-  tags = {
-    tagName1 = "tagValue1"
-    tagName2 = "tagValue2"
-  }
+resource "azurerm_databricks_access_connector" "example" {
+  name                = "databrickstest"
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
   identity {
     type = "SystemAssigned"
   }
-  body = jsonencode({
-    properties = {}
-  })
+  tags = {
+    Environment = "Production"
+  }
 }
 
 resource "databricks_storage_credential" "external_mi" {
   name = "mi_credential"
   azure_managed_identity {
-    access_connector_id = azapi_resource.access_connector.id
+    access_connector_id = azurerm_databricks_access_connector.example.id
   }
   comment = "Managed identity credential managed by TF"
 }

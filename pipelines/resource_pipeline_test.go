@@ -326,7 +326,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 			Include: []string{"com.databricks.include"},
 		},
 		Channel: "CURRENT",
-		Edition: "advanced",
+		Edition: "ADVANCED",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -428,7 +428,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 			Include: []string{"com.databricks.include"},
 		},
 		Channel: "CURRENT",
-		Edition: "advanced",
+		Edition: "ADVANCED",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -590,4 +590,12 @@ func TestListPipelinesWithFilter(t *testing.T) {
 	data, err := NewPipelinesAPI(ctx, client).List(1, "name LIKE 'Pipeline1'")
 	require.NoError(t, err)
 	require.Equal(t, 1, len(data))
+}
+
+func TestStorageSuppressDiff(t *testing.T) {
+	k := "storage"
+	generated := "dbfs:/pipelines/c609bbb0-2e42-4bc8-bb4e-a1c26d6e9403"
+	require.True(t, suppressStorageDiff(k, generated, "", nil))
+	require.False(t, suppressStorageDiff(k, generated, "/tmp/abc", nil))
+	require.False(t, suppressStorageDiff(k, "/tmp/abc", "", nil))
 }

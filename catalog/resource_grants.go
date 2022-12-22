@@ -97,13 +97,20 @@ func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
+func getPermissionEndpoint(securable, name string) string {
+	if securable == "share" {
+		return fmt.Sprintf("/unity-catalog/shares/%s/permissions", name)
+	}
+	return fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name)
+}
+
 func (a PermissionsAPI) getPermissions(securable, name string) (list PermissionsList, err error) {
-	err = a.client.Get(a.context, fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name), nil, &list)
+	err = a.client.Get(a.context, getPermissionEndpoint(securable, name), nil, &list)
 	return
 }
 
 func (a PermissionsAPI) updatePermissions(securable, name string, diff permissionsDiff) error {
-	return a.client.Patch(a.context, fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name), diff)
+	return a.client.Patch(a.context, getPermissionEndpoint(securable, name), diff)
 }
 
 // replacePermissions merges removal diff of existing permissions on the platform
@@ -171,9 +178,18 @@ var mapping = securableMapping{
 		"USAGE":  true,
 
 		// v1.0
-		"ALL_PRIVILEGES": true,
-		"USE_CATALOG":    true,
-		"CREATE_SCHEMA":  true,
+		"ALL_PRIVILEGES":           true,
+		"USE_CATALOG":              true,
+		"USE_SCHEMA":               true,
+		"CREATE_SCHEMA":            true,
+		"CREATE_TABLE":             true,
+		"CREATE_VIEW":              true,
+		"CREATE_FUNCTION":          true,
+		"CREATE_MATERIALIZED_VIEW": true,
+		"EXECUTE":                  true,
+		"MODIFY":                   true,
+		"SELECT":                   true,
+		"REFRESH":                  true,
 	},
 	"schema": {
 		"CREATE": true,
@@ -186,6 +202,10 @@ var mapping = securableMapping{
 		"CREATE_VIEW":              true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"EXECUTE":                  true,
+		"MODIFY":                   true,
+		"SELECT":                   true,
+		"REFRESH":                  true,
 	},
 	"storage_credential": {
 		"CREATE_TABLE":             true,
@@ -203,8 +223,9 @@ var mapping = securableMapping{
 		"WRITE_FILES":  true,
 
 		// v1.0
-		"ALL_PRIVILEGES":        true,
-		"CREATE_EXTERNAL_TABLE": true,
+		"ALL_PRIVILEGES":         true,
+		"CREATE_EXTERNAL_TABLE":  true,
+		"CREATE MANAGED STORAGE": true,
 	},
 	"metastore": {
 		// v1.0
@@ -216,7 +237,16 @@ var mapping = securableMapping{
 		"CREATE_PROVIDER":           true,
 	},
 	"function": {
-		"EXECUTE": true,
+		"ALL_PRIVILEGES": true,
+		"EXECUTE":        true,
+	},
+	"materialized_view": {
+		"ALL_PRIVILEGES": true,
+		"SELECT":         true,
+		"REFRESH":        true,
+	},
+	"share": {
+		"SELECT": true,
 	},
 }
 

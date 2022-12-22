@@ -37,6 +37,7 @@ type SQLEndpoint struct {
 	Tags                    *Tags           `json:"tags,omitempty" tf:"suppress_diff"`
 	SpotInstancePolicy      string          `json:"spot_instance_policy,omitempty" tf:"default:COST_OPTIMIZED"`
 	Channel                 *ReleaseChannel `json:"channel,omitempty" tf:"suppress_diff"`
+	WarehouseType           string          `json:"warehouse_type,omitempty" tf:"suppress_diff"`
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources
@@ -76,7 +77,6 @@ type Tag struct {
 //
 // Note: this object returns more fields than contained in this struct,
 // but we only list the ones that are in use here.
-//
 type DataSource struct {
 	ID         string `json:"id"`
 	EndpointID string `json:"endpoint_id"`
@@ -198,6 +198,8 @@ func ResourceSqlEndpoint() *schema.Resource {
 			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
+		m["warehouse_type"].ValidateDiagFunc = validation.ToDiagFunc(
+			validation.StringInSlice([]string{"PRO", "CLASSIC"}, false))
 		return m
 	})
 	return common.Resource{

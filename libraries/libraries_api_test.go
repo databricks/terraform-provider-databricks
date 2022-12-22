@@ -31,6 +31,15 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 		},
 		{
 			Method:       "GET",
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=1005-abcd",
+			ReuseRequest: true,
+			Status:       400,
+			Response: common.APIError{
+				Message: "Cluster 1005-abcd does not exist",
+			},
+		},
+		{
+			Method:       "GET",
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=still-installing",
 			ReuseRequest: true,
 			Response: ClusterLibraryStatuses{
@@ -114,6 +123,15 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			"failed-wheel", 50 * time.Millisecond, true, true,
 		})
 		assert.NoError(t, err, "library should have been uninstalled and work proceeded")
+
+		// Cluster not available or doesn't exist
+		_, err = libs.WaitForLibrariesInstalled(Wait{
+			"1005-abcd", 50 * time.Millisecond, false, false,
+		})
+
+		ae, _ := err.(common.APIError)
+		assert.Equal(t, 404, ae.StatusCode)
+		assert.Equal(t, "Cluster 1005-abcd does not exist", ae.Message)
 	})
 }
 

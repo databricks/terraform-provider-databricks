@@ -45,6 +45,8 @@ func TestResourceUserRead(t *testing.T) {
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
+	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
@@ -146,6 +148,8 @@ func TestResourceUserCreate(t *testing.T) {
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
+	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
 }
 
 func TestResourceUserCreateInactive(t *testing.T) {
@@ -459,7 +463,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf("User with username me@example.com already exists."),
+			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -480,7 +484,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf("User already exists in another account"),
+			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -521,7 +525,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf("User with username me@example.com already exists."),
+			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -563,7 +567,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf("User already exists in another account"),
+			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})

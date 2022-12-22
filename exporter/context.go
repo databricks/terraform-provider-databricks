@@ -65,8 +65,9 @@ type importContext struct {
 	variables         map[string]string
 	testEmits         map[string]bool
 	sqlDatasources    map[string]string
-	sqlVisualizations map[string]string
+	workspaceConfKeys map[string]any
 
+	includeUserDomains  bool
 	debug               bool
 	mounts              bool
 	services            string
@@ -92,6 +93,19 @@ var nameFixes = []regexFix{
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
 	{regexp.MustCompile(`\W+`), ""},
 	{regexp.MustCompile(`[_]{2,}`), "_"},
+}
+
+// less aggressive name normalization
+var simpleNameFixes = []regexFix{
+	{nameNormalizationRegex, "_"},
+}
+
+var workspaceConfKeys = map[string]any{
+	"enableIpAccessLists":                              false,
+	"enableTokensConfig":                               false,
+	"maxTokenLifetimeDays":                             0,
+	"maxUserInactiveDays":                              0,
+	"storeInteractiveNotebookResultsInCustomerAccount": false,
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
@@ -120,6 +134,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		},
 		allUsers:  []scim.User{},
 		variables: map[string]string{},
+
+		workspaceConfKeys: workspaceConfKeys,
 	}
 }
 
@@ -174,7 +190,7 @@ func (ic *importContext) Run() error {
 	}
 	defer sh.Close()
 	// nolint
-	sh.WriteString("#!/bin/sh\n\n")
+	sh.WriteString("#!/bin/sh\n\nset -e\n\n")
 
 	if ic.generateDeclaration {
 		dcfile, err := os.Create(fmt.Sprintf("%s/databricks.tf", ic.Directory))
@@ -374,7 +390,7 @@ func (ic *importContext) regexFix(s string, fixes []regexFix) string {
 func (ic *importContext) ResourceName(r *resource) string {
 	name := r.Name
 	if name == "" && ic.Importables[r.Resource].Name != nil {
-		name = ic.Importables[r.Resource].Name(r.Data)
+		name = ic.Importables[r.Resource].Name(ic, r.Data)
 	}
 	if name == "" {
 		name = r.ID
@@ -498,11 +514,10 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 			Attribute: attr,
 			Value:     value,
 		}, attr)
-
-		if traversal == nil {
-			break
+		//at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
+		if traversal != nil {
+			return hclwrite.TokensForTraversal(traversal)
 		}
-		return hclwrite.TokensForTraversal(traversal)
 	}
 	return hclwrite.TokensForValue(cty.StringVal(value))
 }
@@ -533,15 +548,20 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 	})
 	for _, tuple := range ss {
 		a, as := tuple.Field, tuple.Schema
-		if as.Computed {
-			continue
-		}
 		pathString := strings.Join(append(path, a), ".")
 		raw, ok := d.GetOk(pathString)
+		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
+			// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
+			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
+				continue
+			}
+		} else if i.ShouldOmitField(ic, pathString, as, d) {
+			continue
+		}
 		for _, r := range i.Depends {
 			if r.Path == pathString && r.Variable {
-				// sensitive fields are moved to variable depends
-				raw = i.Name(d)
+				// sensitive fields are moved to variable depends, variable name is normalized
+				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
 				ok = true
 			}
 		}

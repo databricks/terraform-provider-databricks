@@ -3,8 +3,6 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_data_access (Resource)
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access.
-
 Each [databricks_metastore](docs/resources/metastore.md) requires an IAM role that will be assumed by Unity Catalog to access data. `databricks_metastore_data_access` defines this
 
 ## Example Usage
@@ -35,8 +33,8 @@ For Azure using managed identity as credential (recommended)
 resource "databricks_metastore" "this" {
   name = "primary"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_account.unity_catalog.name,
-  azurerm_storage_container.unity_catalog.name)
+    azurerm_storage_container.unity_catalog.name,
+  azurerm_storage_account.unity_catalog.name)
   owner         = "uc admins"
   force_destroy = true
 }
@@ -57,8 +55,8 @@ For Azure using service principal as credential
 resource "databricks_metastore" "this" {
   name = "primary"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_account.unity_catalog.name,
-  azurerm_storage_container.unity_catalog.name)
+    azurerm_storage_container.unity_catalog.name,
+  azurerm_storage_account.unity_catalog.name)
   owner         = "uc admins"
   force_destroy = true
 }

@@ -33,6 +33,7 @@
 | [databricks_instance_profile](docs/resources/instance_profile.md)
 | [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
+| [databricks_job](docs/data-sources/job.md) data
 | [databricks_jobs](docs/data-sources/jobs.md)
 | [databricks_library](docs/resources/library.md)
 | [databricks_metastore](docs/resources/metastore.md)
@@ -79,8 +80,7 @@
 | [databricks_sql_warehouses](docs/data-sources/sql_warehouses.md) data
 | [databricks_sql_widget](docs/resources/sql_widget.md)
 | [databricks_storage_credential](docs/resources/storage_credential.md)
-| [databricks_table](docs/resources/table.md)
-| [databricks_tables](docs/data-sources/table.md) data
+| [databricks_tables](docs/data-sources/tables.md) data
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_role](docs/resources/user_role.md)
@@ -99,7 +99,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databricks/databricks"
-      version = "1.2.1"
+      version = "1.7.0"
     }
   }
 }

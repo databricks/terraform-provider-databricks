@@ -94,7 +94,7 @@ func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN. Deprecated Resource")
 }
 
 func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
@@ -117,7 +117,7 @@ func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN")
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_id] Invalid ARN. Deprecated Resource")
 }
 
 func TestResourceGroupInstanceProfileRead(t *testing.T) {

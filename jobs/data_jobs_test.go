@@ -11,8 +11,8 @@ func TestJobsData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/list",
-				Response: JobList{
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Response: JobListResponse{
 					Jobs: []Job{
 						{
 							JobID: 123,

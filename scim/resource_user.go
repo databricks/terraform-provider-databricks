@@ -10,6 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func userExistsErrorMessage(userName string, isAccount bool) string {
+	if isAccount {
+		return fmt.Sprintf("User with email %s already exists in this account", userName)
+	} else {
+		return fmt.Sprintf("User with username %s already exists.", userName)
+	}
+}
+
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
 	type entity struct {
@@ -25,6 +33,16 @@ func ResourceUser() *schema.Resource {
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+			}
+			m["home"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
+			m["repos"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			}
 			return m
 		})
@@ -63,6 +81,8 @@ func ResourceUser() *schema.Resource {
 			d.Set("display_name", user.DisplayName)
 			d.Set("active", user.Active)
 			d.Set("external_id", user.ExternalID)
+			d.Set("home", fmt.Sprintf("/Users/%s", user.UserName))
+			d.Set("repos", fmt.Sprintf("/Repos/%s", user.UserName))
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -85,9 +105,7 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	force := fmt.Sprintf("User with username %s already exists.", userName)
-	force_account := "User already exists in another account"
-	if (err.Error() != force) && (err.Error() != force_account) {
+	if (err.Error() != userExistsErrorMessage(userName, false)) && (err.Error() != userExistsErrorMessage(userName, true)) {
 		return err
 	}
 	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName))

@@ -12,12 +12,12 @@ func TestAccDashboard(t *testing.T) {
 		{
 			Template: `
 				resource "databricks_sql_dashboard" "d1" {
-					name = "tf-{var.RANDOM}"
+					name = "tf-{var.RANDOM}-dashboard"
 
 					// The SQLA API doesn't save tags on create, only on update.
 					// Uncomment the following when this is fixed.
 					// tags = [
-					// "tf-{var.RANDOM}",
+					// "tf-{var.RANDOM}-dashboard",
 					// ]
 				}
 
@@ -46,8 +46,8 @@ func TestAccDashboard(t *testing.T) {
 				}
 
 				resource "databricks_sql_query" "q1" {
-					data_source_id = databricks_sql_endpoint.this.data_source_id
-					name = "tf-{var.RANDOM}"
+					data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
+					name = "tf-{var.RANDOM}-query"
 					query = "SELECT 1"
 				}
 
@@ -59,10 +59,22 @@ func TestAccDashboard(t *testing.T) {
 					options = jsonencode({})
 				}
 
-				resource "databricks_sql_endpoint" "this" {
-					name = "tf-{var.RANDOM}"
-					cluster_size = "Small"
-					max_num_clusters = 1
+				resource "databricks_sql_visualization" "q1v2" {
+					query_id = databricks_sql_query.q1.id
+					type = "table"
+					name = "My Table (1)"
+
+					options = jsonencode({})
+
+					# Note: this resource differs from the one above in that
+					# the query plan is set. This tests that it can either
+					# be unset or set and in both cases yield a consistent result.
+					query_plan = jsonencode({
+						# The value should be non-empty to check we don't have
+						# plan changes due to whitespace changes in JSON serialization.
+						groups = [
+						]
+					})
 				}
 			`,
 		},

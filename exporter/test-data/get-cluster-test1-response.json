@@ -28,7 +28,7 @@
   },
   "driver_node_type_id": "Standard_DS3_v2",
   "enable_elastic_disk": true,
-  "enable_local_disk_encryption": false,
+  "enable_local_disk_encryption": true,
   "executors": [
     {
       "host_private_ip": "10.139.0.9",

@@ -55,20 +55,20 @@ type CloudResourceBucket struct {
 }
 
 type GCPManagedNetworkConfig struct {
-	SubnetCIDR               string `json:"subnet_cidr"`
-	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range"`
-	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range"`
+	SubnetCIDR               string `json:"subnet_cidr" tf:"force_new"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range" tf:"force_new"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range" tf:"force_new"`
 }
 
 type GCPCommonNetworkConfig struct {
-	GKEConnectivityType     string `json:"gke_connectivity_type"`
-	GKEClusterMasterIPRange string `json:"gke_cluster_master_ip_range"`
+	GKEConnectivityType     string `json:"gke_connectivity_type" tf:"force_new"`
+	GKEClusterMasterIPRange string `json:"gke_cluster_master_ip_range" tf:"force_new"`
 }
 
 type GCPNetwork struct {
-	NetworkID               string                   `json:"network_id,omitempty"`
-	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty"`
-	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config"`
+	NetworkID               string                   `json:"network_id,omitempty" tf:"force_new"`
+	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty" tf:"force_new"`
+	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config,omitempty" tf:"force_new"`
 }
 
 type externalCustomerInfo struct {
@@ -243,24 +243,36 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
-	request := map[string]string{
-		"credentials_id": ws.CredentialsID,
-		// The ID of the workspace's network configuration object. Used only if you already use a customer-managed VPC.
-		// This change is supported only if you specified a network configuration ID when the workspace was created.
-		// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
-		// is available for updating both failed and running workspaces. Note: You cannot use a network configuration
-		// update in this API to add support for PrivateLink (in Public Preview). To add PrivateLink to an existing
-		// workspace, contact your Databricks representative.
-		"network_id": ws.NetworkID,
+	request := map[string]string{}
+
+	if ws.CredentialsID != "" {
+		request["credentials_id"] = ws.CredentialsID
+	}
+
+	// The ID of the workspace's network configuration object. Used only if you already use a customer-managed VPC.
+	// This change is supported only if you specified a network configuration ID when the workspace was created.
+	// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
+	// is available for updating both failed and running workspaces.
+	if ws.NetworkID != "" {
+		request["network_id"] = ws.NetworkID
+	}
+
+	if ws.PrivateAccessSettingsID != "" {
+		request["private_access_settings_id"] = ws.PrivateAccessSettingsID
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
 	}
+
+	if len(request) == 0 {
+		return nil
+	}
+
 	err := a.client.Patch(a.context, workspacesAPIPath, request)
 	if err != nil {
 		return err
@@ -277,6 +289,13 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 		// generate workspace URL based on client's hostname, if response contains no URL
 		host := generateWorkspaceHostname(a.client, mwsWorkspace)
 		mwsWorkspace.WorkspaceURL = fmt.Sprintf("https://%s", host)
+	}
+
+	if err == nil && mwsWorkspace.Network != nil {
+		//null out all network properties for GCP managed VPC
+		if mwsWorkspace.Network.NetworkID == "" {
+			mwsWorkspace.Network = nil
+		}
 	}
 	return mwsWorkspace, err
 }
@@ -449,6 +468,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old != ""
 			}
+
 			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
 			s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
 			s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
@@ -544,6 +564,13 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				return err
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
+			old, new := d.GetChange("private_access_settings_id")
+			if old != "" && new == "" {
+				return fmt.Errorf("cannot remove private access setting from workspace")
+			}
+			return nil
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),

@@ -70,14 +70,14 @@ func TestGetClientSecretAuthorizer(t *testing.T) {
 	env, err := aa.getAzureEnvironment()
 	require.NoError(t, err)
 	aa.AzureEnvironment = &env
-	auth, err := aa.getClientSecretAuthorizer(armDatabricksResourceID)
+	auth, err := aa.getClientSecretAuthorizer(azureDatabricksProdLoginAppID)
 	require.Nil(t, auth)
 	require.EqualError(t, err, "parameter 'clientID' cannot be empty")
 
 	aa.AzureTenantID = "a"
 	aa.AzureClientID = "b"
 	aa.AzureClientSecret = "c"
-	auth, err = aa.getClientSecretAuthorizer(armDatabricksResourceID)
+	auth, err = aa.getClientSecretAuthorizer(azureDatabricksProdLoginAppID)
 	require.NotNil(t, auth)
 	require.NoError(t, err)
 
@@ -541,10 +541,46 @@ func TestSimpleAADRequestVisitor_FailPlatformAuth(t *testing.T) {
 		},
 	}).simpleAADRequestVisitor(context.Background(),
 		func(resource string) (autorest.Authorizer, error) {
-			if resource == armDatabricksResourceID {
+			if resource == azureDatabricksProdLoginAppID {
 				return nil, fmt.Errorf("🤨")
 			}
 			return autorest.NullAuthorizer{}, nil
 		})
 	assert.EqualError(t, err, "cannot authorize databricks: 🤨")
+}
+
+func TestSimpleAADRequestVisitor_ProdLoginAppId(t *testing.T) {
+	aa := DatabricksClient{
+		Host: "abc.azuredatabricks.net",
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+	}
+	_, err := aa.simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			if resource == "x" {
+				return autorest.NullAuthorizer{}, nil
+			}
+			assert.Equal(t, azureDatabricksProdLoginAppID, resource)
+			return autorest.NullAuthorizer{}, nil
+		})
+	assert.Nil(t, err)
+}
+
+func TestSimpleAADRequestVisitor_LoginAppIdOverride(t *testing.T) {
+	_, err := (&DatabricksClient{
+		Host: "abc.azuredatabricks.net",
+		AzureEnvironment: &azure.Environment{
+			ServiceManagementEndpoint: "x",
+		},
+		AzureDatabricksLoginAppId: "y",
+	}).simpleAADRequestVisitor(context.Background(),
+		func(resource string) (autorest.Authorizer, error) {
+			if resource == "x" {
+				return autorest.NullAuthorizer{}, nil
+			}
+			assert.Equal(t, "y", resource)
+			return autorest.NullAuthorizer{}, nil
+		})
+	assert.Nil(t, err)
 }

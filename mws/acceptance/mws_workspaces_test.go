@@ -1,17 +1,12 @@
 package acceptance
 
 import (
-	"os"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
 func TestMwsAccWorkspaces(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv != "MWS" {
-		t.Skip("Acceptance tests skipped unless CLOUD_ENV=MWS is set")
-	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -63,11 +58,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 	})
 }
 
-func TestGcpAccaWorkspaces(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv != "gcp-accounts" {
-		t.Skip("Acceptance tests skipped unless CLOUD_ENV=gcp-accounts is set")
-	}
+func TestMwsAccGcpWorkspaces(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -86,11 +77,7 @@ func TestGcpAccaWorkspaces(t *testing.T) {
 	})
 }
 
-func TestAccGcpByovpcWorkspaces(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv != "gcp-accounts" {
-		t.Skip("Acceptance tests skipped unless CLOUD_ENV=gcp-accounts is set")
-	}
+func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

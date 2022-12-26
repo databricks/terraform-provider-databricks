@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMWSNetworks(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
+func TestMwsAccNetworks(t *testing.T) {
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
+	if !client.IsAws() {
+		t.Skip("only AWS")
+	}
 	ctx := context.Background()
 	networksAPI := NewNetworksAPI(ctx, client)
 	networksList, err := networksAPI.List(acctID)

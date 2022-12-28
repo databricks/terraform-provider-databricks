@@ -37,10 +37,10 @@ resource "databricks_permission_assignment" "add_admin_spn" {
 
 The following arguments are required:
 
-* `principal_id` - Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the SCIM API.
+* `principal_id` - Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the SCIM API, or using [databricks_user](../data-sources/user.md), [databricks_service_principal](../data-sources/service_principal.md) or [databricks_group](../data-sources/group.md) data sources.
 * `permissions` - The list of workspace permissions to assign to the principal:
-  * `“USER”` - Can access the workspace with basic privileges.
-  * `“ADMIN”` - Can access the workspace and has workspace admin privileges to manage users and groups, workspace configurations, and more.
+  * `"USER"` - Can access the workspace with basic privileges.
+  * `"ADMIN"` - Can access the workspace and has workspace admin privileges to manage users and groups, workspace configurations, and more.
 
 ## Import
 

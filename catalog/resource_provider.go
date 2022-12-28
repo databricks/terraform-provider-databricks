@@ -21,7 +21,13 @@ type ProviderInfo struct {
 	Name                string `json:"name" tf:"force_new"`
 	Comment             string `json:"comment,omitempty"`
 	AuthenticationType  string `json:"authentication_type"`
-	RecipientProfileStr string `json:"recipient_profile_str" tf:"sensitive,suppress_diff"`
+	RecipientProfileStr string `json:"recipient_profile_str" tf:"sensitive"`
+}
+
+type ProviderInfoMetadata struct {
+	Name               string `json:"name" tf:"force_new"`
+	Comment            string `json:"comment,omitempty"`
+	AuthenticationType string `json:"authentication_type"`
 }
 
 type Providers struct {
@@ -51,15 +57,19 @@ func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
 }
 
 func ResourceProvider() *schema.Resource {
-	providerSchema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+	providerInfoSchema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
+		return m
+	})
+	providerInfoMetadataSchema := common.StructToSchema(ProviderInfoMetadata{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
 		return m
 	})
 	return common.Resource{
-		Schema: providerSchema,
+		Schema: providerInfoSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo
-			common.DataToStructPointer(d, providerSchema, &ri)
+			common.DataToStructPointer(d, providerInfoSchema, &ri)
 			if err := NewProvidersAPI(ctx, c).createProvider(&ri); err != nil {
 				return err
 			}
@@ -71,11 +81,11 @@ func ResourceProvider() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(ri, providerSchema, d)
+			return common.StructToData(ri, providerInfoMetadataSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo
-			common.DataToStructPointer(d, providerSchema, &ri)
+			common.DataToStructPointer(d, providerInfoSchema, &ri)
 			return NewProvidersAPI(ctx, c).updateProvider(&ri)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

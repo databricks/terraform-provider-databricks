@@ -16,8 +16,8 @@ func TestAccDataSourceCluster(t *testing.T) {
 			}
 
 			resource "databricks_cluster" "this" {
-				cluster_name            = "job-datasource-acceptance-test"
-				spark_version           = data.databricks_spark_version.latest_lts.id
+				cluster_name            = "cluster-datasource-acceptance-test"
+				spark_version           = data.databricks_spark_version.latest.id
 				node_type_id            = data.databricks_node_type.smallest.id
 				autotermination_minutes = 20
 				autoscale {

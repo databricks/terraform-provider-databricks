@@ -11,7 +11,7 @@ func TestAccDataSourceWarehouse(t *testing.T) {
 		{
 			Template: `
 			resource "databricks_sql_endpoint" "this" {
-				name             = "Endpoint of ${data.databricks_current_user.me.alphanumeric}"
+				name             = "warehouse-datasource-acceptance-test"
 				cluster_size     = "Small"
 				max_num_clusters = 1
 			

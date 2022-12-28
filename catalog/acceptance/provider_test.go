@@ -19,7 +19,7 @@ func TestUcAccCreateProviderDb2Open(t *testing.T) {
 			  recipient_profile_str = jsonencode({
 					"shareCredentialsVersion":1,
 					"bearerToken":"dapiabcdefghijklmonpqrstuvwxyz",
-					"endpoint":"https://sharing.delta.io/delta-sharing/"}
+					"endpoint":"https://sharing.delta.io/delta-sharing/"
 				}
 			  )
 			}`,

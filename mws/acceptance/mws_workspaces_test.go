@@ -81,20 +81,6 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
-			resource "google_compute_router" "this" {
-			    name    = "{env.TEST_PREFIX}-router-{var.RANDOM}"
-			    region  = "{env.GOOGLE_REGION}"
-			    network = "{env.TEST_VPC_ID}"
-			}
-			
-			resource "google_compute_router_nat" "this" {
-			    name                               = "{env.TEST_PREFIX}-nat-{var.RANDOM}"
-			    router                             = google_compute_router.this.name
-			    region                             = google_compute_router.this.region
-			    nat_ip_allocate_option             = "AUTO_ONLY"
-			    source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-			}
-
 			resource "databricks_mws_networks" "this" {
 				account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
 				network_name = "{env.TEST_PREFIX}-network-{var.RANDOM}"

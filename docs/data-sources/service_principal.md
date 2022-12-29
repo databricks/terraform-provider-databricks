@@ -23,7 +23,7 @@ data "databricks_service_principal" "spn" {
 
 resource "databricks_group_member" "my_member_a" {
   group_id  = data.databricks_group.admins.id
-  member_id = data.databricks_service_principal.spn.sp_id
+  member_id = data.databricks_service_principal.spn.id
 }
 ```
 
@@ -37,7 +37,8 @@ Data source allows you to pick service principals by the following attributes
 
 Data source exposes the following attributes:
 
-- `sp_id` - The id of the service principal.
+- `id` - The id of the service principal.
+- `sp_id` - The id of the service principal (deprecated, kept for compatibility with earlier versions).
 - `external_id` - ID of the service principal in an external identity provider.
 - `display_name` - Display name of the [service principal](../resources/service_principal.md), e.g. `Foo SPN`.
 - `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/11111111-2222-3333-4444-555666777888`.

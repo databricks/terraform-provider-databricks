@@ -199,7 +199,11 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 				diags = diag.FromErr(err)
 			}
 			StructToData(ptr.Elem().Interface(), s, d)
-			d.SetId("_")
+			if _, ok := s["id"]; ok {
+				d.SetId(d.Get("id").(string))
+			} else {
+				d.SetId("_")
+			}
 			return
 		},
 	}

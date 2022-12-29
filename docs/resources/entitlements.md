@@ -3,7 +3,9 @@ subcategory: "Security"
 ---
 # databricks_entitlements Resource
 
-This resource allows you to set entitlements to existing [databricks_users](user.md), [databricks_group](group.md) or [databricks_service_principal](service_principal.md)
+This resource allows you to set entitlements to existing [databricks_users](user.md), [databricks_group](group.md) or [databricks_service_principal](service_principal.md).
+
+-> **Note** You must define entitlements of a principal using either `databricks_entitlements` or directly within one of [databricks_users](user.md), [databricks_group](group.md) or [databricks_service_principal](service_principal.md). Having entitlements defined in both resources will result in non-deterministic behaviour.
 
 ## Example Usage
 
@@ -59,9 +61,10 @@ The following arguments are available to specify the identity you need to enforc
 
 The following entitlements are available.
 
-* `allow_cluster_create` -  (Optional) Allow the user to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
-* `allow_instance_pool_create` -  (Optional) Allow the user to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
-* `databricks_sql_access` - (Optional) This is a field to allow the group to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature in User Interface and through [databricks_sql_endpoint](sql_endpoint.md).
+* `allow_cluster_create` -  (Optional) Allow the principal to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
+* `allow_instance_pool_create` -  (Optional) Allow the principal to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.
+* `databricks_sql_access` - (Optional) This is a field to allow the principal to have access to [Databricks SQL](https://databricks.com/product/databricks-sql) feature in User Interface and through [databricks_sql_endpoint](sql_endpoint.md).
+* `workspace_access` - (Optional) This is a field to allow the principal to have access to Databricks Workspace.
 
 ## Import
 

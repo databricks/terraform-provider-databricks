@@ -21,7 +21,7 @@ type ProviderInfo struct {
 	Name                string `json:"name" tf:"force_new"`
 	Comment             string `json:"comment,omitempty"`
 	AuthenticationType  string `json:"authentication_type"`
-	RecipientProfileStr string `json:"recipient_profile_str" tf:"sensitive,suppress_diff"`
+	RecipientProfileStr string `json:"recipient_profile_str" tf:"sensitive"`
 }
 
 type Providers struct {
@@ -55,6 +55,12 @@ func ResourceProvider() *schema.Resource {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
 		return m
 	})
+
+	providerSchemaForRead := map[string]*schema.Schema{
+		"name":                providerSchema["name"],
+		"comment":             providerSchema["comment"],
+		"authentication_type": providerSchema["authentication_type"],
+	}
 	return common.Resource{
 		Schema: providerSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -71,7 +77,7 @@ func ResourceProvider() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(ri, providerSchema, d)
+			return common.StructToData(ri, providerSchemaForRead, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo

@@ -153,6 +153,9 @@ func (sm securableMapping) validate(d attributeGetter, pl PermissionsList) error
 	}
 	for _, v := range pl.Assignments {
 		for _, priv := range v.Privileges {
+			if allowed[strings.ReplaceAll(priv, " ", "_")] {
+				return fmt.Errorf(`%s is not allowed on %s. Did you mean %s?`, priv, securable, strings.ReplaceAll(priv, " ", "_"))
+			}
 			if !allowed[strings.ToUpper(priv)] {
 				return fmt.Errorf(`%s is not allowed on %s`, priv, securable)
 			}

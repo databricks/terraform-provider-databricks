@@ -90,7 +90,7 @@ type Workspace struct {
 	StorageCustomerManagedKeyID         string                `json:"storage_customer_managed_key_id,omitempty"`
 	PricingTier                         string                `json:"pricing_tier,omitempty" tf:"computed"`
 	PrivateAccessSettingsID             string                `json:"private_access_settings_id,omitempty"`
-	NetworkID                           string                `json:"network_id,omitempty"`
+	NetworkID                           string                `json:"network_id,omitempty" tf:"suppress_diff"`
 	IsNoPublicIPEnabled                 bool                  `json:"is_no_public_ip_enabled" tf:"optional,default:true"`
 	WorkspaceID                         int64                 `json:"workspace_id,omitempty" tf:"computed"`
 	WorkspaceURL                        string                `json:"workspace_url,omitempty" tf:"computed"`

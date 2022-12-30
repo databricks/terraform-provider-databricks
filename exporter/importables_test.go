@@ -55,7 +55,7 @@ func TestInstancePool(t *testing.T) {
 		Data: d,
 	})
 	assert.NoError(t, err)
-	assert.True(t, ic.testEmits["databricks_permissions[inst_pool_def] (id: /instance-pools/abc)"])
+	assert.True(t, ic.testEmits["databricks_permissions[inst-pool_def] (id: /instance-pools/abc)"])
 }
 
 func TestClusterPolicy(t *testing.T) {
@@ -83,7 +83,7 @@ func TestClusterPolicy(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, ic.testEmits, 4)
-	assert.True(t, ic.testEmits["databricks_permissions[cluster_policy_bcd] (id: /cluster-policies/abc)"])
+	assert.True(t, ic.testEmits["databricks_permissions[cluster-policy_bcd] (id: /cluster-policies/abc)"])
 	assert.True(t, ic.testEmits["databricks_instance_pool[<unknown>] (id: efg)"])
 	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: def)"])
 	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/init-script.sh)"])
@@ -152,7 +152,7 @@ func TestGroup(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_group_instance_profile[<unknown>] (id: 123|abc)"])
 	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: abc)"])
 	assert.True(t, ic.testEmits["databricks_group[<unknown>] (id: parent-group)"])
-	assert.True(t, ic.testEmits["databricks_group_member[_parent-group_foo] (id: parent-group|123)"])
+	assert.True(t, ic.testEmits["databricks_group_member[_PARENT-GROUP_FOO] (id: parent-group|123)"])
 }
 
 func TestPermissions(t *testing.T) {

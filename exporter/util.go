@@ -96,7 +96,7 @@ func (ic *importContext) emitGroups(u scim.User, principal string) {
 		ic.Emit(&resource{
 			Resource: "databricks_group_member",
 			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-			Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, principal),
+			Name:     strings.ToUpper(fmt.Sprintf("%s_%s_%s", g.Display, g.Value, principal)), //strings.ToUpper fixes 1838
 		})
 	}
 }

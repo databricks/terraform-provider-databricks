@@ -174,7 +174,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/instance-pools/%s", r.ID),
-					Name:     "inst_pool_" + ic.Importables["databricks_instance_pool"].Name(ic, r.Data),
+					Name:     "inst-pool_" + ic.Importables["databricks_instance_pool"].Name(ic, r.Data),
 				})
 			}
 			return nil
@@ -256,7 +256,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/clusters/%s", r.ID),
-					Name:     "cluster_" + ic.Importables["databricks_cluster"].Name(ic, r.Data),
+					Name:     "cluster-" + ic.Importables["databricks_cluster"].Name(ic, r.Data),
 				})
 			}
 			return ic.importLibraries(r.Data, s)
@@ -324,7 +324,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/jobs/%s", r.ID),
-					Name:     "job_" + ic.Importables["databricks_job"].Name(ic, r.Data),
+					Name:     "job-" + ic.Importables["databricks_job"].Name(ic, r.Data),
 				})
 			}
 			if job.SparkPythonTask != nil {
@@ -461,7 +461,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
-					Name:     "cluster_policy_" + ic.Importables["databricks_cluster_policy"].Name(ic, r.Data),
+					Name:     "cluster-policy_" + ic.Importables["databricks_cluster_policy"].Name(ic, r.Data),
 				})
 			}
 			var definition map[string]map[string]any
@@ -595,7 +595,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
 							ID:       fmt.Sprintf("%s|%s", parent.Value, g.ID),
-							Name:     fmt.Sprintf("%s_%s_%s", parent.Display, parent.Value, g.DisplayName),
+							Name:     strings.ToUpper(fmt.Sprintf("%s_%s_%s", parent.Display, parent.Value, g.DisplayName)), //strings.ToUpper fixes 1838
 						})
 					}
 				}
@@ -620,7 +620,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
 							ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
-							Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
+							Name:     strings.ToUpper(fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display)), //strings.ToUpper fixes 1838
 						})
 					}
 					if len(g.Members) > 10 {
@@ -790,7 +790,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					ic.Emit(&resource{
 						Resource: "databricks_secret_scope",
 						ID:       scope.Name,
-						Name:     scope.Name,
+						Name:     strings.ToUpper(scope.Name), //strings.ToUpper fixes 1838
 					})
 					log.Printf("[INFO] Imported %d of %d secret scopes", i, len(scopes))
 				}
@@ -980,7 +980,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/repos/%s", r.ID),
-					Name:     "repo_" + ic.Importables["databricks_repo"].Name(ic, r.Data),
+					Name:     "repo-" + ic.Importables["databricks_repo"].Name(ic, r.Data),
 				})
 			}
 			return nil
@@ -1169,7 +1169,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/sql/queries/%s", r.ID),
-					Name:     "sql_query_" + ic.Importables["databricks_sql_query"].Name(ic, r.Data),
+					Name:     "sql-query_" + ic.Importables["databricks_sql_query"].Name(ic, r.Data),
 				})
 			}
 			return nil
@@ -1210,7 +1210,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/sql/warehouses/%s", r.ID),
-					Name:     "sql_endpoint_" + ic.Importables["databricks_sql_endpoint"].Name(ic, r.Data),
+					Name:     "sql-endpoint_" + ic.Importables["databricks_sql_endpoint"].Name(ic, r.Data),
 				})
 				ic.Emit(&resource{
 					Resource: "databricks_sql_global_config",
@@ -1276,7 +1276,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/sql/dashboards/%s", r.ID),
-					Name:     "sql_dashboard_" + ic.Importables["databricks_sql_dashboard"].Name(ic, r.Data),
+					Name:     "sql-dashboard_" + ic.Importables["databricks_sql_dashboard"].Name(ic, r.Data),
 				})
 			}
 			dashboardID := r.ID
@@ -1432,7 +1432,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/pipelines/%s", r.ID),
-					Name:     "pipeline_" + ic.Importables["databricks_pipeline"].Name(ic, r.Data),
+					Name:     "pipeline-" + ic.Importables["databricks_pipeline"].Name(ic, r.Data),
 				})
 			}
 			return nil

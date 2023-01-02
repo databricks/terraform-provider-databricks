@@ -777,7 +777,8 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_secret_scope": {
 		Service: "secrets",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Get("name").(string)
+			name := d.Get("name").(string)
+			return name + "_" + generateUniqueID(name)
 		},
 		List: func(ic *importContext) error {
 			ssAPI := secrets.NewSecretScopesAPI(ic.Context, ic.Client)
@@ -791,7 +792,6 @@ var resourcesMap map[string]importable = map[string]importable{
 					ic.Emit(&resource{
 						Resource: "databricks_secret_scope",
 						ID:       scope.Name,
-						Name:     scope.Name,
 					})
 					log.Printf("[INFO] Imported %d of %d secret scopes", i+1, len(scopes))
 				}
@@ -832,7 +832,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "string_value", Resource: "aws_secretsmanager_secret_version", Match: "secret_string"},
 		},
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return fmt.Sprintf("%s_%s", d.Get("scope"), d.Get("key"))
+			name := fmt.Sprintf("%s_%s", d.Get("scope"), d.Get("key"))
+			return name + "_" + generateUniqueID(name)
 		},
 	},
 	"databricks_secret_acl": {

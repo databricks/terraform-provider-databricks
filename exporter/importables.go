@@ -577,8 +577,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       fmt.Sprintf("%s|%s", g.ID, instanceProfile.Value),
 					})
 				}
-				if g.DisplayName == "users" {
-					// TODO: make flag
+				if g.DisplayName == "users" && !ic.importAllUsers {
 					log.Printf("[INFO] Skipping import of entire user directory ...")
 					continue
 				}

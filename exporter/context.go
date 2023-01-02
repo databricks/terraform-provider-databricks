@@ -301,7 +301,7 @@ func (ic *importContext) MatchesName(n string) bool {
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
-func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
+func (ic *importContext) Find(r *resource, pick, matchType string) (string, hcl.Traversal) {
 	for _, sr := range ic.State.Resources {
 		if sr.Type != r.Resource {
 			continue
@@ -313,24 +313,28 @@ func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
 					r.Attribute, r.Resource, r.Name, r.ID)
 				continue
 			}
-			if v.(string) == r.Value {
-				if sr.Mode == "data" {
-					return hcl.Traversal{
-						hcl.TraverseRoot{Name: "data"},
-						hcl.TraverseAttr{Name: sr.Type},
-						hcl.TraverseAttr{Name: sr.Name},
-						hcl.TraverseAttr{Name: pick},
-					}
-				}
-				return hcl.Traversal{
-					hcl.TraverseRoot{Name: sr.Type},
+			strValue := v.(string)
+			if ((matchType == "" || matchType == "exact") && strValue != r.Value) ||
+				(matchType == "prefix" && !strings.HasPrefix(r.Value, strValue)) {
+				continue
+			}
+			if sr.Mode == "data" {
+				return strValue, hcl.Traversal{
+					hcl.TraverseRoot{Name: "data"},
+					hcl.TraverseAttr{Name: sr.Type},
 					hcl.TraverseAttr{Name: sr.Name},
 					hcl.TraverseAttr{Name: pick},
 				}
 			}
+			return strValue, hcl.Traversal{
+				hcl.TraverseRoot{Name: sr.Type},
+				hcl.TraverseAttr{Name: sr.Name},
+				hcl.TraverseAttr{Name: pick},
+			}
+
 		}
 	}
-	return nil
+	return "", nil
 }
 
 func (ic *importContext) Has(r *resource) bool {
@@ -510,13 +514,22 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 		if d.Match != "" {
 			attr = d.Match
 		}
-		traversal := ic.Find(&resource{
+		attrValue, traversal := ic.Find(&resource{
 			Resource:  d.Resource,
 			Attribute: attr,
 			Value:     value,
-		}, attr)
-		//at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
+		}, attr, d.MatchType)
+		// at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
 		if traversal != nil {
+			if d.MatchType == "prefix" { // we're replacing the found prefix with the HCL reference using the "${reference}rest" syntax
+				rest := value[len(attrValue):]
+				tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"', '$', '{'}}}
+				tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
+				tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
+				tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(rest)})
+				tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
+				return tokens
+			}
 			return hclwrite.TokensForTraversal(traversal)
 		}
 	}

@@ -57,11 +57,12 @@ type importable struct {
 }
 
 type reference struct {
-	Path     string
-	Resource string
-	Match    string
-	Variable bool
-	File     bool
+	Path      string
+	Resource  string
+	Match     string
+	MatchType string // type of match, `prefix` - reference is embedded into string, `` (or `exact`) - full match
+	Variable  bool
+	File      bool
 }
 
 type resource struct {

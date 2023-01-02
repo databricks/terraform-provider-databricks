@@ -352,9 +352,6 @@ func (ic *importContext) Has(r *resource) bool {
 }
 
 func (ic *importContext) Add(r *resource) {
-	if ic.Has(r) {
-		return
-	}
 	state := r.Data.State()
 	if state == nil {
 		log.Printf("[ERROR] state is nil for %s", r)

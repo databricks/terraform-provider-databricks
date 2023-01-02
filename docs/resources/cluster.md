@@ -30,6 +30,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 
 ## Argument Reference
 
+* `num_workers` - (Optional) Number of worker nodes that this cluster should have. A cluster has one Spark driver and `num_workers` executors for a total of `num_workers` + 1 Spark nodes.
 * `cluster_name` - (Optional) Cluster name, which doesn’t have to be unique. If not specified at creation, the cluster name will be an empty string.
 * `spark_version` - (Required) [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster. Any supported [databricks_spark_version](../data-sources/spark_version.md) id.  We advise using [Cluster Policies](cluster_policy.md) to restrict the list of versions for simplicity while maintaining enough control.
 * `runtime_engine` - (Optional) The type of runtime engine to use. If not specified, the runtime engine type is inferred based on the spark_version value. Allowed values include: `PHOTON`, `STANDARD`.
@@ -288,7 +289,19 @@ init_scripts {
 }
 ```
 
- Clusters with [custom Docker containers](https://docs.databricks.com/clusters/custom-containers.html) also allow a local file location for init scripts as follows:
+Similarly, for an init script stored in ADLS:
+
+```hcl
+init_scripts {
+  abfss {
+    destination = "abfss://container@storage.dfs.core.windows.net/install-elk.sh"
+  }
+}
+```
+
+Please note that you need to provide Spark Hadoop configuration (`spark.hadoop.fs.azure...`) to authenticate to ADLS to get access to the init script.
+
+Clusters with [custom Docker containers](https://docs.databricks.com/clusters/custom-containers.html) also allow a local file location for init scripts as follows:
 
 ```hcl
 init_scripts {
@@ -329,7 +342,7 @@ resource "databricks_cluster" "this" {
 
 The following options are available:
 
-* `zone_id` - (Required) Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like “us-west-2a”. The provided availability zone must be in the same region as the Databricks deployment. For example, “us-west-2a” is not a valid zone ID if the Databricks deployment resides in the “us-east-1” region.
+* `zone_id` - (Required) Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like `us-west-2a`. The provided availability zone must be in the same region as the Databricks deployment. For example, `us-west-2a` is not a valid zone ID if the Databricks deployment resides in the `us-east-1` region. Enable automatic availability zone selection (“Auto-AZ”), by setting the value `auto`. Databricks selects the AZ based on available IPs in the workspace subnets and retries in other availability zones if AWS returns insufficient capacity errors.
 * `availability` - (Optional) Availability type used for all subsequent nodes past the `first_on_demand` ones. Valid values are `SPOT`, `SPOT_WITH_FALLBACK` and `ON_DEMAND`. Note: If `first_on_demand` is zero, this availability type will be used for the entire cluster. Backend default value is `SPOT_WITH_FALLBACK` and could change in the future
 * `first_on_demand` - (Optional) The first `first_on_demand` nodes of the cluster will be placed on on-demand instances. If this value is greater than 0, the cluster driver node will be placed on an on-demand instance. If this value is greater than or equal to the current cluster size, all nodes will be placed on on-demand instances. If this value is less than the current cluster size, `first_on_demand` nodes will be placed on on-demand instances, and the remainder will be placed on availability instances. This value does not affect cluster size and cannot be mutated over the lifetime of a cluster. Backend default value is `1` and could change in the future
 * `spot_bid_price_percent` - (Optional) The max price for AWS spot instances, as a percentage of the corresponding instance type’s on-demand price. For example, if this field is set to 50, and the cluster needs a new `i3.xlarge` spot instance, then the max price is half of the price of on-demand `i3.xlarge` instances. Similarly, if this field is set to 200, the max price is twice the price of on-demand `i3.xlarge` instances. If not specified, the default value is `100`. When spot instances are requested for this cluster, only spot instances whose max price percentage matches this field will be considered. For safety, we enforce this field to be no more than `10000`.

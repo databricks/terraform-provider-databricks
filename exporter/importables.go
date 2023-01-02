@@ -543,10 +543,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if r.Name == "admins" || r.Name == "users" {
+			groupName := r.Data.Get("display_name").(string)
+			if groupName == "admins" || groupName == "users" {
 				// admins & users are to be imported through "data block"
-				// TODO: it doesn't work, fix it...
 				r.Mode = "data"
+				r.Data.Set("workspace_access", false)
+				r.Data.Set("databricks_sql_access", false)
+				r.Data.Set("allow_instance_pool_create", false)
+				r.Data.Set("allow_cluster_create", false)
 				r.Data.State().Set(&terraform.InstanceState{
 					ID: r.ID,
 					Attributes: map[string]string{

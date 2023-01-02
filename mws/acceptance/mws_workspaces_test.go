@@ -1,17 +1,12 @@
 package acceptance
 
 import (
-	"os"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
 func TestMwsAccWorkspaces(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv != "MWS" {
-		t.Skip("Acceptance tests skipped unless CLOUD_ENV=MWS is set")
-	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -63,11 +58,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 	})
 }
 
-func TestGcpAccaWorkspaces(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv != "gcp-accounts" {
-		t.Skip("Acceptance tests skipped unless CLOUD_ENV=gcp-accounts is set")
-	}
+func TestMwsAccGcpWorkspaces(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -81,6 +72,45 @@ func TestGcpAccaWorkspaces(t *testing.T) {
 						project_id = "{env.GOOGLE_PROJECT}"
 					}
 				}
+			}`,
+		},
+	})
+}
+
+func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
+	acceptance.Test(t, []acceptance.Step{
+		{
+			Template: `
+			resource "databricks_mws_networks" "this" {
+				account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+				network_name = "{env.TEST_PREFIX}-network-{var.RANDOM}"
+				gcp_network_info {
+					network_project_id = "{env.GOOGLE_PROJECT}"
+					vpc_id = "{env.TEST_VPC_ID}"
+					subnet_id = "{env.TEST_SUBNET_ID}"
+					subnet_region = "{env.GOOGLE_REGION}"
+					pod_ip_range_name = "pods"
+					service_ip_range_name = "svc"
+		  		}
+			}
+			
+			resource "databricks_mws_workspaces" "this" {
+				account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+				workspace_name  = "{env.TEST_PREFIX}-{var.RANDOM}"
+				location        = "{env.GOOGLE_REGION}"
+		
+				cloud_resource_bucket {
+					gcp {
+						project_id = "{env.GOOGLE_PROJECT}"
+					}
+				}
+				network {
+					network_id = databricks_mws_networks.this.network_id
+					gcp_common_network_config {
+						gke_connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+						gke_cluster_master_ip_range = "10.3.0.0/28"
+					}
+  				}
 			}`,
 		},
 	})

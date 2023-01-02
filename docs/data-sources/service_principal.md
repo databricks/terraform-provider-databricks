@@ -23,7 +23,7 @@ data "databricks_service_principal" "spn" {
 
 resource "databricks_group_member" "my_member_a" {
   group_id  = data.databricks_group.admins.id
-  member_id = data.databricks_service_principal.spn.id
+  member_id = data.databricks_service_principal.spn.sp_id
 }
 ```
 

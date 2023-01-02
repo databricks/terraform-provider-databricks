@@ -988,6 +988,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
+			ic.emitUserOrServicePrincipalForPath(r.Data.Get("path").(string), "/Repos")
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
@@ -996,6 +997,17 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "path" {
+				return false
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+
+		Depends: []reference{
+			{Path: "path", Resource: "databricks_user", Match: "repos", MatchType: "prefix"},
+			{Path: "path", Resource: "databricks_service_principal", Match: "repos", MatchType: "prefix"},
 		},
 	},
 	"databricks_workspace_conf": {

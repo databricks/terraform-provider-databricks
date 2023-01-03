@@ -42,6 +42,7 @@ var (
 	jobClustersRegex          = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex           = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 	predefinedClusterPolicies = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
+	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -1427,6 +1428,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						})
 					}
 				}
+				ic.emitSecretsFromSecretsPath(cluster.SparkConf)
+				ic.emitSecretsFromSecretsPath(cluster.SparkEnvVars)
 			}
 
 			if ic.meAdmin {

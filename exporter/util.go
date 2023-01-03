@@ -61,7 +61,20 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitSecretsFromSecretsPath(c.SparkConf)
+	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
+}
+
+func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
+	for _, v := range m {
+		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_secret_scope",
+				ID:       res[1],
+			})
+		}
+	}
 }
 
 func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {

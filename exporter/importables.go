@@ -42,6 +42,7 @@ var (
 	jobClustersRegex          = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex           = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 	predefinedClusterPolicies = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
+	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -518,7 +519,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			// TODO: don't export users and admins group
-			for _, g := range ic.allGroups {
+			for offset, g := range ic.allGroups {
 				if !ic.MatchesName(g.DisplayName) {
 					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
 					continue
@@ -527,6 +528,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_group",
 					ID:       g.ID,
 				})
+				log.Printf("[INFO] Scanned %d of %d groups", offset+1, len(ic.allGroups))
 			}
 			return nil
 		},
@@ -792,7 +794,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       scope.Name,
 						Name:     scope.Name,
 					})
-					log.Printf("[INFO] Imported %d of %d secret scopes", i, len(scopes))
+					log.Printf("[INFO] Imported %d of %d secret scopes", i+1, len(scopes))
 				}
 			}
 			return nil
@@ -1426,6 +1428,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						})
 					}
 				}
+				ic.emitSecretsFromSecretsPath(cluster.SparkConf)
+				ic.emitSecretsFromSecretsPath(cluster.SparkEnvVars)
 			}
 
 			if ic.meAdmin {

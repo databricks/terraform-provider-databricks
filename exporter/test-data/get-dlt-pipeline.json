@@ -23,7 +23,12 @@
               "destination": "dbfs:/FileStore/jars/test.jar"
             }
           }
-        ]
+        ],
+        "spark_conf": {
+          "fs.azure.account.auth.type": "OAuth",
+          "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
+          "fs.azure.account.oauth2.client.secret": "{{secrets/some-kv-scope/test-secret}}"
+        }
       }
     ],
     "continuous": true,

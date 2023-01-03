@@ -35,6 +35,7 @@ func TestResourceSecretRead(t *testing.T) {
 	assert.Equal(t, 12345678, d.Get("last_updated_timestamp"))
 	assert.Equal(t, "foo", d.Get("scope"))
 	assert.Equal(t, "", d.Get("string_value"))
+	assert.Equal(t, "{{secrets/foo/bar}}", d.Get("config_reference"))
 }
 
 func TestResourceSecretRead_NotFound(t *testing.T) {

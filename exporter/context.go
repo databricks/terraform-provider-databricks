@@ -333,8 +333,14 @@ func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
 	return nil
 }
 
+// This function checks if resource exist in any state (already added or in process of addition)
 func (ic *importContext) Has(r *resource) bool {
-	if _, visiting := ic.importing[r.String()]; visiting {
+	return ic.HasInState(r, false)
+}
+
+// This function checks if resource exist. onlyAdded flag enforces that true is returned only if it was added with Add()
+func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
+	if v, visiting := ic.importing[r.String()]; visiting && (v || !onlyAdded) {
 		return true
 	}
 	k, v := r.MatchPair()
@@ -352,6 +358,10 @@ func (ic *importContext) Has(r *resource) bool {
 }
 
 func (ic *importContext) Add(r *resource) {
+	if ic.HasInState(r, true) { // resource must exist and already marked as added
+		return
+	}
+	ic.importing[r.String()] = true // mark resource as added
 	state := r.Data.State()
 	if state == nil {
 		log.Printf("[ERROR] state is nil for %s", r)
@@ -422,7 +432,7 @@ func (ic *importContext) Emit(r *resource) {
 		ic.testEmits[r.String()] = true
 		return
 	}
-	ic.importing[r.String()] = true
+	ic.importing[r.String()] = false // we're starting to add a new resource
 	pr, ok := ic.Resources[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available in provider", r)

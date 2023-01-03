@@ -50,15 +50,20 @@ All arguments are optional and they tune what code is being generated.
 
 Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which technically allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the prefered way. With the exception of notebooks and possibly libraries, which may have their own CI/CD processes.
 * `groups` - [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
-* `users` - [databricks_user](../resources/user.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, the only use-case for importing `users` service is to migrate workspaces.
+* `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, the only use-case for importing `users` service is to migrate workspaces.
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md). Includes [policies](../resources/cluster_policy.md), [permissions](../resources/permissions.md), [pools](../resources/instance_pool.md).
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually there are more automated jobs than interactive clusters, so they get their own file in this tool's output.
-* `access` - [databricks_permissions](../resources/permissions.md) and [databricks_instance_profile](../resources/instance_profile.md).
+* `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md)
+* `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md) and [databricks_ip_access_list](../resources/ip_access_list.md).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md). 
 * `storage` - any [databricks_dbfs_file](../resources/dbfs_file.md) will be downloaded locally and properly arranged into terraform state.
 * `mounts` - works only in combination with `-mounts`.
-* `notebooks` - [databricks_notebook](../resources/notebook.md)
+* `notebooks` - **listing** [databricks_notebook](../resources/notebook.md)
+* `repos` - **listing** [databricks_repo](../resources/repo.md)
 * `workspace` - [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
+* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md)
+* `sql-queries` - **listing** [databricks_sql_query](../resources/sql_query.md)
+* `sql-dashboards` - **listing** [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md)
 
 ## Secrets
 

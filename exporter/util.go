@@ -61,7 +61,20 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitSecretsFromSecretsPath(c.SparkConf)
+	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
+}
+
+func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
+	for _, v := range m {
+		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_secret_scope",
+				ID:       res[1],
+			})
+		}
+	}
 }
 
 func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
@@ -352,7 +365,7 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 	a := jobs.NewJobsAPI(ic.Context, ic.Client)
 	starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
 	i := 0
-	for _, job := range l {
+	for offset, job := range l {
 		if !ic.MatchesName(job.Settings.Name) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
@@ -383,8 +396,9 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 			ID:       job.ID(),
 		})
 		i++
-		log.Printf("[INFO] Imported %d of total %d jobs", i, len(l))
+		log.Printf("[INFO] Scanned %d of total %d jobs", offset+1, len(l))
 	}
+	log.Printf("[INFO] %d of total %d jobs are going to be imported", i, len(l))
 }
 
 // returns created file name in "files" directory for the export and error if any

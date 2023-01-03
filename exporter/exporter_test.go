@@ -1565,6 +1565,30 @@ func TestImportingDLTPipelines(t *testing.T) {
 				Resource: "/api/2.0/instance-profiles/list",
 				Response: getJSONObject("test-data/list-instance-profiles.json"),
 			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -1573,7 +1597,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "dlt"
-			ic.services = "dlt,access,notebooks"
+			ic.services = "dlt,access,notebooks,secrets"
 
 			err := ic.Run()
 			assert.NoError(t, err)

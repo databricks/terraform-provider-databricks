@@ -44,6 +44,7 @@ All arguments are optional and they tune what code is being generated.
 * `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources multiple workspaces for merging into a single one.
 * `-skip-interactive` - optionally run in a non-interactive mode.
 * `-includeUserDomains` - optionally include domain name into generated resource name for `databricks_user` resource.
+* `-importAllUsers` - optionally include all users and service principals even if they only part of the `users` group.
 
 ## Services
 

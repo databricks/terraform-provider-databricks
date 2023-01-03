@@ -288,7 +288,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "notebook_task.notebook_path", Resource: "databricks_notebook"},
-			{Path: "notebook_task.notebook_path", Resource: "databricks_repo", Match: "path", MatchType: "prefix"},
+			{Path: "notebook_task.notebook_path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -297,7 +297,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.notebook_task.notebook_path", Resource: "databricks_notebook"},
-			{Path: "task.notebook_task.notebook_path", Resource: "databricks_repo", Match: "path", MatchType: "prefix"},
+			{Path: "task.notebook_task.notebook_path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "task.pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_sql_query"},
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
@@ -1006,8 +1006,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 
 		Depends: []reference{
-			{Path: "path", Resource: "databricks_user", Match: "repos", MatchType: "prefix"},
-			{Path: "path", Resource: "databricks_service_principal", Match: "repos", MatchType: "prefix"},
+			{Path: "path", Resource: "databricks_user", Match: "repos", MatchType: MatchPrefix},
+			{Path: "path", Resource: "databricks_service_principal", Match: "repos", MatchType: MatchPrefix},
 		},
 	},
 	"databricks_workspace_conf": {
@@ -1142,8 +1142,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "source", File: true},
-			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: "prefix"},
-			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: "prefix"},
+			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},
+			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: MatchPrefix},
 		},
 	},
 	"databricks_sql_query": {
@@ -1475,7 +1475,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "library.notebook.path", Resource: "databricks_notebook"},
-			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path", MatchType: "prefix"},
+			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},

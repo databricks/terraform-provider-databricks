@@ -56,13 +56,36 @@ type importable struct {
 	ApiVersion common.ApiVersion
 }
 
+type MatchType string
+
+const (
+	// MatchExact is to specify that whole value should match
+	MatchExact = "exact"
+	// MatchPrefix is to specify that prefix of value should match
+	MatchPrefix = "prefix"
+)
+
 type reference struct {
 	Path      string
 	Resource  string
 	Match     string
-	MatchType string // type of match, `prefix` - reference is embedded into string, `` (or `exact`) - full match
+	MatchType MatchType // type of match, `prefix` - reference is embedded into string, `` (or `exact`) - full match
 	Variable  bool
 	File      bool
+}
+
+func (r reference) MatchAttribute() string {
+	if r.Match != "" {
+		return r.Match
+	}
+	return "id"
+}
+
+func (r reference) MatchTypeValue() MatchType {
+	if r.MatchType == "" {
+		return MatchExact
+	}
+	return r.MatchType
 }
 
 type resource struct {

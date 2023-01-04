@@ -25,7 +25,7 @@ func TestAccListClustersIntegration(t *testing.T) {
 		ClusterName: "Terraform Integration Test " + randomName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
 			clusters.SparkVersionRequest{
-				Latest:          true,
+				Latest: true,
 			}),
 		InstancePoolID:         qa.GetEnvOrSkipTest(t, "TEST_INSTANCE_POOL_ID"),
 		IdempotencyToken:       "acc-list-" + randomName,
@@ -76,7 +76,7 @@ func TestAccListClustersResizeIntegrationTest(t *testing.T) {
 		ClusterName: "Terraform Integration Test " + randomName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
 			clusters.SparkVersionRequest{
-				Latest:          true,
+				Latest: true,
 			}),
 		InstancePoolID:         qa.GetEnvOrSkipTest(t, "TEST_INSTANCE_POOL_ID"),
 		IdempotencyToken:       "acc-list-" + randomName,

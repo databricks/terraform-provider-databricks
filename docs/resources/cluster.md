@@ -146,8 +146,8 @@ resource "databricks_cluster" "cluster_with_table_access_control" {
   autotermination_minutes = 20
 
   spark_conf = {
-    "spark.databricks.repl.allowedLanguages": "python,sql",
-    "spark.databricks.cluster.profile": "serverless"
+    "spark.databricks.repl.allowedLanguages" : "python,sql",
+    "spark.databricks.cluster.profile" : "serverless"
   }
 
   custom_tags = {

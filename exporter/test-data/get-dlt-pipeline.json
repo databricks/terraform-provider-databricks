@@ -40,6 +40,11 @@
         "notebook": {
           "path": "/Users/user@domain.com/Test DLT"
         }
+      },
+      {
+        "notebook": {
+          "path": "/Repos/user@domain.com/repo/Test DLT"
+        }
       }
     ],
     "name": "Test DLT",

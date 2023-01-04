@@ -87,11 +87,35 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 			Attribute: "user_name",
 			Value:     userOrSPName,
 		})
-	} else {
+	} else if uuidRegex.MatchString(userOrSPName) {
 		ic.Emit(&resource{
 			Resource:  "databricks_service_principal",
 			Attribute: "application_id",
 			Value:     userOrSPName,
+		})
+	}
+}
+
+func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
+	if strings.HasPrefix(path, prefix) {
+		parts := strings.SplitN(path, "/", 4)
+		if len(parts) >= 3 {
+			ic.emitUserOrServicePrincipal(parts[2])
+		}
+	}
+}
+
+func (ic *importContext) emitNotebookOrRepo(path string) {
+	if strings.HasPrefix(path, "/Repos") {
+		ic.Emit(&resource{
+			Resource:  "databricks_repo",
+			Attribute: "path",
+			Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
+		})
+	} else {
+		ic.Emit(&resource{
+			Resource: "databricks_notebook",
+			ID:       path,
 		})
 	}
 }

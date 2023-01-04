@@ -68,6 +68,7 @@ type importContext struct {
 	workspaceConfKeys map[string]any
 
 	includeUserDomains  bool
+	importAllUsers      bool
 	debug               bool
 	mounts              bool
 	services            string

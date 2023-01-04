@@ -39,9 +39,10 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 		HCL:         `application_id = "abc"`,
 		Read:        true,
 		NonWritable: true,
-		ID:          "_",
+		ID:          "abc",
 	}.ApplyAndExpectData(t, map[string]any{
 		"sp_id":          "abc",
+		"id":             "abc",
 		"application_id": "abc",
 		"display_name":   "Example Service Principal",
 		"active":         true,

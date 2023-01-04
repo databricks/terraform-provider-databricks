@@ -26,6 +26,8 @@ The following arguments are required:
 
 * `name` - Name of Catalog relative to parent metastore. Change forces creation of a new resource.
 * `storage_root` - (Optional) Managed location of the catalog. Location in cloud storage where data for managed tables will be stored. If not specified, the location will default to the metastore root location. Change forces creation of a new resource.
+* `provider_name` - (Optional) For Delta Sharing Catalogs: the name of the delta sharing provider. Change forces creation of a new resource.
+* `share_name` - (Optional) For Delta Sharing Catalogs: the name of the share under the share provider. Change forces creation of a new resource.
 * `owner` - (Optional) Username/groupname/sp application_id of the catalog owner.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Catalog properties.
@@ -36,7 +38,7 @@ The following arguments are required:
 This resource can be imported by name:
 
 ```bash
-$ terraform import databricks_catalog.this <name>
+terraform import databricks_catalog.this <name>
 ```
 
 ## Related Resources

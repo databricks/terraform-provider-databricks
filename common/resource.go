@@ -199,7 +199,13 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 				diags = diag.FromErr(err)
 			}
 			StructToData(ptr.Elem().Interface(), s, d)
-			d.SetId("_")
+			// check if the resource schema has the `id` attribute (marked with `json:"id"` in the provided structure).
+			// and if yes, then use it as resource ID. If not, then use default value for resource ID (`_`)
+			if _, ok := s["id"]; ok {
+				d.SetId(d.Get("id").(string))
+			} else {
+				d.SetId("_")
+			}
 			return
 		},
 	}

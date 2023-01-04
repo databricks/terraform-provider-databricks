@@ -247,7 +247,7 @@ The `timeouts` block allows you to specify `create`, `read` and `update` timeout
 timeouts {
   create = "30m"
   read   = "10m"
-  update = "20m
+  update = "20m"
 }
 ```
 

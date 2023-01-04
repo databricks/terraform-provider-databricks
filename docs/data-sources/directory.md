@@ -11,7 +11,7 @@ This data source allows to get information about a directory in a Databricks Wor
 
 ```hcl
 data "databricks_notebook" "prod" {
-  path   = "/Production"
+  path = "/Production"
 }
 ```
 

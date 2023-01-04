@@ -209,7 +209,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "driver_instance_pool_id", Resource: "databricks_instance_pool"},
-			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -275,7 +275,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "email_notifications.on_success", Resource: "databricks_user", Match: "user_name"},
 			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name"},
 			{Path: "new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "new_cluster.policy_id", Resource: "databricks_cluster_policy"},
@@ -301,13 +301,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "task.existing_cluster_id", Resource: "databricks_cluster"},
 			{Path: "job_cluster.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "job_cluster.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "job_cluster.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
@@ -519,7 +519,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			// TODO: don't export users and admins group
-			for _, g := range ic.allGroups {
+			for offset, g := range ic.allGroups {
 				if !ic.MatchesName(g.DisplayName) {
 					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
 					continue
@@ -528,6 +528,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_group",
 					ID:       g.ID,
 				})
+				log.Printf("[INFO] Scanned %d of %d groups", offset+1, len(ic.allGroups))
 			}
 			return nil
 		},
@@ -578,8 +579,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       fmt.Sprintf("%s|%s", g.ID, instanceProfile.Value),
 					})
 				}
-				if g.DisplayName == "users" {
-					// TODO: make flag
+				if g.DisplayName == "users" && !ic.importAllUsers {
 					log.Printf("[INFO] Skipping import of entire user directory ...")
 					continue
 				}
@@ -793,7 +793,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       scope.Name,
 						Name:     scope.Name,
 					})
-					log.Printf("[INFO] Imported %d of %d secret scopes", i, len(scopes))
+					log.Printf("[INFO] Imported %d of %d secret scopes", i+1, len(scopes))
 				}
 			}
 			return nil
@@ -1448,7 +1448,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "library.notebook.path", Resource: "databricks_notebook"},

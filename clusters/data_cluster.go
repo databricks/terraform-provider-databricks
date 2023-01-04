@@ -12,7 +12,7 @@ func DataSourceCluster() *schema.Resource {
 	type clusterData struct {
 		Id          string       `json:"id,omitempty" tf:"computed"`
 		ClusterId   string       `json:"cluster_id,omitempty" tf:"computed"`
-		Name        string       `json:"name,omitempty" tf:"computed"`
+		Name        string       `json:"cluster_name,omitempty" tf:"computed"`
 		ClusterInfo *ClusterInfo `json:"cluster_info,omitempty" tf:"computed"`
 	}
 	return common.DataResource(clusterData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
@@ -23,16 +23,20 @@ func DataSourceCluster() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			namedClusters := []ClusterInfo{}
 			for _, clst := range clusters {
 				cluster := clst
 				if cluster.ClusterName == data.Name {
-					data.ClusterInfo = &cluster
-					break
+					namedClusters = append(namedClusters, cluster)
 				}
 			}
-			if data.ClusterInfo == nil {
+			if len(namedClusters) == 0 {
 				return fmt.Errorf("there is no cluster with name '%s'", data.Name)
 			}
+			if len(namedClusters) > 1 {
+				return fmt.Errorf("there is more than one cluster with name '%s'", data.Name)
+			}
+			data.ClusterInfo = &namedClusters[0]
 		} else if data.ClusterId != "" {
 			cls, err := clusterAPI.Get(data.ClusterId)
 			if err != nil {
@@ -40,7 +44,7 @@ func DataSourceCluster() *schema.Resource {
 			}
 			data.ClusterInfo = &cls
 		} else {
-			return fmt.Errorf("you need to specify either `name` or `cluster_id`")
+			return fmt.Errorf("you need to specify either `cluster_name` or `cluster_id`")
 		}
 		data.Id = data.ClusterInfo.ClusterID
 		data.ClusterId = data.ClusterInfo.ClusterID

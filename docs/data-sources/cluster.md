@@ -24,8 +24,8 @@ data "databricks_cluster" "all" {
 
 ## Argument Reference
 
-* `cluster_id` - (Required if `name` isn't specified) The id of the cluster
-* `name` - (Required if `cluster_id` isn't specified) The exact name of the cluster to search
+* `cluster_id` - (Required if `cluster_name` isn't specified) The id of the cluster
+* `cluster_name` - (Required if `cluster_id` isn't specified) The exact name of the cluster to search
 
 ## Attribute Reference
 

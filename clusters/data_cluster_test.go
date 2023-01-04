@@ -71,7 +71,7 @@ func TestClusterDataByName(t *testing.T) {
 			},
 		},
 		Resource:    DataSourceCluster(),
-		HCL:         `name = "Shared Autoscaling"`,
+		HCL:         `cluster_name = "Shared Autoscaling"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -101,18 +101,57 @@ func TestClusterDataByName_NotFound(t *testing.T) {
 			},
 		},
 		Resource:    DataSourceCluster(),
-		HCL:         `name = "Unknown"`,
+		HCL:         `cluster_name = "Unknown"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
 	}.ExpectError(t, "there is no cluster with name 'Unknown'")
 }
 
+func TestClusterDataByName_DuplicateNames(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/list",
+
+				Response: ClusterList{
+					Clusters: []ClusterInfo{
+						{
+							ClusterID:              "abc",
+							NumWorkers:             100,
+							ClusterName:            "Shared Autoscaling",
+							SparkVersion:           "7.1-scala12",
+							NodeTypeID:             "i3.xlarge",
+							AutoterminationMinutes: 15,
+							State:                  ClusterStateRunning,
+						},
+						{
+							ClusterID:              "def",
+							NumWorkers:             100,
+							ClusterName:            "Shared Autoscaling",
+							SparkVersion:           "7.1-scala12",
+							NodeTypeID:             "i3.xlarge",
+							AutoterminationMinutes: 15,
+							State:                  ClusterStateRunning,
+						},
+					},
+				},
+			},
+		},
+		Resource:    DataSourceCluster(),
+		HCL:         `cluster_name = "Shared Autoscaling"`,
+		Read:        true,
+		NonWritable: true,
+		ID:          "_",
+	}.ExpectError(t, "there is more than one cluster with name 'Shared Autoscaling'")
+}
+
 func TestClusterDataByName_ListError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,
 		Resource:    DataSourceCluster(),
-		HCL:         `name = "Unknown"`,
+		HCL:         `cluster_name = "Unknown"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -137,5 +176,5 @@ func TestClusterData_ErrorNoParams(t *testing.T) {
 		NonWritable: true,
 		HCL:         "",
 		ID:          "_",
-	}.ExpectError(t, "you need to specify either `name` or `cluster_id`")
+	}.ExpectError(t, "you need to specify either `cluster_name` or `cluster_id`")
 }

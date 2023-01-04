@@ -33,7 +33,7 @@ Terraform will handle any configuration drift on every `terraform apply` run, ev
 
 It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
-Below summarizes which privilege types apply to each securable object in the catalog:
+Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/sql-ref-privileges.html#privilege-types), all privileges to be written with underscore instead of space, e.g. `CREATE_TABLE` and not `CREATE TABLE`. Below summarizes which privilege types apply to each securable object in the catalog:
 
 ## Metastore grants
 

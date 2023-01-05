@@ -174,11 +174,11 @@ func (a NotebooksAPI) ListDirectories(path string, recursive bool) ([]ObjectStat
 }
 
 func (a NotebooksAPI) recursiveAddDirectoryPaths(path string, pathList *[]ObjectStatus) error {
-	notebookInfoList, err := a.list(path)
+	directoryInfoList, err := a.list(path)
 	if err != nil {
 		return err
 	}
-	for _, v := range notebookInfoList {
+	for _, v := range directoryInfoList {
 		if v.ObjectType == Directory {
 			*pathList = append(*pathList, v)
 			err := a.recursiveAddDirectoryPaths(v.Path, pathList)

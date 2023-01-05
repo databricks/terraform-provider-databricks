@@ -76,9 +76,10 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 		New:         true,
 		NonWritable: true,
 		HCL:         `job_id = "234"`,
-		ID:          "_",
+		ID:          "234",
 	}.ApplyAndExpectData(t, map[string]any{
 		"job_id":                         "234",
+		"id":                             "234",
 		"job_settings.0.settings.0.name": "Second",
 	})
 }
@@ -90,9 +91,10 @@ func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		HCL:         `job_name = "First"`,
-		ID:          "_",
+		ID:          "123",
 	}.ApplyAndExpectData(t, map[string]any{
 		"job_id":                         "123",
+		"id":                             "123",
 		"job_settings.0.settings.0.name": "First",
 	})
 }
@@ -132,7 +134,7 @@ func TestDataSourceQueryableJobNoMatchId(t *testing.T) {
 		Resource:    DataSourceJob(),
 		Read:        true,
 		NonWritable: true,
-		HCL:         `job_id= "567"`,
+		HCL:         `id= "567"`,
 		ID:          "_",
 	}.ExpectError(t, "Job 567 does not exist.")
 }

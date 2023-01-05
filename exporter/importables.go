@@ -1133,6 +1133,17 @@ var resourcesMap map[string]importable = map[string]importable{
 			name := r.ID[1:] + ext[language] // todo: replace non-alphanum+/ with _
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
+			splits := strings.Split(r.Name, "_")
+			notebookId := splits[len(splits)-1]
+
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/notebooks/%s", notebookId),
+					Name:     "notebook_" + ic.Importables["databricks_notebook"].Name(ic, r.Data),
+				})
+			}
+
 			if err != nil {
 				return err
 			}
@@ -1478,6 +1489,54 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		},
+	},
+	"databricks_directory": {
+		Service: "directories",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("path").(string)
+			if name == "" {
+				return d.Id()
+			} else {
+				name = nameNormalizationRegex.ReplaceAllString(name[1:], "_") + "_" +
+					strconv.FormatInt(int64(d.Get("object_id").(int)), 10)
+			}
+			return name
+		},
+		List: func(ic *importContext) error {
+			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+			directoryList, err := notebooksAPI.ListDirectories("/", true)
+			if err != nil {
+				return err
+			}
+			for offset, directory := range directoryList {
+				if strings.HasPrefix(directory.Path, "/Repos") {
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_directory",
+					ID:       directory.Path,
+				})
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d directories",
+						offset+1, len(directoryList))
+				}
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+
+			splits := strings.Split(r.Name, "_")
+			directoryId := splits[len(splits)-1]
+
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/directories/%s", directoryId),
+					Name:     "directory_" + ic.Importables["databricks_directory"].Name(ic, r.Data),
+				})
+			}
+			return nil
 		},
 	},
 }

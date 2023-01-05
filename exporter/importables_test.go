@@ -149,7 +149,7 @@ func TestGroup(t *testing.T) {
 	err = ic.Importables["databricks_group"].Import(ic, r)
 	assert.NoError(t, err)
 	assert.Len(t, ic.testEmits, 4)
-	assert.True(t, ic.testEmits["databricks_group_instance_profile[<unknown>] (id: 123|abc)"])
+	assert.True(t, ic.testEmits["databricks_group_role[<unknown>] (id: 123|abc)"])
 	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: abc)"])
 	assert.True(t, ic.testEmits["databricks_group[<unknown>] (id: parent-group)"])
 	assert.True(t, ic.testEmits["databricks_group_member[_parent-group_foo] (id: parent-group|123)"])

@@ -1,0 +1,30 @@
+package mws
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func DataSourceMwsCredentials() *schema.Resource {
+	type mwsCredentialsData struct {
+		Ids map[string]string `json:"ids,omitempty" tf:"computed,slice_set"`
+	}
+	return common.DataResource(mwsCredentialsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+		data := e.(*mwsCredentialsData)
+		if c.AccountID == "" {
+			return fmt.Errorf("provider block is missing `account_id` property")
+		}
+		credentials, err := NewCredentialsAPI(ctx, c).List(c.AccountID)
+		if err != nil {
+			return err
+		}
+		data.Ids = make(map[string]string)
+		for _, v := range credentials {
+			data.Ids[v.CredentialsName] = v.CredentialsID
+		}
+		return nil
+	})
+}

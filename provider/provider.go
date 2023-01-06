@@ -50,6 +50,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_group":                   scim.DataSourceGroup(),
 			"databricks_jobs":                    jobs.DataSourceJobs(),
 			"databricks_job":                     jobs.DataSourceJob(),
+			"databricks_mws_credentials":         mws.DataSourceMwsCredentials(),
 			"databricks_mws_workspaces":          mws.DataSourceMwsWorkspaces(),
 			"databricks_node_type":               clusters.DataSourceNodeType(),
 			"databricks_notebook":                workspace.DataSourceNotebook(),

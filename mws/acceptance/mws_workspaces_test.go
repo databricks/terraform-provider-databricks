@@ -67,7 +67,7 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 				workspace_name  = "{env.TEST_PREFIX}-{var.RANDOM}"
 				location        = "{env.GOOGLE_REGION}"
 		
-				cloud_resource_bucket {
+				cloud_resource_container {
 					gcp {
 						project_id = "{env.GOOGLE_PROJECT}"
 					}
@@ -99,18 +99,18 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 				workspace_name  = "{env.TEST_PREFIX}-{var.RANDOM}"
 				location        = "{env.GOOGLE_REGION}"
 		
-				cloud_resource_bucket {
+				cloud_resource_container {
 					gcp {
 						project_id = "{env.GOOGLE_PROJECT}"
 					}
 				}
-				network {
-					network_id = databricks_mws_networks.this.network_id
-					gcp_common_network_config {
-						gke_connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-						gke_cluster_master_ip_range = "10.3.0.0/28"
-					}
-  				}
+
+				network_id = databricks_mws_networks.this.network_id
+				
+				gke_config {
+					connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+					master_ip_range = "10.3.0.0/28"
+				}
 			}`,
 		},
 	})

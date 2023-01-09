@@ -16,7 +16,7 @@ data "databricks_job" "this" {
   job_name = "My job"
 }
 
-output "cluster_id" {
+output "job_num_workers" {
   value     = data.databricks_job.this.job_settings[0].settings[0].new_cluster[0].num_workers
   sensitive = false
 }
@@ -26,8 +26,9 @@ output "cluster_id" {
 
 This data source exports the following attributes:
 
-* `job_id` - the id of [databricks_job](../resources/job.md) if the resource was matched by name.
-* `job_name` - the job name of [databricks_job](../resources/job.md) if the resource was matched by id.
+
+* `id` - the id of [databricks_job](../resources/job.md) if the resource was matched by name.
+* `name` - the job name of [databricks_job](../resources/job.md) if the resource was matched by id.
 * `job_settings` - the same fields as in [databricks_job](../resources/job.md).
 
 ## Related Resources

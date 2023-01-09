@@ -48,6 +48,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file_paths":         storage.DataSourceDbfsFilePaths(),
 			"databricks_directory":               workspace.DataSourceDirectory(),
 			"databricks_group":                   scim.DataSourceGroup(),
+			"databricks_instance_pool":           pools.DataSourceInstancePool(),
 			"databricks_jobs":                    jobs.DataSourceJobs(),
 			"databricks_job":                     jobs.DataSourceJob(),
 			"databricks_mws_workspaces":          mws.DataSourceMwsWorkspaces(),

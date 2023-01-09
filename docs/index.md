@@ -12,6 +12,7 @@ Use the Databricks Terraform provider to interact with almost all of [Databricks
 ![Resources](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/resources.png)
 
 Compute resources
+
 * Deploy [databricks_cluster](resources/cluster.md) on selected [databricks_node_type](data-sources/node_type.md)
 * Schedule automated [databricks_job](resources/job.md)
 * Control cost and data access with [databricks_cluster_policy](resources/cluster_policy.md)
@@ -21,12 +22,14 @@ Compute resources
 * Manage [databricks_repo](resources/repo.md)
 
 Storage
+
 * Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](resources/dbfs_file.md)
 * List entries on DBFS with [databricks_dbfs_file_paths](data-sources/dbfs_file_paths.md) data source
 * Get contents of small files with [databricks_dbfs_file](data-sources/dbfs_file.md) data source
 * Mount storage with [databricks_mount](resources/mount.md) resource
 
 Security
+
 * Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
 * Create [databricks_service_principal](resources/service_principal.md) with [databricks_obo_token](resources/obo_token.md) to enable even more restricted access control.
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
@@ -35,19 +38,21 @@ Security
 * Manage data object access control lists with [databricks_sql_permissions](resources/sql_permissions.md)
 * Keep sensitive elements like passwords in [databricks_secret](resources/secret.md), grouped into [databricks_secret_scope](resources/secret_scope.md) and controlled by [databricks_secret_acl](resources/secret_acl.md)
 
-
 [E2 Architecture](../docs/guides/aws-workspace.md)
+
 * Create [workspaces](resources/mws_workspaces.md) in your [VPC](resources/mws_networks.md) with [DBFS](resources/mws_storage_configurations.md) using [cross-account IAM roles](resources/mws_credentials.md), having your notebooks encrypted with [CMK](resources/mws_customer_managed_keys.md).
 * Use predefined AWS IAM Policy Templates: [databricks_aws_assume_role_policy](data-sources/aws_assume_role_policy.md), [databricks_aws_crossaccount_policy](data-sources/aws_crossaccount_policy.md), [databricks_aws_bucket_policy](data-sources/aws_bucket_policy.md)
 * Configure billing and audit [databricks_mws_log_delivery](resources/mws_log_delivery.md)
 
 Databricks SQL
+
 * Create [databricks_sql_endpoint](resources/sql_endpoint.md) controlled by [databricks_permissions](resources/permissions.md).
 * Manage [queries](resources/sql_query.md) and their [visualizations](resources/sql_visualization.md).
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
 * Provide [global configuration for all SQL Endpoints](docs/resources/sql_global_config.md)
 
 MLFlow
+
 * Create [MLFlow models](resources/mlflow_model.md).
 * Create [MLFlow experiments](resources/mlflow_experiment.md).
 
@@ -98,11 +103,11 @@ output "job_url" {
 
 ## Switching from `databrickslabs` to `databricks` namespace
 
-To make Databricks Terraform Provider generally available, we've moved it from [https://github.com/databrickslabs](https://github.com/databrickslabs) to [https://github.com/databricks](https://github.com/databricks). We've worked closely with the Terraform Registry team at Hashicorp to ensure a smooth migration. Existing terraform deployments continue to work as expected without any action from your side. We ask you to replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files. 
+To make Databricks Terraform Provider generally available, we've moved it from [https://github.com/databrickslabs](https://github.com/databrickslabs) to [https://github.com/databricks](https://github.com/databricks). We've worked closely with the Terraform Registry team at Hashicorp to ensure a smooth migration. Existing terraform deployments continue to work as expected without any action from your side. We ask you to replace `databrickslabs/databricks` with `databricks/databricks` in all your `.tf` files.
 
 You should have [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl) file in your state directory that is checked into source control. terraform init will give you the following warning.
 
-```
+```text
 Warning: Additional provider information from registry 
 
 The remote registry returned warnings for registry.terraform.io/databrickslabs/databricks:
@@ -129,10 +134,10 @@ There are currently three supported methods to [authenticate](https://docs.datab
 
 ### Authenticating with Databricks CLI credentials
 
-No configuration options given to your provider will look up configured credentials in `~/.databrickscfg` file. It is created by the `databricks configure --token` command. Check [this page](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) 
-for more details. The provider uses config file credentials only when `host`/`token` or `azure_auth` options are not specified. 
-It is the recommended way to use Databricks Terraform provider, in case you're already using the same approach with 
-[AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file) 
+No configuration options given to your provider will look up configured credentials in `~/.databrickscfg` file. It is created by the `databricks configure --token` command. Check [this page](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication)
+for more details. The provider uses config file credentials only when `host`/`token` or `azure_auth` options are not specified.
+It is the recommended way to use Databricks Terraform provider, in case you're already using the same approach with
+[AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file)
 or [Azure CLI authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli).
 
 ``` hcl
@@ -187,16 +192,16 @@ provider "databricks" {
 
 The provider block supports the following arguments:
 
-* `host` - (optional) This is the host of the Databricks workspace. It is a URL that you use to login to your workspace. 
+* `host` - (optional) This is the host of the Databricks workspace. It is a URL that you use to login to your workspace.
 Alternatively, you can provide this value as an environment variable `DATABRICKS_HOST`.
-* `token` - (optional) This is the API token to authenticate into the workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_TOKEN`. 
+* `token` - (optional) This is the API token to authenticate into the workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_TOKEN`.
 * `username` - (optional) This is the username of the user that can log into the workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_USERNAME`. Recommended only for [creating workspaces in AWS](resources/mws_workspaces.md).
 * `password` - (optional) This is the user's password that can log into the workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_PASSWORD`. Recommended only for [creating workspaces in AWS](resources/mws_workspaces.md).
-* `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/username/password/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`. 
-* `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to 
+* `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/username/password/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`.
+* `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to
 `DEFAULT`.
 * `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
-* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, and `databricks-cli`.
+* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-creds`, `google-accounts`, `google-workspace` and `databricks-cli`.
 
 ## Special configurations for Azure
 
@@ -275,7 +280,7 @@ resource "databricks_user" "my-user" {
 * `azure_workspace_resource_id` - (optional) `id` attribute of [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource. Combination of subscription id, resource group name, and workspace name. Required with `auzre_use_msi` or `azure_client_secret`.
 * `azure_client_secret` - (optional) This is the Azure Enterprise Application (Service principal) client secret. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `ARM_CLIENT_SECRET`.
 * `azure_client_id` - (optional) This is the Azure Enterprise Application (Service principal) client id. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `ARM_CLIENT_ID`.
-* `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal) 
+* `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal)
 resides. Alternatively, you can provide this value as an environment variable `ARM_TENANT_ID`.
 * `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
 * `azure_use_msi` - (optional) Use [Azure Managed Service Identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/managed_service_identity) authentication. Alternatively, you can provide this value as an environment variable `ARM_USE_MSI`.
@@ -283,6 +288,10 @@ resides. Alternatively, you can provide this value as an environment variable `A
 There are `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the [`azurerm` provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest).
 
 When a workspace is created using a service principal account, that service principal account is automatically added to the workspace as a member of the admins group. To add a new service principal account to an existing workspace, create a [databricks_service_principal](resources/service_principal.md).
+
+## Special configurations for GCP
+
+The provider works with [Google Cloud CLI authentication](https://cloud.google.com/sdk/docs/authorizing) to facilitate local development workflows. For automated scenarios, a service principal auth is necessary using `google_service_account` parameter with [impersonation](https://cloud.google.com/docs/authentication#service-accounts) and Application Default Credentials. and specification of  and `google_credentials` parameters). Alternatively, you could provide the service account key directly by passing it to `google_credentials` parameter (or `GOOGLE_CREDENTIALS` environment variable)
 
 ## Miscellaneous configuration parameters
 
@@ -295,7 +304,6 @@ This section covers configuration parameters not related to authentication. They
 * `debug_truncate_bytes` - Applicable only when `TF_LOG=DEBUG` is set. Truncate JSON fields in HTTP requests and responses above this limit. Default is *96*.
 * `debug_headers` - Applicable only when `TF_LOG=DEBUG` is set. Debug HTTP headers of requests made by the provider. Default is *false*. We recommend turning this flag on only under exceptional circumstances, when troubleshooting authentication issues. Turning this flag on will log first `debug_truncate_bytes` of any HTTP header value in cleartext.
 * `skip_verify` - skips SSL certificate verification for HTTP calls. *Use at your own risk.* Default is *false* (don't skip verification).
-
 
 ## Environment variables
 
@@ -319,12 +327,11 @@ The following configuration attributes can be passed via environment variables:
 |               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`        |
 |               `rate_limit`    | `DATABRICKS_RATE_LIMIT`           |
 
-
 ## Empty provider block
 
 For example, with the following zero-argument configuration:
 
-``` hcl 
+```hcl
 provider "databricks" {}
 ```
 

@@ -190,11 +190,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			return splits[len(splits)-1]
 		},
 	},
-	"databricks_group_instance_profile": {
+	"databricks_group_role": {
 		Service: "access",
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
-			{Path: "instance_profile_id", Resource: "databricks_instance_profile"},
+			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
 	"databricks_cluster": {
@@ -572,7 +572,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       instanceProfile.Value,
 					})
 					ic.Emit(&resource{
-						Resource: "databricks_group_instance_profile",
+						Resource: "databricks_group_role",
 						ID:       fmt.Sprintf("%s|%s", g.ID, instanceProfile.Value),
 					})
 				}

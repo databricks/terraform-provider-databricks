@@ -144,7 +144,7 @@ resource "random_string" "suffix" {
 
 ## Creating a VPC
 
-The very first step is VPC creation with necessary resources. Please consult [main documentation page](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. A GCP VPC is registered as [databricks_mws_networks](../resources/mws_networks_gcp.md) resource.
+The very first step is VPC creation with necessary resources. Please consult [main documentation page](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. A GCP VPC is registered as [databricks_mws_networks](../resources/mws_networks.md) resource.
 
 ```hcl
 resource "google_compute_network" "dbx_private_vpc" {
@@ -200,7 +200,7 @@ resource "databricks_mws_networks" "this" {
 
 ## Creating a Databricks Workspace
 
-Once [the VPC](#Creating a VPC) is set up, you can create Databricks workspace through [databricks_mws_workspaces](../resources/mws_workspaces_gcp.md) resource.
+Once [the VPC](#Creating a VPC) is set up, you can create Databricks workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
 Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.accounts` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, which have to be used in the latter modules.
 

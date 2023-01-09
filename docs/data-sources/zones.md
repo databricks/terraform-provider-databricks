@@ -1,5 +1,5 @@
 ---
-subcategory: "AWS"
+subcategory: "Deployment"
 ---
 # databricks_zones Data Source
 

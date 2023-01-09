@@ -1492,7 +1492,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_directory": {
-		Service: "directories",
+		Service: "workspace",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("path").(string)
 			if name == "" {

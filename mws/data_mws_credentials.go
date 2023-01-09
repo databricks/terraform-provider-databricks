@@ -10,7 +10,7 @@ import (
 
 func DataSourceMwsCredentials() *schema.Resource {
 	type mwsCredentialsData struct {
-		Ids map[string]string `json:"ids,omitempty" tf:"computed,slice_set"`
+		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
 	return common.DataResource(mwsCredentialsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*mwsCredentialsData)

@@ -9,7 +9,6 @@ import (
 func TestDataSourceMwsCredentials(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			// TODO: run this test to get fixtures
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/credentials",

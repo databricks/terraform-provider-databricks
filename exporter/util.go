@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -505,4 +506,8 @@ func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource
 	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
 	return ic.dataToHcl(ic.Importables[r.Resource],
 		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+}
+
+func generateUniqueID(v string) string {
+	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
 }

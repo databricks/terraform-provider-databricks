@@ -606,8 +606,31 @@ func TestDataResource(t *testing.T) {
 	diags = r.ReadContext(context.Background(), d, &DatabricksClient{})
 	assert.Len(t, diags, 0)
 	assert.Equal(t, "out: test", d.Get("out"))
+	assert.Equal(t, "_", d.Id())
 
 	d.Set("in", "fail")
 	diags = r.ReadContext(context.Background(), d, &DatabricksClient{})
 	assert.Len(t, diags, 1)
+}
+
+func TestDataResourceWithID(t *testing.T) {
+	r := func() *schema.Resource {
+		type entry struct {
+			In  string `json:"in"`
+			ID  string `json:"id,omitempty" tf:"computed"`
+			Out string `json:"out,omitempty" tf:"computed"`
+		}
+		return DataResource(entry{}, func(ctx context.Context, e any, c *DatabricksClient) error {
+			dto := e.(*entry)
+			dto.Out = "out: " + dto.In
+			dto.ID = "abc"
+			return nil
+		})
+	}()
+	d := r.TestResourceData()
+	d.Set("in", "id")
+	diags := r.ReadContext(context.Background(), d, &DatabricksClient{})
+	assert.Len(t, diags, 0)
+	assert.Equal(t, "out: id", d.Get("out"))
+	assert.Equal(t, "abc", d.Id())
 }

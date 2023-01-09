@@ -41,7 +41,9 @@ var (
 	nameNormalizationRegex    = regexp.MustCompile(`\W+`)
 	jobClustersRegex          = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex           = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
+	uuidRegex                 = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 	predefinedClusterPolicies = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
+	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -188,11 +190,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			return splits[len(splits)-1]
 		},
 	},
-	"databricks_group_instance_profile": {
+	"databricks_group_role": {
 		Service: "access",
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
-			{Path: "instance_profile_id", Resource: "databricks_instance_profile"},
+			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
 	"databricks_cluster": {
@@ -208,7 +210,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "driver_instance_pool_id", Resource: "databricks_instance_pool"},
-			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -274,7 +276,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "email_notifications.on_success", Resource: "databricks_user", Match: "user_name"},
 			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name"},
 			{Path: "new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "new_cluster.policy_id", Resource: "databricks_cluster_policy"},
@@ -286,6 +288,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "notebook_task.notebook_path", Resource: "databricks_notebook"},
+			{Path: "notebook_task.notebook_path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -294,19 +297,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.notebook_task.notebook_path", Resource: "databricks_notebook"},
+			{Path: "task.notebook_task.notebook_path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "task.pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_sql_query"},
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "task.existing_cluster_id", Resource: "databricks_cluster"},
 			{Path: "job_cluster.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "job_cluster.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "job_cluster.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
@@ -358,10 +362,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			if job.NotebookTask != nil {
-				ic.Emit(&resource{
-					Resource: "databricks_notebook",
-					ID:       job.NotebookTask.NotebookPath,
-				})
+				ic.emitNotebookOrRepo(job.NotebookTask.NotebookPath)
 			}
 			if job.PipelineTask != nil {
 				ic.Emit(&resource{
@@ -372,10 +373,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			// Support for multitask jobs
 			for _, task := range job.Tasks {
 				if task.NotebookTask != nil {
-					ic.Emit(&resource{
-						Resource: "databricks_notebook",
-						ID:       task.NotebookTask.NotebookPath,
-					})
+					ic.emitNotebookOrRepo(task.NotebookTask.NotebookPath)
 				}
 				if task.PipelineTask != nil {
 					ic.Emit(&resource{
@@ -518,7 +516,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			// TODO: don't export users and admins group
-			for _, g := range ic.allGroups {
+			for offset, g := range ic.allGroups {
 				if !ic.MatchesName(g.DisplayName) {
 					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
 					continue
@@ -527,6 +525,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_group",
 					ID:       g.ID,
 				})
+				log.Printf("[INFO] Scanned %d of %d groups", offset+1, len(ic.allGroups))
 			}
 			return nil
 		},
@@ -573,12 +572,11 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       instanceProfile.Value,
 					})
 					ic.Emit(&resource{
-						Resource: "databricks_group_instance_profile",
+						Resource: "databricks_group_role",
 						ID:       fmt.Sprintf("%s|%s", g.ID, instanceProfile.Value),
 					})
 				}
-				if g.DisplayName == "users" {
-					// TODO: make flag
+				if g.DisplayName == "users" && !ic.importAllUsers {
 					log.Printf("[INFO] Skipping import of entire user directory ...")
 					continue
 				}
@@ -776,7 +774,8 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_secret_scope": {
 		Service: "secrets",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Get("name").(string)
+			name := d.Get("name").(string)
+			return name + "_" + generateUniqueID(name)
 		},
 		List: func(ic *importContext) error {
 			ssAPI := secrets.NewSecretScopesAPI(ic.Context, ic.Client)
@@ -790,9 +789,8 @@ var resourcesMap map[string]importable = map[string]importable{
 					ic.Emit(&resource{
 						Resource: "databricks_secret_scope",
 						ID:       scope.Name,
-						Name:     scope.Name,
 					})
-					log.Printf("[INFO] Imported %d of %d secret scopes", i, len(scopes))
+					log.Printf("[INFO] Imported %d of %d secret scopes", i+1, len(scopes))
 				}
 			}
 			return nil
@@ -831,7 +829,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "string_value", Resource: "aws_secretsmanager_secret_version", Match: "secret_string"},
 		},
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return fmt.Sprintf("%s_%s", d.Get("scope"), d.Get("key"))
+			name := fmt.Sprintf("%s_%s", d.Get("scope"), d.Get("key"))
+			return name + "_" + generateUniqueID(name)
 		},
 	},
 	"databricks_secret_acl": {
@@ -957,7 +956,21 @@ var resourcesMap map[string]importable = map[string]importable{
 			if name == "" {
 				return d.Id()
 			}
-			return strings.TrimPrefix(name, "/")
+			return nameNormalizationRegex.ReplaceAllString(name[7:], "_")
+		},
+		Search: func(ic *importContext, r *resource) error {
+			reposAPI := repos.NewReposAPI(ic.Context, ic.Client)
+			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+			repoDir, err := notebooksAPI.Read(r.Value)
+			if err != nil {
+				return err
+			}
+			repo, err := reposAPI.Read(fmt.Sprintf("%d", repoDir.ObjectID))
+			if err != nil {
+				return err
+			}
+			r.ID = fmt.Sprintf("%d", repo.ID)
+			return nil
 		},
 		List: func(ic *importContext) error {
 			repoList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
@@ -976,6 +989,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
+			ic.emitUserOrServicePrincipalForPath(r.Data.Get("path").(string), "/Repos")
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
@@ -984,6 +998,17 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "path" {
+				return false
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+
+		Depends: []reference{
+			{Path: "path", Resource: "databricks_user", Match: "repos", MatchType: MatchPrefix},
+			{Path: "path", Resource: "databricks_service_principal", Match: "repos", MatchType: MatchPrefix},
 		},
 	},
 	"databricks_workspace_conf": {
@@ -1093,6 +1118,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
+			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
 			contentB64, err := notebooksAPI.Export(r.ID, "SOURCE")
 			if err != nil {
@@ -1117,6 +1143,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "source", File: true},
+			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},
+			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: MatchPrefix},
 		},
 	},
 	"databricks_sql_query": {
@@ -1390,10 +1418,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			common.DataToStructPointer(r.Data, s, &pipeline)
 			for _, lib := range pipeline.Libraries {
 				if lib.Notebook != nil {
-					ic.Emit(&resource{
-						Resource: "databricks_notebook",
-						ID:       lib.Notebook.Path,
-					})
+					ic.emitNotebookOrRepo(lib.Notebook.Path)
 				}
 				ic.emitIfDbfsFile(lib.Jar)
 				ic.emitIfDbfsFile(lib.Whl)
@@ -1426,6 +1451,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						})
 					}
 				}
+				ic.emitSecretsFromSecretsPath(cluster.SparkConf)
+				ic.emitSecretsFromSecretsPath(cluster.SparkEnvVars)
 			}
 
 			if ic.meAdmin {
@@ -1445,10 +1472,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file"},
+			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "library.notebook.path", Resource: "databricks_notebook"},
+			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},

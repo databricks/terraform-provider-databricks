@@ -1,5 +1,5 @@
 ---
-subcategory: "AWS"
+subcategory: "Deployment"
 ---
 # databricks_aws_crossaccount_policy Data Source
 

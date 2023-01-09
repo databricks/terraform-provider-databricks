@@ -259,7 +259,7 @@ The `timeouts` block allows you to specify `create` and `update` timeouts if you
 ```hcl
 timeouts {
   create = "20m"
-  update = "20m
+  update = "20m"
 }
 ```
 

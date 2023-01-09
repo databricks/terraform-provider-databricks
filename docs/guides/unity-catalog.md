@@ -183,7 +183,7 @@ data "aws_iam_policy_document" "passrole_for_uc" {
       variable = "aws:PrincipalArn"
       values   = ["arn:aws:iam::${var.aws_account_id}:role/${local.prefix}-uc-access"]
     }
-  }  
+  }
 }
 
 resource "aws_iam_policy" "unity_metastore" {

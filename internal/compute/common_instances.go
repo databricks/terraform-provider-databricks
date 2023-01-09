@@ -95,7 +95,7 @@ func NewTinyClusterInCommonPool() (c clusters.ClusterInfo, err error) {
 		NumWorkers:  1,
 		ClusterName: "Terraform " + randomName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
-			Latest:          true,
+			Latest: true,
 		}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "tf-" + randomName,
@@ -114,7 +114,7 @@ func NewTinyClusterInCommonPoolPossiblyReused() (c clusters.ClusterInfo) {
 		NumWorkers:  1,
 		ClusterName: currentCluster,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
-			Latest:          true,
+			Latest: true,
 		}),
 		InstancePoolID:         CommonInstancePoolID(),
 		IdempotencyToken:       "tf-" + randomName,

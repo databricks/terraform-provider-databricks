@@ -33,6 +33,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the secret.
 * `last_updated_timestamp` - (Integer) time secret was updated
+* `config_reference` - (String) value to use as a secret reference in [Spark configuration and environment variables](https://docs.databricks.com/security/secrets/secrets.html#use-a-secret-in-a-spark-configuration-property-or-environment-variable): `{{secrets/scope/key}}`.
 
 
 ## Import

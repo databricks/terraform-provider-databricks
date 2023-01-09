@@ -45,4 +45,42 @@ func TestEmitUserOrServicePrincipal(t *testing.T) {
 	ic.emitUserOrServicePrincipal("21aab5a7-ee70-4385-34d4-a77278be5cb6")
 	assert.True(t, len(ic.testEmits) == 1)
 	assert.True(t, ic.testEmits["databricks_service_principal[<unknown>] (application_id: 21aab5a7-ee70-4385-34d4-a77278be5cb6)"])
+
+	// unsuccessfull test
+	ic = importContextForTest()
+	ic.emitUserOrServicePrincipal("abc")
+	assert.True(t, len(ic.testEmits) == 0)
+}
+
+func TestEmitUserOrServicePrincipalForPath(t *testing.T) {
+	ic := importContextForTest()
+
+	ic.emitUserOrServicePrincipalForPath("/Users/user@domain.com/abc", "/Users")
+	assert.True(t, len(ic.testEmits) == 1)
+	assert.True(t, ic.testEmits["databricks_user[<unknown>] (user_name: user@domain.com)"])
+
+	// Negative cases
+	ic = importContextForTest()
+	ic.emitUserOrServicePrincipalForPath("/Shared/abc", "/Users")
+	assert.True(t, len(ic.testEmits) == 0)
+
+	ic = importContextForTest()
+	ic.emitUserOrServicePrincipalForPath("/Users/abc", "/Users")
+	assert.True(t, len(ic.testEmits) == 0)
+	ic = importContextForTest()
+	ic.emitUserOrServicePrincipalForPath("/Users/", "/Users")
+	assert.True(t, len(ic.testEmits) == 0)
+}
+
+func TestEmitNotebookOrRepo(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitNotebookOrRepo("/Users/user@domain.com/abc")
+	assert.True(t, len(ic.testEmits) == 1)
+	assert.True(t, ic.testEmits["databricks_notebook[<unknown>] (id: /Users/user@domain.com/abc)"])
+
+	// test for repository
+	ic = importContextForTest()
+	ic.emitNotebookOrRepo("/Repos/user@domain.com/repo/abc")
+	assert.True(t, len(ic.testEmits) == 1)
+	assert.True(t, ic.testEmits["databricks_repo[<unknown>] (path: /Repos/user@domain.com/repo)"])
 }

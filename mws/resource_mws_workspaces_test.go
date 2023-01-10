@@ -38,7 +38,7 @@ func TestGcpaAccWorkspace(t *testing.T) {
 		AccountID:     acctID,
 		WorkspaceName: qa.RandomName(qa.GetEnvOrSkipTest(t, "TEST_PREFIX") + "-"),
 		Location:      qa.GetEnvOrSkipTest(t, "GOOGLE_REGION"),
-		CloudResourceBucket: &CloudResourceBucket{
+		CloudResourceBucket: &CloudResourceContainer{
 			GCP: &GCP{
 				ProjectID: qa.GetEnvOrSkipTest(t, "GOOGLE_PROJECT"),
 			},
@@ -122,23 +122,21 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 				ExpectedRequest: map[string]any{
 					"account_id": "abc",
 					"cloud":      "gcp",
-					"cloud_resource_bucket": map[string]any{
+					"cloud_resource_container": map[string]any{
 						"gcp": map[string]any{
 							"project_id": "def",
 						},
 					},
-					"location": "bcd",
-					"network": map[string]any{
-						"network_id": "net_id_a",
-						"gcp_common_network_config": map[string]any{
-							"gke_cluster_master_ip_range": "e",
-							"gke_connectivity_type":       "d",
-						},
-						"gcp_managed_network_config": map[string]any{
-							"gke_cluster_pod_ip_range":     "b",
-							"gke_cluster_service_ip_range": "c",
-							"subnet_cidr":                  "a",
-						},
+					"location":   "bcd",
+					"network_id": "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "d",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
 					},
 					"workspace_name": "labdata",
 				},
@@ -168,22 +166,20 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		workspace_name  = "labdata"
 		deployment_name = "900150983cd24fb0"
 		location        = "bcd"
-		cloud_resource_bucket {
+		cloud_resource_container {
 			gcp {
 				project_id = "def"
 			}
 		}
-		network {
-			network_id = "net_id_a"
-			gcp_managed_network_config {
-				subnet_cidr = "a"
-				gke_cluster_pod_ip_range = "b"
-				gke_cluster_service_ip_range = "c"
-			}
-			gcp_common_network_config {
-				gke_connectivity_type = "d"
-				gke_cluster_master_ip_range = "e"
-			}
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "d"
+			master_ip_range = "e"
 		}
 		`,
 		Gcp:    true,
@@ -1340,7 +1336,7 @@ func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -1349,7 +1345,7 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 				ExpectedRequest: map[string]any{
 					"account_id": "abc",
 					"cloud":      "gcp",
-					"cloud_resource_bucket": map[string]any{
+					"cloud_resource_container": map[string]any{
 						"gcp": map[string]any{
 							"project_id": "def",
 						},
@@ -1374,16 +1370,14 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 					WorkspaceStatus: WorkspaceStatusRunning,
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
-					Network: &GCPNetwork{
-						GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
-							SubnetCIDR:               "a",
-							GKEClusterPodIPRange:     "b",
-							GKEClusterServiceIPRange: "c",
-						},
-						GCPCommonNetworkConfig: &GCPCommonNetworkConfig{
-							GKEConnectivityType:     "d",
-							GKEClusterMasterIPRange: "e",
-						},
+					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
+						SubnetCIDR:               "a",
+						GKEClusterPodIPRange:     "b",
+						GKEClusterServiceIPRange: "c",
+					},
+					GkeConfig: &GkeConfig{
+						ConnectivityType: "d",
+						MasterIPRange:    "e",
 					},
 				},
 			},
@@ -1394,7 +1388,7 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 		workspace_name  = "labdata"
 		deployment_name = "900150983cd24fb0"
 		location        = "bcd"
-		cloud_resource_bucket {
+		cloud_resource_container {
 			gcp {
 				project_id = "def"
 			}
@@ -1402,67 +1396,5 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 		`,
 		Gcp:    true,
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, []any([]any{}), d.Get("network"), "Network configuration should be ignored")
-}
-
-func TestResourceWorkspaceUpdateGcpManagedVPCNoChange(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
-				Response: Workspace{
-					AccountID:       "abc",
-					Cloud:           "gcp",
-					WorkspaceID:     1234,
-					WorkspaceStatus: WorkspaceStatusRunning,
-					DeploymentName:  "900150983cd24fb0",
-					WorkspaceName:   "labdata",
-					Network: &GCPNetwork{
-						GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
-							SubnetCIDR:               "a",
-							GKEClusterPodIPRange:     "b",
-							GKEClusterServiceIPRange: "c",
-						},
-						GCPCommonNetworkConfig: &GCPCommonNetworkConfig{
-							GKEConnectivityType:     "d",
-							GKEClusterMasterIPRange: "e",
-						},
-					},
-				},
-			},
-		},
-		Resource: ResourceMwsWorkspaces(),
-		InstanceState: map[string]string{
-			"account_id":              "abc",
-			"workspace_name":          "labdata",
-			"deployment_name":         "900150983cd24fb0",
-			"location":                "bcd",
-			"workspace_id":            "1234",
-			"is_no_public_ip_enabled": "false",
-			"cloud_resource_bucket.#": "1",
-			"cloud_resource_bucket.0.gcp.0.project_id": "def",
-			"cloud": "gcp",
-		},
-		HCL: `
-		account_id      = "abc"
-		workspace_name  = "labdata"
-		deployment_name = "900150983cd24fb0"
-		location        = "bcd"
-		cloud_resource_bucket {
-			gcp {
-				project_id = "def"
-			}
-		}
-		`,
-		Gcp:    true,
-		Update: true,
-		ID:     "abc/1234",
-	}.Apply(t)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
-	assert.Equal(t, []any([]any{}), d.Get("network"), "Network configuration should be ignored")
+	}.ApplyNoError(t)
 }

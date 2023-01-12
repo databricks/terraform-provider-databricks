@@ -15,7 +15,7 @@ import (
 )
 
 // https://github.com/databricks/terraform-provider-databricks/issues/1097
-func TestAccForceUserImport(t *testing.T) {
+func TestMwsAccForceUserImport(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -26,6 +26,7 @@ func TestAccForceUserImport(t *testing.T) {
 	client := common.CommonEnvironmentClient()
 	usersAPI := scim.NewUsersAPI(ctx, client)
 	user, err := usersAPI.Create(scim.User{
+		Active:     true,
 		UserName:   username,
 		ExternalID: qa.RandomName("ext-id"),
 	})
@@ -41,7 +42,7 @@ func TestAccForceUserImport(t *testing.T) {
 	})
 }
 
-func TestAccUserResource(t *testing.T) {
+func TestMwsAccUserResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}

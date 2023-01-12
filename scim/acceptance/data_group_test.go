@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -25,8 +26,8 @@ func createUuid() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
-func TestAccGroupDataSplitMembers(t *testing.T) {
-	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloudEnv != "azure" {
+func TestMwsAccGroupDataSplitMembers(t *testing.T) {
+	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || !strings.Contains(cloudEnv, "azure") {
 		t.Skip("This test will only run on Azure. For simplicity.")
 	}
 	t.Parallel()
@@ -38,12 +39,14 @@ func TestAccGroupDataSplitMembers(t *testing.T) {
 	spAPI := scim.NewServicePrincipalsAPI(ctx, client)
 
 	user, err := usersAPI.Create(scim.User{
+		Active:   true,
 		UserName: fmt.Sprintf("%s@example.com", qa.RandomName("tf-")),
 	})
 	assert.NoError(t, err)
 	defer usersAPI.Delete(user.ID)
 
 	sp, err := spAPI.Create(scim.User{
+		Active:        true,
 		ApplicationID: createUuid(),
 		DisplayName:   qa.RandomName("tf-spn-"),
 	})

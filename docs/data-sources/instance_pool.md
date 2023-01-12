@@ -19,7 +19,7 @@ data "databricks_instance_pool" "Pool" {
 
 resource "databricks_cluster" "my_cluster" {
   instance_pool_id = data.databricks_instance_pool.pool.id
-  ...
+  # ...
 }
 ```
 

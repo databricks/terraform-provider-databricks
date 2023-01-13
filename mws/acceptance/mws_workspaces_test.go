@@ -1,12 +1,18 @@
 package acceptance
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestMwsAccWorkspaces(t *testing.T) {
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
+	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -59,6 +65,10 @@ func TestMwsAccWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpWorkspaces(t *testing.T) {
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
+	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -78,6 +88,10 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
+	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `

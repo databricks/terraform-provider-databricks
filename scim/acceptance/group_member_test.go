@@ -6,11 +6,16 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMwsAccGroupMemberResource(t *testing.T) {
+	TestAccGroupMemberResource(t)
+}
 func TestAccGroupMemberResource(t *testing.T) {
+	qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
 	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{
 		{

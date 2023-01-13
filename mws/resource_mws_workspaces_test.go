@@ -3,6 +3,7 @@ package mws
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,6 +18,10 @@ import (
 func TestMwsAccWorkspace(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
+	}
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()

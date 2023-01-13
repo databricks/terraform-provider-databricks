@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -13,6 +14,10 @@ import (
 func TestMwsAccStorageConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
+	}
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	storageAPI := NewStorageConfigurationsAPI(context.Background(), common.CommonEnvironmentClient())

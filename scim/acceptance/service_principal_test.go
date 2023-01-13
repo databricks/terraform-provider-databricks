@@ -9,6 +9,9 @@ import (
 )
 
 func TestMwsAccServicePrincipalResourceOnAzure(t *testing.T) {
+	TestAccServicePrincipalResourceOnAzure(t)
+}
+func TestAccServicePrincipalResourceOnAzure(t *testing.T) {
 	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || !strings.Contains(cloud, "azure") {
 		t.Skip("Test is only for CLOUD_ENV=azure")
 	}
@@ -23,8 +26,10 @@ func TestMwsAccServicePrincipalResourceOnAzure(t *testing.T) {
 		},
 	})
 }
-
 func TestMwsAccServicePrincipalResourceOnAws(t *testing.T) {
+	TestAccServicePrincipalResourceOnAws(t)
+}
+func TestAccServicePrincipalResourceOnAws(t *testing.T) {
 	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "aws" {
 		t.Skip("Test is only for CLOUD_ENV=aws")
 	}

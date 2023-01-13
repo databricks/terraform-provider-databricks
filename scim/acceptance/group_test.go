@@ -16,8 +16,12 @@ import (
 	"testing"
 )
 
-// https://github.com/databricks/terraform-provider-databricks/issues/1099
 func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
+	TestAccGroupsExternalIdAndScimProvisioning(t)
+}
+
+// https://github.com/databricks/terraform-provider-databricks/issues/1099
+func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -53,6 +57,9 @@ func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 }
 
 func TestMwsAccGroupResource(t *testing.T) {
+	TestAccGroupResource(t)
+}
+func TestAccGroupResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -77,8 +84,10 @@ func TestMwsAccGroupResource(t *testing.T) {
 		},
 	})
 }
-
 func TestMwsAccGroupResource_verify_entitlements(t *testing.T) {
+	TestAccGroupResource_verify_entitlements(t)
+}
+func TestAccGroupResource_verify_entitlements(t *testing.T) {
 	qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
 	// TODO: CHECK THESE RESOURCES FOR GENERIC DESTROY
 	t.Parallel()

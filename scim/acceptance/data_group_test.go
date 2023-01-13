@@ -27,6 +27,9 @@ func createUuid() string {
 }
 
 func TestMwsAccGroupDataSplitMembers(t *testing.T) {
+	TestAccGroupDataSplitMembers(t)
+}
+func TestAccGroupDataSplitMembers(t *testing.T) {
 	if cloudEnv, ok := os.LookupEnv("CLOUD_ENV"); !ok || !strings.Contains(cloudEnv, "azure") {
 		t.Skip("This test will only run on Azure. For simplicity.")
 	}

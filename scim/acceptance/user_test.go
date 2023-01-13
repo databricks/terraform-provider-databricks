@@ -14,8 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// https://github.com/databricks/terraform-provider-databricks/issues/1097
 func TestMwsAccForceUserImport(t *testing.T) {
+	TestAccForceUserImport(t)
+}
+
+// https://github.com/databricks/terraform-provider-databricks/issues/1097
+func TestAccForceUserImport(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -41,8 +45,10 @@ func TestMwsAccForceUserImport(t *testing.T) {
 		},
 	})
 }
-
 func TestMwsAccUserResource(t *testing.T) {
+	TestAccUserResource(t)
+}
+func TestAccUserResource(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}

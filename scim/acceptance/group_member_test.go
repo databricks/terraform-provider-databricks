@@ -12,6 +12,9 @@ import (
 )
 
 func TestMwsAccGroupMemberResource(t *testing.T) {
+	TestAccGroupMemberResource(t)
+}
+func TestAccGroupMemberResource(t *testing.T) {
 	qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
 	t.Parallel()
 	acceptance.Test(t, []acceptance.Step{

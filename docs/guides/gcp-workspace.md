@@ -200,7 +200,7 @@ resource "databricks_mws_networks" "this" {
 
 ## Creating a Databricks Workspace
 
-Once [the VPC](#Creating a VPC) is set up, you can create Databricks workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
+Once [the VPC](#creating-a-vpc) is set up, you can create Databricks workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
 Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.accounts` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, which have to be used in the latter modules.
 

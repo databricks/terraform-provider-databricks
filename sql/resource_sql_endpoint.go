@@ -25,7 +25,7 @@ type SQLEndpoint struct {
 	Name                    string          `json:"name"`
 	ClusterSize             string          `json:"cluster_size"`
 	AutoStopMinutes         int             `json:"auto_stop_mins" tf:"optional,default:120"`
-	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"default:1,suppress_diff"`
+	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"suppress_diff"`
 	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
 	NumClusters             int             `json:"num_clusters,omitempty" tf:"suppress_diff"`
 	EnablePhoton            bool            `json:"enable_photon" tf:"optional,default:true"`

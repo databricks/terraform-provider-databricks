@@ -27,7 +27,7 @@ type SQLEndpoint struct {
 	AutoStopMinutes         int             `json:"auto_stop_mins" tf:"optional,default:120"`
 	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"default:1,suppress_diff"`
 	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
-	NumClusters             int             `json:"num_clusters,omitempty" tf:"default:1,suppress_diff"`
+	NumClusters             int             `json:"num_clusters,omitempty" tf:"suppress_diff"`
 	EnablePhoton            bool            `json:"enable_photon" tf:"optional,default:true"`
 	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty" tf:"suppress_diff"`
 	InstanceProfileARN      string          `json:"instance_profile_arn,omitempty"`

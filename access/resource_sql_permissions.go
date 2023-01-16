@@ -148,9 +148,12 @@ func (ta *SqlPermissions) read() error {
 		if !strings.EqualFold(currentType, thisType) {
 			continue
 		}
-		if !strings.EqualFold(currentKey, thisKey) {
+
+		noBackticks := strings.ReplaceAll(thisKey, "`", "")
+		if !strings.EqualFold(currentKey, thisKey) && !strings.EqualFold(currentKey, noBackticks) {
 			continue
 		}
+
 		if strings.HasPrefix(currentAction, "DENIED_") {
 			// DENY statements are intentionally not supported.
 			continue

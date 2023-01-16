@@ -19,7 +19,7 @@ data "databricks_cluster_policy" "personal" {
 
 resource "databricks_cluster" "my_cluster" {
   policy_id = data.databricks_cluster_policy.personal.id
-  ...
+  # ...
 }
 ```
 

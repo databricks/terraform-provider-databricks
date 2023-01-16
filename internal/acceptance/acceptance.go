@@ -10,7 +10,6 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/internal/compute"
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,15 +47,9 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 	if cloudEnv == "aws" {
 		awsAttrs = "aws_attributes {}"
 	}
-	instancePoolID := ""
-	if cloudEnv != "MWS" && cloudEnv != "gcp-accounts" && !strings.HasPrefix(cloudEnv, "uc") {
-		// TODO: replace this with data resource
-		instancePoolID = compute.CommonInstancePoolID()
-	}
 	vars := map[string]string{
-		"CWD":                     cwd,
-		"AWS_ATTRIBUTES":          awsAttrs,
-		"COMMON_INSTANCE_POOL_ID": instancePoolID,
+		"CWD":            cwd,
+		"AWS_ATTRIBUTES": awsAttrs,
 	}
 	ts := []resource.TestStep{}
 	ctx := context.Background()

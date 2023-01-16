@@ -247,7 +247,7 @@ resource "databricks_mws_workspaces" "this" {
     connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
     master_ip_range   = "10.3.0.0/28"
   }
-  
+
   token {}
 }
 
@@ -270,28 +270,28 @@ variable "databricks_account_id" {
 
 data "google_client_openid_userinfo" "me" {
 }
- 
+
 data "google_client_config" "current" {
 }
 
 resource "databricks_mws_workspaces" "this" {
- provider       = databricks.accounts
- account_id     = var.databricks_account_id
- workspace_name = var.prefix
- location       = data.google_client_config.current.region
- 
- cloud_resource_container {
-   gcp {
-     project_id = data.google_client_config.current.project
-   }
- }
+  provider       = databricks.accounts
+  account_id     = var.databricks_account_id
+  workspace_name = var.prefix
+  location       = data.google_client_config.current.region
 
- gke_config {
+  cloud_resource_container {
+    gcp {
+      project_id = data.google_client_config.current.project
+    }
+  }
+
+  gke_config {
     connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
     master_ip_range   = "10.3.0.0/28"
- } 
+  }
 
- token {}
+  token {}
 }
 
 output "databricks_token" {

@@ -11,10 +11,19 @@ With this resource you can insert a secret under the provided scope with the giv
 resource "databricks_secret_scope" "app" {
   name = "application-secret-scope"
 }
+
 resource "databricks_secret" "publishing_api" {
   key          = "publishing_api"
   string_value = data.azurerm_key_vault_secret.example.value
   scope        = databricks_secret_scope.app.id
+}
+
+resource "databricks_cluster" "this" {
+  # ...
+  spark_conf = {
+    # ...
+    "fs.azure.account.oauth2.client.secret" = databricks_secret.publishing_api.config_reference
+  }
 }
 ```
 

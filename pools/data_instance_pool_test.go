@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDataSourceInstnacePool(t *testing.T) {
+func TestDataSourceInstancePool(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -67,7 +67,7 @@ func TestDataSourceInstancePoolsGetPool(t *testing.T) {
 	})
 }
 
-func TestDataSourceInstnacePool_NotFound(t *testing.T) {
+func TestDataSourceInstancePool_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

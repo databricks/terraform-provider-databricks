@@ -1,5 +1,17 @@
 # Version changelog
 
+### 1.9.0
+
+ * Added [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/mws_credentials) data source ([#1909](https://github.com/databricks/terraform-provider-databricks/pull/1909)).
+ * Fixed incorrect diff for `num_clusters` and `min_num_clusters` for stopped [databricks_sql_endpoint](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_endpoint) ([#1927](https://github.com/databricks/terraform-provider-databricks/pull/1927)).
+ * Fixed `privilege_assignment` in [databricks_sql_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_permissions) ([#1872](https://github.com/databricks/terraform-provider-databricks/pull/1872)).
+ * Documentation improvements ([#1921](https://github.com/databricks/terraform-provider-databricks/pull/1921), [#1923](https://github.com/databricks/terraform-provider-databricks/pull/1923)).
+
+Updated dependency versions:
+
+ * Bump github.com/hashicorp/go-retryablehttp from 0.7.1 to 0.7.2 ([#1913](https://github.com/databricks/terraform-provider-databricks/pull/1913)).
+ * Bump google.golang.org/api from 0.105.0 to 0.106.0 ([#1914](https://github.com/databricks/terraform-provider-databricks/pull/1914)).
+
 ### 1.8.0
 
  * Added support for GCP (Public Preview) with state upgraders for [databricks_mws_workspaces](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_workspaces) ([#1871](https://github.com/databricks/terraform-provider-databricks/pull/1871), [#1886](https://github.com/databricks/terraform-provider-databricks/pull/1886), [#1748](https://github.com/databricks/terraform-provider-databricks/pull/1748), [#1879](https://github.com/databricks/terraform-provider-databricks/pull/1879)).

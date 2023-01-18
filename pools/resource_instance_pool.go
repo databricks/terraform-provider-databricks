@@ -75,7 +75,7 @@ type InstancePool struct {
 	MinIdleInstances                   int32                           `json:"min_idle_instances,omitempty"`
 	MaxCapacity                        int32                           `json:"max_capacity,omitempty" tf:"suppress_diff"`
 	IdleInstanceAutoTerminationMinutes int32                           `json:"idle_instance_autotermination_minutes"`
-	AwsAttributes                      *InstancePoolAwsAttributes      `json:"aws_attributes,omitempty" tf:"force_new,suppress_diff,computed"`
+	AwsAttributes                      *InstancePoolAwsAttributes      `json:"aws_attributes,omitempty" tf:"force_new,suppress_diff"`
 	AwsInstancePoolFleetAttributes     *AwsInstancePoolFleetAttributes `json:"instance_pool_fleet_attributes,omitempty" tf:"force_new,suppress_diff,conflicts:node_type_id"`
 	AzureAttributes                    *InstancePoolAzureAttributes    `json:"azure_attributes,omitempty" tf:"force_new,suppress_diff"`
 	GcpAttributes                      *InstancePoolGcpAttributes      `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`

@@ -555,6 +555,14 @@ func TestResourceUserDelete_DirError(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/delete",
 				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
 					Path:      "/Users/abc",
 					Recursive: true,
 				},

@@ -33,50 +33,50 @@ func TestSecretsScopesAclsIntegration(t *testing.T) {
 		Name:                   testScope,
 		InitialManagePrincipal: initialManagePrincipal,
 	})
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	defer func() {
 		//	Deleting scope deletes everything else
 		err := scopesAPI.Delete(testScope)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	scopes, err := scopesAPI.List()
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, len(scopes) >= 1, "Scopes are empty list")
 
 	scope, err := scopesAPI.Read(testScope)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, testScope, scope.Name, "Scope lookup does not yield same scope")
 
 	err = secretsAPI.Create(testSecret, testScope, testKey)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	secrets, err := secretsAPI.List(testScope)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, len(secrets) > 0, "Secrets are empty list")
 
 	secret, err := secretsAPI.Read(testScope, testKey)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, testKey, secret.Key, "Secret lookup does not yield same key")
 
 	err = secretAclsAPI.Create(testScope, testPrincipal, ACLPermissionManage)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	secretAcls, err := secretAclsAPI.List(testScope)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, len(secretAcls) > 0, "Secrets acls are empty list")
 
 	secretACL, err := secretAclsAPI.Read(testScope, testPrincipal)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, testPrincipal, secretACL.Principal, "Secret lookup does not yield same key")
 	assert.Equal(t, ACLPermissionManage, secretACL.Permission, "Secret lookup does not yield same key")
 
 	err = secretsAPI.Delete(testScope, testKey)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	err = secretAclsAPI.Delete(testScope, testPrincipal)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }
 
 func TestResourceSecretACLRead(t *testing.T) {
@@ -94,7 +94,7 @@ func TestResourceSecretACLRead(t *testing.T) {
 		Read:     true,
 		ID:       "global|||something",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "global|||something", d.Id(), "Id should not be empty")
 	assert.Equal(t, "CAN_MANAGE", d.Get("permission"))
 	assert.Equal(t, "something", d.Get("principal"))
@@ -170,7 +170,7 @@ func TestResourceSecretACLCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "global|||something", d.Id())
 }
 
@@ -202,7 +202,7 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "myapplication/branch|||something", d.Id())
 }
 
@@ -247,7 +247,7 @@ func TestResourceSecretACLDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "global|||something",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "global|||something", d.Id())
 }
 

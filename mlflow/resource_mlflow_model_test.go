@@ -49,7 +49,7 @@ func TestModelCreate(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "xyz", d.Get("name"), "Name should be set")
 	assert.Equal(t, d.Get("name"), d.Id(), "Name and Id should match")
@@ -100,7 +100,7 @@ func TestModelRead(t *testing.T) {
 		ID:       "xyz",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 
@@ -157,7 +157,7 @@ func TestModelUpdate(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "updateddescription", d.Get("description"), "Description should be updated")
 }
@@ -211,7 +211,7 @@ func TestModelDelete(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 

@@ -18,7 +18,7 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 	client := common.CommonEnvironmentClient()
 	cmkAPI := NewCustomerManagedKeysAPI(context.Background(), client)
 	cmkList, err := cmkAPI.List(acctID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(cmkList)
 
 	keyInfo, err := cmkAPI.Create(CustomerManagedKey{
@@ -29,17 +29,17 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 		AccountID: acctID,
 		UseCases:  []string{"MANAGED_SERVICES"},
 	})
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	keyID := keyInfo.CustomerManagedKeyID
 
 	defer func() {
 		err := cmkAPI.Delete(acctID, keyID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	getKeyInfo, err := cmkAPI.Read(acctID, keyID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, getKeyInfo, "key info should not be nil")
 }
 
@@ -89,7 +89,7 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cmkid", d.Id())
 	assert.Equal(t, "key-arn", d.Get("aws_key_info.0.key_arn"))
 	assert.Equal(t, "key-alias", d.Get("aws_key_info.0.key_alias"))
@@ -178,7 +178,7 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 		ID:   "abc/cmkid",
 		Read: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cmkid", d.Id())
 	assert.Equal(t, "key-arn", d.Get("aws_key_info.0.key_arn"))
 	assert.Equal(t, "key-alias", d.Get("aws_key_info.0.key_alias"))
@@ -238,7 +238,7 @@ func TestResourceCustomerManagedKeyDelete(t *testing.T) {
 		ID:     "abc/cmkid",
 		Delete: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cmkid", d.Id())
 }
 

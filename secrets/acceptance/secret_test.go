@@ -42,7 +42,7 @@ func TestAccSecretResource(t *testing.T) {
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
 					err := secrets.NewSecretsAPI(context.Background(), client).Delete(scope, key)
-					assert.NoError(t, err, err)
+					assert.NoError(t, err)
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(

@@ -78,7 +78,7 @@ func TestResourceOboTokenRead(t *testing.T) {
 		New:      true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "Hello, world!", d.Get("comment"))
 }
@@ -157,7 +157,7 @@ func TestResourceOboTokenCreate(t *testing.T) {
 		`,
 		New: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "bcd", d.Id(), "Id should not be empty")
 	assert.Equal(t, "Hello, world!", d.Get("comment"))
 }
@@ -210,6 +210,6 @@ func TestResourceOboTokenCreateNoLifetimeOrComment(t *testing.T) {
 		`,
 		New: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "bcd", d.Id(), "Id should not be empty")
 }

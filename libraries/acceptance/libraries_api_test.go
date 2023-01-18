@@ -20,11 +20,11 @@ func TestAccLibraryCreate(t *testing.T) {
 	t.Parallel()
 	client := common.CommonEnvironmentClient()
 	clusterInfo, err := compute.NewTinyClusterInCommonPool()
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	defer func() {
 		ctx := context.Background()
 		err := clusters.NewClustersAPI(ctx, client).PermanentDelete(clusterInfo.ClusterID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	clusterID := clusterInfo.ClusterID
@@ -47,17 +47,17 @@ func TestAccLibraryCreate(t *testing.T) {
 		ClusterID: clusterID,
 		Libraries: libs,
 	})
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	defer func() {
 		err = libsAPI.Uninstall(libraries.ClusterLibraryList{
 			ClusterID: clusterID,
 			Libraries: libs,
 		})
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	libraryStatusList, err := libsAPI.ClusterStatus(clusterID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, len(libraryStatusList.LibraryStatuses), len(libs))
 }

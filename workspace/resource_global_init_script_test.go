@@ -39,7 +39,7 @@ func TestResourceGlobalInitScriptRead(t *testing.T) {
 		New:      true,
 		ID:       scriptID,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, scriptID, d.Id())
 	assert.Equal(t, "Test", d.Get("name"))
 	assert.Equal(t, true, d.Get("enabled"))
@@ -61,7 +61,7 @@ func TestResourceGlobalInitScriptDelete(t *testing.T) {
 		Delete:   true,
 		ID:       scriptID,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, scriptID, d.Id())
 }
 
@@ -118,7 +118,7 @@ func TestResourceGlobalInitScriptCreate(t *testing.T) {
 			"content_base64": "ZWNobyBoZWxsbw==",
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "1234", d.Id())
 	assert.Equal(t, 0, d.Get("position"))
 }
@@ -188,7 +188,7 @@ func TestResourceGlobalInitScriptUpdate(t *testing.T) {
 			"position":       0,
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "1234", d.Id())
 	assert.Equal(t, 0, d.Get("position"))
 }

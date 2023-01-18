@@ -42,7 +42,7 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id())
 }
 
@@ -92,7 +92,7 @@ func TestResourceGroupMemberRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc|bcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id(), "Id should not be empty")
 }
 
@@ -173,7 +173,7 @@ func TestResourceGroupMemberDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc|bcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id())
 }
 

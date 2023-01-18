@@ -138,7 +138,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 				PreConfig: func() {
 					client := common.CommonEnvironmentClient()
 					err := secrets.NewSecretScopesAPI(context.Background(), client).Delete(scope)
-					assert.NoError(t, err, err)
+					assert.NoError(t, err)
 				},
 				Config: fmt.Sprintf(`
 				resource "databricks_secret_scope" "my_scope" {

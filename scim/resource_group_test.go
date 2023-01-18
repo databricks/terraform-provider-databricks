@@ -66,7 +66,7 @@ func TestResourceGroupCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
@@ -123,7 +123,7 @@ func TestResourceGroupRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -148,7 +148,7 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
@@ -284,7 +284,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		Update:      true,
 		ID:          "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Data Ninjas", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))

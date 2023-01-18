@@ -568,7 +568,7 @@ func TestClient_HandleErrors(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 				rw.WriteHeader(tt.responseStatus)
 				_, err := rw.Write([]byte(tt.response))
-				assert.NoError(t, err, err)
+				assert.NoError(t, err)
 			}))
 			// Close the server when test finishes
 			defer server.Close()

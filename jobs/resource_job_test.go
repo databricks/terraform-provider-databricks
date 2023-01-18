@@ -104,7 +104,7 @@ func TestResourceJobCreate(t *testing.T) {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -204,7 +204,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 			}
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -317,7 +317,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 			}
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "17", d.Id())
 }
 
@@ -386,7 +386,7 @@ func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 		always_running = true
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -475,7 +475,7 @@ func TestResourceJobCreateSingleNode(t *testing.T) {
 			main_class_name = "com.labs.BarMain"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -539,7 +539,7 @@ func TestResourceJobCreateNWorkers(t *testing.T) {
 			main_class_name = "com.labs.BarMain"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -626,7 +626,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 			}
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -843,7 +843,7 @@ func TestResourceJobRead(t *testing.T) {
 		New:      true,
 		ID:       "789",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "Featurizer", d.Get("name"))
 	assert.Equal(t, 2, d.Get("library.#"))
@@ -985,7 +985,7 @@ func TestResourceJobUpdate(t *testing.T) {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
@@ -1103,7 +1103,7 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 		always_running = true
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
@@ -1290,7 +1290,7 @@ func TestResourceJobDelete(t *testing.T) {
 		Delete:   true,
 		Resource: ResourceJob(),
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 

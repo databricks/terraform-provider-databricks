@@ -35,7 +35,7 @@ func TestResourceTokenRead(t *testing.T) {
 		New:      true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "Hello, world!", d.Get("comment"))
 	assert.Equal(t, 10, d.Get("creation_time"))
@@ -129,7 +129,7 @@ func TestResourceTokenCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "dapi...", d.Get("token_value"))
 }
@@ -193,7 +193,7 @@ func TestResourceTokenCreate_NoExpiration(t *testing.T) {
 		State:    map[string]any{},
 		Create:   true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, -1, d.Get("expiry_time")) // tokens without expiration have expiry_time set to -1 as listed in the examples on https://docs.databricks.com/dev-tools/api/latest/tokens.html#list
 	assert.Equal(t, "dapi...", d.Get("token_value"))
@@ -214,7 +214,7 @@ func TestResourceTokenDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -232,7 +232,7 @@ func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }
 
 func TestResourceTokenDelete_Error(t *testing.T) {
@@ -269,19 +269,19 @@ func TestAccCreateToken(t *testing.T) {
 	comment := "Hello world"
 
 	token, err := tokensAPI.Create(lifeTimeSeconds, comment)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
 
 	defer func() {
 		err := tokensAPI.Delete(token.TokenInfo.TokenID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	_, err = tokensAPI.Read(token.TokenInfo.TokenID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	tokenList, err := tokensAPI.List()
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }
 
@@ -294,18 +294,18 @@ func TestAccCreateToken_NoExpiration(t *testing.T) {
 	tokensAPI := NewTokensAPI(context.Background(), client)
 
 	token, err := tokensAPI.Create(0, "")
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
 
 	defer func() {
 		err := tokensAPI.Delete(token.TokenInfo.TokenID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	_, err = tokensAPI.Read(token.TokenInfo.TokenID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	tokenList, err := tokensAPI.List()
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }

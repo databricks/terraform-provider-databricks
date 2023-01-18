@@ -32,7 +32,7 @@ func TestAccListClustersIntegration(t *testing.T) {
 		AutoterminationMinutes: 15,
 	}
 	clusterReadInfo, err := clustersAPI.Create(cluster)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.True(t, clusterReadInfo.NumWorkers == cluster.NumWorkers)
 	assert.True(t, clusterReadInfo.ClusterName == cluster.ClusterName)
 	assert.True(t, reflect.DeepEqual(clusterReadInfo.SparkEnvVars, cluster.SparkEnvVars))
@@ -42,24 +42,24 @@ func TestAccListClustersIntegration(t *testing.T) {
 
 	defer func() {
 		err = clustersAPI.Terminate(clusterReadInfo.ClusterID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 
 		clusterReadInfo, err = clustersAPI.Get(clusterReadInfo.ClusterID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.True(t, clusterReadInfo.State == clusters.ClusterStateTerminated)
 
 		err = clustersAPI.Unpin(clusterReadInfo.ClusterID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 
 		err = clustersAPI.PermanentDelete(clusterReadInfo.ClusterID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	err = clustersAPI.Pin(clusterReadInfo.ClusterID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	clusterReadInfo, err = clustersAPI.Get(clusterReadInfo.ClusterID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, clusterReadInfo.State == clusters.ClusterStateRunning)
 }
 
@@ -84,7 +84,7 @@ func TestAccListClustersResizeIntegrationTest(t *testing.T) {
 	}
 
 	clusterReadInfo, err := clustersAPI.Create(cluster)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.True(t, clusterReadInfo.NumWorkers == cluster.NumWorkers)
 	assert.True(t, clusterReadInfo.ClusterName == cluster.ClusterName)
 	assert.True(t, reflect.DeepEqual(clusterReadInfo.SparkEnvVars, cluster.SparkEnvVars))
@@ -94,7 +94,7 @@ func TestAccListClustersResizeIntegrationTest(t *testing.T) {
 
 	// Resize num workers
 	clusterReadInfo, err = clustersAPI.Resize(clusters.ResizeRequest{ClusterID: clusterReadInfo.ClusterID, NumWorkers: 2})
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.True(t, clusterReadInfo.NumWorkers == 2)
 	assert.True(t, clusterReadInfo.State == clusters.ClusterStateRunning)
 
@@ -103,22 +103,22 @@ func TestAccListClustersResizeIntegrationTest(t *testing.T) {
 		MinWorkers: 1,
 		MaxWorkers: 2,
 	}})
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.True(t, clusterReadInfo.AutoScale.MinWorkers == 1)
 	assert.True(t, clusterReadInfo.AutoScale.MaxWorkers == 2)
 	assert.True(t, clusterReadInfo.State == clusters.ClusterStateRunning)
 
 	// cleanup
 	err = clustersAPI.Terminate(clusterReadInfo.ClusterID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	clusterReadInfo, err = clustersAPI.Get(clusterReadInfo.ClusterID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, clusterReadInfo.State == clusters.ClusterStateTerminated)
 
 	err = clustersAPI.Unpin(clusterReadInfo.ClusterID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	err = clustersAPI.PermanentDelete(clusterReadInfo.ClusterID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }

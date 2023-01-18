@@ -39,7 +39,7 @@ func TestExperimentCreate(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, re.ExperimentId, d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, re.Name, d.Get("name"), "Experiment name should be set")
 }
@@ -115,7 +115,7 @@ func TestExperimentRead(t *testing.T) {
 		ID:       re.ExperimentId,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, re.ExperimentId, d.Id(), "Resource ID should not be empty")
 }
 
@@ -169,7 +169,7 @@ func TestExperimentUpdate(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resPost.ExperimentId, d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, resPost.Name, d.Get("name"), "Name should be updated")
 }
@@ -219,7 +219,7 @@ func TestExperimentDelete(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, r["experiment_id"], d.Id(), "Resource ID should not be empty")
 }
 

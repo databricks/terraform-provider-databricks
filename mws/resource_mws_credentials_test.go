@@ -17,19 +17,19 @@ func TestMwsAccCreds(t *testing.T) {
 	client := common.CommonEnvironmentClient()
 	credsAPI := NewCredentialsAPI(context.Background(), client)
 	credsList, err := credsAPI.List(acctID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(credsList)
 
 	myCreds, err := credsAPI.Create(acctID, qa.RandomName("tf-test"), arn)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	myCredsFull, err := credsAPI.Read(acctID, myCreds.CredentialsID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(myCredsFull.AwsCredentials.StsRole.ExternalID)
 
 	defer func() {
 		err = credsAPI.Delete(acctID, myCreds.CredentialsID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 }
 
@@ -73,7 +73,7 @@ func TestResourceCredentialsCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cid", d.Id())
 }
 
@@ -123,7 +123,7 @@ func TestResourceCredentialsRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc/cid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cid", d.Id(), "Id should not be empty")
 	assert.Equal(t, 0, d.Get("creation_time"))
 	assert.Equal(t, "cid", d.Get("credentials_id"))
@@ -185,7 +185,7 @@ func TestResourceCredentialsDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/cid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cid", d.Id())
 }
 

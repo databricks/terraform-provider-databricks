@@ -55,7 +55,7 @@ func TestResourceAwsS3MountCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, testS3BucketPath, d.Get("source"))
 }

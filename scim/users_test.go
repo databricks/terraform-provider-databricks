@@ -22,12 +22,12 @@ func TestAccReadUser(t *testing.T) {
 	ctx := context.Background()
 	usersAPI := NewUsersAPI(ctx, client)
 	me, err := usersAPI.Me()
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	if strings.Contains(me.UserName, "@") {
 		// let's assume that service principals do not look like emails
 		ru, err := usersAPI.Read(me.ID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.NotNil(t, ru)
 	}
 }
@@ -43,19 +43,19 @@ func TestAccCreateUser(t *testing.T) {
 	user, err := usersAPI.Create(User{
 		UserName: qa.RandomEmail(),
 	})
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	require.True(t, len(user.ID) > 0, "User id is empty")
 	defer usersAPI.Delete(user.ID)
 
 	user, err = usersAPI.Read(user.ID)
 	t.Log(user)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	err = usersAPI.Update(user.ID, User{
 		UserName:    qa.RandomEmail(),
 		DisplayName: "TestAccCreateUser",
 	})
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }
 
 func TestUsersFilter(t *testing.T) {

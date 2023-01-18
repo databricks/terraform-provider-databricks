@@ -521,7 +521,7 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 				},
 				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "Path (/Repos/def) doesn't exist.",
+					Message:   "Path (/Repos/abc) doesn't exist.",
 				},
 				Status: 400,
 			},
@@ -541,7 +541,7 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 			user_name    = "abc"
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "Path (/Repos/def) doesn't exist.")
+	assert.EqualError(t, err, "Path (/Repos/abc) doesn't exist.")
 }
 
 func TestResourceUserDelete_DirError(t *testing.T) {
@@ -594,7 +594,7 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 				},
 				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   "Path (/Users/def) doesn't exist.",
+					Message:   "Path (/Users/abc) doesn't exist.",
 				},
 				Status: 400,
 			},
@@ -606,7 +606,7 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 			user_name    = "abc"
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "Path (/Users/def) doesn't exist.")
+	assert.EqualError(t, err, "Path (/Users/abc) doesn't exist.")
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {

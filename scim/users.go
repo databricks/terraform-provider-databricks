@@ -91,14 +91,12 @@ func (a UsersAPI) Delete(userID string) error {
 
 func (a UsersAPI) DeleteRepos(userID string) error {
 	repoPath := fmt.Sprintf("/Repos/%v", userID)
-	recursive := true
-	return workspace.NewNotebooksAPI(a.context, a.client).Delete(repoPath, recursive)
+	return workspace.NewNotebooksAPI(a.context, a.client).Delete(repoPath, true)
 }
 
-func (a UsersAPI) DeleteDirs(userID string) error {
+func (a UsersAPI) DeleteHomeDirectory(userID string) error {
 	dirPath := fmt.Sprintf("/Users/%v", userID)
-	recursive := true
-	return workspace.NewNotebooksAPI(a.context, a.client).Delete(dirPath, recursive)
+	return workspace.NewNotebooksAPI(a.context, a.client).Delete(dirPath, true)
 }
 
 func (a UsersAPI) UpdateEntitlements(userID string, entitlements patchRequest) error {

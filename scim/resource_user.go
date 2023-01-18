@@ -46,10 +46,12 @@ func ResourceUser() *schema.Resource {
 			m["delete_repos"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 			}
-			m["delete_dirs"] = &schema.Schema{
+			m["delete_home_dir"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 			}
 			return m
 		})
@@ -102,16 +104,30 @@ func ResourceUser() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			usersAPI := NewUsersAPI(ctx, c)
 
-			if d.Get("delete_repos").(bool) {
-				d.Set("cheese", "cheese")
-				_ = usersAPI.DeleteRepos(d.Id())
-			}
-			if d.Get("delete_dirs").(bool) {
-				d.Set("crackers", "crackers")
-				_ = usersAPI.DeleteDirs(d.Id())
+			if c.AccountID != "" {
+				return nil
 			}
 
-			return usersAPI.Delete(d.Id())
+			var err = usersAPI.Delete(d.Id())
+			if err != nil {
+				return err
+			}
+
+			if d.Get("delete_repos").(bool) {
+				err = usersAPI.DeleteRepos(d.Id())
+				if err != nil {
+					return err
+				}
+			}
+
+			if d.Get("delete_home_dir").(bool) {
+				err = usersAPI.DeleteHomeDirectory(d.Id())
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
 		},
 	}.ToResource()
 }

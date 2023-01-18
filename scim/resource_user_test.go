@@ -6,12 +6,11 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
 func TestResourceUserRead(t *testing.T) {
@@ -412,7 +411,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 	require.Error(t, err, err)
 }
 
-func TestResourceUserDelete(t *testing.T) {
+func TestResourceUserDelete_NoError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -423,6 +422,11 @@ func TestResourceUserDelete(t *testing.T) {
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
+		HCL: `
+			user_name = "abc",
+			delete_repos = false,
+			delete_home_dir = false 
+		`,
 	}.ApplyNoError(t)
 }
 
@@ -442,28 +446,14 @@ func TestResourceUserDelete_Error(t *testing.T) {
 	require.Error(t, err, err)
 }
 
-func TestResourceUserDeleteReposAndDirs(t *testing.T) {
-	d, err := qa.ResourceFixture{
+func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{ // create user
-				Method:   "POST",
-				Resource: "/api/2.0/preview/scim/v2/Users",
-				ExpectedRequest: User{
-					DisplayName: "Example user",
-					Active:      true,
-					Entitlements: entitlements{
-						{
-							Value: "allow-cluster-create",
-						},
-					},
-					UserName: "abc",
-					Schemas:  []URN{UserSchema},
-				},
-				Response: User{
-					ID: "abc",
-				},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 			},
-			{ // delete repo
+			{
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/delete",
 				ExpectedRequest: workspace.DeletePath{
@@ -471,7 +461,7 @@ func TestResourceUserDeleteReposAndDirs(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			{ // delete dir
+			{
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/delete",
 				ExpectedRequest: workspace.DeletePath{
@@ -479,9 +469,31 @@ func TestResourceUserDeleteReposAndDirs(t *testing.T) {
 					Recursive: true,
 				},
 			},
-			{ // delete user
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceUserDelete_ReposError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Status: 400,
 			},
 		},
 		Resource: ResourceUser(),
@@ -489,13 +501,112 @@ func TestResourceUserDeleteReposAndDirs(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			delete_repos = true 
-			delete_dirs = true 
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "", d.Get("repos"))
-	assert.Equal(t, "", d.Get("home"))
+	require.Error(t, err, err)
+}
+func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Repos/def) doesn't exist.",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "Path (/Repos/def) doesn't exist.")
+}
+
+func TestResourceUserDelete_DirError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+}
+func TestResourceUserDelete_NonExistingDir(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Users/def) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "Path (/Users/def) doesn't exist.")
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {

@@ -11,6 +11,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
 func TestAccServicePrincipalOnAzure(t *testing.T) {
@@ -404,7 +406,7 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 	}.ExpectError(t, "I'm a teapot")
 }
 
-func TestResourceServicePrincipalDelete(t *testing.T) {
+func TestResourceServicePrincipalDelete_NoError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -413,9 +415,13 @@ func TestResourceServicePrincipalDelete(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
-		HCL:      `display_name = "Squanchy"`,
 		Delete:   true,
 		ID:       "abc",
+		HCL: `
+			display_name = "abc",
+			delete_repos = false,
+			delete_home_dir = false 
+		`,
 	}.ApplyNoError(t)
 }
 
@@ -426,6 +432,140 @@ func TestResourceServicePrincipalDelete_Error(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.ExpectError(t, "I'm a teapot")
+}
+
+func TestResourceServicePrincipalDelete_NoErrorEmtpyParams(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			display_name = "abc"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceServicePrinicpalDelete_ReposError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			display_name    = "abc"
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+}
+
+func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			display_name = "abc"
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+}
+
+func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Users/abc) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			display_name = "abc"
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "Path (/Users/abc) doesn't exist.")
 }
 
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {

@@ -24,12 +24,14 @@ data "databricks_cluster" "all" {
 
 ## Argument Reference
 
-* `cluster_id` - (Required) The id of the cluster
+* `cluster_id` - (Required if `cluster_name` isn't specified) The id of the cluster
+* `cluster_name` - (Required if `cluster_id` isn't specified) The exact name of the cluster to search
 
 ## Attribute Reference
 
 This data source exports the following attributes:
 
+* `id` - cluster ID
 * `cluster_info` block, consisting of following fields:
   * `cluster_name` - Cluster name, which doesn’t have to be unique.
   * `spark_version` - [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster.

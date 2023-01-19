@@ -3,6 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore Resource
 
+-> **Notes**
+  Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+
 A metastore is the top-level container of objects in Unity Catalog. It stores data assets (tables and views) and the permissions that govern access to them. Databricks account admins can create metastores and assign them to Databricks workspaces in order to control which workloads use each metastore.
 
 Unity Catalog offers a new metastore with built in security and auditing. This is distinct to the metastore used in previous versions of Databricks (based on the Hive Metastore).
@@ -60,5 +63,5 @@ The following arguments are required:
 This resource can be imported by ID:
 
 ```bash
-$ terraform import databricks_metastore.this <id>
+terraform import databricks_metastore.this <id>
 ```

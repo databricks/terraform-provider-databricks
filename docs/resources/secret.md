@@ -11,10 +11,19 @@ With this resource you can insert a secret under the provided scope with the giv
 resource "databricks_secret_scope" "app" {
   name = "application-secret-scope"
 }
+
 resource "databricks_secret" "publishing_api" {
   key          = "publishing_api"
   string_value = data.azurerm_key_vault_secret.example.value
   scope        = databricks_secret_scope.app.id
+}
+
+resource "databricks_cluster" "this" {
+  # ...
+  spark_conf = {
+    # ...
+    "fs.azure.account.oauth2.client.secret" = databricks_secret.publishing_api.config_reference
+  }
 }
 ```
 
@@ -33,6 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the secret.
 * `last_updated_timestamp` - (Integer) time secret was updated
+* `config_reference` - (String) value to use as a secret reference in [Spark configuration and environment variables](https://docs.databricks.com/security/secrets/secrets.html#use-a-secret-in-a-spark-configuration-property-or-environment-variable): `{{secrets/scope/key}}`.
 
 
 ## Import

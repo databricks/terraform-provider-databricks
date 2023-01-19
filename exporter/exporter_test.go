@@ -1535,6 +1535,51 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
+				Resource: "/api/2.0/permissions/repos/123",
+				Response: getJSONObject("test-data/get-repo-permissions.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FRepos%2Fuser%40domain.com%2Frepo",
+				Response: workspace.ObjectStatus{
+					ObjectID:   123,
+					ObjectType: "REPO",
+					Path:       "/Repos/user@domain.com/repo",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/123",
+				Response: repos.ReposInformation{
+					ID:           123,
+					Url:          "https://github.com/user/test.git",
+					Provider:     "gitHub",
+					Path:         "/Repos/user@domain.com/repo",
+					HeadCommitID: "1124323423abc23424",
+					Branch:       "releases",
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27user%40domain.com%27",
+				Response: scim.UserList{
+					Resources: []scim.User{
+						{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
+					},
+					StartIndex:   1,
+					TotalResults: 1,
+					ItemsPerPage: 1,
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/123",
+				Response: scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
+			},
+			{
+				Method:   "GET",
 				Resource: "/api/2.0/pipelines/123",
 				Response: getJSONObject("test-data/get-dlt-pipeline.json"),
 			},
@@ -1565,6 +1610,30 @@ func TestImportingDLTPipelines(t *testing.T) {
 				Resource: "/api/2.0/instance-profiles/list",
 				Response: getJSONObject("test-data/list-instance-profiles.json"),
 			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -1573,7 +1642,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "dlt"
-			ic.services = "dlt,access,notebooks"
+			ic.services = "dlt,access,notebooks,users,repos,secrets"
 
 			err := ic.Run()
 			assert.NoError(t, err)

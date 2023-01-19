@@ -149,7 +149,7 @@ func TestGroup(t *testing.T) {
 	err = ic.Importables["databricks_group"].Import(ic, r)
 	assert.NoError(t, err)
 	assert.Len(t, ic.testEmits, 4)
-	assert.True(t, ic.testEmits["databricks_group_instance_profile[<unknown>] (id: 123|abc)"])
+	assert.True(t, ic.testEmits["databricks_group_role[<unknown>] (id: 123|abc)"])
 	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: abc)"])
 	assert.True(t, ic.testEmits["databricks_group[<unknown>] (id: parent-group)"])
 	assert.True(t, ic.testEmits["databricks_group_member[_parent-group_foo] (id: parent-group|123)"])
@@ -194,7 +194,7 @@ func TestSecretScope(t *testing.T) {
 	d.Set("name", "abc")
 	ic := importContextForTest()
 	name := ic.Importables["databricks_secret_scope"].Name(ic, d)
-	assert.Equal(t, "abc", name)
+	assert.Equal(t, "abc_a9993e3647", name)
 }
 
 func TestInstancePoolNameFromID(t *testing.T) {
@@ -769,8 +769,8 @@ func TestSecretGen(t *testing.T) {
 
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
-		resource "databricks_secret" "a_b" {
-		  string_value = var.string_value_a_b
+		resource "databricks_secret" "a_b_eb2980a5a2" {
+		  string_value = var.string_value_a_b_eb2980a5a2
 		  scope        = "a"
 		  key          = "b"
 		}`), string(ic.Files["secrets"].Bytes()))

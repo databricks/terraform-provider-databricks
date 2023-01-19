@@ -1,5 +1,5 @@
 ---
-subcategory: "AWS"
+subcategory: "Deployment"
 ---
 
 # databricks_aws_assume_role_policy Data Source

@@ -10,15 +10,23 @@ import (
 
 func DataSourceJob() *schema.Resource {
 	type queryableJobData struct {
-		Id   string `json:"job_id,omitempty" tf:"computed"`
-		Name string `json:"job_name,omitempty" tf:"computed"`
-		Job  *Job   `json:"job_settings,omitempty" tf:"computed"`
+		Id      string `json:"id,omitempty" tf:"computed"`
+		JobId   string `json:"job_id,omitempty" tf:"computed"`
+		Name    string `json:"name,omitempty" tf:"computed"`
+		JobName string `json:"job_name,omitempty" tf:"computed"`
+		Job     *Job   `json:"job_settings,omitempty" tf:"computed"`
 	}
 	return common.DataResource(queryableJobData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*queryableJobData)
 		jobsAPI := NewJobsAPI(ctx, c)
 		var list []Job
 		var err error
+		if data.Id == "" {
+			data.Id = data.JobId
+		}
+		if data.Name == "" {
+			data.Name = data.JobName
+		}
 		if data.Name != "" {
 			// if name is provided, need to list all jobs ny name
 			list, err = jobsAPI.ListByName(data.Name, true)
@@ -43,6 +51,7 @@ func DataSourceJob() *schema.Resource {
 				data.Job = &currentJob
 				data.Name = currentJobName
 				data.Id = currentJobId
+				data.JobId = currentJobId
 				return nil // break the loop after we found the job
 			}
 		}

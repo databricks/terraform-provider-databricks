@@ -64,7 +64,7 @@ func TestExperimentCreatePostError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestExperimentCreateGetError(t *testing.T) {
@@ -94,7 +94,7 @@ func TestExperimentCreateGetError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestExperimentRead(t *testing.T) {
@@ -138,7 +138,7 @@ func TestExperimentReadGetError(t *testing.T) {
 		ID:       re.ExperimentId,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestExperimentUpdate(t *testing.T) {
@@ -196,7 +196,7 @@ func TestExperimentUpdatePostError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestExperimentDelete(t *testing.T) {
@@ -244,5 +244,5 @@ func TestExperimentDeleteError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }

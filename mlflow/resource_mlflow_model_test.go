@@ -81,7 +81,7 @@ func TestModelCreatePostError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestModelRead(t *testing.T) {
@@ -121,7 +121,7 @@ func TestModelReadGetError(t *testing.T) {
 		ID:       "xyz",
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestModelUpdate(t *testing.T) {
@@ -189,7 +189,7 @@ func TestModelUpdatePatchError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestModelDelete(t *testing.T) {
@@ -235,5 +235,5 @@ func TestModelDeleteError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }

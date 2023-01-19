@@ -719,7 +719,7 @@ func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []stri
 		Resource: ResourceJob(),
 		HCL:      hcl,
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	var found = false
 	for _, fieldName := range conflictingArgs {
 		require.Equal(t, true, strings.Contains(err.Error(), fieldName))
@@ -803,7 +803,7 @@ func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 
@@ -1315,7 +1315,7 @@ func TestResourceJobUpdate_FailNumWorkersZero(t *testing.T) {
 			parameters = ["--cleanup", "full"]
 		}`,
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 

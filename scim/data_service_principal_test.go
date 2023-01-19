@@ -66,7 +66,7 @@ func TestDataServicePrincipalReadNotFound(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestDataServicePrincipalReadError(t *testing.T) {
@@ -84,5 +84,5 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }

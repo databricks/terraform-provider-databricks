@@ -232,7 +232,7 @@ func TestResourceUserCreate_Error(t *testing.T) {
 		allow_cluster_create = true
 		`,
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestResourceUserUpdate(t *testing.T) {
@@ -352,7 +352,7 @@ func TestResourceUserUpdate_Error(t *testing.T) {
 		allow_instance_pool_create = true
 		`,
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestResourceUserUpdate_ErrorPut(t *testing.T) {
@@ -407,7 +407,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 		allow_instance_pool_create = true
 		`,
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestResourceUserDelete(t *testing.T) {
@@ -437,7 +437,7 @@ func TestResourceUserDelete_Error(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {

@@ -1492,7 +1492,7 @@ func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
 			"is_pinned":               false,
 		},
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 
@@ -1508,7 +1508,7 @@ func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
 			"num_workers":             -10,
 		},
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "expected num_workers to be at least (0)"))
 }
 
@@ -1532,7 +1532,7 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 			"num_workers":             0,
 		},
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 

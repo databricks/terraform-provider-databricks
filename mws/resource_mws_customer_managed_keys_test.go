@@ -143,7 +143,7 @@ func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestResourceCustomerManagedKeyRead(t *testing.T) {

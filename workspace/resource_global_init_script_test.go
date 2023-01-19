@@ -133,7 +133,7 @@ func TestResourceGlobalInitScriptCreateBigPayload(t *testing.T) {
 			"content_base64": base64.StdEncoding.EncodeToString([]byte(strings.Repeat("12", maxScriptSize))),
 		},
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 	assert.Equal(t, "size of the global init script (131072 bytes) exceeds maximal allowed (65536 bytes)", err.Error())
 }
 
@@ -148,7 +148,7 @@ func TestResourceGlobalInitScriptUpdateBigPayload(t *testing.T) {
 			"content_base64": base64.StdEncoding.EncodeToString([]byte(strings.Repeat("12", maxScriptSize))),
 		},
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 	assert.Equal(t, "size of the global init script (131072 bytes) exceeds maximal allowed (65536 bytes)", err.Error())
 }
 

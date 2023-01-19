@@ -347,3 +347,27 @@ func TestShareGrantUpdate(t *testing.T) {
 		}`,
 	}.ApplyNoError(t)
 }
+
+func TestPrivilegeWithSpace(t *testing.T) {
+	d := data{"table": "me"}
+	err := mapping.validate(d, PermissionsList{
+		Assignments: []PrivilegeAssignment{
+			{
+				Principal:  "me",
+				Privileges: []string{"ALL PRIVILEGES"},
+			},
+		},
+	})
+	assert.EqualError(t, err, "ALL PRIVILEGES is not allowed on table. Did you mean ALL_PRIVILEGES?")
+
+	d = data{"external_location": "me"}
+	err = mapping.validate(d, PermissionsList{
+		Assignments: []PrivilegeAssignment{
+			{
+				Principal:  "me",
+				Privileges: []string{"CREATE TABLE"},
+			},
+		},
+	})
+	assert.EqualError(t, err, "CREATE TABLE is not allowed on external_location. Did you mean CREATE_TABLE?")
+}

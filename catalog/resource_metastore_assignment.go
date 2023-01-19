@@ -34,9 +34,9 @@ func (a MetastoreAssignmentAPI) updateMetastoreAssignment(ma MetastoreAssignment
 }
 
 func (a MetastoreAssignmentAPI) getAssignedMetastoreID() (string, error) {
-	var ma MetastoreAssignment
-	err := a.client.Get(a.context, "/unity-catalog/metastore_summary", nil, &ma)
-	return ma.MetastoreID, err
+	var mi MetastoreInfo
+	err := a.client.Get(a.context, "/unity-catalog/metastore_summary", nil, &mi)
+	return mi.MetastoreID, err
 }
 
 func (a MetastoreAssignmentAPI) deleteMetastoreAssignment(workspaceID, metastoreID string) error {

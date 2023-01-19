@@ -52,12 +52,10 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 					d.Get("delta_sharing_recipient_token_lifetime_in_seconds")
 			}
 
-			if contains([]string{
-				"aws_iam_role",
-				"azure_service_principal",
-				"azure_managed_identity",
-			}, field) {
-				patch[field] = d.Get(field).([]any)[0]
+			// certain fields e.g. storage creds are nested in an array with single element
+			new_array, test := new.([]any)
+			if test && len(new_array) == 1 {
+				patch[field] = new_array[0]
 				continue
 			}
 

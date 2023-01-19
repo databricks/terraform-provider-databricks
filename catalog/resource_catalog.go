@@ -18,12 +18,14 @@ func NewCatalogsAPI(ctx context.Context, m any) CatalogsAPI {
 }
 
 type CatalogInfo struct {
-	Name        string            `json:"name" tf:"force_new"`
-	Comment     string            `json:"comment,omitempty"`
-	StorageRoot string            `json:"storage_root,omitempty" tf:"force_new"`
-	Properties  map[string]string `json:"properties,omitempty"`
-	Owner       string            `json:"owner,omitempty" tf:"computed"`
-	MetastoreID string            `json:"metastore_id,omitempty" tf:"computed"`
+	Name         string            `json:"name" tf:"force_new"`
+	Comment      string            `json:"comment,omitempty"`
+	StorageRoot  string            `json:"storage_root,omitempty" tf:"force_new"`
+	ProviderName string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	ShareName    string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	Properties   map[string]string `json:"properties,omitempty"`
+	Owner        string            `json:"owner,omitempty" tf:"computed"`
+	MetastoreID  string            `json:"metastore_id,omitempty" tf:"computed"`
 }
 
 type Catalogs struct {
@@ -82,8 +84,11 @@ func ResourceCatalog() *schema.Resource {
 			if err := NewCatalogsAPI(ctx, c).createCatalog(&ci); err != nil {
 				return err
 			}
-			if err := NewSchemasAPI(ctx, c).deleteSchema(ci.Name + ".default"); err != nil {
-				return fmt.Errorf("cannot remove new catalog default schema: %w", err)
+			// only remove catalog default schema for non-Delta Sharing catalog
+			if ci.ShareName == "" {
+				if err := NewSchemasAPI(ctx, c).deleteSchema(ci.Name + ".default"); err != nil {
+					return fmt.Errorf("cannot remove new catalog default schema: %w", err)
+				}
 			}
 			d.SetId(ci.Name)
 			return update(ctx, d, c)

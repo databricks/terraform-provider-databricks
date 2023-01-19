@@ -49,13 +49,13 @@ resource "databricks_user_role" "my_user_account_admin" {
 The following arguments are supported:
 
 * `user_id` - (Required) This is the id of the [user](user.md) resource.
-* `role` -  (Required) Either a role name or the id of the [instance profile](instance_profile.md) resource.
+* `role` -  (Required) Either a role name or the ARN/ID of the [instance profile](instance_profile.md) resource.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-*  `id` - The id in the format `<user_id>|<role>`.
+* `id` - The id in the format `<user_id>|<role>`.
 
 ## Import
 

@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -61,7 +62,20 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitSecretsFromSecretsPath(c.SparkConf)
+	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
+}
+
+func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
+	for _, v := range m {
+		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_secret_scope",
+				ID:       res[1],
+			})
+		}
+	}
 }
 
 func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
@@ -74,11 +88,35 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 			Attribute: "user_name",
 			Value:     userOrSPName,
 		})
-	} else {
+	} else if uuidRegex.MatchString(userOrSPName) {
 		ic.Emit(&resource{
 			Resource:  "databricks_service_principal",
 			Attribute: "application_id",
 			Value:     userOrSPName,
+		})
+	}
+}
+
+func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
+	if strings.HasPrefix(path, prefix) {
+		parts := strings.SplitN(path, "/", 4)
+		if len(parts) >= 3 {
+			ic.emitUserOrServicePrincipal(parts[2])
+		}
+	}
+}
+
+func (ic *importContext) emitNotebookOrRepo(path string) {
+	if strings.HasPrefix(path, "/Repos") {
+		ic.Emit(&resource{
+			Resource:  "databricks_repo",
+			Attribute: "path",
+			Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
+		})
+	} else {
+		ic.Emit(&resource{
+			Resource: "databricks_notebook",
+			ID:       path,
 		})
 	}
 }
@@ -352,7 +390,7 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 	a := jobs.NewJobsAPI(ic.Context, ic.Client)
 	starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
 	i := 0
-	for _, job := range l {
+	for offset, job := range l {
 		if !ic.MatchesName(job.Settings.Name) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
@@ -383,8 +421,9 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 			ID:       job.ID(),
 		})
 		i++
-		log.Printf("[INFO] Imported %d of total %d jobs", i, len(l))
+		log.Printf("[INFO] Scanned %d of total %d jobs", offset+1, len(l))
 	}
+	log.Printf("[INFO] %d of total %d jobs are going to be imported", i, len(l))
 }
 
 // returns created file name in "files" directory for the export and error if any
@@ -467,4 +506,8 @@ func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource
 	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
 	return ic.dataToHcl(ic.Importables[r.Resource],
 		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+}
+
+func generateUniqueID(v string) string {
+	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
 }

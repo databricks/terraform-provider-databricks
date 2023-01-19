@@ -72,6 +72,7 @@ variable "databricks_account_username" {}
 variable "databricks_account_password" {}
 variable "databricks_account_id" {}
 variable "databricks_workspace_url" {}
+variable "aws_account_id" {}
 
 variable "tags" {
   default = {}
@@ -167,6 +168,20 @@ data "aws_iam_policy_document" "passrole_for_uc" {
       test     = "StringEquals"
       variable = "sts:ExternalId"
       values   = [var.databricks_account_id]
+    }
+  }
+  statement {
+    sid     = "ExplicitSelfRoleAssumption"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::${var.aws_account_id}:role/${local.prefix}-uc-access"]
     }
   }
 }

@@ -6,7 +6,6 @@
 // Terraform resources and the API objects. While their structure is
 // very similar, there are a handful of nuanced differences to improve
 // the UX of the Terraform resource.
-//
 package api
 
 import (

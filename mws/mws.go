@@ -46,19 +46,30 @@ type NetworkVPCEndpoints struct {
 	DataplaneRelayAPI []string `json:"dataplane_relay" tf:"slice_set"`
 }
 
+// GcpNetworkInfo is the object that configures byovpc settings for gcp
+type GcpNetworkInfo struct {
+	NetworkProjectId   string `json:"network_project_id"`
+	VpcId              string `json:"vpc_id"`
+	SubnetId           string `json:"subnet_id"`
+	SubnetRegion       string `json:"subnet_region"`
+	PodIpRangeName     string `json:"pod_ip_range_name"`
+	ServiceIpRangeName string `json:"service_ip_range_name"`
+}
+
 // Network is the object that contains all the information for BYOVPC
 type Network struct {
 	AccountID        string               `json:"account_id"`
 	NetworkID        string               `json:"network_id,omitempty" tf:"computed"`
 	NetworkName      string               `json:"network_name"`
-	VPCID            string               `json:"vpc_id"`
-	SubnetIds        []string             `json:"subnet_ids" tf:"slice_set"`
+	VPCID            string               `json:"vpc_id,omitempty"`
+	SubnetIds        []string             `json:"subnet_ids,omitempty" tf:"slice_set"`
 	VPCEndpoints     *NetworkVPCEndpoints `json:"vpc_endpoints,omitempty" tf:"computed,force_new"`
-	SecurityGroupIds []string             `json:"security_group_ids" tf:"slice_set"`
+	SecurityGroupIds []string             `json:"security_group_ids,omitempty" tf:"slice_set"`
 	VPCStatus        string               `json:"vpc_status,omitempty" tf:"computed"`
 	ErrorMessages    []NetworkHealth      `json:"error_messages,omitempty" tf:"computed"`
 	WorkspaceID      int64                `json:"workspace_id,omitempty" tf:"computed"`
 	CreationTime     int64                `json:"creation_time,omitempty" tf:"computed"`
+	GcpNetworkInfo   *GcpNetworkInfo      `json:"gcp_network_info,omitempty"`
 }
 
 // VPCEndpoint is the object that contains all the information for registering an VPC endpoint

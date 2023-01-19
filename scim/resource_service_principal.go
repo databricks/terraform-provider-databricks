@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"golang.org/x/exp/slices"
 
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -212,8 +213,11 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 		return err
 	}
 	// corner-case for overriding manually provisioned service principals
-	force := fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID)
-	if err.Error() != force {
+	knownErrs := []string{
+		fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID),
+		fmt.Sprintf("User with email %s already exists in this account", u.ApplicationID),
+	}
+	if !slices.Contains(knownErrs, err.Error()) {
 		return err
 	}
 	spList, err := spAPI.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")))

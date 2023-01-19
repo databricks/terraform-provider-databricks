@@ -68,6 +68,7 @@ type importContext struct {
 	workspaceConfKeys map[string]any
 
 	includeUserDomains  bool
+	importAllUsers      bool
 	debug               bool
 	mounts              bool
 	services            string
@@ -300,7 +301,7 @@ func (ic *importContext) MatchesName(n string) bool {
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
-func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
+func (ic *importContext) Find(r *resource, pick string, matchType MatchType) (string, hcl.Traversal) {
 	for _, sr := range ic.State.Resources {
 		if sr.Type != r.Resource {
 			continue
@@ -312,28 +313,46 @@ func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
 					r.Attribute, r.Resource, r.Name, r.ID)
 				continue
 			}
-			if v.(string) == r.Value {
-				if sr.Mode == "data" {
-					return hcl.Traversal{
-						hcl.TraverseRoot{Name: "data"},
-						hcl.TraverseAttr{Name: sr.Type},
-						hcl.TraverseAttr{Name: sr.Name},
-						hcl.TraverseAttr{Name: pick},
-					}
-				}
-				return hcl.Traversal{
-					hcl.TraverseRoot{Name: sr.Type},
+			strValue := v.(string)
+			matched := false
+			switch matchType {
+			case MatchExact:
+				matched = (strValue == r.Value)
+			case MatchPrefix:
+				matched = strings.HasPrefix(r.Value, strValue)
+			default:
+				log.Printf("[WARN] Unsupported match type: %s", matchType)
+			}
+			if !matched {
+				continue
+			}
+			if sr.Mode == "data" {
+				return strValue, hcl.Traversal{
+					hcl.TraverseRoot{Name: "data"},
+					hcl.TraverseAttr{Name: sr.Type},
 					hcl.TraverseAttr{Name: sr.Name},
 					hcl.TraverseAttr{Name: pick},
 				}
 			}
+			return strValue, hcl.Traversal{
+				hcl.TraverseRoot{Name: sr.Type},
+				hcl.TraverseAttr{Name: sr.Name},
+				hcl.TraverseAttr{Name: pick},
+			}
+
 		}
 	}
-	return nil
+	return "", nil
 }
 
+// This function checks if resource exist in any state (already added or in process of addition)
 func (ic *importContext) Has(r *resource) bool {
-	if _, visiting := ic.importing[r.String()]; visiting {
+	return ic.HasInState(r, false)
+}
+
+// This function checks if resource exist. onlyAdded flag enforces that true is returned only if it was added with Add()
+func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
+	if v, visiting := ic.importing[r.String()]; visiting && (v || !onlyAdded) {
 		return true
 	}
 	k, v := r.MatchPair()
@@ -351,9 +370,10 @@ func (ic *importContext) Has(r *resource) bool {
 }
 
 func (ic *importContext) Add(r *resource) {
-	if ic.Has(r) {
+	if ic.HasInState(r, true) { // resource must exist and already marked as added
 		return
 	}
+	ic.importing[r.String()] = true // mark resource as added
 	state := r.Data.State()
 	if state == nil {
 		log.Printf("[ERROR] state is nil for %s", r)
@@ -424,7 +444,7 @@ func (ic *importContext) Emit(r *resource) {
 		ic.testEmits[r.String()] = true
 		return
 	}
-	ic.importing[r.String()] = true
+	ic.importing[r.String()] = false // we're starting to add a new resource
 	pr, ok := ic.Resources[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available in provider", r)
@@ -485,6 +505,35 @@ func (ic *importContext) Emit(r *resource) {
 	ic.Add(r)
 }
 
+func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrite.Tokens {
+	matchType := ref.MatchTypeValue()
+	attr := ref.MatchAttribute()
+	attrValue, traversal := ic.Find(&resource{
+		Resource:  ref.Resource,
+		Attribute: attr,
+		Value:     value,
+	}, attr, matchType)
+	// at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
+	if traversal == nil {
+		return nil
+	}
+	switch matchType {
+	case MatchExact:
+		return hclwrite.TokensForTraversal(traversal)
+	case MatchPrefix:
+		rest := value[len(attrValue):]
+		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"', '$', '{'}}}
+		tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(rest)})
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
+		return tokens
+	default:
+		log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
+	}
+	return nil
+}
+
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
@@ -505,18 +554,9 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 		if d.Variable {
 			return ic.variable(fmt.Sprintf("%s_%s", path[0], value), "")
 		}
-		attr := "id"
-		if d.Match != "" {
-			attr = d.Match
-		}
-		traversal := ic.Find(&resource{
-			Resource:  d.Resource,
-			Attribute: attr,
-			Value:     value,
-		}, attr)
-		//at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
-		if traversal != nil {
-			return hclwrite.TokensForTraversal(traversal)
+
+		if tokens := ic.getTraversalTokens(d, value); tokens != nil {
+			return tokens
 		}
 	}
 	return hclwrite.TokensForValue(cty.StringVal(value))

@@ -42,8 +42,8 @@ type DatabricksClient struct {
 	Username string `name:"username" env:"DATABRICKS_USERNAME" auth:"password"`
 	Password string `name:"password" env:"DATABRICKS_PASSWORD" auth:"password,sensitive"`
 
-	ClientID     string `name:"client_id" env:"DATABRICKS_CLIENT_ID" auth:"oauth"`
-	ClientSecret string `name:"client_secret" env:"DATABRICKS_CLIENT_SECRET" auth:"oauth,sensitive"`
+	ClientID      string `name:"client_id" env:"DATABRICKS_CLIENT_ID" auth:"oauth"`
+	ClientSecret  string `name:"client_secret" env:"DATABRICKS_CLIENT_SECRET" auth:"oauth,sensitive"`
 	TokenEndpoint string `name:"token_endpoint" env:"DATABRICKS_TOKEN_ENDPOINT" auth:"oauth"`
 
 	// Databricks Account ID for Accounts API. This field is used in dependencies.

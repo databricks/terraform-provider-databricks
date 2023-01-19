@@ -103,30 +103,25 @@ func ResourceUser() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			usersAPI := NewUsersAPI(ctx, c)
-
 			if c.AccountID != "" {
 				return nil
 			}
-
 			var err = usersAPI.Delete(d.Id())
 			if err != nil {
 				return err
 			}
-
 			if d.Get("delete_repos").(bool) {
 				err = usersAPI.DeleteRepos(d.Id())
 				if err != nil {
 					return err
 				}
 			}
-
 			if d.Get("delete_home_dir").(bool) {
 				err = usersAPI.DeleteHomeDirectory(d.Id())
 				if err != nil {
 					return err
 				}
 			}
-
 			return nil
 		},
 	}.ToResource()

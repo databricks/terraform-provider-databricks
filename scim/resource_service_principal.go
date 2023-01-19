@@ -8,6 +8,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -82,6 +83,16 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	return a.client.Scim(a.context, "DELETE", servicePrincipalPath, nil, nil)
 }
 
+func (a ServicePrincipalsAPI) DeleteRepos(userID string) error {
+	repoPath := fmt.Sprintf("/Repos/%v", userID)
+	return workspace.NewNotebooksAPI(a.context, a.client).Delete(repoPath, true)
+}
+
+func (a ServicePrincipalsAPI) DeleteHomeDirectory(userID string) error {
+	dirPath := fmt.Sprintf("/Users/%v", userID)
+	return workspace.NewNotebooksAPI(a.context, a.client).Delete(dirPath, true)
+}
+
 // ResourceServicePrincipal manages service principals within workspace
 func ResourceServicePrincipal() *schema.Resource {
 	type entity struct {
@@ -107,6 +118,16 @@ func ResourceServicePrincipal() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			}
+			m["delete_repos"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			}
+			m["delete_home_dir"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			}
 			return m
 		})
@@ -160,7 +181,27 @@ func ResourceServicePrincipal() *schema.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewServicePrincipalsAPI(ctx, c).Delete(d.Id())
+			spAPI := NewServicePrincipalsAPI(ctx, c)
+			if c.AccountID != "" {
+				return nil
+			}
+			var err = spAPI.Delete(d.Id())
+			if err != nil {
+				return err
+			}
+			if d.Get("delete_repos").(bool) {
+				err = spAPI.DeleteRepos(d.Id())
+				if err != nil {
+					return err
+				}
+			}
+			if d.Get("delete_home_dir").(bool) {
+				err = spAPI.DeleteHomeDirectory(d.Id())
+				if err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 	}.ToResource()
 }

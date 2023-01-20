@@ -14,7 +14,7 @@ func TestUcAccGroupDataWorkspace(t *testing.T) {
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `data "databricks_account_group" "account_users" {
-				display_name = account users"
+				display_name = "account users"
 			}`,
 			Check: func(s *terraform.State) error {
 				_, ok := s.Modules[0].Resources["data.databricks_group.account_users"]

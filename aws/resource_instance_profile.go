@@ -19,7 +19,7 @@ import (
 // InstanceProfileInfo contains the ARN for aws instance profiles
 type InstanceProfileInfo struct {
 	InstanceProfileArn    string `json:"instance_profile_arn,omitempty"`
-	IamRoleArn            string `json:"iam_role_arn,omitempty" tf:"optional"`
+	IamRoleArn            string `json:"iam_role_arn,omitempty"`
 	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`
 	SkipValidation        bool   `json:"skip_validation,omitempty" tf:"computed"`
 }
@@ -88,7 +88,13 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 func (a InstanceProfilesAPI) Update(ipi InstanceProfileInfo) error {
 	return a.client.Post(a.context, "/instance-profiles/edit", map[string]any{
 		"instance_profile_arn": ipi.InstanceProfileArn,
-		"iam_role_arn":         ipi.IamRoleArn,
+		"iam_role_arn": func(ipi InstanceProfileInfo) string {
+			if ipi.IamRoleArn == "" {
+				return ipi.InstanceProfileArn
+			} else {
+				return ipi.IamRoleArn
+			}
+		}(ipi),
 	}, nil)
 }
 
@@ -240,32 +246,34 @@ func ValidIamRole(v any, c cty.Path) diag.Diagnostics {
 			},
 		}
 	}
-	if !strings.HasPrefix(s, "arn:") {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				AttributePath: c,
-				Summary:       "Invalid ARN",
-				Detail:        "Invalid prefix",
-			},
+	if s != "" {
+		if !strings.HasPrefix(s, "arn:") {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					AttributePath: c,
+					Summary:       "Invalid ARN",
+					Detail:        "Invalid prefix",
+				},
+			}
 		}
-	}
-	arnSections := strings.SplitN(s, ":", 6)
-	if len(arnSections) != 6 {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				AttributePath: c,
-				Summary:       "Invalid ARN",
-				Detail:        "Incorrect number of sections",
-			},
+		arnSections := strings.SplitN(s, ":", 6)
+		if len(arnSections) != 6 {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					AttributePath: c,
+					Summary:       "Invalid ARN",
+					Detail:        "Incorrect number of sections",
+				},
+			}
 		}
-	}
-	if !strings.HasPrefix(arnSections[5], "role") {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				AttributePath: c,
-				Summary:       "Invalid ARN",
-				Detail:        fmt.Sprintf("Not a role ARN: %s", v),
-			},
+		if !strings.HasPrefix(arnSections[5], "role") {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					AttributePath: c,
+					Summary:       "Invalid ARN",
+					Detail:        fmt.Sprintf("Not a role ARN: %s", v),
+				},
+			}
 		}
 	}
 	return nil

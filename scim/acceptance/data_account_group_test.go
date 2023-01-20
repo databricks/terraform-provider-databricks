@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccGroupDataWorkspace(t *testing.T) {
+func TestUcAccGroupDataWorkspace(t *testing.T) {
 	qa.RequireCloudEnv(t, "ucws")
 	acceptance.Test(t, []acceptance.Step{
 		{

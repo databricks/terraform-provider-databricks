@@ -13,12 +13,12 @@ func TestUcAccGroupDataWorkspace(t *testing.T) {
 	qa.RequireCloudEnv(t, "ucws")
 	acceptance.Test(t, []acceptance.Step{
 		{
-			Template: `data "databricks_account_group" "account_users" {
-				display_name = "account users"
+			Template: `data "databricks_account_group" "data_eng_group" {
+				display_name = "{env.TEST_DATA_ENG_GROUP}"
 			}`,
 			Check: func(s *terraform.State) error {
-				_, ok := s.Modules[0].Resources["data.databricks_group.account_users"]
-				require.True(t, ok, "data.databricks_group.account_users has to be there")
+				_, ok := s.Modules[0].Resources["data.databricks_group.data_eng_group"]
+				require.True(t, ok, "data.databricks_group.data_eng_group has to be there")
 				return nil
 			},
 		},

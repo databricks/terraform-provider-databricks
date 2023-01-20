@@ -38,6 +38,15 @@ func (a GroupsAPI) Read(groupID string) (group Group, err error) {
 	return
 }
 
+// ReadAccount reads and returns a Group object via Account SCIM api
+func (a GroupsAPI) ReadAccount(groupID string) (group Group, err error) {
+	err = a.client.Scim(a.context, http.MethodGet, fmt.Sprintf("/account/scim/v2/Groups/%v", groupID), nil, &group)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // Filter returns groups matching the filter
 func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 	var groups GroupList
@@ -49,8 +58,32 @@ func (a GroupsAPI) Filter(filter string) (GroupList, error) {
 	return groups, err
 }
 
+// FilterAccount returns groups matching the filter
+func (a GroupsAPI) FilterAccount(filter string) (GroupList, error) {
+	var groups GroupList
+	req := map[string]string{}
+	if filter != "" {
+		req["filter"] = filter
+	}
+	err := a.client.Scim(a.context, http.MethodGet, "/account/scim/v2/Groups", req, &groups)
+	return groups, err
+}
+
 func (a GroupsAPI) ReadByDisplayName(displayName string) (group Group, err error) {
 	groupList, err := a.Filter(fmt.Sprintf("displayName eq '%s'", displayName))
+	if err != nil {
+		return
+	}
+	if len(groupList.Resources) == 0 {
+		err = fmt.Errorf("cannot find group: %s", displayName)
+		return
+	}
+	group = groupList.Resources[0]
+	return
+}
+
+func (a GroupsAPI) ReadAccountByDisplayName(displayName string) (group Group, err error) {
+	groupList, err := a.FilterAccount(fmt.Sprintf("displayName eq '%s'", displayName))
 	if err != nil {
 		return
 	}

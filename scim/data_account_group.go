@@ -1,0 +1,93 @@
+package scim
+
+import (
+	"context"
+	"sort"
+	"strings"
+
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+)
+
+// DataSourceGroup returns information about group specified by display name
+func DataSourceAccountGroup() *schema.Resource {
+	type entity struct {
+		DisplayName       string   `json:"display_name"`
+		Recursive         bool     `json:"recursive,omitempty"`
+		Members           []string `json:"members,omitempty" tf:"slice_set,computed"`
+		Users             []string `json:"users,omitempty" tf:"slice_set,computed"`
+		ServicePrincipals []string `json:"service_principals,omitempty" tf:"slice_set,computed"`
+		ChildGroups       []string `json:"child_groups,omitempty" tf:"slice_set,computed"`
+		Groups            []string `json:"groups,omitempty" tf:"slice_set,computed"`
+		Roles             []string `json:"roles,omitempty" tf:"slice_set,computed"`
+		ExternalID        string   `json:"external_id,omitempty" tf:"computed"`
+	}
+
+	s := common.StructToSchema(entity{}, func(
+		s map[string]*schema.Schema) map[string]*schema.Schema {
+		// nolint once SDKv2 has Diagnostics-returning validators, change
+		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
+		s["recursive"].Default = true
+		s["members"].Deprecated = "Please use `users`, `service_principals`, and `child_groups` instead"
+		return s
+	})
+
+	return &schema.Resource{
+		Schema: s,
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+			var this entity
+			common.DataToStructPointer(d, s, &this)
+			groupsAPI := NewGroupsAPI(ctx, m)
+			group, err := groupsAPI.ReadAccountByDisplayName(this.DisplayName)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			d.SetId(group.ID)
+			queue := []Group{group}
+			for len(queue) > 0 {
+				current := queue[0]
+				queue = queue[1:]
+				for _, x := range current.Members {
+					this.Members = append(this.Members, x.Value)
+					if strings.HasPrefix(x.Ref, "Users/") {
+						this.Users = append(this.Users, x.Value)
+					}
+					if strings.HasPrefix(x.Ref, "Groups/") {
+						this.ChildGroups = append(this.ChildGroups, x.Value)
+					}
+					if strings.HasPrefix(x.Ref, "ServicePrincipals/") {
+						this.ServicePrincipals = append(this.ServicePrincipals, x.Value)
+					}
+				}
+				for _, x := range current.Roles {
+					this.Roles = append(this.Roles, x.Value)
+				}
+				current.Entitlements.readIntoData(d)
+				for _, x := range current.Groups {
+					this.Groups = append(this.Groups, x.Value)
+					if this.Recursive {
+						childGroup, err := groupsAPI.ReadAccount(x.Value)
+						if err != nil {
+							return diag.FromErr(err)
+						}
+						queue = append(queue, childGroup)
+					}
+				}
+			}
+			this.ExternalID = group.ExternalID
+			sort.Strings(this.Groups)
+			sort.Strings(this.Members)
+			sort.Strings(this.Users)
+			sort.Strings(this.ChildGroups)
+			sort.Strings(this.ServicePrincipals)
+			sort.Strings(this.Roles)
+			err = common.StructToData(this, s, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			return nil
+		},
+	}
+}

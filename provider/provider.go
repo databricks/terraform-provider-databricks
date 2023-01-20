@@ -36,6 +36,7 @@ import (
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
+			"databricks_account_group":           scim.DataSourceAccountGroup(),
 			"databricks_aws_crossaccount_policy": aws.DataAwsCrossaccountPolicy(),
 			"databricks_aws_assume_role_policy":  aws.DataAwsAssumeRolePolicy(),
 			"databricks_aws_bucket_policy":       aws.DataAwsBucketPolicy(),

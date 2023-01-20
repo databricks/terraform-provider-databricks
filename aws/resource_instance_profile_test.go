@@ -42,6 +42,40 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
+func TestResourceInstanceProfileWithRoleCreate(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/instance-profiles/add",
+				ExpectedRequest: InstanceProfileInfo{
+					InstanceProfileArn: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+					IamRoleArn:         "arn:aws:iam::999999999999:role/my-fake-instance-profile-role",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-profiles/list",
+				Response: InstanceProfileList{
+					InstanceProfiles: []InstanceProfileInfo{
+						{
+							InstanceProfileArn: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceInstanceProfile(),
+		State: map[string]any{
+			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+			"iam_role_arn":         "arn:aws:iam::999999999999:role/my-fake-instance-profile-role",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
+}
+
 func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -74,6 +108,18 @@ func TestResourceInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	assert.EqualError(t, err, "invalid config supplied. [instance_profile_arn] Invalid ARN")
+}
+
+func TestResourceInstanceProfileCreate_Error_InvalidRoleARN(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceInstanceProfile(),
+		State: map[string]any{
+			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+			"iam_role_arn":         "abc",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.EqualError(t, err, "invalid config supplied. [iam_role_arn] Invalid ARN")
 }
 
 func TestResourceInstanceProfileRead(t *testing.T) {
@@ -177,6 +223,41 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
+}
+
+func TestResourceInstanceProfileUpdate(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-profiles/list",
+				Response: InstanceProfileList{
+					InstanceProfiles: []InstanceProfileInfo{
+						{
+							InstanceProfileArn: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/instance-profiles/edit",
+				ExpectedRequest: InstanceProfileInfo{
+					InstanceProfileArn: "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+					IamRoleArn:         "arn:aws:iam::999999999999:role/my-fake-instance-profile-role",
+				},
+			},
+		},
+		Resource: ResourceInstanceProfile(),
+		State: map[string]any{
+			"instance_profile_arn": "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+			"iam_role_arn":         "arn:aws:iam::999999999999:role/my-fake-instance-profile-role",
+		},
+		Update: true,
+		ID:     "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
+	}.Apply(t)
+	assert.NoError(t, err, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 

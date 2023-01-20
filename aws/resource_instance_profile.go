@@ -87,7 +87,7 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 // Update updates the IAM role ARN of an existing instance profile
 func (a InstanceProfilesAPI) Update(ipi InstanceProfileInfo) error {
 	return a.client.Post(a.context, "/instance-profiles/edit", map[string]any{
-		"instance_proflie_arn": ipi.InstanceProfileArn,
+		"instance_profile_arn": ipi.InstanceProfileArn,
 		"iam_role_arn":         ipi.IamRoleArn,
 	}, nil)
 }
@@ -147,6 +147,7 @@ func ResourceInstanceProfile() *schema.Resource {
 	instanceProfileSchema := common.StructToSchema(InstanceProfileInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["instance_profile_arn"].ValidateDiagFunc = ValidInstanceProfile
+			m["iam_role_arn"].ValidateDiagFunc = ValidIamRole
 			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if old == "false" && new == "true" {
 					return true
@@ -221,6 +222,49 @@ func ValidInstanceProfile(v any, c cty.Path) diag.Diagnostics {
 				AttributePath: c,
 				Summary:       "Invalid ARN",
 				Detail:        fmt.Sprintf("Not an instance profile ARN: %s", v),
+			},
+		}
+	}
+	return nil
+}
+
+// ValidIamRole validate if it's valid instance profile IAM role ARN
+func ValidIamRole(v any, c cty.Path) diag.Diagnostics {
+	s, ok := v.(string)
+	if !ok {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Invalid ARN",
+				Detail:        "Not a string",
+			},
+		}
+	}
+	if !strings.HasPrefix(s, "arn:") {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Invalid ARN",
+				Detail:        "Invalid prefix",
+			},
+		}
+	}
+	arnSections := strings.SplitN(s, ":", 6)
+	if len(arnSections) != 6 {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Invalid ARN",
+				Detail:        "Incorrect number of sections",
+			},
+		}
+	}
+	if !strings.HasPrefix(arnSections[5], "role") {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Invalid ARN",
+				Detail:        fmt.Sprintf("Not a role ARN: %s", v),
 			},
 		}
 	}

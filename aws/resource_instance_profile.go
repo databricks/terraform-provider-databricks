@@ -19,6 +19,7 @@ import (
 // InstanceProfileInfo contains the ARN for aws instance profiles
 type InstanceProfileInfo struct {
 	InstanceProfileArn    string `json:"instance_profile_arn,omitempty"`
+	IamRoleArn            string `json:"iam_role_arn,omitempty" tf:"optional"`
 	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`
 	SkipValidation        bool   `json:"skip_validation,omitempty" tf:"computed"`
 }
@@ -80,6 +81,14 @@ func (a InstanceProfilesAPI) List() ([]InstanceProfileInfo, error) {
 func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 	return a.client.Post(a.context, "/instance-profiles/remove", map[string]any{
 		"instance_profile_arn": instanceProfileARN,
+	}, nil)
+}
+
+// Update updates the IAM role ARN of an existing instance profile
+func (a InstanceProfilesAPI) Update(ipi InstanceProfileInfo) error {
+	return a.client.Post(a.context, "/instance-profiles/edit", map[string]any{
+		"instance_proflie_arn": ipi.InstanceProfileArn,
+		"iam_role_arn":         ipi.IamRoleArn,
 	}, nil)
 }
 
@@ -166,6 +175,11 @@ func ResourceInstanceProfile() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewInstanceProfilesAPI(ctx, c).Delete(d.Id())
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var profile InstanceProfileInfo
+			common.DataToStructPointer(d, instanceProfileSchema, &profile)
+			return NewInstanceProfilesAPI(ctx, c).Update(profile)
 		},
 	}.ToResource()
 }

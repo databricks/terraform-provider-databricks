@@ -450,6 +450,38 @@ resource "databricks_cluster" "this" {
 }
 ```
 
+## cluster_mount_info blocks
+
+It's possible to mount NFS (Network File System) resources into the Spark containers inside the cluster.  You can specify one or more `cluster_mount_info` blocks describing the mount. This block has following attributes:
+
+* `network_filesystem_info` - block specifying connection. It consists of:
+  * `server_address` - (Required) host name.
+  * `mount_options` - (Optional) string that will be passed as options passed to the `mount` command.
+* `remote_mount_dir_path` - (Optional) string specifying path to mount on the remote service.
+* `local_mount_dir_path` - (Required) path inside the Spark container.
+
+For example, you can mount Azure Data Lake Storage container using the following code:
+
+```hcl
+locals {
+  storage_account   = "ewfw3ggwegwg"
+  storage_container = "test"
+}
+
+resource "databricks_cluster" "with_nfs" {
+  # ...
+  cluster_mount_info {
+    network_filesystem_info {
+      server_address = "${local.storage_account}.blob.core.windows.net"
+      mount_options  = "sec=sys,vers=3,nolock,proto=tcp"
+    }
+    remote_mount_dir_path = "${local.storage_account}/${local.storage_container}"
+    local_mount_dir_path  = "/mnt/nfs-test"
+  }
+}
+```
+
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

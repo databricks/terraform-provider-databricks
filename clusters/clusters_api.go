@@ -367,6 +367,19 @@ type WorkloadType struct {
 	Clients *WorkloadTypeClients `json:"clients"`
 }
 
+// NetworkFileSystemInfo contains information about network file system server
+type NetworkFileSystemInfo struct {
+	ServerAddress string `json:"server_address"`
+	MountOptions  string `json:"mount_options,omitempty"`
+}
+
+// MountInfo provides configuration to mount a network file system
+type MountInfo struct {
+	NetworkFileSystemInfo *NetworkFileSystemInfo `json:"network_filesystem_info"`
+	RemoteMountDirectory  string                 `json:"remote_mount_dir_path,omitempty"`
+	LocalMountDirectory   string                 `json:"local_mount_dir_path"`
+}
+
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
@@ -404,6 +417,7 @@ type Cluster struct {
 	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
 	RuntimeEngine    string        `json:"runtime_engine,omitempty"`
+	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
 }
 
 func (cluster Cluster) Validate() error {

@@ -1,12 +1,18 @@
 package acceptance
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestMwsAccWorkspaces(t *testing.T) {
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
+	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -59,6 +65,10 @@ func TestMwsAccWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpWorkspaces(t *testing.T) {
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
+	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -67,7 +77,7 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 				workspace_name  = "{env.TEST_PREFIX}-{var.RANDOM}"
 				location        = "{env.GOOGLE_REGION}"
 		
-				cloud_resource_bucket {
+				cloud_resource_container {
 					gcp {
 						project_id = "{env.GOOGLE_PROJECT}"
 					}
@@ -78,6 +88,10 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
+	}
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
@@ -99,18 +113,18 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 				workspace_name  = "{env.TEST_PREFIX}-{var.RANDOM}"
 				location        = "{env.GOOGLE_REGION}"
 		
-				cloud_resource_bucket {
+				cloud_resource_container {
 					gcp {
 						project_id = "{env.GOOGLE_PROJECT}"
 					}
 				}
-				network {
-					network_id = databricks_mws_networks.this.network_id
-					gcp_common_network_config {
-						gke_connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-						gke_cluster_master_ip_range = "10.3.0.0/28"
-					}
-  				}
+
+				network_id = databricks_mws_networks.this.network_id
+				
+				gke_config {
+					connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+					master_ip_range = "10.3.0.0/28"
+				}
 			}`,
 		},
 	})

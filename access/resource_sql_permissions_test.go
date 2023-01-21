@@ -89,6 +89,22 @@ func TestTableACLGrants(t *testing.T) {
 	assert.Len(t, ta.PrivilegeAssignments[0].Privileges, 2)
 }
 
+func TestDatabaseACLGrants(t *testing.T) {
+	ta := SqlPermissions{ Database: "default",
+	exec: mockData{
+		"SHOW GRANT ON DATABASE `default`": {
+			// principal, actionType, objType, objectKey
+			// Test with and without backticks
+			{"users", "SELECT", "database", "default"},
+			{"users", "USAGE", "database", "`default`"},
+		},
+	}}
+	err := ta.read()
+	assert.NoError(t, err)
+	assert.Len(t, ta.PrivilegeAssignments, 1)
+	assert.Len(t, ta.PrivilegeAssignments[0].Privileges, 2)
+}
+
 type failedCommand string
 
 func (fc failedCommand) Execute(clusterID, language, commandStr string) common.CommandResults {

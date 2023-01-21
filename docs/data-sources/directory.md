@@ -10,7 +10,7 @@ This data source allows to get information about a directory in a Databricks Wor
 ## Example Usage
 
 ```hcl
-data "databricks_notebook" "prod" {
+data "databricks_directory" "prod" {
   path = "/Production"
 }
 ```

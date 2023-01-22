@@ -180,7 +180,9 @@ func (a NotebooksAPI) recursiveAddDirectoryPaths(path string, pathList *[]Object
 	}
 	for _, v := range directoryInfoList {
 		if v.ObjectType == Directory {
-			*pathList = append(*pathList, v)
+			if v.Path != "/Users" && v.Path != "/Shared" && !(strings.HasPrefix(v.Path, "/Users") && strings.Count(v.Path, "/") == 2 && strings.Count(v.Path, "@") == 1) {
+				*pathList = append(*pathList, v)
+			}
 			err := a.recursiveAddDirectoryPaths(v.Path, pathList)
 			if err != nil {
 				return err

@@ -8,4 +8,5 @@ type Dashboard struct {
 	Name    string            `json:"name"`
 	Tags    []string          `json:"tags,omitempty"`
 	Widgets []json.RawMessage `json:"widgets,omitempty"`
+	Parent  string            `json:"parent,omitempty"`
 }

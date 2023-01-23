@@ -12,71 +12,71 @@ This guide assumes that you are already familiar with Hashicorp Terraform and pr
 
 ```hcl
 variable "prefix" {}
- 
+
 variable "project" {
   type    = string
   default = "<my-project-id>"
 }
- 
+
 provider "google" {
   project = var.project
 }
- 
+
 variable "delegate_from" {
- description = "Allow either user:user.name@example.com, group:deployers@example.com or serviceAccount:sa1@project.iam.gserviceaccount.com to impersonate created service account"
- type        = list(string)
+  description = "Allow either user:user.name@example.com, group:deployers@example.com or serviceAccount:sa1@project.iam.gserviceaccount.com to impersonate created service account"
+  type        = list(string)
 }
- 
+
 resource "google_service_account" "sa2" {
- account_id   = "${var.prefix}-sa2"
- display_name = "Service Account for Databricks Provisioning"
+  account_id   = "${var.prefix}-sa2"
+  display_name = "Service Account for Databricks Provisioning"
 }
- 
+
 output "service_account" {
- value       = google_service_account.sa2.email
- description = "Add this email as a user in the Databricks account console"
+  value       = google_service_account.sa2.email
+  description = "Add this email as a user in the Databricks account console"
 }
- 
+
 data "google_iam_policy" "this" {
- binding {
-   role    = "roles/iam.serviceAccountTokenCreator"
-   members = var.delegate_from
- }
+  binding {
+    role    = "roles/iam.serviceAccountTokenCreator"
+    members = var.delegate_from
+  }
 }
- 
+
 resource "google_service_account_iam_policy" "impersonatable" {
- service_account_id = google_service_account.sa2.name
- policy_data        = data.google_iam_policy.this.policy_data
+  service_account_id = google_service_account.sa2.name
+  policy_data        = data.google_iam_policy.this.policy_data
 }
- 
+
 resource "google_project_iam_custom_role" "workspace_creator" {
- role_id = "${var.prefix}_workspace_creator"
- title   = "Databricks Workspace Creator"
- permissions = [
-   "iam.serviceAccounts.getIamPolicy",
-   "iam.serviceAccounts.setIamPolicy",
-   "iam.roles.create",
-   "iam.roles.delete",
-   "iam.roles.get",
-   "iam.roles.update",
-   "resourcemanager.projects.get",
-   "resourcemanager.projects.getIamPolicy",
-   "resourcemanager.projects.setIamPolicy",
-   "serviceusage.services.get",
-   "serviceusage.services.list",
-   "serviceusage.services.enable"
- ]
+  role_id = "${var.prefix}_workspace_creator"
+  title   = "Databricks Workspace Creator"
+  permissions = [
+    "iam.serviceAccounts.getIamPolicy",
+    "iam.serviceAccounts.setIamPolicy",
+    "iam.roles.create",
+    "iam.roles.delete",
+    "iam.roles.get",
+    "iam.roles.update",
+    "resourcemanager.projects.get",
+    "resourcemanager.projects.getIamPolicy",
+    "resourcemanager.projects.setIamPolicy",
+    "serviceusage.services.get",
+    "serviceusage.services.list",
+    "serviceusage.services.enable"
+  ]
 }
- 
+
 data "google_client_config" "current" {}
- 
+
 output "custom_role_url" {
- value = "https://console.cloud.google.com/iam-admin/roles/details/projects%3C${data.google_client_config.current.project}%3Croles%3C${google_project_iam_custom_role.workspace_creator.role_id}"
+  value = "https://console.cloud.google.com/iam-admin/roles/details/projects%3C${data.google_client_config.current.project}%3Croles%3C${google_project_iam_custom_role.workspace_creator.role_id}"
 }
- 
+
 resource "google_project_iam_member" "sa2_can_create_workspaces" {
- role   = google_project_iam_custom_role.workspace_creator.id
- member = "serviceAccount:${google_service_account.sa2.email}"
+  role   = google_project_iam_custom_role.workspace_creator.id
+  member = "serviceAccount:${google_service_account.sa2.email}"
 }
 ```
 
@@ -123,7 +123,7 @@ provider "google" {
 // initialize provider in "accounts" mode to provision new workspace
 
 provider "databricks" {
-  alias                  = "accounts"  
+  alias                  = "accounts"
   host                   = "https://accounts.gcp.databricks.com"
   google_service_account = var.databricks_google_service_account
   account_id             = var.databricks_account_id
@@ -200,7 +200,7 @@ resource "databricks_mws_networks" "this" {
 
 ## Creating a Databricks Workspace
 
-Once [the VPC](#Creating a VPC) is set up, you can create Databricks workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
+Once [the VPC](#creating-a-vpc) is set up, you can create Databricks workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
 Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.accounts` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, which have to be used in the latter modules.
 

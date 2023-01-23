@@ -87,7 +87,7 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 // Update updates the IAM role ARN of an existing instance profile
 func (a InstanceProfilesAPI) Update(ipi InstanceProfileInfo) error {
 	data := map[string]any{
-		"inatance_profile_arn": ipi.InstanceProfileArn,
+		"instance_profile_arn": ipi.InstanceProfileArn,
 		"iam_role_arn":         ipi.InstanceProfileArn,
 	}
 	if ipi.IamRoleArn != "" {

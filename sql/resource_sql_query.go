@@ -24,6 +24,7 @@ type QueryEntity struct {
 	Tags         []string         `json:"tags,omitempty"`
 	Parameter    []QueryParameter `json:"parameter,omitempty"`
 	RunAsRole    string           `json:"run_as_role,omitempty"`
+	Parent       string           `json:"parent,omitempty" tf:"suppress_diff,force_new"`
 }
 
 // QuerySchedule ...
@@ -157,6 +158,7 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 	aq.Description = q.Description
 	aq.Query = q.Query
 	aq.Tags = append([]string{}, q.Tags...)
+	aq.Parent = q.Parent
 
 	if s := q.Schedule; s != nil {
 		if sp := s.Continuous; sp != nil {
@@ -297,6 +299,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	q.Description = aq.Description
 	q.Query = aq.Query
 	q.Tags = append([]string{}, aq.Tags...)
+	q.Parent = aq.Parent
 
 	if s := aq.Schedule; s != nil {
 		// Set `schedule` to non-empty value to ensure it's picked up by `StructToSchema`.

@@ -186,6 +186,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 							AwsAttributes: &clusters.AwsAttributes{
 								InstanceProfileArn: instance_profile,
 								Availability:       "SPOT",
+								ZoneID:             "auto",
 							},
 							AutoterminationMinutes: 10,
 							SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
@@ -219,6 +220,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: instance_profile,
 						Availability:       "SPOT",
+						ZoneID:             "auto",
 					},
 					AutoterminationMinutes: 10,
 					SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",

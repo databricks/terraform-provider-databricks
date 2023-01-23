@@ -231,6 +231,10 @@ func (library Library) String() string {
 	return "unknown"
 }
 
+func (library Library) GetID(clusterId string) string {
+	return fmt.Sprintf("%s/%s", clusterId, library.String())
+}
+
 // ClusterLibraryList is request body for install and uninstall
 type ClusterLibraryList struct {
 	ClusterID string    `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`

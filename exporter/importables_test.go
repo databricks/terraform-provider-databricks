@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
@@ -210,6 +211,68 @@ func TestClusterNameFromID(t *testing.T) {
 	d := clusters.ResourceCluster().TestResourceData()
 	d.SetId("a-b-c")
 	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(ic, d))
+}
+
+func TestClusterLibrary(t *testing.T) {
+	ic := importContextForTest()
+	d := clusters.ResourceLibrary().TestResourceData()
+	d.SetId("a-b-c")
+	assert.Equal(t, "a-b-c", resourcesMap["databricks_library"].Name(ic, d))
+}
+
+func TestImportClusterLibraries(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Status:       200,
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
+			Response: libraries.ClusterLibraryStatuses{
+				LibraryStatuses: []libraries.LibraryStatus{
+					{
+						Library: &libraries.Library{
+							Whl: "foo.whl",
+						},
+						Status: "INSTALLED",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		d := clusters.ResourceCluster().TestResourceData()
+		d.SetId("abc")
+		err := resourcesMap["databricks_cluster"].Import(ic, &resource{
+			ID:   "abc",
+			Data: d,
+		})
+		assert.NoError(t, err)
+	})
+}
+
+func TestImportClusterLibrariesFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Status:       404,
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
+			Response:     common.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		d := clusters.ResourceCluster().TestResourceData()
+		d.SetId("abc")
+		err := resourcesMap["databricks_cluster"].Import(ic, &resource{
+			ID:   "abc",
+			Data: d,
+		})
+		assert.EqualError(t, err, "nope")
+	})
 }
 
 func TestClusterListFails(t *testing.T) {

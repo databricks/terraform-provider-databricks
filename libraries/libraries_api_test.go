@@ -368,3 +368,8 @@ func TestNewLibraryFromInstanceState(t *testing.T) {
 		})
 	}
 }
+
+func TestNewLibraryGetID(t *testing.T) {
+	library := NewLibraryFromInstanceState(map[string]any{"jar": "a"})
+	assert.Equal(t, "cluster_id/jar:a", library.GetID("cluster_id"))
+}

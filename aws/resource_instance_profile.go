@@ -210,7 +210,7 @@ func ValidArn(v any, c cty.Path) diag.Diagnostics {
 	case "iam_role_arn":
 		arnType = "role"
 	}
-	if s == "" {
+	if s == "" && arnType == "role" {
 		return nil
 	}
 	if !strings.HasPrefix(s, "arn:") {

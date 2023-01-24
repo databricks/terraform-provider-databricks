@@ -189,6 +189,18 @@ func TestResourceInstanceProfileValidate_Error_WrongTypeRoleARN(t *testing.T) {
 	assert.EqualError(t, err, "invalid config supplied. [iam_role_arn] Invalid ARN")
 }
 
+func TestResourceInstanceProfileValidate_Error_EmptyInstanceProfileARN(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceInstanceProfile(),
+		State: map[string]any{
+			"instance_profile_arn": "",
+			"iam_role_arn":         "arn:aws:iam::999999999999:role/my-fake-instance-profile-role",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.EqualError(t, err, "invalid config supplied. [instance_profile_arn] Invalid ARN")
+}
+
 func TestResourceInstanceProfileRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

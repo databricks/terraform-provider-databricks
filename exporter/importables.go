@@ -197,6 +197,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
+	"databricks_library": {
+		Service: "compute",
+		Depends: []reference{
+			{Path: "cluster_id", Resource: "databricks_cluster"},
+			{Path: "jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		},
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Id()
+		},
+	},
 	"databricks_cluster": {
 		Service: "compute",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
@@ -261,7 +273,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Name:     "cluster_" + ic.Importables["databricks_cluster"].Name(ic, r.Data),
 				})
 			}
-			return ic.importLibraries(r.Data, s)
+			return ic.importClusterLibraries(r.Data, s)
 		},
 		ShouldOmitField: makeShouldOmitFieldForCluster(nil),
 	},

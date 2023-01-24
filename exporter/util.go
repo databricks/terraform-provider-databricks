@@ -150,6 +150,25 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 	return nil
 }
 
+func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
+	cll, err := libraries.NewLibrariesAPI(ic.Context, ic.Client).ClusterStatus(d.Id())
+	if err != nil {
+		return err
+	}
+	if cll.LibraryStatuses != nil {
+		for _, lib := range cll.LibraryStatuses {
+			ic.Emit(&resource{
+				Resource: "databricks_library",
+				ID:       lib.Library.GetID(d.Id()),
+			})
+			ic.emitIfDbfsFile(lib.Library.Egg)
+			ic.emitIfDbfsFile(lib.Library.Jar)
+			ic.emitIfDbfsFile(lib.Library.Whl)
+		}
+	}
+	return nil
+}
+
 func (ic *importContext) cacheGroups() error {
 	if len(ic.allGroups) == 0 {
 		log.Printf("[INFO] Caching groups in memory ...")

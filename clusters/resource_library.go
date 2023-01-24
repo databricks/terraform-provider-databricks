@@ -67,7 +67,8 @@ func ResourceLibrary() *schema.Resource {
 			for _, v := range cll.LibraryStatuses {
 				thisRep := v.Library.String()
 				if thisRep == libraryRep {
-					// library is found
+					common.StructToData(v.Library, s, d)
+					d.Set("cluster_id", clusterID)
 					return nil
 				}
 			}

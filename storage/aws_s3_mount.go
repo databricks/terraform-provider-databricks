@@ -135,6 +135,7 @@ func GetOrCreateMountingClusterWithInstanceProfile(
 	cluster.AwsAttributes = &clusters.AwsAttributes{
 		InstanceProfileArn: instanceProfile,
 		Availability:       "SPOT",
+		ZoneID:             "auto",
 	}
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, cluster)
 }

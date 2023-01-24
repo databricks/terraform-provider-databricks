@@ -719,6 +719,50 @@ func TestNotebookGeneration(t *testing.T) {
 	})
 }
 
+func TestDirectoryGeneration(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						Path:       "/first",
+						ObjectType: "DIRECTORY",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2Ffirst",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2Ffirst",
+			Response: workspace.ObjectStatus{
+				ObjectID:   1234,
+				ObjectType: "DIRECTORY",
+				Path:       "/first",
+			},
+		},
+	}, "notebooks", func(ic *importContext) {
+		err := resourcesMap["databricks_directory"].List(ic)
+		assert.NoError(t, err)
+
+		ic.generateHclForResources(nil)
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
+		resource "databricks_directory" "first_1234" {
+		  path = "/first"
+		}`), string(ic.Files["notebooks"].Bytes()))
+	})
+}
+
 func TestGlobalInitScriptGen(t *testing.T) {
 	testGenerate(t, []qa.HTTPFixture{
 		{

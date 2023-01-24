@@ -203,12 +203,18 @@ func ValidArn(v any, c cty.Path) diag.Diagnostics {
 	}
 	var arnType string
 	switch c[0].(cty.GetAttrStep).Name {
-	case "instance_profile_arn":
-		arnType = "instance-profile"
-	case "instance_profile_id":
+	case "instance_profile_arn", "instance_profile_id":
 		arnType = "instance-profile"
 	case "iam_role_arn":
 		arnType = "role"
+	default:
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Unknown attribute",
+				Detail:        "ARN type associated with attribute is not known",
+			},
+		}
 	}
 	if s == "" && arnType == "role" {
 		return nil

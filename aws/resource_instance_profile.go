@@ -150,8 +150,8 @@ func (a InstanceProfilesAPI) Synchronized(arn string, testCallback func() bool) 
 func ResourceInstanceProfile() *schema.Resource {
 	instanceProfileSchema := common.StructToSchema(InstanceProfileInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["instance_profile_arn"].ValidateDiagFunc = ValidInstanceProfile
-			m["iam_role_arn"].ValidateDiagFunc = ValidIamRole
+			m["instance_profile_arn"].ValidateDiagFunc = ValidArn
+			m["iam_role_arn"].ValidateDiagFunc = ValidArn
 			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if old == "false" && new == "true" {
 					return true
@@ -189,8 +189,8 @@ func ResourceInstanceProfile() *schema.Resource {
 	}.ToResource()
 }
 
-// ValidInstanceProfile validate if it's valid instance profile ARN
-func ValidInstanceProfile(v any, c cty.Path) diag.Diagnostics {
+// ValidArn validate if it's valid instance profile or role ARN
+func ValidArn(v any, c cty.Path) diag.Diagnostics {
 	s, ok := v.(string)
 	if !ok {
 		return diag.Diagnostics{
@@ -201,48 +201,14 @@ func ValidInstanceProfile(v any, c cty.Path) diag.Diagnostics {
 			},
 		}
 	}
-	if !strings.HasPrefix(s, "arn:") {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				AttributePath: c,
-				Summary:       "Invalid ARN",
-				Detail:        "Invalid prefix",
-			},
-		}
-	}
-	arnSections := strings.SplitN(s, ":", 6)
-	if len(arnSections) != 6 {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				AttributePath: c,
-				Summary:       "Invalid ARN",
-				Detail:        "Incorrect number of sections",
-			},
-		}
-	}
-	if !strings.HasPrefix(arnSections[5], "instance-profile") {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				AttributePath: c,
-				Summary:       "Invalid ARN",
-				Detail:        fmt.Sprintf("Not an instance profile ARN: %s", v),
-			},
-		}
-	}
-	return nil
-}
-
-// ValidIamRole validate if it's valid instance profile IAM role ARN
-func ValidIamRole(v any, c cty.Path) diag.Diagnostics {
-	s, ok := v.(string)
-	if !ok {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				AttributePath: c,
-				Summary:       "Invalid ARN",
-				Detail:        "Not a string",
-			},
-		}
+	var arnType string
+	switch c[0].(cty.GetAttrStep).Name {
+	case "instance_profile_arn":
+		arnType = "instance-profile"
+	case "instance_profile_id":
+		arnType = "instance-profile"
+	case "iam_role_arn":
+		arnType = "role"
 	}
 	if s == "" {
 		return nil
@@ -266,12 +232,12 @@ func ValidIamRole(v any, c cty.Path) diag.Diagnostics {
 			},
 		}
 	}
-	if !strings.HasPrefix(arnSections[5], "role") {
+	if !strings.HasPrefix(arnSections[5], arnType) {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				AttributePath: c,
 				Summary:       "Invalid ARN",
-				Detail:        fmt.Sprintf("Not a role ARN: %s", v),
+				Detail:        fmt.Sprintf("Not a %s ARN: %s", arnType, v),
 			},
 		}
 	}

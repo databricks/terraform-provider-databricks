@@ -132,7 +132,7 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
-func TestResourceInstanceProfileCreate_Error_InvalidInstanceProfileARN(t *testing.T) {
+func TestResourceInstanceProfileValidate_Error_InvalidInstanceProfileARN(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
 		State: map[string]any{
@@ -143,7 +143,7 @@ func TestResourceInstanceProfileCreate_Error_InvalidInstanceProfileARN(t *testin
 	assert.EqualError(t, err, "invalid config supplied. [instance_profile_arn] Invalid ARN")
 }
 
-func TestResourceInstanceProfileCreate_Error_InvalidRoleARN(t *testing.T) {
+func TestResourceInstanceProfileValidate_Error_InvalidRoleARN(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
 		State: map[string]any{
@@ -155,7 +155,7 @@ func TestResourceInstanceProfileCreate_Error_InvalidRoleARN(t *testing.T) {
 	assert.EqualError(t, err, "invalid config supplied. [iam_role_arn] Invalid ARN")
 }
 
-func TestResourceInstanceProfileCreate_Error_MalformedARN(t *testing.T) {
+func TestResourceInstanceProfileValidate_Error_MalformedARN(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
 		State: map[string]any{
@@ -166,7 +166,7 @@ func TestResourceInstanceProfileCreate_Error_MalformedARN(t *testing.T) {
 	assert.EqualError(t, err, "invalid config supplied. [instance_profile_arn] Invalid ARN")
 }
 
-func TestResourceInstanceProfileCreate_Error_WrongTypeProfileARN(t *testing.T) {
+func TestResourceInstanceProfileValidate_Error_WrongTypeProfileARN(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
 		State: map[string]any{
@@ -177,7 +177,7 @@ func TestResourceInstanceProfileCreate_Error_WrongTypeProfileARN(t *testing.T) {
 	assert.EqualError(t, err, "invalid config supplied. [instance_profile_arn] Invalid ARN")
 }
 
-func TestResourceInstanceProfileCreate_Error_WrongTypeRoleARN(t *testing.T) {
+func TestResourceInstanceProfileValidate_Error_WrongTypeRoleARN(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceInstanceProfile(),
 		State: map[string]any{

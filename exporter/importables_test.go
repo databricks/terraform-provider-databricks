@@ -790,6 +790,7 @@ func TestDirectoryGeneration(t *testing.T) {
 			Response: workspace.ObjectList{
 				Objects: []workspace.ObjectStatus{
 					{
+						ObjectID:   1234,
 						Path:       "/first",
 						ObjectType: "DIRECTORY",
 					},

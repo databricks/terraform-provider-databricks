@@ -20,6 +20,7 @@ func TestResourceClusterPolicyRead(t *testing.T) {
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
 					CreatedAtTimeStamp: 0,
+					MaxClustersPerUser: 5,
 				},
 			},
 		},
@@ -32,6 +33,7 @@ func TestResourceClusterPolicyRead(t *testing.T) {
 	assert.Equal(t, "Dummy", d.Get("name"))
 	assert.Equal(t, "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}", d.Get("definition"))
 	assert.Equal(t, "abc", d.Get("policy_id"))
+	assert.Equal(t, 5, d.Get("max_clusters_per_user"))
 }
 
 func TestResourceClusterPolicyRead_NotFound(t *testing.T) {
@@ -85,6 +87,7 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
 					CreatedAtTimeStamp: 0,
+					MaxClustersPerUser: 3,
 				},
 				Response: ClusterPolicy{
 					PolicyID: "abc",
@@ -98,18 +101,21 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
 					CreatedAtTimeStamp: 0,
+					MaxClustersPerUser: 3,
 				},
 			},
 		},
 		Resource: ResourceClusterPolicy(),
 		State: map[string]any{
-			"definition": `{"spark_conf.foo": {"type": "fixed", "value": "bar"}}`,
-			"name":       "Dummy",
+			"definition":            `{"spark_conf.foo": {"type": "fixed", "value": "bar"}}`,
+			"max_clusters_per_user": 3,
+			"name":                  "Dummy",
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err, err)
 	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, 3, d.Get("max_clusters_per_user"))
 }
 
 func TestResourceClusterPolicyCreate_Error(t *testing.T) {

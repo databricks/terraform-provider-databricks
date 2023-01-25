@@ -418,7 +418,6 @@ func TestResourceServicePrincipalDelete_NoError(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
-			display_name = "abc",
 			delete_repos = false,
 			delete_home_dir = false 
 		`,
@@ -461,9 +460,6 @@ func TestResourceServicePrincipalDelete_NoErrorEmtpyParams(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
-		HCL: `
-			display_name = "abc"
-		`,
 	}.ApplyNoError(t)
 }
 
@@ -488,13 +484,13 @@ func TestResourceServicePrinicpalDelete_ReposError(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
-			display_name    = "abc"
+			delete_repos = true
 		`,
 	}.Apply(t)
 	require.Error(t, err, err)
 }
 
-func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
+func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -508,6 +504,29 @@ func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
 					Path:      "/Repos/abc",
 					Recursive: true,
 				},
+				Response: common.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Repos/abc) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			delete_repos = true	
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "delete_repos: Path (/Repos/abc) doesn't exist.")
+}
+
+func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 			},
 			{
 				Method:   "POST",
@@ -522,6 +541,9 @@ func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
+		HCL: `
+			delete_home_dir = true
+		`,
 	}.Apply(t)
 	require.Error(t, err, err)
 }
@@ -532,14 +554,6 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/delete",
-				ExpectedRequest: workspace.DeletePath{
-					Path:      "/Repos/abc",
-					Recursive: true,
-				},
 			},
 			{
 				Method:   "POST",
@@ -558,8 +572,11 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
+		HCL: `
+			delete_home_dir = true	
+		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "Path (/Users/abc) doesn't exist.")
+	assert.EqualError(t, err, "delete_home_dir: Path (/Users/abc) doesn't exist.")
 }
 
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {

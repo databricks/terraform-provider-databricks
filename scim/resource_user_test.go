@@ -431,19 +431,12 @@ func TestResourceUserDelete_NoError(t *testing.T) {
 }
 
 func TestResourceUserDelete_Error(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-				Status:   400,
-			},
-		},
+	qa.ResourceFixture{
+		Fixtures: qa.HTTPFailures,
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	require.Error(t, err, err)
+	}.ExpectError(t, "I'm a teapot")
 }
 
 func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {
@@ -501,6 +494,7 @@ func TestResourceUserDelete_ReposError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
+			delete_repos = true
 		`,
 	}.Apply(t)
 	require.Error(t, err, err)
@@ -525,23 +519,16 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 				},
 				Status: 400,
 			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/delete",
-				ExpectedRequest: workspace.DeletePath{
-					Path:      "/Users/abc",
-					Recursive: true,
-				},
-			},
 		},
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
+			delete_repos = true
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "Path (/Repos/abc) doesn't exist.")
+	assert.EqualError(t, err, "delete_repos: Path (/Repos/abc) doesn't exist.")
 }
 
 func TestResourceUserDelete_DirError(t *testing.T) {
@@ -550,14 +537,6 @@ func TestResourceUserDelete_DirError(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/delete",
-				ExpectedRequest: workspace.DeletePath{
-					Path:      "/Repos/abc",
-					Recursive: true,
-				},
 			},
 			{
 				Method:   "POST",
@@ -574,6 +553,7 @@ func TestResourceUserDelete_DirError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
+			delete_home_dir = true
 		`,
 	}.Apply(t)
 	require.Error(t, err, err)
@@ -584,14 +564,6 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/workspace/delete",
-				ExpectedRequest: workspace.DeletePath{
-					Path:      "/Repos/abc",
-					Recursive: true,
-				},
 			},
 			{
 				Method:   "POST",
@@ -612,9 +584,10 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
+			delete_home_dir = true
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "Path (/Users/abc) doesn't exist.")
+	assert.EqualError(t, err, "delete_home_dir: Path (/Users/abc) doesn't exist.")
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {

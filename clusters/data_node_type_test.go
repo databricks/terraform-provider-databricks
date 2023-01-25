@@ -401,7 +401,7 @@ func TestNodeTypeFleetEmptyList(t *testing.T) {
 		ID: ".",
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "m-fleet.xlarge", d.Id())
+	assert.Equal(t, "md-fleet.xlarge", d.Id())
 }
 
 func TestNodeTypeVCPUEmptyList(t *testing.T) {

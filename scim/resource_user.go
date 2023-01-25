@@ -102,8 +102,11 @@ func ResourceUser() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			usersAPI := NewUsersAPI(ctx, c)
 			err := usersAPI.Delete(d.Id())
-			if c.AccountID != "" || err != nil {
+			if err != nil {
 				return err
+			}
+			if c.AccountID != "" {
+				return nil
 			}
 			if d.Get("delete_repos").(bool) {
 				err = usersAPI.DeleteRepos(d.Id())

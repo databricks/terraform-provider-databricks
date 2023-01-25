@@ -522,9 +522,6 @@ func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
-		HCL: `
-			display_name = "abc"
-		`,
 	}.Apply(t)
 	require.Error(t, err, err)
 }
@@ -561,9 +558,6 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
-		HCL: `
-			display_name = "abc"
-		`,
 	}.Apply(t)
 	assert.EqualError(t, err, "Path (/Users/abc) doesn't exist.")
 }

@@ -182,8 +182,11 @@ func ResourceServicePrincipal() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			err := spAPI.Delete(d.Id())
-			if c.AccountID != "" || err != nil {
+			if err != nil {
 				return err
+			}
+			if c.AccountID != "" {
+				return nil
 			}
 			if d.Get("delete_repos").(bool) {
 				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", d.Id()), true)

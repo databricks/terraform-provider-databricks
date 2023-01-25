@@ -1,5 +1,22 @@
 # Version changelog
 
+### 1.9.1
+
+* Added `max_clusters_per_user` to [databricks_cluster_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster_policy) resource ([#1955](https://github.com/databricks/terraform-provider-databricks/pull/1955)).
+ * Added support for `cluster_mount_infos` in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#1945](https://github.com/databricks/terraform-provider-databricks/pull/1945)).
+ * Added `parent` attribute to [databricks_sql_query](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_query) and [databricks_sql_dashboard](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_dashboard) ([#1949](https://github.com/databricks/terraform-provider-databricks/pull/1949)).
+ * Added support for `iam_role_arn` in [databricks_instance_profile](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/instance_profile) ([#1943](https://github.com/databricks/terraform-provider-databricks/pull/1943)).
+ * Use `zone_id = "auto"` for [databricks_mount](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mount) on S3 ([#1932](https://github.com/databricks/terraform-provider-databricks/pull/1932)).
+ * Fixed [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource missing library definitions issues ([#1925](https://github.com/databricks/terraform-provider-databricks/pull/1925)).
+ * Remove `computed` annotation for `aws_attributes` ([#1933](https://github.com/databricks/terraform-provider-databricks/pull/1933)).
+
+Updated dependency versions:
+
+ * Bump github.com/Azure/go-autorest/autorest/adal from 0.9.21 to 0.9.22 ([#1953](https://github.com/databricks/terraform-provider-databricks/pull/1953)).
+ * Bump github.com/Azure/go-autorest/autorest/azure/auth ([#1952](https://github.com/databricks/terraform-provider-databricks/pull/1952)).
+ * Bump google.golang.org/api from 0.106.0 to 0.107.0 ([#1929](https://github.com/databricks/terraform-provider-databricks/pull/1929)).
+ * Bump google.golang.org/api from 0.107.0 to 0.108.0 ([#1954](https://github.com/databricks/terraform-provider-databricks/pull/1954)).
+
 ### 1.9.0
 
  * Added [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/mws_credentials) data source ([#1909](https://github.com/databricks/terraform-provider-databricks/pull/1909)).

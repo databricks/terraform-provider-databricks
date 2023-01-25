@@ -123,12 +123,10 @@ func ResourceServicePrincipal() *schema.Resource {
 			m["delete_repos"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			}
 			m["delete_home_dir"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			}
 			return m
 		})
@@ -183,23 +181,20 @@ func ResourceServicePrincipal() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
-			if c.AccountID != "" {
-				return nil
-			}
-			var err = spAPI.Delete(d.Id())
-			if err != nil {
+			err := spAPI.Delete(d.Id())
+			if c.AccountID != "" || err != nil {
 				return err
 			}
 			if d.Get("delete_repos").(bool) {
-				err = spAPI.DeleteRepos(d.Id())
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", d.Id()), true)
 				if err != nil {
-					return err
+					return fmt.Errorf("delete_repos: %w", err)
 				}
 			}
 			if d.Get("delete_home_dir").(bool) {
-				err = spAPI.DeleteHomeDirectory(d.Id())
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", d.Id()), true)
 				if err != nil {
-					return err
+					return fmt.Errorf("delete_home_dir: %w", err)
 				}
 			}
 			return nil

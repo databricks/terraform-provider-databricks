@@ -24,6 +24,7 @@ type NodeTypeRequest struct {
 	IsIOCacheEnabled      bool   `json:"is_io_cache_enabled,omitempty"`
 	SupportPortForwarding bool   `json:"support_port_forwarding,omitempty"`
 	VCPU                  bool   `json:"vcpu,omitempty"`
+	Fleet                 bool   `json:"fleet,omitempty"`
 }
 
 // NodeTypeList contains a list of node types
@@ -136,6 +137,9 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.VCPU {
 			return "vcpu-worker"
 		}
+		if r.Fleet {
+			return "m-fleet.xlarge"
+		}
 		return a.defaultSmallestNodeType()
 	}
 	list.Sort()
@@ -148,6 +152,12 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 			continue
 		}
 		if !r.VCPU && strings.HasPrefix(nt.NodeTypeID, "vcpu") {
+			continue
+		}
+		if r.Fleet && !strings.Contains(nt.NodeTypeID, "-fleet.") {
+			continue
+		}
+		if !r.Fleet && strings.Contains(nt.NodeTypeID, "-fleet.") {
 			continue
 		}
 		if r.MinMemoryGB > 0 && gbs < r.MinMemoryGB {

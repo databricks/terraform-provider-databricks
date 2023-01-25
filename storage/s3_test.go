@@ -67,6 +67,7 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 				AwsAttributes: &clusters.AwsAttributes{
 					Availability:       "SPOT",
 					InstanceProfileArn: "arn:aws:iam::1234567:instance-profile/s3-access",
+					ZoneID:             "auto",
 				},
 				AutoterminationMinutes: 10,
 				SparkConf: map[string]string{

@@ -34,6 +34,10 @@ func DataSourceClusterPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"max_clusters_per_user": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			ClusterPoliciesAPI := NewClusterPoliciesAPI(ctx, m)
@@ -43,6 +47,7 @@ func DataSourceClusterPolicy() *schema.Resource {
 			}
 			d.SetId(policy.PolicyID)
 			d.Set("definition", policy.Definition)
+			d.Set("max_clusters_per_user", policy.MaxClustersPerUser)
 			return nil
 		},
 	}

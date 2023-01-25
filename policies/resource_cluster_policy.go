@@ -15,12 +15,14 @@ type ClusterPolicy struct {
 	Name               string `json:"name"`
 	Definition         string `json:"definition"`
 	CreatedAtTimeStamp int64  `json:"created_at_timestamp"`
+	MaxClustersPerUser int64  `json:"max_clusters_per_user,omitempty"`
 }
 
 // ClusterPolicyCreate is the endity used for request
 type ClusterPolicyCreate struct {
-	Name       string `json:"name"`
-	Definition string `json:"definition"`
+	Name               string `json:"name"`
+	Definition         string `json:"definition"`
+	MaxClustersPerUser int64  `json:"max_clusters_per_user,omitempty"`
 }
 
 type ClusterPolicyList struct {
@@ -92,6 +94,9 @@ func parsePolicyFromData(d *schema.ResourceData) (*ClusterPolicy, error) {
 	if data, ok := d.GetOk("definition"); ok {
 		clusterPolicy.Definition = data.(string)
 	}
+	if max_clusters, ok := d.GetOk("max_clusters_per_user"); ok {
+		clusterPolicy.MaxClustersPerUser = int64(max_clusters.(int))
+	}
 	return clusterPolicy, nil
 }
 
@@ -112,10 +117,14 @@ func ResourceClusterPolicy() *schema.Resource {
 			},
 			"definition": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				Description: "Policy definition JSON document expressed in\n" +
 					"Databricks Policy Definition Language.",
 				ValidateFunc: validation.StringIsJSON,
+			},
+			"max_clusters_per_user": {
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -134,15 +143,11 @@ func ResourceClusterPolicy() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if err = d.Set("name", clusterPolicy.Name); err != nil {
-				return err
-			}
-			if err = d.Set("definition", clusterPolicy.Definition); err != nil {
-				return err
-			}
-			if err = d.Set("policy_id", clusterPolicy.PolicyID); err != nil {
-				return err
-			}
+			d.Set("name", clusterPolicy.Name)
+			d.Set("definition", clusterPolicy.Definition)
+			d.Set("policy_id", clusterPolicy.PolicyID)
+			d.SetId(clusterPolicy.PolicyID)
+			d.Set("max_clusters_per_user", clusterPolicy.MaxClustersPerUser)
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

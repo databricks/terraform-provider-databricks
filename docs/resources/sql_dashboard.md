@@ -12,8 +12,13 @@ A dashboard may have one or more [widgets](sql_widget.md).
 ## Example Usage
 
 ```hcl
+resource "databricks_directory" "shared_dir" {
+  path = "/Shared/Dashboards"
+}
+
 resource "databricks_sql_dashboard" "d1" {
   name = "My Dashboard Name"
+  parent = "folders/${databricks_directory.shared_dir.object_id}"
 
   tags = [
     "some-tag",

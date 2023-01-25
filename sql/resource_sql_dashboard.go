@@ -11,8 +11,9 @@ import (
 
 // DashboardEntity defines the parameters that can be set in the resource.
 type DashboardEntity struct {
-	Name string   `json:"name"`
-	Tags []string `json:"tags,omitempty"`
+	Name   string   `json:"name"`
+	Tags   []string `json:"tags,omitempty"`
+	Parent string   `json:"parent,omitempty" tf:"suppress_diff,force_new"`
 }
 
 func (d *DashboardEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Dashboard, error) {
@@ -24,6 +25,7 @@ func (d *DashboardEntity) toAPIObject(schema map[string]*schema.Schema, data *sc
 	ad.ID = data.Id()
 	ad.Name = d.Name
 	ad.Tags = append([]string{}, d.Tags...)
+	ad.Parent = d.Parent
 
 	return &ad, nil
 }
@@ -32,6 +34,7 @@ func (d *DashboardEntity) fromAPIObject(ad *api.Dashboard, schema map[string]*sc
 	// Copy from API object.
 	d.Name = ad.Name
 	d.Tags = append([]string{}, ad.Tags...)
+	d.Parent = ad.Parent
 
 	// Pass to ResourceData.
 	if err := common.StructToData(*d, schema, data); err != nil {

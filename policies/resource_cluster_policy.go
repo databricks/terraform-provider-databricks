@@ -15,6 +15,7 @@ type ClusterPolicy struct {
 	Name               string `json:"name"`
 	Definition         string `json:"definition"`
 	CreatedAtTimeStamp int64  `json:"created_at_timestamp"`
+	MaxClustersPerUser int64  `json:"max_clusters_per_user,omitempty"`
 }
 
 // ClusterPolicyCreate is the endity used for request

@@ -12,6 +12,10 @@ A query may have one or more [visualizations](sql_visualization.md).
 ## Example Usage
 
 ```hcl
+resource "databricks_directory" "shared_dir" {
+  path = "/Shared/Queries"
+}
+
 resource "databricks_sql_query" "q1" {
   data_source_id = databricks_sql_endpoint.example.data_source_id
   name           = "My Query Name"
@@ -22,6 +26,7 @@ resource "databricks_sql_query" "q1" {
                         AND event_date > date '{{ p3 }}'
                     EOT
 
+  parent = "folders/${databricks_directory.shared_dir.object_id}"
   run_as_role = "viewer"
 
   schedule {

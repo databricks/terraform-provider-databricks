@@ -46,53 +46,7 @@ func TestAccForceUserImport(t *testing.T) {
 	})
 }
 
-/*
-	func TestAccHomeDirDeleteSuccess(t *testing.T) {
-		if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-			t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-		}
-		t.Parallel()
-
-		acceptance.Test(t,
-			[]acceptance.Step{
-				{
-					Template: `
-					resource "databricks_user" "abc" {
-						user_name = "test@example.com"
-					}
-
-					resource "databricks_user" "abc" {
-						delete_home_dir = true
-					}`,
-					Check: acceptance.ResourceCheck("databricks_group.this",
-						func(ctx context.Context, client *common.DatabricksClient, id string) error {
-							notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
-							notebook, err := notebooksAPI.Read(id)
-							if err != nil {
-								return err
-							}
-							// external SCIM change
-							return groupsAPI.UpdateNameAndEntitlements(
-								id, group.DisplayName, qa.RandomName("ext-id"), group.Entitlements)
-						}),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr("databricks_user.abc", "home", "/Users/test@example.com"),
-					),
-				},
-				{
-					Template: `
-					data "databricks_directory" "home_path" {
-						path = "/Users/test@example.com"
-					}`,
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr("databricks_user.abc", "home", "/Users/test@example.com"),
-					),
-				},
-			})
-	}
-*/
-
-func TestAccHomeDeleteSuccess(t *testing.T) {
+func TestAccUserHomeDeleteSuccess(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -114,7 +68,7 @@ func TestAccHomeDeleteSuccess(t *testing.T) {
 		},
 	})
 }
-func TestAccHomeDeleteNotDeleted(t *testing.T) {
+func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
@@ -124,7 +78,7 @@ func TestAccHomeDeleteNotDeleted(t *testing.T) {
 			Template: `
 			resource "databricks_user" "abc" {
 				user_name = "test@example.com"
-				delete_home_dir = false 
+				delete_hom_dir = false 
 			}`,
 		},
 		{

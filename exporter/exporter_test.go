@@ -528,11 +528,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 					Scopes: []secrets.SecretScope{},
 				},
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/list?path=%2F",
-				Response: workspace.ObjectList{},
-			},
+			emptyWorkspace,
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)

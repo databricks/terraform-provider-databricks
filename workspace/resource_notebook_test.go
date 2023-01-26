@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -376,4 +377,18 @@ func TestNotebookLanguageSuppressSourceDiff(t *testing.T) {
 	d.Set("source", "this.PY")
 	suppress := r.Schema["language"].DiffSuppressFunc
 	assert.True(t, suppress("language", Python, Python, d))
+}
+
+func TestListDirectories(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode.")
+	}
+	t.Parallel()
+	client := common.NewClientFromEnvironment()
+	ctx := context.Background()
+	notebooksAPI := NewNotebooksAPI(ctx, client)
+
+	directoryList, err := notebooksAPI.ListDirectories("/", true)
+	assert.NoError(t, err, err)
+	assert.NotNil(t, directoryList)
 }

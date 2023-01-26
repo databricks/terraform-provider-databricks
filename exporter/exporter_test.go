@@ -460,11 +460,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Resource: "/api/2.0/secrets/acls/get?principal=users&scope=a",
 				Response: secrets.ACLItem{Permission: "READ", Principal: "users"},
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/list?path=%2F",
-				Response: workspace.ObjectList{},
-			},
+			emptyWorkspace,
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)

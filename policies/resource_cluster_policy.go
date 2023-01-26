@@ -125,6 +125,9 @@ func ResourceClusterPolicy() *schema.Resource {
 			"max_clusters_per_user": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Description: "Max number of clusters per user that can be active\n" +
+				    "using this policy. If not present, there is no max limit.",
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -50,7 +50,7 @@ func (ta *SqlPermissions) typeAndKey() (string, string) {
 		return "VIEW", fmt.Sprintf("`%s`.`%s`", ta.actualDatabase(), ta.View)
 	}
 	if ta.Database != "" {
-		return "DATABASE", ta.Database
+		return "DATABASE", fmt.Sprintf("`%s`", ta.Database)
 	}
 	if ta.Catalog {
 		return "CATALOG", ""
@@ -148,9 +148,12 @@ func (ta *SqlPermissions) read() error {
 		if !strings.EqualFold(currentType, thisType) {
 			continue
 		}
-		if !strings.EqualFold(currentKey, thisKey) {
+
+		noBackticks := strings.ReplaceAll(thisKey, "`", "")
+		if !strings.EqualFold(currentKey, thisKey) && !strings.EqualFold(currentKey, noBackticks) {
 			continue
 		}
+
 		if strings.HasPrefix(currentAction, "DENIED_") {
 			// DENY statements are intentionally not supported.
 			continue

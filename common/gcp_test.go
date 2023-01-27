@@ -162,7 +162,7 @@ func TestNewOidcAuthorizerForWorkspace(t *testing.T) {
 		AccessToken: "abc",
 		TokenType:   "Bearer",
 	}
-	auth := newOidcAuthorizerForWorkspace(
+	auth := newOidcAuthorizerWithJustBearer(
 		oauth2.StaticTokenSource(&token))
 	request := httptest.NewRequest("GET", "http://localhost", nil)
 	err := auth(request)

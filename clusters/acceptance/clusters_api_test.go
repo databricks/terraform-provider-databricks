@@ -7,7 +7,6 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/internal/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,10 +25,9 @@ func TestAccListClustersIntegration(t *testing.T) {
 		ClusterName: "Terraform Integration Test " + randomName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
 			clusters.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
+				Latest: true,
 			}),
-		InstancePoolID:         compute.CommonInstancePoolID(),
+		InstancePoolID:         qa.GetEnvOrSkipTest(t, "TEST_INSTANCE_POOL_ID"),
 		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}
@@ -78,10 +76,9 @@ func TestAccListClustersResizeIntegrationTest(t *testing.T) {
 		ClusterName: "Terraform Integration Test " + randomName,
 		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
 			clusters.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
+				Latest: true,
 			}),
-		InstancePoolID:         compute.CommonInstancePoolID(),
+		InstancePoolID:         qa.GetEnvOrSkipTest(t, "TEST_INSTANCE_POOL_ID"),
 		IdempotencyToken:       "acc-list-" + randomName,
 		AutoterminationMinutes: 15,
 	}

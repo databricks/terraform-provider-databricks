@@ -18,9 +18,9 @@ func TestGetGitProviderFromUrl(t *testing.T) {
 	assert.Equal(t, "bitbucketCloud", GetGitProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
 	assert.Equal(t, "gitHub", GetGitProviderFromUrl("https://github.com//user/repo.git"))
 	assert.Equal(t, "azureDevOpsServices", GetGitProviderFromUrl("https://user@dev.azure.com/user/project/_git/repo"))
-	//	assert.Equal(t, "bitbucketCloud", GetGitProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
 	assert.Equal(t, "", GetGitProviderFromUrl("https://abc/user/repo.git"))
 	assert.Equal(t, "", GetGitProviderFromUrl("ewfgwergfwe"))
+	assert.Equal(t, "awsCodeCommit", GetGitProviderFromUrl("https://git-codecommit.us-east-2.amazonaws.com/v1/repos/MyDemoRepo"))
 }
 
 func TestResourceRepoRead(t *testing.T) {
@@ -206,7 +206,18 @@ func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
 			"path": "/NotRepos/Production/test/",
 		},
 		Create: true,
-	}.ExpectError(t, "path should start with /Repos/")
+	}.ExpectError(t, "invalid config supplied. [path] should start with /Repos/, got '/NotRepos/Production/test/'")
+}
+
+func TestResourceRepoCreateCustomDirectoryWrongPath(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceRepo(),
+		State: map[string]any{
+			"url":  "https://github.com/user/test.git",
+			"path": "/Repos/test/",
+		},
+		Create: true,
+	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 2")
 }
 
 func TestResourceRepoCreateWithBranch(t *testing.T) {
@@ -390,6 +401,53 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 		ID:     "121232342",
 		Update: true,
 	}.ApplyAndExpectData(t, map[string]any{"branch": "releases"})
+}
+
+func TestResourceReposUpdateSparseCheckout(t *testing.T) {
+	resp := ReposInformation{
+		ID:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitID: "1124323423abc23424",
+	}
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/repos/121232342",
+				ExpectedRequest: map[string]any{"branch": "main",
+					"sparse_checkout": map[string]any{"patterns": []string{"abc", "def"}},
+				},
+				Response: resp,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+		},
+		Resource: ResourceRepo(),
+		InstanceState: map[string]string{
+			"url":                        "https://github.com/user/test.git",
+			"git_provider":               "gitHub",
+			"path":                       "/Repos/user@domain/test",
+			"branch":                     "main",
+			"sparse_checkout.0.patterns": `["abc"]`,
+		},
+		HCL: `
+			url = "https://github.com/user/test.git"
+			git_provider = "gitHub",
+			path = "/Repos/user@domain/test"
+			branch = "main"
+			sparse_checkout{
+				patterns = ["abc", "def"]
+			}
+			`,
+		ID:          "121232342",
+		Update:      true,
+		RequiresNew: true,
+	}.ApplyAndExpectData(t, map[string]any{"branch": "main"})
 }
 
 func TestReposListAll(t *testing.T) {

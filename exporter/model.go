@@ -37,7 +37,7 @@ type importable struct {
 	// Logical (file) group that resources belong to
 	Service string
 	// Semantic resource block name
-	Name func(d *schema.ResourceData) string
+	Name func(ic *importContext, d *schema.ResourceData) string
 	// Method to perform depth-first search and emit resources
 	List func(ic *importContext) error
 	// Search resource by non-ID attribute
@@ -50,16 +50,42 @@ type importable struct {
 	Body func(ic *importContext, body *hclwrite.Body, r *resource) error
 	// Function to detect if the given resource should be ignored or not
 	Ignore func(ic *importContext, r *resource) bool
+	// Function to check if the field in the given resource should be omitted or not
+	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
 }
 
+type MatchType string
+
+const (
+	// MatchExact is to specify that whole value should match
+	MatchExact = "exact"
+	// MatchPrefix is to specify that prefix of value should match
+	MatchPrefix = "prefix"
+)
+
 type reference struct {
-	Path     string
-	Resource string
-	Match    string
-	Variable bool
-	File     bool
+	Path      string
+	Resource  string
+	Match     string
+	MatchType MatchType // type of match, `prefix` - reference is embedded into string, `` (or `exact`) - full match
+	Variable  bool
+	File      bool
+}
+
+func (r reference) MatchAttribute() string {
+	if r.Match != "" {
+		return r.Match
+	}
+	return "id"
+}
+
+func (r reference) MatchTypeValue() MatchType {
+	if r.MatchType == "" {
+		return MatchExact
+	}
+	return r.MatchType
 }
 
 type resource struct {

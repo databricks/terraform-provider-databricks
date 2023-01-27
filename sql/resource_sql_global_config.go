@@ -9,6 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var (
+	GlobalSqlConfigResourceID = "global"
+)
+
 type confPair struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -108,7 +112,7 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 		if err := NewSqlGlobalConfigAPI(ctx, c).Set(gc); err != nil {
 			return err
 		}
-		d.SetId("global")
+		d.SetId(GlobalSqlConfigResourceID)
 		return nil
 	}
 	return common.Resource{

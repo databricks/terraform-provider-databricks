@@ -12,9 +12,7 @@ import (
 )
 
 func TestMwsAccCreds(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
+	arn := qa.GetEnvOrSkipTest(t, "TEST_CROSSACCOUNT_ARN")
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
 	credsAPI := NewCredentialsAPI(context.Background(), client)
@@ -22,9 +20,7 @@ func TestMwsAccCreds(t *testing.T) {
 	assert.NoError(t, err, err)
 	t.Log(credsList)
 
-	myCreds, err := credsAPI.Create(acctID, 
-		qa.RandomName("tf-test"), 
-		qa.GetEnvOrSkipTest(t, "TEST_CROSSACCOUNT_ARN"))
+	myCreds, err := credsAPI.Create(acctID, qa.RandomName("tf-test"), arn)
 	assert.NoError(t, err, err)
 
 	myCredsFull, err := credsAPI.Read(acctID, myCreds.CredentialsID)

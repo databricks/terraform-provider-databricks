@@ -65,8 +65,10 @@ type importContext struct {
 	variables         map[string]string
 	testEmits         map[string]bool
 	sqlDatasources    map[string]string
-	sqlVisualizations map[string]string
+	workspaceConfKeys map[string]any
 
+	includeUserDomains  bool
+	importAllUsers      bool
 	debug               bool
 	mounts              bool
 	services            string
@@ -92,6 +94,19 @@ var nameFixes = []regexFix{
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
 	{regexp.MustCompile(`\W+`), ""},
 	{regexp.MustCompile(`[_]{2,}`), "_"},
+}
+
+// less aggressive name normalization
+var simpleNameFixes = []regexFix{
+	{nameNormalizationRegex, "_"},
+}
+
+var workspaceConfKeys = map[string]any{
+	"enableIpAccessLists":                              false,
+	"enableTokensConfig":                               false,
+	"maxTokenLifetimeDays":                             0,
+	"maxUserInactiveDays":                              0,
+	"storeInteractiveNotebookResultsInCustomerAccount": false,
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
@@ -120,6 +135,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		},
 		allUsers:  []scim.User{},
 		variables: map[string]string{},
+
+		workspaceConfKeys: workspaceConfKeys,
 	}
 }
 
@@ -174,7 +191,7 @@ func (ic *importContext) Run() error {
 	}
 	defer sh.Close()
 	// nolint
-	sh.WriteString("#!/bin/sh\n\n")
+	sh.WriteString("#!/bin/sh\n\nset -e\n\n")
 
 	if ic.generateDeclaration {
 		dcfile, err := os.Create(fmt.Sprintf("%s/databricks.tf", ic.Directory))
@@ -284,7 +301,7 @@ func (ic *importContext) MatchesName(n string) bool {
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
-func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
+func (ic *importContext) Find(r *resource, pick string, matchType MatchType) (string, hcl.Traversal) {
 	for _, sr := range ic.State.Resources {
 		if sr.Type != r.Resource {
 			continue
@@ -296,28 +313,46 @@ func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
 					r.Attribute, r.Resource, r.Name, r.ID)
 				continue
 			}
-			if v.(string) == r.Value {
-				if sr.Mode == "data" {
-					return hcl.Traversal{
-						hcl.TraverseRoot{Name: "data"},
-						hcl.TraverseAttr{Name: sr.Type},
-						hcl.TraverseAttr{Name: sr.Name},
-						hcl.TraverseAttr{Name: pick},
-					}
-				}
-				return hcl.Traversal{
-					hcl.TraverseRoot{Name: sr.Type},
+			strValue := v.(string)
+			matched := false
+			switch matchType {
+			case MatchExact:
+				matched = (strValue == r.Value)
+			case MatchPrefix:
+				matched = strings.HasPrefix(r.Value, strValue)
+			default:
+				log.Printf("[WARN] Unsupported match type: %s", matchType)
+			}
+			if !matched {
+				continue
+			}
+			if sr.Mode == "data" {
+				return strValue, hcl.Traversal{
+					hcl.TraverseRoot{Name: "data"},
+					hcl.TraverseAttr{Name: sr.Type},
 					hcl.TraverseAttr{Name: sr.Name},
 					hcl.TraverseAttr{Name: pick},
 				}
 			}
+			return strValue, hcl.Traversal{
+				hcl.TraverseRoot{Name: sr.Type},
+				hcl.TraverseAttr{Name: sr.Name},
+				hcl.TraverseAttr{Name: pick},
+			}
+
 		}
 	}
-	return nil
+	return "", nil
 }
 
+// This function checks if resource exist in any state (already added or in process of addition)
 func (ic *importContext) Has(r *resource) bool {
-	if _, visiting := ic.importing[r.String()]; visiting {
+	return ic.HasInState(r, false)
+}
+
+// This function checks if resource exist. onlyAdded flag enforces that true is returned only if it was added with Add()
+func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
+	if v, visiting := ic.importing[r.String()]; visiting && (v || !onlyAdded) {
 		return true
 	}
 	k, v := r.MatchPair()
@@ -335,9 +370,10 @@ func (ic *importContext) Has(r *resource) bool {
 }
 
 func (ic *importContext) Add(r *resource) {
-	if ic.Has(r) {
+	if ic.HasInState(r, true) { // resource must exist and already marked as added
 		return
 	}
+	ic.importing[r.String()] = true // mark resource as added
 	state := r.Data.State()
 	if state == nil {
 		log.Printf("[ERROR] state is nil for %s", r)
@@ -374,7 +410,7 @@ func (ic *importContext) regexFix(s string, fixes []regexFix) string {
 func (ic *importContext) ResourceName(r *resource) string {
 	name := r.Name
 	if name == "" && ic.Importables[r.Resource].Name != nil {
-		name = ic.Importables[r.Resource].Name(r.Data)
+		name = ic.Importables[r.Resource].Name(ic, r.Data)
 	}
 	if name == "" {
 		name = r.ID
@@ -408,7 +444,7 @@ func (ic *importContext) Emit(r *resource) {
 		ic.testEmits[r.String()] = true
 		return
 	}
-	ic.importing[r.String()] = true
+	ic.importing[r.String()] = false // we're starting to add a new resource
 	pr, ok := ic.Resources[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available in provider", r)
@@ -469,6 +505,35 @@ func (ic *importContext) Emit(r *resource) {
 	ic.Add(r)
 }
 
+func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrite.Tokens {
+	matchType := ref.MatchTypeValue()
+	attr := ref.MatchAttribute()
+	attrValue, traversal := ic.Find(&resource{
+		Resource:  ref.Resource,
+		Attribute: attr,
+		Value:     value,
+	}, attr, matchType)
+	// at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
+	if traversal == nil {
+		return nil
+	}
+	switch matchType {
+	case MatchExact:
+		return hclwrite.TokensForTraversal(traversal)
+	case MatchPrefix:
+		rest := value[len(attrValue):]
+		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"', '$', '{'}}}
+		tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(rest)})
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
+		return tokens
+	default:
+		log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
+	}
+	return nil
+}
+
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
@@ -489,20 +554,10 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 		if d.Variable {
 			return ic.variable(fmt.Sprintf("%s_%s", path[0], value), "")
 		}
-		attr := "id"
-		if d.Match != "" {
-			attr = d.Match
-		}
-		traversal := ic.Find(&resource{
-			Resource:  d.Resource,
-			Attribute: attr,
-			Value:     value,
-		}, attr)
 
-		if traversal == nil {
-			break
+		if tokens := ic.getTraversalTokens(d, value); tokens != nil {
+			return tokens
 		}
-		return hclwrite.TokensForTraversal(traversal)
 	}
 	return hclwrite.TokensForValue(cty.StringVal(value))
 }
@@ -533,15 +588,20 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 	})
 	for _, tuple := range ss {
 		a, as := tuple.Field, tuple.Schema
-		if as.Computed {
-			continue
-		}
 		pathString := strings.Join(append(path, a), ".")
 		raw, ok := d.GetOk(pathString)
+		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
+			// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
+			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
+				continue
+			}
+		} else if i.ShouldOmitField(ic, pathString, as, d) {
+			continue
+		}
 		for _, r := range i.Depends {
 			if r.Path == pathString && r.Variable {
-				// sensitive fields are moved to variable depends
-				raw = i.Name(d)
+				// sensitive fields are moved to variable depends, variable name is normalized
+				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
 				ok = true
 			}
 		}

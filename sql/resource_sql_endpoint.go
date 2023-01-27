@@ -25,9 +25,9 @@ type SQLEndpoint struct {
 	Name                    string          `json:"name"`
 	ClusterSize             string          `json:"cluster_size"`
 	AutoStopMinutes         int             `json:"auto_stop_mins" tf:"optional,default:120"`
-	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"default:1,suppress_diff"`
+	MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"suppress_diff"`
 	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
-	NumClusters             int             `json:"num_clusters,omitempty" tf:"default:1,suppress_diff"`
+	NumClusters             int             `json:"num_clusters,omitempty" tf:"suppress_diff"`
 	EnablePhoton            bool            `json:"enable_photon" tf:"optional,default:true"`
 	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty" tf:"suppress_diff"`
 	InstanceProfileARN      string          `json:"instance_profile_arn,omitempty"`
@@ -37,6 +37,7 @@ type SQLEndpoint struct {
 	Tags                    *Tags           `json:"tags,omitempty" tf:"suppress_diff"`
 	SpotInstancePolicy      string          `json:"spot_instance_policy,omitempty" tf:"default:COST_OPTIMIZED"`
 	Channel                 *ReleaseChannel `json:"channel,omitempty" tf:"suppress_diff"`
+	WarehouseType           string          `json:"warehouse_type,omitempty" tf:"suppress_diff"`
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources
@@ -76,7 +77,6 @@ type Tag struct {
 //
 // Note: this object returns more fields than contained in this struct,
 // but we only list the ones that are in use here.
-//
 type DataSource struct {
 	ID         string `json:"id"`
 	EndpointID string `json:"endpoint_id"`
@@ -198,6 +198,8 @@ func ResourceSqlEndpoint() *schema.Resource {
 			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
+		m["warehouse_type"].ValidateDiagFunc = validation.ToDiagFunc(
+			validation.StringInSlice([]string{"PRO", "CLASSIC"}, false))
 		return m
 	})
 	return common.Resource{

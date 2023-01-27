@@ -7,7 +7,7 @@ This resource allows you to manage [Databricks Notebooks](https://docs.databrick
 
 ## Example Usage
 
-You can declare Terraform-managed notebook by specifying `source` attribute of corresponding local file. Only `.scala`, `.py`, `.sql` and `.r` extensions are supported, if you would like to omit the `language` attribute.
+You can declare Terraform-managed notebook by specifying `source` attribute of corresponding local file. Only `.scala`, `.py`, `.sql`, `.r`, and `.ipynb` extensions are supported, if you would like to omit the `language` attribute.
 
 ```hcl
 data "databricks_current_user" "me" {
@@ -48,7 +48,7 @@ resource "databricks_notebook" "lesson" {
 
 The size of a notebook source code must not exceed a few megabytes. The following arguments are supported:
 
-* `path` -  (Required) The absolute path of the notebook or directory, beginning with "/", e.g. "/Demo". 
+* `path` -  (Required) The absolute path of the notebook or directory, beginning with "/", e.g. "/Demo".
 * `source` - Path to notebook in source code format on local filesystem. Conflicts with `content_base64`.
 * `content_base64` - The base64-encoded notebook source code. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a notebook with configuration properties for a data pipeline.
 * `language` -  (required with `content_base64`) One of `SCALA`, `PYTHON`, `SQL`, `R`.
@@ -83,7 +83,7 @@ The following resources are often used in the same context:
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
 * [databricks_notebook_paths](../data-sources/notebook_paths.md) data to list notebooks in Databricks Workspace.
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 * [databricks_secret](secret.md) to manage [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_acl](secret_acl.md) to manage access to [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.

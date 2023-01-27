@@ -31,7 +31,7 @@ func TestUcAccExternalLocation(t *testing.T) {
 				external_location = databricks_external_location.some.id
 				grant {
 					principal  = "{env.TEST_DATA_ENG_GROUP}"
-					privileges = ["CREATE_TABLE", "READ_FILES"]
+					privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
 				}
 			}`,
 		},

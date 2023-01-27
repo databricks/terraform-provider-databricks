@@ -27,7 +27,7 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/metastore_summary",
-				Response: MetastoreAssignment{
+				Response: MetastoreInfo{
 					MetastoreID: "a",
 				},
 			},

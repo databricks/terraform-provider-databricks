@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"golang.org/x/exp/slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -37,7 +38,7 @@ func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (sp User, err erro
 	return
 }
 
-func (a ServicePrincipalsAPI) filter(filter string) (u []User, err error) {
+func (a ServicePrincipalsAPI) Filter(filter string) (u []User, err error) {
 	var sps UserList
 	req := map[string]string{}
 	if filter != "" {
@@ -86,7 +87,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 func ResourceServicePrincipal() *schema.Resource {
 	type entity struct {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
-		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
+		DisplayName   string `json:"display_name,omitempty" tf:"computed,force_new"`
 		Active        bool   `json:"active,omitempty"`
 		ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
 	}
@@ -97,6 +98,16 @@ func ResourceServicePrincipal() *schema.Resource {
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+			}
+			m["home"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
+			m["repos"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			}
 			return m
 		})
@@ -128,6 +139,8 @@ func ResourceServicePrincipal() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("home", fmt.Sprintf("/Users/%s", sp.ApplicationID))
+			d.Set("repos", fmt.Sprintf("/Repos/%s", sp.ApplicationID))
 			err = common.StructToData(sp, servicePrincipalSchema, d)
 			if err != nil {
 				return err
@@ -159,11 +172,14 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 		return err
 	}
 	// corner-case for overriding manually provisioned service principals
-	force := fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID)
-	if err.Error() != force {
+	knownErrs := []string{
+		fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID),
+		fmt.Sprintf("User with email %s already exists in this account", u.ApplicationID),
+	}
+	if !slices.Contains(knownErrs, err.Error()) {
 		return err
 	}
-	spList, err := spAPI.filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")))
+	spList, err := spAPI.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")))
 	if err != nil {
 		return err
 	}

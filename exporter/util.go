@@ -1,11 +1,14 @@
 package exporter
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path"
+	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -16,9 +19,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/sql"
-	"github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
 
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -41,6 +44,7 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 		})
 	}
 	if c.InstancePoolID != "" {
+		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
 		ic.Emit(&resource{
 			Resource: "databricks_instance_pool",
 			ID:       c.InstancePoolID,
@@ -58,6 +62,81 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitSecretsFromSecretsPath(c.SparkConf)
+	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitUserOrServicePrincipal(c.SingleUserName)
+}
+
+func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
+	for _, v := range m {
+		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_secret_scope",
+				ID:       res[1],
+			})
+		}
+	}
+}
+
+func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
+	if userOrSPName == "" {
+		return
+	}
+	if strings.Contains(userOrSPName, "@") {
+		ic.Emit(&resource{
+			Resource:  "databricks_user",
+			Attribute: "user_name",
+			Value:     userOrSPName,
+		})
+	} else if uuidRegex.MatchString(userOrSPName) {
+		ic.Emit(&resource{
+			Resource:  "databricks_service_principal",
+			Attribute: "application_id",
+			Value:     userOrSPName,
+		})
+	}
+}
+
+func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
+	if strings.HasPrefix(path, prefix) {
+		parts := strings.SplitN(path, "/", 4)
+		if len(parts) >= 3 {
+			ic.emitUserOrServicePrincipal(parts[2])
+		}
+	}
+}
+
+func (ic *importContext) emitNotebookOrRepo(path string) {
+	if strings.HasPrefix(path, "/Repos") {
+		ic.Emit(&resource{
+			Resource:  "databricks_repo",
+			Attribute: "path",
+			Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
+		})
+	} else {
+		ic.Emit(&resource{
+			Resource: "databricks_notebook",
+			ID:       path,
+		})
+	}
+}
+
+func (ic *importContext) emitGroups(u scim.User, principal string) {
+	for _, g := range u.Groups {
+		if g.Type != "direct" {
+			log.Printf("Skipping non-direct group %s/%s for %s", g.Value, g.Display, principal)
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_group",
+			ID:       g.Value,
+		})
+		ic.Emit(&resource{
+			Resource: "databricks_group_member",
+			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
+			Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, principal),
+		})
+	}
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
@@ -67,6 +146,25 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 		ic.emitIfDbfsFile(lib.Whl)
 		ic.emitIfDbfsFile(lib.Jar)
 		ic.emitIfDbfsFile(lib.Egg)
+	}
+	return nil
+}
+
+func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
+	cll, err := libraries.NewLibrariesAPI(ic.Context, ic.Client).ClusterStatus(d.Id())
+	if err != nil {
+		return err
+	}
+	if cll.LibraryStatuses != nil {
+		for _, lib := range cll.LibraryStatuses {
+			ic.Emit(&resource{
+				Resource: "databricks_library",
+				ID:       lib.Library.GetID(d.Id()),
+			})
+			ic.emitIfDbfsFile(lib.Library.Egg)
+			ic.emitIfDbfsFile(lib.Library.Jar)
+			ic.emitIfDbfsFile(lib.Library.Whl)
+		}
 	}
 	return nil
 }
@@ -99,6 +197,20 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	return
 }
 
+func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
+	a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
+	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")))
+	if err != nil {
+		return
+	}
+	if len(users) == 0 {
+		err = fmt.Errorf("service principal %s not found", applicationID)
+		return
+	}
+	u = users[0]
+	return
+}
+
 func (ic *importContext) emitIfDbfsFile(path string) {
 	if strings.HasPrefix(path, "dbfs:") {
 		ic.Emit(&resource{
@@ -108,54 +220,68 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 	}
 }
 
-func (ic *importContext) getSqlEndpoint(dataSourceId string) (string, error) {
+// todo: generic with go1.18
+type dbsqlListResponse struct {
+	Results    []map[string]any `json:"results"`
+	Page       int64            `json:"page"`
+	TotalCount int64            `json:"count"`
+	PageSize   int64            `json:"page_size"`
+}
+
+// Generic function to list objects related to the DBSQL
+func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, err error) {
+	// TODO: create API method & use it also for data resource
+	var listResponse dbsqlListResponse
+	page_size := 100
+	err = ic.Client.Get(ic.Context, path, map[string]any{"page_size": page_size}, &listResponse)
+	if err != nil {
+		return nil, err
+	}
+	totalCount := int(listResponse.TotalCount)
+	if totalCount == 0 {
+		return events, nil
+	}
+	events = append(events, listResponse.Results...)
+	page := 2
+	for len(events) < totalCount {
+		var listResponse dbsqlListResponse
+		err := ic.Client.Get(ic.Context, path,
+			map[string]any{"page_size": page_size, "page": page},
+			&listResponse)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, listResponse.Results...)
+		page++
+	}
+	return events, err
+}
+
+func (ic *importContext) getSqlDataSources() (map[string]string, error) {
 	if ic.sqlDatasources == nil {
 		var dss []sql.DataSource
 		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		ic.sqlDatasources = make(map[string]string, len(dss))
 		for _, ds := range dss {
 			ic.sqlDatasources[ds.ID] = ds.EndpointID
 		}
 	}
-	endpointID, ok := ic.sqlDatasources[dataSourceId]
+	return ic.sqlDatasources, nil
+}
+
+func (ic *importContext) getSqlEndpoint(dataSourceId string) (string, error) {
+	sources, err := ic.getSqlDataSources()
+	if err != nil {
+		return "", err
+	}
+	endpointID, ok := sources[dataSourceId]
 	if !ok {
 		return "", fmt.Errorf("can't find data source for SQL endpoint %s", dataSourceId)
 	}
-
 	return endpointID, nil
-}
-
-func (ic *importContext) getSqlVisualizations() (map[string]string, error) {
-	if ic.sqlVisualizations == nil {
-		ic.sqlVisualizations = make(map[string]string)
-		qs, err := dbsqlListObjects(ic, "/preview/sql/queries")
-		if err != nil {
-			return nil, err
-		}
-		queryApi := sql.NewQueryAPI(ic.Context, ic.Client)
-		for _, q := range qs {
-			queryID := q["id"].(string)
-			fullQuery, err := queryApi.Read(queryID)
-			if err != nil {
-				log.Printf("[WARN] Problems getting query with ID: %s", queryID)
-				continue
-			}
-			for _, rv := range fullQuery.Visualizations {
-				var vis api.Visualization
-				err = json.Unmarshal(rv, &vis)
-				if err != nil {
-					log.Printf("[WARN] Problems decoding visualization for query with ID: %s", queryID)
-					continue
-				}
-				ic.sqlVisualizations[vis.ID.String()] = queryID + "/" + vis.ID.String()
-			}
-		}
-	}
-
-	return ic.sqlVisualizations, nil
 }
 
 func (ic *importContext) refreshMounts() error {
@@ -278,12 +404,12 @@ func eitherString(a any, b any) string {
 	return ""
 }
 
-func (ic *importContext) importJobs(l jobs.JobList) {
+func (ic *importContext) importJobs(l []jobs.Job) {
 	nowSeconds := time.Now().Unix()
 	a := jobs.NewJobsAPI(ic.Context, ic.Client)
 	starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
 	i := 0
-	for _, job := range l.Jobs {
+	for offset, job := range l {
 		if !ic.MatchesName(job.Settings.Name) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
@@ -314,8 +440,9 @@ func (ic *importContext) importJobs(l jobs.JobList) {
 			ID:       job.ID(),
 		})
 		i++
-		log.Printf("[INFO] Imported %d of total %d jobs", i, len(l.Jobs))
+		log.Printf("[INFO] Scanned %d of total %d jobs", offset+1, len(l))
 	}
+	log.Printf("[INFO] %d of total %d jobs are going to be imported", i, len(l))
 }
 
 // returns created file name in "files" directory for the export and error if any
@@ -341,4 +468,65 @@ func (ic *importContext) createFileIn(dir, name string, content []byte) (string,
 	}
 	relativeName := strings.Replace(localFileName, ic.Directory+"/", "", 1)
 	return relativeName, nil
+}
+
+func defaultShouldOmitFieldFunc(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if as.Computed {
+		return true
+	} else if as.Default != nil && d.Get(pathString) == as.Default {
+		return true
+	}
+
+	return false
+}
+
+func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+		prefix := ""
+		if regex != nil {
+			if res := regex.FindStringSubmatch(pathString); res != nil {
+				prefix = res[0]
+			} else {
+				return false
+			}
+		}
+		raw := d.Get(pathString)
+		if raw != nil {
+			v := reflect.ValueOf(raw)
+			if as.Optional && v.IsZero() {
+				return true
+			}
+		}
+		workerInstPoolID := d.Get(prefix + "instance_pool_id").(string)
+		switch pathString {
+		case prefix + "node_type_id":
+			return workerInstPoolID != ""
+		case prefix + "driver_node_type_id":
+			driverInstPoolID := d.Get(prefix + "driver_instance_pool_id").(string)
+			nodeTypeID := d.Get(prefix + "node_type_id").(string)
+			return workerInstPoolID != "" || driverInstPoolID != "" || raw.(string) == nodeTypeID
+		case prefix + "driver_instance_pool_id":
+			return raw.(string) == workerInstPoolID
+		case prefix + "enable_elastic_disk", prefix + "aws_attributes", prefix + "azure_attributes", prefix + "gcp_attributes":
+			return workerInstPoolID != ""
+		case prefix + "enable_local_disk_encryption":
+			return false
+		}
+
+		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	}
+}
+
+func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource) error {
+	blockType := "resource"
+	if r.Mode == "data" {
+		blockType = r.Mode
+	}
+	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
+	return ic.dataToHcl(ic.Importables[r.Resource],
+		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+}
+
+func generateUniqueID(v string) string {
+	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
 }

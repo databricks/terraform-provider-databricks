@@ -191,6 +191,11 @@ type GcsStorageInfo struct {
 	Destination string `json:"destination,omitempty"`
 }
 
+// AbfssStorageInfo contains the struct for when storing files in ADLS
+type AbfssStorageInfo struct {
+	Destination string `json:"destination,omitempty"`
+}
+
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
 	Destination string `json:"destination,omitempty"`
@@ -204,10 +209,11 @@ type StorageInfo struct {
 
 // InitScriptStorageInfo captures the allowed sources of init scripts.
 type InitScriptStorageInfo struct {
-	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
-	Gcs  *GcsStorageInfo  `json:"gcs,omitempty" tf:"group:storage"`
-	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
-	File *LocalFileInfo   `json:"file,omitempty"`
+	Dbfs  *DbfsStorageInfo  `json:"dbfs,omitempty" tf:"group:storage"`
+	Gcs   *GcsStorageInfo   `json:"gcs,omitempty" tf:"group:storage"`
+	S3    *S3StorageInfo    `json:"s3,omitempty" tf:"group:storage"`
+	Abfss *AbfssStorageInfo `json:"abfss,omitempty" tf:"group:storage"`
+	File  *LocalFileInfo    `json:"file,omitempty"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -361,6 +367,19 @@ type WorkloadType struct {
 	Clients *WorkloadTypeClients `json:"clients"`
 }
 
+// NetworkFileSystemInfo contains information about network file system server
+type NetworkFileSystemInfo struct {
+	ServerAddress string `json:"server_address"`
+	MountOptions  string `json:"mount_options,omitempty"`
+}
+
+// MountInfo provides configuration to mount a network file system
+type MountInfo struct {
+	NetworkFileSystemInfo *NetworkFileSystemInfo `json:"network_filesystem_info"`
+	RemoteMountDirectory  string                 `json:"remote_mount_dir_path,omitempty"`
+	LocalMountDirectory   string                 `json:"local_mount_dir_path"`
+}
+
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
@@ -397,6 +416,8 @@ type Cluster struct {
 	SingleUserName   string        `json:"single_user_name,omitempty"`
 	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
+	RuntimeEngine    string        `json:"runtime_engine,omitempty"`
+	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
 }
 
 func (cluster Cluster) Validate() error {
@@ -489,6 +510,7 @@ type ClusterInfo struct {
 	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty"`
 	TerminationReason         *TerminationReason `json:"termination_reason,omitempty"`
 	DataSecurityMode          string             `json:"data_security_mode,omitempty"`
+	RuntimeEngine             string             `json:"runtime_engine,omitempty"`
 }
 
 // IsRunningOrResizing returns true if cluster is running or resizing

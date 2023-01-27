@@ -38,7 +38,7 @@ resource "databricks_mws_workspaces" "this" {
   account_id     = local.account_id
   workspace_name = local.prefix
   location       = data.google_client_config.current.region
-  cloud_resource_bucket {
+  cloud_resource_container {
     gcp {
       project_id = data.google_client_config.current.project
     }

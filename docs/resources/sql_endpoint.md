@@ -39,6 +39,7 @@ The following arguments are supported:
 * `enable_serverless_compute` - Whether this SQL endpoint is a Serverless endpoint. To use a Serverless SQL endpoint, you must enable Serverless SQL endpoints for the workspace.
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
+* `warehouse_type` - [SQL Warehouse Type](https://docs.databricks.com/sql/admin/sql-endpoints.html#switch-the-sql-warehouse-type-pro-classic-or-serverless): `PRO` or `CLASSIC` (default).  If Serverless SQL is enabled, you can only specify `PRO`.
  
 ## Attribute Reference
 

@@ -97,25 +97,31 @@ func TestQueryMarshalUnmarshal(t *testing.T) {
 					Value: "xyz",
 				},
 				&QueryParameterDateRange{
-					QueryParameter: QueryParameter{
-						Name:  "n10",
-						Title: "t10",
+					QueryParameterRangeBase: QueryParameterRangeBase{
+						QueryParameter: QueryParameter{
+							Name:  "n10",
+							Title: "t10",
+						},
+						StringValue: "xyz",
 					},
-					Value: "xyz",
 				},
 				&QueryParameterDateTimeRange{
-					QueryParameter: QueryParameter{
-						Name:  "n11",
-						Title: "t11",
+					QueryParameterRangeBase: QueryParameterRangeBase{
+						QueryParameter: QueryParameter{
+							Name:  "n11",
+							Title: "t11",
+						},
+						StringValue: "xyz",
 					},
-					Value: "xyz",
 				},
 				&QueryParameterDateTimeSecRange{
-					QueryParameter: QueryParameter{
-						Name:  "n12",
-						Title: "t12",
+					QueryParameterRangeBase: QueryParameterRangeBase{
+						QueryParameter: QueryParameter{
+							Name:  "n12",
+							Title: "t12",
+						},
+						StringValue: "xyz",
 					},
-					Value: "xyz",
 				},
 			},
 		},
@@ -126,6 +132,47 @@ func TestQueryMarshalUnmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	var qp Query
+	if err := json.Unmarshal(out, &qp); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, q, qp)
+}
+
+func TestQueryMarshalUnmarshalRanges(t *testing.T) {
+	q := Query{
+		ID:           "id",
+		DataSourceID: "data_source_id",
+		Name:         "name",
+		Description:  "description",
+		Query:        "SELECT 1",
+		Schedule: &QuerySchedule{
+			Interval: 1000,
+		},
+		Options: &QueryOptions{
+			Parameters: []any{
+				&QueryParameterDateRange{
+					QueryParameterRangeBase: QueryParameterRangeBase{
+						QueryParameter: QueryParameter{
+							Name:  "n13",
+							Title: "t13",
+						},
+						RangeValue: &DateTimeRange{Start: "2022-11-20", End: "2022-11-22"},
+					},
+				},
+			},
+		},
+		Tags: []string{"tag1", "tag2"},
+	}
+
+	out, err := json.Marshal(q)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Contains(t, string(out), `"value":{"start":"2022-11-20","end":"2022-11-22"`)
 
 	var qp Query
 	if err := json.Unmarshal(out, &qp); err != nil {

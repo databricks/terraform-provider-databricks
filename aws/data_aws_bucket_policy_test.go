@@ -37,3 +37,19 @@ func TestDataAwsBucketPolicy_FullAccessRole(t *testing.T) {
 	j := d.Get("json")
 	assert.Lenf(t, j, 413, "Strange length for policy: %s", j)
 }
+
+func TestDataAwsBucketPolicyConfusedDeputyProblem(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Read:        true,
+		Resource:    DataAwsBucketPolicy(),
+		NonWritable: true,
+		ID:          ".",
+		HCL: `
+		bucket = "abc"
+		databricks_e2_account_id = "my_e2_account_id"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	j := d.Get("json")
+	assert.Lenf(t, j, 575, "Strange length for policy: %s", j)
+}

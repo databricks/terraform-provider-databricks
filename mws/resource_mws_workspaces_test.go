@@ -3,6 +3,7 @@ package mws
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,6 +18,10 @@ import (
 func TestMwsAccWorkspace(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode.")
+	}
+	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
+	if strings.Contains(cloudEnv, "azure") {
+		t.Skip("cannot run Account Workspace tests in azure")
 	}
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
@@ -38,7 +43,7 @@ func TestGcpaAccWorkspace(t *testing.T) {
 		AccountID:     acctID,
 		WorkspaceName: qa.RandomName(qa.GetEnvOrSkipTest(t, "TEST_PREFIX") + "-"),
 		Location:      qa.GetEnvOrSkipTest(t, "GOOGLE_REGION"),
-		CloudResourceBucket: &CloudResourceBucket{
+		CloudResourceBucket: &CloudResourceContainer{
 			GCP: &GCP{
 				ProjectID: qa.GetEnvOrSkipTest(t, "GOOGLE_PROJECT"),
 			},
@@ -122,23 +127,21 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 				ExpectedRequest: map[string]any{
 					"account_id": "abc",
 					"cloud":      "gcp",
-					"cloud_resource_bucket": map[string]any{
+					"cloud_resource_container": map[string]any{
 						"gcp": map[string]any{
 							"project_id": "def",
 						},
 					},
-					"location": "bcd",
-					"network": map[string]any{
-						"network_id": "net_id_a",
-						"gcp_common_network_config": map[string]any{
-							"gke_cluster_master_ip_range": "e",
-							"gke_connectivity_type":       "d",
-						},
-						"gcp_managed_network_config": map[string]any{
-							"gke_cluster_pod_ip_range":     "b",
-							"gke_cluster_service_ip_range": "c",
-							"subnet_cidr":                  "a",
-						},
+					"location":   "bcd",
+					"network_id": "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "d",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
 					},
 					"workspace_name": "labdata",
 				},
@@ -168,22 +171,20 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		workspace_name  = "labdata"
 		deployment_name = "900150983cd24fb0"
 		location        = "bcd"
-		cloud_resource_bucket {
+		cloud_resource_container {
 			gcp {
 				project_id = "def"
 			}
 		}
-		network {
-			network_id = "net_id_a"
-			gcp_managed_network_config {
-				subnet_cidr = "a"
-				gke_cluster_pod_ip_range = "b"
-				gke_cluster_service_ip_range = "c"
-			}
-			gcp_common_network_config {
-				gke_connectivity_type = "d"
-				gke_cluster_master_ip_range = "e"
-			}
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "d"
+			master_ip_range = "e"
 		}
 		`,
 		Gcp:    true,
@@ -1233,4 +1234,172 @@ func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
 			NetworkID: "abc",
 		}), "failed to start workspace. Cannot read network: 🐜")
 	})
+}
+
+func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				ExpectedRequest: map[string]any{
+					"credentials_id":                  "bcd",
+					"network_id":                      "fgh",
+					"storage_customer_managed_key_id": "def",
+					"private_access_settings_id":      "pas",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					PrivateAccessSettingsID:             "pas",
+					AccountID:                           "abc",
+					WorkspaceID:                         1234,
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "__OLDER__",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "__OLDER__",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+		},
+		State: map[string]any{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"private_access_settings_id":               "pas",
+			"workspace_id":                             1234,
+		},
+		Update: true,
+		ID:     "abc/1234",
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+}
+
+func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+			"private_access_settings_id":               "pas",
+		},
+		State: map[string]any{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             1234,
+			"private_access_settings_id":               "",
+		},
+		Update: true,
+		ID:     "abc/1234",
+	}.ExpectError(t, "cannot remove private access setting from workspace")
+}
+
+func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":       "bcd",
+					"workspace_name": "labdata",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
+						SubnetCIDR:               "a",
+						GKEClusterPodIPRange:     "b",
+						GKEClusterServiceIPRange: "c",
+					},
+					GkeConfig: &GkeConfig{
+						ConnectivityType: "d",
+						MasterIPRange:    "e",
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
+			}
+		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ApplyNoError(t)
 }

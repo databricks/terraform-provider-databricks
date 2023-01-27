@@ -42,6 +42,10 @@ type DatabricksClient struct {
 	Username string `name:"username" env:"DATABRICKS_USERNAME" auth:"password"`
 	Password string `name:"password" env:"DATABRICKS_PASSWORD" auth:"password,sensitive"`
 
+	ClientID      string `name:"client_id" env:"DATABRICKS_CLIENT_ID" auth:"oauth"`
+	ClientSecret  string `name:"client_secret" env:"DATABRICKS_CLIENT_SECRET" auth:"oauth,sensitive"`
+	TokenEndpoint string `name:"token_endpoint" env:"DATABRICKS_TOKEN_ENDPOINT" auth:"oauth"`
+
 	// Databricks Account ID for Accounts API. This field is used in dependencies.
 	AccountID string `name:"account_id" env:"DATABRICKS_ACCOUNT_ID"`
 
@@ -56,12 +60,13 @@ type DatabricksClient struct {
 	GoogleServiceAccount string `name:"google_service_account" env:"DATABRICKS_GOOGLE_SERVICE_ACCOUNT" auth:"google"`
 	GoogleCredentials    string `name:"google_credentials" env:"GOOGLE_CREDENTIALS" auth:"google,sensitive"`
 
-	AzureResourceID    string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_RESOURCE_ID" auth:"azure"`
-	AzureUseMSI        bool   `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
-	AzureClientSecret  string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure,sensitive"`
-	AzureClientID      string `name:"azure_client_id" env:"ARM_CLIENT_ID" auth:"azure"`
-	AzureTenantID      string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
-	AzurermEnvironment string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
+	AzureResourceID           string `name:"azure_workspace_resource_id" env:"DATABRICKS_AZURE_RESOURCE_ID" auth:"azure"`
+	AzureUseMSI               bool   `name:"azure_use_msi" env:"ARM_USE_MSI" auth:"azure"`
+	AzureClientSecret         string `name:"azure_client_secret" env:"ARM_CLIENT_SECRET" auth:"azure,sensitive"`
+	AzureClientID             string `name:"azure_client_id" env:"ARM_CLIENT_ID" auth:"azure"`
+	AzureTenantID             string `name:"azure_tenant_id" env:"ARM_TENANT_ID" auth:"azure"`
+	AzurermEnvironment        string `name:"azure_environment" env:"ARM_ENVIRONMENT"`
+	AzureDatabricksLoginAppId string `name:"azure_login_app_id" env:"DATABRICKS_AZURE_LOGIN_APP_ID" auth:"azure"`
 
 	// When multiple auth attributes are available in the environment, use the auth type
 	// specified by this argument. This argument also holds currently selected auth.
@@ -250,6 +255,7 @@ func (c *DatabricksClient) Authenticate(ctx context.Context) error {
 	providers := []auth{
 		{c.configureWithPat, "pat"},
 		{c.configureWithBasicAuth, "basic"},
+		{c.configureWithOAuthM2M, "oauth-m2m"},
 		{c.configureWithAzureClientSecret, "azure-client-secret"},
 		{c.configureWithAzureManagedIdentity, "azure-msi"},
 		{c.configureWithAzureCLI, "azure-cli"},
@@ -525,6 +531,8 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 		Username:             c.Username,
 		Password:             c.Password,
 		Token:                c.Token,
+		ClientID:             c.ClientID,
+		ClientSecret:         c.ClientSecret,
 		GoogleServiceAccount: c.GoogleServiceAccount,
 		GoogleCredentials:    c.GoogleCredentials,
 		AzurermEnvironment:   c.AzurermEnvironment,

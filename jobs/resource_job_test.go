@@ -543,6 +543,93 @@ func TestResourceJobCreateNWorkers(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreateWithWebhooks(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					ExistingClusterID: "abc",
+					MaxConcurrentRuns: 1,
+					SparkJarTask: &SparkJarTask{
+						MainClassName: "com.labs.BarMain",
+					},
+					Libraries: []libraries.Library{
+						{
+							Jar: "dbfs://aa/bb/cc.jar",
+						},
+					},
+					Name: "Featurizer",
+					WebhookNotifications: &WebhookNotifications{
+						OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
+						OnSuccess: []Webhook{{ID: "id2"}},
+						OnFailure: []Webhook{{ID: "id3"}},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						ExistingClusterID: "abc",
+						MaxConcurrentRuns: 1,
+						SparkJarTask: &SparkJarTask{
+							MainClassName: "com.labs.BarMain",
+						},
+						Libraries: []libraries.Library{
+							{
+								Jar: "dbfs://aa/bb/cc.jar",
+							},
+						},
+						Name: "Featurizer",
+						WebhookNotifications: &WebhookNotifications{
+							OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
+							OnSuccess: []Webhook{{ID: "id2"}},
+							OnFailure: []Webhook{{ID: "id3"}},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `existing_cluster_id = "abc"
+		name = "Featurizer"
+		max_concurrent_runs = 1
+		spark_jar_task {
+			main_class_name = "com.labs.BarMain"
+		}
+		library {
+			jar = "dbfs://aa/bb/cc.jar"
+		}
+		webhook_notifications {
+			on_start {
+				id = "id3" 
+			}
+			on_start {
+				id = "id1" 
+			}
+			on_start {
+				id = "id2" 
+			}
+			on_success {
+				id = "id2" 
+			}
+			on_failure {
+				id = "id3" 
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err, err)
+	assert.Equal(t, "789", d.Id())
+}
+
 func TestResourceJobCreateFromGitSource(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1236,8 +1323,8 @@ func TestJobsAPIList(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/jobs/list",
-			Response: JobList{
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+			Response: JobListResponse{
 				Jobs: []Job{
 					{
 						JobID: 1,
@@ -1249,7 +1336,62 @@ func TestJobsAPIList(t *testing.T) {
 		a := NewJobsAPI(ctx, client)
 		l, err := a.List()
 		require.NoError(t, err)
-		assert.Len(t, l.Jobs, 1)
+		assert.Len(t, l, 1)
+	})
+}
+
+func TestJobsAPIListMultiplePages(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+			Response: JobListResponse{
+				Jobs: []Job{
+					{
+						JobID: 1,
+					},
+				},
+				HasMore: true,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=1",
+			Response: JobListResponse{
+				Jobs: []Job{
+					{
+						JobID: 2,
+					},
+				},
+				HasMore: false,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewJobsAPI(ctx, client)
+		l, err := a.List()
+		require.NoError(t, err)
+		assert.Len(t, l, 2)
+	})
+}
+
+func TestJobsAPIListByName(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&name=test&offset=0",
+			Response: JobListResponse{
+				Jobs: []Job{
+					{
+						JobID: 1,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewJobsAPI(ctx, client)
+		l, err := a.ListByName("test", false)
+		require.NoError(t, err)
+		assert.Len(t, l, 1)
 	})
 }
 

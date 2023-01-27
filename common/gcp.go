@@ -122,10 +122,10 @@ func (c *DatabricksClient) configureWithGoogleForWorkspace(ctx context.Context) 
 	if err != nil {
 		return nil, err
 	}
-	return newOidcAuthorizerForWorkspace(oidcSource), nil
+	return newOidcAuthorizerWithJustBearer(oidcSource), nil
 }
 
-func newOidcAuthorizerForWorkspace(oidcSource oauth2.TokenSource) func(r *http.Request) error {
+func newOidcAuthorizerWithJustBearer(oidcSource oauth2.TokenSource) func(r *http.Request) error {
 	return func(r *http.Request) error {
 		oidc, err := oidcSource.Token()
 		if err != nil {

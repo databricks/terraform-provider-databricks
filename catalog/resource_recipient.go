@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -12,8 +13,8 @@ type RecipientsAPI struct {
 	context context.Context
 }
 
-func NewRecipientsAPI(ctx context.Context, m interface{}) RecipientsAPI {
-	return RecipientsAPI{m.(*common.DatabricksClient), ctx}
+func NewRecipientsAPI(ctx context.Context, m any) RecipientsAPI {
+	return RecipientsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type Token struct {
@@ -58,7 +59,7 @@ func (a RecipientsAPI) deleteRecipient(name string) error {
 }
 
 func (a RecipientsAPI) updateRecipient(ci *RecipientInfo) error {
-	patch := map[string]interface{}{"comment": ci.Comment, "ip_access_list": ci.IpAccessList}
+	patch := map[string]any{"comment": ci.Comment, "ip_access_list": ci.IpAccessList}
 
 	return a.client.Patch(a.context, "/unity-catalog/recipients/"+ci.Name, patch)
 }

@@ -2,9 +2,7 @@
 page_title: "Unity Catalog set up on Azure"
 ---
 
-# Deploying pre-requisite resources and enabling Unity Catalog (Azure Preview)
-
--> **Public Preview** This feature is in [Public Preview](https://docs.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog). Contact your Databricks representative to request access.
+# Deploying pre-requisite resources and enabling Unity Catalog
 
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
@@ -16,7 +14,7 @@ This guide is provided as-is and you can use this guide as the basis for your cu
 
 To get started with Unity Catalog, this guide takes you throw the following high-level steps:
 
-- [Deploying pre-requisite resources and enabling Unity Catalog (Azure Preview)](#deploying-pre-requisite-resources-and-enabling-unity-catalog-azure-preview)
+- [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)
   - [Configure Azure objects](#configure-azure-objects)
   - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore-and-link-it-to-workspaces)
@@ -62,9 +60,6 @@ data "azurerm_databricks_workspace" "this" {
 ```hcl
 terraform {
   required_providers {
-    azapi = {
-      source = "azure/azapi"
-    }
     azurerm = {
       source = "hashicorp/azurerm"
     }
@@ -72,10 +67,6 @@ terraform {
       source = "databricks/databricks"
     }
   }
-}
-
-provider "azapi" {
-  subscription_id = local.subscription_id
 }
 
 provider "azurerm" {
@@ -96,17 +87,13 @@ The first step is to create the required Azure objects:
 - A Databricks Access Connector that provides Unity Catalog permissions to access and manage data in the storage account.
 
 ```hcl
-resource "azapi_resource" "access_connector" {
-  type      = "Microsoft.Databricks/accessConnectors@2022-04-01-preview"
-  name      = "${local.prefix}-databricks-mi"
-  location  = data.azurerm_resource_group.this.location
-  parent_id = data.azurerm_resource_group.this.id
+resource "azurerm_databricks_access_connector" "unity" {
+  name                = "${local.prefix}-databricks-mi"
+  resource_group_name = data.azurerm_resource_group.this.name
+  location            = data.azurerm_resource_group.this.location
   identity {
     type = "SystemAssigned"
   }
-  body = jsonencode({
-    properties = {}
-  })
 }
 
 resource "azurerm_storage_account" "unity_catalog" {
@@ -128,13 +115,13 @@ resource "azurerm_storage_container" "unity_catalog" {
 resource "azurerm_role_assignment" "example" {
   scope                = azurerm_storage_account.unity_catalog.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azapi_resource.access_connector.identity[0].principal_id
+  principal_id         = azurerm_databricks_access_connector.unity.identity[0].principal_id
 }
 ```
 
 ## Create a Unity Catalog metastore and link it to workspaces
 
-A [databricks_metastore](../resources/metastore.md) is the top level container for data in Unity Catalog. A single metastore can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. Databricks recommends using a small number of metastores, except when organizations wish to have hard isolation boundaries between data. Data cannot be easily joined/queried across metastores.
+A [databricks_metastore](../resources/metastore.md) is the top level container for data in Unity Catalog. You can only create a single metastore for each region in which your organization operates, and attach workspaces to the metastore. Each workspace will have the same view of the data you manage in Unity Catalog.
 
 ```hcl
 resource "databricks_metastore" "this" {
@@ -149,7 +136,7 @@ resource "databricks_metastore_data_access" "first" {
   metastore_id = databricks_metastore.this.id
   name         = "the-keys"
   azure_managed_identity {
-    access_connector_id = azapi_resource.access_connector.id
+    access_connector_id = azurerm_databricks_access_connector.unity.id
   }
 
   is_default = true
@@ -217,17 +204,13 @@ To work with external tables, Unity Catalog introduces two new objects to access
 First, create the required objects in Azure.
 
 ```hcl
-resource "azapi_resource" "ext_access_connector" {
-  type      = "Microsoft.Databricks/accessConnectors@2022-04-01-preview"
-  name      = "ext-databricks-mi"
-  location  = data.azurerm_resource_group.this.location
-  parent_id = data.azurerm_resource_group.this.id
+resource "azurerm_databricks_access_connector" "ext_access_connector" {
+  name                = "ext-databricks-mi"
+  resource_group_name = data.azurerm_resource_group.this.name
+  location            = data.azurerm_resource_group.this.location
   identity {
     type = "SystemAssigned"
   }
-  body = jsonencode({
-    properties = {}
-  })
 }
 
 resource "azurerm_storage_account" "ext_storage" {
@@ -249,16 +232,17 @@ resource "azurerm_storage_container" "ext_storage" {
 resource "azurerm_role_assignment" "ext_storage" {
   scope                = azurerm_storage_account.ext_storage.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azapi_resource.ext_access_connector.identity[0].principal_id
+  principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
+}
 ```
 
 Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
 
 ```hcl
 resource "databricks_storage_credential" "external" {
-  name = azapi_resource.ext_access_connector.name
+  name = azurerm_databricks_access_connector.ext_access_connector.name
   azure_managed_identity {
-    access_connector_id = azapi_resource.ext_access_connector.id
+    access_connector_id = azurerm_databricks_access_connector.ext_access_connector.id
   }
   comment = "Managed by TF"
   depends_on = [
@@ -277,8 +261,9 @@ resource "databricks_grants" "external_creds" {
 resource "databricks_external_location" "some" {
   name = "external"
   url = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_account.ext_storage.name,
-  azurerm_storage_container.ext_storage.name)
+    azurerm_storage_container.ext_storage.name,
+  azurerm_storage_account.ext_storage.name)
+
   credential_name = databricks_storage_credential.external.id
   comment         = "Managed by TF"
   depends_on = [
@@ -351,10 +336,9 @@ resource "databricks_cluster" "dev" {
   spark_version           = data.databricks_spark_version.latest.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 10
-  enable_elastic_disk     = false
   num_workers             = 2
   azure_attributes {
-    availability = "SPOT"
+    availability = "SPOT_WITH_FALLBACK_AZURE"
   }
   data_security_mode = "SINGLE_USER"
   single_user_name   = each.value.user_name

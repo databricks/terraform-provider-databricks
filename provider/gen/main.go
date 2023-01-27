@@ -2,7 +2,6 @@
 // +build ignore
 
 // Usage: go run provider/gen/main.go -name mws_workspaces -package mws -is-data -dry-run=false
-//
 package main
 
 import (

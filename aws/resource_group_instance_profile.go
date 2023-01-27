@@ -14,7 +14,7 @@ import (
 func ResourceGroupInstanceProfile() *schema.Resource {
 	r := common.NewPairID("group_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["instance_profile_id"].ValidateDiagFunc = ValidInstanceProfile
+		m["instance_profile_id"].ValidateDiagFunc = ValidArn
 		return m
 	}).BindResource(common.BindResource{
 		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {

@@ -18,7 +18,7 @@ type ClusterPolicy struct {
 	MaxClustersPerUser int64  `json:"max_clusters_per_user,omitempty"`
 }
 
-// ClusterPolicyCreate is the endity used for request
+// ClusterPolicyCreate is the entity used for request
 type ClusterPolicyCreate struct {
 	Name               string `json:"name"`
 	Definition         string `json:"definition"`
@@ -125,6 +125,9 @@ func ResourceClusterPolicy() *schema.Resource {
 			"max_clusters_per_user": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Description: "Max number of clusters per user that can be active\n" +
+				    "using this policy. If not present, there is no max limit.",
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

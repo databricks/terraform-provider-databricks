@@ -66,10 +66,6 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 			//lint:ignore ST1005 Azure is a valid capitalized string
 			return fmt.Errorf("Azure KeyVault is not available")
 		}
-		if a.client.IsAzureClientSecretSet() {
-			//lint:ignore ST1005 Azure is a valid capitalized string
-			return fmt.Errorf("Azure KeyVault cannot yet be configured for Service Principal authorization")
-		}
 		req.BackendType = "AZURE_KEYVAULT"
 		req.BackendAzureKeyvault = s.KeyvaultMetadata
 	}
@@ -121,10 +117,6 @@ func kvDiffFunc(ctx context.Context, diff *schema.ResourceDiff, v any) error {
 	kvLst := diff.Get("keyvault_metadata").([]any)
 	if len(kvLst) == 0 {
 		return nil
-	}
-	client := v.(*common.DatabricksClient)
-	if client.IsAzure() && client.IsAzureClientSecretSet() {
-		return fmt.Errorf("you can't set up Azure KeyVault-based secret scope via Service Principal")
 	}
 	return nil
 }

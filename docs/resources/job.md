@@ -190,6 +190,22 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 * `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
 * `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
 
+Example
+```hcl
+resource "databricks_job" "sql_aggregation_job" {
+  name     = "Example SQL Job"
+  task {
+    task_key = "run_agg_query"
+    sql_task {
+      warehouse_id = databricks_sql_endpoint.sql_job_warehouse.id
+      query {
+        query_id = databricks_sql_query.agg_query.id
+      }
+    }
+  }
+}
+```
+
 ### Exported attributes
 
 In addition to all arguments above, the following attributes are exported:

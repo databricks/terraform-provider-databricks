@@ -128,7 +128,7 @@ Each entry in `webhook_notification` block takes a list `webhook` blocks. The fi
 * `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
 * `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
 
-Note that the `id` is not to be confused with the name of the alert destination. The `id` can be retrieved through the API or the URL of Databricks UI `https://<workspace url>/sql/destinations/<notification ID>?o=<unknown_number>`
+Note that the `id` is not to be confused with the name of the alert destination. The `id` can be retrieved through the API or the URL of Databricks UI `https://<workspace host>/sql/destinations/<notification ID>?o=<workspace id>`
 
 Example
 ```hcl

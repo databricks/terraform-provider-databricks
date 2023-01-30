@@ -23,6 +23,9 @@ locals {
 
 provider "aws" {
   region = local.region
+  default_tags {
+    tags = locals.tags
+  }
 }
 
 // initialize provider in "MWS" mode to provision new workspace
@@ -39,7 +42,6 @@ data "databricks_aws_assume_role_policy" "this" {
 resource "aws_iam_role" "cross_account_role" {
   name               = "${local.prefix}-crossaccount"
   assume_role_policy = data.databricks_aws_assume_role_policy.this.json
-  tags               = local.tags
 }
 
 data "databricks_aws_crossaccount_policy" "this" {
@@ -71,9 +73,9 @@ resource "aws_s3_bucket" "root_storage_bucket" {
     enabled = false
   }
   force_destroy = true
-  tags = merge(local.tags, {
+  tags = {
     Name = "${local.prefix}-root-bucket"
-  })
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "root_storage_bucket" {
@@ -109,7 +111,6 @@ module "vpc" {
   name = local.prefix
   cidr = local.cidr_block
   azs  = data.aws_availability_zones.available.names
-  tags = local.tags
 
   enable_dns_hostnames = true
   enable_nat_gateway   = true

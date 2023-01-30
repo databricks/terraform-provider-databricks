@@ -1,7 +1,6 @@
 package secrets
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -301,9 +300,4 @@ func TestResourceSecretScopeDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
-}
-
-func TestKVDiffFuncNil(t *testing.T) {
-	err := kvDiffFunc(context.Background(), nil, common.DatabricksClient{Host: ""})
-	assert.Nil(t, err)
 }

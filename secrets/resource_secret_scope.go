@@ -110,17 +110,6 @@ var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`
 	"Must consist of alphanumeric characters, dashes, underscores, and periods, "+
 		"and may not exceed 128 characters.")
 
-func kvDiffFunc(ctx context.Context, diff *schema.ResourceDiff, v any) error {
-	if diff == nil {
-		return nil
-	}
-	kvLst := diff.Get("keyvault_metadata").([]any)
-	if len(kvLst) == 0 {
-		return nil
-	}
-	return nil
-}
-
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() *schema.Resource {
 	s := common.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -153,6 +142,5 @@ func ResourceSecretScope() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSecretScopesAPI(ctx, c).Delete(d.Id())
 		},
-		CustomizeDiff: kvDiffFunc,
 	}.ToResource()
 }

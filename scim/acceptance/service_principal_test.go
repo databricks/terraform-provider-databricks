@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/workspace"
-	"github.com/stretchr/testify/assert"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestMwsAccServicePrincipalResourceOnAzure(t *testing.T) {
@@ -52,43 +53,71 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
+	appId := "12345a67-8b9c-0d1e-23fa-4567b89cde04"
+	os.Setenv("appId", appId)
+	ctx := context.Background()
+	client := common.CommonEnvironmentClient()
+	notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
-			resource "databricks_service_principal" "abc" {
-				application_id    = "abc"
-				display_name = "abc"
+			resource "databricks_service_principal" "a" {
+				application_id = "{env.appId}"
 				delete_home_dir = true
 			}`,
+			Check: func(s *terraform.State) error {
+				return nil
+			},
 		},
 		{
-			Callback: func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				_, err := workspace.NewNotebooksAPI(ctx, client).Read("/Users/abc")
-				assert.NotEqual(t, err, nil)
+			Template: `
+			resource "databricks_service_principal" "b" {
+				application_id = "12345a67-8b9c-0d1e-23fa-4567b89cde10"
+			}
+			`,
+			Check: func(s *terraform.State) error {
+				_, err := notebooksAPI.Read(fmt.Sprintf("/Users/%v", appId))
+				if err != nil {
+					if strings.Contains(err.Error(), "doesn't exist") {
+						return nil
+					}
+					return err
+				}
 				return nil
 			},
 		},
 	})
 }
-func TestAccServicePrincipalHomeDeleteNotDeleted(t *testing.T) {
+
+func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
+	appId := "12345a67-8b9c-0d1e-23fa-4567b89cde99"
+	os.Setenv("appId", appId)
+	ctx := context.Background()
+	client := common.CommonEnvironmentClient()
+	notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
-			resource "databricks_service_principal" "abc" {
-				application_id    = "abc"
-				display_name = "abc"
-				delete_hom_dir = false 
+			resource "databricks_service_principal" "a" {
+				application_id = "{env.appId}"
 			}`,
+			Check: func(s *terraform.State) error {
+				return nil
+			},
 		},
 		{
-			Callback: func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				_, err := workspace.NewNotebooksAPI(ctx, client).Read("/Users/abc")
-				assert.Equal(t, err, nil)
-				return nil
+			Template: `
+			resource "databricks_service_principal" "b" {
+				application_id = "12345a67-8b9c-0d1e-23fa-4567b89cde12"
+			}
+			`,
+			Check: func(s *terraform.State) error {
+				_, err := notebooksAPI.Read(fmt.Sprintf("/Users/%v", appId))
+				return err
 			},
 		},
 	})

@@ -484,6 +484,7 @@ func TestResourceServicePrinicpalDelete_ReposError(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
+			application_id = "abc"
 			delete_repos = true
 		`,
 	}.Apply(t)
@@ -515,6 +516,7 @@ func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
+			application_id = "abc"
 			delete_repos = true	
 		`,
 	}.Apply(t)
@@ -542,6 +544,7 @@ func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
+			application_id = "abc"
 			delete_home_dir = true
 		`,
 	}.Apply(t)
@@ -573,6 +576,7 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
+		 	application_id = "abc"
 			delete_home_dir = true	
 		`,
 	}.Apply(t)

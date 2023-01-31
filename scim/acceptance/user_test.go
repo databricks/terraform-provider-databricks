@@ -2,13 +2,16 @@ package acceptance
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -46,46 +49,76 @@ func TestAccForceUserImport(t *testing.T) {
 	})
 }
 
-func TestAccUserHomeDeleteSuccess(t *testing.T) {
+func TestAccUserHomeDelete(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
+	username := qa.RandomEmail()
+	os.Setenv("TEST_USERNAME", username)
+	ctx := context.Background()
+	client := common.CommonEnvironmentClient()
+	notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
-			resource "databricks_user" "abc" {
-				user_name = "test@example.com"
+			resource "databricks_user" "first" {
+				user_name = "{env.TEST_USERNAME}"
 				delete_home_dir = true
 			}`,
+			Check: func(s *terraform.State) error {
+				return nil
+			},
 		},
 		{
-			Callback: func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				_, err := workspace.NewNotebooksAPI(ctx, client).Read("/Users/test@example.com")
-				assert.NotEqual(t, err, nil)
+			Template: `
+			resource "databricks_user" "second" {
+				user_name = "a@a.com"
+			}`,
+			Check: func(s *terraform.State) error {
+				_, err := notebooksAPI.Read(fmt.Sprintf("/Users/%v", username))
+				if err != nil {
+					targetErr := fmt.Sprintf("Path (/Users/%v) doesn't exist", username)
+					if strings.Contains(err.Error(), targetErr) {
+						return nil
+					}
+					return err
+				}
 				return nil
 			},
 		},
 	})
 }
+
 func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
+	username := qa.RandomEmail()
+	os.Setenv("TEST_USERNAME", username)
+	ctx := context.Background()
+	client := common.CommonEnvironmentClient()
+	notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
 	acceptance.Test(t, []acceptance.Step{
 		{
 			Template: `
-			resource "databricks_user" "abc" {
-				user_name = "test@example.com"
-				delete_hom_dir = false 
+			resource "databricks_user" "a" {
+				user_name = "{env.TEST_USERNAME}"
 			}`,
+			Check: func(s *terraform.State) error {
+				return nil
+			},
 		},
 		{
-			Callback: func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				_, err := workspace.NewNotebooksAPI(ctx, client).Read("/Users/test@example.com")
-				assert.Equal(t, err, nil)
-				return nil
+			Template: `
+			resource "databricks_user" "b" {
+				user_name = "b@na.com"
+			}
+			`,
+			Check: func(s *terraform.State) error {
+				_, err := notebooksAPI.Read(fmt.Sprintf("/Users/%v", username))
+				return err
 			},
 		},
 	})

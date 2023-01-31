@@ -18,7 +18,8 @@ import (
 
 // InstanceProfileInfo contains the ARN for aws instance profiles
 type InstanceProfileInfo struct {
-	InstanceProfileArn    string `json:"instance_profile_arn,omitempty"`
+	InstanceProfileArn    string `json:"instance_profile_arn"`
+	IamRoleArn            string `json:"iam_role_arn,omitempty"`
 	IsMetaInstanceProfile bool   `json:"is_meta_instance_profile,omitempty"`
 	SkipValidation        bool   `json:"skip_validation,omitempty" tf:"computed"`
 }
@@ -83,6 +84,18 @@ func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 	}, nil)
 }
 
+// Update updates the IAM role ARN of an existing instance profile
+func (a InstanceProfilesAPI) Update(ipi InstanceProfileInfo) error {
+	data := map[string]any{
+		"instance_profile_arn": ipi.InstanceProfileArn,
+		"iam_role_arn":         ipi.InstanceProfileArn,
+	}
+	if ipi.IamRoleArn != "" {
+		data["iam_role_arn"] = ipi.IamRoleArn
+	}
+	return a.client.Post(a.context, "/instance-profiles/edit", data, nil)
+}
+
 // IsRegistered checks if instance profile exists
 func (a InstanceProfilesAPI) IsRegistered(arn string) bool {
 	if _, err := a.Read(arn); err == nil {
@@ -137,7 +150,8 @@ func (a InstanceProfilesAPI) Synchronized(arn string, testCallback func() bool) 
 func ResourceInstanceProfile() *schema.Resource {
 	instanceProfileSchema := common.StructToSchema(InstanceProfileInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["instance_profile_arn"].ValidateDiagFunc = ValidInstanceProfile
+			m["instance_profile_arn"].ValidateDiagFunc = ValidArn
+			m["iam_role_arn"].ValidateDiagFunc = ValidArn
 			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if old == "false" && new == "true" {
 					return true
@@ -167,11 +181,16 @@ func ResourceInstanceProfile() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewInstanceProfilesAPI(ctx, c).Delete(d.Id())
 		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var profile InstanceProfileInfo
+			common.DataToStructPointer(d, instanceProfileSchema, &profile)
+			return NewInstanceProfilesAPI(ctx, c).Update(profile)
+		},
 	}.ToResource()
 }
 
-// ValidInstanceProfile validate if it's valid instance profile ARN
-func ValidInstanceProfile(v any, c cty.Path) diag.Diagnostics {
+// ValidArn validate if it's valid instance profile or role ARN
+func ValidArn(v any, c cty.Path) diag.Diagnostics {
 	s, ok := v.(string)
 	if !ok {
 		return diag.Diagnostics{
@@ -181,6 +200,24 @@ func ValidInstanceProfile(v any, c cty.Path) diag.Diagnostics {
 				Detail:        "Not a string",
 			},
 		}
+	}
+	var arnType string
+	switch c[0].(cty.GetAttrStep).Name {
+	case "instance_profile_arn", "instance_profile_id":
+		arnType = "instance-profile"
+	case "iam_role_arn":
+		arnType = "role"
+	default:
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				AttributePath: c,
+				Summary:       "Unknown attribute",
+				Detail:        "ARN type associated with attribute is not known",
+			},
+		}
+	}
+	if s == "" && arnType == "role" {
+		return nil
 	}
 	if !strings.HasPrefix(s, "arn:") {
 		return diag.Diagnostics{
@@ -201,12 +238,12 @@ func ValidInstanceProfile(v any, c cty.Path) diag.Diagnostics {
 			},
 		}
 	}
-	if !strings.HasPrefix(arnSections[5], "instance-profile") {
+	if !strings.HasPrefix(arnSections[5], arnType) {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				AttributePath: c,
 				Summary:       "Invalid ARN",
-				Detail:        fmt.Sprintf("Not an instance profile ARN: %s", v),
+				Detail:        fmt.Sprintf("Not a %s ARN: %s", arnType, v),
 			},
 		}
 	}

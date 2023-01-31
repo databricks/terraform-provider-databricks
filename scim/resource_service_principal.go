@@ -84,16 +84,6 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	return a.client.Scim(a.context, "DELETE", servicePrincipalPath, nil, nil)
 }
 
-func (a ServicePrincipalsAPI) DeleteRepos(userID string) error {
-	repoPath := fmt.Sprintf("/Repos/%v", userID)
-	return workspace.NewNotebooksAPI(a.context, a.client).Delete(repoPath, true)
-}
-
-func (a ServicePrincipalsAPI) DeleteHomeDirectory(userID string) error {
-	dirPath := fmt.Sprintf("/Users/%v", userID)
-	return workspace.NewNotebooksAPI(a.context, a.client).Delete(dirPath, true)
-}
-
 // ResourceServicePrincipal manages service principals within workspace
 func ResourceServicePrincipal() *schema.Resource {
 	type entity struct {
@@ -181,6 +171,7 @@ func ResourceServicePrincipal() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
+			appId := d.Get("application_id").(string)
 			err := spAPI.Delete(d.Id())
 			if err != nil {
 				return err
@@ -189,13 +180,13 @@ func ResourceServicePrincipal() *schema.Resource {
 				return nil
 			}
 			if d.Get("delete_repos").(bool) {
-				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", d.Id()), true)
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
 				if err != nil {
 					return fmt.Errorf("delete_repos: %w", err)
 				}
 			}
 			if d.Get("delete_home_dir").(bool) {
-				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", d.Id()), true)
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
 				if err != nil {
 					return fmt.Errorf("delete_home_dir: %w", err)
 				}

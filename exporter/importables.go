@@ -1549,7 +1549,16 @@ var resourcesMap map[string]importable = map[string]importable{
 					Name:     "directory_" + ic.Importables["databricks_directory"].Name(ic, r.Data),
 				})
 			}
+
+			if r.ID == "/Shared" || r.ID == "/Users" || strings.HasPrefix(r.ID, "/Users") && strings.Count(r.ID, "/") == 2 && strings.Count(r.ID, "@") == 1 {
+				r.Mode = "data"
+				r.Data.Set("object_id", nil)
+				r.Data.Set("path", nil)
+				r.Data.Set("delete_recursive", nil)
+				// DON'T emit pre-defined Directory
+			}
 			return nil
+
 		},
 		Depends: []reference{
 			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},

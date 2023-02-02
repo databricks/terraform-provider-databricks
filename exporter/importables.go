@@ -1148,6 +1148,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
 			splits := strings.Split(r.Name, "_")
 			notebookId := splits[len(splits)-1]
+			directorySplits := strings.Split(r.ID, "/")
+			directorySplits = directorySplits[:len(directorySplits)-1]
+			directoryPath := strings.Join(directorySplits, "/")
 
 			if ic.meAdmin {
 				ic.Emit(&resource{
@@ -1157,13 +1160,13 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
-			// if ic.meAdmin {
-			// 	ic.Emit(&resource{
-			// 		Resource: "databricks_directory",
-			// 		ID:       fmt.Sprintf("/notebooks/%s", notebookId),
-			// 		Name:     "directory_" + ic.Importables["databricks_notebook"].Name(ic, r.Data),
-			// 	})
-			// }
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource:  "databricks_directory",
+					Attribute: "path",
+					Value:     directoryPath,
+				})
+			}
 
 			if err != nil {
 				return err

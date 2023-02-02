@@ -1451,6 +1451,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				if lib.Notebook != nil {
 					ic.emitNotebookOrRepo(lib.Notebook.Path)
 				}
+				if lib.File != nil {
+					ic.emitNotebookOrRepo(lib.File.Path)
+				}
 				ic.emitIfDbfsFile(lib.Jar)
 				ic.emitIfDbfsFile(lib.Whl)
 			}
@@ -1508,6 +1511,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "library.notebook.path", Resource: "databricks_notebook"},
 			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
+			{Path: "library.file.path", Resource: "databricks_notebook"},
+			{Path: "library.file.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},

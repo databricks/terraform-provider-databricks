@@ -128,6 +128,17 @@ Each entry in `webhook_notification` block takes a list `webhook` blocks. The fi
 * `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
 * `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
 
+Note that the `id` is not to be confused with the name of the alert destination. The `id` can be retrieved through the API or the URL of Databricks UI `https://<workspace host>/sql/destinations/<notification id>?o=<workspace id>`
+
+Example
+```hcl
+ webhook_notifications {
+    on_failure {
+      id = "fb99f3dc-a0a0-11ed-a8fc-0242ac120002"
+    }
+  }
+```
+
 ### webhook Configuration Block
 
 * `id` - ID of the system notification that is notified when an event defined in `webhook_notifications` is triggered.
@@ -189,6 +200,22 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 * `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
 * `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
 * `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
+
+Example
+```hcl
+resource "databricks_job" "sql_aggregation_job" {
+  name     = "Example SQL Job"
+  task {
+    task_key = "run_agg_query"
+    sql_task {
+      warehouse_id = databricks_sql_endpoint.sql_job_warehouse.id
+      query {
+        query_id = databricks_sql_query.agg_query.id
+      }
+    }
+  }
+}
+```
 
 ### Exported attributes
 

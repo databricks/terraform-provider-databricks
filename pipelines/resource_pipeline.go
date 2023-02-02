@@ -63,11 +63,16 @@ type NotebookLibrary struct {
 	Path string `json:"path"`
 }
 
+type FileLibrary struct {
+	Path string `json:"path"`
+}
+
 type PipelineLibrary struct {
 	Jar      string           `json:"jar,omitempty"`
 	Maven    *libraries.Maven `json:"maven,omitempty"`
 	Whl      string           `json:"whl,omitempty"`
 	Notebook *NotebookLibrary `json:"notebook,omitempty"`
+	File     *FileLibrary     `json:"file,omitempty"`
 }
 
 type filters struct {
@@ -79,6 +84,7 @@ type PipelineSpec struct {
 	ID                  string            `json:"id,omitempty" tf:"computed"`
 	Name                string            `json:"name,omitempty"`
 	Storage             string            `json:"storage,omitempty" tf:"force_new"`
+	Catalog             string            `json:"catalog,omitempty" tf:"force_new"`
 	Configuration       map[string]string `json:"configuration,omitempty"`
 	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"alias:cluster"`
 	Libraries           []PipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
@@ -307,6 +313,8 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	m["edition"].ValidateFunc = validation.StringInSlice([]string{"pro", "core", "advanced"}, true)
 
 	m["storage"].DiffSuppressFunc = suppressStorageDiff
+	m["storage"].ConflictsWith = []string{"catalog"}
+	m["catalog"].ConflictsWith = []string{"storage"}
 
 	return m
 }

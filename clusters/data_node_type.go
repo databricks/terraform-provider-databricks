@@ -178,19 +178,19 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.Category != "" && !strings.EqualFold(nt.Category, r.Category) {
 			continue
 		}
-		if r.IsIOCacheEnabled && nt.IsIOCacheEnabled != r.IsIOCacheEnabled {
+		if r.IsIOCacheEnabled && !nt.IsIOCacheEnabled {
 			continue
 		}
-		if r.SupportPortForwarding && nt.SupportPortForwarding != r.SupportPortForwarding {
+		if r.SupportPortForwarding && !nt.SupportPortForwarding {
 			continue
 		}
-		if r.PhotonDriverCapable && nt.PhotonDriverCapable != r.PhotonDriverCapable {
+		if r.PhotonDriverCapable && !nt.PhotonDriverCapable {
 			continue
 		}
-		if r.PhotonWorkerCapable && nt.PhotonWorkerCapable != r.PhotonWorkerCapable {
+		if r.PhotonWorkerCapable && !nt.PhotonWorkerCapable {
 			continue
 		}
-		if r.Graviton && nt.Graviton != r.Graviton {
+		if nt.Graviton != r.Graviton {
 			continue
 		}
 		return nt.NodeTypeID

@@ -1157,6 +1157,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
+			// if ic.meAdmin {
+			// 	ic.Emit(&resource{
+			// 		Resource: "databricks_directory",
+			// 		ID:       fmt.Sprintf("/notebooks/%s", notebookId),
+			// 		Name:     "directory_" + ic.Importables["databricks_notebook"].Name(ic, r.Data),
+			// 	})
+			// }
+
 			if err != nil {
 				return err
 			}
@@ -1539,6 +1547,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 
+			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			splits := strings.Split(r.Name, "_")
 			directoryId := splits[len(splits)-1]
 
@@ -1550,16 +1559,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
-			if r.ID == "/Shared" || r.ID == "/Users" || strings.HasPrefix(r.ID, "/Users") && strings.Count(r.ID, "/") == 2 && strings.Count(r.ID, "@") == 1 {
+			if r.ID == "/Shared" || r.ID == "/Users" || ic.IsUserOrServicePrincipalDirectory(r.ID, "/Users") {
 				r.Mode = "data"
-				r.Data.Set("object_id", nil)
-				r.Data.Set("path", nil)
-				r.Data.Set("delete_recursive", nil)
-				// DON'T emit pre-defined Directory
 			}
+
 			return nil
 
 		},
+		Body: resourceOrDataBlockBody,
 		Depends: []reference{
 			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},
 			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: MatchPrefix},

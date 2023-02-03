@@ -6,6 +6,7 @@
  * Added new node type selector to [databricks_node_type](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/node_type) data source ([#1957](https://github.com/databricks/terraform-provider-databricks/pull/1957)).
  * Removed check for creation of Azure Key Vault-based [databricks_secret_scope](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/secret_scope) using Service Principals ([#1965](https://github.com/databricks/terraform-provider-databricks/pull/1965)).
  * Reworked Graviton selection logic in [databricks_node_type](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/node_type) data source ([#1974](https://github.com/databricks/terraform-provider-databricks/pull/1974)).
+ * Don't consider GPU-based nodes in [databricks_node_type](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/node_type) data source until explicitly requested ([#1978](https://github.com/databricks/terraform-provider-databricks/pull/1978)).
  
 Documentation:
 

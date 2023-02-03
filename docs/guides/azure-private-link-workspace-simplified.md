@@ -79,8 +79,19 @@ variable "location" {
   type    = string
 }
 
+data "azurerm_client_config" "current" {
+}
+
+data "external" "me" {
+  program = ["az", "account", "show", "--query", "user"]
+}
+
 locals {
-  prefix = "adb-pl"
+  prefix = "abd-pl"
+  tags = {
+    Environment = "Demo"
+    Owner       = lookup(data.external.me.result, "name")
+  }
 }
 ```
 
@@ -96,14 +107,14 @@ resource "azurerm_virtual_network" "this" {
   location            = var.location
   resource_group_name = var.rg_name
   address_space       = [var.cidr]
-  tags                = var.tags
+  tags                = local.tags
 }
 
 resource "azurerm_network_security_group" "this" {
   name                = "${local.prefix}-nsg"
   location            = var.location
   resource_group_name = var.rg_name
-  tags                = var.tags
+  tags                = local.tags
 }
 
 resource "azurerm_network_security_rule" "aad" {
@@ -277,7 +288,7 @@ resource "azurerm_databricks_workspace" "this" {
   resource_group_name                   = var.rg_name
   location                              = var.location
   sku                                   = "premium"
-  tags                                  = var.tags
+  tags                                  = local.tags
   public_network_access_enabled         = false
   network_security_group_rules_required = "NoAzureDatabricksRules"
   customer_managed_key_enabled          = true

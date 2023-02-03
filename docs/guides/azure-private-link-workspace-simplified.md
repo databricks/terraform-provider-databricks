@@ -280,8 +280,6 @@ resource "azurerm_private_endpoint" "auth" {
 
 Deploy an Azure Databricks workspace
 
--> **Note** The public network access to the workspace is disabled. You can access the workspace only through the private connectivity to the on-premises user environment. For testing purposes, you can deploy an Azure VM in the same vnet in order to test the frontend connectivity.
-
 ```hcl
 resource "azurerm_databricks_workspace" "this" {
   name                                  = "${local.prefix}-workspace"
@@ -308,3 +306,5 @@ resource "azurerm_databricks_workspace" "this" {
   ]
 }
 ```
+
+-> **Note** The public network access to the workspace is disabled. You can access the workspace only through the private connectivity to the on-premises user environment. For testing purposes, you can deploy an Azure VM in the same vnet in order to test the frontend connectivity.

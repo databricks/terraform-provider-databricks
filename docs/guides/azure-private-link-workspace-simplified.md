@@ -52,7 +52,7 @@ terraform {
     databricks = {
       source = "databricks/databricks"
     }
-    aws = {
+    azurerm = {
       source  = "hashicorp/azurerm"
       version = ">=2.83.0"
     }

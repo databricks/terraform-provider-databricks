@@ -1,5 +1,21 @@
 # Version changelog
 
+### 1.9.2
+
+ * Added `file` library type to [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) resource ([#1975](https://github.com/databricks/terraform-provider-databricks/pull/1975)).
+ * Added new node type selector to [databricks_node_type](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/node_type) data source ([#1957](https://github.com/databricks/terraform-provider-databricks/pull/1957)).
+ * Removed check for creation of Azure Key Vault-based [databricks_secret_scope](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/secret_scope) using Service Principals ([#1965](https://github.com/databricks/terraform-provider-databricks/pull/1965)).
+ * Reworked Graviton selection logic in [databricks_node_type](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/node_type) data source ([#1974](https://github.com/databricks/terraform-provider-databricks/pull/1974)).
+ 
+Documentation:
+
+ * Added SQL example for [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) documentation ([#1967](https://github.com/databricks/terraform-provider-databricks/pull/1967)).
+ * Added description to `max_clusters_per_user` in [databricks_cluster_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster_policy) ([#1959](https://github.com/databricks/terraform-provider-databricks/pull/1959)).
+ * Clarify SQL warehouse types for `sql_task` in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#1964](https://github.com/databricks/terraform-provider-databricks/pull/1964)).
+ * Moved tags to `default_tags` in AWS provider examples ([#1969](https://github.com/databricks/terraform-provider-databricks/pull/1969)).
+ * Added documentation around `webhooks_notifications` for [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#1968](https://github.com/databricks/terraform-provider-databricks/pull/1968)).
+ * Removed deprecated params from bucket doc examples ([#1970](https://github.com/databricks/terraform-provider-databricks/pull/1970)).
+
 ### 1.9.1
 
 * Added `max_clusters_per_user` to [databricks_cluster_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster_policy) resource ([#1955](https://github.com/databricks/terraform-provider-databricks/pull/1955)).

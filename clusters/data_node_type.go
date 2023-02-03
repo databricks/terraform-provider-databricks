@@ -163,7 +163,7 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.MinCores > 0 && int32(nt.NumCores) < r.MinCores {
 			continue
 		}
-		if r.MinGPUs > 0 && nt.NumGPUs < r.MinGPUs {
+		if (r.MinGPUs > 0 && nt.NumGPUs < r.MinGPUs) || (r.MinGPUs == 0 && nt.NumGPUs > 0) {
 			continue
 		}
 		if (r.LocalDisk || r.LocalDiskMinSize > 0) && nt.NodeInstanceType != nil &&

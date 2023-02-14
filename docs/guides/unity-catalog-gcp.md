@@ -110,6 +110,10 @@ resource "google_storage_bucket_iam_member" "unity_sa_reader" {
 resource "google_service_account_key" "mykey" {
   service_account_id = google_service_account.unity_sa.name
 }
+
+locals {
+  mykey = jsondecode(base64decode(google_service_account_key.mykey.private_key))
+}
 ```
 
 ## Create a Unity Catalog metastore and link it to workspaces
@@ -128,8 +132,8 @@ resource "databricks_metastore_data_access" "first" {
   name         = "the-keys"
   gcp_service_account_key {
     email          = google_service_account.unity_sa.email
-    private_key_id = google_service_account_key.mykey.id
-    private_key    = google_service_account_key.mykey.private_key
+    private_key_id = local.mykey.private_key_id
+    private_key    = local.mykey.private_key
   }
 
   is_default = true
@@ -209,19 +213,23 @@ resource "google_service_account" "unity_credential" {
 }
 
 resource "google_storage_bucket_iam_member" "unity_cred_admin" {
-  bucket = google_storage_bucket.unity_metastore.name
+  bucket = google_storage_bucket.ext_bucket.name
   role = "roles/storage.objectAdmin"
   member = "serviceAccount:${google_service_account.unity_credential.email}"
 }
 
 resource "google_storage_bucket_iam_member" "unity_cred_reader" {
-  bucket = google_storage_bucket.unity_metastore.name
+  bucket = google_storage_bucket.ext_bucket.name
   role = "roles/storage.legacyBucketReader"
   member = "serviceAccount:${google_service_account.unity_credential.email}"
 }
 
 resource "google_service_account_key" "my_cred_key" {
   service_account_id = google_service_account.unity_credential.name
+}
+
+locals {
+  my_cred_key = jsondecode(base64decode(google_service_account_key.my_cred_key.private_key))
 }
 ```
 
@@ -233,8 +241,8 @@ resource "databricks_storage_credential" "external" {
 
   gcp_service_account_key {
     email          = google_service_account.unity_credential.email
-    private_key_id = google_service_account_key.my_cred_key.id
-    private_key    = google_service_account_key.my_cred_key.private_key
+    private_key_id = local.my_cred_key.private_key_id
+    private_key    = local.my_cred_key.private_key
   }
   comment = "Managed by TF"
   depends_on = [

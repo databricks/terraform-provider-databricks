@@ -20,6 +20,19 @@ resource "databricks_permission_assignment" "add_user" {
 }
 ```
 
+In workspace context, adding account-level group to a workspace:
+
+```hcl
+resource "databricks_account_group" "group" {
+  display_name = "dataeng-admin"
+}
+
+resource "databricks_permission_assignment" "add_acc_group" {
+  principal_id = databricks_account_group.group.id
+  permissions  = ["ADMIN"]
+}
+```
+
 In workspace context, adding account-level service principal to a workspace:
 
 ```hcl
@@ -37,7 +50,7 @@ resource "databricks_permission_assignment" "add_admin_spn" {
 
 The following arguments are required:
 
-* `principal_id` - Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the account-level SCIM API, or using [databricks_user](../data-sources/user.md), [databricks_service_principal](../data-sources/service_principal.md) or [databricks_group](../data-sources/group.md) data sources with account API (and has to be an account admin). A more sensible approach is to retrieve the list of `principal_id` as outputs from another Terraform stack.
+* `principal_id` - Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the account-level SCIM API, or using [databricks_user](../data-sources/user.md), [databricks_service_principal](../data-sources/service_principal.md) or [databricks_account_group](../data-sources/account_group.md) data sources.
 * `permissions` - The list of workspace permissions to assign to the principal:
   * `"USER"` - Can access the workspace with basic privileges.
   * `"ADMIN"` - Can access the workspace and has workspace admin privileges to manage users and groups, workspace configurations, and more.

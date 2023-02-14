@@ -229,7 +229,7 @@ var mapping = securableMapping{
 		// v1.0
 		"ALL_PRIVILEGES":         true,
 		"CREATE_EXTERNAL_TABLE":  true,
-		"CREATE MANAGED STORAGE": true,
+		"CREATE_MANAGED_STORAGE": true,
 	},
 	"metastore": {
 		// v1.0

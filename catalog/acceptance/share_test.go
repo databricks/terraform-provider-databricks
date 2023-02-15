@@ -43,6 +43,22 @@ func TestUcAccCreateShare(t *testing.T) {
 					type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
 				}
 			}
+
+			resource "databricks_table" "mytable_2" {
+				catalog_name = databricks_catalog.sandbox.id
+				schema_name = databricks_schema.things.name
+				name = "bar_2"
+				table_type = "MANAGED"
+				data_source_format = "DELTA"
+				
+				column {
+					name      = "id"
+					position  = 0
+					type_name = "INT"
+					type_text = "int"
+					type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+				}
+			}			
 			
 			resource "databricks_share" "myshare" {
 				name = "{var.RANDOM}-terraform-delta-share"
@@ -50,7 +66,14 @@ func TestUcAccCreateShare(t *testing.T) {
 					name = databricks_table.mytable.id
 					comment = "c"
 					data_object_type = "TABLE"
-				}				
+				}			
+				object {
+					name = databricks_table.mytable_2.id
+					history_data_sharing_status = "ENABLED"
+					cdf_enabled = true
+					comment = "c"
+					data_object_type = "TABLE"
+				}						
 			}
 
 			resource "databricks_recipient" "db2open" {

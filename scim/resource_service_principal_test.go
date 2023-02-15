@@ -417,10 +417,6 @@ func TestResourceServicePrincipalDelete_NoError(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
-		HCL: `
-			delete_repos = false,
-			delete_home_dir = false 
-		`,
 	}.ApplyNoError(t)
 }
 
@@ -463,7 +459,7 @@ func TestResourceServicePrincipalDelete_NoErrorEmtpyParams(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestResourceServicePrinicpalDelete_ReposError(t *testing.T) {
+func TestResourceServicePrinicpalforce_delete_reposError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -485,7 +481,7 @@ func TestResourceServicePrinicpalDelete_ReposError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			application_id = "abc"
-			delete_repos = true
+			force_delete_repos = true
 		`,
 	}.Apply(t)
 	require.Error(t, err, err)
@@ -517,10 +513,10 @@ func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			application_id = "abc"
-			delete_repos = true	
+			force_delete_repos = true	
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "delete_repos: Path (/Repos/abc) doesn't exist.")
+	assert.EqualError(t, err, "force_delete_repos: Path (/Repos/abc) doesn't exist.")
 }
 
 func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
@@ -545,7 +541,7 @@ func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			application_id = "abc"
-			delete_home_dir = true
+			force_delete_home_dir = true
 		`,
 	}.Apply(t)
 	require.Error(t, err, err)
@@ -577,10 +573,10 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 		 	application_id = "abc"
-			delete_home_dir = true	
+			force_delete_home_dir = true	
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "delete_home_dir: Path (/Users/abc) doesn't exist.")
+	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
 }
 
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {

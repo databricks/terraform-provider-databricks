@@ -110,11 +110,11 @@ func ResourceServicePrincipal() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			}
-			m["delete_repos"] = &schema.Schema{
+			m["force_delete_repos"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			m["delete_home_dir"] = &schema.Schema{
+			m["force_delete_home_dir"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
@@ -179,16 +179,16 @@ func ResourceServicePrincipal() *schema.Resource {
 			if c.AccountID != "" {
 				return nil
 			}
-			if d.Get("delete_repos").(bool) {
+			if d.Get("force_delete_repos").(bool) {
 				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
 				if err != nil {
-					return fmt.Errorf("delete_repos: %w", err)
+					return fmt.Errorf("force_delete_repos: %w", err)
 				}
 			}
-			if d.Get("delete_home_dir").(bool) {
+			if d.Get("force_delete_home_dir").(bool) {
 				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
 				if err != nil {
-					return fmt.Errorf("delete_home_dir: %w", err)
+					return fmt.Errorf("force_delete_home_dir: %w", err)
 				}
 			}
 			return nil

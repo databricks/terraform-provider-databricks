@@ -1,12 +1,9 @@
 package tokens
 
 import (
-	"context"
-	"os"
 	"testing"
-	"time"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -74,7 +71,7 @@ func TestResourceTokenRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/token/list",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -140,7 +137,7 @@ func TestResourceTokenCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -224,7 +221,7 @@ func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/delete",
-				Response: common.NotFound("RESOURCE_DOES_NOT_EXIST"), // per documentation this is the error response
+				Response: apierr.NotFound("RESOURCE_DOES_NOT_EXIST"), // per documentation this is the error response
 				Status:   404,
 			},
 		},
@@ -241,7 +238,7 @@ func TestResourceTokenDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -254,58 +251,4 @@ func TestResourceTokenDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
-}
-
-func TestAccCreateToken(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	t.Parallel()
-	client := common.NewClientFromEnvironment()
-	tokensAPI := NewTokensAPI(context.Background(), client)
-
-	//lint:ignore ST1011 it's a test here
-	lifeTimeSeconds := time.Duration(30) * time.Second
-	comment := "Hello world"
-
-	token, err := tokensAPI.Create(lifeTimeSeconds, comment)
-	assert.NoError(t, err)
-	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
-
-	defer func() {
-		err := tokensAPI.Delete(token.TokenInfo.TokenID)
-		assert.NoError(t, err)
-	}()
-
-	_, err = tokensAPI.Read(token.TokenInfo.TokenID)
-	assert.NoError(t, err)
-
-	tokenList, err := tokensAPI.List()
-	assert.NoError(t, err)
-	assert.True(t, len(tokenList) > 0, "Token list is empty")
-}
-
-func TestAccCreateToken_NoExpiration(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	t.Parallel()
-	client := common.NewClientFromEnvironment()
-	tokensAPI := NewTokensAPI(context.Background(), client)
-
-	token, err := tokensAPI.Create(0, "")
-	assert.NoError(t, err)
-	assert.True(t, len(token.TokenValue) > 0, "Token value is empty")
-
-	defer func() {
-		err := tokensAPI.Delete(token.TokenInfo.TokenID)
-		assert.NoError(t, err)
-	}()
-
-	_, err = tokensAPI.Read(token.TokenInfo.TokenID)
-	assert.NoError(t, err)
-
-	tokenList, err := tokensAPI.List()
-	assert.NoError(t, err)
-	assert.True(t, len(tokenList) > 0, "Token list is empty")
 }

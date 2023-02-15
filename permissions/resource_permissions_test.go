@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -107,7 +111,7 @@ func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
 				Status:   400,
-				Response: common.APIError{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
 				},
@@ -369,7 +373,7 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cluster does not exist",
 				},
@@ -391,7 +395,7 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -439,7 +443,7 @@ func TestResourcePermissionsCustomizeDiff_ErrorOnScimMe(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -476,7 +480,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		{
 			Method:   http.MethodGet,
 			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: common.APIErrorBody{
+			Response: apierr.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
 			},
@@ -630,7 +634,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -884,7 +888,7 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -988,7 +992,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1008,7 +1012,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	if assert.Error(t, err) {
-		if e, ok := err.(common.APIError); ok {
+		if e, ok := err.(apierr.APIError); ok {
 			assert.Equal(t, "INVALID_REQUEST", e.ErrorCode)
 		}
 	}
@@ -1264,7 +1268,11 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 }
 
 func TestCustomizeDiffNoHostYet(t *testing.T) {
-	assert.Nil(t, ResourcePermissions().CustomizeDiff(context.TODO(), nil, &common.DatabricksClient{}))
+	assert.Nil(t, ResourcePermissions().CustomizeDiff(context.TODO(), nil, &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}))
 }
 
 func TestPathPermissionsResourceIDFields(t *testing.T) {
@@ -1274,10 +1282,7 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 			m = x
 		}
 	}
-	_, err := m.idRetriever(context.Background(), &common.DatabricksClient{
-		Host:  "localhost",
-		Token: "x",
-	}, "x")
+	_, err := m.idRetriever(context.Background(), &databricks.Config{}, "x")
 	assert.EqualError(t, err, "cannot load path x: DatabricksClient is not configured")
 }
 
@@ -1307,7 +1312,7 @@ func TestDeleteMissing(t *testing.T) {
 		{
 			MatchAny: true,
 			Status:   404,
-			Response: common.NotFound("missing"),
+			Response: apierr.NotFound("missing"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := ResourcePermissions()

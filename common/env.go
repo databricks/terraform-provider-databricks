@@ -2,75 +2,27 @@ package common
 
 import (
 	"os"
-	"reflect"
-	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/mitchellh/go-homedir"
 )
 
 var (
-	envMutex     sync.Mutex
-	onceClient   sync.Once
-	commonClient *DatabricksClient
+	envMutex sync.Mutex
 )
 
-// NewClientFromEnvironment makes very good client for testing purposes
-func NewClientFromEnvironment() *DatabricksClient {
-	client := DatabricksClient{}
-	for _, attr := range ClientAttributes() {
-		found := false
-		var value any
-		for _, envName := range attr.EnvVars {
-			v := os.Getenv(envName)
-			if v == "" {
-				continue
-			}
-			switch attr.Kind {
-			case reflect.String:
-				value = v
-				found = true
-			case reflect.Bool:
-				if vv, err := strconv.ParseBool(v); err == nil {
-					value = vv
-					found = true
-				}
-			case reflect.Int:
-				if vv, err := strconv.Atoi(v); err == nil {
-					value = vv
-					found = true
-				}
-			default:
-				continue
-			}
-		}
-		if found {
-			attr.Set(&client, value)
-		}
-	}
-	err := client.Configure()
+func CommonEnvironmentClient() *DatabricksClient {
+	client, err := client.New(&config.Config{})
 	if err != nil {
 		panic(err)
 	}
-	return &client
-}
-
-// ResetCommonEnvironmentClient resets test dummy
-func ResetCommonEnvironmentClient() {
-	commonClient = nil
-	onceClient = sync.Once{}
-}
-
-// CommonEnvironmentClient configured once per run of application
-func CommonEnvironmentClient() *DatabricksClient {
-	if commonClient != nil {
-		return commonClient
+	return &DatabricksClient{
+		DatabricksClient: client,
+		Config:           client.Config,
 	}
-	onceClient.Do(func() {
-		commonClient = NewClientFromEnvironment()
-	})
-	return commonClient
 }
 
 // CleanupEnvironment backs up environment - use as `defer CleanupEnvironment()()`

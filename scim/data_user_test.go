@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +55,7 @@ func TestDataSourceUserGerUser(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27searching_error%27",
 			Status:   404,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "searching_error",
 			},
 		},

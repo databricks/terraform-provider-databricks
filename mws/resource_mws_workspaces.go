@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 
@@ -190,7 +191,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	// make a request to Tokens API, just to verify there are no errors
 	var response map[string]any
 	err = wsClient.Get(ctx, "/token/list", nil, &response)
-	if apiError, ok := err.(common.APIError); ok {
+	if apiError, ok := err.(apierr.APIError); ok {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
 			ws.WorkspaceURL, apiError)
 		log.Printf("[INFO] %s", err)
@@ -305,7 +306,7 @@ func (a WorkspacesAPI) Delete(mwsAcctID, workspaceID string) error {
 	}
 	return resource.RetryContext(a.context, 15*time.Minute, func() *resource.RetryError {
 		workspace, err := a.Read(mwsAcctID, workspaceID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			log.Printf("[INFO] Workspace %s/%s is removed.", mwsAcctID, workspaceID)
 			return nil
 		}
@@ -375,7 +376,7 @@ func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 	}
 	tokensAPI := tokens.NewTokensAPI(a.context, client)
 	_, err = tokensAPI.Read(wsToken.Token.TokenID)
-	if common.IsMissing(err) {
+	if apierr.IsMissing(err) {
 		return CreateTokenIfNeeded(a, workspaceSchema, d)
 	}
 	if err != nil {

@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -15,6 +18,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+// GetEnvOrSkipTest proceeds with test only with that env variable
+func GetEnvOrSkipTest(t *testing.T, name string) string {
+	value := os.Getenv(name)
+	if value == "" {
+		skipf(t)("Environment variable %s is missing", name)
+	}
+	return value
+}
+
+func skipf(t *testing.T) func(format string, args ...any) {
+	if isInDebug() {
+		// VSCode "debug test" feature doesn't show dlv logs,
+		// so that we fail here for maintainer productivity.
+		return t.Fatalf
+	}
+	return t.Skipf
+}
+
+// detects if test is run from "debug test" feature in VSCode
+func isInDebug() bool {
+	ex, _ := os.Executable()
+	return path.Base(ex) == "__debug_bin"
+}
 
 // Step ...
 type Step struct {
@@ -53,8 +80,14 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 	}
 	ts := []resource.TestStep{}
 	ctx := context.Background()
-	client := common.CommonEnvironmentClient()
-
+	c, err := client.New(&config.Config{})
+	if err != nil {
+		panic(err)
+	}
+	client := &common.DatabricksClient{
+		DatabricksClient: c,
+		Config:           c.Config,
+	}
 	type testResource struct {
 		ID       string
 		Name     string
@@ -159,7 +192,13 @@ func ResourceCheck(name string,
 		if !ok {
 			return fmt.Errorf("not found: %s", name)
 		}
-		client := common.CommonEnvironmentClient()
-		return cb(context.Background(), client, rs.Primary.ID)
+		client, err := client.New(&config.Config{})
+		if err != nil {
+			panic(err)
+		}
+		return cb(context.Background(), &common.DatabricksClient{
+			DatabricksClient: client,
+			Config:           client.Config,
+		}, rs.Primary.ID)
 	}
 }

@@ -3,6 +3,8 @@ package acceptance
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
@@ -17,9 +19,15 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	client := common.CommonEnvironmentClient()
 	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, client)
+	client, err := client.New(&config.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, &common.DatabricksClient{
+		DatabricksClient: client,
+		Config:           client.Config,
+	})
 	instanceProfilesAPI.Synchronized(arn, func() bool {
 		if instanceProfilesAPI.IsRegistered(arn) {
 			return false

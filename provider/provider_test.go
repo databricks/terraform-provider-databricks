@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -402,7 +403,8 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	err := client.Authenticate(ctx)
+	req, _ := http.NewRequest("GET", client.Config.Host, nil)
+	err := client.Config.Authenticate(req)
 	if err != nil {
 		return nil, err
 	}

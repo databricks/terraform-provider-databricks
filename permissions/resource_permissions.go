@@ -9,12 +9,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
-	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -238,7 +239,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	err = a.client.Get(a.context, urlPathForObjectID(objectID), nil, &objectACL)
-	apiErr, ok := err.(common.APIError)
+	apiErr, ok := err.(apierr.APIError)
 	// https://github.com/databricks/terraform-provider-databricks/issues/1227
 	// platform propagates INVALID_STATE error for auto-purged clusters in
 	// the permissions api. this adds "a logical fix" also here, not to introduce
@@ -257,20 +258,24 @@ type permissionsIDFieldMapping struct {
 
 	allowedPermissionLevels []string
 
-	idRetriever func(ctx context.Context, client *common.DatabricksClient, id string) (string, error)
+	idRetriever func(ctx context.Context, cfg *databricks.Config, id string) (string, error)
 }
 
 // PermissionsResourceIDFields shows mapping of id columns to resource types
 func permissionsResourceIDFields() []permissionsIDFieldMapping {
-	SIMPLE := func(ctx context.Context, client *common.DatabricksClient, id string) (string, error) {
+	SIMPLE := func(ctx context.Context, cfg *databricks.Config, id string) (string, error) {
 		return id, nil
 	}
-	PATH := func(ctx context.Context, client *common.DatabricksClient, path string) (string, error) {
-		info, err := workspace.NewNotebooksAPI(ctx, client).Read(path)
+	PATH := func(ctx context.Context, cfg *databricks.Config, path string) (string, error) {
+		w, err := databricks.NewWorkspaceClient(cfg)
+		if err != nil {
+			return "", fmt.Errorf("cannot init client %s: %s", path, err)
+		}
+		info, err := w.Workspace.GetByPath(ctx, path)
 		if err != nil {
 			return "", fmt.Errorf("cannot load path %s: %s", path, err)
 		}
-		return strconv.FormatInt(info.ObjectID, 10), nil
+		return strconv.FormatInt(info.ObjectId, 10), nil
 	}
 	return []permissionsIDFieldMapping{
 		{"cluster_policy_id", "cluster-policy", "cluster-policies", []string{"CAN_USE"}, SIMPLE},
@@ -382,11 +387,15 @@ func ResourcePermissions() *schema.Resource {
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c any) error {
 			client := c.(*common.DatabricksClient)
-			if client.Host == "" {
+			if client.DatabricksClient.Config.Host == "" {
 				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
 				return nil
 			}
-			me, err := scim.NewUsersAPI(ctx, client).Me()
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			me, err := w.CurrentUser.Me(ctx)
 			if err != nil {
 				return err
 			}
@@ -411,11 +420,15 @@ func ResourcePermissions() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			id := d.Id()
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			objectACL, err := NewPermissionsAPI(ctx, c).Read(id)
 			if err != nil {
 				return err
 			}
-			me, err := scim.NewUsersAPI(ctx, c).Me()
+			me, err := w.CurrentUser.Me(ctx)
 			if err != nil {
 				return err
 			}
@@ -435,7 +448,7 @@ func ResourcePermissions() *schema.Resource {
 			common.DataToStructPointer(d, s, &entity)
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
-					id, err := mapping.idRetriever(ctx, c, v.(string))
+					id, err := mapping.idRetriever(ctx, (*databricks.Config)(c.Config), v.(string))
 					if err != nil {
 						return err
 					}

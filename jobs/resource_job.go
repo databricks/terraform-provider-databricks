@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -506,7 +507,7 @@ func wrapMissingJobError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
-	apiErr, ok := err.(common.APIError)
+	apiErr, ok := err.(apierr.APIError)
 	if !ok {
 		return err
 	}

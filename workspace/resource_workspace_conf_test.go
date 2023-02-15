@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -48,7 +47,7 @@ func TestWorkspaceConfCreate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -121,7 +120,7 @@ func TestWorkspaceConfUpdate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -160,7 +159,7 @@ func TestWorkspaceConfRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace-conf?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -209,7 +208,7 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

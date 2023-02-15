@@ -4,17 +4,17 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCommandMock(t *testing.T) {
 	c := DatabricksClient{
-		Host:  ".",
-		Token: ".",
+		Config: &config.Config{
+			Host:  ".",
+			Token: ".",
+		},
 	}
-	err := c.Configure()
-	assert.NoError(t, err)
-
 	called := false
 	c.WithCommandMock(func(commandStr string) CommandResults {
 		called = true

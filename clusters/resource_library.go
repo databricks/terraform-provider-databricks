@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,7 +73,7 @@ func ResourceLibrary() *schema.Resource {
 					return nil
 				}
 			}
-			return common.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
+			return apierr.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
@@ -94,7 +95,7 @@ func ResourceLibrary() *schema.Resource {
 					Libraries: []libraries.Library{*v.Library},
 				})
 			}
-			return common.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
+			return apierr.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
 		},
 	}.ToResource()
 }

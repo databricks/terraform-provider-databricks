@@ -3,53 +3,14 @@ package scim
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-func TestAccServicePrincipalOnAzure(t *testing.T) {
-	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "azure" {
-		t.Skip("Test will only run with CLOUD_ENV=azure")
-	}
-	t.Parallel()
-	client := common.NewClientFromEnvironment()
-	ctx := context.Background()
-
-	spAPI := NewServicePrincipalsAPI(ctx, client)
-
-	sp, err := spAPI.Create(User{
-		ApplicationID: "00000000-0000-0000-0000-000000000001",
-		Entitlements: entitlements{
-			{
-				Value: "allow-cluster-create",
-			},
-		},
-		DisplayName: "ABC SP",
-		Active:      true,
-	})
-	require.NoError(t, err)
-	defer func() {
-		err := spAPI.Delete(sp.ID)
-		require.NoError(t, err)
-	}()
-
-	err = spAPI.Update(sp.ID, User{
-		ApplicationID: sp.ApplicationID,
-		Entitlements: entitlements{
-			{
-				Value: "allow-instance-pool-create",
-			},
-		},
-		DisplayName: "BCD",
-	})
-	require.NoError(t, err)
-}
 
 func TestResourceServicePrincipalRead(t *testing.T) {
 	qa.ResourceFixture{
@@ -109,7 +70,7 @@ func TestResourceServicePrincipalRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -444,7 +405,7 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 			Method:   "GET",
 			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "cannot find service principal",
 			},
 		},

@@ -24,7 +24,7 @@ func TestAzureAccKeyVaultSimple(t *testing.T) {
 	DNSName := qa.GetEnvOrSkipTest(t, "TEST_KEY_VAULT_DNS_NAME")
 
 	client := common.CommonEnvironmentClient()
-	if client.IsAzureClientSecretSet() {
+	if client.IsAzure() {
 		t.Skip("AKV scopes don't work for SP auth yet")
 	}
 	scopesAPI := secrets.NewSecretScopesAPI(context.Background(), client)

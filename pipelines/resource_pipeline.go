@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -213,7 +214,7 @@ func (a PipelinesAPI) Delete(id string, timeout time.Duration) error {
 		func() *resource.RetryError {
 			i, err := a.Read(id)
 			if err != nil {
-				if common.IsMissing(err) {
+				if apierr.IsMissing(err) {
 					return nil
 				}
 				return resource.NonRetryableError(err)

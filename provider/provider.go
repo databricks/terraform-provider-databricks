@@ -146,8 +146,10 @@ func DatabricksProvider() *schema.Provider {
 		},
 		Schema: providerSchema(),
 	}
-	useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+		if p.TerraformVersion != "" {
+			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
+		}
 		ctx = context.WithValue(ctx, common.Provider, p)
 		return configureDatabricksClient(ctx, d)
 	}
@@ -183,16 +185,12 @@ func providerSchema() map[string]*schema.Schema {
 }
 
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
-	prov := ctx.Value(common.Provider).(*schema.Provider)
-	pc := &common.DatabricksClient{ // TODO: must be a wrapper
-		Config:   &config.Config{},
-		Provider: prov,
-	}
+	cfg := &config.Config{}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}
 	for _, attr := range config.ConfigAttributes {
 		if value, ok := d.GetOk(attr.Name); ok {
-			err := attr.Set(pc.Config, value)
+			err := attr.Set(cfg, value)
 			if err != nil {
 				return nil, diag.FromErr(err)
 			}
@@ -206,24 +204,15 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 	}
 	sort.Strings(attrsUsed)
 	log.Printf("[INFO] Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", "))
-	authorizationMethodsUsed := []string{}
-	for name, used := range authsUsed {
-		if used {
-			authorizationMethodsUsed = append(authorizationMethodsUsed, name)
-		}
-	}
-	if pc.AuthType == "" && len(authorizationMethodsUsed) > 1 {
-		sort.Strings(authorizationMethodsUsed)
-		return nil, diag.Errorf("More than one authorization method configured: %s",
-			strings.Join(authorizationMethodsUsed, " and "))
-	}
-	client, err := client.New(pc.Config)
+	client, err := client.New(cfg)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
-	pc.Client = client
-	if err := pc.Configure(attrsUsed...); err != nil {
-		return nil, diag.FromErr(err)
+	pc := &common.DatabricksClient{
+		DatabricksClient: client,
+		Config:           cfg,
+		// TODO: check if it's still needed with `useragent.WithUserAgentExtra`
+		Provider: ctx.Value(common.Provider).(*schema.Provider),
 	}
 	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, client)

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -670,7 +671,7 @@ func wrapMissingClusterError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
-	apiErr, ok := err.(common.APIError)
+	apiErr, ok := err.(apierr.APIError)
 	if !ok {
 		return err
 	}
@@ -699,7 +700,7 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 	// nolint should be a bigger context-aware refactor
 	return result, resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)
 			return resource.RetryableError(err)
 		}

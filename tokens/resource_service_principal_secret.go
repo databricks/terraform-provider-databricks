@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -107,7 +108,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 				}
 				return d.Set("status", v.Status)
 			}
-			return common.NotFound("client secret not found")
+			return apierr.NotFound("client secret not found")
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.AccountID == "" {

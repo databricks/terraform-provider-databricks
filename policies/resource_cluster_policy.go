@@ -126,7 +126,7 @@ func ResourceClusterPolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Description: "Max number of clusters per user that can be active\n" +
-				    "using this policy. If not present, there is no max limit.",
+					"using this policy. If not present, there is no max limit.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 		},

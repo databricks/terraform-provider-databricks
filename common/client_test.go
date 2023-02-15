@@ -3,20 +3,22 @@ package common
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
-	err := dc.Configure()
+	req, err := http.NewRequest("GET", dc.Host, nil)
 	if err != nil {
 		return dc, err
 	}
-	return dc, dc.Authenticate(context.Background())
+	return dc, dc.Config.Authenticate(req)
 }
 
 func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string) {
@@ -32,7 +34,9 @@ func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string)
 func TestDatabricksClientConfigure_Nothing(t *testing.T) {
 	defer CleanupEnvironment()()
 	os.Setenv("PATH", "testdata:/bin")
-	failsToAuthenticateWith(t, &DatabricksClient{},
+	failsToAuthenticateWith(t, &DatabricksClient{
+		Config: &config.Config{},
+	},
 		"authentication is not configured for provider")
 }
 
@@ -152,39 +156,34 @@ func TestDatabricksClient_FormatURL(t *testing.T) {
 	assert.Equal(t, "https://some.host/#job/123", client.FormatURL("#job/123"))
 }
 
-func TestClientAttributes(t *testing.T) {
-	ca := ClientAttributes()
-	assert.Len(t, ca, 25)
-}
+// func TestDatabricksClient_Authenticate(t *testing.T) {
+// 	defer CleanupEnvironment()()
+// 	dc := DatabricksClient{}
+// 	err := dc.Configure("account_id", "username", "password")
+// 	os.Setenv("DATABRICKS_PASSWORD", ".")
+// 	assert.NoError(t, err)
+// 	err = dc.Authenticate(context.WithValue(context.Background(), IsData, "yes"))
+// 	assert.EqualError(t, err, "workspace is most likely not created yet, because the `host` is empty. "+
+// 		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
+// 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/behavior.html more info. "+
+// 		"Attributes used: account_id, username. Environment variables used: DATABRICKS_PASSWORD. "+
+// 		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
+// }
 
-func TestDatabricksClient_Authenticate(t *testing.T) {
-	defer CleanupEnvironment()()
-	dc := DatabricksClient{}
-	err := dc.Configure("account_id", "username", "password")
-	os.Setenv("DATABRICKS_PASSWORD", ".")
-	assert.NoError(t, err)
-	err = dc.Authenticate(context.WithValue(context.Background(), IsData, "yes"))
-	assert.EqualError(t, err, "workspace is most likely not created yet, because the `host` is empty. "+
-		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
-		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/behavior.html more info. "+
-		"Attributes used: account_id, username. Environment variables used: DATABRICKS_PASSWORD. "+
-		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
-}
-
-func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
-	defer CleanupEnvironment()()
-	os.Setenv("ARM_CLIENT_SECRET", ".")
-	os.Setenv("ARM_CLIENT_ID", ".")
-	dc := DatabricksClient{}
-	err := dc.Configure("azure_client_id", "azure_client_secret")
-	assert.NoError(t, err)
-	err = dc.Authenticate(context.WithValue(context.Background(), IsData, "yes"))
-	assert.EqualError(t, err, "workspace is most likely not created yet, because the `host` is empty. "+
-		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
-		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/"+
-		"behavior.html more info. Environment variables used: ARM_CLIENT_SECRET, ARM_CLIENT_ID. "+
-		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
-}
+// func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
+// 	defer CleanupEnvironment()()
+// 	os.Setenv("ARM_CLIENT_SECRET", ".")
+// 	os.Setenv("ARM_CLIENT_ID", ".")
+// 	dc := DatabricksClient{}
+// 	err := dc.Configure("azure_client_id", "azure_client_secret")
+// 	assert.NoError(t, err)
+// 	err = dc.Authenticate(context.WithValue(context.Background(), IsData, "yes"))
+// 	assert.EqualError(t, err, "workspace is most likely not created yet, because the `host` is empty. "+
+// 		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
+// 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/"+
+// 		"behavior.html more info. Environment variables used: ARM_CLIENT_SECRET, ARM_CLIENT_ID. "+
+// 		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
+// }
 
 func TestDatabricksIsGcp(t *testing.T) {
 	dc, err := configureAndAuthenticate(&DatabricksClient{
@@ -232,58 +231,6 @@ func TestClientForHostAuthError(t *testing.T) {
 	}
 }
 
-func TestDatabricksCliCouldNotFindHomeDir(t *testing.T) {
-	_, err := (&DatabricksClient{
-		ConfigFile: "~.databrickscfg",
-	}).configureWithDatabricksCfg(context.Background())
-	assert.EqualError(t, err, "cannot find homedir: cannot expand user-specific home dir")
-}
-
-func TestDatabricksCliCouldNotParseIni(t *testing.T) {
-	_, err := (&DatabricksClient{
-		ConfigFile: "testdata/az",
-	}).configureWithDatabricksCfg(context.Background())
-	if assert.NotNil(t, err) {
-		assert.True(t, strings.HasPrefix(err.Error(),
-			"cannot parse config file: key-value delimiter not found"), err.Error())
-	}
-}
-
-func TestDatabricksCliWrongProfile(t *testing.T) {
-	_, err := (&DatabricksClient{
-		ConfigFile: "testdata/.databrickscfg",
-		Profile:    "🤣",
-	}).configureWithDatabricksCfg(context.Background())
-	assert.EqualError(t, err, "testdata/.databrickscfg has no 🤣 profile configured")
-}
-
-func TestDatabricksNoHost(t *testing.T) {
-	_, err := (&DatabricksClient{
-		ConfigFile: "testdata/corrupt/.databrickscfg",
-		Profile:    "nohost",
-	}).configureWithDatabricksCfg(context.Background())
-	assert.EqualError(t, err, "config file testdata/corrupt/.databrickscfg is corrupt: cannot find host in nohost profile")
-}
-
-func TestDatabricksNoToken(t *testing.T) {
-	_, err := (&DatabricksClient{
-		ConfigFile: "testdata/corrupt/.databrickscfg",
-		Profile:    "notoken",
-	}).configureWithDatabricksCfg(context.Background())
-	assert.EqualError(t, err, "config file testdata/corrupt/.databrickscfg is corrupt: cannot find token in notoken profile")
-}
-
-func TestDatabricksBasicAuth(t *testing.T) {
-	c := &DatabricksClient{
-		ConfigFile: "testdata/.databrickscfg",
-		Profile:    "basic",
-	}
-	_, err := c.configureWithDatabricksCfg(context.Background())
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", c.Username)
-	assert.Equal(t, "bcd", c.Password)
-}
-
 func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
 	defer CleanupEnvironment()()
 	failsToAuthenticateWith(t, &DatabricksClient{
@@ -301,10 +248,9 @@ func TestConfigAttributeSetNonsense(t *testing.T) {
 func TestDatabricksClientFixHost(t *testing.T) {
 	hostForInput := func(in string) (string, error) {
 		client := &DatabricksClient{
-			Host: in,
-		}
-		if err := client.fixHost(); err != nil {
-			return "", err
+			Config: &config.Config{
+				Host: in,
+			},
 		}
 		return client.Host, nil
 	}

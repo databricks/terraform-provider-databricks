@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,7 +42,7 @@ func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {
 	nope := func(ctx context.Context,
 		d *schema.ResourceData,
 		c *DatabricksClient) error {
-		return NotFound("nope")
+		return apierr.NotFound("nope")
 	}
 	r := Resource{
 		Create: nope,
@@ -96,12 +97,12 @@ func TestUpdate(t *testing.T) {
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
 			c *DatabricksClient) error {
-			return NotFound("nope")
+			return apierr.NotFound("nope")
 		},
 		Delete: func(ctx context.Context,
 			d *schema.ResourceData,
 			c *DatabricksClient) error {
-			return NotFound("nope")
+			return apierr.NotFound("nope")
 		},
 		Schema: map[string]*schema.Schema{
 			"foo": {

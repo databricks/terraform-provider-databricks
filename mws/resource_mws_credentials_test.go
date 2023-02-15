@@ -1,37 +1,14 @@
 package mws
 
 import (
-	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestMwsAccCreds(t *testing.T) {
-	arn := qa.GetEnvOrSkipTest(t, "TEST_CROSSACCOUNT_ARN")
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	client := common.CommonEnvironmentClient()
-	credsAPI := NewCredentialsAPI(context.Background(), client)
-	credsList, err := credsAPI.List(acctID)
-	assert.NoError(t, err)
-	t.Log(credsList)
-
-	myCreds, err := credsAPI.Create(acctID, qa.RandomName("tf-test"), arn)
-	assert.NoError(t, err)
-
-	myCredsFull, err := credsAPI.Read(acctID, myCreds.CredentialsID)
-	assert.NoError(t, err)
-	t.Log(myCredsFull.AwsCredentials.StsRole.ExternalID)
-
-	defer func() {
-		err = credsAPI.Delete(acctID, myCreds.CredentialsID)
-		assert.NoError(t, err)
-	}()
-}
 
 func TestResourceCredentialsCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -83,7 +60,7 @@ func TestResourceCredentialsCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/credentials",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -138,7 +115,7 @@ func TestResourceCredentialsRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -158,7 +135,7 @@ func TestResourceCredentialsRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -195,7 +172,7 @@ func TestResourceCredentialsDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

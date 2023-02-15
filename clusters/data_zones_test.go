@@ -3,7 +3,7 @@ package clusters
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,7 +37,7 @@ func TestZones_404(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/list-zones",
 				Status:   404,
-				Response: common.NotFound("missing"),
+				Response: apierr.NotFound("missing"),
 			},
 		},
 		Read:        true,

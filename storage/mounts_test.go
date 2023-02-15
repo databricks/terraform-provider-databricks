@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 
@@ -40,9 +41,6 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 		Host:  ".",
 		Token: ".",
 	}
-	err := c.Configure()
-	assert.NoError(t, err)
-
 	var called bool
 
 	c.WithCommandMock(func(commandStr string) common.CommandResults {
@@ -279,7 +277,7 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=def",
 			Status:   518,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "😤",
 			},
 		},
@@ -295,7 +293,7 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		// no mounting cluster given, try creating it
@@ -321,7 +319,7 @@ func TestMountCRD(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()

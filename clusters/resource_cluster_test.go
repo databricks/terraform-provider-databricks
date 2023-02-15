@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -437,7 +437,7 @@ func TestResourceClusterCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -517,7 +517,7 @@ func TestResourceClusterRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -537,7 +537,7 @@ func TestResourceClusterRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1221,7 +1221,7 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1377,7 +1377,7 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

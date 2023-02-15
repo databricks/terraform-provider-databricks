@@ -30,14 +30,14 @@ type ShareInfo struct {
 }
 
 type SharedDataObject struct {
-	Name                     string `json:"name"`
-	DataObjectType           string `json:"data_object_type"`
-	Comment                  string `json:"comment,omitempty"`
-	SharedAs                 string `json:"shared_as,omitempty" tf:"suppress_diff"`
-	HistoryDataSharingStatus string `json:"history_data_sharing_status,omitempty" tf:"suppress_diff"`
-	CDFEnabled               bool   `json:"cdf_enabled,omitempty" tf:"suppress_diff"`
-	AddedAt                  int64  `json:"added_at,omitempty" tf:"computed"`
-	AddedBy                  string `json:"added_by,omitempty" tf:"computed"`
+	Name           string `json:"name"`
+	DataObjectType string `json:"data_object_type"`
+	Comment        string `json:"comment,omitempty"`
+	SharedAs       string `json:"shared_as,omitempty" tf:"suppress_diff"`
+	CDFEnabled     bool   `json:"cdf_enabled,omitempty" tf:"suppress_diff"`
+	StartVersion   int64  `json:"start_version,omitempty" tf:"suppress_diff"`
+	AddedAt        int64  `json:"added_at,omitempty" tf:"computed"`
+	AddedBy        string `json:"added_by,omitempty" tf:"computed"`
 }
 
 type ShareDataChange struct {

@@ -98,7 +98,7 @@ If you use Terraform 0.13 or newer, please refer to instructions specified at [r
 terraform {
   required_providers {
     databricks = {
-      source  = "databricks/databricks"
+      source = "databricks/databricks"
     }
   }
 }

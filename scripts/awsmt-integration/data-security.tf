@@ -1,14 +1,22 @@
 // create bucket for mounting
 resource "aws_s3_bucket" "ds" {
   bucket = "${local.prefix}-ds"
-  acl    = "private"
-  versioning {
-    enabled = false
-  }
   force_destroy = true
   tags = merge(local.tags, {
     Name = "${local.prefix}-ds"
   })
+}
+
+resource "aws_s3_bucket_acl" "ds" {
+  bucket = aws_s3_bucket.ds.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "ds" {
+  bucket = aws_s3_bucket.ds.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 data "aws_iam_policy_document" "assume_role_for_ec2" {

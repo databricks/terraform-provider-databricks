@@ -43,11 +43,11 @@ func ResourceUser() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			}
-			m["delete_repos"] = &schema.Schema{
+			m["force_delete_repos"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			m["delete_home_dir"] = &schema.Schema{
+			m["force_delete_home_dir"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
@@ -109,16 +109,16 @@ func ResourceUser() *schema.Resource {
 			if c.AccountID != "" {
 				return nil
 			}
-			if d.Get("delete_repos").(bool) {
+			if d.Get("force_delete_repos").(bool) {
 				err = NewUsersAPI(ctx, c).DeletePath(fmt.Sprintf("/Repos/%v", userName))
 				if err != nil {
-					return fmt.Errorf("delete_repos: %w", err)
+					return fmt.Errorf("force_delete_repos: %w", err)
 				}
 			}
-			if d.Get("delete_home_dir").(bool) {
+			if d.Get("force_delete_home_dir").(bool) {
 				err = NewUsersAPI(ctx, c).DeletePath(fmt.Sprintf("/Users/%v", userName))
 				if err != nil {
-					return fmt.Errorf("delete_home_dir: %w", err)
+					return fmt.Errorf("force_delete_home_dir: %w", err)
 				}
 			}
 			return nil

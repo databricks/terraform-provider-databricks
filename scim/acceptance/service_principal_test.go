@@ -49,12 +49,14 @@ func TestAccServicePrincipalResourceOnAws(t *testing.T) {
 }
 
 func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud == "aws" {
+		t.Skip("Test is only for CLOUD_ENV!=aws")
 	}
 	t.Parallel()
 	appId := "12345a67-8b9c-0d1e-23fa-4567b89cde04"
+	appId2 := "22345a67-8b9c-0d1e-23fa-4567b89cde04"
 	os.Setenv("appId", appId)
+	os.Setenv("appId2", appId2)
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
@@ -63,7 +65,7 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 			Template: `
 			resource "databricks_service_principal" "a" {
 				application_id = "{env.appId}"
-				delete_home_dir = true
+				force_delete_home_dir = true
 			}`,
 			Check: func(s *terraform.State) error {
 				return nil
@@ -72,7 +74,7 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 		{
 			Template: `
 			resource "databricks_service_principal" "b" {
-				application_id = "12345a67-8b9c-0d1e-23fa-4567b89cde10"
+				application_id = "{env.appId2}"
 			}
 			`,
 			Check: func(s *terraform.State) error {
@@ -90,12 +92,14 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 }
 
 func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud == "aws" {
+		t.Skip("Test is only for CLOUD_ENV!=aws")
 	}
 	t.Parallel()
-	appId := "12345a67-8b9c-0d1e-23fa-4567b89cde99"
+	appId := "12343a67-8b9c-0d1e-23fa-4567b89cde99"
+	appId2 := "22343a67-8b9c-0d1e-23fa-4567b89cde99"
 	os.Setenv("appId", appId)
+	os.Setenv("appId2", appId2)
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
@@ -112,7 +116,7 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 		{
 			Template: `
 			resource "databricks_service_principal" "b" {
-				application_id = "12345a67-8b9c-0d1e-23fa-4567b89cde12"
+				application_id = "{env.appId2}"
 			}
 			`,
 			Check: func(s *terraform.State) error {

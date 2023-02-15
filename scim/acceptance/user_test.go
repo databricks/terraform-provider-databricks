@@ -55,7 +55,9 @@ func TestAccUserHomeDelete(t *testing.T) {
 	}
 	t.Parallel()
 	username := qa.RandomEmail()
+	username2 := qa.RandomEmail()
 	os.Setenv("TEST_USERNAME", username)
+	os.Setenv("TEST_USERNAME2", username2)
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
@@ -64,7 +66,7 @@ func TestAccUserHomeDelete(t *testing.T) {
 			Template: `
 			resource "databricks_user" "first" {
 				user_name = "{env.TEST_USERNAME}"
-				delete_home_dir = true
+				force_delete_home_dir = true
 			}`,
 			Check: func(s *terraform.State) error {
 				return nil
@@ -73,7 +75,7 @@ func TestAccUserHomeDelete(t *testing.T) {
 		{
 			Template: `
 			resource "databricks_user" "second" {
-				user_name = "a@a.com"
+				user_name = "{env.TEST_USERNAME2}"
 			}`,
 			Check: func(s *terraform.State) error {
 				_, err := notebooksAPI.Read(fmt.Sprintf("/Users/%v", username))
@@ -96,7 +98,9 @@ func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	}
 	t.Parallel()
 	username := qa.RandomEmail()
+	username2 := qa.RandomEmail()
 	os.Setenv("TEST_USERNAME", username)
+	os.Setenv("TEST_USERNAME2", username2)
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	notebooksAPI := workspace.NewNotebooksAPI(ctx, client)
@@ -113,7 +117,7 @@ func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 		{
 			Template: `
 			resource "databricks_user" "b" {
-				user_name = "b@na.com"
+				user_name = "{env.TEST_USERNAME2}"
 			}
 			`,
 			Check: func(s *terraform.State) error {

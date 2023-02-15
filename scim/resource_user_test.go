@@ -424,8 +424,8 @@ func TestResourceUserDelete_NoError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name = "abc",
-			delete_repos = false,
-			delete_home_dir = false 
+			force_delete_repos = false,
+			force_delete_home_dir = false 
 		`,
 	}.ApplyNoError(t)
 }
@@ -472,7 +472,7 @@ func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestResourceUserDelete_ReposError(t *testing.T) {
+func TestResourceUserforce_delete_reposError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -494,7 +494,7 @@ func TestResourceUserDelete_ReposError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			delete_repos = true
+			force_delete_repos = true
 		`,
 	}.Apply(t)
 	require.Error(t, err, err)
@@ -525,10 +525,10 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			delete_repos = true
+			force_delete_repos = true
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "delete_repos: Path (/Repos/abc) doesn't exist.")
+	assert.EqualError(t, err, "force_delete_repos: Path (/Repos/abc) doesn't exist.")
 }
 
 func TestResourceUserDelete_DirError(t *testing.T) {
@@ -553,7 +553,7 @@ func TestResourceUserDelete_DirError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			delete_home_dir = true
+			force_delete_home_dir = true
 		`,
 	}.Apply(t)
 	require.Error(t, err, err)
@@ -584,10 +584,10 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			delete_home_dir = true
+			force_delete_home_dir = true
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "delete_home_dir: Path (/Users/abc) doesn't exist.")
+	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {

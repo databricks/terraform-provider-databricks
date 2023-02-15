@@ -89,17 +89,6 @@ func (a UsersAPI) Delete(userID string) error {
 	return a.client.Scim(a.context, http.MethodDelete, userPath, nil, nil)
 }
 
-/*
-	func (a UsersAPI) DeleteRepos(userID string) error {
-		repoPath := fmt.Sprintf("/Repos/%v", userID)
-		return workspace.NewNotebooksAPI(a.context, a.client).Delete(repoPath, true)
-	}
-
-	func (a UsersAPI) DeleteHomeDirectory(userID string) error {
-		dirPath := fmt.Sprintf("/Users/%v", userID)
-		return workspace.NewNotebooksAPI(a.context, a.client).Delete(dirPath, true)
-	}
-*/
 func (a UsersAPI) DeletePath(dir string) error {
 	return workspace.NewNotebooksAPI(a.context, a.client).Delete(dir, true)
 }

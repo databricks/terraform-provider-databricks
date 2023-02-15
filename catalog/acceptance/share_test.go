@@ -69,8 +69,7 @@ func TestUcAccCreateShare(t *testing.T) {
 				}			
 				object {
 					name = databricks_table.mytable_2.id
-					history_data_sharing_status = "ENABLED"
-					cdf_enabled = true
+					cdf_enabled = false
 					comment = "c"
 					data_object_type = "TABLE"
 				}						

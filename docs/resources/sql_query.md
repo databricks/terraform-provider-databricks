@@ -26,7 +26,7 @@ resource "databricks_sql_query" "q1" {
                         AND event_date > date '{{ p3 }}'
                     EOT
 
-  parent = "folders/${databricks_directory.shared_dir.object_id}"
+  parent      = "folders/${databricks_directory.shared_dir.object_id}"
   run_as_role = "viewer"
 
   schedule {

@@ -17,7 +17,7 @@ resource "databricks_directory" "shared_dir" {
 }
 
 resource "databricks_sql_dashboard" "d1" {
-  name = "My Dashboard Name"
+  name   = "My Dashboard Name"
   parent = "folders/${databricks_directory.shared_dir.object_id}"
 
   tags = [

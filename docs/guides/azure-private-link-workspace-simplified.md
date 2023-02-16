@@ -1,24 +1,24 @@
 ---
-page_title: "Provisioning Databricks on Azure with PrivateLink - Simplified deployment"
+page_title: "Provisioning Databricks on Azure with Private Link - Simple deployment"
 ---
 
-# Deploying pre-requisite resources and enabling PrivateLink connections
+# Deploying pre-requisite resources and enabling Private Link connections
 
--> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using Expressroute or a VPN gateway connection.
+-> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
 
-Databricks PrivateLink support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. 
+Databricks Private Link support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. 
 
 You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically, using a programmatic approach. 
 
 
-This guide covers a [simplified deployment](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/private-link-simplified) to configure Azure Databricks with private link:
+This guide covers a [simple deployment](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/private-link-simplified) to configure Azure Databricks with Private Link:
 * No separate VNet separates user access from the VNet that you use for your compute resources in the Classic data plane
 * A transit subnet in the data plane VNet is used for user access
 * Only a single private endpoint is used for both front-end and back-end connectivity. 
-* A seperate private endpoint is used for web authentication
+* A separate private endpoint is used for web authentication
 * The same Databricks workspace is used for web authentication traffic but Databricks strongly recommends creating a seperate workspace called a private web auth workspace for each region to host the web auth private network settings.
 
-![Private link backend](../images/azure-private-link-simplified.png)
+![Private Link backend](../images/azure-private-link-simplified.png)
 
 This guide uses the following variables:
 
@@ -28,16 +28,16 @@ This guide uses the following variables:
 
 This guide is provided as-is and you can use it as the basis for your custom Terraform module.
 
-To get started with Azure PrivateLink integration, this guide takes you through the following high-level steps:
+To get started with Azure Private Link integration, this guide takes you through the following high-level steps:
 
 - Initialize the required providers
 - Configure Azure objects
   - Deploy an Azure Vnet with the following subnets:
     - Public and private subnets for Azure Databricks workspace
-    - Private link subnet that will contain the following private endpoints:
+    - Private Link subnet that will contain the following private endpoints:
       - Frontend / Backend private endpoint
       - Web_auth private endpoint 
-  - Configure the private dns zone in order to add: 
+  - Configure the private DNS zone in order to add: 
     - DNS A record to map connection for workspace access
     - DNS A record(s) for web_auth
 - Workspace Creation
@@ -54,7 +54,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">=2.83.0"
+      version = ">=3.43.0"
     }
   }
 }
@@ -99,7 +99,7 @@ locals {
 
 ### Deploy Azure vnet and subnets
 
-Create a new Azure vnet and the different required subnets :
+Create a new Azure VNet, the required subnets and associated security groups:
 
 ```hcl
 resource "azurerm_virtual_network" "this" {

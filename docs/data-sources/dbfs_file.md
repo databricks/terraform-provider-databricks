@@ -12,7 +12,7 @@ This data source allows to get file content from [Databricks File System (DBFS)]
 ```hcl
 data "databricks_dbfs_file" "report" {
   path            = "dbfs:/reports/some.csv"
-  limit_file_size = "true" 
+  limit_file_size = "true"
 }
 ```
 ## Argument Reference

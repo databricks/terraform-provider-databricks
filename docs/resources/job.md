@@ -132,11 +132,11 @@ Note that the `id` is not to be confused with the name of the alert destination.
 
 Example
 ```hcl
- webhook_notifications {
-    on_failure {
-      id = "fb99f3dc-a0a0-11ed-a8fc-0242ac120002"
-    }
+webhook_notifications {
+  on_failure {
+    id = "fb99f3dc-a0a0-11ed-a8fc-0242ac120002"
   }
+}
 ```
 
 ### webhook Configuration Block
@@ -204,7 +204,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 Example
 ```hcl
 resource "databricks_job" "sql_aggregation_job" {
-  name     = "Example SQL Job"
+  name = "Example SQL Job"
   task {
     task_key = "run_agg_query"
     sql_task {

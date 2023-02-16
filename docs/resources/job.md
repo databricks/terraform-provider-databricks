@@ -77,7 +77,7 @@ resource "databricks_job" "this" {
 The following arguments are required:
 
 * `name` - (Optional) An optional name for the job. The default value is Untitled.
-* `job_clusters` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
+* `job_cluster` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
 * `always_running` - (Optional) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
@@ -132,11 +132,11 @@ Note that the `id` is not to be confused with the name of the alert destination.
 
 Example
 ```hcl
- webhook_notifications {
-    on_failure {
-      id = "fb99f3dc-a0a0-11ed-a8fc-0242ac120002"
-    }
+webhook_notifications {
+  on_failure {
+    id = "fb99f3dc-a0a0-11ed-a8fc-0242ac120002"
   }
+}
 ```
 
 ### webhook Configuration Block
@@ -204,7 +204,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 Example
 ```hcl
 resource "databricks_job" "sql_aggregation_job" {
-  name     = "Example SQL Job"
+  name = "Example SQL Job"
   task {
     task_key = "run_agg_query"
     sql_task {

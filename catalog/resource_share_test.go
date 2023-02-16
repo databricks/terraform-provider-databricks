@@ -118,12 +118,12 @@ func TestCreateShare(t *testing.T) {
 					Name: "a",
 					Objects: []SharedDataObject{
 						{
-							Name:           "main.b",
+							Name:           "main.a",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 						},
 						{
-							Name:           "main.a",
+							Name:           "main.b",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 						},
@@ -141,7 +141,7 @@ func TestCreateShare(t *testing.T) {
 						{
 							Action: "ADD",
 							DataObject: SharedDataObject{
-								Name:           "main.b",
+								Name:           "main.a",
 								DataObjectType: "TABLE",
 								Comment:        "c",
 							},
@@ -149,7 +149,7 @@ func TestCreateShare(t *testing.T) {
 						{
 							Action: "ADD",
 							DataObject: SharedDataObject{
-								Name:           "main.a",
+								Name:           "main.b",
 								DataObjectType: "TABLE",
 								Comment:        "c",
 							},
@@ -167,12 +167,12 @@ func TestCreateShare(t *testing.T) {
 					Name: "a",
 					Objects: []SharedDataObject{
 						{
-							Name:           "main.b",
+							Name:           "main.a",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 						},
 						{
-							Name:           "main.a",
+							Name:           "main.b",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 						},
@@ -365,12 +365,12 @@ func TestCreateShare_ThrowError(t *testing.T) {
 					Name: "a",
 					Objects: []SharedDataObject{
 						{
-							Name:           "main.b",
+							Name:           "main.a",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 						},
 						{
-							Name:           "main.a",
+							Name:           "main.b",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 						},
@@ -413,12 +413,12 @@ func TestCreateShareButPatchFails(t *testing.T) {
 					Name: "a",
 					Objects: []SharedDataObject{
 						{
-							Name:           "main.b",
+							Name:           "main.a",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 						},
 						{
-							Name:           "main.a",
+							Name:           "main.b",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 						},
@@ -436,7 +436,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 						{
 							Action: "ADD",
 							DataObject: SharedDataObject{
-								Name:           "main.b",
+								Name:           "main.a",
 								DataObjectType: "TABLE",
 								Comment:        "c",
 							},
@@ -444,7 +444,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 						{
 							Action: "ADD",
 							DataObject: SharedDataObject{
-								Name:           "main.a",
+								Name:           "main.b",
 								DataObjectType: "TABLE",
 								Comment:        "c",
 							},

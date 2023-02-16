@@ -108,8 +108,8 @@ func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
 	assert.Equal(t, "pat", dc.Config.AuthType)
 }
 
-func TestDatabricksClientConfigure_BasicAuthTakePrecedence(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+func TestDatabricksClientConfigure_BasicAuthDoesNotTakePrecedence(t *testing.T) {
+	failsToAuthenticateWith(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
 				Host:       "foo",
@@ -119,10 +119,7 @@ func TestDatabricksClientConfigure_BasicAuthTakePrecedence(t *testing.T) {
 				ConfigFile: "testdata/.databrickscfg",
 			},
 		},
-	})
-	assert.NoError(t, err)
-	assert.Equal(t, "pat", dc.Config.AuthType)
-	assert.Equal(t, "configured", dc.Config.Token)
+	}, "validate: more than one authorization method configured: basic and pat.")
 }
 
 func TestDatabricksClientConfigure_ConfigRead(t *testing.T) {
@@ -149,19 +146,6 @@ func TestDatabricksClientConfigure_NoHostGivesError(t *testing.T) {
 		},
 	}, "default auth: cannot configure default credentials. "+
 		"Config: token=***, profile=nohost, config_file=testdata/.databrickscfg")
-}
-
-func TestDatabricksClientConfigure_NoTokenGivesError(t *testing.T) {
-	failsToAuthenticateWith(t, &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Token:      "connfigured",
-				ConfigFile: "testdata/.databrickscfg",
-				Profile:    "notoken",
-			},
-		},
-	}, "cannot configure databricks-cli auth: config file "+
-		"testdata/.databrickscfg is corrupt: cannot find token in notoken profile.")
 }
 
 func TestDatabricksClientConfigure_InvalidProfileGivesError(t *testing.T) {
@@ -297,10 +281,7 @@ func TestClientForHostAuthError(t *testing.T) {
 		},
 	}
 	_, err := c.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
-	if assert.NotNil(t, err) {
-		assert.True(t, strings.HasPrefix(err.Error(),
-			"cannot authenticate parent client: cannot configure databricks-cli auth"), err.Error())
-	}
+	assert.NoError(t, err)
 }
 
 func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {

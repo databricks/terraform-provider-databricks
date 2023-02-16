@@ -258,20 +258,16 @@ type permissionsIDFieldMapping struct {
 
 	allowedPermissionLevels []string
 
-	idRetriever func(ctx context.Context, cfg *databricks.Config, id string) (string, error)
+	idRetriever func(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error)
 }
 
 // PermissionsResourceIDFields shows mapping of id columns to resource types
 func permissionsResourceIDFields() []permissionsIDFieldMapping {
-	SIMPLE := func(ctx context.Context, cfg *databricks.Config, id string) (string, error) {
+	SIMPLE := func(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
 		return id, nil
 	}
-	PATH := func(ctx context.Context, cfg *databricks.Config, path string) (string, error) {
-		w, err := databricks.NewWorkspaceClient(cfg)
-		if err != nil {
-			return "", fmt.Errorf("cannot init client %s: %s", path, err)
-		}
-		info, err := w.Workspace.GetByPath(ctx, path)
+	PATH := func(ctx context.Context, w *databricks.WorkspaceClient, path string) (string, error) {
+		info, err := w.Workspace.GetStatusByPath(ctx, path)
 		if err != nil {
 			return "", fmt.Errorf("cannot load path %s: %s", path, err)
 		}
@@ -448,7 +444,11 @@ func ResourcePermissions() *schema.Resource {
 			common.DataToStructPointer(d, s, &entity)
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
-					id, err := mapping.idRetriever(ctx, (*databricks.Config)(c.Config), v.(string))
+					w, err := c.WorkspaceClient()
+					if err != nil {
+						return err
+					}
+					id, err := mapping.idRetriever(ctx, w, v.(string))
 					if err != nil {
 						return err
 					}

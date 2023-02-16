@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -1282,8 +1283,11 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 			m = x
 		}
 	}
-	_, err := m.idRetriever(context.Background(), &databricks.Config{}, "x")
-	assert.EqualError(t, err, "cannot load path x: DatabricksClient is not configured")
+	_, err := m.idRetriever(context.Background(), databricks.Must(databricks.NewWorkspaceClient(
+		(*databricks.Config)(config.NewMockConfig(func(r *http.Request) error {
+			return fmt.Errorf("nope")
+		})))), "x")
+	assert.EqualError(t, err, "cannot load path x: nope")
 }
 
 func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {

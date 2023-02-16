@@ -3,6 +3,7 @@ package common
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/client"
@@ -62,9 +63,7 @@ func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 		},
 	}
 	_, err := client.GetAzureJwtProperty("tid")
-	require.EqualError(t, err, "cannot configure azure-cli auth: "+
-		"Invoking Azure CLI failed with the following error: "+
-		"This is just a failing script.\n. "+
-		"Please check https://registry.terraform.io/providers/"+
-		"databricks/databricks/latest/docs#authentication for details")
+	require.Error(t, err)
+	assert.True(t, strings.HasPrefix(err.Error(),
+		"default auth: azure-cli: cannot get access token: This is just a failing script"))
 }

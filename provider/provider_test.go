@@ -249,7 +249,7 @@ func TestConfig_PatFromDatabricksCfg(t *testing.T) {
 			"HOME": "../common/testdata",
 		},
 		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com",
-		assertAuth: "databricks-cli",
+		assertAuth: "pat",
 	}.apply(t)
 }
 
@@ -291,6 +291,7 @@ func TestConfig_ConfigProfileAndPassword(t *testing.T) {
 
 var azResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
+// https://github.com/databricks/databricks-sdk-go/issues/304
 func TestConfig_AzureCliHost(t *testing.T) {
 	p, _ := filepath.Abs("../common/testdata")
 	providerFixture{
@@ -308,6 +309,7 @@ func TestConfig_AzureCliHost(t *testing.T) {
 	}.apply(t)
 }
 
+// https://github.com/databricks/databricks-sdk-go/issues/304
 func TestConfig_AzureCliHost_Fail(t *testing.T) {
 	p, _ := filepath.Abs("../common/testdata")
 	providerFixture{
@@ -323,6 +325,7 @@ func TestConfig_AzureCliHost_Fail(t *testing.T) {
 	}.apply(t)
 }
 
+// https://github.com/databricks/databricks-sdk-go/issues/304
 func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 	providerFixture{
 		// `az` not installed, which is expected for deployers on other clouds...
@@ -351,6 +354,7 @@ func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
 	}.apply(t)
 }
 
+// https://github.com/databricks/databricks-sdk-go/issues/304
 func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 	p, _ := filepath.Abs("../common/testdata")
 	providerFixture{
@@ -379,7 +383,7 @@ func TestConfig_AzureAndPasswordConflict(t *testing.T) {
 			"HOME":                p,
 			"DATABRICKS_USERNAME": "x",
 		},
-		assertError: "validate: more than one authorization method configured: azure and basic and pat. " + 
+		assertError: "validate: more than one authorization method configured: azure and basic and pat. " +
 			"Config: host=x, token=***, username=x, " +
 			"azure_workspace_resource_id=/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c. " +
 			"Env: DATABRICKS_USERNAME",

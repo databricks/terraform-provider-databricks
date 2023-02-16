@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"sort"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,18 +24,23 @@ const (
 
 type ShareInfo struct {
 	Name      string             `json:"name" tf:"force_new"`
-	Objects   []SharedDataObject `json:"objects,omitempty" tf:"slice_set,alias:object"`
+	Objects   []SharedDataObject `json:"objects,omitempty" tf:"alias:object"`
 	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 	CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
 }
 
 type SharedDataObject struct {
-	Name           string `json:"name"`
-	DataObjectType string `json:"data_object_type"`
-	Comment        string `json:"comment,omitempty"`
-	SharedAs       string `json:"shared_as,omitempty" tf:"computed"`
-	AddedAt        int64  `json:"added_at,omitempty" tf:"computed"`
-	AddedBy        string `json:"added_by,omitempty" tf:"computed"`
+	Name                     string      `json:"name"`
+	DataObjectType           string      `json:"data_object_type"`
+	Comment                  string      `json:"comment,omitempty"`
+	SharedAs                 string      `json:"shared_as,omitempty" tf:"suppress_diff"`
+	CDFEnabled               bool        `json:"cdf_enabled,omitempty" tf:"suppress_diff"`
+	StartVersion             int64       `json:"start_version,omitempty" tf:"suppress_diff"`
+	HistoryDataSharingStatus string      `json:"history_data_sharing_status,omitempty" tf:"suppress_diff"`
+	Partitions               []Partition `json:"partitions,omitempty" tf:"alias:partition"`
+	Status                   string      `json:"status,omitempty" tf:"computed"`
+	AddedAt                  int64       `json:"added_at,omitempty" tf:"computed"`
+	AddedBy                  string      `json:"added_by,omitempty" tf:"computed"`
 }
 
 type ShareDataChange struct {
@@ -50,17 +56,46 @@ type Shares struct {
 	Shares []ShareInfo `json:"shares"`
 }
 
+type Partition struct {
+	Values []PartitionValue `json:"values" tf:"alias:value"`
+}
+
+type PartitionValue struct {
+	Name                 string `json:"name"`
+	Op                   string `json:"op"`
+	RecipientPropertyKey string `json:"recipient_property_key,omitempty"`
+	Value                string `json:"value,omitempty"`
+}
+
+func (si *ShareInfo) sortSharesByName() {
+	sort.Slice(si.Objects, func(i, j int) bool {
+		return si.Objects[i].Name < si.Objects[j].Name
+	})
+}
+
+func (si *ShareInfo) suppressCDFEnabledDiff() {
+	//suppress diff for CDF Enabled if HistoryDataSharingStatus is enabled , as API does not accept both fields to be set
+	for i := range si.Objects {
+		if si.Objects[i].HistoryDataSharingStatus == "ENABLED" {
+			si.Objects[i].CDFEnabled = false
+		}
+	}
+}
+
 func (a SharesAPI) list() (shares Shares, err error) {
 	err = a.client.Get(a.context, "/unity-catalog/shares", nil, &shares)
 	return
 }
 
-func (a SharesAPI) create(ci *ShareInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/shares", ci, ci)
+func (a SharesAPI) create(si *ShareInfo) error {
+	si.sortSharesByName()
+	return a.client.Post(a.context, "/unity-catalog/shares", si, si)
 }
 
-func (a SharesAPI) get(name string) (ci ShareInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/shares/"+name+"?include_shared_data=true", nil, &ci)
+func (a SharesAPI) get(name string) (si ShareInfo, err error) {
+	err = a.client.Get(a.context, "/unity-catalog/shares/"+name+"?include_shared_data=true", nil, &si)
+	si.sortSharesByName()
+	si.suppressCDFEnabledDiff()
 	return
 }
 

@@ -22,19 +22,19 @@ func TestMwsAccStorageConfigurations(t *testing.T) {
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	storageAPI := NewStorageConfigurationsAPI(context.Background(), common.CommonEnvironmentClient())
 	storageConfigsList, err := storageAPI.List(acctID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(storageConfigsList)
 
 	storageConfig, err := storageAPI.Create(acctID, "sri-mws-terraform-storage-root-bucket", "sri-root-s3-bucket")
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	myStorageConfig, err := storageAPI.Read(acctID, storageConfig.StorageConfigurationID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(myStorageConfig.RootBucketInfo.BucketName)
 
 	defer func() {
 		err = storageAPI.Delete(acctID, storageConfig.StorageConfigurationID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 }
 
@@ -74,7 +74,7 @@ func TestResourceStorageConfigurationCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/scid", d.Id())
 }
 
@@ -122,7 +122,7 @@ func TestResourceStorageConfigurationRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc/scid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/scid", d.Id(), "Id should not be empty")
 	assert.Equal(t, "bucket", d.Get("bucket_name"))
 	assert.Equal(t, 0, d.Get("creation_time"))
@@ -183,7 +183,7 @@ func TestResourceStorageConfigurationDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/scid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/scid", d.Id())
 }
 

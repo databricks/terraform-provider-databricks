@@ -31,7 +31,7 @@ To get workspace running, you have to configure a couple of things:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account ID that can be found in the dropdown under the email address in the upper-right corner of https://accounts.cloud.databricks.com/"
 }
 
 provider "databricks" {

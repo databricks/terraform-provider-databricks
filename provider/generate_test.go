@@ -47,7 +47,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 			Read: true,
 			ID: "abc",
 		}.Apply(t)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 		{{range $index, $element := .Resource.Schema}}assert.Equal(t, "...{{$index}}", d.Get("{{$index}}"))
 		{{end}}
@@ -110,7 +110,7 @@ func (stub *resourceTestStub) Creates(t *testing.T) {
 			{{end}}
 			`+"`"+`,
 		}.Apply(t)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "...", d.Id())
 	}`)
 	stub.stoobyDo(t, "Create_Error", `
@@ -155,7 +155,7 @@ func (stub *resourceTestStub) Updates(t *testing.T) {
 			{{end}}
 			`+"`"+`,
 		}.Apply(t)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 	}`)
 	stub.stoobyDo(t, "Update_Error", `
@@ -202,7 +202,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 			Delete: true,
 			ID: "abc",
 		}.Apply(t)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "abc", d.Id())
 	}`)
 	stub.stoobyDo(t, "Delete_Error", `

@@ -168,28 +168,28 @@ func TestAccCreateFile(t *testing.T) {
 	dbfsAPI := NewDbfsAPI(context.Background(), client)
 
 	err := dbfsAPI.Create(path, randomStr, true)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	err = dbfsAPI.Create(path2, randomStr, true)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	err = dbfsAPI.Create(path3, randomStr, true)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	defer func() {
 		err := dbfsAPI.Delete(dir, true)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	resp, err := dbfsAPI.Read(path)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, md5.Sum(randomStr) == md5.Sum(resp))
 
 	items, err := dbfsAPI.List(dir, false)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Len(t, items, 2)
 
 	items, err = dbfsAPI.List(dir, true)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Len(t, items, 3)
 }

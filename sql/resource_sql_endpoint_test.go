@@ -107,7 +107,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
   		cluster_size = "Small"
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
@@ -154,7 +154,7 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 		auto_stop_mins = 0
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
@@ -205,7 +205,7 @@ func TestResourceSQLEndpointRead(t *testing.T) {
   		cluster_size = "Small"
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
@@ -248,7 +248,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
   		cluster_size = "Small"
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
@@ -265,7 +265,7 @@ func TestResourceSQLEndpointDelete(t *testing.T) {
 		ID:       "abc",
 		Delete:   true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 }
 

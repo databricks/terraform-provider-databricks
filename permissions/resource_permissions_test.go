@@ -89,7 +89,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 		New:      true,
 		ID:       "/clusters/abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/clusters/abc", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -150,7 +150,7 @@ func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 		New:      true,
 		ID:       "/registered-models/fakeuuid123",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -210,7 +210,7 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -273,7 +273,7 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 		// Removed:  true,
 		ID: "/registered-models/fakeuuid123",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -321,7 +321,7 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 		Delete:   true,
 		ID:       "/registered-models/fakeuuid123",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
 }
 
@@ -353,7 +353,7 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 		New:      true,
 		ID:       "/sql/dashboards/abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/sql/dashboards/abc", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -583,7 +583,7 @@ func TestResourcePermissionsDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "/clusters/abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/clusters/abc", d.Id())
 }
 
@@ -759,7 +759,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -818,7 +818,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -869,7 +869,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -973,7 +973,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -1112,7 +1112,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "/jobs/9",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/jobs/9", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -1393,7 +1393,7 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -1453,7 +1453,7 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -1516,7 +1516,7 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 		Update:   true,
 		ID:       "/sql/queries/id111",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)

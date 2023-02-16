@@ -109,7 +109,7 @@ func TestIPACLCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, TestingID, d.Id())
 	assert.Equal(t, TestingLabel, d.Get("label"))
 	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
@@ -192,7 +192,7 @@ func TestIPACLUpdate(t *testing.T) {
 		Update: true,
 		ID:     TestingID,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, TestingID, d.Id())
 	assert.Equal(t, TestingLabel, d.Get("label"))
 	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
@@ -247,7 +247,7 @@ func TestIPACLRead(t *testing.T) {
 		New:      true,
 		ID:       TestingID,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, TestingID, d.Id())
 	assert.Equal(t, TestingLabel, d.Get("label"))
 	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
@@ -309,7 +309,7 @@ func TestIPACLDelete(t *testing.T) {
 		Delete:   true,
 		ID:       TestingID,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, TestingID, d.Id())
 }
 

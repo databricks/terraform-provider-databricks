@@ -112,7 +112,7 @@ func TestResourceLogDeliveryCreate(t *testing.T) {
 		delivery_start_time = "2020-10"`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|nid", d.Id())
 	assert.Equal(t, "nid", d.Get("config_id"))
 }
@@ -177,7 +177,7 @@ func TestResourceLogDeliveryCreateDisabled(t *testing.T) {
 		status = "DISABLED"`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|nid", d.Id())
 	assert.Equal(t, "nid", d.Get("config_id"))
 }
@@ -240,7 +240,7 @@ func TestResourceLogDeliveryRead(t *testing.T) {
 		New:      true,
 		ID:       "abc|nid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|nid", d.Id(), "Id should not be empty")
 	assert.Equal(t, "bcd", d.Get("credentials_id"))
 	assert.Equal(t, "def", d.Get("storage_configuration_id"))

@@ -20,7 +20,7 @@ func TestMwsAccNetworks(t *testing.T) {
 	ctx := context.Background()
 	networksAPI := NewNetworksAPI(ctx, client)
 	networksList, err := networksAPI.List(acctID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(networksList)
 
 	network := Network{
@@ -31,14 +31,14 @@ func TestMwsAccNetworks(t *testing.T) {
 		SecurityGroupIds: []string{"sg-0a1b2c3d4e5f6a7b8"},
 	}
 	err = networksAPI.Create(&network)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	defer func() {
 		err = networksAPI.Delete(acctID, network.NetworkID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	myNetworkFull, err := networksAPI.Read(acctID, network.NetworkID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(myNetworkFull)
 }
 
@@ -82,7 +82,7 @@ func TestResourceNetworkCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id())
 }
 
@@ -136,7 +136,7 @@ func TestResourceNetworkCreate_GCP(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id())
 }
 
@@ -220,7 +220,7 @@ func TestResourceNetworkRead(t *testing.T) {
 		New:      true,
 		ID:       "abc/nid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id(), "Id should not be empty")
 	assert.Equal(t, 0, d.Get("creation_time"))
 	assert.Equal(t, "nid", d.Get("network_id"))
@@ -302,7 +302,7 @@ func TestResourceNetworkDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/nid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id())
 }
 

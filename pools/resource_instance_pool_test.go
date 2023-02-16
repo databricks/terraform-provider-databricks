@@ -45,15 +45,15 @@ func TestAccInstancePools(t *testing.T) {
 		}
 	}
 	poolInfo, err := NewInstancePoolsAPI(context.Background(), client).Create(pool)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	defer func() {
 		err := NewInstancePoolsAPI(context.Background(), client).Delete(poolInfo.InstancePoolID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	poolReadInfo, err := NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, poolInfo.InstancePoolID, poolReadInfo.InstancePoolID)
 	assert.Equal(t, pool.InstancePoolName, poolReadInfo.InstancePoolName)
 	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
@@ -62,10 +62,10 @@ func TestAccInstancePools(t *testing.T) {
 	poolReadInfo.InstancePoolName = "Terraform Integration Test Updated"
 	poolReadInfo.MaxCapacity = 20
 	err = NewInstancePoolsAPI(context.Background(), client).Update(poolReadInfo)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	poolReadInfo, err = NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, poolReadInfo.MaxCapacity, int32(20))
 }
 
@@ -111,7 +111,7 @@ func TestResourceInstancePoolCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -164,7 +164,7 @@ func TestResourceInstancePoolRead(t *testing.T) {
 		New:      true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, 15, d.Get("idle_instance_autotermination_minutes"))
 	assert.Equal(t, "Shared Pool", d.Get("instance_pool_name"))
@@ -259,7 +259,7 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
 func TestResourceInstancePoolUpdate_Error(t *testing.T) {
@@ -306,7 +306,7 @@ func TestResourceInstancePoolDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 

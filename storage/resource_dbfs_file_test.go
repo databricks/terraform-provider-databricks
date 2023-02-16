@@ -175,7 +175,7 @@ func TestDBFSFileCreate(t *testing.T) {
 				},
 			}.Apply(t)
 			if tt.expectedError == "" {
-				assert.NoError(t, err, err)
+				assert.NoError(t, err)
 				assert.Equal(t, tt.path, d.Id())
 				assert.Equal(t, tt.source, d.Get("source"))
 				assert.Equal(t, tt.path, d.Get("path"))
@@ -199,7 +199,7 @@ func TestDBFSFileDelete(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 }
 

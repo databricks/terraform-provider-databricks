@@ -5,7 +5,7 @@ subcategory: "Unity Catalog"
 
 Within a metastore, Unity Catalog provides the ability to create a share, which is a named object that contains a collection of tables in a metastore that you want to share as a group. A share can contain tables from only a single metastore. You can add or remove tables from a share at any time.
 
-A `databricks_share` is contained within [databricks_metastore](metastore.md) and can contain a list of shares.
+A `databricks_share` is contained within [databricks_metastore](metastore.md) and can contain a list of tables.
 
 ## Example Usage
 
@@ -26,6 +26,38 @@ resource "databricks_share" "some" {
       data_object_type = "TABLE"
     }
   }
+}
+```
+
+Creating a Delta Sharing share and share a table with partitions spec and history
+
+```hcl
+resource "databricks_share" "some" {
+  name = "my_share"
+  object {
+    name                        = "my_catalog.my_schema.my_table"
+    data_object_type            = "TABLE"
+    history_data_sharing_status = "ENABLED"
+    partition {
+      value {
+        name                   = "year"
+        op                     = "EQUAL"
+        value                  = "2009"
+      }
+      value {
+        name                   = "month"
+        op                     = "EQUAL"
+        value                  = "12"
+      }
+    }  
+    partition {
+      value {
+        name                   = "year"
+        op                     = "EQUAL"
+        value                  = "2010"
+      }
+    }        
+  } 
 }
 ```
 

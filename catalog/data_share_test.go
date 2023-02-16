@@ -21,6 +21,8 @@ func TestShareData(t *testing.T) {
 							Name:           "a",
 							DataObjectType: "TABLE",
 							Comment:        "c",
+							CDFEnabled:     false,
+							StartVersion:   0,
 							SharedAs:       "",
 							AddedAt:        0,
 							AddedBy:        "",
@@ -50,6 +52,8 @@ func TestShareData(t *testing.T) {
 			"data_object_type": "TABLE",
 			"name":             "a",
 			"shared_as":        "",
+			"start_version":    0,
+			"cdf_enabled":      false,
 		},
 		d.Get("object").(*schema.Set).List()[0])
 }

@@ -28,7 +28,7 @@ func TestResourceClusterPolicyRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "Dummy", d.Get("name"))
 	assert.Equal(t, "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}", d.Get("definition"))
@@ -113,7 +113,7 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, 3, d.Get("max_clusters_per_user"))
 }
@@ -174,7 +174,7 @@ func TestResourceClusterPolicyUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -218,7 +218,7 @@ func TestResourceClusterPolicyDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 

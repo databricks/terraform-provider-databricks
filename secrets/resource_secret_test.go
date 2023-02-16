@@ -29,7 +29,7 @@ func TestResourceSecretRead(t *testing.T) {
 		Read:     true,
 		ID:       "foo|||bar",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo|||bar", d.Id())
 	assert.Equal(t, "bar", d.Get("key"))
 	assert.Equal(t, 12345678, d.Get("last_updated_timestamp"))
@@ -115,7 +115,7 @@ func TestResourceSecretCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo|||bar", d.Id())
 }
 
@@ -160,7 +160,7 @@ func TestResourceSecretDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "foo|||bar",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo|||bar", d.Id())
 }
 

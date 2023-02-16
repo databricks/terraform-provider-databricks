@@ -40,7 +40,7 @@ func TestResourceUserRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
@@ -143,7 +143,7 @@ func TestResourceUserCreate(t *testing.T) {
 		allow_cluster_create = true
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
@@ -208,7 +208,7 @@ func TestResourceUserCreateInactive(t *testing.T) {
 		active = false
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
@@ -232,7 +232,7 @@ func TestResourceUserCreate_Error(t *testing.T) {
 		allow_cluster_create = true
 		`,
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestResourceUserUpdate(t *testing.T) {
@@ -325,7 +325,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		allow_instance_pool_create = true
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Changed Name", d.Get("display_name"))
@@ -352,7 +352,7 @@ func TestResourceUserUpdate_Error(t *testing.T) {
 		allow_instance_pool_create = true
 		`,
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestResourceUserUpdate_ErrorPut(t *testing.T) {
@@ -407,7 +407,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 		allow_instance_pool_create = true
 		`,
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestResourceUserDelete(t *testing.T) {
@@ -437,7 +437,7 @@ func TestResourceUserDelete_Error(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {

@@ -26,7 +26,7 @@ func TestMwsAccWorkspace(t *testing.T) {
 	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	client := common.CommonEnvironmentClient()
 	workspaceList, err := NewWorkspacesAPI(context.Background(), client).List(acctID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(workspaceList)
 }
 
@@ -36,7 +36,7 @@ func TestGcpaAccWorkspace(t *testing.T) {
 	workspacesAPI := NewWorkspacesAPI(context.Background(), client)
 
 	workspaceList, err := workspacesAPI.List(acctID)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	t.Log(workspaceList)
 
 	ws := Workspace{
@@ -113,7 +113,7 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -250,7 +250,7 @@ func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -308,7 +308,7 @@ func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -381,7 +381,7 @@ func TestResourceWorkspaceRead(t *testing.T) {
 		New:      true,
 		ID:       "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty")
 	assert.Equal(t, "us-east-1", d.Get("aws_region"))
 	assert.Equal(t, "bcd", d.Get("credentials_id"))
@@ -446,7 +446,7 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 		New:      true,
 		ID:       "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty")
 	assert.Equal(t, "prefix-900150983cd24fb0", d.Get("deployment_name"))
 	assert.Equal(t, "https://prefix-900150983cd24fb0.cloud.databricks.com", d.Get("workspace_url"))
@@ -554,7 +554,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
 }
 
@@ -650,7 +650,7 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 		Update: true,
 		ID:     "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
 }
 
@@ -716,7 +716,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -1300,7 +1300,7 @@ func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
 		Update: true,
 		ID:     "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
 }
 

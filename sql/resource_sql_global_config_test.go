@@ -35,7 +35,7 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 		HCL: `
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "global", d.Id(), "Id should not be empty")
 	assert.Equal(t, "DATA_ACCESS_CONTROL", d.Get("security_policy"))
 }
@@ -67,7 +67,7 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 		HCL: `
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "global", d.Id(), "Id should not be empty")
 	assert.Equal(t, "DATA_ACCESS_CONTROL", d.Get("security_policy"))
 }
@@ -117,7 +117,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 			},
 		},
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "global", d.Id(), "Id should not be empty")
 	assert.Equal(t, "PASSTHROUGH", d.Get("security_policy"))
 }

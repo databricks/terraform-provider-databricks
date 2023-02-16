@@ -42,7 +42,7 @@ func TestDashboardCreate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "Dashboard name", d.Get("name"))
 }
@@ -65,7 +65,7 @@ func TestDashboardRead(t *testing.T) {
 		ID:       "xyz",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 
@@ -100,7 +100,7 @@ func TestDashboardUpdate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 
@@ -117,7 +117,7 @@ func TestDashboardDelete(t *testing.T) {
 		ID:       "xyz",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 

@@ -106,7 +106,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 		continuous = false
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
 }
 
@@ -260,7 +260,7 @@ func TestResourcePipelineRead(t *testing.T) {
 		New:      true,
 		ID:       "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id(), "Id should not be empty")
 	assert.Equal(t, "/test/storage", d.Get("storage"))
 	assert.Equal(t, "value1", d.Get("configuration.key1"))
@@ -372,7 +372,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
 }
 
@@ -500,7 +500,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
 }
 

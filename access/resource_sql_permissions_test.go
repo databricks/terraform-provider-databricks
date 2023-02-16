@@ -476,7 +476,7 @@ func TestResourceSqlPermissions_NoUpdateAnyFile(t *testing.T) {
 		},
 		ID: "any file/",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, d.Get("privilege_assignments.#"))
 	assert.Equal(t, 1, d.Get("privilege_assignments.0.privileges.#"))
 	assert.Equal(t, "users", d.Get("privilege_assignments.0.principal"))
@@ -510,7 +510,7 @@ func TestResourceSqlPermissions_NoUpdateAnonymousFunction(t *testing.T) {
 		},
 		ID: "anonymous function/",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, d.Get("privilege_assignments.#"))
 	assert.Equal(t, 1, d.Get("privilege_assignments.0.privileges.#"))
 	assert.Equal(t, "users", d.Get("privilege_assignments.0.principal"))

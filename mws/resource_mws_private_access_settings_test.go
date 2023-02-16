@@ -20,7 +20,7 @@ func TestMwsAccPAS(t *testing.T) {
 	ctx := context.Background()
 	pasAPI := NewPrivateAccessSettingsAPI(ctx, client)
 	pasList, err := pasAPI.List(acctID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(pasList)
 
 	pas := PrivateAccessSettings{
@@ -29,14 +29,14 @@ func TestMwsAccPAS(t *testing.T) {
 		Region:    awsRegion,
 	}
 	err = pasAPI.Create(&pas)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	defer func() {
 		err = pasAPI.Delete(acctID, pas.PasID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 
 	myPAS, err := pasAPI.Read(acctID, pas.PasID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	t.Log(myPAS)
 }
 
@@ -76,7 +76,7 @@ func TestResourcePASCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/pas_id", d.Id())
 }
 
@@ -123,7 +123,7 @@ func TestResourcePASRead(t *testing.T) {
 		New:      true,
 		ID:       "abc/pas_id",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/pas_id", d.Id(), "Id should not be empty")
 	assert.Equal(t, "account_id", d.Get("account_id"))
 	assert.Equal(t, "pas_name", d.Get("private_access_settings_name"))
@@ -245,7 +245,7 @@ func TestResourcePASDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/pas_id",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/pas_id", d.Id())
 }
 

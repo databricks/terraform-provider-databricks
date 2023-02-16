@@ -41,7 +41,7 @@ func TestShareData(t *testing.T) {
 		name = "a"
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "bob", d.Get("created_by"))
 	assert.Equal(t, 1921321, d.Get("created_at"))
 	assert.Equal(t,

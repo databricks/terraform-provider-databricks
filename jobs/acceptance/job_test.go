@@ -65,25 +65,25 @@ func TestAccAwsJobsCreate(t *testing.T) {
 	}
 
 	job, err := jobsAPI.Create(jobSettings)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	id := job.ID()
 	defer func() {
 		err := jobsAPI.Delete(id)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 	t.Log(id)
 	job, err = jobsAPI.Read(id)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, job.Settings.NewCluster.SparkVersion == sparkVersion, "Something is wrong with spark version")
 
 	newSparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{Latest: true})
 	jobSettings.NewCluster.SparkVersion = newSparkVersion
 
 	err = jobsAPI.Update(id, jobSettings)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	job, err = jobsAPI.Read(id)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.True(t, job.Settings.NewCluster.SparkVersion == newSparkVersion, "Something is wrong with spark version")
 }
 

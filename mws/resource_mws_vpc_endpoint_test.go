@@ -26,7 +26,7 @@ func TestMwsAccVPCEndpointIntegration(t *testing.T) {
 	ctx := context.Background()
 	vpcEndpointAPI := NewVPCEndpointAPI(ctx, client)
 	endpointList, err := vpcEndpointAPI.List(acctID)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	t.Logf("VPC Endpoints: %v", endpointList)
 
 	vpcEndpoint := VPCEndpoint{
@@ -36,13 +36,13 @@ func TestMwsAccVPCEndpointIntegration(t *testing.T) {
 		Region:           awsRegion,
 	}
 	err = vpcEndpointAPI.Create(&vpcEndpoint)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	defer func() {
 		err = vpcEndpointAPI.Delete(acctID, vpcEndpoint.VPCEndpointID)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 	}()
 	thisEndpoint, err := vpcEndpointAPI.Read(acctID, vpcEndpoint.VPCEndpointID)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "available", thisEndpoint.State)
 }
 
@@ -85,7 +85,7 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/ve_id", d.Id())
 }
 
@@ -134,7 +134,7 @@ func TestResourceVPCEndpointRead(t *testing.T) {
 		New:      true,
 		ID:       "abc/veid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/veid", d.Id(), "Id should not be empty")
 	assert.Equal(t, "veid", d.Get("account_id"))
 	assert.Equal(t, "ve_name", d.Get("vpc_endpoint_name"))
@@ -214,7 +214,7 @@ func TestResourceVPCEndpointDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/veid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/veid", d.Id())
 }
 

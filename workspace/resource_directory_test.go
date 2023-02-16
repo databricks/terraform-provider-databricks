@@ -33,7 +33,7 @@ func TestResourceDirectoryRead(t *testing.T) {
 		New:      true,
 		ID:       path,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 	assert.Equal(t, path, d.Get("path"))
 }
@@ -58,7 +58,7 @@ func TestResourceDirectoryDelete(t *testing.T) {
 			"delete_recursive": delete_recursive,
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 }
 
@@ -134,7 +134,7 @@ func TestResourceDirectoryCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 }
 

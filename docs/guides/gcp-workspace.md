@@ -8,7 +8,7 @@ You can provision multiple Databricks workspaces with Terraform.
 
 ## Creating a GCP service account for Databricks Provisioning
 
-This guide assumes that you are already familiar with Hashicorp Terraform and provisioned some of the Google Compute Cloud infrastructure with it. To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. You can use the following Terraform configuration to create a Service Account for Databricks Provisioning, which can be impersonated by a list of principals defined in delegate_from variable. Service Account would be automatically assigned to the newly created Databricks Workspace Creator custom role
+This guide assumes that you are already familiar with Hashicorp Terraform and provisioned some of the Google Compute Cloud infrastructure with it. To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. You can use the following Terraform configuration to create a Service Account for Databricks Provisioning, which can be impersonated by a list of principals defined in `delegate_from` variable. Service Account would be automatically assigned to the newly created Databricks Workspace Creator custom role
 
 ```hcl
 variable "prefix" {}
@@ -64,7 +64,10 @@ resource "google_project_iam_custom_role" "workspace_creator" {
     "resourcemanager.projects.setIamPolicy",
     "serviceusage.services.get",
     "serviceusage.services.list",
-    "serviceusage.services.enable"
+    "serviceusage.services.enable",
+    "compute.networks.get",
+    "compute.projects.get",
+    "compute.subnetworks.get",
   ]
 }
 
@@ -75,8 +78,9 @@ output "custom_role_url" {
 }
 
 resource "google_project_iam_member" "sa2_can_create_workspaces" {
-  role   = google_project_iam_custom_role.workspace_creator.id
-  member = "serviceAccount:${google_service_account.sa2.email}"
+  project = var.project
+  role    = google_project_iam_custom_role.workspace_creator.id
+  member  = "serviceAccount:${google_service_account.sa2.email}"
 }
 ```
 

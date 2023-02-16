@@ -163,7 +163,7 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.MinCores > 0 && int32(nt.NumCores) < r.MinCores {
 			continue
 		}
-		if r.MinGPUs > 0 && nt.NumGPUs < r.MinGPUs {
+		if (r.MinGPUs > 0 && nt.NumGPUs < r.MinGPUs) || (r.MinGPUs == 0 && nt.NumGPUs > 0) {
 			continue
 		}
 		if (r.LocalDisk || r.LocalDiskMinSize > 0) && nt.NodeInstanceType != nil &&
@@ -178,19 +178,19 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.Category != "" && !strings.EqualFold(nt.Category, r.Category) {
 			continue
 		}
-		if r.IsIOCacheEnabled && nt.IsIOCacheEnabled != r.IsIOCacheEnabled {
+		if r.IsIOCacheEnabled && !nt.IsIOCacheEnabled {
 			continue
 		}
-		if r.SupportPortForwarding && nt.SupportPortForwarding != r.SupportPortForwarding {
+		if r.SupportPortForwarding && !nt.SupportPortForwarding {
 			continue
 		}
-		if r.PhotonDriverCapable && nt.PhotonDriverCapable != r.PhotonDriverCapable {
+		if r.PhotonDriverCapable && !nt.PhotonDriverCapable {
 			continue
 		}
-		if r.PhotonWorkerCapable && nt.PhotonWorkerCapable != r.PhotonWorkerCapable {
+		if r.PhotonWorkerCapable && !nt.PhotonWorkerCapable {
 			continue
 		}
-		if r.Graviton && nt.Graviton != r.Graviton {
+		if nt.Graviton != r.Graviton {
 			continue
 		}
 		return nt.NodeTypeID

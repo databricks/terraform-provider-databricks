@@ -16,7 +16,7 @@ This guide covers a [simple deployment](https://learn.microsoft.com/en-us/azure/
 * A transit subnet in the data plane VNet is used for user access
 * Only a single private endpoint is used for both front-end and back-end connectivity. 
 * A separate private endpoint is used for web authentication
-* The same Databricks workspace is used for web authentication traffic but Databricks strongly recommends creating a seperate workspace called a private web auth workspace for each region to host the web auth private network settings.
+* The same Databricks workspace is used for web authentication traffic but Databricks strongly recommends creating a separate workspace called a private web auth workspace for each region to host the web auth private network settings.
 
 ![Private Link backend](../images/azure-private-link-simplified.png)
 

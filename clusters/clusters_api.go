@@ -412,7 +412,7 @@ type Cluster struct {
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
-	DataSecurityMode string        `json:"data_security_mode,omitempty"`
+	DataSecurityMode string        `json:"data_security_mode,omitempty" tf:"suppress_diff"`
 	SingleUserName   string        `json:"single_user_name,omitempty"`
 	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`

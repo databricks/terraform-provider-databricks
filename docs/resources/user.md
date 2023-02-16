@@ -75,7 +75,7 @@ provider "databricks" {
 }
 
 resource "databricks_user" "account_user" {
-  provider     = databricks.mws
+  provider     = databricks.azure_account
   user_name    = "me@example.com"
   display_name = "Example user"
 }

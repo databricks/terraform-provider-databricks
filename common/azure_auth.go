@@ -13,10 +13,10 @@ func (aa *DatabricksClient) GetAzureJwtProperty(key string) (any, error) {
 	if !aa.IsAzure() {
 		return "", fmt.Errorf("can't get Azure JWT token in non-Azure environment")
 	}
-	if key == "tid" && aa.AzureTenantID != "" {
-		return aa.AzureTenantID, nil
+	if key == "tid" && aa.Config.AzureTenantID != "" {
+		return aa.Config.AzureTenantID, nil
 	}
-	request, err := http.NewRequest("GET", aa.Host, nil)
+	request, err := http.NewRequest("GET", aa.Config.Host, nil)
 	if err != nil {
 		return nil, err
 	}

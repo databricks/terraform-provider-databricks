@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -71,7 +73,13 @@ func TestClustersDataSourceContainsName(t *testing.T) {
 
 func TestClustersDataSourceErrorsOut(t *testing.T) {
 	diag := DataSourceClusters().ReadContext(context.Background(), nil, &common.DatabricksClient{
-		Host: ".", Token: "."})
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: ".", 
+				Token: ".",
+			},
+		},
+	})
 	assert.NotNil(t, diag)
 	assert.True(t, diag.HasError())
 }

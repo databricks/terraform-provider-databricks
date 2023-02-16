@@ -32,19 +32,19 @@ type ServicePrincipalSecretAPI struct {
 }
 
 func (a ServicePrincipalSecretAPI) createServicePrincipalSecret(spnID string) (secret *ServicePrincipalSecret, err error) {
-	path := fmt.Sprintf("/accounts/%s/servicePrincipals/%s/credentials/secrets", a.client.AccountID, spnID)
+	path := fmt.Sprintf("/accounts/%s/servicePrincipals/%s/credentials/secrets", a.client.Config.AccountID, spnID)
 	err = a.client.Post(a.context, path, map[string]any{}, &secret)
 	return
 }
 
 func (a ServicePrincipalSecretAPI) listServicePrincipalSecrets(spnID string) (secrets ListServicePrincipalSecrets, err error) {
-	path := fmt.Sprintf("/accounts/%s/servicePrincipals/%s/credentials/secrets", a.client.AccountID, spnID)
+	path := fmt.Sprintf("/accounts/%s/servicePrincipals/%s/credentials/secrets", a.client.Config.AccountID, spnID)
 	err = a.client.Get(a.context, path, nil, &secrets)
 	return
 }
 
 func (a ServicePrincipalSecretAPI) deleteServicePrincipalSecret(spnID, secretID string) error { // FIXME
-	path := fmt.Sprintf("/accounts/%s/servicePrincipals/%s/credentials/secrets/%s", a.client.AccountID, spnID, secretID)
+	path := fmt.Sprintf("/accounts/%s/servicePrincipals/%s/credentials/secrets/%s", a.client.Config.AccountID, spnID, secretID)
 	return a.client.Delete(a.context, path, nil)
 }
 
@@ -62,7 +62,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 	return common.Resource{
 		Schema: spnSecretSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if c.AccountID == "" {
+			if c.Config.AccountID == "" {
 				return errors.New("must have `account_id` on provider")
 			}
 			idSeen := map[string]bool{}
@@ -93,7 +93,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 			return d.Set("secret", secret.Secret)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if c.AccountID == "" {
+			if c.Config.AccountID == "" {
 				return errors.New("must have `account_id` on provider")
 			}
 			api := NewServicePrincipalSecretAPI(ctx, c)
@@ -111,7 +111,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 			return apierr.NotFound("client secret not found")
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if c.AccountID == "" {
+			if c.Config.AccountID == "" {
 				return errors.New("must have `account_id` on provider")
 			}
 			api := NewServicePrincipalSecretAPI(ctx, c)

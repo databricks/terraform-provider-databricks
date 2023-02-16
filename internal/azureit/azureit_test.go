@@ -23,8 +23,8 @@ func TestStart(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		responseWriter := httptest.NewRecorder()
-		azure.PublicCloud.ResourceManagerEndpoint = client.Host
-		os.Setenv("MSI_ENDPOINT", client.Host)
+		azure.PublicCloud.ResourceManagerEndpoint = client.Config.Host
+		os.Setenv("MSI_ENDPOINT", client.Config.Host)
 		os.Setenv("MSI_SECRET", "secret")
 		os.Setenv("ACI_CONTAINER_GROUP", "")
 		triggerStart(responseWriter, nil)

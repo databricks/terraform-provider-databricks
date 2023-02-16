@@ -55,7 +55,7 @@ func DataSourceCurrentUser() *schema.Resource {
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)
 			d.Set("alphanumeric", norm)
-			d.Set("workspace_url", usersAPI.client.Host)
+			d.Set("workspace_url", usersAPI.client.Config.Host)
 			d.SetId(me.ID)
 			return nil
 		},

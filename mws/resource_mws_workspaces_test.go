@@ -898,7 +898,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 					AccountID:       "abc",
 					WorkspaceID:     1234,
 					WorkspaceStatus: "RUNNING",
-					WorkspaceURL:    wsClient.Host,
+					WorkspaceURL:    wsClient.Config.Host,
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -937,9 +937,9 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[1].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
-			WorkspaceURL:    wsClient.Host,
+			WorkspaceURL:    wsClient.Config.Host,
 		}
-		state["workspace_url"] = wsClient.Host
+		state["workspace_url"] = wsClient.Config.Host
 		state["workspace_name"] = "b"
 		state["account_id"] = "c"
 		state["is_no_public_ip_enabled"] = "false"
@@ -1053,7 +1053,7 @@ func TestEnsureTokenExists(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1083,7 +1083,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1142,7 +1142,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1163,13 +1163,21 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 func TestGenerateWorkspaceHostname_CornerCases(t *testing.T) {
 	assert.Equal(t, "fallback.cloud.databricks.com",
 		generateWorkspaceHostname(&common.DatabricksClient{
-			Host: "$%^&*",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "$%^&*",
+				},
+			},
 		}, Workspace{
 			DeploymentName: "fallback",
 		}))
 	assert.Equal(t, "stuff.is.exaple.com",
 		generateWorkspaceHostname(&common.DatabricksClient{
-			Host: "https://this.is.exaple.com",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "https://this.is.exaple.com",
+				},
+			},
 		}, Workspace{
 			DeploymentName: "stuff",
 		}))

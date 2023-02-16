@@ -4,15 +4,18 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCommandMock(t *testing.T) {
 	c := DatabricksClient{
-		Config: &config.Config{
-			Host:  ".",
-			Token: ".",
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  ".",
+				Token: ".",
+			},
 		},
 	}
 	called := false

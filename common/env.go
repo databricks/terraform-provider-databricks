@@ -21,7 +21,6 @@ func CommonEnvironmentClient() *DatabricksClient {
 	}
 	return &DatabricksClient{
 		DatabricksClient: client,
-		Config:           client.Config,
 	}
 }
 

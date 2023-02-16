@@ -14,10 +14,10 @@ func DataSourceMwsWorkspaces() *schema.Resource {
 	}
 	return common.DataResource(mwsWorkspacesData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*mwsWorkspacesData)
-		if c.AccountID == "" {
+		if c.Config.AccountID == "" {
 			return fmt.Errorf("provider block is missing `account_id` property")
 		}
-		workspaces, err := NewWorkspacesAPI(ctx, c).List(c.AccountID)
+		workspaces, err := NewWorkspacesAPI(ctx, c).List(c.Config.AccountID)
 		if err != nil {
 			return err
 		}

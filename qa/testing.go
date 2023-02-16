@@ -161,18 +161,18 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		client.WithCommandMock(f.CommandMock)
 	}
 	if f.Azure {
-		client.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+		client.Config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	}
 	if f.AzureSPN {
-		client.AzureClientID = "a"
-		client.AzureClientSecret = "b"
-		client.AzureTenantID = "c"
+		client.Config.AzureClientID = "a"
+		client.Config.AzureClientSecret = "b"
+		client.Config.AzureTenantID = "c"
 	}
 	if f.Gcp {
-		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
+		client.Config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
 	if f.AccountID != "" {
-		client.AccountID = f.AccountID
+		client.Config.AccountID = f.AccountID
 	}
 	if len(f.HCL) > 0 {
 		var out any
@@ -344,7 +344,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
-		client.AccountID = config["account_id"]
+		client.Config.AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue
@@ -498,7 +498,6 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 		return nil, nil, err
 	}
 	return &common.DatabricksClient{
-		Config:           cfg,
 		DatabricksClient: c,
 	}, server, nil
 }

@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 
@@ -38,8 +40,12 @@ const expectedCommandResp = "done"
 func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount) (string, error), mount Mount,
 	mountName, expectedCommand string) {
 	c := common.DatabricksClient{
-		Host:  ".",
-		Token: ".",
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  ".",
+				Token: ".",
+			},
+		},
 	}
 	var called bool
 
@@ -102,8 +108,12 @@ func TestMountPoint_Mount(t *testing.T) {
 	`, mountName, expectedMountSource, expectedMountConfig)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
 		client := common.DatabricksClient{
-			Host:  ".",
-			Token: ".",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host:  ".",
+					Token: ".",
+				},
+			},
 		}
 		return mp.Mount(mount, &client)
 	}, mount, mountName, expectedCommand)

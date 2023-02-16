@@ -26,7 +26,6 @@ func TestAccAwsGroupInstanceProfileResource(t *testing.T) {
 	}
 	instanceProfilesAPI := aws.NewInstanceProfilesAPI(ctx, &common.DatabricksClient{
 		DatabricksClient: client,
-		Config:           client.Config,
 	})
 	instanceProfilesAPI.Synchronized(arn, func() bool {
 		if instanceProfilesAPI.IsRegistered(arn) {

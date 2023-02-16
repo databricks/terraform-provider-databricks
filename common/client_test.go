@@ -202,6 +202,17 @@ func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
 	}, "cannot configure databricks-cli auth: cannot parse config file")
 }
 
+func TestDatabricksClient_FormatURL(t *testing.T) {
+	client := DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://some.host",
+			},
+		},
+	}
+	assert.Equal(t, "https://some.host/#job/123", client.FormatURL("#job/123"))
+}
+
 // func TestDatabricksClient_Authenticate(t *testing.T) {
 // 	defer CleanupEnvironment()()
 // 	dc := DatabricksClient{}

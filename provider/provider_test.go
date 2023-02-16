@@ -85,8 +85,8 @@ func (tc providerFixture) apply(t *testing.T) {
 		return
 	}
 	assert.Equal(t, tc.assertAzure, c.IsAzure())
-	assert.Equal(t, tc.assertAuth, c.AuthType)
-	assert.Equal(t, tc.assertHost, c.Host)
+	assert.Equal(t, tc.assertAuth, c.Config.AuthType)
+	assert.Equal(t, tc.assertHost, c.Config.Host)
 }
 
 func TestConfig_NoParams(t *testing.T) {

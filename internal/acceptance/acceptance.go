@@ -86,7 +86,6 @@ func Test(t *testing.T, steps []Step, otherVars ...map[string]string) {
 	}
 	client := &common.DatabricksClient{
 		DatabricksClient: c,
-		Config:           c.Config,
 	}
 	type testResource struct {
 		ID       string
@@ -198,7 +197,6 @@ func ResourceCheck(name string,
 		}
 		return cb(context.Background(), &common.DatabricksClient{
 			DatabricksClient: client,
-			Config:           client.Config,
 		}, rs.Primary.ID)
 	}
 }

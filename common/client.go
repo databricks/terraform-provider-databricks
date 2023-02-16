@@ -143,6 +143,16 @@ func (c *DatabricksClient) IsGcp() bool {
 	return c.Config.IsGcp()
 }
 
+// FormatURL creates URL from the client Host and additional strings
+func (c *DatabricksClient) FormatURL(strs ...string) string {
+	host := c.Config.Host
+	if !strings.HasSuffix(host, "/") {
+		host += "/"
+	}
+	data := append([]string{host}, strs...)
+	return strings.Join(data, "")
+}
+
 // ClientForHost creates a new DatabricksClient instance with the same auth parameters,
 // but for the given host. Authentication has to be reinitialized, as Google OIDC has
 // different authorizers, depending if it's workspace or Accounts API we're talking to.

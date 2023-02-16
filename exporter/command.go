@@ -82,7 +82,6 @@ func Run(args ...string) error {
 	}
 	ic := newImportContext(&common.DatabricksClient{
 		DatabricksClient: client,
-		Config:           client.Config,
 	})
 
 	flags := flag.NewFlagSet("exporter", flag.ExitOnError)

@@ -177,10 +177,8 @@ func providerSchema() map[string]*schema.Schema {
 		}
 	}
 	// TODO: check if still relevant
-	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT",
-		common.DefaultRateLimitPerSecond)
-	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES",
-		common.DefaultTruncateBytes)
+	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", 15)
+	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96)
 	return ps
 }
 
@@ -210,7 +208,6 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 	}
 	pc := &common.DatabricksClient{
 		DatabricksClient: client,
-		Config:           cfg,
 		// TODO: check if it's still needed with `useragent.WithUserAgentExtra`
 		Provider: ctx.Value(common.Provider).(*schema.Provider),
 	}

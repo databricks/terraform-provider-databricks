@@ -107,8 +107,8 @@ func getContainerDefaults(d *schema.ResourceData, allowed_schemas []string, suff
 }
 
 func getTenantID(client *common.DatabricksClient) (string, error) {
-	if client.AzureTenantID != "" {
-		return client.AzureTenantID, nil
+	if client.Config.AzureTenantID != "" {
+		return client.Config.AzureTenantID, nil
 	}
 	v, err := client.GetAzureJwtProperty("tid")
 	if err != nil {

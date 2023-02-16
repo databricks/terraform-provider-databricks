@@ -534,7 +534,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
 			scim.ResourceServicePrincipal().Schema["application_id"], d))
-		ic.Client.Host = "https://abc.azuredatabricks.net"
+		ic.Client.Config.Host = "https://abc.azuredatabricks.net"
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
 			scim.ResourceServicePrincipal().Schema["display_name"], d))
 

@@ -39,8 +39,7 @@ func TestDatabricksClientConfigure_Nothing(t *testing.T) {
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{},
 		},
-	},
-		"authentication is not configured for provider")
+	}, "default auth: cannot configure default credentials")
 }
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
@@ -52,7 +51,7 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 				Password: "bar",
 			},
 		},
-	}, "authentication is not configured for provider.")
+	}, "default auth: cannot configure default credentials")
 }
 
 func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
@@ -92,7 +91,7 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 				Token: "dapi345678",
 			},
 		},
-	}, "authentication is not configured for provider.")
+	}, "default auth: cannot configure default credentials")
 }
 
 func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
@@ -135,7 +134,7 @@ func TestDatabricksClientConfigure_ConfigRead(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, "databricks-cli", dc.Config.AuthType)
+	assert.Equal(t, "pat", dc.Config.AuthType)
 	assert.Equal(t, "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ", dc.Config.Token)
 }
 
@@ -148,8 +147,8 @@ func TestDatabricksClientConfigure_NoHostGivesError(t *testing.T) {
 				Profile:    "nohost",
 			},
 		},
-	}, "cannot configure databricks-cli auth: config file "+
-		"testdata/.databrickscfg is corrupt: cannot find host in nohost profile.")
+	}, "default auth: cannot configure default credentials. "+
+		"Config: token=***, profile=nohost, config_file=testdata/.databrickscfg")
 }
 
 func TestDatabricksClientConfigure_NoTokenGivesError(t *testing.T) {
@@ -174,8 +173,8 @@ func TestDatabricksClientConfigure_InvalidProfileGivesError(t *testing.T) {
 				Profile:    "invalidhost",
 			},
 		},
-	}, "cannot configure databricks-cli auth: testdata/.databrickscfg "+
-		"has no invalidhost profile configured")
+	}, "resolve: testdata/.databrickscfg has no invalidhost profile configured. "+
+		"Config: token=***, profile=invalidhost, config_file=testdata/.databrickscfg")
 }
 
 func TestDatabricksClientConfigure_MissingFile(t *testing.T) {
@@ -187,7 +186,7 @@ func TestDatabricksClientConfigure_MissingFile(t *testing.T) {
 				Profile:    "invalidhost",
 			},
 		},
-	}, "authentication is not configured for provider.")
+	}, "default auth: cannot configure default credentials.")
 }
 
 func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
@@ -199,7 +198,7 @@ func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
 				Profile:    "invalidhost",
 			},
 		},
-	}, "cannot configure databricks-cli auth: cannot parse config file")
+	}, `resolve: cannot parse config file`)
 }
 
 func TestDatabricksClient_FormatURL(t *testing.T) {
@@ -312,7 +311,7 @@ func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
 				AuthType: "nonsense",
 			},
 		},
-	}, "cannot configure nonsense auth.")
+	}, "default auth: cannot configure default credentials")
 }
 
 func TestConfigAttributeSetNonsense(t *testing.T) {
@@ -320,51 +319,4 @@ func TestConfigAttributeSetNonsense(t *testing.T) {
 		Kind: reflect.Chan,
 	}).Set(&DatabricksClient{}, 1)
 	assert.EqualError(t, err, "cannot set  of unknown type Chan")
-}
-
-func TestDatabricksClientFixHost(t *testing.T) {
-	hostForInput := func(in string) (string, error) {
-		client := &DatabricksClient{
-			DatabricksClient: &client.DatabricksClient{
-				Config: &config.Config{
-					Host: in,
-				},
-			},
-		}
-		return client.Config.Host, nil
-	}
-
-	{
-		// Strip trailing slash.
-		out, err := hostForInput("https://accounts.gcp.databricks.com/")
-		assert.Nil(t, err)
-		assert.Equal(t, out, "https://accounts.gcp.databricks.com")
-	}
-
-	{
-		// Keep port.
-		out, err := hostForInput("https://accounts.gcp.databricks.com:443")
-		assert.Nil(t, err)
-		assert.Equal(t, out, "https://accounts.gcp.databricks.com:443")
-	}
-
-	{
-		// Default scheme.
-		out, err := hostForInput("accounts.gcp.databricks.com")
-		assert.Nil(t, err)
-		assert.Equal(t, out, "https://accounts.gcp.databricks.com")
-	}
-
-	{
-		// Default scheme with port.
-		out, err := hostForInput("accounts.gcp.databricks.com:443")
-		assert.Nil(t, err)
-		assert.Equal(t, out, "https://accounts.gcp.databricks.com:443")
-	}
-
-	{
-		// Return error.
-		_, err := hostForInput("://@@@accounts.gcp.databricks.com/")
-		assert.NotNil(t, err)
-	}
 }

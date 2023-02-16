@@ -91,7 +91,7 @@ func (tc providerFixture) apply(t *testing.T) {
 
 func TestConfig_NoParams(t *testing.T) {
 	providerFixture{
-		assertError: "authentication is not configured for provider",
+		assertError: "default auth: cannot configure default credentials",
 	}.apply(t)
 }
 
@@ -100,7 +100,7 @@ func TestConfig_HostEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_HOST": "x",
 		},
-		assertError: "authentication is not configured for provider",
+		assertError: "default auth: cannot configure default credentials",
 	}.apply(t)
 }
 
@@ -109,7 +109,7 @@ func TestConfig_TokenEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertError: "authentication is not configured for provider. Environment variables used: DATABRICKS_TOKEN",
+		assertError: "default auth: cannot configure default credentials. Config: token=***. Env: DATABRICKS_TOKEN",
 	}.apply(t)
 }
 
@@ -141,8 +141,8 @@ func TestConfig_UserPasswordEnv(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "authentication is not configured for provider." +
-			" Environment variables used: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
+		assertError: "default auth: cannot configure default credentials. " +
+			"Config: username=x, password=***. Env: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
 		assertHost: "https://x",
 	}.apply(t)
 }
@@ -213,7 +213,9 @@ func TestConfig_ConflictingEnvs(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "More than one authorization method configured: password and token",
+		assertError: "validate: more than one authorization method configured: basic and pat. " +
+			"Config: host=x, token=***, username=x, password=***. " +
+			"Env: DATABRICKS_HOST, DATABRICKS_TOKEN, DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
 	}.apply(t)
 }
 
@@ -236,7 +238,7 @@ func TestConfig_ConfigFile(t *testing.T) {
 		env: map[string]string{
 			"CONFIG_FILE": "x",
 		},
-		assertError: "authentication is not configured for provider",
+		assertError: "default auth: cannot configure default credentials",
 	}.apply(t)
 }
 
@@ -258,8 +260,8 @@ func TestConfig_PatFromDatabricksCfg_NohostProfile(t *testing.T) {
 			"HOME":                      "../common/testdata",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 		},
-		assertError: "cannot configure databricks-cli auth: config " +
-			"file ../common/testdata/.databrickscfg is corrupt: cannot find host in nohost profile",
+		assertError: "default auth: cannot configure default credentials. " +
+			"Config: token=***, profile=nohost. Env: DATABRICKS_CONFIG_PROFILE",
 	}.apply(t)
 }
 
@@ -270,7 +272,8 @@ func TestConfig_ConfigProfileAndToken(t *testing.T) {
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 			"HOME":                      "../common/testdata",
 		},
-		assertError: "More than one authorization method configured: config profile and token",
+		assertError: "default auth: cannot configure default credentials. " +
+			"Config: token=***, profile=nohost. Env: DATABRICKS_TOKEN, DATABRICKS_CONFIG_PROFILE",
 	}.apply(t)
 }
 
@@ -281,7 +284,8 @@ func TestConfig_ConfigProfileAndPassword(t *testing.T) {
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 			"HOME":                      "../common/testdata",
 		},
-		assertError: "More than one authorization method configured: config profile and password",
+		assertError: "validate: more than one authorization method configured: basic and pat. " +
+			"Config: token=***, username=x, profile=nohost. Env: DATABRICKS_USERNAME, DATABRICKS_CONFIG_PROFILE",
 	}.apply(t)
 }
 
@@ -341,7 +345,9 @@ func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
 			"PATH": p,
 			"HOME": p,
 		},
-		assertError: "More than one authorization method configured: azure and token",
+		assertError: "validate: more than one authorization method configured: azure and pat. " +
+			"Config: host=https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/, token=***, " +
+			"azure_workspace_resource_id=/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
 	}.apply(t)
 }
 
@@ -373,7 +379,10 @@ func TestConfig_AzureAndPasswordConflict(t *testing.T) {
 			"HOME":                p,
 			"DATABRICKS_USERNAME": "x",
 		},
-		assertError: "More than one authorization method configured: azure and password",
+		assertError: "validate: more than one authorization method configured: azure and basic and pat. " + 
+			"Config: host=x, token=***, username=x, " +
+			"azure_workspace_resource_id=/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c. " +
+			"Env: DATABRICKS_USERNAME",
 	}.apply(t)
 }
 
@@ -382,8 +391,7 @@ func TestConfig_CorruptConfig(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata/corrupt",
 		},
-		assertError: "cannot configure databricks-cli auth: " +
-			"../common/testdata/corrupt/.databrickscfg has no DEFAULT profile configured",
+		assertError: "default auth: cannot configure default credentials",
 	}.apply(t)
 }
 

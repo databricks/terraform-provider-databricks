@@ -44,6 +44,21 @@ func TestDiffShareInfo(t *testing.T) {
 			},
 		},
 	}
+	thirdShare := ShareInfo{
+		Name: "b",
+		Objects: []SharedDataObject{
+			{
+				Name:           "main.c",
+				DataObjectType: "TABLE",
+				Comment:        "d",
+			},
+			{
+				Name:           "main.b",
+				DataObjectType: "TABLE",
+				Comment:        "d",
+			},
+		},
+	}
 	diffAdd := []ShareDataChange{
 		{
 			Action: ShareAdd,
@@ -98,10 +113,37 @@ func TestDiffShareInfo(t *testing.T) {
 			},
 		},
 	}
+	diffMix2 := []ShareDataChange{
+		{
+			Action: ShareRemove,
+			DataObject: SharedDataObject{
+				Name:           "main.a",
+				DataObjectType: "TABLE",
+				Comment:        "c",
+			},
+		},
+		{
+			Action: ShareAdd,
+			DataObject: SharedDataObject{
+				Name:           "main.c",
+				DataObjectType: "TABLE",
+				Comment:        "d",
+			},
+		},
+		{
+			Action: ShareUpdate,
+			DataObject: SharedDataObject{
+				Name:           "main.b",
+				DataObjectType: "TABLE",
+				Comment:        "d",
+			},
+		},
+	}
 	assert.Equal(t, firstShare.Diff(firstShare), []ShareDataChange{}, "Should not have difference")
 	assert.Equal(t, empty.Diff(firstShare), diffAdd, "Should have 2 ADDs")
 	assert.Equal(t, firstShare.Diff(empty), diffRemove, "Should have 2 REMOVEs")
 	assert.Equal(t, firstShare.Diff(secondShare), diffMix, "Should have 1 ADD and 1 REMOVE")
+	assert.Equal(t, firstShare.Diff(thirdShare), diffMix2, "Should have 1 ADD, 1 REMOVE and 1 UPDATE")
 }
 
 func TestShareCornerCases(t *testing.T) {

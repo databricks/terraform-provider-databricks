@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"reflect"
 	"sort"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -20,6 +21,7 @@ func NewSharesAPI(ctx context.Context, m any) SharesAPI {
 const (
 	ShareAdd    = "ADD"
 	ShareRemove = "REMOVE"
+	ShareUpdate = "UPDATE"
 )
 
 type ShareInfo struct {
@@ -148,9 +150,16 @@ func (si ShareInfo) Diff(other ShareInfo) []ShareDataChange {
 	}
 
 	// not in before so add
+	// if in before but diff then update
 	for _, afterSdo := range other.Objects {
-		_, exists := beforeMap[afterSdo.Name]
+		beforeSdo, exists := beforeMap[afterSdo.Name]
 		if exists {
+			if !reflect.DeepEqual(beforeSdo, afterSdo) {
+				changes = append(changes, ShareDataChange{
+					Action:     ShareUpdate,
+					DataObject: afterSdo,
+				})
+			}
 			continue
 		}
 		changes = append(changes, ShareDataChange{

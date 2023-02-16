@@ -21,6 +21,8 @@ func TestShareData(t *testing.T) {
 							Name:           "a",
 							DataObjectType: "TABLE",
 							Comment:        "c",
+							CDFEnabled:     false,
+							StartVersion:   0,
 							SharedAs:       "",
 							AddedAt:        0,
 							AddedBy:        "",
@@ -39,7 +41,7 @@ func TestShareData(t *testing.T) {
 		name = "a"
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "bob", d.Get("created_by"))
 	assert.Equal(t, 1921321, d.Get("created_at"))
 	assert.Equal(t,
@@ -50,6 +52,8 @@ func TestShareData(t *testing.T) {
 			"data_object_type": "TABLE",
 			"name":             "a",
 			"shared_as":        "",
+			"start_version":    0,
+			"cdf_enabled":      false,
 		},
 		d.Get("object").(*schema.Set).List()[0])
 }

@@ -46,7 +46,7 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
@@ -108,7 +108,7 @@ func TestResourceUserInstanceProfileRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty")
 }
 
@@ -189,7 +189,7 @@ func TestResourceUserInstanceProfileDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 

@@ -259,13 +259,13 @@ func (f ResourceFixture) requiresNew(diff *terraform.InstanceDiff) error {
 // ApplyNoError is a convenience method for no-data tests
 func (f ResourceFixture) ApplyNoError(t *testing.T) {
 	_, err := f.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }
 
 // ApplyAndExpectData is a convenience method for tests that doesn't expect error, but want to check data
 func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]any) {
 	d, err := f.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	for k, expected := range data {
 		if k == "id" {
 			assert.Equal(t, expected, d.Id())
@@ -418,23 +418,23 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 				if fixture.ExpectedRequest != nil {
 					buf := new(bytes.Buffer)
 					_, err := buf.ReadFrom(req.Body)
-					assert.NoError(t, err, err)
+					assert.NoError(t, err)
 					jsonStr, err := json.Marshal(fixture.ExpectedRequest)
-					assert.NoError(t, err, err)
+					assert.NoError(t, err)
 					assert.JSONEq(t, string(jsonStr), buf.String(), "json strings do not match")
 				}
 				if fixture.Response != nil {
 					if alreadyJSON, ok := fixture.Response.(string); ok {
 						_, err = rw.Write([]byte(alreadyJSON))
-						assert.NoError(t, err, err)
+						assert.NoError(t, err)
 					} else {
 						responseBytes, err := json.Marshal(fixture.Response)
 						if err != nil {
-							assert.NoError(t, err, err)
+							assert.NoError(t, err)
 							t.FailNow()
 						}
 						_, err = rw.Write(responseBytes)
-						assert.NoError(t, err, err)
+						assert.NoError(t, err)
 					}
 				}
 				found = true
@@ -449,9 +449,9 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 			receivedRequest := map[string]any{}
 			buf := new(bytes.Buffer)
 			_, err := buf.ReadFrom(req.Body)
-			assert.NoError(t, err, err)
+			assert.NoError(t, err)
 			err = json.Unmarshal(buf.Bytes(), &receivedRequest)
-			assert.NoError(t, err, err)
+			assert.NoError(t, err)
 
 			expectedRequest := ""
 			if len(receivedRequest) > 0 {

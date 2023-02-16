@@ -32,7 +32,7 @@ func TestResourceNotebookRead(t *testing.T) {
 		New:      true,
 		ID:       path,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 	assert.Equal(t, path, d.Get("path"))
 	assert.Equal(t, "PYTHON", d.Get("language"))
@@ -54,7 +54,7 @@ func TestResourceNotebookDelete(t *testing.T) {
 		Delete:   true,
 		ID:       path,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 }
 
@@ -146,7 +146,7 @@ func TestResourceNotebookCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/foo/path.py", d.Id())
 }
 
@@ -200,7 +200,7 @@ func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/Mars", d.Id())
 }
 
@@ -238,7 +238,7 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/Dashboard", d.Id())
 }
 

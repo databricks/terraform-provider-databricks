@@ -122,7 +122,7 @@ func TestResourceEntitlementsGroupCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "group/abc", d.Id())
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -206,7 +206,7 @@ func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 		databricks_sql_access = true
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "group/abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -341,7 +341,7 @@ func TestResourceEntitlementsUserCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "user/abc", d.Id())
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -464,7 +464,7 @@ func TestResourceEntitlementsUserUpdate(t *testing.T) {
 		databricks_sql_access = true
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "user/abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -533,7 +533,7 @@ func TestResourceEntitlementsSPNCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "spn/abc", d.Id())
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -645,7 +645,7 @@ func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 		databricks_sql_access      = true
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "spn/abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))

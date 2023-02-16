@@ -34,7 +34,7 @@ func TestWorkspaceConfCreate(t *testing.T) {
 		}`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "_", d.Id())
 	assert.Equal(t, "true", d.Get("custom_config.enableIpAccessLists"))
 }
@@ -107,7 +107,7 @@ func TestWorkspaceConfUpdate(t *testing.T) {
 		Update: true,
 		ID:     "_",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "_", d.Id())
 	assert.Equal(t, "true", d.Get("custom_config.enableIpAccessLists"))
 }
@@ -151,7 +151,7 @@ func TestWorkspaceConfRead(t *testing.T) {
 		Read:     true,
 		ID:       "_",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }
 
 func TestWorkspaceConfRead_Error(t *testing.T) {
@@ -199,7 +199,7 @@ func TestWorkspaceConfDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "_",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "_", d.Id())
 }
 

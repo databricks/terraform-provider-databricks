@@ -40,6 +40,9 @@ The following arguments are required:
 * `name` (Required) - Full name of the object, e.g. `catalog.schema.name` for a table.
 * `data_object_type` (Required) - Type of the object, currently only `TABLE` is allowed.
 * `comment` (Optional) -  Description about the object.
+* `shared_as` (Optional) - A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share.
+* `cdf_enabled` (Optional) - Whether to enable Change Data Feed (cdf) on the shared object.
+* `start_version` (Optional) -  The start version associated with the object for cdf. This allows data providers to control the lowest object version that is accessible by clients.
 
 ## Attribute Reference
 

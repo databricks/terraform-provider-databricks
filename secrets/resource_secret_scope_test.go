@@ -33,7 +33,7 @@ func TestResourceSecretScopeRead(t *testing.T) {
 		New:      true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "DATABRICKS", d.Get("backend_type"))
 	assert.Equal(t, "", d.Get("initial_manage_principal"))
@@ -66,7 +66,7 @@ func TestResourceSecretScopeRead_KeyVault(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "AZURE_KEYVAULT", d.Get("backend_type"))
 	assert.Equal(t, "", d.Get("initial_manage_principal"))
@@ -150,7 +150,7 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "Boom", d.Id())
 }
 
@@ -197,7 +197,7 @@ func TestResourceSecretScopeCreate_KeyVault(t *testing.T) {
 		Azure:  true,
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "Boom", d.Id())
 }
 
@@ -234,7 +234,7 @@ func TestResourceSecretScopeCreate_Users(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "Boom", d.Id())
 }
 
@@ -277,7 +277,7 @@ func TestResourceSecretScopeDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 

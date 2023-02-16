@@ -38,7 +38,7 @@ func TestResourceInstanceProfileCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
@@ -72,7 +72,7 @@ func TestResourceInstanceProfileWithRoleCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
@@ -105,7 +105,7 @@ func TestResourceInstanceProfileWithEmptyRoleCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
@@ -221,7 +221,7 @@ func TestResourceInstanceProfileRead(t *testing.T) {
 		New:      true,
 		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id(), "Id should not be empty")
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Get("instance_profile_arn"))
 }
@@ -280,7 +280,7 @@ func TestResourceInstanceProfileDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
@@ -336,7 +336,7 @@ func TestResourceInstanceProfileUpdate(t *testing.T) {
 		Update: true,
 		ID:     "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
@@ -390,11 +390,11 @@ func TestAccAwsInstanceProfiles(t *testing.T) {
 		}
 		defer func() {
 			err := instanceProfilesAPI.Delete(arn)
-			assert.NoError(t, err, err)
+			assert.NoError(t, err)
 		}()
 
 		arnSearch, err := instanceProfilesAPI.Read(arn)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.True(t, len(arnSearch.InstanceProfileArn) > 0)
 		return true
 	})
@@ -415,11 +415,11 @@ func TestAccAwsInstanceProfilesSkippingValidation(t *testing.T) {
 		}
 		defer func() {
 			err := instanceProfilesAPI.Delete(arn)
-			assert.NoError(t, err, err)
+			assert.NoError(t, err)
 		}()
 
 		arnSearch, err := instanceProfilesAPI.Read(arn)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.True(t, len(arnSearch.InstanceProfileArn) > 0)
 		return true
 	})

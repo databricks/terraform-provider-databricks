@@ -53,12 +53,12 @@ func (c *DatabricksClient) Put(ctx context.Context, path string, request any) er
 	return c.Do(ctx, http.MethodPut, path, request, nil, c.addApiPrefix)
 }
 
-type apiVersion string
+type ApiVersion string
 
 const (
-	API_1_2 apiVersion = "1.2"
-	API_2_0 apiVersion = "2.0"
-	API_2_1 apiVersion = "2.1"
+	API_1_2 ApiVersion = "1.2"
+	API_2_0 ApiVersion = "2.0"
+	API_2_1 ApiVersion = "2.1"
 )
 
 func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
@@ -66,7 +66,7 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 		return fmt.Errorf("no URL found in request")
 	}
 	ctx := r.Context()
-	av, ok := ctx.Value(Api).(apiVersion)
+	av, ok := ctx.Value(Api).(ApiVersion)
 	if !ok {
 		av = API_2_0
 	}
@@ -191,4 +191,14 @@ func (aa *DatabricksClient) GetAzureJwtProperty(key string) (any, error) {
 		return nil, fmt.Errorf("can't find field '%s' in parsed JWT", key)
 	}
 	return v, nil
+}
+
+func CommonEnvironmentClient() *DatabricksClient {
+	c, err := client.New(&config.Config{})
+	if err != nil {
+		panic(err)
+	}
+	return &DatabricksClient{
+		DatabricksClient: c,
+	}
 }

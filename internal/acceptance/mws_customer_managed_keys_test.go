@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestMwsAccCustomerManagedKeys(t *testing.T) {
+func TestMwsAccAwsCustomerManagedKeys(t *testing.T) {
 	accountLevel(t, step{
 		Template: `resource "databricks_mws_customer_managed_keys" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -14,5 +14,20 @@ func TestMwsAccCustomerManagedKeys(t *testing.T) {
 			}
 			use_cases = ["MANAGED_SERVICES"]
 		}`,
+	})
+}
+
+func TestGcpaAccCustomerManagedKeysForStorage(t *testing.T) {
+	accountLevel(t, step{
+		Template: `provider "databricks" {
+				host     = "{env.DATABRICKS_HOST}"
+			}
+			resource "databricks_mws_customer_managed_keys" "this" {
+				account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+				gcp_key_info {
+					kms_key_id   = "{env.TEST_GCP_KMS_KEY_ID}"
+				}
+				use_cases = ["STORAGE"]
+			}`,
 	})
 }

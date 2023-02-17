@@ -5,24 +5,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/databricks/databricks-sdk-go/client"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/mitchellh/go-homedir"
 )
 
 var (
 	envMutex sync.Mutex
 )
-
-func CommonEnvironmentClient() *DatabricksClient {
-	client, err := client.New(&config.Config{})
-	if err != nil {
-		panic(err)
-	}
-	return &DatabricksClient{
-		DatabricksClient: client,
-	}
-}
 
 // CleanupEnvironment backs up environment - use as `defer CleanupEnvironment()()`
 // clears it and restores it in the end. It's meant strictly for "unit" tests

@@ -5,12 +5,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
@@ -195,35 +197,6 @@ func TestDatabricksClient_FormatURL(t *testing.T) {
 	assert.Equal(t, "https://some.host/#job/123", client.FormatURL("#job/123"))
 }
 
-// func TestDatabricksClient_Authenticate(t *testing.T) {
-// 	defer CleanupEnvironment()()
-// 	dc := DatabricksClient{}
-// 	err := dc.Configure("account_id", "username", "password")
-// 	os.Setenv("DATABRICKS_PASSWORD", ".")
-// 	assert.NoError(t, err)
-// 	err = dc.Authenticate(context.WithValue(context.Background(), IsData, "yes"))
-// 	assert.EqualError(t, err, "workspace is most likely not created yet, because the `host` is empty. "+
-// 		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
-// 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/behavior.html more info. "+
-// 		"Attributes used: account_id, username. Environment variables used: DATABRICKS_PASSWORD. "+
-// 		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
-// }
-
-// func TestDatabricksClient_AuthenticateAzure(t *testing.T) {
-// 	defer CleanupEnvironment()()
-// 	os.Setenv("ARM_CLIENT_SECRET", ".")
-// 	os.Setenv("ARM_CLIENT_ID", ".")
-// 	dc := DatabricksClient{}
-// 	err := dc.Configure("azure_client_id", "azure_client_secret")
-// 	assert.NoError(t, err)
-// 	err = dc.Authenticate(context.WithValue(context.Background(), IsData, "yes"))
-// 	assert.EqualError(t, err, "workspace is most likely not created yet, because the `host` is empty. "+
-// 		"Please add `depends_on = [databricks_mws_workspaces.this]` or `depends_on = [azurerm_databricks"+
-// 		"_workspace.this]` to every data resource. See https://www.terraform.io/docs/language/resources/"+
-// 		"behavior.html more info. Environment variables used: ARM_CLIENT_SECRET, ARM_CLIENT_ID. "+
-// 		"Please check https://registry.terraform.io/providers/databricks/databricks/latest/docs#authentication for details")
-// }
-
 func TestDatabricksIsGcp(t *testing.T) {
 	dc, err := configureAndAuthenticate(&DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
@@ -292,4 +265,60 @@ func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
 			},
 		},
 	}, "default auth: cannot configure default credentials")
+}
+
+func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
+	defer CleanupEnvironment()()
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
+
+	aa := DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				AzureClientID:     "a",
+				AzureClientSecret: "b",
+				AzureTenantID:     "c",
+				Host:              "https://adb-1232.azuredatabricks.net",
+			},
+		},
+	}
+	tid, err := aa.GetAzureJwtProperty("tid")
+	assert.NoError(t, err)
+	assert.Equal(t, "c", tid)
+}
+
+func TestGetJWTProperty_NonAzure(t *testing.T) {
+	defer CleanupEnvironment()()
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
+
+	aa := DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://abc.cloud.databricks.com",
+				Token: "abc",
+			},
+		},
+	}
+	_, err := aa.GetAzureJwtProperty("tid")
+	require.EqualError(t, err, "can't get Azure JWT token in non-Azure environment")
+}
+
+func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
+	defer CleanupEnvironment()()
+	p, _ := filepath.Abs("./testdata")
+	os.Setenv("PATH", p+":/bin")
+	os.Setenv("FAIL", "yes")
+
+	client := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host: "https://adb-1232.azuredatabricks.net",
+			},
+		},
+	}
+	_, err := client.GetAzureJwtProperty("tid")
+	require.Error(t, err)
+	assert.True(t, strings.HasPrefix(err.Error(),
+		"default auth: azure-cli: cannot get access token: This is just a failing script"))
 }

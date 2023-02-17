@@ -155,7 +155,6 @@ func DatabricksProvider() *schema.Provider {
 		if p.TerraformVersion != "" {
 			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 		}
-		ctx = context.WithValue(ctx, common.Provider, p)
 		return configureDatabricksClient(ctx, d)
 	}
 	common.AddContextToAllResources(p, "databricks")
@@ -213,8 +212,6 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 	}
 	pc := &common.DatabricksClient{
 		DatabricksClient: client,
-		// TODO: check if it's still needed with `useragent.WithUserAgentExtra`
-		Provider: ctx.Value(common.Provider).(*schema.Provider),
 	}
 	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, client)

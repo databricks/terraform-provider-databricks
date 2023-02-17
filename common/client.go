@@ -3,14 +3,14 @@ package common
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // DatabricksClient holds properties needed for authentication and HTTP client setup
@@ -20,16 +20,75 @@ import (
 type DatabricksClient struct {
 	*client.DatabricksClient
 
-	// Terraform provider instance to include Terraform binary version in
-	// User-Agent header
-	Provider *schema.Provider
-
 	// callback used to create API1.2 call wrapper, which simplifies unit tessting
 	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
 	return databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
+}
+
+// Get on path
+func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodGet, path, request, response, c.addApiPrefix)
+}
+
+// Post on path
+func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodPost, path, request, response, c.addApiPrefix)
+}
+
+// Delete on path
+func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
+	return c.Do(ctx, http.MethodDelete, path, request, nil, c.addApiPrefix)
+}
+
+// Patch on path
+func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
+	return c.Do(ctx, http.MethodPatch, path, request, nil, c.addApiPrefix)
+}
+
+// Put on path
+func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
+	return c.Do(ctx, http.MethodPut, path, request, nil, c.addApiPrefix)
+}
+
+type apiVersion string
+
+const (
+	API_1_2 apiVersion = "1.2"
+	API_2_0 apiVersion = "2.0"
+	API_2_1 apiVersion = "2.1"
+)
+
+func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
+	if r.URL == nil {
+		return fmt.Errorf("no URL found in request")
+	}
+	ctx := r.Context()
+	av, ok := ctx.Value(Api).(apiVersion)
+	if !ok {
+		av = API_2_0
+	}
+	r.URL.Path = fmt.Sprintf("/api/%s%s", av, r.URL.Path)
+	return nil
+}
+
+// scimPathVisitorFactory is a separate method for the sake of unit tests
+func (c *DatabricksClient) scimVisitor(r *http.Request) error {
+	r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
+	if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+		// until `/preview` is there for workspace scim,
+		// `/api/2.0` is added by completeUrl visitor
+		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
+			fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
+	}
+	return nil
+}
+
+// Scim sets SCIM headers
+func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
+	return c.Do(ctx, method, path, request, response, c.addApiPrefix, c.scimVisitor)
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
@@ -90,7 +149,46 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	// copy all client configuration options except Databricks CLI profile
 	return &DatabricksClient{
 		DatabricksClient: client,
-		Provider:         c.Provider,
 		commandFactory:   c.commandFactory,
 	}, nil
+}
+
+func (aa *DatabricksClient) GetAzureJwtProperty(key string) (any, error) {
+	if !aa.IsAzure() {
+		return "", fmt.Errorf("can't get Azure JWT token in non-Azure environment")
+	}
+	if key == "tid" && aa.Config.AzureTenantID != "" {
+		return aa.Config.AzureTenantID, nil
+	}
+	request, err := http.NewRequest("GET", aa.Config.Host, nil)
+	if err != nil {
+		return nil, err
+	}
+	err = aa.Config.Authenticate(request)
+	if err != nil {
+		return nil, err
+	}
+	header := request.Header.Get("Authorization")
+	var stoken string
+	if len(header) > 0 && strings.HasPrefix(string(header), "Bearer ") {
+		log.Printf("[DEBUG] Got Bearer token")
+		stoken = strings.TrimSpace(strings.TrimPrefix(string(header), "Bearer "))
+	}
+	if stoken == "" {
+		return nil, fmt.Errorf("can't obtain Azure JWT token")
+	}
+	if strings.HasPrefix(stoken, "dapi") {
+		return nil, fmt.Errorf("can't use Databricks PAT")
+	}
+	parser := jwt.Parser{SkipClaimsValidation: true}
+	token, _, err := parser.ParseUnverified(stoken, jwt.MapClaims{})
+	if err != nil {
+		return nil, err
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	v, ok := claims[key]
+	if !ok {
+		return nil, fmt.Errorf("can't find field '%s' in parsed JWT", key)
+	}
+	return v, nil
 }

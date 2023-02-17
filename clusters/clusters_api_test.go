@@ -1270,16 +1270,16 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 
 func TestWrapMissingClusterError(t *testing.T) {
 	assert.EqualError(t, wrapMissingClusterError(fmt.Errorf("x"), "abc"), "x")
-	assert.EqualError(t, wrapMissingClusterError(apierr.APIError{
+	assert.EqualError(t, wrapMissingClusterError(&apierr.APIError{
 		Message: "Cluster abc does not exist",
 	}, "abc"), "Cluster abc does not exist")
 }
 
 func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
-	err := wrapMissingClusterError(apierr.APIError{
+	err := wrapMissingClusterError(&apierr.APIError{
 		ErrorCode: "INVALID_STATE",
 		Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
 	}, "X")
-	ae, _ := err.(apierr.APIError)
+	ae, _ := err.(*apierr.APIError)
 	assert.Equal(t, 404, ae.StatusCode)
 }

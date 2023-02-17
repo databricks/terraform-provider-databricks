@@ -80,7 +80,7 @@ func (a LibrariesAPI) WaitForLibrariesInstalled(wait Wait) (result *ClusterLibra
 	err = resource.RetryContext(a.context, wait.Timeout, func() *resource.RetryError {
 		libsClusterStatus, err := a.ClusterStatus(wait.ClusterID)
 		if err != nil {
-			apiErr, ok := err.(apierr.APIError)
+			apiErr, ok := err.(*apierr.APIError)
 			if !ok {
 				return resource.NonRetryableError(err)
 			}

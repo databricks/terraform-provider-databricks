@@ -1013,7 +1013,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	if assert.Error(t, err) {
-		if e, ok := err.(apierr.APIError); ok {
+		if e, ok := err.(*apierr.APIError); ok {
 			assert.Equal(t, "INVALID_REQUEST", e.ErrorCode)
 		}
 	}

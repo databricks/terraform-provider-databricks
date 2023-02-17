@@ -507,7 +507,7 @@ func wrapMissingJobError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
-	apiErr, ok := err.(apierr.APIError)
+	apiErr, ok := err.(*apierr.APIError)
 	if !ok {
 		return err
 	}

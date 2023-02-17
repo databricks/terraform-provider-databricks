@@ -239,7 +239,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	err = a.client.Get(a.context, urlPathForObjectID(objectID), nil, &objectACL)
-	apiErr, ok := err.(apierr.APIError)
+	apiErr, ok := err.(*apierr.APIError)
 	// https://github.com/databricks/terraform-provider-databricks/issues/1227
 	// platform propagates INVALID_STATE error for auto-purged clusters in
 	// the permissions api. this adds "a logical fix" also here, not to introduce

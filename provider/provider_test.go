@@ -320,8 +320,7 @@ func TestConfig_AzureCliHost_Fail(t *testing.T) {
 			"HOME": p,
 			"FAIL": "yes",
 		},
-		assertError: "cannot configure azure-cli auth: Invoking Azure CLI " +
-			"failed with the following error: This is just a failing script.",
+		assertError: "default auth: azure-cli: cannot get access token: This is just a failing script.",
 	}.apply(t)
 }
 
@@ -334,7 +333,7 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 			"PATH": "whatever",
 			"HOME": "../common/testdata",
 		},
-		assertError: "cannot configure azure-cli auth: most likely Azure CLI is not installed.",
+		assertError: "default auth: cannot configure default credentials.",
 	}.apply(t)
 }
 
@@ -348,9 +347,7 @@ func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
 			"PATH": p,
 			"HOME": p,
 		},
-		assertError: "validate: more than one authorization method configured: azure and pat. " +
-			"Config: host=https://dbc-XXXXXXXX-YYYY.cloud.databricks.com/, token=***, " +
-			"azure_workspace_resource_id=/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
+		assertError: "validate: more than one authorization method configured: azure and pat.",
 	}.apply(t)
 }
 
@@ -383,10 +380,7 @@ func TestConfig_AzureAndPasswordConflict(t *testing.T) {
 			"HOME":                p,
 			"DATABRICKS_USERNAME": "x",
 		},
-		assertError: "validate: more than one authorization method configured: azure and basic and pat. " +
-			"Config: host=x, token=***, username=x, " +
-			"azure_workspace_resource_id=/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c. " +
-			"Env: DATABRICKS_USERNAME",
+		assertError: "validate: more than one authorization method configured: azure and basic.",
 	}.apply(t)
 }
 

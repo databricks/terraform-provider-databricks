@@ -191,7 +191,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	// make a request to Tokens API, just to verify there are no errors
 	var response map[string]any
 	err = wsClient.Get(ctx, "/token/list", nil, &response)
-	if apiError, ok := err.(apierr.APIError); ok {
+	if apiError, ok := err.(*apierr.APIError); ok {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
 			ws.WorkspaceURL, apiError)
 		log.Printf("[INFO] %s", err)

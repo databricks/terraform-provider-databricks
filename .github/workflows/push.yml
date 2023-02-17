@@ -21,9 +21,6 @@ jobs:
         with:
           go-version: 1.18.x
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-
       - name: Cache packages
         uses: actions/cache@v2
         with:

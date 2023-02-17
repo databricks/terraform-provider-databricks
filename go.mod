@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/Azure/go-autorest/autorest v0.11.28
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
-	github.com/databricks/databricks-sdk-go v0.3.2
+	github.com/databricks/databricks-sdk-go v0.3.3-0.20230217184724-a15de889505b
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/hcl v1.0.0

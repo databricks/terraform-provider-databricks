@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -293,11 +292,4 @@ func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
 			},
 		},
 	}, "default auth: cannot configure default credentials")
-}
-
-func TestConfigAttributeSetNonsense(t *testing.T) {
-	err := (&ConfigAttribute{
-		Kind: reflect.Chan,
-	}).Set(&DatabricksClient{}, 1)
-	assert.EqualError(t, err, "cannot set  of unknown type Chan")
 }

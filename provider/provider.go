@@ -36,6 +36,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
+func init() {
+	// IMPORTANT: this line cannot be changed
+	useragent.WithProduct("databricks-tf-provider", common.Version())
+}
+
 // DatabricksProvider returns the entire terraform provider object
 func DatabricksProvider() *schema.Provider {
 	p := &schema.Provider{

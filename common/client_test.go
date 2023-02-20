@@ -33,7 +33,6 @@ func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string)
 }
 
 func TestDatabricksClientConfigure_Nothing(t *testing.T) {
-	defer CleanupEnvironment()()
 	t.Setenv("PATH", "testdata:/bin")
 	failsToAuthenticateWith(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
@@ -43,7 +42,6 @@ func TestDatabricksClientConfigure_Nothing(t *testing.T) {
 }
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
-	defer CleanupEnvironment()()
 	failsToAuthenticateWith(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -84,7 +82,6 @@ func TestDatabricksClientConfigure_HostWithoutScheme(t *testing.T) {
 }
 
 func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
-	defer CleanupEnvironment()()
 	failsToAuthenticateWith(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -256,7 +253,6 @@ func TestClientForHostAuthError(t *testing.T) {
 }
 
 func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
-	defer CleanupEnvironment()()
 	failsToAuthenticateWith(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -267,7 +263,6 @@ func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
 }
 
 func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
-	defer CleanupEnvironment()()
 	p, _ := filepath.Abs("./testdata")
 	t.Setenv("PATH", p+":/bin")
 
@@ -287,7 +282,6 @@ func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
 }
 
 func TestGetJWTProperty_NonAzure(t *testing.T) {
-	defer CleanupEnvironment()()
 	p, _ := filepath.Abs("./testdata")
 	t.Setenv("PATH", p+":/bin")
 
@@ -304,7 +298,6 @@ func TestGetJWTProperty_NonAzure(t *testing.T) {
 }
 
 func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
-	defer CleanupEnvironment()()
 	p, _ := filepath.Abs("./testdata")
 	t.Setenv("PATH", p+":/bin")
 	t.Setenv("FAIL", "yes")

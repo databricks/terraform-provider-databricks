@@ -11,9 +11,6 @@ import (
 
 func TestRunningRealTerraformWithFixtureBackend(t *testing.T) {
 	t.Skip("fails on GitHub Actions")
-	defer common.CleanupEnvironment()
-	t.Setenv("CLOUD_ENV", "AWS")
-
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",

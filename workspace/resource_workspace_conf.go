@@ -104,6 +104,10 @@ func ResourceWorkspaceConf() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			config := d.Get("custom_config").(map[string]any)
 			for k, v := range config {
+				if !strings.HasPrefix(k, "enable") && !strings.HasPrefix(k, "enforce") {
+					log.Printf("[DEBUG] Skip erasing configuration of %s", k)
+					continue
+				}
 				switch r := v.(type) {
 				default:
 					config[k] = ""

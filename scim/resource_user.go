@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -43,6 +42,14 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			}
+			m["force_delete_repos"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["force_delete_home_dir"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
 			}
 			return m
 		})
@@ -93,7 +100,28 @@ func ResourceUser() *schema.Resource {
 			return NewUsersAPI(ctx, c).Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewUsersAPI(ctx, c).Delete(d.Id())
+			user := NewUsersAPI(ctx, c)
+			userName := d.Get("user_name").(string)
+			err := user.Delete(d.Id())
+			if err != nil {
+				return err
+			}
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+				return nil
+			}
+			if d.Get("force_delete_repos").(bool) {
+				err = NewUsersAPI(ctx, c).DeletePath(fmt.Sprintf("/Repos/%v", userName))
+				if err != nil {
+					return fmt.Errorf("force_delete_repos: %w", err)
+				}
+			}
+			if d.Get("force_delete_home_dir").(bool) {
+				err = NewUsersAPI(ctx, c).DeletePath(fmt.Sprintf("/Users/%v", userName))
+				if err != nil {
+					return fmt.Errorf("force_delete_home_dir: %w", err)
+				}
+			}
+			return nil
 		},
 	}.ToResource()
 }

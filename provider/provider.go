@@ -37,7 +37,8 @@ import (
 )
 
 func init() {
-	// IMPORTANT: this line cannot be changed
+	// IMPORTANT: this line cannot be changed, because it's used for 
+	// internal purposes at Databricks.
 	useragent.WithProduct("databricks-tf-provider", common.Version())
 }
 

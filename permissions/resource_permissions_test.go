@@ -34,14 +34,14 @@ var (
 	}
 )
 
-func TestAccessControlChangeString(t *testing.T) {
+func TestEntityAccessControlChangeString(t *testing.T) {
 	assert.Equal(t, "me CAN_READ", AccessControlChange{
 		UserName:        "me",
 		PermissionLevel: "CAN_READ",
 	}.String())
 }
 
-func TestAccessControlString(t *testing.T) {
+func TestEntityAccessControlString(t *testing.T) {
 	assert.Equal(t, "me[CAN_READ (from [parent]) CAN_MANAGE]", AccessControl{
 		UserName: "me",
 		AllPermissions: []Permission{
@@ -1297,7 +1297,7 @@ func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
 	assert.EqualError(t, err, "unknown object type bananas")
 }
 
-func TestAccessControlToAccessControlChange(t *testing.T) {
+func TestEntityAccessControlToAccessControlChange(t *testing.T) {
 	_, res := AccessControl{}.toAccessControlChange()
 	assert.False(t, res)
 }

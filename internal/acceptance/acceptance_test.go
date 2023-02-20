@@ -53,13 +53,11 @@ func TestRunningRealTerraformWithFixtureBackend(t *testing.T) {
 			t.Setenv("DATABRICKS_HOST", client.Config.Host)
 			t.Setenv("DATABRICKS_TOKEN", client.Config.Token)
 
-			Test(t, []Step{
-				{
-					Template: `resource "databricks_token" "this" {
-						lifetime_seconds = 6000
-						comment = "Testing token"
-					}`,
-				},
+			workspaceLevel(t, step{
+				Template: `resource "databricks_token" "this" {
+					lifetime_seconds = 6000
+					comment = "Testing token"
+				}`,
 			})
 		})
 }

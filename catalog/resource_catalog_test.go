@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -137,7 +137,7 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 				Method:   "DELETE",
 				Resource: "/api/2.1/unity-catalog/schemas/a.default",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},

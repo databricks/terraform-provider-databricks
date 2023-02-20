@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/secrets"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/databricks/terraform-provider-databricks/secrets"
 
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -33,6 +33,9 @@ func TestAccSecretResource(t *testing.T) {
 	key := qa.FirstKeyValue(t, config, "key")
 	secret := qa.FirstKeyValue(t, config, "string_value")
 
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+
 	acceptance.AccTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			{
@@ -40,8 +43,10 @@ func TestAccSecretResource(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					client := common.CommonEnvironmentClient()
-					err := secrets.NewSecretsAPI(context.Background(), client).Delete(scope, key)
+					err := w.Secrets.DeleteSecret(ctx, secrets.DeleteSecret{
+						Scope: scope,
+						Key:   key,
+					})
 					assert.NoError(t, err)
 				},
 				Config: config,

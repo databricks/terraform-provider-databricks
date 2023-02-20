@@ -113,7 +113,6 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
 	p.SetMeta(c)
-	c.Provider = p
 	ctx := context.WithValue(context.Background(), common.Provider, p)
 	ctx = context.WithValue(ctx, common.ResourceName, "exporter")
 	c.WithCommandExecutor(func(

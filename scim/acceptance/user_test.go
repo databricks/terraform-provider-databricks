@@ -23,9 +23,8 @@ func TestAccForceUserImport(t *testing.T) {
 	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
-	t.Parallel()
 	username := qa.RandomEmail()
-	os.Setenv("TEST_USERNAME", username)
+	t.Setenv("TEST_USERNAME", username)
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	usersAPI := scim.NewUsersAPI(ctx, client)

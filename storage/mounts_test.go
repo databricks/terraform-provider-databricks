@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 
@@ -37,12 +40,13 @@ const expectedCommandResp = "done"
 func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount) (string, error), mount Mount,
 	mountName, expectedCommand string) {
 	c := common.DatabricksClient{
-		Host:  ".",
-		Token: ".",
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  ".",
+				Token: ".",
+			},
+		},
 	}
-	err := c.Configure()
-	assert.NoError(t, err)
-
 	var called bool
 
 	c.WithCommandMock(func(commandStr string) common.CommandResults {
@@ -104,8 +108,12 @@ func TestMountPoint_Mount(t *testing.T) {
 	`, mountName, expectedMountSource, expectedMountConfig)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
 		client := common.DatabricksClient{
-			Host:  ".",
-			Token: ".",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host:  ".",
+					Token: ".",
+				},
+			},
 		}
 		return mp.Mount(mount, &client)
 	}, mount, mountName, expectedCommand)
@@ -279,7 +287,7 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=def",
 			Status:   518,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "😤",
 			},
 		},
@@ -295,7 +303,7 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		// no mounting cluster given, try creating it
@@ -321,7 +329,7 @@ func TestMountCRD(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()

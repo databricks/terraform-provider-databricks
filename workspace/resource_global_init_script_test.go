@@ -6,8 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -71,7 +70,7 @@ func TestResourceGlobalInitScriptRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "The global unit script with ID 1234 does not exist.",
 				},

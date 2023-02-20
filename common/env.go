@@ -2,8 +2,6 @@ package common
 
 import (
 	"os"
-	"reflect"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -11,67 +9,8 @@ import (
 )
 
 var (
-	envMutex     sync.Mutex
-	onceClient   sync.Once
-	commonClient *DatabricksClient
+	envMutex sync.Mutex
 )
-
-// NewClientFromEnvironment makes very good client for testing purposes
-func NewClientFromEnvironment() *DatabricksClient {
-	client := DatabricksClient{}
-	for _, attr := range ClientAttributes() {
-		found := false
-		var value any
-		for _, envName := range attr.EnvVars {
-			v := os.Getenv(envName)
-			if v == "" {
-				continue
-			}
-			switch attr.Kind {
-			case reflect.String:
-				value = v
-				found = true
-			case reflect.Bool:
-				if vv, err := strconv.ParseBool(v); err == nil {
-					value = vv
-					found = true
-				}
-			case reflect.Int:
-				if vv, err := strconv.Atoi(v); err == nil {
-					value = vv
-					found = true
-				}
-			default:
-				continue
-			}
-		}
-		if found {
-			attr.Set(&client, value)
-		}
-	}
-	err := client.Configure()
-	if err != nil {
-		panic(err)
-	}
-	return &client
-}
-
-// ResetCommonEnvironmentClient resets test dummy
-func ResetCommonEnvironmentClient() {
-	commonClient = nil
-	onceClient = sync.Once{}
-}
-
-// CommonEnvironmentClient configured once per run of application
-func CommonEnvironmentClient() *DatabricksClient {
-	if commonClient != nil {
-		return commonClient
-	}
-	onceClient.Do(func() {
-		commonClient = NewClientFromEnvironment()
-	})
-	return commonClient
-}
 
 // CleanupEnvironment backs up environment - use as `defer CleanupEnvironment()()`
 // clears it and restores it in the end. It's meant strictly for "unit" tests

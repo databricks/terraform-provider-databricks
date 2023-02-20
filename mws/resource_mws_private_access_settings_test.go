@@ -4,41 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMwsAccPAS(t *testing.T) {
-	t.SkipNow()
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_REGION")
-	client := common.CommonEnvironmentClient()
-	ctx := context.Background()
-	pasAPI := NewPrivateAccessSettingsAPI(ctx, client)
-	pasList, err := pasAPI.List(acctID)
-	assert.NoError(t, err)
-	t.Log(pasList)
-
-	pas := PrivateAccessSettings{
-		AccountID: acctID,
-		PasName:   qa.RandomName("tf-"),
-		Region:    awsRegion,
-	}
-	err = pasAPI.Create(&pas)
-	assert.NoError(t, err)
-	defer func() {
-		err = pasAPI.Delete(acctID, pas.PasID)
-		assert.NoError(t, err)
-	}()
-
-	myPAS, err := pasAPI.Read(acctID, pas.PasID)
-	assert.NoError(t, err)
-	t.Log(myPAS)
-}
 
 func TestResourcePASCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -86,7 +57,7 @@ func TestResourcePASCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/private-access-settings",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -137,7 +108,7 @@ func TestResourcePAStRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -157,7 +128,7 @@ func TestResourcePAS_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -234,7 +205,7 @@ func TestResourcePASDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Yes, it's not found",
 				},
@@ -255,7 +226,7 @@ func TestResourcePASDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

@@ -3,6 +3,8 @@ package clusters
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -227,19 +229,31 @@ func TestNodeTypeVCPU(t *testing.T) {
 func TestSmallestNodeTypeClouds(t *testing.T) {
 	assert.Equal(t, "Standard_D3_v2", ClustersAPI{
 		client: &common.DatabricksClient{
-			Host: "foo.azuredatabricks.net",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "foo.azuredatabricks.net",
+				},
+			},
 		},
 	}.defaultSmallestNodeType())
 
 	assert.Equal(t, "n1-standard-4", ClustersAPI{
 		client: &common.DatabricksClient{
-			Host: "foo.gcp.databricks.com",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "foo.gcp.databricks.com",
+				},
+			},
 		},
 	}.defaultSmallestNodeType())
 
 	assert.Equal(t, "i3.xlarge", ClustersAPI{
 		client: &common.DatabricksClient{
-			Host: "foo.cloud.databricks.com",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "foo.cloud.databricks.com",
+				},
+			},
 		},
 	}.defaultSmallestNodeType())
 }

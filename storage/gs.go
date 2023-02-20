@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -63,7 +64,7 @@ func createOrValidateClusterForGoogleStorage(ctx context.Context, m any,
 	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			cluster, err := GetOrCreateMountingClusterWithGcpServiceAccount(clustersAPI, serviceAccount)
 			if err != nil {
 				return fmt.Errorf("cannot re-create mounting cluster: %w", err)

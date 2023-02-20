@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -506,8 +508,8 @@ func wrapMissingJobError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
-	apiErr, ok := err.(common.APIError)
-	if !ok {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
 		return err
 	}
 	if apiErr.IsMissing() {

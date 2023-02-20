@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -27,6 +28,12 @@ type op func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostic
 // wrap operation invokations with additional context
 func (f op) addContext(k contextKey, v string) op {
 	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+		switch k {
+		case ResourceName:
+			ctx = useragent.InContext(ctx, "resource", v)
+		case IsData:
+			ctx = useragent.InContext(ctx, "data", v)
+		}
 		ctx = context.WithValue(ctx, k, v)
 		return f(ctx, d, m)
 	}

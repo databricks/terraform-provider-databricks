@@ -107,8 +107,8 @@ func getContainerDefaults(d *schema.ResourceData, allowed_schemas []string, suff
 }
 
 func getTenantID(client *common.DatabricksClient) (string, error) {
-	if client.AzureTenantID != "" {
-		return client.AzureTenantID, nil
+	if client.Config.AzureTenantID != "" {
+		return client.Config.AzureTenantID, nil
 	}
 	v, err := client.GetAzureJwtProperty("tid")
 	if err != nil {
@@ -170,7 +170,11 @@ func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 
 // Config returns mount configurations
 func (m *AzureADLSGen2MountGeneric) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
+	env, err := client.Config.GetAzureEnvironment()
+	if err != nil {
+		panic(err) // TODO: change interface
+	}
+	aadEndpoint := env.ActiveDirectoryEndpoint
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
@@ -235,7 +239,11 @@ func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 
 // Config ...
 func (m *AzureADLSGen1MountGeneric) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
+	env, err := client.Config.GetAzureEnvironment()
+	if err != nil {
+		panic(err) // TODO: change interface
+	}
+	aadEndpoint := env.ActiveDirectoryEndpoint
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 

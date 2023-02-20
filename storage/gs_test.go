@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -16,7 +17,7 @@ func TestCreateOrValidateClusterForGoogleStorage_Failures(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceMount().TestResourceData()
@@ -34,7 +35,7 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
 			Status:   404,
-			Response: common.NotFound("cluster deleted"),
+			Response: apierr.NotFound("cluster deleted"),
 		},
 		{
 			Method:   "GET",
@@ -101,7 +102,7 @@ func TestCreateOrValidateClusterForGoogleStorage_FailsOnErrorGettingCluster(t *t
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=my-cluster",
 			Status:   500,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				ErrorCode:  "SERVER_ERROR",
 				StatusCode: 500,
 				Message:    "Server error",

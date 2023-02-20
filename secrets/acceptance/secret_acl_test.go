@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/scim"
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -37,20 +37,18 @@ func TestAccSecretAclResource(t *testing.T) {
 						scope = databricks_secret_scope.app.name
 					}`),
 				Check: func(s *terraform.State) error {
-					client := common.CommonEnvironmentClient()
+					w := databricks.Must(databricks.NewWorkspaceClient())
 
 					ctx := context.Background()
-					usersAPI := scim.NewUsersAPI(ctx, client)
-					me, err := usersAPI.Me()
+					me, err := w.CurrentUser.Me(ctx)
 					require.NoError(t, err)
 
-					secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
 					scope := s.RootModule().Resources["databricks_secret_scope.app"].Primary.ID
-					acls, err := secretACLAPI.List(scope)
+					acls, err := w.Secrets.ListAclsByScope(ctx, scope)
 					require.NoError(t, err)
-					assert.Equal(t, 2, len(acls))
+					assert.Equal(t, 2, len(acls.Items))
 					m := map[string]string{}
-					for _, acl := range acls {
+					for _, acl := range acls.Items {
 						m[acl.Principal] = string(acl.Permission)
 					}
 

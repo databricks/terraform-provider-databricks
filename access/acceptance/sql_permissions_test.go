@@ -6,10 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/commands"
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
-	"github.com/databricks/terraform-provider-databricks/internal/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,23 +19,20 @@ func TestAccTableACL(t *testing.T) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
-	client := common.CommonEnvironmentClient()
-	client.WithCommandExecutor(func(ctx context.Context,
-		dc *common.DatabricksClient) common.CommandExecutor {
-		return commands.NewCommandsAPI(ctx, dc)
-	})
 
-	shell := client.CommandExecutor(context.Background())
-	clusterInfo := compute.NewTinyClusterInCommonPoolPossiblyReused()
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	info, err := w.Clusters.GetOrCreateRunningCluster(ctx, "tf-dummy")
+	require.NoError(t, err)
+
 	talbeName := qa.RandomName("table_acl_")
-
-	cr := shell.Execute(clusterInfo.ClusterID, "python",
+	cr := w.CommandExecutor.Execute(ctx, info.ClusterId, "python",
 		fmt.Sprintf("spark.range(10).write.saveAsTable('%s')",
 			talbeName))
 	require.False(t, cr.Failed(), cr.Error())
 	os.Setenv("TABLE_ACL_TEST_TABLE", talbeName)
 	defer func() {
-		cr := shell.Execute(clusterInfo.ClusterID, "sql",
+		cr := w.CommandExecutor.Execute(ctx, info.ClusterId, "sql",
 			fmt.Sprintf("DROP TABLE %s", talbeName))
 		assert.False(t, cr.Failed(), cr.Error())
 	}()
@@ -47,7 +42,7 @@ func TestAccTableACL(t *testing.T) {
 			Template: `
 			resource "databricks_sql_permissions" "this" {
 				table = "{env.TABLE_ACL_TEST_TABLE}"
-			
+
 				privilege_assignments {
 					principal = "users"
 					privileges = ["SELECT"]

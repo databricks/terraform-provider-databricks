@@ -23,7 +23,7 @@ output "all_metastores" {
 
 This data source exports the following attributes:
 
-* `metastores` - list of [databricks_metastore](../resources/share.md)
+* `metastores` - list of [databricks_metastore](../resources/metastore.md)
 
 ## Related Resources
 

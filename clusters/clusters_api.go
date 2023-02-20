@@ -2,6 +2,7 @@ package clusters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -672,8 +673,8 @@ func wrapMissingClusterError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
-	apiErr, ok := err.(*apierr.APIError)
-	if !ok {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
 		return err
 	}
 	if apiErr.IsMissing() {

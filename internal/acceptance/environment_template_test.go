@@ -34,8 +34,8 @@ func TestEnvironmentTemplate_other_vars(t *testing.T) {
 func TestEnvironmentTemplate_unset_env(t *testing.T) {
 	res, err := environmentTemplate(t, `
 	resource "user" "me" {
-		name  = "{env.USER}"
-		email = "{env.USER}+{var.RANDOM}@example.com"
+		name  = "{env.A}"
+		email = "{env.A}+{var.RANDOM}@example.com"
 	}`)
 	assert.Equal(t, "", res)
 	assert.Errorf(t, err, fmt.Sprintf("please set %d variables and restart.", 2))

@@ -2,6 +2,7 @@ package libraries
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -130,7 +131,8 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			"1005-abcd", 50 * time.Millisecond, false, false,
 		})
 
-		ae, _ := err.(*apierr.APIError)
+		var ae *apierr.APIError
+		assert.True(t, errors.As(err, &ae))
 		assert.Equal(t, 404, ae.StatusCode)
 		assert.Equal(t, "Cluster 1005-abcd does not exist", ae.Message)
 	})

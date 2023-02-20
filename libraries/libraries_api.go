@@ -2,6 +2,7 @@ package libraries
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -80,8 +81,8 @@ func (a LibrariesAPI) WaitForLibrariesInstalled(wait Wait) (result *ClusterLibra
 	err = resource.RetryContext(a.context, wait.Timeout, func() *resource.RetryError {
 		libsClusterStatus, err := a.ClusterStatus(wait.ClusterID)
 		if err != nil {
-			apiErr, ok := err.(*apierr.APIError)
-			if !ok {
+			var apiErr *apierr.APIError
+			if !errors.As(err, &apiErr) {
 				return resource.NonRetryableError(err)
 			}
 			if apiErr.StatusCode != 404 && strings.Contains(apiErr.Message,

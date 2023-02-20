@@ -2,6 +2,7 @@ package clusters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	// "reflect"
@@ -1280,6 +1281,7 @@ func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
 		ErrorCode: "INVALID_STATE",
 		Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
 	}, "X")
-	ae, _ := err.(*apierr.APIError)
+	var ae *apierr.APIError
+	assert.True(t, errors.As(err, &ae))
 	assert.Equal(t, 404, ae.StatusCode)
 }

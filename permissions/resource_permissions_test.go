@@ -987,7 +987,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 }
 
 func TestResourcePermissionsCreate_error(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
 			{
@@ -1011,12 +1011,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			},
 		},
 		Create: true,
-	}.Apply(t)
-	if assert.Error(t, err) {
-		if e, ok := err.(*apierr.APIError); ok {
-			assert.Equal(t, "INVALID_REQUEST", e.ErrorCode)
-		}
-	}
+	}.ExpectError(t, "permission_level CAN_USE is not supported with cluster_id objects")
 }
 
 func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {

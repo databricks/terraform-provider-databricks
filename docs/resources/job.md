@@ -221,6 +221,7 @@ resource "databricks_job" "sql_aggregation_job" {
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - ID of the job
 * `url` - URL of the job on the given workspace
 
 ## Access Control

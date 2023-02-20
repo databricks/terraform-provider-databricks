@@ -38,12 +38,16 @@ type MetastoreInfo struct {
 	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
 
+type Metastores struct {
+	Metastores []MetastoreInfo `json:"metastores"`
+}
+
 type CreateMetastore struct {
 	Name        string `json:"name"`
 	StorageRoot string `json:"storage_root"`
 }
 
-func (a MetastoresAPI) listMetastores() (mis []MetastoreInfo, err error) {
+func (a MetastoresAPI) listMetastores() (mis Metastores, err error) {
 	err = a.client.Get(a.context, "/unity-catalog/metastores", nil, &mis)
 	return
 }

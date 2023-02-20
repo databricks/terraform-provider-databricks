@@ -98,7 +98,7 @@ func (r Resource) ToResource() *schema.Resource {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
 			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
-			// TODO: add special handling for clusters and jobs
+			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 			if ignoreMissing && apierr.IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
 					ResourceName.GetOrUnknown(ctx), d.Id())
@@ -137,6 +137,7 @@ func (r Resource) ToResource() *schema.Resource {
 			m any) diag.Diagnostics {
 			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
 			if apierr.IsMissing(err) {
+				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
 					ResourceName.GetOrUnknown(ctx), d.Id())
 				d.SetId("")

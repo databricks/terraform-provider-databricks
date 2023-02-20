@@ -9,7 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/tokens"
 )
 
-func TestRunningEmbeddedTf(t *testing.T) {
+func TestRunningRealTerraformWithFixtureBackend(t *testing.T) {
 	t.Skip("fails on GitHub Actions")
 	defer common.CleanupEnvironment()
 	t.Setenv("CLOUD_ENV", "AWS")

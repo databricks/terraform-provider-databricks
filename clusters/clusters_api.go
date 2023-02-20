@@ -667,6 +667,7 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 }
 
 // make common/resource.go#ToResource read behavior consistent with "normal" resources
+// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 func wrapMissingClusterError(err error, id string) error {
 	if err == nil {
 		return nil

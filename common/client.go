@@ -74,7 +74,7 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 	return nil
 }
 
-// scimPathVisitorFactory is a separate method for the sake of unit tests
+// scimVisitor is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
 	r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
 	if c.Config.IsAccountClient() && c.Config.AccountID != "" {

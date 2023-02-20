@@ -47,8 +47,8 @@ func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 			allow_cluster_create = true
 		}`,
 		Check: resource.ComposeAggregateTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_group.my_group", "allow_cluster_create", "true"),
-			resource.TestCheckResourceAttr("databricks_group.my_group", "allow_instance_pool_create", "false"),
+			resource.TestCheckResourceAttr("databricks_group.this", "allow_cluster_create", "true"),
+			resource.TestCheckResourceAttr("databricks_group.this", "allow_instance_pool_create", "false"),
 			resourceCheck("databricks_group.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
 					groupsAPI := scim.NewGroupsAPI(ctx, client)

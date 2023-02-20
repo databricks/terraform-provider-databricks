@@ -5,7 +5,7 @@ import (
 )
 
 const azureSpn = `resource "databricks_service_principal" "this" {
-	application_id = "00000000-1234-5678-0000-000000000001"
+	application_id = "{var.RANDOM_UUID}"
 	display_name = "SPN {var.RANDOM}"
 	force = true
 }`

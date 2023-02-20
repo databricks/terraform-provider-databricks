@@ -30,10 +30,12 @@ import (
 func init() {
 	rand.Seed(time.Now().UnixMicro())
 	databricks.WithProduct("tf-integration-tests", common.Version())
-	// Terraform SDK v2 intercepts default logger
-	// that Go SDK SimpleLogger is using, so we have
-	// to re-implement one again.
-	logger.DefaultLogger = stdErrLogger{}
+	if isInDebug() {
+		// Terraform SDK v2 intercepts default logger
+		// that Go SDK SimpleLogger is using, so we have
+		// to re-implement one again.
+		logger.DefaultLogger = stdErrLogger{}
+	}
 }
 
 func workspaceLevel(t *testing.T, steps ...step) {
@@ -96,11 +98,21 @@ type step struct {
 	ImportStateVerify         bool
 }
 
+func createUuid() string {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "10000000-2000-3000-4000-500000000000"
+	}
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+}
+
 // environmentTemplate asserts existence and fills in {env.VAR} & {var.RANDOM} placeholders in template.
 // For writing a unit test to intercept the errors (t.Fatalf literally ends the test in failure)
 func environmentTemplate(t *testing.T, template string, otherVars ...map[string]string) string {
 	vars := map[string]string{
-		"RANDOM": qa.RandomName("t"),
+		"RANDOM":      qa.RandomName("t"),
+		"RANDOM_UUID": createUuid(),
 	}
 	if len(otherVars) > 1 {
 		skipf(t)("cannot have more than one custom variable map")
@@ -356,24 +368,28 @@ func loadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 	}
 }
 
-type stdErrLogger struct{}
+type stdErrLogger struct {
+	traceEnabled bool
+}
 
 func (l stdErrLogger) Tracef(format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "\n[TRACE] "+format, v...)
+	if l.traceEnabled {
+		fmt.Fprintf(os.Stderr, "[TRACE] "+format+"\n", v...)
+	}
 }
 
 func (l stdErrLogger) Debugf(format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "\n[DEBUG] "+format, v...)
+	fmt.Fprintf(os.Stderr, "\n[DEBUG] "+format+"\n", v...)
 }
 
 func (l stdErrLogger) Infof(format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "\n[INFO] "+format, v...)
+	fmt.Fprintf(os.Stderr, "\n[INFO] "+format+"\n", v...)
 }
 
 func (l stdErrLogger) Warnf(format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "\n[WARN] "+format, v...)
+	fmt.Fprintf(os.Stderr, "\n[WARN] "+format+"\n", v...)
 }
 
 func (l stdErrLogger) Errorf(format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[ERROR] "+format, v...)
+	fmt.Fprintf(os.Stderr, "[ERROR] "+format+"\n", v...)
 }

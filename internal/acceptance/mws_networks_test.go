@@ -5,6 +5,7 @@ import (
 )
 
 func TestMwsAccNetworks(t *testing.T) {
+	GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET") // marker for AWS test env
 	accountLevel(t, step{
 		Template: `
 		resource "databricks_mws_networks" "my_network" {

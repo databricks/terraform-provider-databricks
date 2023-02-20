@@ -13,7 +13,7 @@ resource "databricks_user" "this" {
 	user_name = "tf-{var.RANDOM}@example.com"
 }
 resource "databricks_service_principal" "this" {
-	application_id = "00000000-1234-5678-0000-000000000001"
+	application_id = "{var.RANDOM_UUID}"
 	display_name = "tf-spn-{var.RANDOM}"
 	force = true
 }

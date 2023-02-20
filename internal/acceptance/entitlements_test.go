@@ -47,13 +47,15 @@ func TestAccEntitlementResource(t *testing.T) {
 
 func TestAccServicePrincipalEntitlementsResourceOnAzure(t *testing.T) {
 	// this test should run only on Azure, so just expect SPN config to be there or fail
+	// TODO: change to SDK so that we can be explicit if we want to fetch entitlements
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
 	workspaceLevel(t, step{
 		Template: `resource "databricks_service_principal" "this" {
-			application_id = "00000000-1234-5678-0000-000000000001"
-			display_name = "SPN {var.RANDOM}"
+			application_id = "{var.RANDOM_UUID}"
 			allow_cluster_create       = true
-			allow_instance_pool_create = true				
+			allow_instance_pool_create = true
+			display_name = "SPN {var.RANDOM}"
+			force = true			
 		}
 
 		resource "databricks_entitlements" "service_principal" {

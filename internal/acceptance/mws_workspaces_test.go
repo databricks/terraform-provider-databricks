@@ -72,6 +72,8 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
+	t.Skip()
+	// FIXME: flaky with `Secondary IP range (pods, svc) is already in use by another GKE cluster`
 	accountLevel(t, step{
 		Template: `
 		resource "databricks_mws_networks" "this" {

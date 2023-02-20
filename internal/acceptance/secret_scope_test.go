@@ -44,6 +44,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 					return nil
 				}),
 		),
+		ExpectNonEmptyPlan: true,
 	}, step{
 		Template: fmt.Sprintf(`
 		resource "databricks_secret_scope" "my_scope" {

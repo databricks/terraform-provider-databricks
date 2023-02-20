@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -97,7 +98,8 @@ func (r Resource) ToResource() *schema.Resource {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
 			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
-			if ignoreMissing && IsMissing(err) {
+			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
+			if ignoreMissing && apierr.IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
 					ResourceName.GetOrUnknown(ctx), d.Id())
 				d.SetId("")
@@ -134,7 +136,8 @@ func (r Resource) ToResource() *schema.Resource {
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
 			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
-			if IsMissing(err) {
+			if apierr.IsMissing(err) {
+				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
 					ResourceName.GetOrUnknown(ctx), d.Id())
 				d.SetId("")

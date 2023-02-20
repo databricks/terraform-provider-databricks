@@ -1,10 +1,9 @@
 package aws
 
 import (
-	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -115,7 +114,7 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/add",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -250,7 +249,7 @@ func TestResourceInstanceProfileRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/instance-profiles/list",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -290,7 +289,7 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/remove",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -357,7 +356,7 @@ func TestResourceInstanceProfileUpdate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/edit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -376,51 +375,3 @@ func TestResourceInstanceProfileUpdate_Error(t *testing.T) {
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
 
-func TestAccAwsInstanceProfiles(t *testing.T) {
-	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	client := common.NewClientFromEnvironment()
-	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	instanceProfilesAPI := NewInstanceProfilesAPI(ctx, client)
-	instanceProfilesAPI.Synchronized(arn, func() bool {
-		err := instanceProfilesAPI.Create(InstanceProfileInfo{
-			InstanceProfileArn: arn,
-		})
-		if err != nil {
-			return false
-		}
-		defer func() {
-			err := instanceProfilesAPI.Delete(arn)
-			assert.NoError(t, err)
-		}()
-
-		arnSearch, err := instanceProfilesAPI.Read(arn)
-		assert.NoError(t, err)
-		assert.True(t, len(arnSearch.InstanceProfileArn) > 0)
-		return true
-	})
-}
-
-func TestAccAwsInstanceProfilesSkippingValidation(t *testing.T) {
-	arn := qa.GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	client := common.NewClientFromEnvironment()
-	ctx := context.WithValue(context.Background(), common.Current, t.Name())
-	instanceProfilesAPI := NewInstanceProfilesAPI(ctx, client)
-	instanceProfilesAPI.Synchronized(arn, func() bool {
-		err := instanceProfilesAPI.Create(InstanceProfileInfo{
-			InstanceProfileArn: arn,
-			SkipValidation:     true,
-		})
-		if err != nil {
-			return false
-		}
-		defer func() {
-			err := instanceProfilesAPI.Delete(arn)
-			assert.NoError(t, err)
-		}()
-
-		arnSearch, err := instanceProfilesAPI.Read(arn)
-		assert.NoError(t, err)
-		assert.True(t, len(arnSearch.InstanceProfileArn) > 0)
-		return true
-	})
-}

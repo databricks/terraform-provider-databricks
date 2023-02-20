@@ -3,7 +3,7 @@ package scim
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -156,7 +156,7 @@ func TestResourceEntitlementsGroupRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -375,7 +375,7 @@ func TestResourceEntitlementsUserRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -396,7 +396,7 @@ func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -406,7 +406,7 @@ func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
 				ExpectedRequest: updateRequest,
 				Status:          400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -595,7 +595,7 @@ func TestResourceEntitlementsSPNRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},

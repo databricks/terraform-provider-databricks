@@ -1,15 +1,12 @@
 package storage
 
 import (
-	"bytes"
 	"context"
-	"crypto/md5"
-	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +20,7 @@ func TestCreateFileFails(t *testing.T) {
 				Overwrite: true,
 			},
 			Status:   404,
-			Response: common.NotFound("fails"),
+			Response: apierr.NotFound("fails"),
 		},
 		{
 			Method:   "POST",
@@ -55,7 +52,7 @@ func TestCreateFile_AddBlockFails(t *testing.T) {
 				Handle: 123,
 			},
 			Status:   404,
-			Response: common.NotFound("fails"),
+			Response: apierr.NotFound("fails"),
 		},
 		{
 			Method:   "POST",
@@ -82,7 +79,7 @@ func TestCreateFile_CloseFails(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/dbfs/close",
 			Status:   404,
-			Response: common.NotFound("fails"),
+			Response: apierr.NotFound("fails"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewDbfsAPI(ctx, client)
@@ -97,7 +94,7 @@ func TestDbfsListRecursiveFails(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/dbfs/list?path=abc",
 			Status:   404,
-			Response: common.NotFound("fails"),
+			Response: apierr.NotFound("fails"),
 		},
 		{
 			Method:   "GET",
@@ -116,7 +113,7 @@ func TestDbfsListRecursiveFails(t *testing.T) {
 			ReuseRequest: true,
 			Resource:     "/api/2.0/dbfs/list?path=bcd",
 			Status:       404,
-			Response:     common.NotFound("fails"),
+			Response:     apierr.NotFound("fails"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewDbfsAPI(ctx, client)
@@ -134,62 +131,11 @@ func TestDbfsReadFails(t *testing.T) {
 		{
 			MatchAny: true,
 			Status:   404,
-			Response: common.NotFound("fails"),
+			Response: apierr.NotFound("fails"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewDbfsAPI(ctx, client)
 		_, err := a.Read("abc")
 		assert.EqualError(t, err, "cannot read abc: fails")
 	})
-}
-
-func genString(times int) []byte {
-	var buf bytes.Buffer
-	for i := 0; i < times; i++ {
-		buf.WriteString("Hello world how are you doing?\n")
-	}
-	return buf.Bytes()
-}
-
-func TestAccCreateFile(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	t.Parallel()
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	dir := "/client-test/" + randomName
-	path := dir + "/randomfile"
-	path2 := dir + "/dir2/randomfile"
-	path3 := dir + "/dir2/randomfile2"
-
-	randomStr := genString(10)
-	client := common.NewClientFromEnvironment()
-
-	dbfsAPI := NewDbfsAPI(context.Background(), client)
-
-	err := dbfsAPI.Create(path, randomStr, true)
-	assert.NoError(t, err)
-
-	err = dbfsAPI.Create(path2, randomStr, true)
-	assert.NoError(t, err)
-
-	err = dbfsAPI.Create(path3, randomStr, true)
-	assert.NoError(t, err)
-
-	defer func() {
-		err := dbfsAPI.Delete(dir, true)
-		assert.NoError(t, err)
-	}()
-
-	resp, err := dbfsAPI.Read(path)
-	assert.NoError(t, err)
-	assert.True(t, md5.Sum(randomStr) == md5.Sum(resp))
-
-	items, err := dbfsAPI.List(dir, false)
-	assert.NoError(t, err)
-	assert.Len(t, items, 2)
-
-	items, err = dbfsAPI.List(dir, true)
-	assert.NoError(t, err)
-	assert.Len(t, items, 3)
 }

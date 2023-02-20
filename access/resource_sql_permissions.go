@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -120,7 +121,7 @@ func (ta *SqlPermissions) read() error {
 		failure := currentGrantsOnThis.Error()
 		if strings.Contains(failure, "does not exist") ||
 			strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
-			return common.NotFound(failure)
+			return apierr.NotFound(failure)
 		}
 		return fmt.Errorf("cannot read current grants: %s", failure)
 	}
@@ -249,7 +250,7 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 	clusterInfo, err := clustersAPI.StartAndGetInfo(ta.ClusterID)
-	if common.IsMissing(err) {
+	if apierr.IsMissing(err) {
 		// cluster that was previously in a tfstate was deleted
 		ta.ClusterID, err = ta.getOrCreateCluster(clustersAPI)
 		if err != nil {

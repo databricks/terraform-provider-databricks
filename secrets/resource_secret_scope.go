@@ -3,9 +3,9 @@ package secrets
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"regexp"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -59,7 +59,8 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		BackendType:            "DATABRICKS",
 	}
 	if s.KeyvaultMetadata != nil {
-		if err := a.client.Authenticate(a.context); err != nil {
+		err := a.client.Config.EnsureResolved()
+		if err != nil {
 			return err
 		}
 		if !a.client.IsAzure() {
@@ -98,12 +99,8 @@ func (a SecretScopesAPI) Read(scopeName string) (SecretScope, error) {
 			return scope, nil
 		}
 	}
-	return secretScope, common.APIError{
-		ErrorCode:  "NOT_FOUND",
-		Message:    fmt.Sprintf("no Secret Scope found with scope name %s", scopeName),
-		Resource:   "/api/2.0/secrets/scopes/list",
-		StatusCode: http.StatusNotFound,
-	}
+	return secretScope, apierr.NotFound(
+		fmt.Sprintf("no Secret Scope found with scope name %s", scopeName))
 }
 
 var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`),

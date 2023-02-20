@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -23,20 +22,20 @@ func TestStart(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		responseWriter := httptest.NewRecorder()
-		azure.PublicCloud.ResourceManagerEndpoint = client.Host
-		os.Setenv("MSI_ENDPOINT", client.Host)
-		os.Setenv("MSI_SECRET", "secret")
-		os.Setenv("ACI_CONTAINER_GROUP", "")
+		azure.PublicCloud.ResourceManagerEndpoint = client.Config.Host
+		t.Setenv("MSI_ENDPOINT", client.Config.Host)
+		t.Setenv("MSI_SECRET", "secret")
+		t.Setenv("ACI_CONTAINER_GROUP", "")
 		triggerStart(responseWriter, nil)
 		assert.Equal(t, "400 Bad Request", responseWriter.Result().Status)
 
 		responseWriter = httptest.NewRecorder()
-		os.Setenv("ACI_CONTAINER_GROUP", "/abc")
+		t.Setenv("ACI_CONTAINER_GROUP", "/abc")
 		triggerStart(responseWriter, nil)
 		assert.Equal(t, "200 OK", responseWriter.Result().Status)
 
 		// test that app properly fails
-		os.Setenv("FUNCTIONS_CUSTOMHANDLER_PORT", "abc")
+		t.Setenv("FUNCTIONS_CUSTOMHANDLER_PORT", "abc")
 		defer func() {
 			err := recover()
 			require.NotNil(t, err)

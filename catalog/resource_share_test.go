@@ -3,9 +3,9 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -376,7 +376,7 @@ func TestCreateShare_ThrowError(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -451,7 +451,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

@@ -5,6 +5,11 @@ if [ "yes" == "$FAIL" ]; then
     exit 1
 fi
 
+if [ "logout" == "$FAIL" ]; then 
+    >&2 /bin/echo "No subscription found. Run 'az account set' to select a subscription."
+    exit 1
+fi
+
 if [ "corrupt" == "$FAIL" ]; then 
     /bin/echo "{accessToken: ..corrupt"
     exit
@@ -16,7 +21,7 @@ if [ -z "${EXP}" ]; then
   # Linux
   EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/S/seconds/')
   EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/M/minutes/')
-  EXP=$(/bin/date --date=+${EXPIRE:=10seconds} +'%FT%TZ')
+  EXP=$(/bin/date --date=+${EXPIRE:=10seconds} +'%F %T')
 fi
 
 if [ -z "${TF_AAD_TOKEN}" ]; then

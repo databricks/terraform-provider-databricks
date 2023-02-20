@@ -25,7 +25,7 @@ func TestAccForceUserImport(t *testing.T) {
 	}
 	t.Parallel()
 	username := qa.RandomEmail()
-	os.Setenv("TEST_USERNAME", username)
+	t.Setenv("TEST_USERNAME", username)
 	ctx := context.Background()
 	client := common.CommonEnvironmentClient()
 	usersAPI := scim.NewUsersAPI(ctx, client)

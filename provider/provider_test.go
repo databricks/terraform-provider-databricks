@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -396,7 +395,7 @@ func TestConfig_CorruptConfig(t *testing.T) {
 func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
 	defer common.CleanupEnvironment()()
 	for k, v := range tt.env {
-		os.Setenv(k, v)
+		t.Setenv(k, v)
 	}
 	p := DatabricksProvider()
 	ctx := context.Background()

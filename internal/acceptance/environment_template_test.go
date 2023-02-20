@@ -12,7 +12,7 @@ import (
 
 func TestEnvironmentTemplate(t *testing.T) {
 	defer common.CleanupEnvironment()
-	err := os.Setenv("USER", qa.RandomName())
+	err := t.Setenv("USER", qa.RandomName())
 	assert.NoError(t, err)
 
 	res := EnvironmentTemplate(t, `

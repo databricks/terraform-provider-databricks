@@ -200,5 +200,8 @@ func CommonEnvironmentClient() *DatabricksClient {
 	}
 	return &DatabricksClient{
 		DatabricksClient: c,
+		commandFactory: func(ctx context.Context, dc *DatabricksClient) CommandExecutor {
+			panic("command executor not initalized")
+		},
 	}
 }

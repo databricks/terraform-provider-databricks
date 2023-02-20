@@ -138,7 +138,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 }
 
 // Test wrapper over terraform testing framework
-func run(t *testing.T, steps []step, otherVars ...map[string]string) {
+func run(t *testing.T, steps []step) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
@@ -158,13 +158,6 @@ func run(t *testing.T, steps []step, otherVars ...map[string]string) {
 	}
 	ts := []resource.TestStep{}
 	ctx := context.Background()
-	c, err := client.New(&config.Config{})
-	if err != nil {
-		panic(err)
-	}
-	client := &common.DatabricksClient{
-		DatabricksClient: c,
-	}
 	type testResource struct {
 		ID       string
 		Name     string
@@ -173,8 +166,8 @@ func run(t *testing.T, steps []step, otherVars ...map[string]string) {
 
 	resourceAndName := regexp.MustCompile(`resource\s+"([^"]*)"\s+"([^"]*)"`)
 	resourcesEverCreated := map[testResource]bool{}
+	stepConfig := ""
 	for i, s := range steps {
-		stepConfig := ""
 		if s.Template != "" {
 			stepConfig = environmentTemplate(t, s.Template, vars)
 		}
@@ -200,6 +193,8 @@ func run(t *testing.T, steps []step, otherVars ...map[string]string) {
 			ImportState:               s.ImportState,
 			ImportStateVerify:         s.ImportStateVerify,
 			Check: func(state *terraform.State) error {
+				// get configured client from provider
+				client := provider.Meta().(*common.DatabricksClient)
 				for n, is := range state.RootModule().Resources {
 					p := strings.Split(n, ".")
 					if p[0] == "data" {
@@ -233,6 +228,7 @@ func run(t *testing.T, steps []step, otherVars ...map[string]string) {
 		})
 	}
 	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
 		ProviderFactories: map[string]func() (*schema.Provider, error){
 			"databricks": func() (*schema.Provider, error) {
 				return provider, nil

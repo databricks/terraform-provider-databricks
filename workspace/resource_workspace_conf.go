@@ -106,6 +106,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 			for k, v := range config {
 				if !strings.HasPrefix(k, "enable") && !strings.HasPrefix(k, "enforce") {
 					log.Printf("[DEBUG] Skip erasing configuration of %s", k)
+					delete(config, k)
 					continue
 				}
 				switch r := v.(type) {

@@ -9,7 +9,7 @@ import (
 
 func DataSourceMetastores() *schema.Resource {
 	type MetastoresData struct {
-		Metastores []MetastoreInfo `json:"metastores,omitempty" tf:"computed,slice_set"`
+		Metastores []MetastoreInfo `json:"metastores,omitempty" tf:"computed"`
 	}
 	return common.DataResource(MetastoresData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*MetastoresData)

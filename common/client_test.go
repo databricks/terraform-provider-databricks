@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -35,7 +34,7 @@ func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string)
 
 func TestDatabricksClientConfigure_Nothing(t *testing.T) {
 	defer CleanupEnvironment()()
-	os.Setenv("PATH", "testdata:/bin")
+	t.Setenv("PATH", "testdata:/bin")
 	failsToAuthenticateWith(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{},
@@ -270,7 +269,7 @@ func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
 func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
 	defer CleanupEnvironment()()
 	p, _ := filepath.Abs("./testdata")
-	os.Setenv("PATH", p+":/bin")
+	t.Setenv("PATH", p+":/bin")
 
 	aa := DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
@@ -290,7 +289,7 @@ func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
 func TestGetJWTProperty_NonAzure(t *testing.T) {
 	defer CleanupEnvironment()()
 	p, _ := filepath.Abs("./testdata")
-	os.Setenv("PATH", p+":/bin")
+	t.Setenv("PATH", p+":/bin")
 
 	aa := DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
@@ -307,8 +306,8 @@ func TestGetJWTProperty_NonAzure(t *testing.T) {
 func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 	defer CleanupEnvironment()()
 	p, _ := filepath.Abs("./testdata")
-	os.Setenv("PATH", p+":/bin")
-	os.Setenv("FAIL", "yes")
+	t.Setenv("PATH", p+":/bin")
+	t.Setenv("FAIL", "yes")
 
 	client := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{

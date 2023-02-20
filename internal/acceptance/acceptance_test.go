@@ -2,7 +2,6 @@ package acceptance
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -13,7 +12,7 @@ import (
 func TestRunningEmbeddedTf(t *testing.T) {
 	t.Skip("fails on GitHub Actions")
 	defer common.CleanupEnvironment()
-	os.Setenv("CLOUD_ENV", "AWS")
+	t.Setenv("CLOUD_ENV", "AWS")
 
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -51,8 +50,8 @@ func TestRunningEmbeddedTf(t *testing.T) {
 		},
 	},
 		func(ctx context.Context, client *common.DatabricksClient) {
-			os.Setenv("DATABRICKS_HOST", client.Config.Host)
-			os.Setenv("DATABRICKS_TOKEN", client.Config.Token)
+			t.Setenv("DATABRICKS_HOST", client.Config.Host)
+			t.Setenv("DATABRICKS_TOKEN", client.Config.Token)
 
 			Test(t, []Step{
 				{

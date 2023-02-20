@@ -30,7 +30,7 @@ func TestAccTableACL(t *testing.T) {
 		fmt.Sprintf("spark.range(10).write.saveAsTable('%s')",
 			talbeName))
 	require.False(t, cr.Failed(), cr.Error())
-	os.Setenv("TABLE_ACL_TEST_TABLE", talbeName)
+	t.Setenv("TABLE_ACL_TEST_TABLE", talbeName)
 	defer func() {
 		cr := w.CommandExecutor.Execute(ctx, info.ClusterId, "sql",
 			fmt.Sprintf("DROP TABLE %s", talbeName))

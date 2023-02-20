@@ -11,10 +11,9 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/stretchr/testify v1.8.1
 	github.com/zclconf/go-cty v1.12.1
-	golang.org/x/exp v0.0.0-20221204150635-6dcec336b2bb
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/mod v0.8.0
 )
-
 
 require (
 	cloud.google.com/go/compute v1.18.0 // indirect
@@ -60,7 +59,7 @@ require (
 	github.com/vmihailenco/tagparser v0.1.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.5.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect

@@ -3,7 +3,6 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -49,13 +48,10 @@ func TestAccForceUserImport(t *testing.T) {
 
 func TestAccUserHomeDelete(t *testing.T) {
 	username := qa.RandomEmail()
-	username2 := qa.RandomEmail()
-	os.Setenv("TEST_USERNAME", username)
-	os.Setenv("TEST_USERNAME2", username2)
 	workspaceLevel(t, step{
 		Template: `
 		resource "databricks_user" "first" {
-			user_name = "{env.TEST_USERNAME}"
+			user_name = "` + username + `"
 			force_delete_home_dir = true
 		}`,
 		Check: func(s *terraform.State) error {
@@ -64,7 +60,7 @@ func TestAccUserHomeDelete(t *testing.T) {
 	}, step{
 		Template: `
 		resource "databricks_user" "second" {
-			user_name = "{env.TEST_USERNAME2}"
+			user_name = "{var.RANDOM}@example.com"
 		}`,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
@@ -86,13 +82,10 @@ func TestAccUserHomeDelete(t *testing.T) {
 }
 func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	username := qa.RandomEmail()
-	username2 := qa.RandomEmail()
-	os.Setenv("TEST_USERNAME", username)
-	os.Setenv("TEST_USERNAME2", username2)
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_user" "a" {
-				user_name = "{env.TEST_USERNAME}"
+				user_name = "` + username + `"
 			}`,
 		Check: func(s *terraform.State) error {
 			return nil
@@ -100,7 +93,7 @@ func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	}, step{
 		Template: `
 			resource "databricks_user" "b" {
-				user_name = "{env.TEST_USERNAME2}"
+				user_name = "{var.RANDOM}@example.com"
 			}`,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -110,13 +111,13 @@ func ResourceUser() *schema.Resource {
 				return nil
 			}
 			if d.Get("force_delete_repos").(bool) {
-				err = NewUsersAPI(ctx, c).DeletePath(fmt.Sprintf("/Repos/%v", userName))
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
 				if err != nil {
 					return fmt.Errorf("force_delete_repos: %w", err)
 				}
 			}
 			if d.Get("force_delete_home_dir").(bool) {
-				err = NewUsersAPI(ctx, c).DeletePath(fmt.Sprintf("/Users/%v", userName))
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
 				if err != nil {
 					return fmt.Errorf("force_delete_home_dir: %w", err)
 				}

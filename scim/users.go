@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
 // NewUsersAPI creates UsersAPI instance from provider meta
@@ -87,10 +86,6 @@ func (a UsersAPI) Patch(userID string, r patchRequest) error {
 func (a UsersAPI) Delete(userID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
 	return a.client.Scim(a.context, http.MethodDelete, userPath, nil, nil)
-}
-
-func (a UsersAPI) DeletePath(dir string) error {
-	return workspace.NewNotebooksAPI(a.context, a.client).Delete(dir, true)
 }
 
 func (a UsersAPI) UpdateEntitlements(userID string, entitlements patchRequest) error {

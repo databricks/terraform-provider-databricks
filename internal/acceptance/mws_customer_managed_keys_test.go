@@ -19,10 +19,7 @@ func TestMwsAccAwsCustomerManagedKeys(t *testing.T) {
 
 func TestMwsAccGcpCustomerManagedKeysForStorage(t *testing.T) {
 	accountLevel(t, step{
-		Template: `provider "databricks" {
-				host     = "{env.DATABRICKS_HOST}"
-			}
-			resource "databricks_mws_customer_managed_keys" "this" {
+		Template: `resource "databricks_mws_customer_managed_keys" "this" {
 				account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
 				gcp_key_info {
 					kms_key_id   = "{env.TEST_GCP_KMS_KEY_ID}"

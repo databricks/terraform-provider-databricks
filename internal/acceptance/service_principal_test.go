@@ -25,7 +25,7 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_service_principal" "a" {
-				application_id = "12345a67-8b9c-0d1e-23fa-4567b89cde04"
+				application_id = "{var.RANDOM_UUID}"
 				force_delete_home_dir = true
 			}`,
 		Check: func(s *terraform.State) error {
@@ -61,7 +61,7 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_service_principal" "a" {
-				application_id = "12343a67-8b9c-0d1e-23fa-4567b89cde99"
+				application_id = "{var.RANDOM_UUID}"
 				force_delete_home_dir = true
 			}`,
 		Check: func(s *terraform.State) error {

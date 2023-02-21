@@ -11,9 +11,6 @@ import (
 
 func TestRunningRealTerraformWithFixtureBackend(t *testing.T) {
 	t.Skip("fails on GitHub Actions")
-	defer common.CleanupEnvironment()
-	t.Setenv("CLOUD_ENV", "AWS")
-
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
@@ -53,13 +50,11 @@ func TestRunningRealTerraformWithFixtureBackend(t *testing.T) {
 			t.Setenv("DATABRICKS_HOST", client.Config.Host)
 			t.Setenv("DATABRICKS_TOKEN", client.Config.Token)
 
-			Test(t, []Step{
-				{
-					Template: `resource "databricks_token" "this" {
-						lifetime_seconds = 6000
-						comment = "Testing token"
-					}`,
-				},
+			workspaceLevel(t, step{
+				Template: `resource "databricks_token" "this" {
+					lifetime_seconds = 6000
+					comment = "Testing token"
+				}`,
 			})
 		})
 }

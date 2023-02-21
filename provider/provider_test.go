@@ -389,7 +389,6 @@ func TestConfig_CorruptConfig(t *testing.T) {
 }
 
 func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
-	defer common.CleanupEnvironment()()
 	for k, v := range tt.env {
 		t.Setenv(k, v)
 	}

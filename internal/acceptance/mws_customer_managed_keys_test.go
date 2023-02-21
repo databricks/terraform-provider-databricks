@@ -17,7 +17,7 @@ func TestMwsAccAwsCustomerManagedKeys(t *testing.T) {
 	})
 }
 
-func TestGcpaAccCustomerManagedKeysForStorage(t *testing.T) {
+func TestMwsAccGcpCustomerManagedKeysForStorage(t *testing.T) {
 	accountLevel(t, step{
 		Template: `provider "databricks" {
 				host     = "{env.DATABRICKS_HOST}"

@@ -37,7 +37,7 @@ import (
 )
 
 func init() {
-	// IMPORTANT: this line cannot be changed, because it's used for 
+	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
 	useragent.WithProduct("databricks-tf-provider", common.Version())
 }
@@ -207,6 +207,20 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 	}
 	sort.Strings(attrsUsed)
 	log.Printf("[INFO] Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", "))
+	if cfg.AuthType != "" {
+		// mapping from previous Google authentication types
+		// and current authentication types from Databricks Go SDK
+		oldToNewerAuthType := map[string]string{
+			"google-creds":     "google-credentials",
+			"google-accounts":  "google-id",
+			"google-workspace": "google-id",
+		}
+		newer, ok := oldToNewerAuthType[cfg.AuthType]
+		if ok {
+			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
+			cfg.AuthType = newer
+		}
+	}
 	client, err := client.New(cfg)
 	if err != nil {
 		return nil, diag.FromErr(err)

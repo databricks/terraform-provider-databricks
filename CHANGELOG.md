@@ -2,6 +2,7 @@
 
 ### 1.10.0
 
+ * Migrated client and configuration layer to [`github.com/databricks/databricks-sdk-go`](http://github.com/databricks/databricks-sdk-go) ([#1848](https://github.com/databricks/terraform-provider-databricks/pull/1848)).
  * Added new attribute to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#1988](https://github.com/databricks/terraform-provider-databricks/pull/1988)).
  * Added `history_data_sharing_status`, `partition` and `status` fields to [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/share) ([#2013](https://github.com/databricks/terraform-provider-databricks/pull/2013)).
  * Added `start_version` and `cdf_enabled` support for [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/share) ([#2007](https://github.com/databricks/terraform-provider-databricks/pull/2007)).
@@ -13,7 +14,6 @@
 
 Updated dependency versions:
 
- * Migrate client and configuration layer to `github.com/databricks/databricks-sdk-go` ([#1848](https://github.com/databricks/terraform-provider-databricks/pull/1848)).
  * Removed unused `github.com/Azure/go-autorest/autorest` and `github.com/mitchellh/go-homedir` ([#2026](https://github.com/databricks/terraform-provider-databricks/pull/2026)).
  * Bump Go from 1.18 to 1.19 ([#2029](https://github.com/databricks/terraform-provider-databricks/pull/2029)).
  * Bump CodeQL to v2 ([#2027](https://github.com/databricks/terraform-provider-databricks/pull/2027)).

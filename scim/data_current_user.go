@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -42,21 +43,25 @@ func DataSourceCurrentUser() *schema.Resource {
 			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			usersAPI := NewUsersAPI(ctx, m)
-			me, err := usersAPI.Me()
+			c := m.(*common.DatabricksClient)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			me, err := w.CurrentUser.Me(ctx)
 			if err != nil {
 				return diag.FromErr(err)
 			}
 			d.Set("user_name", me.UserName)
 			d.Set("home", fmt.Sprintf("/Users/%s", me.UserName))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", me.UserName))
-			d.Set("external_id", me.ExternalID)
+			d.Set("external_id", me.ExternalId)
 			splits := strings.Split(me.UserName, "@")
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)
 			d.Set("alphanumeric", norm)
-			d.Set("workspace_url", usersAPI.client.Config.Host)
-			d.SetId(me.ID)
+			d.Set("workspace_url", w.Config.Host)
+			d.SetId(me.Id)
 			return nil
 		},
 	}

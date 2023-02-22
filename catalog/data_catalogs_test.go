@@ -28,7 +28,9 @@ func TestCatalogsData(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"ids": []string{"a", "b"},
+	})
 }
 
 func TestCatalogsData_Error(t *testing.T) {

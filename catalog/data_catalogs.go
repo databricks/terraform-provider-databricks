@@ -9,10 +9,9 @@ import (
 )
 
 func DataSourceCatalogs() *schema.Resource {
-	type catalogsData struct {
+	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
-	}
-	return common.WorkspaceData(func(ctx context.Context, data *catalogsData, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient) error {
 		catalogs, err := w.Catalogs.ListAll(ctx)
 		if err != nil {
 			return err

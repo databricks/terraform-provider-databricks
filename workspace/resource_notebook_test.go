@@ -575,7 +575,7 @@ func TestListDirectoriesRecursive_Error(t *testing.T) {
 		{
 			Method:   http.MethodGet,
 			Resource: "/api/2.0/workspace/list?path=%2FParent",
-			Response: common.APIErrorBody{
+			Response: apierr.APIErrorBody{
 				ErrorCode: "Internal Error",
 				Message:   "Internal Error",
 			},

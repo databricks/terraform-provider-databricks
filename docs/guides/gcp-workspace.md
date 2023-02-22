@@ -90,7 +90,7 @@ After you’ve added Service Account to Databricks Accounts Console, please copy
 
 Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). The `gcloud` command is available after installing the SDK. Then run the following commands
 
-* `gcloud auth application-default login` to authorise your user with Google Cloud Platform.
+* `gcloud auth application-default login` to authorise your user with Google Cloud Platform. (If you want to use your [service account's credentials instead](https://cloud.google.com/docs/authentication/provide-credentials-adc#local-key), set the environment variable `GOOGLE_APPLICATION_CREDENTIALS` to the path of the JSON file that contains your service account key)
 * `terraform init` to load Google and Databricks Terraform providers.
 * `terraform apply` to apply the configuration changes. Terraform will use your credential to impersonate the service account specified in `databricks_google_service_account` to call the Databricks account-level API.
 

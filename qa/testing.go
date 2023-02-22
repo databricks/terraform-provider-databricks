@@ -15,7 +15,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -159,18 +161,18 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		client.WithCommandMock(f.CommandMock)
 	}
 	if f.Azure {
-		client.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+		client.Config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	}
 	if f.AzureSPN {
-		client.AzureClientID = "a"
-		client.AzureClientSecret = "b"
-		client.AzureTenantID = "c"
+		client.Config.AzureClientID = "a"
+		client.Config.AzureClientSecret = "b"
+		client.Config.AzureTenantID = "c"
 	}
 	if f.Gcp {
-		client.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
+		client.Config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
 	if f.AccountID != "" {
-		client.AccountID = f.AccountID
+		client.Config.AccountID = f.AccountID
 	}
 	if len(f.HCL) > 0 {
 		var out any
@@ -313,7 +315,7 @@ var HTTPFailures = []HTTPFixture{
 		MatchAny:     true,
 		ReuseRequest: true,
 		Status:       418,
-		Response: common.APIError{
+		Response: apierr.APIError{
 			ErrorCode:  "NONSENSE",
 			StatusCode: 418,
 			Message:    "I'm a teapot",
@@ -342,7 +344,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
-		client.AccountID = config["account_id"]
+		client.Config.AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue
@@ -405,8 +407,8 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 }
 
 // HttpFixtureClientWithToken creates client for emulated HTTP server
-func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (client *common.DatabricksClient, server *httptest.Server, err error) {
-	server = httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (*common.DatabricksClient, *httptest.Server, error) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {
 			if (req.Method == fixture.Method && req.RequestURI == fixture.Resource) || fixture.MatchAny {
@@ -425,7 +427,7 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 				}
 				if fixture.Response != nil {
 					if alreadyJSON, ok := fixture.Response.(string); ok {
-						_, err = rw.Write([]byte(alreadyJSON))
+						_, err := rw.Write([]byte(alreadyJSON))
 						assert.NoError(t, err)
 					} else {
 						responseBytes, err := json.Marshal(fixture.Response)
@@ -486,13 +488,18 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 			t.FailNow()
 		}
 	}))
-	client = &common.DatabricksClient{
+	cfg := &config.Config{
 		Host:             server.URL,
 		Token:            token,
-		AzureEnvironment: &azure.PublicCloud,
+		AzureEnvironment: "PUBLIC",
 	}
-	err = client.Configure()
-	return client, server, err
+	c, err := client.New(cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &common.DatabricksClient{
+		DatabricksClient: c,
+	}, server, nil
 }
 
 // HTTPFixturesApply is a helper method

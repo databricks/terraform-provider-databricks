@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -259,7 +260,7 @@ func TestImportClusterLibrariesFails(t *testing.T) {
 			Method:       "GET",
 			Status:       404,
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -281,7 +282,7 @@ func TestClusterListFails(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/list",
 			Status:   404,
-			Response: common.NotFound("nope"),
+			Response: apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -335,7 +336,7 @@ func TestJobList_FailGetRuns(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=1&limit=1",
 			Status:   404,
-			Response: common.NotFound("nope"),
+			Response: apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -386,7 +387,7 @@ func TestGroupCacheError(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/preview/scim/v2/Groups?",
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -445,7 +446,7 @@ func TestUserSearchFails(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27dbc%27",
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -474,7 +475,7 @@ func TestSpnSearchFails(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27dbc%27",
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -533,7 +534,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
 			scim.ResourceServicePrincipal().Schema["application_id"], d))
-		ic.Client.Host = "https://abc.azuredatabricks.net"
+		ic.Client.Config.Host = "https://abc.azuredatabricks.net"
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
 			scim.ResourceServicePrincipal().Schema["display_name"], d))
 
@@ -645,7 +646,7 @@ func TestGlobalInitScriptsErrors(t *testing.T) {
 			ReuseRequest: true,
 			MatchAny:     true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -708,7 +709,7 @@ func TestRepoListFails(t *testing.T) {
 			ReuseRequest: true,
 			MatchAny:     true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()

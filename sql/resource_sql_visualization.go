@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -101,11 +101,8 @@ func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualizat
 		}
 	}
 
-	return nil, common.APIError{
-		ErrorCode:  "NOT_FOUND",
-		StatusCode: http.StatusNotFound,
-		Message:    fmt.Sprintf("Cannot find visualization %s attached to query %s", visualizationID, queryID),
-	}
+	return nil, apierr.NotFound(
+		fmt.Sprintf("Cannot find visualization %s attached to query %s", visualizationID, queryID))
 }
 
 // Update ...

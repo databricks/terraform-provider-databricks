@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -869,7 +870,7 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -890,7 +891,7 @@ func TestResourceJobRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1135,7 +1136,7 @@ func TestJobRestarts(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/get?run_id=345",
 			Status:   400,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "nope",
 			},
 		},
@@ -1200,7 +1201,7 @@ func TestJobRestarts(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/jobs/runs/cancel",
 			Status:   400,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "nope",
 			},
 		},
@@ -1208,7 +1209,7 @@ func TestJobRestarts(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=222",
 			Status:   400,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "nope",
 			},
 		},

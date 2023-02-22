@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -16,7 +17,7 @@ func TestPreprocessS3MountOnDeletedClusterNoInstanceProfileSpecifiedError(t *tes
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
 			Status:   404,
-			Response: common.NotFound("cluster deleted"),
+			Response: apierr.NotFound("cluster deleted"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
@@ -34,7 +35,7 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
 			Status:   404,
-			Response: common.NotFound("cluster deleted"),
+			Response: apierr.NotFound("cluster deleted"),
 		},
 		{
 			Method:   "GET",

@@ -9,8 +9,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
-	"github.com/Azure/go-autorest/autorest/azure"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/stretchr/testify/assert"
@@ -1527,9 +1525,9 @@ func TestARMParsingError(t *testing.T) {
 }
 
 func TestARMParsing2(t *testing.T) {
-	res, err := azure.ParseResourceID("/subscriptions/6369c148-f8a9-4fb5-8a9d-ac1b2c8e756e/resourceGroups/alexott-rg/providers/Microsoft.DataLakeStore/accounts/aottgen1")
+	res, err := parseAzureResourceID("/subscriptions/6369c148-f8a9-4fb5-8a9d-ac1b2c8e756e/resourceGroups/alexott-rg/providers/Microsoft.DataLakeStore/accounts/aottgen1")
 	require.NoError(t, err)
-	assert.Equal(t, res.ResourceName, "aottgen1")
+	assert.Equal(t, res.resourceName, "aottgen1")
 }
 
 func TestGenericMountDefaults(t *testing.T) {

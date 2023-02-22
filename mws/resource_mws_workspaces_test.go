@@ -2,11 +2,12 @@ package mws
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 
@@ -14,47 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMwsAccWorkspace(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	cloudEnv := qa.GetEnvOrSkipTest(t, "CLOUD_ENV")
-	if strings.Contains(cloudEnv, "azure") {
-		t.Skip("cannot run Account Workspace tests in azure")
-	}
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	client := common.CommonEnvironmentClient()
-	workspaceList, err := NewWorkspacesAPI(context.Background(), client).List(acctID)
-	assert.NoError(t, err)
-	t.Log(workspaceList)
-}
-
-func TestGcpaAccWorkspace(t *testing.T) {
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	client := common.CommonEnvironmentClient()
-	workspacesAPI := NewWorkspacesAPI(context.Background(), client)
-
-	workspaceList, err := workspacesAPI.List(acctID)
-	require.NoError(t, err)
-	t.Log(workspaceList)
-
-	ws := Workspace{
-		AccountID:     acctID,
-		WorkspaceName: qa.RandomName(qa.GetEnvOrSkipTest(t, "TEST_PREFIX") + "-"),
-		Location:      qa.GetEnvOrSkipTest(t, "GOOGLE_REGION"),
-		CloudResourceBucket: &CloudResourceContainer{
-			GCP: &GCP{
-				ProjectID: qa.GetEnvOrSkipTest(t, "GOOGLE_PROJECT"),
-			},
-		},
-	}
-	err = workspacesAPI.Create(&ws, 5*time.Minute)
-	require.NoError(t, err)
-
-	err = workspacesAPI.Delete(acctID, fmt.Sprintf("%d", ws.WorkspaceID))
-	require.NoError(t, err)
-}
 
 func TestResourceWorkspaceCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -319,7 +279,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -328,7 +288,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -458,7 +418,7 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -478,7 +438,7 @@ func TestResourceWorkspaceRead_Error(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -660,7 +620,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -705,7 +665,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cannot find anything",
 				},
@@ -726,7 +686,7 @@ func TestResourceWorkspaceDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -938,7 +898,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 					AccountID:       "abc",
 					WorkspaceID:     1234,
 					WorkspaceStatus: "RUNNING",
-					WorkspaceURL:    wsClient.Host,
+					WorkspaceURL:    wsClient.Config.Host,
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -977,9 +937,9 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[1].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
-			WorkspaceURL:    wsClient.Host,
+			WorkspaceURL:    wsClient.Config.Host,
 		}
-		state["workspace_url"] = wsClient.Host
+		state["workspace_url"] = wsClient.Config.Host
 		state["workspace_name"] = "b"
 		state["account_id"] = "c"
 		state["is_no_public_ip_enabled"] = "false"
@@ -1093,7 +1053,7 @@ func TestEnsureTokenExists(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1123,7 +1083,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1138,11 +1098,13 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 }
 
 func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
-	defer common.CleanupEnvironment()()
-	client := &common.DatabricksClient{}
+	client, err := client.New(&config.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
 	r := ResourceMwsWorkspaces()
 	d := r.TestResourceData()
-	d.Set("workspace_url", client.Host)
+	d.Set("workspace_url", client.Config.Host)
 	d.Set("token", []any{
 		map[string]any{
 			"lifetime_seconds": 3600,
@@ -1151,15 +1113,14 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 		},
 	})
 
-	wsApi := NewWorkspacesAPI(context.Background(), client)
+	wsApi := NewWorkspacesAPI(context.Background(), &common.DatabricksClient{
+		DatabricksClient: client,
+	})
 
-	noAuth := "cannot authenticate parent client: authentication is not configured " +
-		"for provider. Please check https://registry.terraform.io/providers/" +
-		"databricks/databricks/latest/docs#authentication for details"
+	noAuth := "cannot authenticate parent client: default auth: cannot configure default credentials"
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
 	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")
-
 }
 
 func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
@@ -1168,7 +1129,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       418,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				ErrorCode:  "NONSENSE",
 				StatusCode: 418,
 				Message:    "I'm a teapot",
@@ -1178,7 +1139,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1199,13 +1160,21 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 func TestGenerateWorkspaceHostname_CornerCases(t *testing.T) {
 	assert.Equal(t, "fallback.cloud.databricks.com",
 		generateWorkspaceHostname(&common.DatabricksClient{
-			Host: "$%^&*",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "$%^&*",
+				},
+			},
 		}, Workspace{
 			DeploymentName: "fallback",
 		}))
 	assert.Equal(t, "stuff.is.exaple.com",
 		generateWorkspaceHostname(&common.DatabricksClient{
-			Host: "https://this.is.exaple.com",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "https://this.is.exaple.com",
+				},
+			},
 		}, Workspace{
 			DeploymentName: "stuff",
 		}))
@@ -1217,7 +1186,7 @@ func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       418,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				ErrorCode:  "NONSENSE",
 				StatusCode: 418,
 				Message:    "🐜",

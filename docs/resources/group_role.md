@@ -38,9 +38,9 @@ resource "databricks_group" "my_group" {
   display_name = "my_group_name"
 }
 
-resource "databricks_user_role" "my_user_account_admin" {
-  user_id = databricks_group.my_group.id
-  role    = "account_admin"
+resource "databricks_group_role" "my_group_account_admin" {
+  group_id = databricks_group.my_group.id
+  role     = "account_admin"
 }
 ```
 

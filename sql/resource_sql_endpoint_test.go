@@ -3,48 +3,16 @@ package sql
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestAccSQLEndpoints(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	t.Parallel()
-	ctx := context.Background()
-	client := common.NewClientFromEnvironment()
-	endpoitsAPI := NewSQLEndpointsAPI(ctx, client)
-	se := SQLEndpoint{
-		Name:            qa.RandomName("tf-"),
-		ClusterSize:     "Small",
-		AutoStopMinutes: 10,
-		MaxNumClusters:  1,
-		Tags: &Tags{
-			CustomTags: []Tag{
-				{"Country", "Netherlands"},
-				{"City", "Amsterdam"},
-			},
-		},
-	}
-	err := endpoitsAPI.Create(&se, 20*time.Minute)
-	require.NoError(t, err)
-	defer func() {
-		err = endpoitsAPI.Delete(se.ID)
-		assert.NoError(t, err)
-	}()
-
-	se.Name = "renamed-" + se.Name
-	err = endpoitsAPI.Edit(se)
-	require.NoError(t, err)
-}
 
 // Define fixture for retrieving all data sources.
 // Shared between tests that end up performing a read operation.
@@ -166,7 +134,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/sql/warehouses",
 				Status:   404,
-				Response: common.APIError{
+				Response: apierr.APIError{
 					ErrorCode: "FEATURE_DISABLED",
 					Message:   "Databricks SQL is not supported",
 				},
@@ -291,7 +259,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/sql/warehouses/failstart/start",
 			Status:   404,
-			Response: common.NotFound("nope"),
+			Response: apierr.NotFound("nope"),
 		},
 		{
 			Method:   "POST",
@@ -315,7 +283,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/sql/warehouses/cantwait",
 			Status:   500,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "does not compute",
 			},
 		},

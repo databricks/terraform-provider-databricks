@@ -2,12 +2,14 @@ package clusters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	// "reflect"
 	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -104,7 +106,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.Config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
@@ -157,7 +159,7 @@ func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.AzureResourceID = "/a/b/c"
+	client.Config.AzureResourceID = "/a/b/c"
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
@@ -171,7 +173,7 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
-			Response: common.APIErrorBody{
+			Response: apierr.APIErrorBody{
 				Message: "Nope",
 			},
 			Status: 404,
@@ -187,7 +189,7 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.AzureResourceID = "/a/b/c"
+	client.Config.AzureResourceID = "/a/b/c"
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
@@ -201,7 +203,7 @@ func TestWaitForClusterStatus_StopRetryingEarly(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
-			Response: common.APIErrorBody{
+			Response: apierr.APIErrorBody{
 				Message: "I am a teapot",
 			},
 			Status: 418,
@@ -232,7 +234,7 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.AzureResourceID = "/a/b/c"
+	client.Config.AzureResourceID = "/a/b/c"
 
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
@@ -591,7 +593,7 @@ func TestStartAndGetInfo_StartingError(t *testing.T) {
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
-			Response: common.APIErrorBody{
+			Response: apierr.APIErrorBody{
 				Message: "I am a teapot!",
 			},
 			Status: 418,
@@ -628,7 +630,7 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
-			Response: common.APIErrorBody{
+			Response: apierr.APIErrorBody{
 				Message: "unpin the cluster first",
 			},
 			Status: 400,
@@ -654,16 +656,6 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 	ctx := context.Background()
 	err = NewClustersAPI(ctx, client).PermanentDelete("abc")
 	require.NoError(t, err)
-}
-
-func TestAccAwsSmallestNodeType(t *testing.T) {
-	qa.RequireCloudEnv(t, "aws")
-	client := common.CommonEnvironmentClient()
-	ctx := context.Background()
-	nodeType := NewClustersAPI(ctx, client).GetSmallestNodeType(NodeTypeRequest{
-		LocalDisk: true,
-	})
-	assert.Equal(t, "m5d.large", nodeType)
 }
 
 func TestEventsSinglePage(t *testing.T) {
@@ -1239,7 +1231,7 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
 			Status:   418,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				ErrorCode: "TEST",
 				Message:   "nothing",
 			},
@@ -1259,7 +1251,7 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/permanent-delete",
 			Status:   418,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				ErrorCode: "TEST",
 				Message:   "You should unpin the cluster first",
 			},
@@ -1268,7 +1260,7 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/unpin",
 			Status:   418,
-			Response: common.NotFound("missing"),
+			Response: apierr.NotFound("missing"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewClustersAPI(ctx, client)
@@ -1279,16 +1271,17 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 
 func TestWrapMissingClusterError(t *testing.T) {
 	assert.EqualError(t, wrapMissingClusterError(fmt.Errorf("x"), "abc"), "x")
-	assert.EqualError(t, wrapMissingClusterError(common.APIError{
+	assert.EqualError(t, wrapMissingClusterError(&apierr.APIError{
 		Message: "Cluster abc does not exist",
 	}, "abc"), "Cluster abc does not exist")
 }
 
 func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
-	err := wrapMissingClusterError(common.APIError{
+	err := wrapMissingClusterError(&apierr.APIError{
 		ErrorCode: "INVALID_STATE",
 		Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
 	}, "X")
-	ae, _ := err.(common.APIError)
+	var ae *apierr.APIError
+	assert.True(t, errors.As(err, &ae))
 	assert.Equal(t, 404, ae.StatusCode)
 }

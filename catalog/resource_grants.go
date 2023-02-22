@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -310,7 +311,7 @@ func ResourceGrants() *schema.Resource {
 				return err
 			}
 			if len(grants.Assignments) == 0 {
-				return common.NotFound("got empty permissions list")
+				return apierr.NotFound("got empty permissions list")
 			}
 			return common.StructToData(grants, s, d)
 		},

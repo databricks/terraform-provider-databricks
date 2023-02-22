@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/exp/slices"
 
+	"github.com/databricks/databricks-sdk-go/service/workspaceconf"
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -1029,9 +1031,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			return globalWorkspaceConfName
 		},
 		List: func(ic *importContext) error {
-			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
-			keys := map[string]any{"zDummyKey": "42"}
-			err := wsConfAPI.Read(&keys)
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			_, err = w.WorkspaceConf.GetStatus(ic.Context, workspaceconf.GetStatus{
+				Keys: "zDummyKey",
+			})
 			/* this is done to pass the TestImportingNoResourcesError test in exporter_test.go
 			Commonly, some of the keys in a workspace conf are Nil
 			In the simulated server all are returned with a value.
@@ -1047,18 +1053,29 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
-			keys := ic.workspaceConfKeys
-			err := wsConfAPI.Read(&keys)
+			w, err := ic.Client.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			for k, v := range keys {
-				if v == nil {
-					delete(keys, k)
-				}
+			loaded := map[string]any{}
+			keyNames := []string{}
+			for k := range ic.workspaceConfKeys {
+				keyNames = append(keyNames, k)
 			}
-			r.Data.Set("custom_config", keys)
+			sort.Strings(keyNames)
+			conf, err := w.WorkspaceConf.GetStatus(ic.Context, workspaceconf.GetStatus{
+				Keys: strings.Join(keyNames, ","),
+			})
+			if err != nil {
+				return err
+			}
+			for k, v := range *conf {
+				if v == "" {
+					continue
+				}
+				loaded[k] = v
+			}
+			r.Data.Set("custom_config", loaded)
 			return nil
 		},
 	},

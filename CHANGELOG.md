@@ -10,7 +10,7 @@
 
 Updated dependency versions:
 
- * Bump github.com/databricks/databricks-sdk-go ([#2044](https://github.com/databricks/terraform-provider-databricks/pull/2044)).
+ * Bump github.com/databricks/databricks-sdk-go from v0.3.2 to v0.3.3 ([#2044](https://github.com/databricks/terraform-provider-databricks/pull/2044)).
  * Bump github.com/zclconf/go-cty from 1.12.1 to 1.13.0 ([#2043](https://github.com/databricks/terraform-provider-databricks/pull/2043)).
 
 ### 1.10.0

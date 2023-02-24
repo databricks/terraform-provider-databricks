@@ -1,5 +1,18 @@
 # Version changelog
 
+### 1.10.1
+
+ * Migrated [databricks_catalogs](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/catalogs) data to Go SDK ([#2038](https://github.com/databricks/terraform-provider-databricks/pull/2038)).
+ * Migrated [databricks_current_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/current_user) data source to Go SDK ([#2037](https://github.com/databricks/terraform-provider-databricks/pull/2037)).
+ * Migrated [databricks_workspace_conf](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_conf) to Go SDK ([#2035](https://github.com/databricks/terraform-provider-databricks/pull/2035)).
+ * Added new feature ([#2015](https://github.com/databricks/terraform-provider-databricks/pull/2015)).
+ * Minor documentation improvements ([#2039](https://github.com/databricks/terraform-provider-databricks/pull/2039)).
+
+Updated dependency versions:
+
+ * Bump github.com/databricks/databricks-sdk-go ([#2044](https://github.com/databricks/terraform-provider-databricks/pull/2044)).
+ * Bump github.com/zclconf/go-cty from 1.12.1 to 1.13.0 ([#2043](https://github.com/databricks/terraform-provider-databricks/pull/2043)).
+
 ### 1.10.0
 
  * Migrated client and configuration layer to [`github.com/databricks/databricks-sdk-go`](http://github.com/databricks/databricks-sdk-go) ([#1848](https://github.com/databricks/terraform-provider-databricks/pull/1848)).

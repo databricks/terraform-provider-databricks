@@ -41,12 +41,13 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/sql/warehouses",
 				ExpectedRequest: SQLEndpoint{
-					Name:               "foo",
-					ClusterSize:        "Small",
-					MaxNumClusters:     1,
-					AutoStopMinutes:    120,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
+					Name:                    "foo",
+					ClusterSize:             "Small",
+					MaxNumClusters:          1,
+					AutoStopMinutes:         120,
+					EnablePhoton:            true,
+					EnableServerlessCompute: true,
+					SpotInstancePolicy:      "COST_OPTIMIZED",
 				},
 				Response: SQLEndpoint{
 					ID: "abc",
@@ -80,6 +81,54 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
+func TestResourceClassicSQLEndpointCreate(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/warehouses",
+				ExpectedRequest: SQLEndpoint{
+					Name:                    "foo",
+					ClusterSize:             "Small",
+					MaxNumClusters:          1,
+					AutoStopMinutes:         120,
+					EnablePhoton:            true,
+					EnableServerlessCompute: false,
+					SpotInstancePolicy:      "COST_OPTIMIZED",
+				},
+				Response: SQLEndpoint{
+					ID: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/sql/warehouses/abc",
+				ReuseRequest: true,
+				Response: SQLEndpoint{
+					Name:           "foo",
+					ClusterSize:    "Small",
+					ID:             "abc",
+					State:          "RUNNING",
+					Tags:           &Tags{},
+					MaxNumClusters: 1,
+					NumClusters:    1,
+				},
+			},
+			dataSourceListHTTPFixture,
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		enable_serverless_compute = "false"
+		`,
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+}
+
 func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -87,12 +136,13 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/sql/warehouses",
 				ExpectedRequest: SQLEndpoint{
-					Name:               "foo",
-					ClusterSize:        "Small",
-					MaxNumClusters:     1,
-					AutoStopMinutes:    0,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
+					Name:                    "foo",
+					ClusterSize:             "Small",
+					MaxNumClusters:          1,
+					AutoStopMinutes:         0,
+					EnablePhoton:            true,
+					EnableServerlessCompute: true,
+					SpotInstancePolicy:      "COST_OPTIMIZED",
 				},
 				Response: SQLEndpoint{
 					ID: "abc",
@@ -185,13 +235,14 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/sql/warehouses/abc/edit",
 				ExpectedRequest: SQLEndpoint{
-					ID:                 "abc",
-					Name:               "foo",
-					ClusterSize:        "Small",
-					AutoStopMinutes:    120,
-					MaxNumClusters:     1,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
+					ID:                      "abc",
+					Name:                    "foo",
+					ClusterSize:             "Small",
+					AutoStopMinutes:         120,
+					MaxNumClusters:          1,
+					EnablePhoton:            true,
+					EnableServerlessCompute: true,
+					SpotInstancePolicy:      "COST_OPTIMIZED",
 				},
 			},
 			{

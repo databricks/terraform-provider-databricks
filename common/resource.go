@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -182,6 +183,7 @@ func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.
 	}
 }
 
+// Deprecated: migrate to WorkspaceData
 func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) *schema.Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
 	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
@@ -197,6 +199,55 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 			ptr := reflect.New(reflect.ValueOf(sc).Type())
 			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
 			err := read(ctx, ptr.Interface(), m.(*DatabricksClient))
+			if err != nil {
+				err = nicerError(ctx, err, "read data")
+				diags = diag.FromErr(err)
+			}
+			StructToData(ptr.Elem().Interface(), s, d)
+			// check if the resource schema has the `id` attribute (marked with `json:"id"` in the provided structure).
+			// and if yes, then use it as resource ID. If not, then use default value for resource ID (`_`)
+			if _, ok := s["id"]; ok {
+				d.SetId(d.Get("id").(string))
+			} else {
+				d.SetId("_")
+			}
+			return
+		},
+	}
+}
+
+// WorkspaceData is a generic way to define data resources in Terraform provider.
+//
+// Example usage:
+//
+//	type catalogsData struct {
+//		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
+//	}
+//	return common.WorkspaceData(func(ctx context.Context, data *catalogsData, w *databricks.WorkspaceClient) error {
+//		catalogs, err := w.Catalogs.ListAll(ctx)
+//		...
+//	})
+func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
+	var dummy T
+	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
+	return &schema.Resource{
+		Schema: s,
+		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {
+			defer func() {
+				// using recoverable() would cause more complex rewrapping of DataToStructPointer & StructToData
+				if panic := recover(); panic != nil {
+					diags = diag.Errorf("panic: %v", panic)
+				}
+			}()
+			ptr := reflect.New(reflect.ValueOf(dummy).Type())
+			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
+			client := m.(*DatabricksClient)
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				err = nicerError(ctx, err, "read data")
+				return diag.FromErr(err)
+			}
+			err = read(ctx, ptr.Interface().(*T), w)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 				diags = diag.FromErr(err)

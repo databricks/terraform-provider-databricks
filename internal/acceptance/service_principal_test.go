@@ -3,6 +3,7 @@ package acceptance
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -21,7 +22,8 @@ const awsSpn = `resource "databricks_service_principal" "this" {
 }`
 
 func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
-	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	os.Setenv("CLOUD_ENV", "AZURE")
+	//GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_service_principal" "a" {
@@ -29,6 +31,8 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 				force_delete_home_dir = true
 			}`,
 		Check: func(s *terraform.State) error {
+			appId := s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
+			os.Setenv("application_id_a", appId)
 			return nil
 		},
 	}, step{
@@ -43,8 +47,8 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 				return err
 			}
 			ctx := context.Background()
-			appId := s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
-			_, err = w.Workspace.GetByPath(ctx, fmt.Sprintf("/Users/%v", appId))
+			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", os.Getenv("application_id_a")))
+			os.Remove("application_id_a")
 			if err != nil {
 				if apierr.IsMissing(err) {
 					return nil
@@ -57,14 +61,17 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 }
 
 func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
-	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	os.Setenv("CLOUD_ENV", "AZURE")
+	//GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_service_principal" "a" {
 				application_id = "{var.RANDOM_UUID}"
-				force_delete_home_dir = true
+				force_delete_home_dir = false 
 			}`,
 		Check: func(s *terraform.State) error {
+			appId := s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
+			os.Setenv("application_id_a", appId)
 			return nil
 		},
 	}, step{
@@ -79,8 +86,9 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 				return err
 			}
 			ctx := context.Background()
-			appId := s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
-			_, err = w.Workspace.GetByPath(ctx, fmt.Sprintf("/Users/%v", appId))
+			appId := os.Getenv("application_id_a")
+			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", appId))
+			os.Remove("application_id_a")
 			return err
 		},
 	})

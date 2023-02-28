@@ -90,15 +90,15 @@ func TestTableACLGrants(t *testing.T) {
 }
 
 func TestDatabaseACLGrants(t *testing.T) {
-	ta := SqlPermissions{ Database: "default",
-	exec: mockData{
-		"SHOW GRANT ON DATABASE `default`": {
-			// principal, actionType, objType, objectKey
-			// Test with and without backticks
-			{"users", "SELECT", "database", "default"},
-			{"users", "USAGE", "database", "`default`"},
-		},
-	}}
+	ta := SqlPermissions{Database: "default",
+		exec: mockData{
+			"SHOW GRANT ON DATABASE `default`": {
+				// principal, actionType, objType, objectKey
+				// Test with and without backticks
+				{"users", "SELECT", "database", "default"},
+				{"users", "USAGE", "database", "`default`"},
+			},
+		}}
 	err := ta.read()
 	assert.NoError(t, err)
 	assert.Len(t, ta.PrivilegeAssignments, 1)

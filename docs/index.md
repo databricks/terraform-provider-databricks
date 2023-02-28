@@ -7,7 +7,7 @@ description: Terraform provider for the Databricks Lakehouse platform
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. If you're migrating from version *0.3.x*, please follow [this guide](guides/migration-0.4.x.md). Changelog is available [on GitHub](https://github.com/databricks/terraform-provider-databricks/blob/master/CHANGELOG.md).
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. Changelog is available [on GitHub](https://github.com/databricks/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
 ![Resources](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/resources.png)
 
@@ -201,7 +201,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to
 `DEFAULT`.
 * `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
-* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `More than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-creds`, `google-accounts`, `google-workspace` and `databricks-cli`.
+* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-credentials`, and `google-id`.
 
 ## Special configurations for Azure
 
@@ -345,3 +345,5 @@ provider "databricks" {}
 8. Will check for the `~/.databrickscfg` file in the home directory, will fail otherwise.
 9. Will check for `profile` presence and try picking from that file will fail otherwise.
 10. Will check for `host` and `token` or `username`+`password` combination, and will fail if none of these exist.
+
+Please check [Default Authentication Flow](https://github.com/databricks/databricks-sdk-go#default-authentication-flow) from [Databricks SDK for Go](https://docs.databricks.com/dev-tools/sdk-go.html) in case you need more details.

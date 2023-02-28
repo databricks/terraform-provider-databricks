@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
@@ -20,7 +21,7 @@ func ResourceServicePrincipalRole() *schema.Resource {
 			servicePrincipal, err := scim.NewServicePrincipalsAPI(ctx, c).Read(servicePrincipalID)
 			hasRole := scim.ComplexValues(servicePrincipal.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return common.NotFound("Service Principal has no role")
+				return apierr.NotFound("Service Principal has no role")
 			}
 			return err
 		},

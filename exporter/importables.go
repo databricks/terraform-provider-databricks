@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/exp/slices"
 
+	"github.com/databricks/databricks-sdk-go/service/workspaceconf"
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -747,8 +749,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "registered_model_id", Resource: "databricks_mlflow_model"},
 			{Path: "experiment_id", Resource: "databricks_mlflow_experiment"},
 			{Path: "repo_id", Resource: "databricks_repo"},
-			{Path: "directory_path", Resource: "databricks_directory"},
-			{Path: "notebook_path", Resource: "databricks_notebook"},
+			{Path: "directory_id", Resource: "databricks_directory", Match: "object_id"},
+			{Path: "notebook_id", Resource: "databricks_notebook", Match: "object_id"},
 			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name"},
 			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
 			{Path: "access_control.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
@@ -1029,9 +1031,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			return globalWorkspaceConfName
 		},
 		List: func(ic *importContext) error {
-			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
-			keys := map[string]any{"zDummyKey": "42"}
-			err := wsConfAPI.Read(&keys)
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			_, err = w.WorkspaceConf.GetStatus(ic.Context, workspaceconf.GetStatus{
+				Keys: "zDummyKey",
+			})
 			/* this is done to pass the TestImportingNoResourcesError test in exporter_test.go
 			Commonly, some of the keys in a workspace conf are Nil
 			In the simulated server all are returned with a value.
@@ -1047,18 +1053,29 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			wsConfAPI := workspace.NewWorkspaceConfAPI(ic.Context, ic.Client)
-			keys := ic.workspaceConfKeys
-			err := wsConfAPI.Read(&keys)
+			w, err := ic.Client.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			for k, v := range keys {
-				if v == nil {
-					delete(keys, k)
-				}
+			loaded := map[string]any{}
+			keyNames := []string{}
+			for k := range ic.workspaceConfKeys {
+				keyNames = append(keyNames, k)
 			}
-			r.Data.Set("custom_config", keys)
+			sort.Strings(keyNames)
+			conf, err := w.WorkspaceConf.GetStatus(ic.Context, workspaceconf.GetStatus{
+				Keys: strings.Join(keyNames, ","),
+			})
+			if err != nil {
+				return err
+			}
+			for k, v := range *conf {
+				if v == "" {
+					continue
+				}
+				loaded[k] = v
+			}
+			r.Data.Set("custom_config", loaded)
 			return nil
 		},
 	},
@@ -1146,6 +1163,28 @@ var resourcesMap map[string]importable = map[string]importable{
 			name := r.ID[1:] + ext[language] // todo: replace non-alphanum+/ with _
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
+			splits := strings.Split(r.Name, "_")
+			notebookId := splits[len(splits)-1]
+			directorySplits := strings.Split(r.ID, "/")
+			directorySplits = directorySplits[:len(directorySplits)-1]
+			directoryPath := strings.Join(directorySplits, "/")
+
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/notebooks/%s", notebookId),
+					Name:     "notebook_" + ic.Importables["databricks_notebook"].Name(ic, r.Data),
+				})
+			}
+
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource:  "databricks_directory",
+					Attribute: "path",
+					Value:     directoryPath,
+				})
+			}
+
 			if err != nil {
 				return err
 			}
@@ -1496,6 +1535,66 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.file.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		},
+	},
+	"databricks_directory": {
+		Service: "notebooks",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("path").(string)
+			if name == "" {
+				return d.Id()
+			} else {
+				name = nameNormalizationRegex.ReplaceAllString(name[1:], "_") + "_" +
+					strconv.FormatInt(int64(d.Get("object_id").(int)), 10)
+			}
+			return name
+		},
+		List: func(ic *importContext) error {
+			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+			directoryList, err := notebooksAPI.ListDirectories("/", true)
+			if err != nil {
+				return err
+			}
+			for offset, directory := range directoryList {
+				if strings.HasPrefix(directory.Path, "/Repos") {
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_directory",
+					ID:       directory.Path,
+				})
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d directories",
+						offset+1, len(directoryList))
+				}
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+
+			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
+			splits := strings.Split(r.Name, "_")
+			directoryId := splits[len(splits)-1]
+
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/directories/%s", directoryId),
+					Name:     "directory_" + ic.Importables["databricks_directory"].Name(ic, r.Data),
+				})
+			}
+
+			if r.ID == "/Shared" || r.ID == "/Users" || ic.IsUserOrServicePrincipalDirectory(r.ID, "/Users") {
+				r.Mode = "data"
+			}
+
+			return nil
+
+		},
+		Body: resourceOrDataBlockBody,
+		Depends: []reference{
+			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},
+			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: MatchPrefix},
 		},
 	},
 }

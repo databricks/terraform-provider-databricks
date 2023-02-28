@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
@@ -21,7 +22,7 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 			group, err := scim.NewGroupsAPI(ctx, c).Read(groupID)
 			hasRole := scim.ComplexValues(group.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return common.NotFound("Group has no instance profile")
+				return apierr.NotFound("Group has no instance profile")
 			}
 			return err
 		},

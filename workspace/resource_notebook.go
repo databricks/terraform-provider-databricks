@@ -161,6 +161,35 @@ func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus) e
 	return err
 }
 
+func (a NotebooksAPI) ListDirectories(path string, recursive bool) ([]ObjectStatus, error) {
+	if recursive {
+		var paths []ObjectStatus
+		err := a.recursiveAddDirectoryPaths(path, &paths)
+		if err != nil {
+			return nil, err
+		}
+		return paths, err
+	}
+	return a.list(path)
+}
+
+func (a NotebooksAPI) recursiveAddDirectoryPaths(path string, pathList *[]ObjectStatus) error {
+	directoryInfoList, err := a.list(path)
+	if err != nil {
+		return err
+	}
+	for _, v := range directoryInfoList {
+		if v.ObjectType == Directory {
+			*pathList = append(*pathList, v)
+			err := a.recursiveAddDirectoryPaths(v.Path, pathList)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return err
+}
+
 type ObjectList struct {
 	Objects []ObjectStatus `json:"objects,omitempty"`
 }

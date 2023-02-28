@@ -90,7 +90,7 @@ After you’ve added Service Account to Databricks Accounts Console, please copy
 
 Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). The `gcloud` command is available after installing the SDK. Then run the following commands
 
-* `gcloud auth application-default login` to authorise your user with Google Cloud Platform.
+* `gcloud auth application-default login` to authorise your user with Google Cloud Platform. (If you want to use your [service account's credentials instead](https://cloud.google.com/docs/authentication/provide-credentials-adc#local-key), set the environment variable `GOOGLE_APPLICATION_CREDENTIALS` to the path of the JSON file that contains your service account key)
 * `terraform init` to load Google and Databricks Terraform providers.
 * `terraform apply` to apply the configuration changes. Terraform will use your credential to impersonate the service account specified in `databricks_google_service_account` to call the Databricks account-level API.
 
@@ -248,7 +248,7 @@ output "databricks_token" {
 
 ### Data resources and Authentication is not configured errors
 
-*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `default auth: cannot configure default credentials` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
 
 ```hcl
 data "databricks_current_user" "me" {

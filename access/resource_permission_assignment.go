@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -56,7 +57,7 @@ func (l PermissionAssignmentList) ForPrincipal(principalId int64) (res Permissio
 		}
 		return Permissions{v.Permissions}, nil
 	}
-	return res, common.NotFound(fmt.Sprintf("%d not found", principalId))
+	return res, apierr.NotFound(fmt.Sprintf("%d not found", principalId))
 }
 
 func (a PermissionAssignmentAPI) List() (list PermissionAssignmentList, err error) {

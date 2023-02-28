@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -46,7 +47,7 @@ func (a NetworksAPI) Delete(mwsAcctID, networksID string) error {
 	}
 	return resource.RetryContext(a.context, 60*time.Second, func() *resource.RetryError {
 		network, err := a.Read(mwsAcctID, networksID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			log.Printf("[INFO] Network %s/%s is removed.", mwsAcctID, networksID)
 			return nil
 		}

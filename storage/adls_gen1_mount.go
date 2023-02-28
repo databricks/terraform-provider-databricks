@@ -34,7 +34,11 @@ func (m AzureADLSGen1Mount) ValidateAndApplyDefaults(d *schema.ResourceData, cli
 
 // Config ...
 func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
+	env, err := client.Config.GetAzureEnvironment()
+	if err != nil {
+		panic(err) // TODO: change interface
+	}
+	aadEndpoint := env.ActiveDirectoryEndpoint
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 

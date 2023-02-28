@@ -3,8 +3,7 @@ package scim
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -49,7 +48,7 @@ func TestResourceGroupRoleCreate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -115,7 +114,7 @@ func TestResourceGroupRoleRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -135,7 +134,7 @@ func TestResourceGroupRoleRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -172,7 +171,7 @@ func TestResourceGroupRoleDelete_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

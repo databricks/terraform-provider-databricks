@@ -460,6 +460,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Resource: "/api/2.0/secrets/acls/get?principal=users&scope=a",
 				Response: secrets.ACLItem{Permission: "READ", Principal: "users"},
 			},
+			emptyWorkspace,
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -527,6 +528,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 					Scopes: []secrets.SecretScope{},
 				},
 			},
+			emptyWorkspace,
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -1587,6 +1589,11 @@ func TestImportingDLTPipelines(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/permissions/pipelines/123",
 				Response: getJSONObject("test-data/get-pipeline-permissions.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/notebooks/123",
+				Response: getJSONObject("test-data/get-notebook-permissions.json"),
 			},
 			{
 				Method:   "GET",

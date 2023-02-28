@@ -266,6 +266,25 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}
+		case reflect.Struct:
+			scm[fieldName].MaxItems = 1
+			scm[fieldName].Type = schema.TypeList
+
+			elem := typeField.Type  // changed from ptr
+			sv := reflect.New(elem) // changed from ptr
+
+			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			if strings.Contains(tfTag, "suppress_diff") {
+				blockCount := strings.Join(append(path, fieldName, "#"), ".")
+				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				for _, v := range nestedSchema {
+					// to those relatively new to GoLang: we must explicitly pass down v by copy
+					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+				}
+			}
+			scm[fieldName].Elem = &schema.Resource{
+				Schema: nestedSchema,
+			}
 		case reflect.Slice:
 			ft := schema.TypeList
 			if strings.Contains(tfTag, "slice_set") {
@@ -315,9 +334,10 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 			continue
 		}
 		omitEmpty := isOptional(typeField)
-		if omitEmpty && !fieldSchema.Optional {
-			return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
-		}
+		// TODO: fix in https://github.com/databricks/databricks-sdk-go/issues/268
+		// if omitEmpty && !fieldSchema.Optional {
+		// 	return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
+		// }
 		defaultEmpty := reflect.ValueOf(fieldSchema.Default).Kind() == reflect.Invalid
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
@@ -610,6 +630,20 @@ func readListFromData(path []string, d attributeGetter,
 		nestedResource := fieldSchema.Elem.(*schema.Resource)
 		nestedPath := append(path, offsetConverter(0))
 		return readReflectValueFromData(nestedPath, d, ve, nestedResource.Schema)
+	case reflect.Struct:
+		// code path for setting the struct value is different from pointer value
+		// in a single way: we set the field only after readReflectValueFromData
+		// traversed the graph.
+		vstruct := reflect.New(valueField.Type())
+		ve := vstruct.Elem()
+		nestedResource := fieldSchema.Elem.(*schema.Resource)
+		nestedPath := append(path, offsetConverter(0))
+		err := readReflectValueFromData(nestedPath, d, ve, nestedResource.Schema)
+		if err != nil {
+			return err
+		}
+		valueField.Set(ve)
+		return nil
 	case reflect.Slice:
 		k := valueField.Type().Elem().Kind()
 		newSlice := reflect.MakeSlice(valueField.Type(), len(rawList), len(rawList))

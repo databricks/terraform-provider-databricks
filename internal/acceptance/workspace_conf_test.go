@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/workspaceconf"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,13 +18,18 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 		}`,
 		Check: resourceCheck("databricks_workspace_conf.this",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				conf := map[string]any{
-					"enableIpAccessLists": nil,
+				w, err := client.WorkspaceClient()
+				if err != nil {
+					return err
 				}
-				err := workspace.NewWorkspaceConfAPI(ctx, client).Read(&conf)
-				assert.NoError(t, err)
-				assert.Len(t, conf, 1)
-				assert.Equal(t, conf["enableIpAccessLists"], "true")
+				conf, err := w.WorkspaceConf.GetStatus(ctx, workspaceconf.GetStatus{
+					Keys: "enableIpAccessLists",
+				})
+				if err != nil {
+					return err
+				}
+				assert.Len(t, *conf, 1)
+				assert.Equal(t, (*conf)["enableIpAccessLists"], "true")
 				return nil
 			}),
 	})

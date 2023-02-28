@@ -7,48 +7,18 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
+	"github.com/databricks/databricks-sdk-go/service/workspaceconf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// WorkspaceConfAPI exposes the workspace configurations API
-type WorkspaceConfAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-// NewWorkspaceConfAPI returns workspace conf API
-func NewWorkspaceConfAPI(ctx context.Context, m any) WorkspaceConfAPI {
-	return WorkspaceConfAPI{m.(*common.DatabricksClient), ctx}
-}
-
-// Update will handle creation of new values as well as deletes. Deleting just implies that a value of "" or
-// the appropriate disable string like "false" is sent with the appropriate key
-func (a WorkspaceConfAPI) Update(workspaceConfMap map[string]any) error {
-	return a.client.Patch(a.context, "/workspace-conf", workspaceConfMap)
-}
-
-// Read just returns back a map of keys and values which keys are the configuration items and values are the settings
-func (a WorkspaceConfAPI) Read(conf *map[string]any) error {
-	keys := []string{}
-	for k := range *conf {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return a.client.Get(a.context, "/workspace-conf", map[string]string{
-		"keys": strings.Join(keys, ","),
-	}, &conf)
-}
 
 // ResourceWorkspaceConf maintains workspace configuration for specified keys
 func ResourceWorkspaceConf() *schema.Resource {
 	create := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		wsConfAPI := NewWorkspaceConfAPI(ctx, c)
 		o, n := d.GetChange("custom_config")
 		old, okOld := o.(map[string]any)
 		new, okNew := n.(map[string]any)
@@ -56,9 +26,9 @@ func ResourceWorkspaceConf() *schema.Resource {
 			return fmt.Errorf("internal type casting error")
 		}
 		log.Printf("[DEBUG] Old workspace config: %v, new: %v", old, new)
-		patch := map[string]any{}
+		patch := workspaceconf.WorkspaceConf{}
 		for k, v := range new {
-			patch[k] = v
+			patch[k] = fmt.Sprint(v)
 		}
 		for k, v := range old {
 			_, keep := new[k]
@@ -80,9 +50,17 @@ func ResourceWorkspaceConf() *schema.Resource {
 				patch[k] = "false"
 			}
 		}
-		err := wsConfAPI.Update(patch)
+		w, err := c.WorkspaceClient()
 		if err != nil {
 			return err
+		}
+		err = w.WorkspaceConf.SetStatus(ctx, patch)
+		if err != nil {
+			return err
+		}
+		newConfig := map[string]any{}
+		for k, v := range patch {
+			newConfig[k] = v
 		}
 		d.SetId("_")
 		return nil
@@ -91,35 +69,54 @@ func ResourceWorkspaceConf() *schema.Resource {
 		Create: create,
 		Update: create,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			wsConfAPI := NewWorkspaceConfAPI(ctx, c)
 			config := d.Get("custom_config").(map[string]any)
 			log.Printf("[DEBUG] Config available in state: %v", config)
-			err := wsConfAPI.Read(&config)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
+			}
+			var keys []string
+			for k := range config {
+				keys = append(keys, k)
+			}
+			if len(keys) == 0 {
+				return nil
+			}
+			remote, err := w.WorkspaceConf.GetStatus(ctx, workspaceconf.GetStatus{
+				Keys: strings.Join(keys, ","),
+			})
+			if err != nil {
+				return err
+			}
+			for k, v := range *remote {
+				config[k] = v
 			}
 			log.Printf("[DEBUG] Setting new config to state: %v", config)
 			return d.Set("custom_config", config)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			patch := workspaceconf.WorkspaceConf{}
 			config := d.Get("custom_config").(map[string]any)
 			for k, v := range config {
 				switch r := v.(type) {
 				default:
-					config[k] = ""
+					patch[k] = ""
 				case string:
 					_, err := strconv.ParseBool(r)
 					if err != nil {
-						config[k] = ""
+						patch[k] = ""
 					} else {
-						config[k] = "false"
+						patch[k] = "false"
 					}
 				case bool:
-					config[k] = "false"
+					patch[k] = "false"
 				}
 			}
-			wsConfAPI := NewWorkspaceConfAPI(ctx, c)
-			return wsConfAPI.Update(config)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.WorkspaceConf.SetStatus(ctx, patch)
 		},
 		Schema: map[string]*schema.Schema{
 			"custom_config": {

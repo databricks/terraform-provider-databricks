@@ -106,6 +106,24 @@ func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) 
 	}
 }
 
+func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) bool {
+	if strings.HasPrefix(path, prefix) {
+		parts := strings.SplitN(path, "/", 4)
+		if len(parts) == 3 {
+			userOrSPName := parts[2]
+			if strings.Contains(userOrSPName, "@") || uuidRegex.MatchString(userOrSPName) {
+				return true
+			} else {
+				return false
+			}
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+}
+
 func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.Emit(&resource{

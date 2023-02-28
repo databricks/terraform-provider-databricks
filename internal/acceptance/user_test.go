@@ -3,7 +3,6 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -18,7 +17,6 @@ import (
 
 // https://github.com/databricks/terraform-provider-databricks/issues/1097
 func TestAccForceUserImport(t *testing.T) {
-	os.Setenv("CLOUD_ENV", "AZURE")
 	username := qa.RandomEmail()
 	workspaceLevel(t, step{
 		Template: `data "databricks_current_user" "me" {}`,

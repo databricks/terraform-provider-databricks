@@ -22,8 +22,7 @@ const awsSpn = `resource "databricks_service_principal" "this" {
 }`
 
 func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
-	os.Setenv("CLOUD_ENV", "AZURE")
-	//GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_service_principal" "a" {
@@ -61,8 +60,7 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 }
 
 func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
-	os.Setenv("CLOUD_ENV", "AZURE")
-	//GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_service_principal" "a" {

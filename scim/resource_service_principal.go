@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"golang.org/x/exp/slices"
 
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -109,6 +110,14 @@ func ResourceServicePrincipal() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			m["force_delete_repos"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["force_delete_home_dir"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
 			return m
 		})
 	spFromData := func(d *schema.ResourceData) User {
@@ -161,7 +170,28 @@ func ResourceServicePrincipal() *schema.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewServicePrincipalsAPI(ctx, c).Delete(d.Id())
+			spAPI := NewServicePrincipalsAPI(ctx, c)
+			appId := d.Get("application_id").(string)
+			err := spAPI.Delete(d.Id())
+			if err != nil {
+				return err
+			}
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+				return nil
+			}
+			if d.Get("force_delete_repos").(bool) {
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
+				if err != nil {
+					return fmt.Errorf("force_delete_repos: %w", err)
+				}
+			}
+			if d.Get("force_delete_home_dir").(bool) {
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
+				if err != nil {
+					return fmt.Errorf("force_delete_home_dir: %w", err)
+				}
+			}
+			return nil
 		},
 	}.ToResource()
 }

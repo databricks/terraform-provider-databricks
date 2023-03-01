@@ -8,7 +8,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
@@ -454,7 +453,7 @@ func TestResourcePermissionsCustomizeDiff_ErrorOnScimMe(t *testing.T) {
 		Resource: ResourcePermissions(),
 		Read:     true,
 		ID:       "/clusters/abc",
-	}.ExpectError(t, "Internal error happened")
+	}.ExpectError(t, "customize diff: me: Internal error happened")
 }
 
 func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
@@ -1261,14 +1260,6 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		err := p.Delete("/pipelines/123")
 		assert.NoError(t, err)
 	})
-}
-
-func TestCustomizeDiffNoHostYet(t *testing.T) {
-	assert.Nil(t, ResourcePermissions().CustomizeDiff(context.TODO(), nil, &common.DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{},
-		},
-	}))
 }
 
 func TestPathPermissionsResourceIDFields(t *testing.T) {

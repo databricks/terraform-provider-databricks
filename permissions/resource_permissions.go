@@ -383,7 +383,8 @@ func ResourcePermissions() *schema.Resource {
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c any) error {
 			client := c.(*common.DatabricksClient)
-			if client.DatabricksClient.Config.Host == "" {
+			log.Printf("[DEBUG] permissions id=%s, config_present=%v", diff.Id(), client.Config != nil)
+			if client.Config.Host == "" || client.DatabricksClient.Config.Host == "" {
 				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
 				return nil
 			}
@@ -393,7 +394,7 @@ func ResourcePermissions() *schema.Resource {
 			}
 			me, err := w.CurrentUser.Me(ctx)
 			if err != nil {
-				return err
+				return fmt.Errorf("customize diff: me: %w", err)
 			}
 			// Plan time validation for object permission levels
 			for _, mapping := range permissionsResourceIDFields() {

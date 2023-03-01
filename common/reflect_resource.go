@@ -323,6 +323,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	if !rv.IsValid() {
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
 	}
+	isGoSDK := strings.Contains(rv.Type().PkgPath(), "databricks-sdk-go")
 	for i := 0; i < rv.NumField(); i++ {
 		typeField := rv.Type().Field(i)
 		fieldName := chooseFieldName(typeField)
@@ -335,9 +336,9 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		}
 		omitEmpty := isOptional(typeField)
 		// TODO: fix in https://github.com/databricks/databricks-sdk-go/issues/268
-		// if omitEmpty && !fieldSchema.Optional {
-		// 	return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
-		// }
+		if !isGoSDK && omitEmpty && !fieldSchema.Optional {
+			return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
+		}
 		defaultEmpty := reflect.ValueOf(fieldSchema.Default).Kind() == reflect.Invalid
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)

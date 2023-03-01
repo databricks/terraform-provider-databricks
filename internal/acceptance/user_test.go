@@ -46,6 +46,22 @@ func TestAccForceUserImport(t *testing.T) {
 	})
 }
 
+func TestAccUserHomeDeleteHasNoEffectInAccount(t *testing.T) {
+	username := qa.RandomEmail()
+	accountLevel(t, step{
+		Template: `
+		resource "databricks_user" "first" {
+			user_name = "` + username + `"
+			force_delete_home_dir = true
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_user" "second" {
+			user_name = "{var.RANDOM}@example.com"
+		}`,
+	})
+}
+
 func TestAccUserHomeDelete(t *testing.T) {
 	username := qa.RandomEmail()
 	workspaceLevel(t, step{
@@ -54,9 +70,6 @@ func TestAccUserHomeDelete(t *testing.T) {
 			user_name = "` + username + `"
 			force_delete_home_dir = true
 		}`,
-		Check: func(s *terraform.State) error {
-			return nil
-		},
 	}, step{
 		Template: `
 		resource "databricks_user" "second" {
@@ -80,6 +93,7 @@ func TestAccUserHomeDelete(t *testing.T) {
 		},
 	})
 }
+
 func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	username := qa.RandomEmail()
 	workspaceLevel(t, step{
@@ -106,6 +120,7 @@ func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 		},
 	})
 }
+
 func TestAccUserResource(t *testing.T) {
 	differentUsers := `
 	resource "databricks_user" "first" {

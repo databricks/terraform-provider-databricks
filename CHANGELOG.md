@@ -1,5 +1,17 @@
 # Version changelog
 
+### 1.11.0
+
+ * Added `force_delete_home_dir` and `force_delete_repos` attributes to [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) and [databricks_service_principal](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal) resources ([#2032](https://github.com/databricks/terraform-provider-databricks/pull/2032)).
+ * Added docs for `continuous` block in the [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2048](https://github.com/databricks/terraform-provider-databricks/pull/2048)).
+ * Exporter: `databricks_permissions` for [databricks_notebook](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/notebook) & [databricks_directory](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/directory) ([#1908](https://github.com/databricks/terraform-provider-databricks/pull/1908)).
+ * Improve error messages for [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) ([#2055](https://github.com/databricks/terraform-provider-databricks/pull/2055)).
+ * Make reflect resource utility friendly with Go SDK ([#2051](https://github.com/databricks/terraform-provider-databricks/pull/2051)).
+
+Updated dependency versions:
+
+ * Bump github.com/stretchr/testify from 1.8.1 to 1.8.2 ([#2049](https://github.com/databricks/terraform-provider-databricks/pull/2049)).
+
 ### 1.10.1
 
  * Migrated [databricks_catalogs](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/catalogs) data to Go SDK ([#2038](https://github.com/databricks/terraform-provider-databricks/pull/2038)).

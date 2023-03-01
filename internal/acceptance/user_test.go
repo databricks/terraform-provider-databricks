@@ -2,6 +2,8 @@ package acceptance
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -44,6 +46,66 @@ func TestAccForceUserImport(t *testing.T) {
 	})
 }
 
+func TestAccUserHomeDelete(t *testing.T) {
+	username := qa.RandomEmail()
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_user" "first" {
+			user_name = "` + username + `"
+			force_delete_home_dir = true
+		}`,
+		Check: func(s *terraform.State) error {
+			return nil
+		},
+	}, step{
+		Template: `
+		resource "databricks_user" "second" {
+			user_name = "{var.RANDOM}@example.com"
+		}`,
+		Check: func(s *terraform.State) error {
+			w, err := databricks.NewWorkspaceClient()
+			if err != nil {
+				return err
+			}
+			ctx := context.Background()
+			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", username))
+			if err != nil {
+				targetErr := fmt.Sprintf("Path (/Users/%v) doesn't exist", username)
+				if strings.Contains(err.Error(), targetErr) {
+					return nil
+				}
+				return err
+			}
+			return nil
+		},
+	})
+}
+func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
+	username := qa.RandomEmail()
+	workspaceLevel(t, step{
+		Template: `
+			resource "databricks_user" "a" {
+				user_name = "` + username + `"
+			}`,
+		Check: func(s *terraform.State) error {
+			return nil
+		},
+	}, step{
+		Template: `
+			resource "databricks_user" "b" {
+				user_name = "{var.RANDOM}@example.com"
+			}`,
+		Check: func(s *terraform.State) error {
+			w, err := databricks.NewWorkspaceClient()
+			if err != nil {
+				return err
+			}
+			ctx := context.Background()
+			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", username))
+			return err
+		},
+	})
+}
 func TestAccUserResource(t *testing.T) {
 	differentUsers := `
 	resource "databricks_user" "first" {

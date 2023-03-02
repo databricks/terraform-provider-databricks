@@ -374,3 +374,4 @@ func TestResourceInstanceProfileUpdate_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile", d.Id())
 }
+

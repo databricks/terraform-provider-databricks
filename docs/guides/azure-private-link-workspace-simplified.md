@@ -18,7 +18,7 @@ This guide covers a [simple deployment](https://learn.microsoft.com/en-us/azure/
 * A separate private endpoint is used for web authentication
 * The same Databricks workspace is used for web authentication traffic but Databricks strongly recommends creating a separate workspace called a private web auth workspace for each region to host the web auth private network settings.
 
-![Private Link backend](../images/azure-private-link-simplified.png)
+![Private Link backend](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/azure-private-link-simplified.png)
 
 This guide uses the following variables:
 

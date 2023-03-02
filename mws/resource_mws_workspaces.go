@@ -570,7 +570,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			old, new := d.GetChange("private_access_settings_id")
 			if old != "" && new == "" {
 				return fmt.Errorf("cannot remove private access setting from workspace")

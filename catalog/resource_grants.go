@@ -281,7 +281,7 @@ func ResourceGrants() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c any) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			if d.Id() == "" {
 				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
 				return nil

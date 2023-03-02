@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
@@ -14,7 +15,7 @@ import (
 func ResourceUserInstanceProfile() *schema.Resource {
 	r := common.NewPairID("user_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["instance_profile_id"].ValidateDiagFunc = ValidInstanceProfile
+		m["instance_profile_id"].ValidateDiagFunc = ValidArn
 		return m
 	}).BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
@@ -24,7 +25,7 @@ func ResourceUserInstanceProfile() *schema.Resource {
 			user, err := scim.NewUsersAPI(ctx, c).Read(userID)
 			hasRole := scim.ComplexValues(user.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return common.NotFound("User has no role")
+				return apierr.NotFound("User has no role")
 			}
 			return err
 		},

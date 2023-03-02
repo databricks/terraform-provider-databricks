@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -170,7 +171,7 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	clusterInfo, err := clustersAPI.Get(clusterID)
-	if common.IsMissing(err) {
+	if apierr.IsMissing(err) {
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	if err != nil {

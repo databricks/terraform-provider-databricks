@@ -3,6 +3,8 @@ package clusters
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -22,6 +24,12 @@ func TestNodeType(t *testing.T) {
 							InstanceTypeID: "vcpu-worker",
 							MemoryMB:       0,
 							NumCores:       0,
+						},
+						{
+							NodeTypeID:     "m-fleet.xlarge",
+							InstanceTypeID: "m-fleet.xlarge",
+							MemoryMB:       16384,
+							NumCores:       4,
 						},
 						{
 							NodeTypeID:     "Random_05",
@@ -147,11 +155,18 @@ func TestNodeTypeCategory(t *testing.T) {
 							Category: "Memory Optimized",
 						},
 						{
+							NodeTypeID:     "Random_02_GPU",
+							InstanceTypeID: "Random_02_GPU",
+							MemoryMB:       8192,
+							NumCores:       8,
+							NumGPUs:        2,
+							Category:       "Storage Optimized",
+						},
+						{
 							NodeTypeID:     "Random_02",
 							InstanceTypeID: "Random_02",
 							MemoryMB:       8192,
 							NumCores:       8,
-							NumGPUs:        2,
 							Category:       "Storage Optimized",
 						},
 					},
@@ -183,7 +198,7 @@ func TestNodeTypeVCPU(t *testing.T) {
 							NodeTypeID:     "Random_05",
 							InstanceTypeID: "Random_05",
 							MemoryMB:       1024,
-							NumCores:       32,
+							NumCores:       2,
 							NodeInstanceType: &NodeInstanceType{
 								LocalDisks:      3,
 								LocalDiskSizeGB: 100,
@@ -193,7 +208,7 @@ func TestNodeTypeVCPU(t *testing.T) {
 							NodeTypeID:     "vcpu-worker",
 							InstanceTypeID: "vcpu-worker",
 							MemoryMB:       0,
-							NumCores:       0,
+							NumCores:       4,
 						},
 					},
 				},
@@ -214,13 +229,31 @@ func TestNodeTypeVCPU(t *testing.T) {
 func TestSmallestNodeTypeClouds(t *testing.T) {
 	assert.Equal(t, "Standard_D3_v2", ClustersAPI{
 		client: &common.DatabricksClient{
-			Host: "foo.azuredatabricks.net",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "foo.azuredatabricks.net",
+				},
+			},
 		},
 	}.defaultSmallestNodeType())
 
 	assert.Equal(t, "n1-standard-4", ClustersAPI{
 		client: &common.DatabricksClient{
-			Host: "foo.gcp.databricks.com",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "foo.gcp.databricks.com",
+				},
+			},
+		},
+	}.defaultSmallestNodeType())
+
+	assert.Equal(t, "i3.xlarge", ClustersAPI{
+		client: &common.DatabricksClient{
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "foo.cloud.databricks.com",
+				},
+			},
 		},
 	}.defaultSmallestNodeType())
 }
@@ -270,7 +303,6 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 							InstanceTypeID: "Random_03",
 							MemoryMB:       8192,
 							NumCores:       8,
-							NumGPUs:        2,
 							Category:       "Storage Optimized",
 						},
 					},
@@ -303,4 +335,113 @@ func TestNodeTypeShouldBeSkipped(t *testing.T) {
 	}
 	assert.Equal(t, true, toBeSkipped.shouldBeSkipped())
 	assert.Equal(t, false, NodeType{}.shouldBeSkipped())
+}
+
+func TestNodeTypeFleet(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/list-node-types",
+				Response: NodeTypeList{
+					[]NodeType{
+						{
+							NodeTypeID:     "Random_05",
+							InstanceTypeID: "Random_05",
+							MemoryMB:       1024,
+							NumCores:       4,
+						},
+						{
+							NodeTypeID:     "m-fleet.xlarge",
+							InstanceTypeID: "m-fleet.xlarge",
+							MemoryMB:       16384,
+							NumCores:       4,
+						},
+						{
+							NodeTypeID:     "m-fleet.2xlarge",
+							InstanceTypeID: "m-fleet.2xlarge",
+							MemoryMB:       32768,
+							NumCores:       8,
+						},
+					},
+				},
+			},
+		},
+		Read:        true,
+		Resource:    DataSourceNodeType(),
+		NonWritable: true,
+		State: map[string]any{
+			"fleet":     true,
+			"min_cores": 8,
+		},
+		ID: ".",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "m-fleet.2xlarge", d.Id())
+}
+
+func TestNodeTypeEmptyList(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/list-node-types",
+				Response:     NodeTypeList{},
+			},
+		},
+		Read:        true,
+		Resource:    DataSourceNodeType(),
+		NonWritable: true,
+		Azure:       true,
+		State:       map[string]any{},
+		ID:          ".",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "Standard_D3_v2", d.Id())
+}
+
+func TestNodeTypeFleetEmptyList(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/list-node-types",
+				Response:     NodeTypeList{},
+			},
+		},
+		Read:        true,
+		Resource:    DataSourceNodeType(),
+		NonWritable: true,
+		State: map[string]any{
+			"fleet": true,
+		},
+		ID: ".",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "md-fleet.xlarge", d.Id())
+}
+
+func TestNodeTypeVCPUEmptyList(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/list-node-types",
+				Response:     NodeTypeList{},
+			},
+		},
+		Read:        true,
+		Resource:    DataSourceNodeType(),
+		NonWritable: true,
+		State: map[string]any{
+			"vcpu": true,
+		},
+		ID: ".",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "vcpu-worker", d.Id())
 }

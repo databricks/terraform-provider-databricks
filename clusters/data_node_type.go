@@ -24,6 +24,7 @@ type NodeTypeRequest struct {
 	IsIOCacheEnabled      bool   `json:"is_io_cache_enabled,omitempty"`
 	SupportPortForwarding bool   `json:"support_port_forwarding,omitempty"`
 	VCPU                  bool   `json:"vcpu,omitempty"`
+	Fleet                 bool   `json:"fleet,omitempty"`
 }
 
 // NodeTypeList contains a list of node types
@@ -133,8 +134,11 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 	// error is explicitly ingored here, because Azure returns
 	// apparently too big of a JSON for Go to parse
 	if len(list.NodeTypes) == 0 {
-		if r.VCPU {
+		if r.VCPU && a.client.IsAws() {
 			return "vcpu-worker"
+		}
+		if r.Fleet && a.client.IsAws() {
+			return "md-fleet.xlarge"
 		}
 		return a.defaultSmallestNodeType()
 	}
@@ -144,10 +148,10 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 			continue
 		}
 		gbs := (nt.MemoryMB / 1024)
-		if r.VCPU && !strings.HasPrefix(nt.NodeTypeID, "vcpu") {
+		if r.VCPU != strings.HasPrefix(nt.NodeTypeID, "vcpu") {
 			continue
 		}
-		if !r.VCPU && strings.HasPrefix(nt.NodeTypeID, "vcpu") {
+		if r.Fleet != strings.Contains(nt.NodeTypeID, "-fleet.") {
 			continue
 		}
 		if r.MinMemoryGB > 0 && gbs < r.MinMemoryGB {
@@ -159,7 +163,7 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.MinCores > 0 && int32(nt.NumCores) < r.MinCores {
 			continue
 		}
-		if r.MinGPUs > 0 && nt.NumGPUs < r.MinGPUs {
+		if (r.MinGPUs > 0 && nt.NumGPUs < r.MinGPUs) || (r.MinGPUs == 0 && nt.NumGPUs > 0) {
 			continue
 		}
 		if (r.LocalDisk || r.LocalDiskMinSize > 0) && nt.NodeInstanceType != nil &&
@@ -174,19 +178,19 @@ func (a ClustersAPI) GetSmallestNodeType(r NodeTypeRequest) string {
 		if r.Category != "" && !strings.EqualFold(nt.Category, r.Category) {
 			continue
 		}
-		if r.IsIOCacheEnabled && nt.IsIOCacheEnabled != r.IsIOCacheEnabled {
+		if r.IsIOCacheEnabled && !nt.IsIOCacheEnabled {
 			continue
 		}
-		if r.SupportPortForwarding && nt.SupportPortForwarding != r.SupportPortForwarding {
+		if r.SupportPortForwarding && !nt.SupportPortForwarding {
 			continue
 		}
-		if r.PhotonDriverCapable && nt.PhotonDriverCapable != r.PhotonDriverCapable {
+		if r.PhotonDriverCapable && !nt.PhotonDriverCapable {
 			continue
 		}
-		if r.PhotonWorkerCapable && nt.PhotonWorkerCapable != r.PhotonWorkerCapable {
+		if r.PhotonWorkerCapable && !nt.PhotonWorkerCapable {
 			continue
 		}
-		if r.Graviton && nt.Graviton != r.Graviton {
+		if nt.Graviton != r.Graviton {
 			continue
 		}
 		return nt.NodeTypeID

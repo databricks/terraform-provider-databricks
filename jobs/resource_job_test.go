@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -104,7 +105,7 @@ func TestResourceJobCreate(t *testing.T) {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -204,7 +205,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 			}
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -317,7 +318,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 			}
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "17", d.Id())
 }
 
@@ -386,7 +387,7 @@ func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 		always_running = true
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -475,7 +476,7 @@ func TestResourceJobCreateSingleNode(t *testing.T) {
 			main_class_name = "com.labs.BarMain"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -539,7 +540,7 @@ func TestResourceJobCreateNWorkers(t *testing.T) {
 			main_class_name = "com.labs.BarMain"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -626,7 +627,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 			}
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -719,7 +720,7 @@ func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []stri
 		Resource: ResourceJob(),
 		HCL:      hcl,
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	var found = false
 	for _, fieldName := range conflictingArgs {
 		require.Equal(t, true, strings.Contains(err.Error(), fieldName))
@@ -803,7 +804,7 @@ func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 
@@ -843,7 +844,7 @@ func TestResourceJobRead(t *testing.T) {
 		New:      true,
 		ID:       "789",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "Featurizer", d.Get("name"))
 	assert.Equal(t, 2, d.Get("library.#"))
@@ -869,7 +870,7 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -890,7 +891,7 @@ func TestResourceJobRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -985,7 +986,7 @@ func TestResourceJobUpdate(t *testing.T) {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
@@ -1103,7 +1104,7 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 		always_running = true
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
@@ -1135,7 +1136,7 @@ func TestJobRestarts(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/get?run_id=345",
 			Status:   400,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "nope",
 			},
 		},
@@ -1200,7 +1201,7 @@ func TestJobRestarts(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/jobs/runs/cancel",
 			Status:   400,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "nope",
 			},
 		},
@@ -1208,7 +1209,7 @@ func TestJobRestarts(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=222",
 			Status:   400,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "nope",
 			},
 		},
@@ -1290,7 +1291,7 @@ func TestResourceJobDelete(t *testing.T) {
 		Delete:   true,
 		Resource: ResourceJob(),
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
 
@@ -1315,7 +1316,7 @@ func TestResourceJobUpdate_FailNumWorkersZero(t *testing.T) {
 			parameters = ["--cleanup", "full"]
 		}`,
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 

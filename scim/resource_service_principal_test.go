@@ -3,53 +3,16 @@ package scim
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestAccServicePrincipalOnAzure(t *testing.T) {
-	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "azure" {
-		t.Skip("Test will only run with CLOUD_ENV=azure")
-	}
-	t.Parallel()
-	client := common.NewClientFromEnvironment()
-	ctx := context.Background()
-
-	spAPI := NewServicePrincipalsAPI(ctx, client)
-
-	sp, err := spAPI.Create(User{
-		ApplicationID: "00000000-0000-0000-0000-000000000001",
-		Entitlements: entitlements{
-			{
-				Value: "allow-cluster-create",
-			},
-		},
-		DisplayName: "ABC SP",
-		Active:      true,
-	})
-	require.NoError(t, err)
-	defer func() {
-		err := spAPI.Delete(sp.ID)
-		require.NoError(t, err)
-	}()
-
-	err = spAPI.Update(sp.ID, User{
-		ApplicationID: sp.ApplicationID,
-		Entitlements: entitlements{
-			{
-				Value: "allow-instance-pool-create",
-			},
-		},
-		DisplayName: "BCD",
-	})
-	require.NoError(t, err)
-}
 
 func TestResourceServicePrincipalRead(t *testing.T) {
 	qa.ResourceFixture{
@@ -109,7 +72,7 @@ func TestResourceServicePrincipalRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -428,6 +391,156 @@ func TestResourceServicePrincipalDelete_Error(t *testing.T) {
 	}.ExpectError(t, "I'm a teapot")
 }
 
+func TestResourceServicePrincipalDelete_NoErrorEmtpyParams(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+	}.ApplyNoError(t)
+}
+
+func TestResourceServicePrinicpalforce_delete_reposError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			application_id = "abc"
+			force_delete_repos = true
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+}
+
+func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Repos/abc) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			application_id = "abc"
+			force_delete_repos = true	
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "force_delete_repos: Path (/Repos/abc) doesn't exist.")
+}
+
+func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			application_id = "abc"
+			force_delete_home_dir = true
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+}
+
+func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Users/abc) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+		 	application_id = "abc"
+			force_delete_home_dir = true	
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
+}
+
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {
 	d := ResourceUser().TestResourceData()
 	d.Set("force", true)
@@ -444,7 +557,7 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 			Method:   "GET",
 			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "cannot find service principal",
 			},
 		},

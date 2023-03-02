@@ -35,7 +35,7 @@ func TestClusterDataByID(t *testing.T) {
 		NonWritable: true,
 		ID:          "abc",
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, 15, d.Get("cluster_info.0.autotermination_minutes"))
 	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_info.0.cluster_name"))
 	assert.Equal(t, "i3.xlarge", d.Get("cluster_info.0.node_type_id"))
@@ -76,7 +76,7 @@ func TestClusterDataByName(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, 15, d.Get("cluster_info.0.autotermination_minutes"))
 	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_info.0.cluster_name"))
 	assert.Equal(t, "i3.xlarge", d.Get("cluster_info.0.node_type_id"))

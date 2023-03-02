@@ -1,73 +1,13 @@
 package pools
 
 import (
-	"context"
-	"os"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/clusters"
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestAccInstancePools(t *testing.T) {
-	t.Parallel()
-	cloud := os.Getenv("CLOUD_ENV")
-	if cloud == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	client := common.NewClientFromEnvironment()
-
-	clustersAPI := clusters.NewClustersAPI(context.Background(), client)
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{Latest: true, LongTermSupport: true})
-	nodeType := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{})
-	pool := InstancePool{
-		InstancePoolName:                   "Terraform Integration Test",
-		MinIdleInstances:                   0,
-		NodeTypeID:                         nodeType,
-		IdleInstanceAutoTerminationMinutes: 20,
-		PreloadedSparkVersions: []string{
-			sparkVersion,
-		},
-	}
-	if client.IsAws() {
-		pool.DiskSpec = &InstancePoolDiskSpec{
-			DiskType: &InstancePoolDiskType{
-				EbsVolumeType: clusters.EbsVolumeTypeGeneralPurposeSsd,
-			},
-			DiskCount: 1,
-			DiskSize:  32,
-		}
-		pool.AwsAttributes = &InstancePoolAwsAttributes{
-			Availability: clusters.AwsAvailabilitySpot,
-		}
-	}
-	poolInfo, err := NewInstancePoolsAPI(context.Background(), client).Create(pool)
-	assert.NoError(t, err, err)
-
-	defer func() {
-		err := NewInstancePoolsAPI(context.Background(), client).Delete(poolInfo.InstancePoolID)
-		assert.NoError(t, err, err)
-	}()
-
-	poolReadInfo, err := NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)
-	assert.NoError(t, err, err)
-	assert.Equal(t, poolInfo.InstancePoolID, poolReadInfo.InstancePoolID)
-	assert.Equal(t, pool.InstancePoolName, poolReadInfo.InstancePoolName)
-	assert.Equal(t, pool.NodeTypeID, poolReadInfo.NodeTypeID)
-	assert.Equal(t, pool.IdleInstanceAutoTerminationMinutes, poolReadInfo.IdleInstanceAutoTerminationMinutes)
-
-	poolReadInfo.InstancePoolName = "Terraform Integration Test Updated"
-	poolReadInfo.MaxCapacity = 20
-	err = NewInstancePoolsAPI(context.Background(), client).Update(poolReadInfo)
-	assert.NoError(t, err, err)
-
-	poolReadInfo, err = NewInstancePoolsAPI(context.Background(), client).Read(poolInfo.InstancePoolID)
-	assert.NoError(t, err, err)
-	assert.Equal(t, poolReadInfo.MaxCapacity, int32(20))
-}
 
 func TestResourceInstancePoolCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -111,7 +51,7 @@ func TestResourceInstancePoolCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -121,7 +61,7 @@ func TestResourceInstancePoolCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -164,7 +104,7 @@ func TestResourceInstancePoolRead(t *testing.T) {
 		New:      true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, 15, d.Get("idle_instance_autotermination_minutes"))
 	assert.Equal(t, "Shared Pool", d.Get("instance_pool_name"))
@@ -179,7 +119,7 @@ func TestResourceInstancePoolRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/instance-pools/get?instance_pool_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -199,7 +139,7 @@ func TestResourceInstancePoolRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/instance-pools/get?instance_pool_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -259,7 +199,7 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
 func TestResourceInstancePoolUpdate_Error(t *testing.T) {
@@ -268,7 +208,7 @@ func TestResourceInstancePoolUpdate_Error(t *testing.T) {
 			{ // read log output for better stub url...
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/edit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -306,7 +246,7 @@ func TestResourceInstancePoolDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -316,7 +256,7 @@ func TestResourceInstancePoolDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

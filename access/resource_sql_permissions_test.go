@@ -90,15 +90,15 @@ func TestTableACLGrants(t *testing.T) {
 }
 
 func TestDatabaseACLGrants(t *testing.T) {
-	ta := SqlPermissions{ Database: "default",
-	exec: mockData{
-		"SHOW GRANT ON DATABASE `default`": {
-			// principal, actionType, objType, objectKey
-			// Test with and without backticks
-			{"users", "SELECT", "database", "default"},
-			{"users", "USAGE", "database", "`default`"},
-		},
-	}}
+	ta := SqlPermissions{Database: "default",
+		exec: mockData{
+			"SHOW GRANT ON DATABASE `default`": {
+				// principal, actionType, objType, objectKey
+				// Test with and without backticks
+				{"users", "SELECT", "database", "default"},
+				{"users", "USAGE", "database", "`default`"},
+			},
+		}}
 	err := ta.read()
 	assert.NoError(t, err)
 	assert.Len(t, ta.PrivilegeAssignments, 1)
@@ -476,7 +476,7 @@ func TestResourceSqlPermissions_NoUpdateAnyFile(t *testing.T) {
 		},
 		ID: "any file/",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, d.Get("privilege_assignments.#"))
 	assert.Equal(t, 1, d.Get("privilege_assignments.0.privileges.#"))
 	assert.Equal(t, "users", d.Get("privilege_assignments.0.principal"))
@@ -510,7 +510,7 @@ func TestResourceSqlPermissions_NoUpdateAnonymousFunction(t *testing.T) {
 		},
 		ID: "anonymous function/",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, d.Get("privilege_assignments.#"))
 	assert.Equal(t, 1, d.Get("privilege_assignments.0.privileges.#"))
 	assert.Equal(t, "users", d.Get("privilege_assignments.0.principal"))

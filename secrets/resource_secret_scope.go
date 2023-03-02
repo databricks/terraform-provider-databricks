@@ -3,9 +3,9 @@ package secrets
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"regexp"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -59,16 +59,13 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		BackendType:            "DATABRICKS",
 	}
 	if s.KeyvaultMetadata != nil {
-		if err := a.client.Authenticate(a.context); err != nil {
+		err := a.client.Config.EnsureResolved()
+		if err != nil {
 			return err
 		}
 		if !a.client.IsAzure() {
 			//lint:ignore ST1005 Azure is a valid capitalized string
 			return fmt.Errorf("Azure KeyVault is not available")
-		}
-		if a.client.IsAzureClientSecretSet() {
-			//lint:ignore ST1005 Azure is a valid capitalized string
-			return fmt.Errorf("Azure KeyVault cannot yet be configured for Service Principal authorization")
 		}
 		req.BackendType = "AZURE_KEYVAULT"
 		req.BackendAzureKeyvault = s.KeyvaultMetadata
@@ -102,32 +99,13 @@ func (a SecretScopesAPI) Read(scopeName string) (SecretScope, error) {
 			return scope, nil
 		}
 	}
-	return secretScope, common.APIError{
-		ErrorCode:  "NOT_FOUND",
-		Message:    fmt.Sprintf("no Secret Scope found with scope name %s", scopeName),
-		Resource:   "/api/2.0/secrets/scopes/list",
-		StatusCode: http.StatusNotFound,
-	}
+	return secretScope, apierr.NotFound(
+		fmt.Sprintf("no Secret Scope found with scope name %s", scopeName))
 }
 
 var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`),
 	"Must consist of alphanumeric characters, dashes, underscores, and periods, "+
 		"and may not exceed 128 characters.")
-
-func kvDiffFunc(ctx context.Context, diff *schema.ResourceDiff, v any) error {
-	if diff == nil {
-		return nil
-	}
-	kvLst := diff.Get("keyvault_metadata").([]any)
-	if len(kvLst) == 0 {
-		return nil
-	}
-	client := v.(*common.DatabricksClient)
-	if client.IsAzure() && client.IsAzureClientSecretSet() {
-		return fmt.Errorf("you can't set up Azure KeyVault-based secret scope via Service Principal")
-	}
-	return nil
-}
 
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() *schema.Resource {
@@ -161,6 +139,5 @@ func ResourceSecretScope() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSecretScopesAPI(ctx, c).Delete(d.Id())
 		},
-		CustomizeDiff: kvDiffFunc,
 	}.ToResource()
 }

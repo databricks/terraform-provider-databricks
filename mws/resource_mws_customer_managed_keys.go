@@ -17,10 +17,17 @@ type AwsKeyInfo struct {
 	KeyRegion string `json:"key_region,omitempty" tf:"computed"`
 }
 
+// GcpKeyInfo has information about the KMS key for BYOK
+type GcpKeyInfo struct {
+	KmsKeyId string `json:"kms_key_id"`
+}
+
 // CustomerManagedKey contains key information and metadata for BYOK for E2
+// You must specify either AwsKeyInfo for AWS or GcpKeyInfo for GCP, but not both
 type CustomerManagedKey struct {
 	CustomerManagedKeyID string      `json:"customer_managed_key_id,omitempty" tf:"computed"`
-	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info" tf:"force_new"`
+	AwsKeyInfo           *AwsKeyInfo `json:"aws_key_info,omitempty" tf:"force_new,conflicts:gcp_key_info"`
+	GcpKeyInfo           *GcpKeyInfo `json:"gcp_key_info,omitempty" tf:"force_new,conflicts:aws_key_info"`
 	AccountID            string      `json:"account_id" tf:"force_new"`
 	CreationTime         int64       `json:"creation_time,omitempty" tf:"computed"`
 	UseCases             []string    `json:"use_cases"`

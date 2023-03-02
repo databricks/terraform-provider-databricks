@@ -2,12 +2,14 @@ package clusters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -367,6 +369,19 @@ type WorkloadType struct {
 	Clients *WorkloadTypeClients `json:"clients"`
 }
 
+// NetworkFileSystemInfo contains information about network file system server
+type NetworkFileSystemInfo struct {
+	ServerAddress string `json:"server_address"`
+	MountOptions  string `json:"mount_options,omitempty"`
+}
+
+// MountInfo provides configuration to mount a network file system
+type MountInfo struct {
+	NetworkFileSystemInfo *NetworkFileSystemInfo `json:"network_filesystem_info"`
+	RemoteMountDirectory  string                 `json:"remote_mount_dir_path,omitempty"`
+	LocalMountDirectory   string                 `json:"local_mount_dir_path"`
+}
+
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
@@ -399,11 +414,12 @@ type Cluster struct {
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
-	DataSecurityMode string        `json:"data_security_mode,omitempty"`
+	DataSecurityMode string        `json:"data_security_mode,omitempty" tf:"suppress_diff"`
 	SingleUserName   string        `json:"single_user_name,omitempty"`
 	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
 	RuntimeEngine    string        `json:"runtime_engine,omitempty"`
+	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
 }
 
 func (cluster Cluster) Validate() error {
@@ -652,12 +668,13 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 }
 
 // make common/resource.go#ToResource read behavior consistent with "normal" resources
+// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 func wrapMissingClusterError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
-	apiErr, ok := err.(common.APIError)
-	if !ok {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
 		return err
 	}
 	if apiErr.IsMissing() {
@@ -685,7 +702,7 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 	// nolint should be a bigger context-aware refactor
 	return result, resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)
 			return resource.RetryableError(err)
 		}

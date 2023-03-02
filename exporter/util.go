@@ -106,6 +106,24 @@ func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) 
 	}
 }
 
+func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) bool {
+	if strings.HasPrefix(path, prefix) {
+		parts := strings.SplitN(path, "/", 4)
+		if len(parts) == 3 {
+			userOrSPName := parts[2]
+			if strings.Contains(userOrSPName, "@") || uuidRegex.MatchString(userOrSPName) {
+				return true
+			} else {
+				return false
+			}
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+}
+
 func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.Emit(&resource{
@@ -146,6 +164,25 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 		ic.emitIfDbfsFile(lib.Whl)
 		ic.emitIfDbfsFile(lib.Jar)
 		ic.emitIfDbfsFile(lib.Egg)
+	}
+	return nil
+}
+
+func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
+	cll, err := libraries.NewLibrariesAPI(ic.Context, ic.Client).ClusterStatus(d.Id())
+	if err != nil {
+		return err
+	}
+	if cll.LibraryStatuses != nil {
+		for _, lib := range cll.LibraryStatuses {
+			ic.Emit(&resource{
+				Resource: "databricks_library",
+				ID:       lib.Library.GetID(d.Id()),
+			})
+			ic.emitIfDbfsFile(lib.Library.Egg)
+			ic.emitIfDbfsFile(lib.Library.Jar)
+			ic.emitIfDbfsFile(lib.Library.Whl)
+		}
 	}
 	return nil
 }

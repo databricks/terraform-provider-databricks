@@ -7,10 +7,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
@@ -212,13 +214,75 @@ func TestClusterNameFromID(t *testing.T) {
 	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(ic, d))
 }
 
+func TestClusterLibrary(t *testing.T) {
+	ic := importContextForTest()
+	d := clusters.ResourceLibrary().TestResourceData()
+	d.SetId("a-b-c")
+	assert.Equal(t, "a-b-c", resourcesMap["databricks_library"].Name(ic, d))
+}
+
+func TestImportClusterLibraries(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Status:       200,
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
+			Response: libraries.ClusterLibraryStatuses{
+				LibraryStatuses: []libraries.LibraryStatus{
+					{
+						Library: &libraries.Library{
+							Whl: "foo.whl",
+						},
+						Status: "INSTALLED",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		d := clusters.ResourceCluster().TestResourceData()
+		d.SetId("abc")
+		err := resourcesMap["databricks_cluster"].Import(ic, &resource{
+			ID:   "abc",
+			Data: d,
+		})
+		assert.NoError(t, err)
+	})
+}
+
+func TestImportClusterLibrariesFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Status:       404,
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
+			Response:     apierr.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		d := clusters.ResourceCluster().TestResourceData()
+		d.SetId("abc")
+		err := resourcesMap["databricks_cluster"].Import(ic, &resource{
+			ID:   "abc",
+			Data: d,
+		})
+		assert.EqualError(t, err, "nope")
+	})
+}
+
 func TestClusterListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/list",
 			Status:   404,
-			Response: common.NotFound("nope"),
+			Response: apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -272,7 +336,7 @@ func TestJobList_FailGetRuns(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=1&limit=1",
 			Status:   404,
-			Response: common.NotFound("nope"),
+			Response: apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -323,7 +387,7 @@ func TestGroupCacheError(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/preview/scim/v2/Groups?",
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -382,7 +446,7 @@ func TestUserSearchFails(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27dbc%27",
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -411,7 +475,7 @@ func TestSpnSearchFails(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27dbc%27",
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -470,7 +534,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
 			scim.ResourceServicePrincipal().Schema["application_id"], d))
-		ic.Client.Host = "https://abc.azuredatabricks.net"
+		ic.Client.Config.Host = "https://abc.azuredatabricks.net"
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
 			scim.ResourceServicePrincipal().Schema["display_name"], d))
 
@@ -582,7 +646,7 @@ func TestGlobalInitScriptsErrors(t *testing.T) {
 			ReuseRequest: true,
 			MatchAny:     true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -645,7 +709,7 @@ func TestRepoListFails(t *testing.T) {
 			ReuseRequest: true,
 			MatchAny:     true,
 			Status:       404,
-			Response:     common.NotFound("nope"),
+			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
@@ -715,6 +779,51 @@ func TestNotebookGeneration(t *testing.T) {
 		resource "databricks_notebook" "first_second_123" {
 		  source = "${path.module}/notebooks/First/Second.py"
 		  path   = "/First/Second"
+		}`), string(ic.Files["notebooks"].Bytes()))
+	})
+}
+
+func TestDirectoryGeneration(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						ObjectID:   1234,
+						Path:       "/first",
+						ObjectType: "DIRECTORY",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2Ffirst",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2Ffirst",
+			Response: workspace.ObjectStatus{
+				ObjectID:   1234,
+				ObjectType: "DIRECTORY",
+				Path:       "/first",
+			},
+		},
+	}, "notebooks", func(ic *importContext) {
+		err := resourcesMap["databricks_directory"].List(ic)
+		assert.NoError(t, err)
+
+		ic.generateHclForResources(nil)
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
+		resource "databricks_directory" "first_1234" {
+		  path = "/first"
 		}`), string(ic.Files["notebooks"].Bytes()))
 	})
 }

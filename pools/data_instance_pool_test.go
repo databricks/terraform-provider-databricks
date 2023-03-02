@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -47,7 +48,7 @@ func TestDataSourceInstancePoolsGetPool(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/instance-pools/list",
 			Status:   404,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "searching_error",
 			},
 		},

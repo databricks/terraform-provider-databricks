@@ -61,7 +61,7 @@ func TestQueryCreate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo", d.Id())
 	assert.Equal(t, "xyz", d.Get("data_source_id"))
@@ -150,7 +150,7 @@ func TestQueryCreateWithContinuousSchedule(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, intervalSeconds, d.Get("schedule.0.continuous.0.interval_seconds"))
 	assert.Equal(t, untilDate, d.Get("schedule.0.continuous.0.until_date"))
 }
@@ -215,7 +215,7 @@ func TestQueryCreateWithDailySchedule(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, intervalDays, d.Get("schedule.0.daily.0.interval_days"))
 	assert.Equal(t, timeOfDay, d.Get("schedule.0.daily.0.time_of_day"))
 	assert.Equal(t, untilDate, d.Get("schedule.0.daily.0.until_date"))
@@ -283,7 +283,7 @@ func TestQueryCreateWithWeeklySchedule(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, intervalWeeks, d.Get("schedule.0.weekly.0.interval_weeks"))
 	assert.Equal(t, dayOfWeek, d.Get("schedule.0.weekly.0.day_of_week"))
 	assert.Equal(t, timeOfDay, d.Get("schedule.0.weekly.0.time_of_day"))
@@ -341,7 +341,7 @@ func TestQueryCreateDeletesDefaultVisualization(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }
 
 func TestQueryRead(t *testing.T) {
@@ -364,7 +364,7 @@ func TestQueryRead(t *testing.T) {
 		ID:       "foo",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo", d.Id())
 }
@@ -392,7 +392,7 @@ func TestQueryReadWithSchedule(t *testing.T) {
 		ID:       "foo",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 12345, d.Get("schedule.0.continuous.0.interval_seconds"))
 }
 
@@ -433,7 +433,7 @@ func TestQueryUpdate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo", d.Id())
 	assert.Equal(t, "xyz", d.Get("data_source_id"))
@@ -676,7 +676,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo", d.Id())
 	assert.Equal(t, "xyz", d.Get("data_source_id"))
@@ -698,7 +698,7 @@ func TestQueryDelete(t *testing.T) {
 		ID:       "foo",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo", d.Id(), "Resource ID should not be empty")
 }
 

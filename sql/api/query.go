@@ -16,6 +16,7 @@ type Query struct {
 	Options        *QueryOptions     `json:"options,omitempty"`
 	Tags           []string          `json:"tags,omitempty"`
 	Visualizations []json.RawMessage `json:"visualizations,omitempty"`
+	Parent         string            `json:"parent,omitempty"`
 }
 
 // QuerySchedule ...

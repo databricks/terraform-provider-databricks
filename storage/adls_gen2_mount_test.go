@@ -52,7 +52,7 @@ func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
 }

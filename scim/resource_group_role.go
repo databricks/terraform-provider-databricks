@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -18,7 +19,7 @@ func ResourceGroupRole() *schema.Resource {
 			group, err := NewGroupsAPI(ctx, c).Read(groupID)
 			hasRole := ComplexValues(group.Roles).HasValue(role)
 			if err == nil && !hasRole {
-				return common.NotFound("Group has no role")
+				return apierr.NotFound("Group has no role")
 			}
 			return err
 		},

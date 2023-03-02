@@ -77,7 +77,7 @@ resource "databricks_job" "this" {
 The following arguments are required:
 
 * `name` - (Optional) An optional name for the job. The default value is Untitled.
-* `job_clusters` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
+* `job_cluster` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
 * `always_running` - (Optional) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
@@ -101,7 +101,11 @@ The following arguments are required:
 
 * `quartz_cron_expression` - (Required) A [Cron expression using Quartz syntax](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) that describes the schedule for a job. This field is required.
 * `timezone_id` - (Required) A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required.
-* `pause_status` - (Optional) Indicate whether this schedule is paused or not. Either “PAUSED” or “UNPAUSED”. When the pause_status field is omitted and a schedule is provided, the server will default to using "UNPAUSED" as a value for pause_status.
+* `pause_status` - (Optional) Indicate whether this schedule is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted and a schedule is provided, the server will default to using `UNPAUSED` as a value for `pause_status`.
+
+### continuous Configuration Block
+
+* `pause_status` - (Optional) Indicate whether this continuous job is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 
 ### git_source Configuration Block
 
@@ -127,6 +131,17 @@ Each entry in `webhook_notification` block takes a list `webhook` blocks. The fi
 * `on_start` - (Optional) (List) list of notification IDs to call when the run starts. A maximum of 3 destinations can be specified.
 * `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
 * `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
+
+Note that the `id` is not to be confused with the name of the alert destination. The `id` can be retrieved through the API or the URL of Databricks UI `https://<workspace host>/sql/destinations/<notification id>?o=<workspace id>`
+
+Example
+```hcl
+webhook_notifications {
+  on_failure {
+    id = "fb99f3dc-a0a0-11ed-a8fc-0242ac120002"
+  }
+}
+```
 
 ### webhook Configuration Block
 
@@ -184,16 +199,33 @@ You also need to include a `git_source` block to configure the repository that c
 
 One of the `query`, `dashboard` or `alert` needs to be provided.
 
-* `warehouse_id` - (Required) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only serverless warehouses are supported right now.
+* `warehouse_id` - (Required) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now.
 * `parameters` - (Optional) (Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters.
 * `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
 * `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
 * `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
 
+Example
+```hcl
+resource "databricks_job" "sql_aggregation_job" {
+  name = "Example SQL Job"
+  task {
+    task_key = "run_agg_query"
+    sql_task {
+      warehouse_id = databricks_sql_endpoint.sql_job_warehouse.id
+      query {
+        query_id = databricks_sql_query.agg_query.id
+      }
+    }
+  }
+}
+```
+
 ### Exported attributes
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - ID of the job
 * `url` - URL of the job on the given workspace
 
 ## Access Control

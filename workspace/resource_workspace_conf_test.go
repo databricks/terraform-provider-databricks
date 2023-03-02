@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +33,7 @@ func TestWorkspaceConfCreate(t *testing.T) {
 		}`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "_", d.Id())
 	assert.Equal(t, "true", d.Get("custom_config.enableIpAccessLists"))
 }
@@ -48,7 +47,7 @@ func TestWorkspaceConfCreate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -107,7 +106,7 @@ func TestWorkspaceConfUpdate(t *testing.T) {
 		Update: true,
 		ID:     "_",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "_", d.Id())
 	assert.Equal(t, "true", d.Get("custom_config.enableIpAccessLists"))
 }
@@ -121,7 +120,7 @@ func TestWorkspaceConfUpdate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -151,7 +150,7 @@ func TestWorkspaceConfRead(t *testing.T) {
 		Read:     true,
 		ID:       "_",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }
 
 func TestWorkspaceConfRead_Error(t *testing.T) {
@@ -160,7 +159,7 @@ func TestWorkspaceConfRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace-conf?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -199,7 +198,7 @@ func TestWorkspaceConfDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "_",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "_", d.Id())
 }
 
@@ -209,7 +208,7 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

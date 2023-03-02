@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -175,6 +177,10 @@ type JobCluster struct {
 	NewCluster    *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 }
 
+type ContinuousConf struct {
+	PauseStatus string `json:"pause_status,omitempty" tf:"computed"`
+}
+
 // JobSettings contains the information for configuring a job on databricks
 type JobSettings struct {
 	Name string `json:"name,omitempty" tf:"default:Untitled"`
@@ -207,6 +213,7 @@ type JobSettings struct {
 	// END Jobs + Repo integration preview
 
 	Schedule             *CronSchedule         `json:"schedule,omitempty"`
+	Continuous           *ContinuousConf       `json:"continuous,omitempty"`
 	MaxConcurrentRuns    int32                 `json:"max_concurrent_runs,omitempty"`
 	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
@@ -501,8 +508,8 @@ func wrapMissingJobError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
-	apiErr, ok := err.(common.APIError)
-	if !ok {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
 		return err
 	}
 	if apiErr.IsMissing() {
@@ -567,6 +574,8 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			Default:  false,
 			Type:     schema.TypeBool,
 		}
+		s["schedule"].ConflictsWith = []string{"continuous"}
+		s["continuous"].ConflictsWith = []string{"schedule"}
 		return s
 	})
 

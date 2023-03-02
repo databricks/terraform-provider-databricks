@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -194,7 +195,7 @@ func TestCommandsAPIExecute_FailGettingCluster(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "Does not compute",
 			},
 		},
@@ -234,7 +235,7 @@ func TestCommandsAPIExecute_FailToCreateContext(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/1.2/contexts/create",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "Does not compute",
 			},
 		},
@@ -265,7 +266,7 @@ func TestCommandsAPIExecute_FailToWaitForContext(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/1.2/contexts/status?clusterId=abc&contextId=abc",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "Does not compute",
 			},
 		},
@@ -303,7 +304,7 @@ func TestCommandsAPIExecute_FailToCreateCommand(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/1.2/commands/execute",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "Does not compute",
 			},
 		},
@@ -348,7 +349,7 @@ func TestCommandsAPIExecute_FailToWaitForCommand(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/1.2/commands/status?clusterId=abc&commandId=abc&contextId=abc",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "Does not compute",
 			},
 		},
@@ -400,7 +401,7 @@ func TestCommandsAPIExecute_FailToGetCommand(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/1.2/commands/status?clusterId=abc&commandId=abc&contextId=abc",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "Does not compute",
 			},
 		},
@@ -453,7 +454,7 @@ func TestCommandsAPIExecute_FailToDeleteContext(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/1.2/contexts/destroy",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "Does not compute",
 			},
 		},

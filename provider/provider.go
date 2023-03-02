@@ -10,6 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/useragent"
+
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/catalog"
@@ -31,6 +35,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/tokens"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 )
+
+func init() {
+	// IMPORTANT: this line cannot be changed, because it's used for
+	// internal purposes at Databricks.
+	useragent.WithProduct("databricks-tf-provider", common.Version())
+}
 
 // DatabricksProvider returns the entire terraform provider object
 func DatabricksProvider() *schema.Provider {
@@ -144,7 +154,9 @@ func DatabricksProvider() *schema.Provider {
 		Schema: providerSchema(),
 	}
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
-		ctx = context.WithValue(ctx, common.Provider, p)
+		if p.TerraformVersion != "" {
+			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
+		}
 		return configureDatabricksClient(ctx, d)
 	}
 	common.AddContextToAllResources(p, "databricks")
@@ -159,8 +171,7 @@ func providerSchema() map[string]*schema.Schema {
 		// other values will immediately fail unit tests
 	}
 	ps := map[string]*schema.Schema{}
-	attrs := common.ClientAttributes() // TODO: pass by argument
-	for _, attr := range attrs {
+	for _, attr := range config.ConfigAttributes {
 		fieldSchema := &schema.Schema{
 			Type:      kindMap[attr.Kind],
 			Optional:  true,
@@ -171,24 +182,19 @@ func providerSchema() map[string]*schema.Schema {
 			fieldSchema.DefaultFunc = schema.MultiEnvDefaultFunc(attr.EnvVars, nil)
 		}
 	}
-	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT",
-		common.DefaultRateLimitPerSecond)
-	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES",
-		common.DefaultTruncateBytes)
+	// TODO: check if still relevant
+	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", 15)
+	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96)
 	return ps
 }
 
 func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
-	prov := ctx.Value(common.Provider).(*schema.Provider)
-	pc := common.DatabricksClient{
-		Provider: prov,
-	}
+	cfg := &config.Config{}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}
-	attrs := common.ClientAttributes() // todo: pass by argument
-	for _, attr := range attrs {
+	for _, attr := range config.ConfigAttributes {
 		if value, ok := d.GetOk(attr.Name); ok {
-			err := attr.Set(&pc, value)
+			err := attr.Set(cfg, value)
 			if err != nil {
 				return nil, diag.FromErr(err)
 			}
@@ -202,22 +208,29 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 	}
 	sort.Strings(attrsUsed)
 	log.Printf("[INFO] Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", "))
-	authorizationMethodsUsed := []string{}
-	for name, used := range authsUsed {
-		if used {
-			authorizationMethodsUsed = append(authorizationMethodsUsed, name)
+	if cfg.AuthType != "" {
+		// mapping from previous Google authentication types
+		// and current authentication types from Databricks Go SDK
+		oldToNewerAuthType := map[string]string{
+			"google-creds":     "google-credentials",
+			"google-accounts":  "google-id",
+			"google-workspace": "google-id",
+		}
+		newer, ok := oldToNewerAuthType[cfg.AuthType]
+		if ok {
+			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
+			cfg.AuthType = newer
 		}
 	}
-	if pc.AuthType == "" && len(authorizationMethodsUsed) > 1 {
-		sort.Strings(authorizationMethodsUsed)
-		return nil, diag.Errorf("More than one authorization method configured: %s",
-			strings.Join(authorizationMethodsUsed, " and "))
-	}
-	if err := pc.Configure(attrsUsed...); err != nil {
+	client, err := client.New(cfg)
+	if err != nil {
 		return nil, diag.FromErr(err)
+	}
+	pc := &common.DatabricksClient{
+		DatabricksClient: client,
 	}
 	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, client)
 	})
-	return &pc, nil
+	return pc, nil
 }

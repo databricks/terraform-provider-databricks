@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -229,7 +230,7 @@ var mapping = securableMapping{
 		// v1.0
 		"ALL_PRIVILEGES":         true,
 		"CREATE_EXTERNAL_TABLE":  true,
-		"CREATE MANAGED STORAGE": true,
+		"CREATE_MANAGED_STORAGE": true,
 	},
 	"metastore": {
 		// v1.0
@@ -310,7 +311,7 @@ func ResourceGrants() *schema.Resource {
 				return err
 			}
 			if len(grants.Assignments) == 0 {
-				return common.NotFound("got empty permissions list")
+				return apierr.NotFound("got empty permissions list")
 			}
 			return common.StructToData(grants, s, d)
 		},

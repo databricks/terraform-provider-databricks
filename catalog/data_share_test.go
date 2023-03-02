@@ -18,12 +18,17 @@ func TestShareData(t *testing.T) {
 					Name: "a",
 					Objects: []SharedDataObject{
 						{
-							Name:           "a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
+							Name:                     "a",
+							DataObjectType:           "TABLE",
+							Comment:                  "c",
+							CDFEnabled:               false,
+							StartVersion:             0,
+							SharedAs:                 "",
+							AddedAt:                  0,
+							AddedBy:                  "",
+							HistoryDataSharingStatus: "DISABLED",
+							Status:                   "ACTIVE",
+							Partitions:               []Partition{},
 						},
 					},
 					CreatedBy: "bob",
@@ -39,17 +44,22 @@ func TestShareData(t *testing.T) {
 		name = "a"
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "bob", d.Get("created_by"))
 	assert.Equal(t, 1921321, d.Get("created_at"))
 	assert.Equal(t,
 		map[string]interface{}{
-			"added_at":         0,
-			"added_by":         "",
-			"comment":          "c",
-			"data_object_type": "TABLE",
-			"name":             "a",
-			"shared_as":        "",
+			"added_at":                    0,
+			"added_by":                    "",
+			"comment":                     "c",
+			"data_object_type":            "TABLE",
+			"name":                        "a",
+			"shared_as":                   "",
+			"start_version":               0,
+			"cdf_enabled":                 false,
+			"status":                      "ACTIVE",
+			"history_data_sharing_status": "DISABLED",
+			"partition":                   []interface{}{},
 		},
 		d.Get("object").(*schema.Set).List()[0])
 }

@@ -9,8 +9,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
-	"github.com/Azure/go-autorest/autorest/azure"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/stretchr/testify/assert"
@@ -52,18 +50,18 @@ func TestS3MountDefaults(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
 	defer server.Close()
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 
 	err = S3IamMount{}.ValidateAndApplyDefaults(d, client)
 	qa.AssertErrorStartsWith(t, err, "'name' is not detected & it's impossible to infer it")
 
 	d = schema.TestResourceDataRaw(t, s, map[string]any{"name": "test"})
 	err = S3IamMount{}.ValidateAndApplyDefaults(d, client)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, d.Get("name").(string), "test")
 	d = schema.TestResourceDataRaw(t, s, map[string]any{})
 	err = S3IamMount{BucketName: "abc"}.ValidateAndApplyDefaults(d, client)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, d.Get("name").(string), "abc")
 }
 
@@ -105,7 +103,7 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, testS3BucketPath, d.Get("source"))
 }
@@ -147,7 +145,7 @@ func TestResourceAwsS3MountGenericCreate_NoName(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, testS3BucketName, d.Id())
 	assert.Equal(t, testS3BucketPath, d.Get("source"))
 }
@@ -186,6 +184,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 							AwsAttributes: &clusters.AwsAttributes{
 								InstanceProfileArn: instance_profile,
 								Availability:       "SPOT",
+								ZoneID:             "auto",
 							},
 							AutoterminationMinutes: 10,
 							SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
@@ -219,6 +218,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 					AwsAttributes: &clusters.AwsAttributes{
 						InstanceProfileArn: instance_profile,
 						Availability:       "SPOT",
+						ZoneID:             "auto",
 					},
 					AutoterminationMinutes: 10,
 					SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
@@ -256,7 +256,7 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, "abcd", d.Get("cluster_id"))
 	assert.Equal(t, testS3BucketPath, d.Get("source"))
@@ -491,7 +491,7 @@ func TestResourceAdlsGen1MountGeneric_Create(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 }
 
@@ -534,7 +534,7 @@ func TestResourceAdlsGen1MountGeneric_Create_ResourceID(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "gen1", d.Id())
 }
 
@@ -656,7 +656,7 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 			}}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
 }
@@ -699,7 +699,7 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 			}}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
 }
@@ -745,7 +745,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
 			}}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
 }
@@ -793,7 +793,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 			}}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
 }
@@ -880,7 +880,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 			}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
@@ -926,7 +926,7 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 			}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
@@ -970,7 +970,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 			}},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "c", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }
@@ -1232,18 +1232,18 @@ func TestGSMountDefaults(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
 	defer server.Close()
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 
 	err = GSMount{}.ValidateAndApplyDefaults(d, client)
 	qa.AssertErrorStartsWith(t, err, "'name' is not detected & it's impossible to infer it")
 
 	d = schema.TestResourceDataRaw(t, s, map[string]any{"name": "test"})
 	err = GSMount{}.ValidateAndApplyDefaults(d, client)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, d.Get("name").(string), "test")
 	d = schema.TestResourceDataRaw(t, s, map[string]any{})
 	err = GSMount{BucketName: "abc"}.ValidateAndApplyDefaults(d, client)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, d.Get("name").(string), "abc")
 }
 
@@ -1286,7 +1286,7 @@ func TestResourceGcsMountGenericCreate_WithCluster(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, testGcsBucketPath, d.Get("source"))
 }
@@ -1329,7 +1329,7 @@ func TestResourceGcsMountGenericCreate_WithCluster_NoName(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, testS3BucketName, d.Id())
 	assert.Equal(t, testGcsBucketPath, d.Get("source"))
 }
@@ -1435,7 +1435,7 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, "abcd", d.Get("cluster_id"))
 	assert.Equal(t, testGcsBucketPath, d.Get("source"))
@@ -1494,7 +1494,7 @@ func TestResourceMountGenericCreate_WithUriAndOpts(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
 	assert.Equal(t, abfssPath, d.Get("source"))
 }
@@ -1514,7 +1514,7 @@ func TestNames(t *testing.T) {
 
 func TestARMParsing(t *testing.T) {
 	acc, container, err := parseStorageContainerId("/subscriptions/5363c143-2af7-4fb5-8a9d-ab1b2c8e756e/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/lrs-acc/blobServices/default/containers/test")
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, acc, "lrs-acc")
 	assert.Equal(t, container, "test")
 }
@@ -1525,9 +1525,9 @@ func TestARMParsingError(t *testing.T) {
 }
 
 func TestARMParsing2(t *testing.T) {
-	res, err := azure.ParseResourceID("/subscriptions/6369c148-f8a9-4fb5-8a9d-ac1b2c8e756e/resourceGroups/alexott-rg/providers/Microsoft.DataLakeStore/accounts/aottgen1")
-	require.NoError(t, err, err)
-	assert.Equal(t, res.ResourceName, "aottgen1")
+	res, err := parseAzureResourceID("/subscriptions/6369c148-f8a9-4fb5-8a9d-ac1b2c8e756e/resourceGroups/alexott-rg/providers/Microsoft.DataLakeStore/accounts/aottgen1")
+	require.NoError(t, err)
+	assert.Equal(t, res.resourceName, "aottgen1")
 }
 
 func TestGenericMountDefaults(t *testing.T) {
@@ -1535,11 +1535,11 @@ func TestGenericMountDefaults(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{})
 	defer server.Close()
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 
 	gm := GenericMount{MountName: "test"}
 	err = common.StructToData(gm, s, d)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	err = gm.ValidateAndApplyDefaults(d, client)
 	qa.AssertErrorStartsWith(t, err, "value of uri is not specified or empty")
 

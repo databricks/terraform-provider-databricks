@@ -1,5 +1,10 @@
 # Version changelog
 
+### 1.11.1
+
+ * Databricks on Azure with PrivateLink - Simplified deployment ([#1977](https://github.com/databricks/terraform-provider-databricks/pull/1977)).
+ * Deterministic diff for [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) ([#2059](https://github.com/databricks/terraform-provider-databricks/pull/2059)).
+
 ### 1.11.0
 
  * Added `force_delete_home_dir` and `force_delete_repos` attributes to [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) and [databricks_service_principal](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal) resources ([#2032](https://github.com/databricks/terraform-provider-databricks/pull/2032)).

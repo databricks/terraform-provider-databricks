@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -381,21 +380,7 @@ func ResourcePermissions() *schema.Resource {
 	})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c any) error {
-			client := c.(*common.DatabricksClient)
-			log.Printf("[DEBUG] permissions id=%s, config_present=%v", diff.Id(), client.Config != nil)
-			if client.Config.Host == "" || client.DatabricksClient.Config.Host == "" {
-				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
-				return nil
-			}
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			me, err := w.CurrentUser.Me(ctx)
-			if err != nil {
-				return fmt.Errorf("customize diff: me: %w", err)
-			}
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff) error {
 			// Plan time validation for object permission levels
 			for _, mapping := range permissionsResourceIDFields() {
 				if _, ok := diff.GetOk(mapping.field); !ok {
@@ -406,10 +391,8 @@ func ResourcePermissions() *schema.Resource {
 					m := access_control.(map[string]any)
 					permission_level := m["permission_level"].(string)
 					if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
-						return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, mapping.field)
-					}
-					if m["user_name"].(string) == me.UserName {
-						return fmt.Errorf("it is not possible to decrease administrative permissions for the current user: %s", me.UserName)
+						return fmt.Errorf(`permission_level %s is not supported with %s objects`,
+							permission_level, mapping.field)
 					}
 				}
 			}
@@ -443,12 +426,25 @@ func ResourcePermissions() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			me, err := w.CurrentUser.Me(ctx)
+			if err != nil {
+				return err
+			}
+			// this logic was moved from CustomizeDiff because of undeterministic auth behavior
+			// in the corner-case scenarios.
+			// see https://github.com/databricks/terraform-provider-databricks/issues/2052
+			for _, v := range entity.AccessControlList {
+				if v.UserName == me.UserName {
+					format := "it is not possible to decrease administrative permissions for the current user: %s"
+					return fmt.Errorf(format, me.UserName)
+				}
+			}
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
-					w, err := c.WorkspaceClient()
-					if err != nil {
-						return err
-					}
 					id, err := mapping.idRetriever(ctx, w, v.(string))
 					if err != nil {
 						return err

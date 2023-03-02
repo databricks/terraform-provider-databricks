@@ -409,51 +409,32 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestResourcePermissionsCustomizeDiff_ErrorOnScimMe(t *testing.T) {
+func TestResourcePermissionsCustomizeDiff_ErrorOnCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourcePermissions(),
+		Create:   true,
+		HCL: `
+		cluster_id = "abc"
+		access_control {
+			permission_level = "WHATEVER"
+		}`,
+	}.ExpectError(t, "permission_level WHATEVER is not supported with cluster_id objects")
+}
+
+func TestResourcePermissionsCustomizeDiff_ErrorOnPermissionsDecreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectID:   "/clusters/abc",
-					ObjectType: "clusters",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
-							},
-						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
-							},
-						},
-					},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+			me,
 		},
 		Resource: ResourcePermissions(),
-		Read:     true,
-		ID:       "/clusters/abc",
-	}.ExpectError(t, "customize diff: me: Internal error happened")
+		Create:   true,
+		HCL: `
+		cluster_id = "abc"
+		access_control {
+			permission_level = "CAN_ATTACH_TO"
+			user_name = "admin"
+		}`,
+	}.ExpectError(t, "it is not possible to decrease administrative permissions for the current user: admin")
 }
 
 func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {

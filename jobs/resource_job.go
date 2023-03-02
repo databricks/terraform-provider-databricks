@@ -595,7 +595,7 @@ func ResourceJob() *schema.Resource {
 			Create: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			var js JobSettings
 			common.DiffToStructPointer(d, jobSchema, &js)
 			alwaysRunning := d.Get("always_running").(bool)

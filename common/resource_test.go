@@ -155,3 +155,26 @@ func TestRecoverableFromPanic(t *testing.T) {
 	assert.True(t, diags.HasError())
 	assert.Equal(t, "cannot read sample: panic: what to do?...", diags[0].Summary)
 }
+
+func TestCustomizeDiffRobustness(t *testing.T) {
+	r := Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return fmt.Errorf("nope")
+		},
+	}.ToResource()
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, ResourceName, "sample")
+
+	err := r.CustomizeDiff(ctx, nil, nil)
+	assert.EqualError(t, err, "cannot customize diff for sample: nope")
+
+	r = Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			panic("oops")
+		},
+	}.ToResource()
+
+	err = r.CustomizeDiff(ctx, nil, nil)
+	assert.EqualError(t, err, "cannot customize diff for sample: panic: oops")
+}

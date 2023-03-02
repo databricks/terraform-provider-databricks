@@ -85,7 +85,7 @@ func ResourceTable() *schema.Resource {
 		"view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c any) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			if d.Get("table_type") != "EXTERNAL" {
 				return nil
 			}

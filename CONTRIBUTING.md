@@ -61,7 +61,7 @@ After installing necessary software for building provider from sources, you shou
 
 Make sure you have `$GOPATH/bin` in your `$PATH`:
 ```
-echo "export PATH=$PATH:$(go env GOPATH)/bin" >> ~/.bash_profile
+echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bash_profile
 ```
 
 Installing `staticcheck` (the version that works with Go 1.18):

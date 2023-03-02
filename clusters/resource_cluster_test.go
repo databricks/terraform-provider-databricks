@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -78,7 +78,7 @@ func TestResourceClusterCreate(t *testing.T) {
 			"is_pinned":               false,
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -159,7 +159,7 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 			"is_pinned":               true,
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -355,7 +355,7 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 			}
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -427,7 +427,7 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 			"runtime_engine":          "PHOTON",
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -437,7 +437,7 @@ func TestResourceClusterCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -497,7 +497,7 @@ func TestResourceClusterRead(t *testing.T) {
 		ID:       "abc",
 		New:      true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, 15, d.Get("autotermination_minutes"))
 	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_name"))
@@ -517,11 +517,13 @@ func TestResourceClusterRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: common.APIErrorBody{
-					ErrorCode: "NOT_FOUND",
-					Message:   "Item not found",
+				Response: apierr.APIErrorBody{
+					// clusters API is not fully restful, so let's test for that
+					// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
+					ErrorCode: "INVALID_STATE",
+					Message:   "Cluster abc does not exist",
 				},
-				Status: 404,
+				Status: 400,
 			},
 		},
 		Resource: ResourceCluster(),
@@ -537,7 +539,7 @@ func TestResourceClusterRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -958,7 +960,7 @@ func TestResourceClusterUpdate(t *testing.T) {
 			"num_workers":             100,
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
 
@@ -1039,7 +1041,7 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 			"is_pinned":               true,
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
 
@@ -1211,7 +1213,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			egg = "dbfs://bar.egg"
 		}`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
 
@@ -1221,7 +1223,7 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1334,7 +1336,7 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 		}
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
 
@@ -1367,7 +1369,7 @@ func TestResourceClusterDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -1377,7 +1379,7 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1476,7 +1478,7 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 			},
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 0, d.Get("num_workers"))
 }
 
@@ -1492,7 +1494,7 @@ func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
 			"is_pinned":               false,
 		},
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 
@@ -1508,7 +1510,7 @@ func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
 			"num_workers":             -10,
 		},
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "expected num_workers to be at least (0)"))
 }
 
@@ -1532,7 +1534,7 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 			"num_workers":             0,
 		},
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
 }
 

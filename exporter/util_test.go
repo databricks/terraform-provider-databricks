@@ -84,3 +84,30 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 	assert.True(t, len(ic.testEmits) == 1)
 	assert.True(t, ic.testEmits["databricks_repo[<unknown>] (path: /Repos/user@domain.com/repo)"])
 }
+
+func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
+
+	ic := importContextForTest()
+	result_false_partslength_more_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/abc", "/Users")
+	assert.False(t, result_false_partslength_more_than_3)
+
+	ic = importContextForTest()
+	result_false_partslength_less_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users", "/Users")
+	assert.False(t, result_false_partslength_less_than_3)
+
+	ic = importContextForTest()
+	result_false_part2_empty := ic.IsUserOrServicePrincipalDirectory("/Users/", "/Users")
+	assert.False(t, result_false_part2_empty)
+
+	ic = importContextForTest()
+	result_false_notprefix_with_user := ic.IsUserOrServicePrincipalDirectory("/Shared", "/Users")
+	assert.False(t, result_false_notprefix_with_user)
+
+	ic = importContextForTest()
+	result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com", "/Users")
+	assert.True(t, result_true_user_directory)
+
+	ic = importContextForTest()
+	result_true_sp_directory := ic.IsUserOrServicePrincipalDirectory("/Users/0e561119-c5a0-4f29-b246-5a953adb9575", "/Users")
+	assert.True(t, result_true_sp_directory)
+}

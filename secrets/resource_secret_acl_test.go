@@ -1,83 +1,12 @@
 package secrets
 
 import (
-	"context"
-	"os"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestSecretsScopesAclsIntegration(t *testing.T) {
-	cloud := os.Getenv("CLOUD_ENV")
-	if cloud == "" {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	client := common.NewClientFromEnvironment()
-	ctx := context.Background()
-	scopesAPI := NewSecretScopesAPI(ctx, client)
-	secretsAPI := NewSecretsAPI(ctx, client)
-	secretAclsAPI := NewSecretAclsAPI(ctx, client)
-
-	testScope := "my-test-scope"
-	testKey := "my-test-key"
-	testSecret := "my-test-secret"
-	initialManagePrincipal := ""
-	// TODO: on random group
-	testPrincipal := "users"
-
-	err := scopesAPI.Create(SecretScope{
-		Name:                   testScope,
-		InitialManagePrincipal: initialManagePrincipal,
-	})
-	assert.NoError(t, err, err)
-
-	defer func() {
-		//	Deleting scope deletes everything else
-		err := scopesAPI.Delete(testScope)
-		assert.NoError(t, err, err)
-	}()
-
-	scopes, err := scopesAPI.List()
-	assert.NoError(t, err, err)
-	assert.True(t, len(scopes) >= 1, "Scopes are empty list")
-
-	scope, err := scopesAPI.Read(testScope)
-	assert.NoError(t, err, err)
-	assert.Equal(t, testScope, scope.Name, "Scope lookup does not yield same scope")
-
-	err = secretsAPI.Create(testSecret, testScope, testKey)
-	assert.NoError(t, err, err)
-
-	secrets, err := secretsAPI.List(testScope)
-	assert.NoError(t, err, err)
-	assert.True(t, len(secrets) > 0, "Secrets are empty list")
-
-	secret, err := secretsAPI.Read(testScope, testKey)
-	assert.NoError(t, err, err)
-	assert.Equal(t, testKey, secret.Key, "Secret lookup does not yield same key")
-
-	err = secretAclsAPI.Create(testScope, testPrincipal, ACLPermissionManage)
-	assert.NoError(t, err, err)
-
-	secretAcls, err := secretAclsAPI.List(testScope)
-	assert.NoError(t, err, err)
-	assert.True(t, len(secretAcls) > 0, "Secrets acls are empty list")
-
-	secretACL, err := secretAclsAPI.Read(testScope, testPrincipal)
-	assert.NoError(t, err, err)
-	assert.Equal(t, testPrincipal, secretACL.Principal, "Secret lookup does not yield same key")
-	assert.Equal(t, ACLPermissionManage, secretACL.Permission, "Secret lookup does not yield same key")
-
-	err = secretsAPI.Delete(testScope, testKey)
-	assert.NoError(t, err, err)
-
-	err = secretAclsAPI.Delete(testScope, testPrincipal)
-	assert.NoError(t, err, err)
-}
 
 func TestResourceSecretACLRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -94,7 +23,7 @@ func TestResourceSecretACLRead(t *testing.T) {
 		Read:     true,
 		ID:       "global|||something",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "global|||something", d.Id(), "Id should not be empty")
 	assert.Equal(t, "CAN_MANAGE", d.Get("permission"))
 	assert.Equal(t, "something", d.Get("principal"))
@@ -107,7 +36,7 @@ func TestResourceSecretACLRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -127,7 +56,7 @@ func TestResourceSecretACLRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -170,7 +99,7 @@ func TestResourceSecretACLCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "global|||something", d.Id())
 }
 
@@ -202,7 +131,7 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "myapplication/branch|||something", d.Id())
 }
 
@@ -212,7 +141,7 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 			{ // read log output for better stub url...
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/acls/put",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -247,7 +176,7 @@ func TestResourceSecretACLDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "global|||something",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "global|||something", d.Id())
 }
 
@@ -257,7 +186,7 @@ func TestResourceSecretACLDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/acls/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

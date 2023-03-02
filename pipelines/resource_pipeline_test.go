@@ -4,8 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -106,7 +105,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 		continuous = false
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
 }
 
@@ -116,7 +115,7 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/pipelines",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -167,7 +166,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INTERNAL_ERROR",
 					Message:   "Internal error",
 				},
@@ -218,7 +217,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "No such resource",
 				},
@@ -260,7 +259,7 @@ func TestResourcePipelineRead(t *testing.T) {
 		New:      true,
 		ID:       "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id(), "Id should not be empty")
 	assert.Equal(t, "/test/storage", d.Get("storage"))
 	assert.Equal(t, "value1", d.Get("configuration.key1"))
@@ -274,7 +273,7 @@ func TestResourcePipelineRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -294,7 +293,7 @@ func TestResourcePipelineRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -372,7 +371,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
 }
 
@@ -382,7 +381,7 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 			{ // read log output for better stub url...
 				Method:   "PUT",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -489,7 +488,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "No such resource",
 				},
@@ -500,7 +499,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
 }
 
@@ -510,7 +509,7 @@ func TestResourcePipelineDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

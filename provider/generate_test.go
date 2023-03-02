@@ -47,7 +47,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 			Read: true,
 			ID: "abc",
 		}.Apply(t)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 		{{range $index, $element := .Resource.Schema}}assert.Equal(t, "...{{$index}}", d.Get("{{$index}}"))
 		{{end}}
@@ -59,7 +59,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				{   // read log output for correct url...
 					Method:   "GET",
 					Resource: "/api/2.0/...", 
-					Response: common.APIErrorBody{
+					Response: apierr.APIErrorBody{
 						ErrorCode: "NOT_FOUND",
 						Message:   "Item not found",
 					},
@@ -79,7 +79,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				{   // read log output for correct url...
 					Method:   "GET",
 					Resource: "/api/2.0/...", 
-					Response: common.APIErrorBody{
+					Response: apierr.APIErrorBody{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -110,7 +110,7 @@ func (stub *resourceTestStub) Creates(t *testing.T) {
 			{{end}}
 			`+"`"+`,
 		}.Apply(t)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "...", d.Id())
 	}`)
 	stub.stoobyDo(t, "Create_Error", `
@@ -120,7 +120,7 @@ func (stub *resourceTestStub) Creates(t *testing.T) {
 				{   // read log output for better stub url...
 					Method:   "POST",
 					Resource: "/api/2.0/...", 
-					Response: common.APIErrorBody{
+					Response: apierr.APIErrorBody{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -155,7 +155,7 @@ func (stub *resourceTestStub) Updates(t *testing.T) {
 			{{end}}
 			`+"`"+`,
 		}.Apply(t)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 	}`)
 	stub.stoobyDo(t, "Update_Error", `
@@ -165,7 +165,7 @@ func (stub *resourceTestStub) Updates(t *testing.T) {
 				{   // read log output for better stub url...
 					Method:   "POST",
 					Resource: "/api/2.0/.../edit",
-					Response: common.APIErrorBody{
+					Response: apierr.APIErrorBody{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -202,7 +202,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 			Delete: true,
 			ID: "abc",
 		}.Apply(t)
-		assert.NoError(t, err, err)
+		assert.NoError(t, err)
 		assert.Equal(t, "abc", d.Id())
 	}`)
 	stub.stoobyDo(t, "Delete_Error", `
@@ -212,7 +212,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 				{
 					Method:   "POST",
 					Resource: "/api/2.0/.../delete",
-					Response: common.APIErrorBody{
+					Response: apierr.APIErrorBody{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},

@@ -3,8 +3,7 @@ package policies
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +27,7 @@ func TestResourceClusterPolicyRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "Dummy", d.Get("name"))
 	assert.Equal(t, "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}", d.Get("definition"))
@@ -42,7 +41,7 @@ func TestResourceClusterPolicyRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -62,7 +61,7 @@ func TestResourceClusterPolicyRead_Error(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -113,7 +112,7 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, 3, d.Get("max_clusters_per_user"))
 }
@@ -124,7 +123,7 @@ func TestResourceClusterPolicyCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -174,7 +173,7 @@ func TestResourceClusterPolicyUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -184,7 +183,7 @@ func TestResourceClusterPolicyUpdate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/edit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -218,7 +217,7 @@ func TestResourceClusterPolicyDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -228,7 +227,7 @@ func TestResourceClusterPolicyDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

@@ -12,7 +12,7 @@ Security-conscious enterprises that use cloud SaaS applications need to restrict
 ```hcl
 resource "databricks_workspace_conf" "this" {
   custom_config = {
-    "enableIpAccessLists" : true
+    "enableIpAccessLists" = true
   }
 }
 

@@ -3,8 +3,7 @@ package secrets
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +28,7 @@ func TestResourceSecretRead(t *testing.T) {
 		Read:     true,
 		ID:       "foo|||bar",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo|||bar", d.Id())
 	assert.Equal(t, "bar", d.Get("key"))
 	assert.Equal(t, 12345678, d.Get("last_updated_timestamp"))
@@ -67,7 +66,7 @@ func TestResourceSecretRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/list?scope=foo",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -115,7 +114,7 @@ func TestResourceSecretCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo|||bar", d.Id())
 }
 
@@ -125,7 +124,7 @@ func TestResourceSecretCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/put",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -160,7 +159,7 @@ func TestResourceSecretDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "foo|||bar",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo|||bar", d.Id())
 }
 
@@ -170,7 +169,7 @@ func TestResourceSecretDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

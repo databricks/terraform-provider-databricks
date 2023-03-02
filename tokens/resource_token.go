@@ -3,9 +3,9 @@ package tokens
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -81,12 +81,7 @@ func (a TokensAPI) Read(tokenID string) (TokenInfo, error) {
 			return tokenInfoRecord, nil
 		}
 	}
-	return tokenInfo, common.APIError{
-		ErrorCode:  "NOT_FOUND",
-		Message:    fmt.Sprintf("Unable to locate token: %s", tokenID),
-		Resource:   "/api/2.0/token/list",
-		StatusCode: http.StatusNotFound,
-	}
+	return tokenInfo, apierr.NotFound(fmt.Sprintf("Unable to locate token: %s", tokenID))
 }
 
 // Delete will delete the token given a token id
@@ -94,7 +89,7 @@ func (a TokensAPI) Delete(tokenID string) error {
 	err := a.client.Post(a.context, "/token/delete", map[string]string{
 		"token_id": tokenID,
 	}, nil)
-	if common.IsMissing(err) {
+	if apierr.IsMissing(err) {
 		return nil
 	}
 	return err

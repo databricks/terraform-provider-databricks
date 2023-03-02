@@ -1,14 +1,15 @@
 package workspace
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResourceNotebookRead(t *testing.T) {
@@ -32,7 +33,7 @@ func TestResourceNotebookRead(t *testing.T) {
 		New:      true,
 		ID:       path,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 	assert.Equal(t, path, d.Get("path"))
 	assert.Equal(t, "PYTHON", d.Get("language"))
@@ -54,7 +55,7 @@ func TestResourceNotebookDelete(t *testing.T) {
 		Delete:   true,
 		ID:       path,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 }
 
@@ -64,7 +65,7 @@ func TestResourceNotebookRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -84,7 +85,7 @@ func TestResourceNotebookRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -146,7 +147,7 @@ func TestResourceNotebookCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/foo/path.py", d.Id())
 }
 
@@ -200,7 +201,7 @@ func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/Mars", d.Id())
 }
 
@@ -238,7 +239,7 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/Dashboard", d.Id())
 }
 
@@ -248,7 +249,7 @@ func TestResourceNotebookCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -273,7 +274,7 @@ func TestResourceNotebookDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -376,4 +377,216 @@ func TestNotebookLanguageSuppressSourceDiff(t *testing.T) {
 	d.Set("source", "this.PY")
 	suppress := r.Schema["language"].DiffSuppressFunc
 	assert.True(t, suppress("language", Python, Python, d))
+}
+
+func TestListDirectories(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{
+						ObjectID:   1,
+						Path:       "/Parent",
+						ObjectType: "DIRECTORY",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2FParent",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{
+						ObjectID:   11,
+						ObjectType: Directory,
+						Path:       "/Parent/Kid1",
+					},
+					{
+						ObjectID:   12,
+						ObjectType: Directory,
+						Path:       "/Parent/Kid2",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid1",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{
+						ObjectID:   111,
+						ObjectType: Directory,
+						Path:       "/Parent/Kid1/GrandKid1",
+					},
+					{
+						ObjectID:   112,
+						ObjectType: Notebook,
+						Path:       "/Parent/Kid1/GrandKid2",
+						Language:   Python,
+					},
+				},
+			},
+		},
+
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid2",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid1%2FGrandKid1",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{},
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	notebooksAPI := NewNotebooksAPI(ctx, client)
+
+	directoryList, err := notebooksAPI.ListDirectories("/", true)
+	var paths []string
+	for _, directory := range directoryList {
+		paths = append(paths, directory.Path)
+	}
+	assert.NoError(t, err, err)
+	assert.NotNil(t, directoryList)
+	assert.Len(t, directoryList, 4)
+	assert.Contains(t, paths, "/Parent")
+	assert.Contains(t, paths, "/Parent/Kid1")
+	assert.Contains(t, paths, "/Parent/Kid2")
+	assert.Contains(t, paths, "/Parent/Kid1/GrandKid1")
+}
+
+func TestListDirectories_NoneRecursive(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{
+						ObjectID:   1,
+						Path:       "/Parent",
+						ObjectType: "DIRECTORY",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2FParent",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{
+						ObjectID:   11,
+						ObjectType: Directory,
+						Path:       "/Parent/Kid1",
+					},
+					{
+						ObjectID:   12,
+						ObjectType: Directory,
+						Path:       "/Parent/Kid2",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid1",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{
+						ObjectID:   111,
+						ObjectType: Directory,
+						Path:       "/Parent/Kid1/GrandKid1",
+					},
+					{
+						ObjectID:   112,
+						ObjectType: Notebook,
+						Path:       "/Parent/Kid1/GrandKid2",
+						Language:   Python,
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid2",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid1%2FGrandKid1",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{},
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+	ctx := context.Background()
+	notebooksAPI := NewNotebooksAPI(ctx, client)
+	directoryList_not_recursive, err := notebooksAPI.ListDirectories("/", false)
+	var paths []string
+	for _, directory := range directoryList_not_recursive {
+		paths = append(paths, directory.Path)
+	}
+	assert.NoError(t, err, err)
+	assert.NotNil(t, directoryList_not_recursive)
+	assert.Len(t, directoryList_not_recursive, 1)
+	assert.Contains(t, paths, "/Parent")
+}
+
+func TestListDirectoriesRecursive_Error(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: ObjectList{
+				Objects: []ObjectStatus{
+					{
+						ObjectID:   1,
+						Path:       "/Parent",
+						ObjectType: "DIRECTORY",
+					},
+				},
+			},
+		},
+		{
+			Method:   http.MethodGet,
+			Resource: "/api/2.0/workspace/list?path=%2FParent",
+			Response: apierr.APIErrorBody{
+				ErrorCode: "Internal Error",
+				Message:   "Internal Error",
+			},
+			Status: 400,
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+	ctx := context.Background()
+	notebooksAPI := NewNotebooksAPI(ctx, client)
+	directoryList, err := notebooksAPI.ListDirectories("/", true)
+	assert.Error(t, err, err)
+	assert.Nil(t, directoryList)
 }

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -60,13 +60,8 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (result InstancePro
 			return
 		}
 	}
-	err = common.APIError{
-		ErrorCode: "NOT_FOUND",
-		Message: fmt.Sprintf("Instance profile with name: %s not found in "+
-			"list of instance profiles in the workspace!", instanceProfileARN),
-		Resource:   "/api/2.0/instance-profiles/list",
-		StatusCode: http.StatusNotFound,
-	}
+	err = apierr.NotFound(fmt.Sprintf("Instance profile with name: %s not found in "+
+		"list of instance profiles in the workspace!", instanceProfileARN))
 	return
 }
 

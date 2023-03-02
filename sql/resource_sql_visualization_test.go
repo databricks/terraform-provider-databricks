@@ -71,7 +71,7 @@ func TestVisualizationCreate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
@@ -126,7 +126,7 @@ func TestVisualizationRead(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
@@ -270,7 +270,7 @@ func TestVisualizationReadNotFound(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "", d.Id(), "Resource ID should be empty")
 }
 
@@ -345,7 +345,7 @@ func TestVisualizationUpdate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
@@ -369,7 +369,7 @@ func TestVisualizationDelete(t *testing.T) {
 		ID:       "foo/12345",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo/12345", d.Id(), "Resource ID should not be empty")
 }
 

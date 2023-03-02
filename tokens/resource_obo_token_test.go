@@ -1,63 +1,13 @@
 package tokens
 
 import (
-	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-func TestAccAwsOboFlow(t *testing.T) {
-	qa.RequireCloudEnv(t, "aws")
-	ctx := context.Background()
-	client := common.CommonEnvironmentClient()
-	tmAPI := NewTokenManagementAPI(ctx, client)
-	spAPI := scim.NewServicePrincipalsAPI(ctx, client)
-	groupsAPI := scim.NewGroupsAPI(ctx, client)
-
-	sp, err := spAPI.Create(scim.User{
-		DisplayName: qa.RandomName("tf"),
-		Active:      true,
-	})
-	require.NoError(t, err)
-	defer spAPI.Delete(sp.ID)
-
-	admins, err := groupsAPI.ReadByDisplayName("admins")
-	require.NoError(t, err)
-
-	// add new SP to admins, as it's the easiest way to give it permissions to do so,
-	// because importing access package will create circular import dependency
-	err = groupsAPI.Patch(admins.ID, scim.PatchRequest("add", "members", sp.ID))
-	require.NoError(t, err)
-
-	oboToken, err := tmAPI.CreateTokenOnBehalfOfServicePrincipal(OboToken{
-		ApplicationID:   sp.ApplicationID,
-		Comment:         qa.RandomLongName(),
-		LifetimeSeconds: 60,
-	})
-	require.NoError(t, err)
-	defer tmAPI.Delete(oboToken.TokenInfo.TokenID)
-
-	spClient := &common.DatabricksClient{
-		Host:  client.Host,
-		Token: oboToken.TokenValue,
-	}
-	err = spClient.Configure()
-	require.NoError(t, err)
-
-	newMe, err := scim.NewUsersAPI(ctx, spClient).Me()
-	require.NoError(t, err)
-	assert.Equal(t, newMe.DisplayName, sp.DisplayName)
-
-	r, err := tmAPI.Read(oboToken.TokenInfo.TokenID)
-	require.NoError(t, err)
-	assert.Equal(t, r.TokenInfo.TokenID, oboToken.TokenInfo.TokenID)
-}
 
 func TestResourceOboTokenRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -78,7 +28,7 @@ func TestResourceOboTokenRead(t *testing.T) {
 		New:      true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "Hello, world!", d.Get("comment"))
 }
@@ -90,7 +40,7 @@ func TestResourceOboTokenRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/token-management/tokens/abc",
 				Status:   500,
-				Response: common.APIError{
+				Response: apierr.APIError{
 					Message: "nope",
 				},
 			},
@@ -109,7 +59,7 @@ func TestResourceOboTokenCreate_Error(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/token-management/on-behalf-of/tokens",
 				Status:   500,
-				Response: common.APIError{
+				Response: apierr.APIError{
 					Message: "nope",
 				},
 			},
@@ -157,7 +107,7 @@ func TestResourceOboTokenCreate(t *testing.T) {
 		`,
 		New: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "bcd", d.Id(), "Id should not be empty")
 	assert.Equal(t, "Hello, world!", d.Get("comment"))
 }
@@ -210,6 +160,6 @@ func TestResourceOboTokenCreateNoLifetimeOrComment(t *testing.T) {
 		`,
 		New: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "bcd", d.Id(), "Id should not be empty")
 }

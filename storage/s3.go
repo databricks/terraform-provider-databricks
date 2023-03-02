@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -62,7 +63,7 @@ func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, 
 	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			if instanceProfile == "" {
 				return fmt.Errorf("instance profile is required to re-create mounting cluster")
 			}

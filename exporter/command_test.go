@@ -5,6 +5,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +22,11 @@ func TestInteractivePrompts(t *testing.T) {
 	cliInput = dummyReader("y\n")
 	cliOutput = &bytes.Buffer{}
 	ic := &importContext{
-		Client:  &common.DatabricksClient{},
+		Client: &common.DatabricksClient{
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{},
+			},
+		},
 		Context: context.Background(),
 		Importables: map[string]importable{
 			"x": {

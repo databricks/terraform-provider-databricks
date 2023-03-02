@@ -3,7 +3,7 @@ package workspace
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -75,7 +75,7 @@ func TestDataSourceNotebook_ErrorStatus(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Fa%2Fb%2Fc",
 				Status:   401,
-				Response: common.APIError{
+				Response: apierr.APIError{
 					ErrorCode:  "Unauthorized",
 					StatusCode: 401,
 					Message:    "Unauthorized",

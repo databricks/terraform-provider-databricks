@@ -79,7 +79,7 @@ func TestWidgetCreateWithVisualization(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
@@ -141,7 +141,7 @@ func TestWidgetCreateWithVisualizationByResourceID(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
@@ -201,7 +201,7 @@ func TestWidgetCreateWithText(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
@@ -304,7 +304,7 @@ func TestWidgetCreateWithParamValue(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
@@ -414,7 +414,7 @@ func TestWidgetCreateWithPosition(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
@@ -509,7 +509,7 @@ func TestWidgetCreateWithPositionAndAutoheight(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
@@ -554,7 +554,7 @@ func TestWidgetReadNotFound(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "", d.Id(), "Resource ID should be empty")
 }
 
@@ -616,7 +616,7 @@ func TestWidgetUpdate(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "some-uuid", d.Get("dashboard_id"))
 	assert.Equal(t, "12345", d.Get("widget_id"))
@@ -642,7 +642,7 @@ func TestWidgetDelete(t *testing.T) {
 		ID:       "some-uuid/12345",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "some-uuid/12345", d.Id(), "Resource ID should not be empty")
 }
 

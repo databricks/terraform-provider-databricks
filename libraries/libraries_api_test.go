@@ -2,9 +2,11 @@ package libraries
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -18,14 +20,14 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=missing",
 			ReuseRequest: true,
 			Status:       404,
-			Response:     common.NotFound("missing"),
+			Response:     apierr.NotFound("missing"),
 		},
 		{
 			Method:       "GET",
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=error",
 			ReuseRequest: true,
 			Status:       500,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "internal error",
 			},
 		},
@@ -34,7 +36,7 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=1005-abcd",
 			ReuseRequest: true,
 			Status:       400,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "Cluster 1005-abcd does not exist",
 			},
 		},
@@ -129,7 +131,8 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			"1005-abcd", 50 * time.Millisecond, false, false,
 		})
 
-		ae, _ := err.(common.APIError)
+		var ae *apierr.APIError
+		assert.True(t, errors.As(err, &ae))
 		assert.Equal(t, 404, ae.StatusCode)
 		assert.Equal(t, "Cluster 1005-abcd does not exist", ae.Message)
 	})

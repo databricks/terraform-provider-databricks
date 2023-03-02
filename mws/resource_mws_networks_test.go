@@ -1,46 +1,13 @@
 package mws
 
 import (
-	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestMwsAccNetworks(t *testing.T) {
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	client := common.CommonEnvironmentClient()
-	if !client.IsAws() {
-		t.Skip("only AWS")
-	}
-	ctx := context.Background()
-	networksAPI := NewNetworksAPI(ctx, client)
-	networksList, err := networksAPI.List(acctID)
-	assert.NoError(t, err, err)
-	t.Log(networksList)
-
-	network := Network{
-		AccountID:        acctID,
-		NetworkName:      qa.RandomName(),
-		VPCID:            "vpc-0abcdef1234567890",
-		SubnetIds:        []string{"subnet-0123456789abcdef0", "subnet-0fedcba9876543210"},
-		SecurityGroupIds: []string{"sg-0a1b2c3d4e5f6a7b8"},
-	}
-	err = networksAPI.Create(&network)
-	assert.NoError(t, err, err)
-	defer func() {
-		err = networksAPI.Delete(acctID, network.NetworkID)
-		assert.NoError(t, err, err)
-	}()
-
-	myNetworkFull, err := networksAPI.Read(acctID, network.NetworkID)
-	assert.NoError(t, err, err)
-	t.Log(myNetworkFull)
-}
 
 func TestResourceNetworkCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -82,7 +49,7 @@ func TestResourceNetworkCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id())
 }
 
@@ -136,7 +103,7 @@ func TestResourceNetworkCreate_GCP(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id())
 }
 
@@ -178,7 +145,7 @@ func TestResourceNetworkCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/networks",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -220,7 +187,7 @@ func TestResourceNetworkRead(t *testing.T) {
 		New:      true,
 		ID:       "abc/nid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id(), "Id should not be empty")
 	assert.Equal(t, 0, d.Get("creation_time"))
 	assert.Equal(t, "nid", d.Get("network_id"))
@@ -235,7 +202,7 @@ func TestResourceNetworkRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -255,7 +222,7 @@ func TestResourceNetworkRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -291,7 +258,7 @@ func TestResourceNetworkDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Yes, it's not found",
 				},
@@ -302,7 +269,7 @@ func TestResourceNetworkDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/nid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id())
 }
 
@@ -312,7 +279,7 @@ func TestResourceNetworkDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/networks/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

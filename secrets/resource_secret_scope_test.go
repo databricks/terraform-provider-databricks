@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,7 +32,7 @@ func TestResourceSecretScopeRead(t *testing.T) {
 		New:      true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "DATABRICKS", d.Get("backend_type"))
 	assert.Equal(t, "", d.Get("initial_manage_principal"))
@@ -66,7 +65,7 @@ func TestResourceSecretScopeRead_KeyVault(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "AZURE_KEYVAULT", d.Get("backend_type"))
 	assert.Equal(t, "", d.Get("initial_manage_principal"))
@@ -104,7 +103,7 @@ func TestResourceSecretScopeRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/scopes/list",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -150,7 +149,7 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "Boom", d.Id())
 }
 
@@ -197,7 +196,7 @@ func TestResourceSecretScopeCreate_KeyVault(t *testing.T) {
 		Azure:  true,
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "Boom", d.Id())
 }
 
@@ -234,7 +233,7 @@ func TestResourceSecretScopeCreate_Users(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "Boom", d.Id())
 }
 
@@ -244,7 +243,7 @@ func TestResourceSecretScopeCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/scopes/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -277,7 +276,7 @@ func TestResourceSecretScopeDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 }
 
@@ -287,7 +286,7 @@ func TestResourceSecretScopeDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/scopes/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

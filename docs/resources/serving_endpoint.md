@@ -3,7 +3,7 @@ subcategory: "MLflow"
 ---
 # databricks_serving_endpoint Resource
 
-This resource allows you to manage [Model Serving Endpoints](https://docs.databricks.com/machine-learning/model-inference/serverless/serverless-real-time-inference.html) in Databricks.
+This resource allows you to manage [Serverless Real-Time Inference (SRTI) Endpoints](https://docs.databricks.com/machine-learning/model-inference/serverless/serverless-real-time-inference.html) in Databricks.
 
 ## Example Usage
 

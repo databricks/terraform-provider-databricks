@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// DefaultProvisionTimeout ...
 const DefaultProvisionTimeout = 45 * time.Minute
 
 func ResourceServingEndpoint() *schema.Resource {

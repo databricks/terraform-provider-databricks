@@ -177,3 +177,53 @@ func TestCreateDacWithGcpSA(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestCreateDacWithDbGcpSA(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations",
+				ExpectedRequest: DataAccessConfiguration{
+					Name:    "bcd",
+					DBGcpSA: &DbGcpServiceAccount{},
+				},
+				Response: DataAccessConfiguration{
+					ID: "efg",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]any{
+					"default_data_access_config_id": "efg",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/data-access-configurations/efg",
+				Response: DataAccessConfiguration{
+					Name: "bcd",
+					DBGcpSA: &DbGcpServiceAccount{
+						Email: "a@example.com",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				Response: MetastoreInfo{
+					DefaultDacID: "efg",
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceMetastoreDataAccess(),
+		HCL: `
+		metastore_id = "abc"
+		name = "bcd"
+		is_default = true
+		databricks_gcp_service_account {}
+		`,
+	}.ApplyNoError(t)
+}

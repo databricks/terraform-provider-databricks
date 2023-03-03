@@ -24,6 +24,7 @@ type StorageCredentialInfo struct {
 	Azure       *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
 	AzMI        *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
 	GcpSAKey    *GcpServiceAccountKey  `json:"gcp_service_account_key,omitempty" tf:"group:access"`
+	DBGcpSA     *DbGcpServiceAccount   `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
 }
 
@@ -47,6 +48,7 @@ func ResourceStorageCredential() *schema.Resource {
 			m["azure_service_principal"].AtLeastOneOf = alofCred
 			m["azure_managed_identity"].AtLeastOneOf = alofCred
 			m["gcp_service_account_key"].AtLeastOneOf = alofCred
+			m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
 
 			// suppress changes for private_key
 			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff

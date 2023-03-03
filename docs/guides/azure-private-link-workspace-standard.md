@@ -180,7 +180,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "transitdnszonevnetlink
 }
 ```
 
-2. Create Web Auth workspace with the sub resource **browser_authentication**:
+3. Create Web Auth workspace with the sub resource **browser_authentication**:
 
 ```hcl
 resource "azurerm_subnet" "transit_public" {
@@ -291,7 +291,7 @@ resource "azurerm_databricks_workspace" "web_auth_workspace" {
 }
 ```
 
-3. Create a Frontend private endpoint with the sub resource **databricks_ui_api**:
+4. Create a Frontend private endpoint with the sub resource **databricks_ui_api**:
 
 ```hcl
 resource "azurerm_private_endpoint" "front_pe" {
@@ -497,4 +497,6 @@ resource "azurerm_private_endpoint" "app_dpcp" {
 }
 ```
 
--> **Note** The public network access to the workspace is disabled. You can access the workspace only through the private connectivity to the on-premises user environment. For testing purposes, you can deploy an Azure VM in the same vnet in order to test the frontend connectivity.
+-> **Note** 
+- The public network access to the workspace is disabled. You can access the workspace only through the private connectivity to the on-premises user environment. For testing purposes, you can deploy an Azure VM in the Transit vnet in order to test the frontend connectivity.
+- If you wish to deploy a test VM in the Data Plane VNet, you should configure a peering connection between the two VNets

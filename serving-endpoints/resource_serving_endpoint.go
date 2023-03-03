@@ -16,6 +16,7 @@ func ResourceServingEndpoint() *schema.Resource {
 	s := common.StructToSchema(
 		endpoints.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["name"].ForceNew = true
 			return m
 		})
 

@@ -81,38 +81,12 @@ provider "databricks" {
 The first step is to create the required Google Cloud objects:
 
 - A GCS bucket which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
-- A service account that provides Unity Catalog permissions to access and manage data in the bucket and a service account key.
 
 ```hcl
 resource "google_storage_bucket" "unity_metastore" {
   name          = "${local.prefix}-metastore"
   location      = var.location
   force_destroy = true
-}
-
-resource "google_service_account" "unity_sa" {
-  account_id   = "unity-sa"
-  display_name = "Service Account for Unity Catalog"
-}
-
-resource "google_storage_bucket_iam_member" "unity_sa_admin" {
-  bucket = google_storage_bucket.unity_metastore.name
-  role = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.unity_sa.email}"
-}
-
-resource "google_storage_bucket_iam_member" "unity_sa_reader" {
-  bucket = google_storage_bucket.unity_metastore.name
-  role = "roles/storage.legacyBucketReader"
-  member = "serviceAccount:${google_service_account.unity_sa.email}"
-}
-
-resource "google_service_account_key" "mykey" {
-  service_account_id = google_service_account.unity_sa.name
-}
-
-locals {
-  mykey = jsondecode(base64decode(google_service_account_key.mykey.private_key))
 }
 ```
 
@@ -129,14 +103,21 @@ resource "databricks_metastore" "this" {
 
 resource "databricks_metastore_data_access" "first" {
   metastore_id = databricks_metastore.this.id
+  databricks_gcp_service_account {}
   name         = "the-keys"
-  gcp_service_account_key {
-    email          = google_service_account.unity_sa.email
-    private_key_id = local.mykey.private_key_id
-    private_key    = local.mykey.private_key
-  }
-
   is_default = true
+}
+
+resource "google_storage_bucket_iam_member" "unity_sa_admin" {
+  bucket = google_storage_bucket.unity_metastore.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${databricks_metastore_data_access.first.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_storage_bucket_iam_member" "unity_sa_reader" {
+  bucket = google_storage_bucket.unity_metastore.name
+  role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${databricks_metastore_data_access.first.databricks_gcp_service_account[0].email}"
 }
 
 resource "databricks_metastore_assignment" "this" {
@@ -198,7 +179,7 @@ To work with external tables, Unity Catalog introduces two new objects to access
 - [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage. Storage credentials are access-controlled to determine which users can use the credential.
 - [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
-First, create the required objects in GCP.
+First, create the required object in GCPs, including granting permissions on the bucket to the Databricks-managed Service Account.
 
 ```hcl
 resource "google_storage_bucket" "ext_bucket" {
@@ -207,49 +188,28 @@ resource "google_storage_bucket" "ext_bucket" {
   force_destroy = true
 }
 
-resource "google_service_account" "unity_credential" {
-  account_id   = "unity-credential"
-  display_name = "Service Account for Unity Catalog"
+resource "databricks_storage_credential" "ext" {
+  name = "the-creds"
+  databricks_gcp_service_account {}
+  depends_on = [databricks_metastore_assignment.this]
 }
 
 resource "google_storage_bucket_iam_member" "unity_cred_admin" {
   bucket = google_storage_bucket.ext_bucket.name
-  role = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.unity_credential.email}"
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
 }
 
 resource "google_storage_bucket_iam_member" "unity_cred_reader" {
   bucket = google_storage_bucket.ext_bucket.name
-  role = "roles/storage.legacyBucketReader"
-  member = "serviceAccount:${google_service_account.unity_credential.email}"
-}
-
-resource "google_service_account_key" "my_cred_key" {
-  service_account_id = google_service_account.unity_credential.name
-}
-
-locals {
-  my_cred_key = jsondecode(base64decode(google_service_account_key.my_cred_key.private_key))
+  role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
 }
 ```
 
 Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
 
 ```hcl
-resource "databricks_storage_credential" "external" {
-  name = google_service_account.unity_credential.name
-
-  gcp_service_account_key {
-    email          = google_service_account.unity_credential.email
-    private_key_id = local.my_cred_key.private_key_id
-    private_key    = local.my_cred_key.private_key
-  }
-  comment = "Managed by TF"
-  depends_on = [
-    databricks_metastore_assignment.this
-  ]
-}
-
 resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
@@ -259,13 +219,15 @@ resource "databricks_grants" "external_creds" {
 }
 
 resource "databricks_external_location" "some" {
-  name = "external"
-  url = "gs://${google_storage_bucket.ext_bucket.name}"
+  name = "the-ext-location"
+  url  = "gs://${google_storage_bucket.ext_bucket.name}"
 
-  credential_name = databricks_storage_credential.external.id
+  credential_name = databricks_storage_credential.ext.id
   comment         = "Managed by TF"
   depends_on = [
-    databricks_metastore_assignment.this
+    databricks_metastore_assignment.this,
+    google_storage_bucket_iam_member.unity_cred_reader,
+    google_storage_bucket_iam_member.unity_cred_admin
   ]
 }
 

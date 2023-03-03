@@ -4,6 +4,8 @@ page_title: "Provisioning Databricks on Azure with Private Link - Standard deplo
 
 # Deploying pre-requisite resources and enabling Private Link connections - Standard deployment
 
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+
 -> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
 
 Databricks Private Link support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. 
@@ -21,11 +23,10 @@ This guide covers a [standard deployment](https://learn.microsoft.com/en-us/azur
 * A dedicated Databricks workspace, called Web Auth workspace, is used for web authentication traffic. This workspace is configured with the sub resource **browser_authentication** and deployed using subnets in the transit VNet.
 
 -> **Note**  
-* A seperate Web Auth workspace is not mandatory.
+* A seperate Web Auth workspace is not mandatory but recommended.
 * DNS mapping for SSO login callbacks to the Azure Databricks web application can either be managed by the Web Auth workspace or another workspace that is associated with the **browser_authentication** private endpoint.
-* Databricks strongly recommends creating a private web auth workspace for each region to host the web auth private network settings.
 
-![Private Link backend](https://github.com/yessawab/terraform-provider-databricks/raw/yes-azure-private-link/docs/images/azure-private-link-standard.png)
+![Azure Databricks with Private Link - Standard deployment](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/azure-private-link-standard.png)
 
 This guide uses the following variables:
 

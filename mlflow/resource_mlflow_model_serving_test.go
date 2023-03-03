@@ -1,4 +1,4 @@
-package serving_endpoints
+package mlflow
 
 import (
 	"net/http"
@@ -9,11 +9,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func TestServingEndpointCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceServingEndpoint())
+func TestModelServingCornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceModelServing())
 }
 
-func TestServingEndpointCreate(t *testing.T) {
+func TestModelServingCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -112,7 +112,7 @@ func TestServingEndpointCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceServingEndpoint(),
+		Resource: ResourceModelServing(),
 		HCL: `
 			name = "test-endpoint"
 			config {
@@ -146,7 +146,7 @@ func TestServingEndpointCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestServingEndpointCreate_Error(t *testing.T) {
+func TestModelServingCreate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -159,12 +159,12 @@ func TestServingEndpointCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceServingEndpoint(),
+		Resource: ResourceModelServing(),
 		Create:   true,
 	}.ExpectError(t, "Internal error happened")
 }
 
-func TestServingEndpointRead(t *testing.T) {
+func TestModelServingRead(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -210,13 +210,13 @@ func TestServingEndpointRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceServingEndpoint(),
+		Resource: ResourceModelServing(),
 		Read:     true,
 		ID:       "test-endpoint",
 	}.ApplyNoError(t)
 }
 
-func TestServingEndpointRead_Error(t *testing.T) {
+func TestModelServingRead_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -229,12 +229,12 @@ func TestServingEndpointRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceServingEndpoint(),
+		Resource: ResourceModelServing(),
 		Read:     true,
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")
 }
-func TestServingEndpointUpdate(t *testing.T) {
+func TestModelServingUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -309,7 +309,7 @@ func TestServingEndpointUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceServingEndpoint(),
+		Resource: ResourceModelServing(),
 		Update:   true,
 		ID:       "test-endpoint",
 		HCL: `
@@ -333,7 +333,7 @@ func TestServingEndpointUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestServingEndpointUpdate_Error(t *testing.T) {
+func TestModelServingUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -346,7 +346,7 @@ func TestServingEndpointUpdate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceServingEndpoint(),
+		Resource: ResourceModelServing(),
 		Update:   true,
 		ID:       "test-endpoint",
 		HCL: `
@@ -370,7 +370,7 @@ func TestServingEndpointUpdate_Error(t *testing.T) {
 	}.ExpectError(t, "Internal error happened")
 }
 
-func TestServingEndpointDelete(t *testing.T) {
+func TestModelServingDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -382,13 +382,13 @@ func TestServingEndpointDelete(t *testing.T) {
 				Response: "",
 			},
 		},
-		Resource: ResourceServingEndpoint(),
+		Resource: ResourceModelServing(),
 		Delete:   true,
 		ID:       "test-endpoint",
 	}.ApplyNoError(t)
 }
 
-func TestServingEndpointDelete_Error(t *testing.T) {
+func TestModelServingDelete_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -401,7 +401,7 @@ func TestServingEndpointDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceServingEndpoint(),
+		Resource: ResourceModelServing(),
 		Delete:   true,
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")

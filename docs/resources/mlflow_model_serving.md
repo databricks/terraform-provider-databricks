@@ -1,14 +1,14 @@
 ---
 subcategory: "MLflow"
 ---
-# databricks_serving_endpoint Resource
+# databricks_mlflow_model_serving Resource
 
-This resource allows you to manage [Serverless Real-Time Inference (SRTI) Endpoints](https://docs.databricks.com/machine-learning/model-inference/serverless/serverless-real-time-inference.html) in Databricks.
+This resource allows you to manage [Model Serving Endpoints](https://docs.databricks.com/machine-learning/model-inference/serverless/serverless-real-time-inference.html) in Databricks.
 
 ## Example Usage
 
 ```hcl
-resource "databricks_serving_endpoint" "this" {
+resource "databricks_mlflow_model_serving" "this" {
   name = "ads-serving-endpoint"
   config {
     served_models {
@@ -43,12 +43,12 @@ resource "databricks_serving_endpoint" "this" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the serving endpoint. This field is required and must be unique across a workspace. An endpoint name can consist of alphanumeric characters, dashes, and underscores.
-* `config` - (Required) The serving endpoint configuration.
+* `name` - (Required) The name of the model serving endpoint. This field is required and must be unique across a workspace. An endpoint name can consist of alphanumeric characters, dashes, and underscores.
+* `config` - (Required) The model serving endpoint configuration.
 
 ### config Configuration Block
 
-* `served_models` - (Required) Each block represents a served model for the endpoint to serve. A serving endpoint can have up to 10 served models.
+* `served_models` - (Required) Each block represents a served model for the endpoint to serve. A model serving endpoint can have up to 10 served models.
 * `traffic_config` - The traffic split configuration amongst the served models.
 
 ### served_models Configuration Block
@@ -70,10 +70,10 @@ The following arguments are supported:
 
 ## Import
 
-The serving endpoint resource can be imported using the name of the endpoint.
+The model serving resource can be imported using the name of the endpoint.
 
 ```bash
-$ terraform import databricks_serving_endpoint.this <serving-endpoint-name>
+$ terraform import databricks_mlflow_model_serving.this <model-serving-endpoint-name>
 ```
 
 ## Related Resources

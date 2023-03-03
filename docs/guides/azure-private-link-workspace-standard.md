@@ -313,7 +313,7 @@ resource "azurerm_private_endpoint" "front_pe" {
 
   private_service_connection {
     name                           = "ple-${var.prefix}-uiapi"
-    private_connection_resource_id = azurerm_databricks_workspace.dev_workspace.id
+    private_connection_resource_id = azurerm_databricks_workspace.app_workspace.id
     is_manual_connection           = false
     subresource_names              = ["databricks_ui_api"]
   }

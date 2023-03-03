@@ -7,7 +7,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/endpoints"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestServingEndpointCornerCases(t *testing.T) {
@@ -148,7 +147,7 @@ func TestServingEndpointCreate(t *testing.T) {
 }
 
 func TestServingEndpointCreate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
@@ -162,13 +161,11 @@ func TestServingEndpointCreate_Error(t *testing.T) {
 		},
 		Resource: ResourceServingEndpoint(),
 		Create:   true,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestServingEndpointRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -216,13 +213,11 @@ func TestServingEndpointRead(t *testing.T) {
 		Resource: ResourceServingEndpoint(),
 		Read:     true,
 		ID:       "test-endpoint",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "test-endpoint", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestServingEndpointRead_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -237,12 +232,10 @@ func TestServingEndpointRead_Error(t *testing.T) {
 		Resource: ResourceServingEndpoint(),
 		Read:     true,
 		ID:       "test-endpoint",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "test-endpoint", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }
 func TestServingEndpointUpdate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPut,
@@ -337,13 +330,11 @@ func TestServingEndpointUpdate(t *testing.T) {
 				}
 			}
 			`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "test-endpoint", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestServingEndpointUpdate_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPut,
@@ -376,13 +367,11 @@ func TestServingEndpointUpdate_Error(t *testing.T) {
 				}
 			}
 			`,
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "test-endpoint", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }
 
 func TestServingEndpointDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
@@ -396,13 +385,11 @@ func TestServingEndpointDelete(t *testing.T) {
 		Resource: ResourceServingEndpoint(),
 		Delete:   true,
 		ID:       "test-endpoint",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "test-endpoint", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestServingEndpointDelete_Error(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
@@ -417,7 +404,5 @@ func TestServingEndpointDelete_Error(t *testing.T) {
 		Resource: ResourceServingEndpoint(),
 		Delete:   true,
 		ID:       "test-endpoint",
-	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "test-endpoint", d.Id())
+	}.ExpectError(t, "Internal error happened")
 }

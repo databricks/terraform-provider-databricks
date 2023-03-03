@@ -10,7 +10,7 @@ import (
 )
 
 func TestModelServingCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceModelServing())
+	qa.ResourceCornerCases(t, ResourceMlflowModelServing())
 }
 
 func TestModelServingCreate(t *testing.T) {
@@ -112,7 +112,7 @@ func TestModelServingCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceModelServing(),
+		Resource: ResourceMlflowModelServing(),
 		HCL: `
 			name = "test-endpoint"
 			config {
@@ -159,7 +159,7 @@ func TestModelServingCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceModelServing(),
+		Resource: ResourceMlflowModelServing(),
 		Create:   true,
 	}.ExpectError(t, "Internal error happened")
 }
@@ -210,7 +210,7 @@ func TestModelServingRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceModelServing(),
+		Resource: ResourceMlflowModelServing(),
 		Read:     true,
 		ID:       "test-endpoint",
 	}.ApplyNoError(t)
@@ -229,7 +229,7 @@ func TestModelServingRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceModelServing(),
+		Resource: ResourceMlflowModelServing(),
 		Read:     true,
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")
@@ -309,7 +309,7 @@ func TestModelServingUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceModelServing(),
+		Resource: ResourceMlflowModelServing(),
 		Update:   true,
 		ID:       "test-endpoint",
 		HCL: `
@@ -346,7 +346,7 @@ func TestModelServingUpdate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceModelServing(),
+		Resource: ResourceMlflowModelServing(),
 		Update:   true,
 		ID:       "test-endpoint",
 		HCL: `
@@ -382,7 +382,7 @@ func TestModelServingDelete(t *testing.T) {
 				Response: "",
 			},
 		},
-		Resource: ResourceModelServing(),
+		Resource: ResourceMlflowModelServing(),
 		Delete:   true,
 		ID:       "test-endpoint",
 	}.ApplyNoError(t)
@@ -401,7 +401,7 @@ func TestModelServingDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceModelServing(),
+		Resource: ResourceMlflowModelServing(),
 		Delete:   true,
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")

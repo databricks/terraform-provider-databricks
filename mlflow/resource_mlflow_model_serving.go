@@ -12,7 +12,7 @@ import (
 
 const DefaultProvisionTimeout = 45 * time.Minute
 
-func ResourceModelServing() *schema.Resource {
+func ResourceMlflowModelServing() *schema.Resource {
 	s := common.StructToSchema(
 		endpoints.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

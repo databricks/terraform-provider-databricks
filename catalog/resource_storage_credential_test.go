@@ -272,6 +272,43 @@ func TestUpdateAzStorageCredentials(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateStorageCredentialWithDbGcpSA(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: StorageCredentialInfo{
+					Name:    "a",
+					DBGcpSA: &DbGcpServiceAccount{},
+					Comment: "c",
+				},
+				Response: StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				Response: StorageCredentialInfo{
+					Name: "a",
+					DBGcpSA: &DbGcpServiceAccount{
+						Email: "a@example.com",
+					},
+					MetastoreID: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		databricks_gcp_service_account {}
+		comment = "c"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateAzStorageCredentialMI(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

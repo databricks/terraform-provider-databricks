@@ -25,7 +25,7 @@ This guide covers a [standard deployment](https://learn.microsoft.com/en-us/azur
 * DNS mapping for SSO login callbacks to the Azure Databricks web application can either be managed by the Web Auth workspace or another workspace that is associated with the **browser_authentication** private endpoint.
 * Databricks strongly recommends creating a private web auth workspace for each region to host the web auth private network settings.
 
-![Private Link backend](https://github.com/yessawab/terraform-provider-databricks/raw/master/docs/images/azure-private-link-standard.png)
+![Private Link backend](https://github.com/yessawab/terraform-provider-databricks/raw/yes-azure-private-link/docs/images/azure-private-link-standard.png)
 
 This guide uses the following variables:
 
@@ -115,11 +115,7 @@ locals {
 
 ## Configure network 
 
-### Deploy Azure VNets and subnets
-
-Create two new Azure VNets, the required subnets and associated security groups:
-
-#### Transit resources
+### Deploy Transit resources
 
 1. Create a Transit VNet
 
@@ -318,7 +314,7 @@ resource "azurerm_private_endpoint" "front_pe" {
 }
 ```
 
-#### Data Plane 
+### Deploy Data Plane resources
 
 1. Create a Data Plane VNet
 

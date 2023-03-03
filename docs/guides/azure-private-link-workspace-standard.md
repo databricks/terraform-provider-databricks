@@ -113,9 +113,20 @@ locals {
 }
 ```
 
-## Configure network 
+## Summary
 
-### Deploy Transit resources
+* In the Transit resource group:
+  1. Create a Transit VNet
+  2. Create a private DNS zone
+  3. Create Web Auth Databricks workspace with the sub resource **browser_authentication**
+  4. Create a Frontend private endpoint with the sub resource **databricks_ui_api**
+* In the Data Plane resource group:
+  1. Create a Data Plane VNet
+  2. Create a private DNS zone
+  3. Create a new Azure Databricks workspace
+  4. Create a Backend private endpoint with the sub resource **databricks_ui_api**
+
+## Deploy Transit resources
 
 1. Create a Transit VNet
 
@@ -180,7 +191,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "transitdnszonevnetlink
 }
 ```
 
-3. Create Web Auth workspace with the sub resource **browser_authentication**:
+3. Create Web Auth Databricks workspace with the sub resource **browser_authentication**:
 
 ```hcl
 resource "azurerm_subnet" "transit_public" {
@@ -314,7 +325,7 @@ resource "azurerm_private_endpoint" "front_pe" {
 }
 ```
 
-### Deploy Data Plane resources
+## Deploy Data Plane resources
 
 1. Create a Data Plane VNet
 
@@ -379,7 +390,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "uiapidnszonevnetlink" 
 }
 ```
 
-3. Create a new workspace
+3. Create a new Azure Databricks workspace
 
 ```hcl
 resource "azurerm_subnet" "app_public" {

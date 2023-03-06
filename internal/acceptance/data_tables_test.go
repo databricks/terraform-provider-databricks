@@ -11,8 +11,14 @@ import (
 
 func checkTablesDataSourcePopulated(t *testing.T) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		_, ok := s.Modules[0].Resources["data.databricks_tables.this"]
+		r, ok := s.Modules[0].Resources["data.databricks_tables.this"]
 		require.True(t, ok, "data.databricks_shares.this has to be there")
+
+		attr := r.Primary.Attributes
+
+		assert.Equal(t, s.Modules[0].Resources["databricks_table.mytable"].Primary.ID, attr["ids.0"])
+		assert.Equal(t, s.Modules[0].Resources["databricks_table.mytable_2"].Primary.ID, attr["ids.1"])
+
 		num_tables, _ := strconv.Atoi(s.Modules[0].Outputs["tables"].Value.(string))
 		assert.Equal(t, num_tables, 2)
 		return nil

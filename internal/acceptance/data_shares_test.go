@@ -10,8 +10,8 @@ import (
 
 func checkSharesDataSourcePopulated(t *testing.T) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		_, ok := s.Modules[0].Resources["data.databricks_shares.things"]
-		require.True(t, ok, "data.databricks_shares.things has to be there")
+		_, ok := s.Modules[0].Resources["data.databricks_shares.this"]
+		require.True(t, ok, "data.databricks_shares.this has to be there")
 		assert.GreaterOrEqual(t, s.Modules[0].Outputs["shares"], 1)
 		return nil
 	}

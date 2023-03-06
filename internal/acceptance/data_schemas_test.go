@@ -19,7 +19,7 @@ func checkSchemasDataSourcePopulated(t *testing.T) func(s *terraform.State) erro
 		return nil
 	}
 }
-func TestAccDataSourceSchemas(t *testing.T) {
+func TestUcAccDataSourceSchemas(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {

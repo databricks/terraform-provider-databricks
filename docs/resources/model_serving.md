@@ -1,14 +1,14 @@
 ---
-subcategory: "MLflow"
+subcategory: "Serving"
 ---
-# databricks_mlflow_model_serving Resource
+# databricks_model_serving Resource
 
 This resource allows you to manage [Model Serving Endpoints](https://docs.databricks.com/machine-learning/model-inference/serverless/serverless-real-time-inference.html) in Databricks.
 
 ## Example Usage
 
 ```hcl
-resource "databricks_mlflow_model_serving" "this" {
+resource "databricks_model_serving" "this" {
   name = "ads-serving-endpoint"
   config {
     served_models {
@@ -73,7 +73,7 @@ The following arguments are supported:
 The model serving resource can be imported using the name of the endpoint.
 
 ```bash
-$ terraform import databricks_mlflow_model_serving.this <model-serving-endpoint-name>
+$ terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
 
 ## Related Resources

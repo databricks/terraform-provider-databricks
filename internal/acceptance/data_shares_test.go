@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -12,7 +13,8 @@ func checkSharesDataSourcePopulated(t *testing.T) func(s *terraform.State) error
 	return func(s *terraform.State) error {
 		_, ok := s.Modules[0].Resources["data.databricks_shares.this"]
 		require.True(t, ok, "data.databricks_shares.this has to be there")
-		assert.GreaterOrEqual(t, s.Modules[0].Outputs["shares"].Value.(int), 1)
+		num_shares, _ := strconv.Atoi(s.Modules[0].Outputs["shares"].Value.(string))
+		assert.GreaterOrEqual(t, num_shares, 1)
 		return nil
 	}
 }

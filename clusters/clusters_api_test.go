@@ -499,6 +499,55 @@ func TestStartAndGetInfo_Pending(t *testing.T) {
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
 
+func TestStartAndGetInfo_InitScript(t *testing.T) {
+	TestInitScripts := []InitScriptStorageInfo{
+		{
+			Dbfs: &DbfsStorageInfo{
+				Destination: "dbfs:/my_init_script.sh",
+			},
+		},
+		{
+			Gcs: &GcsStorageInfo{
+				Destination: "gs://my_bucket/my_init_script.sh",
+			},
+		},
+		{
+			S3: &S3StorageInfo{
+				Destination: "s3://my_bucket/my_init_script.sh",
+			},
+		},
+		{
+			Abfss: &AbfssStorageInfo{
+				Destination: "abfss://my_bucket/my_init_script.sh",
+			},
+		},
+		{
+			File: &LocalFileInfo{
+				Destination: "/my_init_script.sh",
+			},
+		},
+	}
+
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State:       ClusterStateRunning,
+				ClusterID:   "abc",
+				InitScripts: TestInitScripts,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
+	require.NoError(t, err)
+	assert.Equal(t, TestInitScripts, clusterInfo.InitScripts)
+}
+
 func TestStartAndGetInfo_Terminating(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{

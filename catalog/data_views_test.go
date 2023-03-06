@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/unitycatalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -11,19 +12,21 @@ func TestViewsData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
-				Response: Tables{
-					Tables: []TableInfo{
+				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
+				Response: unitycatalog.ListTablesResponse{
+					Tables: []unitycatalog.TableInfo{
 						{
 							CatalogName: "a",
 							SchemaName:  "b",
 							Name:        "c",
+							FullName:    "a.b.c",
 							TableType:   "MANAGED",
 						},
 						{
 							CatalogName: "a",
 							SchemaName:  "b",
 							Name:        "d",
+							FullName:    "a.b.d",
 							TableType:   "VIEW",
 						},
 					},

@@ -14,7 +14,7 @@ func TestTablesData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
+				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
 				Response: Tables{
 					Tables: []TableInfo{
 						{
@@ -44,7 +44,7 @@ func TestTablesDataIssue1264(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
+				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
 				Response: Tables{
 					Tables: []TableInfo{
 						{
@@ -68,13 +68,13 @@ func TestTablesDataIssue1264(t *testing.T) {
 	require.NoError(t, err)
 	s := d.Get("ids").(*schema.Set)
 	assert.Equal(t, 2, s.Len())
-	assert.True(t, s.Contains("..a"))
+	assert.True(t, s.Contains("a"))
 
 	d, err = qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
+				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
 				Response: Tables{
 					Tables: []TableInfo{
 						{
@@ -98,7 +98,7 @@ func TestTablesDataIssue1264(t *testing.T) {
 	require.NoError(t, err)
 	s = d.Get("ids").(*schema.Set)
 	assert.Equal(t, 2, s.Len())
-	assert.True(t, s.Contains("..c"))
+	assert.True(t, s.Contains("c"))
 }
 
 func TestTablesData_Error(t *testing.T) {

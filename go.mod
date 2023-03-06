@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/zclconf/go-cty v1.13.0
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
-	golang.org/x/mod v0.8.0
+	golang.org/x/mod v0.9.0
 )
 
 require (

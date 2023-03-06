@@ -251,13 +251,7 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
 				Response: gitcredentials.GetCredentialsResponse{
-					Credentials: []gitcredentials.CredentialInfo{
-						{
-							CredentialId: 121232342,
-							GitProvider:  provider,
-							GitUsername:  user,
-						},
-					},
+					Credentials: []gitcredentials.CredentialInfo{resp},
 				},
 			},
 			{
@@ -370,7 +364,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 	provider := "gitHub"
 	user := "test"
 	token := "12345"
-	resp := gitcredentials.CreateCredentialsResponse{
+	resp := gitcredentials.CredentialInfo{
 		CredentialId: 121232342,
 		GitProvider:  provider,
 		GitUsername:  user,
@@ -395,13 +389,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
 				Response: gitcredentials.GetCredentialsResponse{
-					Credentials: []gitcredentials.CredentialInfo{
-						{
-							CredentialId: 121232342,
-							GitProvider:  provider,
-							GitUsername:  user,
-						},
-					},
+					Credentials: []gitcredentials.CredentialInfo{resp},
 				},
 			},
 			{

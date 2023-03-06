@@ -55,5 +55,6 @@ func TestAccDataSourceSchemas(t *testing.T) {
 				databricks_schema.things_2
 			]
 		}`,
+		Check: checkSchemasDataSourcePopulated(t),
 	})
 }

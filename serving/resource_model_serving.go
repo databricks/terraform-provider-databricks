@@ -1,4 +1,4 @@
-package mlflow
+package serving
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 const DefaultProvisionTimeout = 45 * time.Minute
 
-func ResourceMlflowModelServing() *schema.Resource {
+func ResourceModelServing() *schema.Resource {
 	s := common.StructToSchema(
 		endpoints.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

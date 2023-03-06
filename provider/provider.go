@@ -30,6 +30,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
+	"github.com/databricks/terraform-provider-databricks/serving"
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/tokens"
@@ -108,8 +109,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_metastore_data_access":       catalog.ResourceMetastoreDataAccess(),
 			"databricks_mlflow_experiment":           mlflow.ResourceMlflowExperiment(),
 			"databricks_mlflow_model":                mlflow.ResourceMlflowModel(),
-			"databricks_mlflow_model_serving":        mlflow.ResourceMlflowModelServing(),
 			"databricks_mlflow_webhook":              mlflow.ResourceMlflowWebhook(),
+			"databricks_model_serving":               serving.ResourceModelServing(),
 			"databricks_mount":                       storage.ResourceMount(),
 			"databricks_mws_customer_managed_keys":   mws.ResourceMwsCustomerManagedKeys(),
 			"databricks_mws_credentials":             mws.ResourceMwsCredentials(),

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccMLflowModelServing(t *testing.T) {
+func TestAccModelServing(t *testing.T) {
 	name := fmt.Sprintf("terraform-test-model-serving-%[1]s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
 	workspaceLevel(t, step{
@@ -81,7 +81,7 @@ func TestAccMLflowModelServing(t *testing.T) {
 			resource "databricks_mlflow_model" "model" {
 				name = "%[1]s-model"
 			}
-			resource "databricks_mlflow_model_serving" "endpoint" {
+			resource "databricks_model_serving" "endpoint" {
 				name = "%[1]s"
 				config {
 					served_models {

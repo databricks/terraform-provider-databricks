@@ -1,4 +1,4 @@
-package mlflow
+package serving
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestModelServingCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceMlflowModelServing())
+	qa.ResourceCornerCases(t, ResourceModelServing())
 }
 
 func TestModelServingCreate(t *testing.T) {
@@ -112,7 +112,7 @@ func TestModelServingCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMlflowModelServing(),
+		Resource: ResourceModelServing(),
 		HCL: `
 			name = "test-endpoint"
 			config {
@@ -159,7 +159,7 @@ func TestModelServingCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMlflowModelServing(),
+		Resource: ResourceModelServing(),
 		Create:   true,
 	}.ExpectError(t, "Internal error happened")
 }
@@ -210,7 +210,7 @@ func TestModelServingRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMlflowModelServing(),
+		Resource: ResourceModelServing(),
 		Read:     true,
 		ID:       "test-endpoint",
 	}.ApplyNoError(t)
@@ -229,7 +229,7 @@ func TestModelServingRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMlflowModelServing(),
+		Resource: ResourceModelServing(),
 		Read:     true,
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")
@@ -241,6 +241,7 @@ func TestModelServingUpdate(t *testing.T) {
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint/config",
 				ExpectedRequest: endpoints.EndpointCoreConfigInput{
+					Name: "test-endpoint",
 					ServedModels: []endpoints.ServedModelInput{
 						{
 							Name:               "prod_model",
@@ -309,7 +310,7 @@ func TestModelServingUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceMlflowModelServing(),
+		Resource: ResourceModelServing(),
 		Update:   true,
 		ID:       "test-endpoint",
 		HCL: `
@@ -346,7 +347,7 @@ func TestModelServingUpdate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMlflowModelServing(),
+		Resource: ResourceModelServing(),
 		Update:   true,
 		ID:       "test-endpoint",
 		HCL: `
@@ -382,7 +383,7 @@ func TestModelServingDelete(t *testing.T) {
 				Response: "",
 			},
 		},
-		Resource: ResourceMlflowModelServing(),
+		Resource: ResourceModelServing(),
 		Delete:   true,
 		ID:       "test-endpoint",
 	}.ApplyNoError(t)
@@ -401,7 +402,7 @@ func TestModelServingDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceMlflowModelServing(),
+		Resource: ResourceModelServing(),
 		Delete:   true,
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")

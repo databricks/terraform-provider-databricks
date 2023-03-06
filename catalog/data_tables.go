@@ -21,7 +21,7 @@ func DataSourceTables() *schema.Resource {
 		}
 		for _, v := range tables {
 			if v.TableType != "VIEW" {
-				data.Ids = append(data.Ids, v.Name)
+				data.Ids = append(data.Ids, v.FullName)
 			}
 		}
 		return nil

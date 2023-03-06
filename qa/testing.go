@@ -326,7 +326,7 @@ var HTTPFailures = []HTTPFixture{
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
 func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
 	config := map[string]string{
-		"id":           "123",
+		"id":           "x",
 		"expect_error": "I'm a teapot",
 		"account_id":   "",
 	}

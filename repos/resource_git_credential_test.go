@@ -426,5 +426,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 }
 
 func TestGitCredentialCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceGitCredential())
+	qa.ResourceCornerCases(t, ResourceGitCredential(),
+		qa.CornerCaseSkipCRUD("create"),
+		qa.CornerCaseExpectError(`strconv.ParseInt: parsing "x": invalid syntax`))
 }

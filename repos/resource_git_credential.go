@@ -67,11 +67,11 @@ func ResourceGitCredential() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			cred_id, err := strconv.Atoi(d.Id())
+			cred_id, err := strconv.ParseInt(d.Id(), 10, 0)
 			if err != nil {
 				return err
 			}
-			resp, err := w.GitCredentials.Get(ctx, gitcredentials.Get{CredentialId: int64(cred_id)})
+			resp, err := w.GitCredentials.Get(ctx, gitcredentials.Get{CredentialId: cred_id})
 			if err != nil {
 				return err
 			}
@@ -81,12 +81,13 @@ func ResourceGitCredential() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var req gitcredentials.UpdateCredentials
+
 			common.DataToStructPointer(d, s, &req)
-			cred_id, err := strconv.Atoi(d.Id())
+			cred_id, err := strconv.ParseInt(d.Id(), 10, 0)
 			if err != nil {
 				return err
 			}
-			req.CredentialId = int64(cred_id)
+			req.CredentialId = cred_id
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -98,11 +99,11 @@ func ResourceGitCredential() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			cred_id, err := strconv.Atoi(d.Id())
+			cred_id, err := strconv.ParseInt(d.Id(), 10, 0)
 			if err != nil {
 				return err
 			}
-			return w.GitCredentials.DeleteByCredentialId(ctx, int64(cred_id))
+			return w.GitCredentials.DeleteByCredentialId(ctx, cred_id)
 		},
 	}.ToResource()
 }

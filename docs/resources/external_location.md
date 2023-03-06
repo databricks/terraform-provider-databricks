@@ -74,12 +74,29 @@ resource "databricks_grants" "some" {
 }
 ```
 
+For GCP
+
+```hcl
+resource "databricks_storage_credential" "ext" {
+  name = "the-creds"
+  databricks_gcp_service_account {}
+}
+
+resource "databricks_external_location" "some" {
+  name = "the-ext-location"
+  url  = "gs://${google_storage_bucket.ext_bucket.name}"
+
+  credential_name = databricks_storage_credential.ext.id
+  comment         = "Managed by TF"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 - `name` - Name of External Location, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
-- `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure).
+- `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure), `gs://[bucket-host]/[bucket-dir]` (GCP).
 - `credential_name` - Name of the [databricks_storage_credential](storage_credential.md) to use with this External Location.
 - `owner` - (Optional) Username/groupname/sp application_id of the external Location owner.
 - `comment` - (Optional) User-supplied free-form text.

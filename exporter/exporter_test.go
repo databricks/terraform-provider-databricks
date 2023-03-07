@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/service/gitcredentials"
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -228,7 +229,9 @@ var emptyRepos = qa.HTTPFixture{
 var emptyGitCredentials = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/git-credentials",
-	Response: repos.GitCredentialList{},
+	Response: []gitcredentials.CredentialInfo{
+		{},
+	},
 }
 
 var emptyIpAccessLIst = qa.HTTPFixture{

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/gitcredentials"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -18,11 +19,11 @@ func TestResourceGitCredentialRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", credID),
-				Response: GitCredentialResponse{
-					ID:       int64(credID),
-					Provider: provider,
-					UserName: user,
+				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d?", credID),
+				Response: gitcredentials.CredentialInfo{
+					CredentialId: int64(credID),
+					GitProvider:  provider,
+					GitUsername:  user,
 				},
 			},
 		},
@@ -39,7 +40,7 @@ func TestResourceGitCredentialRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", credID),
+				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d?", credID),
 				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Git credential with the given ID could not be found.",
@@ -74,26 +75,27 @@ func TestResourceGitCredentialUpdate(t *testing.T) {
 	provider := "gitHub"
 	user := "test"
 	token := "1234"
-	resp := GitCredentialResponse{
-		ID:       int64(credID),
-		Provider: provider,
-		UserName: user,
+	resp := gitcredentials.CredentialInfo{
+		CredentialId: int64(credID),
+		GitProvider:  provider,
+		GitUsername:  user,
 	}
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
 				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", credID),
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				ExpectedRequest: gitcredentials.UpdateCredentials{
+					CredentialId:        int64(credID),
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: resp,
 			},
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", credID),
+				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d?", credID),
 				Response: resp,
 			},
 		},
@@ -123,10 +125,11 @@ func TestResourceGitCredentialUpdate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", credID),
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				ExpectedRequest: gitcredentials.UpdateCredentials{
+					CredentialId:        int64(credID),
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
@@ -155,26 +158,26 @@ func TestResourceGitCredentialCreate(t *testing.T) {
 	provider := "gitHub"
 	user := "test"
 	token := "12345"
-	resp := GitCredentialResponse{
-		ID:       121232342,
-		Provider: provider,
-		UserName: user,
+	resp := gitcredentials.CreateCredentialsResponse{
+		CredentialId: 121232342,
+		GitProvider:  provider,
+		GitUsername:  user,
 	}
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				ExpectedRequest: gitcredentials.CreateCredentials{
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: resp,
 			},
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.ID),
+				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d?", resp.CredentialId),
 				Response: resp,
 			},
 		},
@@ -185,7 +188,7 @@ func TestResourceGitCredentialCreate(t *testing.T) {
 			"personal_access_token": token,
 		},
 		Create: true,
-	}.ApplyAndExpectData(t, map[string]any{"id": resp.GitCredentialID(), "git_provider": provider, "git_username": user})
+	}.ApplyAndExpectData(t, map[string]any{"id": fmt.Sprintf("%d", resp.CredentialId), "git_provider": provider, "git_username": user})
 }
 
 func TestResourceGitCredentialCreate_Error(t *testing.T) {
@@ -197,10 +200,10 @@ func TestResourceGitCredentialCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				ExpectedRequest: gitcredentials.CreateCredentials{
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
@@ -223,20 +226,20 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 	provider := "gitHub"
 	user := "test"
 	token := "12345"
-	resp := GitCredentialResponse{
-		ID:       121232342,
-		Provider: provider,
-		UserName: user,
+	resp := gitcredentials.CredentialInfo{
+		CredentialId: 121232342,
+		GitProvider:  provider,
+		GitUsername:  user,
 	}
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				ExpectedRequest: gitcredentials.CreateCredentials{
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
@@ -247,23 +250,24 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
-				Response: GitCredentialList{
-					Credentials: []GitCredentialResponse{resp},
+				Response: gitcredentials.GetCredentialsResponse{
+					Credentials: []gitcredentials.CredentialInfo{resp},
 				},
 			},
 			{
 				Method:   http.MethodPatch,
-				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.ID),
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.CredentialId),
+				ExpectedRequest: gitcredentials.UpdateCredentials{
+					CredentialId:        resp.CredentialId,
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: resp,
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.ID),
+				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d?", resp.CredentialId),
 				Response: resp,
 			},
 		},
@@ -275,7 +279,7 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 			"force":                 true,
 		},
 		Create: true,
-	}.ApplyAndExpectData(t, map[string]any{"id": resp.GitCredentialID(), "git_provider": provider, "git_username": user})
+	}.ApplyAndExpectData(t, map[string]any{"id": fmt.Sprintf("%d", resp.CredentialId), "git_provider": provider, "git_username": user})
 }
 
 func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
@@ -287,10 +291,10 @@ func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				ExpectedRequest: gitcredentials.CreateCredentials{
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
@@ -328,10 +332,10 @@ func TestResourceGitCredentialCreateWithForce_ErrorEmptyList(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				ExpectedRequest: gitcredentials.CreateCredentials{
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
@@ -342,7 +346,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorEmptyList(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
-				Response: GitCredentialList{},
+				Response: gitcredentials.GetCredentialsResponse{},
 			},
 		},
 		Resource: ResourceGitCredential(),
@@ -360,20 +364,20 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 	provider := "gitHub"
 	user := "test"
 	token := "12345"
-	resp := GitCredentialResponse{
-		ID:       121232342,
-		Provider: provider,
-		UserName: user,
+	resp := gitcredentials.CredentialInfo{
+		CredentialId: 121232342,
+		GitProvider:  provider,
+		GitUsername:  user,
 	}
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: GitCredentialRequest{
-					Provider: provider,
-					UserName: user,
-					PAT:      token,
+				ExpectedRequest: gitcredentials.CreateCredentials{
+					GitProvider:         provider,
+					GitUsername:         user,
+					PersonalAccessToken: token,
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
@@ -384,13 +388,13 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
-				Response: GitCredentialList{
-					Credentials: []GitCredentialResponse{resp},
+				Response: gitcredentials.GetCredentialsResponse{
+					Credentials: []gitcredentials.CredentialInfo{resp},
 				},
 			},
 			{
 				Method:   http.MethodPatch,
-				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.ID),
+				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.CredentialId),
 				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Git credential with the given ID could not be found.",
@@ -410,5 +414,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 }
 
 func TestGitCredentialCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceGitCredential())
+	qa.ResourceCornerCases(t, ResourceGitCredential(),
+		qa.CornerCaseSkipCRUD("create"),
+		qa.CornerCaseExpectError(`strconv.ParseInt: parsing "x": invalid syntax`))
 }

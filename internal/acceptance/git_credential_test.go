@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,10 +18,12 @@ func TestAccGitCredentials(t *testing.T) {
 		}`,
 		Check: resourceCheck("databricks_git_credential.this",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				creds, err := repos.NewGitCredentialsAPI(ctx, client).List()
+				w, err := client.WorkspaceClient()
+				assert.NoError(t, err)
+				creds, err := w.GitCredentials.ListAll(ctx)
 				assert.NoError(t, err)
 				assert.Len(t, creds, 1)
-				assert.Equal(t, creds[0].UserName, "test")
+				assert.Equal(t, creds[0].GitUsername, "test")
 				return nil
 			}),
 	})

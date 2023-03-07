@@ -19,7 +19,7 @@ func DataSourceSchemas() *schema.Resource {
 			return err
 		}
 		for _, v := range schemas {
-			data.Ids = append(data.Ids, v.Name)
+			data.Ids = append(data.Ids, v.FullName)
 		}
 		return nil
 	})

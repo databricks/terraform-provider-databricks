@@ -59,9 +59,6 @@ func TestModelServingCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				ExpectedRequest: endpoints.GetServingEndpointRequest{
-					Name: "test-endpoint",
-				},
 				Response: endpoints.ServingEndpointDetailed{
 					Name: "test-endpoint",
 					State: &endpoints.EndpointState{
@@ -72,9 +69,6 @@ func TestModelServingCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				ExpectedRequest: endpoints.GetServingEndpointRequest{
-					Name: "test-endpoint",
-				},
 				Response: endpoints.ServingEndpointDetailed{
 					Id:   "test-endpoint",
 					Name: "test-endpoint",
@@ -170,9 +164,6 @@ func TestModelServingRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				ExpectedRequest: endpoints.GetServingEndpointRequest{
-					Name: "test-endpoint",
-				},
 				Response: endpoints.ServingEndpointDetailed{
 					Id:   "test-endpoint",
 					Name: "test-endpoint",
@@ -267,9 +258,6 @@ func TestModelServingUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				ExpectedRequest: endpoints.GetServingEndpointRequest{
-					Name: "test-endpoint",
-				},
 				Response: endpoints.ServingEndpointDetailed{
 					Name: "test-endpoint",
 					State: &endpoints.EndpointState{
@@ -280,9 +268,6 @@ func TestModelServingUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				ExpectedRequest: endpoints.GetServingEndpointRequest{
-					Name: "test-endpoint",
-				},
 				Response: endpoints.ServingEndpointDetailed{
 					Id:   "test-endpoint",
 					Name: "test-endpoint",
@@ -313,6 +298,9 @@ func TestModelServingUpdate(t *testing.T) {
 		Resource: ResourceModelServing(),
 		Update:   true,
 		ID:       "test-endpoint",
+		InstanceState: map[string]string{
+			"name": "test-endpoint",
+		},		
 		HCL: `
 			name = "test-endpoint"
 			config {
@@ -350,6 +338,9 @@ func TestModelServingUpdate_Error(t *testing.T) {
 		Resource: ResourceModelServing(),
 		Update:   true,
 		ID:       "test-endpoint",
+		InstanceState: map[string]string{
+			"name": "test-endpoint",
+		},		
 		HCL: `
 			name = "test-endpoint"
 			config {

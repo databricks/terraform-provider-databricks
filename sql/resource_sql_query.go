@@ -20,6 +20,7 @@ type QueryEntity struct {
 	Name         string           `json:"name"`
 	Description  string           `json:"description,omitempty"`
 	Query        string           `json:"query"`
+	// Deprecated: Use databricks_job resource to schedule a Query
 	Schedule     *QuerySchedule   `json:"schedule,omitempty"`
 	Tags         []string         `json:"tags,omitempty"`
 	Parameter    []QueryParameter `json:"parameter,omitempty"`
@@ -28,6 +29,7 @@ type QueryEntity struct {
 }
 
 // QuerySchedule ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QuerySchedule struct {
 	Continuous *QueryScheduleContinuous `json:"continuous,omitempty"`
 	Daily      *QueryScheduleDaily      `json:"daily,omitempty"`
@@ -35,12 +37,14 @@ type QuerySchedule struct {
 }
 
 // QueryScheduleContinuous ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QueryScheduleContinuous struct {
 	IntervalSeconds int    `json:"interval_seconds"`
 	UntilDate       string `json:"until_date,omitempty"`
 }
 
 // QueryScheduleDaily ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QueryScheduleDaily struct {
 	IntervalDays int    `json:"interval_days"`
 	TimeOfDay    string `json:"time_of_day"`
@@ -48,6 +52,7 @@ type QueryScheduleDaily struct {
 }
 
 // QueryScheduleWeekly ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QueryScheduleWeekly struct {
 	IntervalWeeks int    `json:"interval_weeks"`
 	DayOfWeek     string `json:"day_of_week"`

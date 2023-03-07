@@ -36,6 +36,9 @@ func (a VPCEndpointAPI) Create(vpcEndpoint *VPCEndpoint) error {
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+		if (ve.GcpVpcEndpointInfo != nil) {
+			return nil
+		}
 		switch state := strings.ToLower(ve.State); state {
 		case "available":
 			return nil
@@ -76,6 +79,13 @@ func ResourceMwsVpcEndpoint() *schema.Resource {
 	s := common.StructToSchema(VPCEndpoint{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["vpc_endpoint_name"].ValidateFunc = validation.StringLenBetween(4, 256)
+
+
+		s["aws_vpc_endpoint_id"].ExactlyOneOf = []string{"aws_vpc_endpoint_id", "gcp_vpc_endpoint_info"}
+		s["region"].ExactlyOneOf = []string{"region", "gcp_vpc_endpoint_info"}
+		s["aws_endpoint_service_id"].ConflictsWith = []string{"gcp_vpc_endpoint_info"}
+		s["aws_account_id"].ConflictsWith = []string{"gcp_vpc_endpoint_info"}
+		s["gcp_vpc_endpoint_info"].ConflictsWith = []string{"aws_vpc_endpoint_id", "region", "aws_endpoint_service_id", "aws_account_id"}
 		return s
 	})
 	p := common.NewPairSeparatedID("account_id", "vpc_endpoint_id", "/")

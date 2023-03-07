@@ -54,6 +54,80 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 	assert.Equal(t, "abc/ve_id", d.Id())
 }
 
+func TestResourceVPCEndpointCreate_GCP(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/vpc-endpoints",
+				ExpectedRequest: VPCEndpoint{
+					AccountID:       "abc",
+					VPCEndpointName: "ve_name",
+					GcpVpcEndpointInfo: &GcpVpcEndpointInfo{
+						ProjectId:       "project_a",
+						PscEndpointName: "psc_endpoint_a",
+						EndpointRegion:  "region_a",
+					},
+				},
+				Response: VPCEndpoint{
+					VPCEndpointID: "ve_id",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/vpc-endpoints/ve_id",
+				ReuseRequest: true,
+				Response: VPCEndpoint{
+					AccountID:       "abc",
+					VPCEndpointName: "ve_name",
+					GcpVpcEndpointInfo: &GcpVpcEndpointInfo{
+						ProjectId:           "project_a",
+						PscEndpointName:     "psc_endpoint_a",
+						EndpointRegion:      "region_a",
+						PscConnectionId:     "120938102938209",
+						ServiceAttachmentId: "service_attachment_a",
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsVpcEndpoint(),
+		HCL: `
+		account_id = "abc"
+		vpc_endpoint_name = "ve_name"
+		gcp_vpc_endpoint_info {
+			project_id = "project_a"
+			psc_endpoint_name = "psc_endpoint_a"
+			endpoint_region = "region_a"
+        }
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/ve_id", d.Id())
+}
+
+func TestResourceVPCEndpointCreate_ConflictErrors(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourceMwsVpcEndpoint(),
+		HCL: `
+		account_id = "abc"
+		vpc_endpoint_name = "ve_name"
+		region = "ar"
+		aws_vpc_endpoint_id = "ave_id"
+		gcp_vpc_endpoint_info {
+			project_id = "project_a"
+			psc_endpoint_name = "psc_endpoint_a"
+			endpoint_region = "region_a"
+        }
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.ErrorContains(t, err, "[gcp_vpc_endpoint_info] Conflicting configuration arguments")
+	assert.ErrorContains(t, err, "[region] Invalid combination of arguments")
+	assert.ErrorContains(t, err, "[aws_vpc_endpoint_id] Invalid combination of arguments")
+}
+
 func TestResourceVPCEndpointCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

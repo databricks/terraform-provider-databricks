@@ -28,7 +28,7 @@ func ResourceModelServing() *schema.Resource {
 			}
 			var e endpoints.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
-			endpoint, err := w.ServingEndpoints.CreateAndWait(ctx, e, retries.Timeout[endpoints.ServingEndpointDetailed](DefaultProvisionTimeout))
+			endpoint, err := w.ServingEndpoints.CreateAndWait(ctx, e, retries.Timeout[endpoints.ServingEndpointDetailed](d.Timeout(schema.TimeoutCreate)))
 			if err != nil {
 				return err
 			}
@@ -54,11 +54,8 @@ func ResourceModelServing() *schema.Resource {
 			var e endpoints.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
 			e.Config.Name = e.Name
-			_, err = w.ServingEndpoints.UpdateConfigAndWait(ctx, e.Config, retries.Timeout[endpoints.ServingEndpointDetailed](DefaultProvisionTimeout))
-			if err != nil {
-				return err
-			}
-			return nil
+			_, err = w.ServingEndpoints.UpdateConfigAndWait(ctx, e.Config, retries.Timeout[endpoints.ServingEndpointDetailed](d.Timeout(schema.TimeoutUpdate)))
+			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -70,6 +67,9 @@ func ResourceModelServing() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{},
 		Schema:         s,
 		SchemaVersion:  0,
-		Timeouts:       &schema.ResourceTimeout{},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
+		},
 	}.ToResource()
 }

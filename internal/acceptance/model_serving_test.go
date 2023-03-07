@@ -68,7 +68,10 @@ func TestAccModelServing(t *testing.T) {
 				client = MlflowClient()
 				client.create_model_version(name="%[1]s-model", source=source, run_id=run1_id)
 				client.create_model_version(name="%[1]s-model", source=source, run_id=run1_id)
-				time.sleep(100) # wait for model version to finish creation
+				while client.get_model_version(name="%[1]s-model", version="1").getStatus() != ModelRegistry.ModelVersionStatus.READY:
+					time.sleep(10)
+				while client.get_model_version(name="%[1]s-model", version="2").getStatus() != ModelRegistry.ModelVersionStatus.READY:
+					time.sleep(10)
 			`, name))
 			return nil
 		},
@@ -106,6 +109,34 @@ func TestAccModelServing(t *testing.T) {
 						routes {
 							served_model_name = "candidate_model"
 							traffic_percentage = 10
+						}
+					}
+				}
+			}
+		`, name),
+		},
+		step{
+			Template: fmt.Sprintf(`
+			resource "databricks_mlflow_experiment" "exp" {
+				name = "/Shared/%[1]s-exp"
+			}
+			resource "databricks_mlflow_model" "model" {
+				name = "%[1]s-model"
+			}
+			resource "databricks_model_serving" "endpoint" {
+				name = "%[1]s"
+				config {
+					served_models {
+						name = "prod_model"
+						model_name = "%[1]s-model"
+						model_version = "1"
+						workload_size = "Small"
+						scale_to_zero_enabled = true
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
 						}
 					}
 				}

@@ -225,6 +225,7 @@ func TestModelServingRead_Error(t *testing.T) {
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")
 }
+
 func TestModelServingUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -300,7 +301,7 @@ func TestModelServingUpdate(t *testing.T) {
 		ID:       "test-endpoint",
 		InstanceState: map[string]string{
 			"name": "test-endpoint",
-		},		
+		},
 		HCL: `
 			name = "test-endpoint"
 			config {
@@ -340,7 +341,7 @@ func TestModelServingUpdate_Error(t *testing.T) {
 		ID:       "test-endpoint",
 		InstanceState: map[string]string{
 			"name": "test-endpoint",
-		},		
+		},
 		HCL: `
 			name = "test-endpoint"
 			config {

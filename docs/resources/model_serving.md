@@ -43,7 +43,7 @@ resource "databricks_model_serving" "this" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the model serving endpoint. This field is required and must be unique across a workspace. An endpoint name can consist of alphanumeric characters, dashes, and underscores.
+* `name` - (Required) The name of the model serving endpoint. This field is required and must be unique across a workspace. An endpoint name can consist of alphanumeric characters, dashes, and underscores. NOTE: Changing this name will delete the existing endpoint and create a new endpoint with the update name.
 * `config` - (Required) The model serving endpoint configuration.
 
 ### config Configuration Block
@@ -68,6 +68,16 @@ The following arguments are supported:
 * `served_model_name` - (Required) The name of the served model this route configures traffic for.
 * `traffic_percentage` - (Required) The percentage of endpoint traffic to send to this route. It must be an integer between 0 and 100 inclusive.
 
+## Timeouts
+
+The `timeouts` block allows you to specify `create` and `update` timeouts. The default right now is 45 minutes for both operations.
+
+```hcl
+timeouts {
+  create = "30m"
+}
+```
+
 ## Import
 
 The model serving resource can be imported using the name of the endpoint.
@@ -81,7 +91,7 @@ $ terraform import databricks_model_serving.this <model-serving-endpoint-name>
 The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
-* [databricks_directory](directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
+* [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).
 * [databricks_mlflow_model](mlflow_model.md) to create [MLflow models](https://docs.databricks.com/applications/mlflow/models.html) in Databricks.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
 * [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.

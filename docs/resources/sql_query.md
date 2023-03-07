@@ -100,7 +100,7 @@ $ terraform import databricks_sql_query.this <query-id>
 
 In case you see `Error: cannot create sql query: Internal Server Error` during `terraform apply`; double check that you are using the correct [`data_source_id`](sql_endpoint.md)
 
-Operations on `databricks_sql_query` schedules are ⛔️ deprecated. You can create, update or delete a schedule for a SQLA and other Databricks resources using the [databricks_job](./job.md#sql_task-configuration-block) resource.
+Operations on `databricks_sql_query` schedules are ⛔️ deprecated. You can create, update or delete a schedule for SQLA and other Databricks resources using the [databricks_job](job.md#sql_task-configuration-block) resource.
 
 ## Related Resources
 
@@ -111,4 +111,4 @@ The following resources are often used in the same context:
 * [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
 * [databricks_sql_global_config](sql_global_config.md) to configure the security policy, [databricks_instance_profile](instance_profile.md), and [data access properties](https://docs.databricks.com/sql/admin/data-access-configuration.html) for all [databricks_sql_endpoint](sql_endpoint.md) of workspace.
 * [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html).
-* [databricks_job](./job.md#sql_task-configuration-block) to schedule Databricks SQL queries (also dashboards and alerts) using Databricks Jobs.
+* [databricks_job](job.md#sql_task-configuration-block) to schedule Databricks SQL queries (as well as dashboards and alerts) using Databricks Jobs.

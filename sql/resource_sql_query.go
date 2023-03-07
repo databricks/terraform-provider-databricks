@@ -513,6 +513,7 @@ func ResourceSqlQuery() *schema.Resource {
 	s := common.StructToSchema(
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["schedule"].Deprecated = "Operations on `databricks_sql_query` schedules are deprecated. Please use `databricks_job` resource to schedule a `sql_task`."
 			schedule := m["schedule"].Elem.(*schema.Resource)
 
 			// Make different query schedule types mutually exclusive.

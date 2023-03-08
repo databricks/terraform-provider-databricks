@@ -3,7 +3,7 @@ subcategory: "Serving"
 ---
 # databricks_model_serving Resource
 
-This resource allows you to manage [Model Serving Endpoints](https://docs.databricks.com/machine-learning/model-inference/serverless/serverless-real-time-inference.html) in Databricks.
+This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks.
 
 ## Example Usage
 
@@ -57,7 +57,7 @@ The following arguments are supported:
 * `model_name` - (Required) The name of the model in Databricks Model Registry to be served.
 * `model_version` - (Required) The version of the model in Databricks Model Registry to be served.
 * `workload_size` - (Required) The workload size of the served model. The workload size corresponds to a range of provisioned concurrency that the compute will autoscale between. A single unit of provisioned concurrency can process one request at a time. Valid workload sizes are "Small" (4 - 4 provisioned concurrency), "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64 provisioned concurrency).
-* `scale_to_zero_enabled` - (Required) Whether the compute resources for the served model should scale down to zero. If scale-to-zero is enabled, the lower bound of the provisioned concurrency for each workload size will be 0.
+* `scale_to_zero_enabled` - Whether the compute resources for the served model should scale down to zero. If scale-to-zero is enabled, the lower bound of the provisioned concurrency for each workload size will be 0. The default value is `true`.
 
 ### traffic_config Configuration Block
 

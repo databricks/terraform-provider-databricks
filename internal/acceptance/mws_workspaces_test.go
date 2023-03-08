@@ -109,3 +109,49 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 		}`,
 	})
 }
+
+func TestMwsAccGcpPscWorkspaces(t *testing.T) {
+	accountLevel(t, step{
+		Template: `
+		resource "databricks_mws_networks" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "{env.TEST_PREFIX}-network-{var.RANDOM}"
+			gcp_network_info {
+				network_project_id = "{env.GOOGLE_PROJECT}"
+				vpc_id = "{env.TEST_VPC_ID}"
+				subnet_id = "{env.TEST_SUBNET_ID}"
+				subnet_region = "{env.GOOGLE_REGION}"
+				pod_ip_range_name = "pods_psc"
+				service_ip_range_name = "svc_psc"
+			}
+		}
+
+		resource "databricks_mws_private_access_settings" "this" {
+			account_id = "{env.DATABRICKS_ACCOUNT_ID}"
+			private_access_settings_name = "tf-pas-{var.RANDOM}"
+			region = "{env.GOOGLE_REGION}"
+			public_access_enabled = true
+			private_access_level = "ACCOUNT"
+		}
+		
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "{env.TEST_PREFIX}-{var.RANDOM}"
+			location        = "{env.GOOGLE_REGION}"
+	
+			cloud_resource_container {
+				gcp {
+					project_id = "{env.GOOGLE_PROJECT}"
+				}
+			}
+            
+            private_access_settings_id = databricks_mws_private_access_settings.this.private_access_settings_id
+			network_id = databricks_mws_networks.this.network_id
+			
+			gke_config {
+				connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+				master_ip_range = "10.3.0.0/28"
+			}
+		}`,
+	})
+}

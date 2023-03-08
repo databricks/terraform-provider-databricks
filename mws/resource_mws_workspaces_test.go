@@ -152,6 +152,83 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id": "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
+					},
+					"workspace_name": "labdata",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
+			}
+		}
+		private_access_settings_id = "pas_id_a"
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+			master_ip_range = "e"
+		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
 func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

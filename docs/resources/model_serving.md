@@ -61,7 +61,7 @@ The following arguments are supported:
 
 ### traffic_config Configuration Block
 
-* `routes` - (Required) Each block represents a route that defines traffic to each served model.
+* `routes` - (Required) Each block represents a route that defines traffic to each served model. Each `served_models` block needs to have a corresponding `routes` block
 
 ### routes Configuration Block
 

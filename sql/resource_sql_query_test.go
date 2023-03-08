@@ -90,7 +90,7 @@ func TestQueryCreateWithMultipleSchedules(t *testing.T) {
 				}
 			}
 		`,
-	}.ExpectError(t, "invalid config supplied. [schedule.#.continuous] Conflicting configuration arguments. [schedule.#.daily] Conflicting configuration arguments")
+	}.ExpectError(t, "invalid config supplied. [schedule.#.continuous] Conflicting configuration arguments. [schedule.#.daily] Conflicting configuration arguments. [schedule] Argument is deprecated")
 }
 
 func TestQueryCreateWithContinuousSchedule(t *testing.T) {

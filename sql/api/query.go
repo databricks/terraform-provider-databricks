@@ -12,6 +12,7 @@ type Query struct {
 	Name           string            `json:"name"`
 	Description    string            `json:"description"`
 	Query          string            `json:"query"`
+	// Deprecated: Use databricks_job resource to schedule a Query
 	Schedule       *QuerySchedule    `json:"schedule"`
 	Options        *QueryOptions     `json:"options,omitempty"`
 	Tags           []string          `json:"tags,omitempty"`
@@ -20,6 +21,7 @@ type Query struct {
 }
 
 // QuerySchedule ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QuerySchedule struct {
 	// Interval in seconds.
 	//

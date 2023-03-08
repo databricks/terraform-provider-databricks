@@ -49,7 +49,7 @@ The following arguments are supported:
 ### config Configuration Block
 
 * `served_models` - (Required) Each block represents a served model for the endpoint to serve. A model serving endpoint can have up to 10 served models.
-* `traffic_config` - The traffic split configuration amongst the served models.
+* `traffic_config` - A single block represents the traffic split configuration amongst the served models.
 
 ### served_models Configuration Block
 

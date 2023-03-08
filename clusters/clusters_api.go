@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
+
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -865,7 +867,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 			}
 		}
 	}
-	smallestNodeType := a.GetSmallestNodeType(NodeTypeRequest{
+	smallestNodeType := a.GetSmallestNodeType(clustersApi.NodeTypeRequest{
 		LocalDisk: true,
 	})
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)

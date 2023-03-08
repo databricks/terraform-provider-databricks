@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
 	"github.com/databricks/databricks-sdk-go/service/gitcredentials"
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/aws"
@@ -158,10 +159,10 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: clusters.NodeTypeList{
-					NodeTypes: []clusters.NodeType{
+				Response: clustersApi.ListNodeTypesResponse{
+					NodeTypes: []clustersApi.NodeType{
 						{
-							NodeTypeID: "m5d.large",
+							NodeTypeId: "m5d.large",
 						},
 					},
 				},

@@ -53,7 +53,7 @@ The following arguments are supported:
 
 ### served_models Configuration Block
 
-* `name` - The name of a served model. It must be unique across an endpoint. If not specified, this field will default to -. A served model name can consist of alphanumeric characters, dashes, and underscores.
+* `name` - The name of a served model. It must be unique across an endpoint. If not specified, this field will default to `modelname-modelversion`. A served model name can consist of alphanumeric characters, dashes, and underscores.
 * `model_name` - (Required) The name of the model in Databricks Model Registry to be served.
 * `model_version` - (Required) The version of the model in Databricks Model Registry to be served.
 * `workload_size` - (Required) The workload size of the served model. The workload size corresponds to a range of provisioned concurrency that the compute will autoscale between. A single unit of provisioned concurrency can process one request at a time. Valid workload sizes are "Small" (4 - 4 provisioned concurrency), "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64 provisioned concurrency).

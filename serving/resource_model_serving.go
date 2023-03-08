@@ -17,6 +17,10 @@ func ResourceModelServing() *schema.Resource {
 		endpoints.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].ForceNew = true
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
+			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
 			return m
 		})
 

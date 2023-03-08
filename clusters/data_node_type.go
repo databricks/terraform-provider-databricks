@@ -2,11 +2,10 @@ package clusters
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/databricks/databricks-sdk-go/service/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -43,24 +42,9 @@ func (a ClustersAPI) GetSmallestNodeType(request clusters.NodeTypeRequest) strin
 
 // DataSourceNodeType returns smallest node depedning on the cloud
 func DataSourceNodeType() *schema.Resource {
-	s := common.StructToSchema(clusters.NodeTypeRequest{}, func(
-		s map[string]*schema.Schema) map[string]*schema.Schema {
-		return s
+	return common.WorkspaceData(func(ctx context.Context, data *clusters.NodeTypeRequest, w *databricks.WorkspaceClient) error {
+		data.Id = smallestNodeType(ctx, *data, w)
+		log.Printf("[DEBUG] smallest node: %s", data.Id)
+		return nil
 	})
-	return &schema.Resource{
-		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
-			var this clusters.NodeTypeRequest
-			common.DataToStructPointer(d, s, &this)
-			client := m.(*common.DatabricksClient)
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				err = fmt.Errorf("cannot read data databricks_node_type: %w", err)
-				return diag.FromErr(err)
-			}
-			d.SetId(smallestNodeType(ctx, this, w))
-			return nil
-		},
-	}
 }

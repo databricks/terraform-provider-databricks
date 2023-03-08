@@ -33,7 +33,7 @@ Code contributions—bug fixes, new development, test improvement—all follow a
 1. Clone down the repo to your local system.
 
     ```bash
-    git clone git@github.com:your-user-name/project-name.git
+    git clone git@github.com:YOUR_USER_NAME/terraform-provider-databricks.git
     ```
 
 1. Create a new branch to hold your work.

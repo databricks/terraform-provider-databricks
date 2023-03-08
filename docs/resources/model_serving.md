@@ -65,7 +65,7 @@ The following arguments are supported:
 
 ### routes Configuration Block
 
-* `served_model_name` - (Required) The name of the served model this route configures traffic for.
+* `served_model_name` - (Required) The name of the served model this route configures traffic for. This needs to match the name of a `served_models` block
 * `traffic_percentage` - (Required) The percentage of endpoint traffic to send to this route. It must be an integer between 0 and 100 inclusive.
 
 ## Timeouts

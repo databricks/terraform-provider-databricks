@@ -107,6 +107,68 @@ func TestResourceNetworkCreate_GCP(t *testing.T) {
 	assert.Equal(t, "abc/nid", d.Id())
 }
 
+func TestResourceNetworkCreate_GCPPsc(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/networks",
+				ExpectedRequest: Network{
+					AccountID:   "abc",
+					NetworkName: "Open Workers",
+					GcpNetworkInfo: &GcpNetworkInfo{
+						NetworkProjectId:   "project_a",
+						VpcId:              "vpc_a",
+						SubnetId:           "subnet_a",
+						SubnetRegion:       "region_a",
+						PodIpRangeName:     "pods",
+						ServiceIpRangeName: "svc",
+					},
+					VPCEndpoints: &NetworkVPCEndpoints{
+						RestAPI:           []string{"rest_api_endpoint"},
+						DataplaneRelayAPI: []string{"dataplane_relay_endpoint"},
+					},
+				},
+				Response: Network{
+					AccountID: "abc",
+					NetworkID: "nid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: Network{
+					NetworkID:        "nid",
+					SecurityGroupIds: []string{"one", "two"},
+					NetworkName:      "Open Workers",
+					VPCID:            "five",
+					SubnetIds:        []string{"four", "three"},
+				},
+			},
+		},
+		Resource: ResourceMwsNetworks(),
+		HCL: `
+		account_id = "abc"
+		network_name = "Open Workers"
+		gcp_network_info {
+			network_project_id = "project_a"
+			vpc_id = "vpc_a"
+			subnet_id = "subnet_a"
+			subnet_region = "region_a"
+			pod_ip_range_name = "pods"
+			service_ip_range_name = "svc"
+        }
+        vpc_endpoints {
+        	rest_api = ["rest_api_endpoint"]
+        	dataplane_relay = ["dataplane_relay_endpoint"]
+        }
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/nid", d.Id())
+}
+
 func TestResourceNetworkCreate_ConflictErrors(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
@@ -135,7 +197,6 @@ func TestResourceNetworkCreate_ConflictErrors(t *testing.T) {
 	assert.ErrorContains(t, err, "[gcp_network_info] Conflicting configuration arguments")
 	assert.ErrorContains(t, err, "[security_group_ids] Invalid combination of arguments")
 	assert.ErrorContains(t, err, "[subnet_ids] Invalid combination of arguments")
-	assert.ErrorContains(t, err, "[vpc_endpoints] Conflicting configuration arguments")
 	assert.ErrorContains(t, err, "[vpc_id] Invalid combination of arguments")
 }
 

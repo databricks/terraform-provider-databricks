@@ -70,6 +70,28 @@ resource "aws_vpc_endpoint" "kinesis-streams" {
 }
 ```
 
+Once you have created the necessary endpoints, you need to register each of them via *this* Terraform resource, which calls out to the [Databricks Account API](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-3-register-your-vpc-endpoint-ids-with-the-account-api)):
+
+```hcl
+resource "databricks_mws_vpc_endpoint" "workspace" {
+  provider            = databricks.mws
+  account_id          = var.databricks_account_id
+  aws_vpc_endpoint_id = aws_vpc_endpoint.workspace.id
+  vpc_endpoint_name   = "VPC Relay for ${module.vpc.vpc_id}"
+  region              = var.region
+  depends_on          = [aws_vpc_endpoint.workspace]
+}
+
+resource "databricks_mws_vpc_endpoint" "relay" {
+  provider            = databricks.mws
+  account_id          = var.databricks_account_id
+  aws_vpc_endpoint_id = aws_vpc_endpoint.relay.id
+  vpc_endpoint_name   = "VPC Relay for ${module.vpc.vpc_id}"
+  region              = var.region
+  depends_on          = [aws_vpc_endpoint.relay]
+}
+```
+
 Typically the next steps after this would be to create a [databricks_mws_private_access_settings](mws_private_access_settings.md) and [databricks_mws_networks](mws_networks.md) configuration, before passing the `databricks_mws_private_access_settings.pas.private_access_settings_id` and `databricks_mws_networks.this.network_id` into a [databricks_mws_workspaces](mws_workspaces.md) resource:
 
 ```hcl
@@ -106,7 +128,18 @@ provider "databricks" {
   host  = "https://accounts.gcp.databricks.com"
 }
 
-resource "databricks_mws_vpc_endpoint" "this" {
+resource "databricks_mws_vpc_endpoint" "workspace" {
+  provider            = databricks.mws
+  account_id          = var.databricks_account_id
+  vpc_endpoint_name   = "PSC Rest API endpoint"
+  gcp_vpc_endpoint_info {
+    project_id        = var.google_project
+    psc_endpoint_name = "PSC Rest API endpoint"
+    endpoint_region   = var.subnet_region
+  }
+}
+
+resource "databricks_mws_vpc_endpoint" "relay" {
   provider            = databricks.mws
   account_id          = var.databricks_account_id
   vpc_endpoint_name   = "PSC Relay endpoint"

@@ -1,5 +1,25 @@
 # Version changelog
 
+### 1.12.0
+
+ * Added [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) resource ([#2054](https://github.com/databricks/terraform-provider-databricks/pull/2054)).
+ * Added Unity Catalog on GCP support ([#2000](https://github.com/databricks/terraform-provider-databricks/pull/2000)).
+ * Deprecate `schedule` block in [databricks_sql_query](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_query) resource ([#2078](https://github.com/databricks/terraform-provider-databricks/pull/2078)).
+ * Fixed InitScripts Type to work with GCS and ABFS in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource ([#2067](https://github.com/databricks/terraform-provider-databricks/pull/2067)).
+ * Added more testing for [databricks_tables](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/tables) data source ([#2075](https://github.com/databricks/terraform-provider-databricks/pull/2075)).
+ * Added more testing for [databricks_schemas](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/schemas) data source ([#2074](https://github.com/databricks/terraform-provider-databricks/pull/2074)).
+ * Migrated [databricks_node_type](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/node_type) data source to Go SDK ([#2070](https://github.com/databricks/terraform-provider-databricks/pull/2070)).
+ * Migrated [databricks_schemas](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/schemas) data to Go SDK ([#2065](https://github.com/databricks/terraform-provider-databricks/pull/2065)).
+ * Migrated [databricks_tables](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/tables) data source to SDK ([#2068](https://github.com/databricks/terraform-provider-databricks/pull/2068)).
+ * Migrated [databricks_views](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/views) data source to Go SDK ([#2073](https://github.com/databricks/terraform-provider-databricks/pull/2073)).
+ * Migrated [databricks_git_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/git_credential) to Go SDK ([#2069](https://github.com/databricks/terraform-provider-databricks/pull/2069)).
+ * Migrated [databricks_shares](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/shares) data source to Go SDK ([#2072](https://github.com/databricks/terraform-provider-databricks/pull/2072)).
+
+Updated dependency versions:
+
+ * Bump github.com/databricks/databricks-sdk-go from v0.3.3 to v0.4.0 ([#2086](https://github.com/databricks/terraform-provider-databricks/pull/2086)).
+ * Bump golang.org/x/mod from 0.8.0 to 0.9.0 ([#2076](https://github.com/databricks/terraform-provider-databricks/pull/2076)).
+
 ### 1.11.1
 
  * Databricks on Azure with PrivateLink - Simplified deployment ([#1977](https://github.com/databricks/terraform-provider-databricks/pull/1977)).

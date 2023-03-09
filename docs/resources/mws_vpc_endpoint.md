@@ -99,7 +99,7 @@ variable "databricks_account_id" {
 }
 variable "databricks_google_service_account" {}
 variable "google_project" {}
-variable "subnet_region"
+variable "subnet_region" {}
 
 provider "databricks" {
   alias = "mws"

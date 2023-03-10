@@ -31,7 +31,7 @@ This data source exports the following attributes:
 
 The following resources are used in the same context:
 
-* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide
+* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide.
 * [databricks_dbfs_file](dbfs_file.md) data to get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
 * [databricks_dbfs_file_paths](dbfs_file_paths.md) data to get list of file names from get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
 * [databricks_dbfs_file](../resources/dbfs_file.md) to manage relatively small files on [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).

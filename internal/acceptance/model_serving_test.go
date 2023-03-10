@@ -3,6 +3,7 @@ package acceptance
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -11,6 +12,13 @@ import (
 )
 
 func TestAccModelServing(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	switch cloudEnv {
+	case "aws", "azure":
+	default:
+		t.Skipf("not available on %s", cloudEnv)
+	}
+
 	name := fmt.Sprintf("terraform-test-model-serving-%[1]s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
 	workspaceLevel(t, step{

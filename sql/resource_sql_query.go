@@ -16,16 +16,16 @@ import (
 
 // QueryEntity defines the parameters that can be set in the resource.
 type QueryEntity struct {
-	DataSourceID string           `json:"data_source_id"`
-	Name         string           `json:"name"`
-	Description  string           `json:"description,omitempty"`
-	Query        string           `json:"query"`
+	DataSourceID string `json:"data_source_id"`
+	Name         string `json:"name"`
+	Description  string `json:"description,omitempty"`
+	Query        string `json:"query"`
 	// Deprecated: Use databricks_job resource to schedule a Query
-	Schedule     *QuerySchedule   `json:"schedule,omitempty"`
-	Tags         []string         `json:"tags,omitempty"`
-	Parameter    []QueryParameter `json:"parameter,omitempty"`
-	RunAsRole    string           `json:"run_as_role,omitempty"`
-	Parent       string           `json:"parent,omitempty" tf:"suppress_diff,force_new"`
+	Schedule  *QuerySchedule   `json:"schedule,omitempty"`
+	Tags      []string         `json:"tags,omitempty"`
+	Parameter []QueryParameter `json:"parameter,omitempty"`
+	RunAsRole string           `json:"run_as_role,omitempty"`
+	Parent    string           `json:"parent,omitempty" tf:"suppress_diff,force_new"`
 }
 
 // QuerySchedule ...

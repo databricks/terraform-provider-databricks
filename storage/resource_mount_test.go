@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -29,17 +30,16 @@ var sparkVersionsResponse = clusters.SparkVersionsList{
 	},
 }
 
-var nodeListResponse = clusters.NodeTypeList{
-	NodeTypes: []clusters.NodeType{
+var nodeListResponse = clustersApi.ListNodeTypesResponse{
+	NodeTypes: []clustersApi.NodeType{
 		{
-			NodeTypeID:     "Standard_F4s",
-			InstanceTypeID: "Standard_F4s",
-			MemoryMB:       8192,
+			NodeTypeId:     "Standard_F4s",
+			InstanceTypeId: "Standard_F4s",
+			MemoryMb:       8192,
 			NumCores:       4,
-			NodeInstanceType: &clusters.NodeInstanceType{
+			NodeInstanceType: &clustersApi.NodeInstanceType{
 				LocalDisks:      1,
-				LocalDiskSizeGB: 16,
-				LocalNVMeDisks:  0,
+				LocalDiskSizeGb: 16,
 			},
 		},
 	},

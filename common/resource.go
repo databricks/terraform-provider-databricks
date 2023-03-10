@@ -212,7 +212,9 @@ func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.
 // Deprecated: migrate to WorkspaceData
 func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) *schema.Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
-	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
+	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		return m
+	})
 	return &schema.Resource{
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {
@@ -255,7 +257,14 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
 	var dummy T
-	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
+	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		// `id` attribute must be marked as computed, otherwise it's not set!
+		if v, ok := m["id"]; ok {
+			v.Computed = true
+			v.Required = false
+		}
+		return m
+	})
 	return &schema.Resource{
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {

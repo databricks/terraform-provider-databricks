@@ -1,0 +1,30 @@
+{
+  "access_control_list": [
+    {
+      "all_permissions": [
+        {
+          "inherited": true,
+          "inherited_from_object": [
+            "/directories/"
+          ],
+          "permission_level": "CAN_MANAGE"
+        }
+      ],
+      "user_name": "user@domain.com"
+    },
+    {
+      "all_permissions": [
+        {
+          "inherited": true,
+          "inherited_from_object": [
+            "/directories/"
+          ],
+          "Permission_level": "CAN_MANAGE"
+        }
+      ],
+      "group_name": "admins"
+    }
+  ],
+  "object_id": "/4451965692354143/4451965692354143",
+  "object_type": "directory"
+}

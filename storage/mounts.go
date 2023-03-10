@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -142,7 +143,7 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 				LongTermSupport: true,
 			}),
 		NodeTypeID: clustersAPI.GetSmallestNodeType(
-			clusters.NodeTypeRequest{
+			clustersApi.NodeTypeRequest{
 				LocalDisk: true,
 			}),
 		AutoterminationMinutes: 10,

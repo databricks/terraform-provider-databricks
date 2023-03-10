@@ -36,7 +36,7 @@ func TestImportContextFindSkips(t *testing.T) {
 		Resource:  "a",
 		Attribute: "b",
 		Name:      "c",
-	}, "x", "")
+	}, "x", reference{})
 	assert.Nil(t, traversal)
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -197,18 +198,17 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/list-node-types",
-		Response: clusters.NodeTypeList{
-			NodeTypes: []clusters.NodeType{
+		Response: clustersApi.ListNodeTypesResponse{
+			NodeTypes: []clustersApi.NodeType{
 				{
-					NodeTypeID:     "Standard_F4s",
-					InstanceTypeID: "Standard_F4s",
-					MemoryMB:       8192,
+					NodeTypeId:     "Standard_F4s",
+					InstanceTypeId: "Standard_F4s",
+					MemoryMb:       8192,
 					NumCores:       4,
-					NodeInstanceType: &clusters.NodeInstanceType{
+					NodeInstanceType: &clustersApi.NodeInstanceType{
 						LocalDisks:      1,
-						InstanceTypeID:  "Standard_F4s",
-						LocalDiskSizeGB: 16,
-						LocalNVMeDisks:  0,
+						InstanceTypeId:  "Standard_F4s",
+						LocalDiskSizeGb: 16,
 					},
 				},
 			},

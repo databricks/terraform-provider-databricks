@@ -157,7 +157,7 @@ func TestResourceNetworkCreate_GCPPsc(t *testing.T) {
 			subnet_region = "region_a"
 			pod_ip_range_name = "pods"
 			service_ip_range_name = "svc"
-        }
+		}
         vpc_endpoints {
         	rest_api = ["rest_api_endpoint"]
         	dataplane_relay = ["dataplane_relay_endpoint"]

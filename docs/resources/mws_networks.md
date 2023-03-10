@@ -98,7 +98,7 @@ resource "databricks_mws_networks" "this" {
     dataplane_relay = [databricks_mws_vpc_endpoint.relay.vpc_endpoint_id]
     rest_api        = [databricks_mws_vpc_endpoint.workspace.vpc_endpoint_id]
   }
-  depends_on = [vpc_endpoint.workspace, vpc_endpoint.relay]
+  depends_on = [aws_vpc_endpoint.workspace, aws_vpc_endpoint.relay]
 }
 ```
 
@@ -153,8 +153,8 @@ resource "databricks_mws_networks" "this" {
   gcp_network_info {
     network_project_id    = var.google_project
     vpc_id                = google_compute_network.dbx_private_vpc.name
-    subnet_id             = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
-    subnet_region         = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
+    subnet_id             = google_compute_subnetwork.network_with_private_secondary_ip_ranges.name
+    subnet_region         = google_compute_subnetwork.network_with_private_secondary_ip_ranges.region
     pod_ip_range_name     = "pods"
     service_ip_range_name = "svc"
   }
@@ -170,8 +170,8 @@ resource "databricks_mws_networks" "this" {
   gcp_network_info {
     network_project_id    = var.google_project
     vpc_id                = google_compute_network.dbx_private_vpc.name
-    subnet_id             = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
-    subnet_region         = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
+    subnet_id             = google_compute_subnetwork.network_with_private_secondary_ip_ranges.name
+    subnet_region         = google_compute_subnetwork.network_with_private_secondary_ip_ranges.region
     pod_ip_range_name     = "pods"
     service_ip_range_name = "svc"
   }
@@ -179,7 +179,6 @@ resource "databricks_mws_networks" "this" {
     dataplane_relay = [databricks_mws_vpc_endpoint.relay.vpc_endpoint_id]
     rest_api        = [databricks_mws_vpc_endpoint.workspace.vpc_endpoint_id]
   }
-  depends_on = [vpc_endpoint.workspace, vpc_endpoint.relay]
 }
 ```
 
@@ -230,6 +229,6 @@ The following resources are used in the same context:
 * [Provisioning Databricks on AWS with PrivateLink](../guides/aws-private-link-workspace.md) guide.
 * [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
 * [Provisioning Databricks on GCP](../guides/gcp-workspace.md) guide.
-* [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) to register [vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) resources with Databricks such that they can be used as part of a [databricks_mws_networks](mws_networks.md) configuration.
+* [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) to register [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) resources with Databricks such that they can be used as part of a [databricks_mws_networks](mws_networks.md) configuration.
 * [databricks_mws_private_access_settings](mws_private_access_settings.md) to create a Private Access Setting that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or [GCP Private Service Connect] (https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html).
 * [databricks_mws_workspaces](mws_workspaces.md) to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1).

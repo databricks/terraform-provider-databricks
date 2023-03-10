@@ -61,17 +61,22 @@ type MatchType string
 const (
 	// MatchExact is to specify that whole value should match
 	MatchExact = "exact"
+	// MatchDefault - same meaning as MatchExact
+	MatchDefault = ""
 	// MatchPrefix is to specify that prefix of value should match
 	MatchPrefix = "prefix"
+	// MatchRegexp is to specify that the group extracted from value should match
+	MatchRegexp = "regexp"
 )
 
 type reference struct {
 	Path      string
 	Resource  string
 	Match     string
-	MatchType MatchType // type of match, `prefix` - reference is embedded into string, `` (or `exact`) - full match
+	MatchType MatchType // type of match, `prefix` - reference is embedded into string, `` (or `exact`) - full match, ...
 	Variable  bool
 	File      bool
+	Regexp    *regexp.Regexp // regular expression must define a group that will be used to extract value to match
 }
 
 func (r reference) MatchAttribute() string {

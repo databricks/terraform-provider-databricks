@@ -16,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -66,6 +67,7 @@ type importContext struct {
 	testEmits         map[string]bool
 	sqlDatasources    map[string]string
 	workspaceConfKeys map[string]any
+	allDirectories    []workspace.ObjectStatus
 
 	includeUserDomains  bool
 	importAllUsers      bool
@@ -132,9 +134,9 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
-		allUsers:  []scim.User{},
-		variables: map[string]string{},
-
+		allUsers:          []scim.User{},
+		variables:         map[string]string{},
+		allDirectories:    []workspace.ObjectStatus{},
 		workspaceConfKeys: workspaceConfKeys,
 	}
 }
@@ -300,10 +302,23 @@ func (ic *importContext) MatchesName(n string) bool {
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
-func (ic *importContext) Find(r *resource, pick string, matchType MatchType) (string, hcl.Traversal) {
+func (ic *importContext) Find(r *resource, pick string, ref reference) (string, hcl.Traversal) {
 	for _, sr := range ic.State.Resources {
 		if sr.Type != r.Resource {
 			continue
+		}
+		// optimize performance by avoiding doing regexp matching multiple times
+		matchValue := ""
+		if ref.MatchType == MatchRegexp {
+			if ref.Regexp == nil {
+				log.Printf("[WARN] you must provide regular expression for 'regexp' match type")
+				continue
+			}
+			res := ref.Regexp.FindStringSubmatch(r.Value)
+			if len(res) < 2 {
+				log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, r.Value)
+			}
+			matchValue = res[1]
 		}
 		for _, i := range sr.Instances {
 			v := i.Attributes[r.Attribute]
@@ -314,13 +329,15 @@ func (ic *importContext) Find(r *resource, pick string, matchType MatchType) (st
 			}
 			strValue := v.(string)
 			matched := false
-			switch matchType {
-			case MatchExact:
+			switch ref.MatchType {
+			case MatchExact, MatchDefault:
 				matched = (strValue == r.Value)
 			case MatchPrefix:
 				matched = strings.HasPrefix(r.Value, strValue)
+			case MatchRegexp:
+				matched = (matchValue == strValue)
 			default:
-				log.Printf("[WARN] Unsupported match type: %s", matchType)
+				log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 			}
 			if !matched {
 				continue
@@ -511,13 +528,13 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 		Resource:  ref.Resource,
 		Attribute: attr,
 		Value:     value,
-	}, attr, matchType)
+	}, attr, ref)
 	// at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
 	if traversal == nil {
 		return nil
 	}
 	switch matchType {
-	case MatchExact:
+	case MatchExact, MatchDefault:
 		return hclwrite.TokensForTraversal(traversal)
 	case MatchPrefix:
 		rest := value[len(attrValue):]
@@ -527,6 +544,19 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(rest)})
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
 		return tokens
+	case MatchRegexp:
+		indices := ref.Regexp.FindStringSubmatchIndex(value)
+		if len(indices) == 4 {
+			tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}}}
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(value[0:indices[2]])})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'$', '{'}})
+			tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(value[indices[3]:])})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
+			return tokens
+		}
+		log.Printf("[WARN] Can't match found data in '%s'. Indices: %v", value, indices)
 	default:
 		log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 	}

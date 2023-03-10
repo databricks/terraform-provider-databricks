@@ -1442,6 +1442,38 @@ func TestImportingSqlObjects(t *testing.T) {
 			emptyGlobalSQLConfig,
 			{
 				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2F",
+				Response: workspace.ObjectList{
+					Objects: []workspace.ObjectStatus{
+						{
+							Path:       "/Shared",
+							ObjectID:   4451965692354143,
+							ObjectType: workspace.Directory,
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2FShared",
+				Response: workspace.ObjectList{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FShared",
+				Response: workspace.ObjectStatus{
+					Path:       "/Shared",
+					ObjectID:   4451965692354143,
+					ObjectType: workspace.Directory,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/directories/4451965692354143",
+				Response: getJSONObject("test-data/get-directory-permissions.json"),
+			},
+			{
+				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",
 				Response: map[string]any{},
 			},
@@ -1512,8 +1544,8 @@ func TestImportingSqlObjects(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.listing = "sql-dashboards,sql-queries,sql-endpoints,access"
-			ic.services = "sql-dashboards,sql-queries,sql-endpoints,access"
+			ic.listing = "sql-dashboards,sql-queries,sql-endpoints"
+			ic.services = "sql-dashboards,sql-queries,sql-endpoints,access,notebooks"
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -1525,6 +1557,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
+			emptyWorkspace,
 			emptyIpAccessLIst,
 			{
 				Method:   "GET",

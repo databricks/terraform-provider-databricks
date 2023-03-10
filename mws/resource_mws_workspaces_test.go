@@ -167,9 +167,9 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 							"project_id": "def",
 						},
 					},
-					"location":   "bcd",
+					"location":                   "bcd",
 					"private_access_settings_id": "pas_id_a",
-					"network_id": "net_id_a",
+					"network_id":                 "net_id_a",
 					"gke_config": map[string]any{
 						"master_ip_range":   "e",
 						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",

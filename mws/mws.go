@@ -74,11 +74,11 @@ type Network struct {
 
 // GcpVpcEndpointInfo is the objecy that configures GCP Private Service Connect endpoints.
 type GcpVpcEndpointInfo struct {
-        PscConnectionId     string `json:"psc_connection_id,omitempty" tf:"computed"`
-        ProjectId           string `json:"project_id"`
-        PscEndpointName     string `json:"psc_endpoint_name"`
-        EndpointRegion      string `json:"endpoint_region"`
-        ServiceAttachmentId string `json:"service_attachment_id,omitempty" tf:"computed"`
+	PscConnectionId     string `json:"psc_connection_id,omitempty" tf:"computed"`
+	ProjectId           string `json:"project_id"`
+	PscEndpointName     string `json:"psc_endpoint_name"`
+	EndpointRegion      string `json:"endpoint_region"`
+	ServiceAttachmentId string `json:"service_attachment_id,omitempty" tf:"computed"`
 }
 
 // VPCEndpoint is the object that contains all the information for registering an VPC endpoint
@@ -92,7 +92,7 @@ type VPCEndpoint struct {
 	UseCase                 string              `json:"use_case,omitempty" tf:"computed"`
 	Region                  string              `json:"region,omitempty"`
 	State                   string              `json:"state,omitempty" tf:"computed"`
-        GcpVpcEndpointInfo      *GcpVpcEndpointInfo `json:"gcp_vpc_endpoint_info,omitempty"` 
+	GcpVpcEndpointInfo      *GcpVpcEndpointInfo `json:"gcp_vpc_endpoint_info,omitempty"`
 }
 
 // PrivateAccessSettings (PAS) is the object that contains all the information for creating an PrivateAccessSettings (PAS)

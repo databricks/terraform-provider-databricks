@@ -55,7 +55,7 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 }
 
 func TestResourceVPCEndpointCreate_GCP(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -74,8 +74,8 @@ func TestResourceVPCEndpointCreate_GCP(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/vpc-endpoints/ve_id",
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/abc/vpc-endpoints/ve_id",
 				ReuseRequest: true,
 				Response: VPCEndpoint{
 					AccountID:       "abc",
@@ -101,9 +101,7 @@ func TestResourceVPCEndpointCreate_GCP(t *testing.T) {
         }
 		`,
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/ve_id", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceVPCEndpointCreate_ConflictErrors(t *testing.T) {

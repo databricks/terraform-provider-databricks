@@ -122,6 +122,9 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	if w.NetworkID != "" {
 		workspaceCreationRequest["network_id"] = w.NetworkID
 	}
+	if w.PrivateAccessSettingsID != "" {
+		workspaceCreationRequest["private_access_settings_id"] = w.PrivateAccessSettingsID
+	}
 	if w.GkeConfig != nil {
 		workspaceCreationRequest["gke_config"] = w.GkeConfig
 	}

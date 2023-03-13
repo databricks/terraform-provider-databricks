@@ -54,7 +54,7 @@ func TestResourceNetworkCreate(t *testing.T) {
 }
 
 func TestResourceNetworkCreate_GCP(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -102,13 +102,11 @@ func TestResourceNetworkCreate_GCP(t *testing.T) {
         }
 		`,
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/nid", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceNetworkCreate_GCPPsc(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -164,9 +162,7 @@ func TestResourceNetworkCreate_GCPPsc(t *testing.T) {
         }
 		`,
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/nid", d.Id())
+	}.ApplyNoError(t)
 }
 
 func TestResourceNetworkCreate_ConflictErrors(t *testing.T) {

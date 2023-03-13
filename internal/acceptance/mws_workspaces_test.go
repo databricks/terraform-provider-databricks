@@ -118,11 +118,11 @@ func TestMwsAccGcpPscWorkspaces(t *testing.T) {
 			network_name = "{env.TEST_PREFIX}-network-{var.RANDOM}"
 			gcp_network_info {
 				network_project_id = "{env.GOOGLE_PROJECT}"
-				vpc_id = "{env.TEST_VPC_ID}"
-				subnet_id = "{env.TEST_SUBNET_ID}"
+				vpc_id = "{env.VPC_NETWORK_ID}"
+				subnet_id = "{env.SUBNET_ID}"
 				subnet_region = "{env.GOOGLE_REGION}"
-				pod_ip_range_name = "pods_psc"
-				service_ip_range_name = "svc_psc"
+				pod_ip_range_name = "{env.POD_IP_RANGE_NAME}"
+				service_ip_range_name = "{env.SVC_IP_RANGE_NAME}"
 			}
 		}
 

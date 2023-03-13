@@ -92,6 +92,7 @@ func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) erro
 		block.SetAttributeRaw("client_secret_key", ic.variable(
 			"client_secret_key"+varName,
 			"Key in secret scope that stores app client secret"+textStr))
+		block.SetAttributeValue("initialize_file_system", cty.BoolVal(false))
 	} else if res := adlsGen1Regex.FindStringSubmatch(mount.URL); res != nil {
 		block := b.AppendNewBlock("adl", nil).Body()
 		storageResourceName := res[2]

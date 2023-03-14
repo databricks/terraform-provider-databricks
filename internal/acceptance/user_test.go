@@ -27,7 +27,7 @@ func TestAccForceUserImport(t *testing.T) {
 			}
 			ctx := context.Background()
 			// cleanup of this user will be handled by terraform
-			logger.Infof("Creating conflicting user")
+			logger.Infof(ctx, "Creating conflicting user")
 			_, err = w.Users.Create(ctx, scim.User{
 				Active:     true,
 				UserName:   username,

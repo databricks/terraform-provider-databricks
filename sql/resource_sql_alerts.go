@@ -13,7 +13,7 @@ type AlertOptions struct {
 	Column        string `json:"column"`
 	Op            string `json:"op"`
 	Value         string `json:"value"`
-	Muted         bool   `json:"muted,omitempty" tf:"suppress_diff"`
+	Muted         bool   `json:"muted,omitempty"`
 	CustomBody    string `json:"custom_body,omitempty"`
 	CustomSubject string `json:"custom_subject,omitempty"`
 }

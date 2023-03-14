@@ -1,5 +1,21 @@
 # Version changelog
 
+## 1.13.0
+
+ * Added [databricks_sql_alert](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_alert) resource ([#2047](https://github.com/databricks/terraform-provider-databricks/pull/2047)).
+ * Added experimental GCP support for more resources ([#2088](https://github.com/databricks/terraform-provider-databricks/pull/2088), [#2091](https://github.com/databricks/terraform-provider-databricks/pull/2091), [#2090](https://github.com/databricks/terraform-provider-databricks/pull/2090), [#2089](https://github.com/databricks/terraform-provider-databricks/pull/2089), [#2080](https://github.com/databricks/terraform-provider-databricks/pull/2080)).
+ * Added suppress diff to `default_data_access_config_id` in [databricks_metastore](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/metastore) ([#2111](https://github.com/databricks/terraform-provider-databricks/pull/2111)).
+ * Export `initialize_file_system` for ADLS Gen2 mounts ([#2107](https://github.com/databricks/terraform-provider-databricks/pull/2107)).
+ * Enforce formatting on pull requests ([#2099](https://github.com/databricks/terraform-provider-databricks/pull/2099)).
+ * Added `MatchRegexp` match type for partial matches ([#2102](https://github.com/databricks/terraform-provider-databricks/pull/2102)).
+ * Skip model serving integration test on GCP ([#2098](https://github.com/databricks/terraform-provider-databricks/pull/2098)).
+ * More doc fixes ([#2108](https://github.com/databricks/terraform-provider-databricks/pull/2108), [#2106](https://github.com/databricks/terraform-provider-databricks/pull/2106)).
+
+Updated dependency versions:
+
+ * Bump github.com/databricks/databricks-sdk-go from 0.4.0 to 0.5.0 ([#2096](https://github.com/databricks/terraform-provider-databricks/pull/2096), [#2112](https://github.com/databricks/terraform-provider-databricks/pull/2112)).
+ * Bump github.com/hashicorp/hcl/v2 from 2.16.1 to 2.16.2 ([#2097](https://github.com/databricks/terraform-provider-databricks/pull/2097)).
+
 ### 1.12.0
 
  * Added [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) resource ([#2054](https://github.com/databricks/terraform-provider-databricks/pull/2054)).

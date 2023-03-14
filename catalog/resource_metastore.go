@@ -22,7 +22,7 @@ func NewMetastoresAPI(ctx context.Context, m any) MetastoresAPI {
 type MetastoreInfo struct {
 	Name                                        string  `json:"name"`
 	StorageRoot                                 string  `json:"storage_root" tf:"force_new"`
-	DefaultDacID                                string  `json:"default_data_access_config_id,omitempty"`
+	DefaultDacID                                string  `json:"default_data_access_config_id,omitempty" tf:"suppress_diff"`
 	Owner                                       string  `json:"owner,omitempty" tf:"computed"`
 	MetastoreID                                 string  `json:"metastore_id,omitempty" tf:"computed"`
 	WorkspaceIDs                                []int64 `json:"workspace_ids,omitempty" tf:"computed"`

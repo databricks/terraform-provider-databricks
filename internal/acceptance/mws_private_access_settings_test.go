@@ -18,6 +18,7 @@ func TestMwsAccPrivateAccessSettings(t *testing.T) {
 }
 
 func TestMwsGcpAccPrivateAccessSettings(t *testing.T) {
+	t.Skipf("skipping until feature is disabled")
 	accountLevel(t, step{
 		Template: `
 		resource "databricks_mws_private_access_settings" "this" {

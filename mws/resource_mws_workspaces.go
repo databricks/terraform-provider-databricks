@@ -560,9 +560,11 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				workspace.CustomerManagedKeyID = ""
 			}
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
-			if err != nil {
-				return err
+			if d.HasChangeExcept("token") {
+				err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return err
+				}
 			}
 			return UpdateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},

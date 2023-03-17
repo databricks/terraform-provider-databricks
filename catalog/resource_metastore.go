@@ -39,8 +39,8 @@ type MetastoreInfo struct {
 	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
 
-type Metastores struct {
-	Metastores []unitycatalog.MetastoreInfo `json:"metastores"`
+type MetastoresData struct {
+	Metastores []unitycatalog.MetastoreInfo `json:"metastores,omitempty" tf:"computed"`
 }
 
 type CreateMetastore struct {

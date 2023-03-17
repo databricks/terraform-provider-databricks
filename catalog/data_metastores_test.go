@@ -13,7 +13,7 @@ func TestMetastoresData(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/metastores",
-				Response: Metastores{
+				Response: MetastoresData{
 					Metastores: []unitycatalog.MetastoreInfo{
 						{
 							Name:                      "a",
@@ -49,7 +49,7 @@ func TestMetastoresDataContainsName(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/metastores",
-				Response: Metastores{
+				Response: MetastoresData{
 					Metastores: []unitycatalog.MetastoreInfo{
 						{
 							Name:                      "a",

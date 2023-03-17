@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource directory can be imported using directory path
+The resource directory can be imported using directory path:
 
 ```bash
 $ terraform import databricks_directory.this /path/to/directory

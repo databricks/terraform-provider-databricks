@@ -2,6 +2,8 @@ package acceptance
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -25,7 +27,7 @@ func TestAccForceUserImport(t *testing.T) {
 			}
 			ctx := context.Background()
 			// cleanup of this user will be handled by terraform
-			logger.Infof("Creating conflicting user")
+			logger.Infof(ctx, "Creating conflicting user")
 			_, err = w.Users.Create(ctx, scim.User{
 				Active:     true,
 				UserName:   username,
@@ -41,6 +43,81 @@ func TestAccForceUserImport(t *testing.T) {
 			user_name = "` + username + `"
 			force     = true
 		}`,
+	})
+}
+
+func TestAccUserHomeDeleteHasNoEffectInAccount(t *testing.T) {
+	username := qa.RandomEmail()
+	accountLevel(t, step{
+		Template: `
+		resource "databricks_user" "first" {
+			user_name = "` + username + `"
+			force_delete_home_dir = true
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_user" "second" {
+			user_name = "{var.RANDOM}@example.com"
+		}`,
+	})
+}
+
+func TestAccUserHomeDelete(t *testing.T) {
+	username := qa.RandomEmail()
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_user" "first" {
+			user_name = "` + username + `"
+			force_delete_home_dir = true
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_user" "second" {
+			user_name = "{var.RANDOM}@example.com"
+		}`,
+		Check: func(s *terraform.State) error {
+			w, err := databricks.NewWorkspaceClient()
+			if err != nil {
+				return err
+			}
+			ctx := context.Background()
+			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", username))
+			if err != nil {
+				targetErr := fmt.Sprintf("Path (/Users/%v) doesn't exist", username)
+				if strings.Contains(err.Error(), targetErr) {
+					return nil
+				}
+				return err
+			}
+			return nil
+		},
+	})
+}
+
+func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
+	username := qa.RandomEmail()
+	workspaceLevel(t, step{
+		Template: `
+			resource "databricks_user" "a" {
+				user_name = "` + username + `"
+			}`,
+		Check: func(s *terraform.State) error {
+			return nil
+		},
+	}, step{
+		Template: `
+			resource "databricks_user" "b" {
+				user_name = "{var.RANDOM}@example.com"
+			}`,
+		Check: func(s *terraform.State) error {
+			w, err := databricks.NewWorkspaceClient()
+			if err != nil {
+				return err
+			}
+			ctx := context.Background()
+			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", username))
+			return err
+		},
 	})
 }
 

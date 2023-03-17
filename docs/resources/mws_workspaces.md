@@ -257,6 +257,8 @@ output "databricks_token" {
 }
 ```
 
+In order to create a [Databricks Workspace that leverages GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) please ensure that you have read and understood the [Enable Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) documentation and then customise the example above with the relevant examples from [mws_vpc_endpoint](mws_vpc_endpoint.md), [mws_private_access_settings](mws_private_access_settings.md) and [mws_networks](mws_networks.md).
+
 #### Creating a Databricks on GCP workspace with Databricks-Managed VPC
 
 ![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
@@ -302,24 +304,25 @@ output "databricks_token" {
 
 ## Argument Reference
 
--> **Note** All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id` on a running workspace.
+-> **Note** All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id`, `private_access_settings_id` on a running workspace.
 
-The following arguments are available and cannot be changed after workspace is created:
+The following arguments are available:
 
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
-* `workspace_name` - name of the workspace, will appear on UI
+* `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).
-* `aws_region` - (AWS only) region of VPC
-* `storage_configuration_id` - (AWS only)`storage_configuration_id` from [storage configuration](mws_storage_configurations.md)
+* `aws_region` - (AWS only) region of VPC.
+* `storage_configuration_id` - (AWS only)`storage_configuration_id` from [storage configuration](mws_storage_configurations.md).
 * `managed_services_customer_managed_key_id` - (Optional, AWS only) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
-* `location` - (GCP only) region of the subnet
+* `location` - (GCP only) region of the subnet.
 * `cloud_resource_container` - (GCP only) A block that specifies GCP workspace configurations, consisting of following blocks:
   * `gcp` - A block that consists of the following field:
     * `project_id` - The Google Cloud project ID, which the workspace uses to instantiate cloud resources for your workspace.
-* `gke_config` - A block that specifies GKE configuration for the Databricks workspace:
-  * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`
+* `gke_config` - (GCP only) A block that specifies GKE configuration for the Databricks workspace:
+  * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`.
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
+* `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
 
 ## token block
 
@@ -379,8 +382,10 @@ The following resources are used in the same context:
 * [Provisioning Databricks on AWS with PrivateLink](../guides/aws-private-link-workspace.md) guide.
 * [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
 * [Provisioning Databricks on GCP](../guides/gcp-workspace.md) guide.
+* [Provisioning Databricks workspaces on GCP with Private Service Connect](../guides/gcp-private-service-connect-workspace.md) guide.
 * [databricks_mws_credentials](mws_credentials.md) to configure the cross-account role for creation of new workspaces within AWS.
 * [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) to configure KMS keys for new workspaces within AWS.
 * [databricks_mws_log_delivery](mws_log_delivery.md) to configure delivery of [billable usage logs](https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html) and [audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html).
 * [databricks_mws_networks](mws_networks.md) to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS.
 * [databricks_mws_storage_configurations](mws_storage_configurations.md) to configure root bucket new workspaces within AWS.
+* [databricks_mws_private_access_settings](mws_private_access_settings.md) to create a [Private Access Setting](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html#step-5-create-a-private-access-settings-configuration-using-the-databricks-account-api) that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html).

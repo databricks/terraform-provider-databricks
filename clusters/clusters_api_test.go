@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -52,30 +53,30 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 			Method:       "GET",
 			ReuseRequest: true,
 			Resource:     "/api/2.0/clusters/list-node-types",
-			Response: NodeTypeList{
-				[]NodeType{
+			Response: clusters.ListNodeTypesResponse{
+				[]clusters.NodeType{
 					{
-						NodeTypeID:     "Standard_F4s",
-						InstanceTypeID: "Standard_F4s",
-						MemoryMB:       8192,
+						NodeTypeId:     "Standard_F4s",
+						InstanceTypeId: "Standard_F4s",
+						MemoryMb:       8192,
 						NumCores:       4,
-						NodeInstanceType: &NodeInstanceType{
+						NodeInstanceType: &clusters.NodeInstanceType{
 							LocalDisks:      1,
-							InstanceTypeID:  "Standard_F4s",
-							LocalDiskSizeGB: 16,
-							LocalNVMeDisks:  0,
+							InstanceTypeId:  "Standard_F4s",
+							LocalDiskSizeGb: 16,
+							LocalNvmeDisks:  0,
 						},
 					},
 					{
-						NodeTypeID:     "Standard_L80s_v2",
-						InstanceTypeID: "Standard_L80s_v2",
-						MemoryMB:       655360,
+						NodeTypeId:     "Standard_L80s_v2",
+						InstanceTypeId: "Standard_L80s_v2",
+						MemoryMb:       655360,
 						NumCores:       80,
-						NodeInstanceType: &NodeInstanceType{
+						NodeInstanceType: &clusters.NodeInstanceType{
 							LocalDisks:      2,
-							InstanceTypeID:  "Standard_L80s_v2",
-							LocalDiskSizeGB: 160,
-							LocalNVMeDisks:  1,
+							InstanceTypeId:  "Standard_L80s_v2",
+							LocalDiskSizeGb: 160,
+							LocalNvmeDisks:  1,
 						},
 					},
 				},
@@ -497,6 +498,55 @@ func TestStartAndGetInfo_Pending(t *testing.T) {
 	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
+}
+
+func TestStartAndGetInfo_InitScript(t *testing.T) {
+	TestInitScripts := []InitScriptStorageInfo{
+		{
+			Dbfs: &DbfsStorageInfo{
+				Destination: "dbfs:/my_init_script.sh",
+			},
+		},
+		{
+			Gcs: &GcsStorageInfo{
+				Destination: "gs://my_bucket/my_init_script.sh",
+			},
+		},
+		{
+			S3: &S3StorageInfo{
+				Destination: "s3://my_bucket/my_init_script.sh",
+			},
+		},
+		{
+			Abfss: &AbfssStorageInfo{
+				Destination: "abfss://my_bucket/my_init_script.sh",
+			},
+		},
+		{
+			File: &LocalFileInfo{
+				Destination: "/my_init_script.sh",
+			},
+		},
+	}
+
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Response: ClusterInfo{
+				State:       ClusterStateRunning,
+				ClusterID:   "abc",
+				InitScripts: TestInitScripts,
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	clusterInfo, err := NewClustersAPI(ctx, client).StartAndGetInfo("abc")
+	require.NoError(t, err)
+	assert.Equal(t, TestInitScripts, clusterInfo.InitScripts)
 }
 
 func TestStartAndGetInfo_Terminating(t *testing.T) {
@@ -1077,58 +1127,6 @@ func TestGetLatestSparkVersion(t *testing.T) {
 	_, err = versions.LatestSparkVersion(SparkVersionRequest{Scala: "2.12", SparkVersion: "3.10"})
 	require.Error(t, err)
 	require.Equal(t, true, strings.Contains(err.Error(), "query returned no results"))
-}
-
-func TestListNodeTypes(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:       "GET",
-			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/list-node-types",
-			Response: NodeTypeList{
-				[]NodeType{
-					{
-						NodeTypeID:     "Standard_F4s",
-						InstanceTypeID: "Standard_F4s",
-						MemoryMB:       8192,
-						NumCores:       4,
-						NodeInstanceType: &NodeInstanceType{
-							LocalDisks:      1,
-							InstanceTypeID:  "Standard_F4s",
-							LocalDiskSizeGB: 16,
-							LocalNVMeDisks:  0,
-						},
-					},
-					{
-						NodeTypeID:     "Standard_L80s_v2",
-						InstanceTypeID: "Standard_L80s_v2",
-						MemoryMB:       655360,
-						NumCores:       80,
-						NodeInstanceType: &NodeInstanceType{
-							LocalDisks:      2,
-							InstanceTypeID:  "Standard_L80s_v2",
-							LocalDiskSizeGB: 160,
-							LocalNVMeDisks:  1,
-						},
-					},
-				},
-			},
-		},
-	})
-	defer server.Close()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	api := NewClustersAPI(ctx, client)
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{SupportPortForwarding: true}), api.defaultSmallestNodeType())
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{PhotonWorkerCapable: true}), api.defaultSmallestNodeType())
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{PhotonDriverCapable: true}), api.defaultSmallestNodeType())
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{IsIOCacheEnabled: true}), api.defaultSmallestNodeType())
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{Category: "Storage Optimized"}), api.defaultSmallestNodeType())
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{MinMemoryGB: 100500}), api.defaultSmallestNodeType())
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{GBPerCore: 100500}), api.defaultSmallestNodeType())
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{MinCores: 100500}), api.defaultSmallestNodeType())
-	assert.Equal(t, api.GetSmallestNodeType(NodeTypeRequest{LocalDisk: true}), "Standard_F4s")
 }
 
 func TestClusterState_CanReach(t *testing.T) {

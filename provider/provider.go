@@ -30,6 +30,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
+	"github.com/databricks/terraform-provider-databricks/serving"
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/tokens"
@@ -110,6 +111,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mlflow_experiment":           mlflow.ResourceMlflowExperiment(),
 			"databricks_mlflow_model":                mlflow.ResourceMlflowModel(),
 			"databricks_mlflow_webhook":              mlflow.ResourceMlflowWebhook(),
+			"databricks_model_serving":               serving.ResourceModelServing(),
 			"databricks_mount":                       storage.ResourceMount(),
 			"databricks_mws_customer_managed_keys":   mws.ResourceMwsCustomerManagedKeys(),
 			"databricks_mws_credentials":             mws.ResourceMwsCredentials(),
@@ -141,6 +143,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_sql_global_config":           sql.ResourceSqlGlobalConfig(),
 			"databricks_sql_permissions":             access.ResourceSqlPermissions(),
 			"databricks_sql_query":                   sql.ResourceSqlQuery(),
+			"databricks_sql_alert":                   sql.ResourceSqlAlert(),
 			"databricks_sql_visualization":           sql.ResourceSqlVisualization(),
 			"databricks_sql_widget":                  sql.ResourceSqlWidget(),
 			"databricks_storage_credential":          catalog.ResourceStorageCredential(),

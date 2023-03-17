@@ -17,7 +17,9 @@
   },
   "latest_query_data_id": "e39090e8-6cc0-4a6d-b989-6c7dc75a7a8f",
   "name": "Jobs per day per status last 30 days",
+  "parent": "folders/4451965692354143",
   "options": {
+    "parent": "folders/4451965692354143",
     "apply_auto_limit": true,
     "parameters": []
   },

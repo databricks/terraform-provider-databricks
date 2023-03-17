@@ -20,7 +20,7 @@ type Resource struct {
 	Read           func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Update         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
 	Delete         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	CustomizeDiff  func(ctx context.Context, d *schema.ResourceDiff, c any) error
+	CustomizeDiff  func(ctx context.Context, d *schema.ResourceDiff) error
 	StateUpgraders []schema.StateUpgrader
 	Schema         map[string]*schema.Schema
 	SchemaVersion  int
@@ -50,6 +50,32 @@ func recoverable(cb func(
 			}
 		}()
 		err = cb(ctx, d, c)
+		return
+	}
+}
+
+func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
+	if r.CustomizeDiff == nil {
+		return nil
+	}
+	return func(ctx context.Context, rd *schema.ResourceDiff, _ any) (err error) {
+		defer func() {
+			// this is deliberate decision to convert a panic into error,
+			// so that any unforeseen bug would we visible to end-user
+			// as an error and not a provider crash, which is way less
+			// of pleasant experience.
+			if panic := recover(); panic != nil {
+				err = nicerError(ctx, fmt.Errorf("panic: %v", panic),
+					"customize diff for")
+			}
+		}()
+		// we don't propagate instance of SDK client to the diff function, because
+		// authentication is not deterministic at this stage with the recent Terraform
+		// versions. Diff customization must be limited to hermetic checks only anyway.
+		err = r.CustomizeDiff(ctx, rd)
+		if err != nil {
+			err = nicerError(ctx, err, "customize diff for")
+		}
 		return
 	}
 }
@@ -117,7 +143,7 @@ func (r Resource) ToResource() *schema.Resource {
 		Schema:         r.Schema,
 		SchemaVersion:  r.SchemaVersion,
 		StateUpgraders: r.StateUpgraders,
-		CustomizeDiff:  r.CustomizeDiff,
+		CustomizeDiff:  r.saferCustomizeDiff(),
 		CreateContext: func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
 			c := m.(*DatabricksClient)
@@ -186,7 +212,9 @@ func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.
 // Deprecated: migrate to WorkspaceData
 func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) *schema.Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
-	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
+	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		return m
+	})
 	return &schema.Resource{
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {
@@ -229,7 +257,14 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
 	var dummy T
-	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
+	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		// `id` attribute must be marked as computed, otherwise it's not set!
+		if v, ok := m["id"]; ok {
+			v.Computed = true
+			v.Required = false
+		}
+		return m
+	})
 	return &schema.Resource{
 		Schema: s,
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {

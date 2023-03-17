@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/unitycatalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -13,21 +14,21 @@ func TestMetastoresData(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/metastores",
 				Response: Metastores{
-					Metastores: []MetastoreInfo{
+					Metastores: []unitycatalog.MetastoreInfo{
 						{
-							Name:              "a",
-							StorageRoot:       "",
-							DefaultDacID:      "sth",
-							Owner:             "John.Doe@example.com",
-							MetastoreID:       "abc",
-							Region:            "",
-							Cloud:             "",
-							GlobalMetastoreId: "",
-							CreatedAt:         0,
-							CreatedBy:         "",
-							UpdatedAt:         0,
-							UpdatedBy:         "",
-							DeltaSharingScope: "",
+							Name:                      "a",
+							StorageRoot:               "",
+							DefaultDataAccessConfigId: "sth",
+							Owner:                     "John.Doe@example.com",
+							MetastoreId:               "abc",
+							Region:                    "",
+							Cloud:                     "",
+							GlobalMetastoreId:         "",
+							CreatedAt:                 0,
+							CreatedBy:                 "",
+							UpdatedAt:                 0,
+							UpdatedBy:                 "",
+							DeltaSharingScope:         "",
 							DeltaSharingRecipientTokenLifetimeInSeconds: 0,
 							DeltaSharingOrganizationName:                "",
 						},
@@ -49,20 +50,20 @@ func TestMetastoresDataContainsName(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/metastores",
 				Response: Metastores{
-					Metastores: []MetastoreInfo{
+					Metastores: []unitycatalog.MetastoreInfo{
 						{
-							Name:         "a",
-							StorageRoot:  "abc",
-							DefaultDacID: "sth",
-							Owner:        "John.Doe@example.com",
-							MetastoreID:  "abc",
+							Name:                      "a",
+							StorageRoot:               "abc",
+							DefaultDataAccessConfigId: "sth",
+							Owner:                     "John.Doe@example.com",
+							MetastoreId:               "abc",
 						},
 						{
-							Name:         "b",
-							StorageRoot:  "dcw",
-							DefaultDacID: "sth",
-							Owner:        "John.Doe@example.com",
-							MetastoreID:  "ded",
+							Name:                      "b",
+							StorageRoot:               "dcw",
+							DefaultDataAccessConfigId: "sth",
+							Owner:                     "John.Doe@example.com",
+							MetastoreId:               "ded",
 						},
 					},
 				},

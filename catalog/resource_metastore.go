@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/service/unitycatalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,7 +40,7 @@ type MetastoreInfo struct {
 }
 
 type Metastores struct {
-	Metastores []MetastoreInfo `json:"metastores"`
+	Metastores []unitycatalog.MetastoreInfo `json:"metastores"`
 }
 
 type CreateMetastore struct {

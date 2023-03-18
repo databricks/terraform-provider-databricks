@@ -153,6 +153,10 @@ type JobTaskSettings struct {
 	Description string           `json:"description,omitempty"`
 	DependsOn   []TaskDependency `json:"depends_on,omitempty"`
 
+	// BEGIN Jobs + RunIf preview
+	RunIf string `json:"run_if,omitempty"`
+	// END Jobs + RunIf preview
+
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	JobClusterKey          string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`

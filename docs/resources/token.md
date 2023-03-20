@@ -34,7 +34,7 @@ A token can be automatically rotated by taking a dependency on the `time_rotatin
 
 ```hcl
 resource "time_rotating" "this" {
-  rotation_months = 30
+  rotation_days = 30
 }
 
 resource "databricks_token" "pat" {

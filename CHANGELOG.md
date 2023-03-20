@@ -616,7 +616,7 @@ Updated dependency versions:
 
 * Added `workspace_url` attribute to the `databricks_current_user` data source ([#1107](https://github.com/databricks/terraform-provider-databricks/pull/1107)).
 * Fixed issue at `databricks_mount` where new cluster was created for S3 mount even when `cluster_id` was specified ([#1064](https://github.com/databricks/terraform-provider-databricks/issues/1064)).
-* Allow to disable auto-termination for Databricks SQL endpoints ([#900](https://github.com/databricks/terraform-provider-databricks/pull/900)).
+* Allow to disable auto-termination for Databricks SQL warehouses ([#900](https://github.com/databricks/terraform-provider-databricks/pull/900)).
 * Added new `gcp_attributes` to `databricks_cluster` and `databricks_instance_pool` ([#1126](https://github.com/databricks/terraform-provider-databricks/pull/1126)).
 * Added exporter functionality for `databricks_ip_access_list` and `databricks_workspace_conf` ([#1125](https://github.com/databricks/terraform-provider-databricks/pull/1125)).
 * Added `graviton` selector for `databricks_node_type` and `databricks_spark_version` data sources ([#1127](https://github.com/databricks/terraform-provider-databricks/pull/1127)).
@@ -778,7 +778,7 @@ Updated dependency versions:
 
 ## 0.3.11
 
-* Added `databricks_sql_global_config` resource to provide global configuration for SQL Endpoints ([#855](https://github.com/databricks/terraform-provider-databricks/issues/855))
+* Added `databricks_sql_global_config` resource to provide global configuration for SQL warehouses ([#855](https://github.com/databricks/terraform-provider-databricks/issues/855))
 * Added `databricks_mount` resource to mount arbitrary cloud storage ([#497](https://github.com/databricks/terraform-provider-databricks/issues/497))
 * Improved implementation of `databricks_repo` by creating the parent folder structure ([#895](https://github.com/databricks/terraform-provider-databricks/pull/895))
 * Fixed `databricks_job` error related [to randomized job IDs](https://docs.databricks.com/release-notes/product/2021/august.html#jobs-service-stability-and-scalability-improvements) ([#901](https://github.com/databricks/terraform-provider-databricks/issues/901))

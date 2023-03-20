@@ -527,9 +527,9 @@ resource "databricks_permissions" "token_usage" {
 }
 ```
 
-## SQL Endpoint Usage
+## SQL warehouse usage
 
-[SQL endpoints](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have two possible permissions: `CAN_USE` and `CAN_MANAGE`:
+[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have two possible permissions: `CAN_USE` and `CAN_MANAGE`:
 
 ```hcl
 data "databricks_current_user" "me" {}
@@ -693,7 +693,7 @@ Exactly one of the following arguments is required:
 - `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
 - `registered_model_id` - [MLflow registered model](mlflow_model.md) id
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
-- `sql_endpoint_id` - [SQL endpoint](sql_endpoint.md) id
+- `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id
 - `sql_query_id` - [SQL query](sql_query.md) id
 - `sql_alert_id` - [SQL alert](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) id

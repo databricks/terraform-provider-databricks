@@ -30,6 +30,22 @@ output "databricks_token" {
 }
 ```
 
+A token can be automatically rotated by taking a dependency on the `time_rotating` resource:
+
+```hcl
+resource "time_rotating" "this" {
+  rotation_months = 30
+}
+
+resource "databricks_token" "pat" {
+  comment = "Terraform (created: ${time_rotating.this.rfc3339})"
+
+  # Token is valid for 60 days but is rotated after 30 days.
+  # Run `terraform apply` within 60 days to refresh before it expires.
+  lifetime_seconds = 60 * 24 * 60 * 60
+}
+```
+
 ## Argument Reference
 
 The following arguments are available:

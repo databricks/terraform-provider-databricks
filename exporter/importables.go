@@ -1235,7 +1235,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       sqlEndpointID,
 				})
 			} else {
-				log.Printf("[WARN] Can't find SQL endpoint for data source '%s'", query.DataSourceID)
+				log.Printf("[WARN] Can't find SQL warehouse for data source '%s'", query.DataSourceID)
 			}
 			// emit queries specified as parameters
 			for _, p := range query.Parameter {
@@ -1294,7 +1294,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_sql_endpoint",
 					ID:       q.ID,
 				})
-				log.Printf("[INFO] Imported %d of %d SQL endpoints", i+1, len(endpointsList.Endpoints))
+				log.Printf("[INFO] Imported %d of %d SQL warehouses", i+1, len(endpointsList.Endpoints))
 			}
 			return nil
 		},
@@ -1426,7 +1426,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						})
 						sqlEndpointID, err := ic.getSqlEndpoint(query.DataSourceID)
 						if err != nil {
-							log.Printf("[WARN] Can't find SQL endpoint for data source id %s", query.DataSourceID)
+							log.Printf("[WARN] Can't find SQL warehouse for data source id %s", query.DataSourceID)
 						} else {
 							ic.Emit(&resource{
 								Resource: "databricks_sql_endpoint",

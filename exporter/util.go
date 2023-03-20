@@ -306,7 +306,7 @@ func (ic *importContext) getSqlEndpoint(dataSourceId string) (string, error) {
 	}
 	endpointID, ok := sources[dataSourceId]
 	if !ok {
-		return "", fmt.Errorf("can't find data source for SQL endpoint %s", dataSourceId)
+		return "", fmt.Errorf("can't find data source for SQL warehouse %s", dataSourceId)
 	}
 	return endpointID, nil
 }

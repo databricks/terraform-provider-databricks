@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// ClusterSizes for SQL endpoints
+// ClusterSizes for SQL warehouses
 var (
 	ClusterSizes   = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"}
 	MaxNumClusters = 30
@@ -50,7 +50,7 @@ type ReleaseChannel struct {
 	Name string `json:"name,omitempty" tf:"default:CHANNEL_NAME_CURRENT"`
 }
 
-// OdbcParams hold information required to submit SQL commands to the SQL endpoint using ODBC.
+// OdbcParams hold information required to submit SQL commands to the SQL warehouse using ODBC.
 type OdbcParams struct {
 	Hostname string `json:"hostname,omitempty"`
 	Path     string `json:"path"`
@@ -98,7 +98,7 @@ type SQLEndpointsAPI struct {
 	context context.Context
 }
 
-// List all SQL endpoints
+// List all SQL warehouses
 func (a SQLEndpointsAPI) List() (lst EndpointList, err error) {
 	err = a.client.Get(a.context, "/sql/warehouses", nil, &lst)
 	return

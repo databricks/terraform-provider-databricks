@@ -27,6 +27,7 @@ type GlobalConfig struct {
 	SecurityPolicy          string            `json:"security_policy,omitempty" tf:"default:DATA_ACCESS_CONTROL"`
 	DataAccessConfig        map[string]string `json:"data_access_config,omitempty"`
 	InstanceProfileARN      string            `json:"instance_profile_arn,omitempty"`
+	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"default:false"`
 	SqlConfigParams         map[string]string `json:"sql_config_params,omitempty"`
 }
 
@@ -35,6 +36,7 @@ type GlobalConfigForRead struct {
 	SecurityPolicy             string                     `json:"security_policy"`
 	DataAccessConfig           []confPair                 `json:"data_access_config"`
 	InstanceProfileARN         string                     `json:"instance_profile_arn,omitempty"`
+	EnableServerlessCompute    bool                       `json:"enable_serverless_compute"`
 	SqlConfigurationParameters *repeatedEndpointConfPairs `json:"sql_configuration_parameters,omitempty"`
 }
 
@@ -50,6 +52,7 @@ type globalConfigAPI struct {
 func (a globalConfigAPI) Set(gc GlobalConfig) error {
 	data := map[string]any{
 		"security_policy":           gc.SecurityPolicy,
+		"enable_serverless_compute": gc.EnableServerlessCompute,
 	}
 	if a.client.Config.Host == "" {
 		err := a.client.Config.EnsureResolved()
@@ -89,6 +92,7 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 	}
 	gc.InstanceProfileARN = gcr.InstanceProfileARN
 	gc.SecurityPolicy = gcr.SecurityPolicy
+	gc.EnableServerlessCompute = gcr.EnableServerlessCompute
 	gc.DataAccessConfig = make(map[string]string, len(gcr.DataAccessConfig))
 	for _, v := range gcr.DataAccessConfig {
 		gc.DataAccessConfig[v.Key] = v.Value

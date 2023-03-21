@@ -17,6 +17,7 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: map[string]any{
 					"data_access_config":        []any{},
+					"enable_serverless_compute": false,
 					"security_policy":           "DATA_ACCESS_CONTROL",
 				},
 			},
@@ -47,6 +48,7 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: map[string]any{
 					"data_access_config":        []any{},
+					"enable_serverless_compute": false,
 					"security_policy":           "DATA_ACCESS_CONTROL",
 				},
 			},
@@ -79,6 +81,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 				ExpectedRequest: GlobalConfigForRead{
 					DataAccessConfig:           []confPair{{Key: "spark.sql.session.timeZone", Value: "UTC"}},
 					SqlConfigurationParameters: &repeatedEndpointConfPairs{ConfigPairs: []confPair{{Key: "ANSI_MODE", Value: "true"}}},
+					EnableServerlessCompute:    false,
 					SecurityPolicy:             "PASSTHROUGH",
 					InstanceProfileARN:         "arn:...",
 				},

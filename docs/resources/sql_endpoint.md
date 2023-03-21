@@ -36,7 +36,7 @@ The following arguments are supported:
 * `tags` - Databricks tags all endpoint resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`. This field is optional. Default is `COST_OPTIMIZED`.
 * `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine). This field is optional and is enabled by default.
-* `enable_serverless_compute` - Whether this SQL warehouse is a Serverless endpoint. To use a Serverless SQL warehouse, you must enable Serverless SQL warehouses for the workspace.
+* `enable_serverless_compute` - Whether this SQL warehouse is a serverless endpoint. To use a serverless SQL warehouse, you may need to enable serverless SQL warehouses for the account.
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 * `warehouse_type` - [SQL Warehouse Type](https://docs.databricks.com/sql/admin/sql-endpoints.html#switch-the-sql-warehouse-type-pro-classic-or-serverless): `PRO` or `CLASSIC` (default).  If Serverless SQL is enabled, you can only specify `PRO`.

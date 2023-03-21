@@ -7,7 +7,7 @@ subcategory: "Databricks SQL"
 
 Retrieves information about a [databricks_sql_warehouse](../resources/sql_warehouse.md) using its id. This could be retrieved programmatically using [databricks_sql_warehouses](../data-sources/sql_warehouses.md) data source.
 
-## Example Usage
+## Example usage
 
 Retrieve attributes of each SQL warehouses in a workspace
 
@@ -22,11 +22,11 @@ data "databricks_sql_warehouse" "all" {
 
 ```
 
-## Argument Reference
+## Argument reference
 
 * `id` - (Required) The ID of the SQL warehouse
 
-## Attribute Reference
+## Attribute reference
 
 This data source exports the following attributes:
 
@@ -45,7 +45,7 @@ This data source exports the following attributes:
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
 * `data_source_id` - ID of the data source for this warehouse. This is used to bind an Databricks SQL query to an warehouse.
 
-## Related Resources
+## Related resources
 
 The following resources are often used in the same context:
 

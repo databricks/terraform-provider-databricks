@@ -24,7 +24,7 @@ resource "databricks_sql_endpoint" "this" {
 }
 ```
 
-## Argument Reference
+## Argument reference
 
 The following arguments are supported:
 
@@ -41,7 +41,7 @@ The following arguments are supported:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 * `warehouse_type` - [SQL Warehouse Type](https://docs.databricks.com/sql/admin/sql-endpoints.html#switch-the-sql-warehouse-type-pro-classic-or-serverless): `PRO` or `CLASSIC` (default).  If Serverless SQL is enabled, you can only specify `PRO`.
  
-## Attribute Reference
+## Attribute reference
 
 In addition to all arguments above, the following attributes are exported:
 
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
 * `data_source_id` - ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.
 
-## Access Control
+## Access control
 
 * [databricks_permissions](permissions.md#Job-Endpoint-usage) can control which groups or individual users can *Can Use* or *Can Manage* SQL warehouses.
 * `databricks_sql_access` on [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
@@ -72,7 +72,7 @@ You can import a `databricks_sql_endpoint` resource with ID like the following:
 $ terraform import databricks_sql_endpoint.this <endpoint-id>
 ```
 
-## Related Resources
+## Related resources
 
 The following resources are often used in the same context:
 

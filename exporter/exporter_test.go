@@ -1760,7 +1760,6 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/sql/config/warehouses",
 				Response: sql.GlobalConfigForRead{
-					EnableServerlessCompute: true,
 					InstanceProfileARN:      "arn:...",
 				},
 			},

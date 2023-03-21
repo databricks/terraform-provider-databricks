@@ -38,11 +38,12 @@ This data source exports the following attributes:
 * `tags` - Databricks tags all warehouse resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`.
 * `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine).
-* `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse. 
+* `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse. If this value is true explicitly or through the default, you **must** also set `warehouse_type` field to `pro`.
 
     - **For AWS**: To use serverless SQL warehouses, if your account was created before October 1, 2021, your organization's owner or account administrator must [accept applicable terms of use](https://docs.databricks.com/sql/admin/serverless.html#accept-terms) before workspaces are enabled for serverless compute. A workspace must meet the [requirements](https://docs.databricks.com/sql/admin/serverless.html#requirements) and might require an update its instance profile role to [add a trust relationship](https://docs.databricks.com/sql/admin/serverless.html#aws-instance-profile-setup). 
 
-    - **For Azure**, you must [enable your workspace for serverless SQL warehouse](https://learn.microsoft.com/azure/databricks/sql/admin/serverless). 
+    - **For Azure**, you must [enable your workspace for serverless SQL warehouse](https://learn.microsoft.com/azure/databricks/sql/admin/serverless).
+* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/index.html#warehouse-types) or [Azure](https://learn.microsoft.com/azure/databricks/sql/#warehouse-types). Set to `PRO` or `CLASSIC` (default).  If you want to use serverless compute, you must set to `PRO` and **also** set the field `enable_serverless_compute` to `true`.
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 * `jdbc_url` - JDBC connection string.

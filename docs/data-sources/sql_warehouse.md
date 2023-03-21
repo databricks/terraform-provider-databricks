@@ -24,7 +24,7 @@ data "databricks_sql_warehouse" "all" {
 
 ## Argument Reference
 
-* `id` - (Required) The id of the SQL warehouse
+* `id` - (Required) The ID of the SQL warehouse
 
 ## Attribute Reference
 
@@ -38,7 +38,7 @@ This data source exports the following attributes:
 * `tags` - Databricks tags all warehouse resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`.
 * `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine).
-* `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse. To use a serverless SQL warehouse, you must enable serverless SQL warehouses for the workspace.
+* `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse. To use a serverless SQL warehouse, you may need to enable serverless SQL warehouses for the account.
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 * `jdbc_url` - JDBC connection string.

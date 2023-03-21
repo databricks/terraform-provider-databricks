@@ -778,7 +778,7 @@ Updated dependency versions:
 
 ## 0.3.11
 
-* Added `databricks_sql_global_config` resource to provide global configuration for SQL warehouses ([#855](https://github.com/databricks/terraform-provider-databricks/issues/855))
+* Added `databricks_sql_global_config` resource to provide global configuration for SQL Endpoints ([#855](https://github.com/databricks/terraform-provider-databricks/issues/855))
 * Added `databricks_mount` resource to mount arbitrary cloud storage ([#497](https://github.com/databricks/terraform-provider-databricks/issues/497))
 * Improved implementation of `databricks_repo` by creating the parent folder structure ([#895](https://github.com/databricks/terraform-provider-databricks/pull/895))
 * Fixed `databricks_job` error related [to randomized job IDs](https://docs.databricks.com/release-notes/product/2021/august.html#jobs-service-stability-and-scalability-improvements) ([#901](https://github.com/databricks/terraform-provider-databricks/issues/901))

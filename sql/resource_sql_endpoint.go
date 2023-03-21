@@ -194,6 +194,8 @@ func (a SQLEndpointsAPI) Delete(endpointID string) error {
 func ResourceSqlEndpoint() *schema.Resource {
 	s := common.StructToSchema(SQLEndpoint{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["enable_serverless_compute"].Deprecated = "This field is intended as an internal API " +
+			"and may be removed from the Databricks Terraform provider in the future"
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(

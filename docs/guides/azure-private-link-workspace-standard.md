@@ -4,9 +4,10 @@ page_title: "Provisioning Databricks on Azure with Private Link - Standard deplo
 
 # Deploying pre-requisite resources and enabling Private Link connections - Standard deployment
 
--> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
-
--> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
+-> **Note** 
+  - Refer to [adb-with-private-link-standard](https://github.com/databricks/terraform-databricks-examples/tree/main/modules/adb-with-private-link-standard), a Terraform module that contains code used to deploy an Azure Databricks workspace with Azure Private Link using the Standard deployment approach. 
+  - Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for more Terraform modules and examples to deploy Azure Databricks resources.
+  - This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
 
 Databricks Private Link support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. 
 
@@ -30,10 +31,10 @@ This guide covers a [standard deployment](https://learn.microsoft.com/en-us/azur
 
 This guide uses the following variables:
 
-- `cidr_transit`: The CIDR for the Azure transit VNet
-- `cidr_app`: The CIDR for the Azure Data Plane VNet
+- `cidr_transit`: The network range (CIDR) for the Azure transit VNet
+- `cidr_dp`: The network range (CIDR) for the Azure Data Plane VNet
 - `rg_transit`: The name of the existing resource group that will contain the Azure transit VNet and the private DNS zone for the Frontend and the Web auth private endpoint
-- `rg_app`: The name of the existing resource group that will contain the Azure Data Plane VNet and the private DNS zone for the Backend private endpoint
+- `rg_dp`: The name of the existing resource group that will contain the Azure Data Plane VNet and the private DNS zone for the Backend private endpoint
 - `location`: The location for Azure resources
 
 This guide is provided as-is and you can use it as the basis for your custom Terraform module.
@@ -43,7 +44,7 @@ To get started with Azure Private Link integration, this guide takes you through
 - Initialize the required providers
 - Configure Azure objects
   - Deploy two Azure VNets with the following subnets:
-    - Public and private subnets for Azure Databricks workspace in the Data Plane VNet
+    - Public and private subnets for each Azure Databricks workspace in the Data Plane VNet
     - Private Link subnet, in the Data Plane VNet, that will contain the Backend private endpoint 
     - Private Link subnet, in the Transit VNet, that will contain the following private endpoints:
       - Frontend private endpoint
@@ -60,9 +61,6 @@ Initialize provider
 ```hcl
 terraform {
   required_providers {
-    databricks = {
-      source = "databricks/databricks"
-    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = ">=3.43.0"
@@ -82,7 +80,7 @@ variable "cidr_transit" {
   type    = string
 }
 
-variable "cidr_app" {
+variable "cidr_dp" {
   type    = string
 }
 
@@ -90,7 +88,7 @@ variable "rg_transit" {
   type    = string
 }
 
-variable "rg_app" {
+variable "rg_dp" {
   type    = string
 }
 
@@ -334,15 +332,15 @@ resource "azurerm_private_endpoint" "front_pe" {
 resource "azurerm_virtual_network" "app_vnet" {
   name                = "${local.prefix}-app-vnet"
   location            = var.location
-  resource_group_name = var.rg_app
-  address_space       = [local.cidr_app]
+  resource_group_name = var.rg_dp
+  address_space       = [local.cidr_dp]
   tags                = local.tags
 }
 
 resource "azurerm_network_security_group" "app_sg" {
   name                = "${local.prefix}-app-nsg"
   location            = var.location
-  resource_group_name = var.rg_app
+  resource_group_name = var.rg_dp
   tags                = local.tags
 }
 
@@ -356,7 +354,7 @@ resource "azurerm_network_security_rule" "app_aad" {
   destination_port_range      = "443"
   source_address_prefix       = "VirtualNetwork"
   destination_address_prefix  = "AzureActiveDirectory"
-  resource_group_name         = var.rg_app
+  resource_group_name         = var.rg_dp
   network_security_group_name = azurerm_network_security_group.app_sg.name
 }
 
@@ -370,7 +368,7 @@ resource "azurerm_network_security_rule" "app_azfrontdoor" {
   destination_port_range      = "443"
   source_address_prefix       = "VirtualNetwork"
   destination_address_prefix  = "AzureFrontDoor.Frontend"
-  resource_group_name         = var.rg_app
+  resource_group_name         = var.rg_dp
   network_security_group_name = azurerm_network_security_group.app_sg.name
 }
 ```
@@ -380,12 +378,12 @@ resource "azurerm_network_security_rule" "app_azfrontdoor" {
 ```hcl
 resource "azurerm_private_dns_zone" "dnsdpcp" {
   name                = "privatelink.azuredatabricks.net"
-  resource_group_name = var.rg_app
+  resource_group_name = var.rg_dp
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "uiapidnszonevnetlink" {
   name                  = "dpcpvnetconnection"
-  resource_group_name   = var.rg_app
+  resource_group_name   = var.rg_dp
   private_dns_zone_name = azurerm_private_dns_zone.dnsdpcp.name
   virtual_network_id    = azurerm_virtual_network.app_vnet.id 
 }
@@ -396,9 +394,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "uiapidnszonevnetlink" 
 ```hcl
 resource "azurerm_subnet" "app_public" {
   name                 = "${local.prefix}-app-public"
-  resource_group_name  = var.rg_app
+  resource_group_name  = var.rg_dp
   virtual_network_name = azurerm_virtual_network.app_vnet.name
-  address_prefixes     = [cidrsubnet(local.cidr_app, 6, 0)]
+  address_prefixes     = [cidrsubnet(local.cidr_dp, 6, 0)]
 
   delegation {
     name = "databricks"
@@ -423,9 +421,9 @@ variable "private_subnet_endpoints" {
 
 resource "azurerm_subnet" "app_private" {
   name                 = "${local.prefix}-app-private"
-  resource_group_name  = var.rg_app
+  resource_group_name  = var.rg_dp
   virtual_network_name = azurerm_virtual_network.app_vnet.name
-  address_prefixes     = [cidrsubnet(local.cidr_app, 6, 1)]
+  address_prefixes     = [cidrsubnet(local.cidr_dp, 6, 1)]
 
   enforce_private_link_endpoint_network_policies = true
   enforce_private_link_service_network_policies  = true
@@ -454,15 +452,15 @@ resource "azurerm_subnet_network_security_group_association" "app_private" {
 resource "azurerm_subnet" "app_plsubnet" {
   provider                                       = azurerm.app
   name                                           = "${local.prefix}-app-privatelink"
-  resource_group_name                            = var.rg_app
+  resource_group_name                            = var.rg_dp
   virtual_network_name                           = azurerm_virtual_network.app_vnet.name
-  address_prefixes                               = [cidrsubnet(local.cidr_app, 6, 2)]
+  address_prefixes                               = [cidrsubnet(local.cidr_dp, 6, 2)]
   enforce_private_link_endpoint_network_policies = true 
 }
 
 resource "azurerm_databricks_workspace" "app_workspace" {
   name                                  = "${local.prefix}-app-workspace"
-  resource_group_name                   = var.rg_app
+  resource_group_name                   = var.rg_dp
   location                              = var.location
   sku                                   = "premium"
   tags                                  = local.tags
@@ -491,7 +489,7 @@ resource "azurerm_databricks_workspace" "app_workspace" {
 ```hcl
 resource "azurerm_private_endpoint" "app_dpcp" {
   name                = "dpcppvtendpoint"
- resource_group_name  = var.rg_app
+ resource_group_name  = var.rg_dp
   location            = var.location
   subnet_id           = azurerm_subnet.app_plsubnet.id
 

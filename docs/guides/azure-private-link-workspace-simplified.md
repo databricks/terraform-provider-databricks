@@ -12,7 +12,6 @@ Databricks Private Link support enables private connectivity between users and t
 
 You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically, using a programmatic approach. 
 
-
 This guide covers a [simple deployment](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/private-link-simplified) to configure Azure Databricks with Private Link:
 * No separate VNet separates user access from the VNet that you use for your compute resources in the Classic data plane
 * A transit subnet in the data plane VNet is used for user access

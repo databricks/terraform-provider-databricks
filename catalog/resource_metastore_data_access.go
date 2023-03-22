@@ -37,6 +37,10 @@ type GcpServiceAccountKey struct {
 	PrivateKey   string `json:"private_key" tf:"sensitive"`
 }
 
+type DbGcpServiceAccount struct {
+	Email string `json:"email,omitempty" tf:"computed"`
+}
+
 type DataAccessConfiguration struct {
 	ID                string                 `json:"id,omitempty" tf:"computed"`
 	Name              string                 `json:"name"`
@@ -45,9 +49,10 @@ type DataAccessConfiguration struct {
 	Azure             *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
 	AzMI              *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
 	GcpSAKey          *GcpServiceAccountKey  `json:"gcp_service_account_key,omitempty" tf:"group:access"`
+	DBGcpSA           *DbGcpServiceAccount   `json:"databricks_gcp_service_account,omitempty" tf:"group:access"`
 }
 
-var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity", "gcp_service_account_key"}
+var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity", "gcp_service_account_key", "databricks_gcp_service_account"}
 
 func (a DataAccessConfigurationsAPI) Create(metastoreID string, dac *DataAccessConfiguration) error {
 	path := fmt.Sprintf("/unity-catalog/metastores/%s/data-access-configurations", metastoreID)
@@ -88,6 +93,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			m["azure_service_principal"].AtLeastOneOf = alofCred
 			m["azure_managed_identity"].AtLeastOneOf = alofCred
 			m["gcp_service_account_key"].AtLeastOneOf = alofCred
+			m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
 
 			// suppress changes for private_key
 			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff

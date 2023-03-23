@@ -45,7 +45,7 @@ func TestResourceJobCreate(t *testing.T) {
 					MinRetryIntervalMillis: 5000,
 					RetryOnTimeout:         true,
 					MaxConcurrentRuns:      1,
-					Queue: &Queue{},
+					Queue:                  &Queue{},
 				},
 				Response: Job{
 					JobID: 789,

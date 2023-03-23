@@ -185,6 +185,9 @@ type ContinuousConf struct {
 	PauseStatus string `json:"pause_status,omitempty" tf:"computed"`
 }
 
+type Queue struct {
+}
+
 // JobSettings contains the information for configuring a job on databricks
 type JobSettings struct {
 	Name string `json:"name,omitempty" tf:"default:Untitled"`
@@ -222,6 +225,7 @@ type JobSettings struct {
 	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
 	Tags                 map[string]string     `json:"tags,omitempty"`
+	Queue                *Queue                `json:"queue,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {

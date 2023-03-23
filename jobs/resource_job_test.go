@@ -45,6 +45,7 @@ func TestResourceJobCreate(t *testing.T) {
 					MinRetryIntervalMillis: 5000,
 					RetryOnTimeout:         true,
 					MaxConcurrentRuns:      1,
+					Queue: &Queue{},
 				},
 				Response: Job{
 					JobID: 789,
@@ -78,6 +79,7 @@ func TestResourceJobCreate(t *testing.T) {
 							TimezoneID:           "America/Los_Angeles",
 							PauseStatus:          "PAUSED",
 						},
+						Queue: &Queue{},
 					},
 				},
 			},
@@ -103,7 +105,8 @@ func TestResourceJobCreate(t *testing.T) {
 		}
 		library {
 			jar = "dbfs://ff/gg/hh.jar"
-		}`,
+		}
+		queue {}`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())

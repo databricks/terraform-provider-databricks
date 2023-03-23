@@ -4,8 +4,3 @@
 ## Tests
 <!-- How is this tested? -->
 
-## Public Tickets
-<!--
-Link to public tickets (if any). Please don't mention internal tickets. 
--->
-N/A

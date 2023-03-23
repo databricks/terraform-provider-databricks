@@ -40,24 +40,24 @@ resource "databricks_share" "some" {
     history_data_sharing_status = "ENABLED"
     partition {
       value {
-        name                   = "year"
-        op                     = "EQUAL"
-        value                  = "2009"
+        name  = "year"
+        op    = "EQUAL"
+        value = "2009"
       }
       value {
-        name                   = "month"
-        op                     = "EQUAL"
-        value                  = "12"
+        name  = "month"
+        op    = "EQUAL"
+        value = "12"
       }
-    }  
+    }
     partition {
       value {
-        name                   = "year"
-        op                     = "EQUAL"
-        value                  = "2010"
+        name  = "year"
+        op    = "EQUAL"
+        value = "2010"
       }
-    }        
-  } 
+    }
+  }
 }
 ```
 

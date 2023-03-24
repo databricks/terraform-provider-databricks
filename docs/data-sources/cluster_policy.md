@@ -34,5 +34,5 @@ Data source allows you to pick a cluster policy by the following attribute
 Data source exposes the following attributes:
 
 - `id` - The id of the cluster policy.
-* `definition` - Policy definition: JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition).
-
+- `definition` - Policy definition: JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition).
+- `max_clusters_per_user` - Max number of clusters per user that can be active using this policy

@@ -129,9 +129,9 @@ provider "databricks" {
 }
 
 resource "databricks_mws_vpc_endpoint" "workspace" {
-  provider            = databricks.mws
-  account_id          = var.databricks_account_id
-  vpc_endpoint_name   = "PSC Rest API endpoint"
+  provider          = databricks.mws
+  account_id        = var.databricks_account_id
+  vpc_endpoint_name = "PSC Rest API endpoint"
   gcp_vpc_endpoint_info {
     project_id        = var.google_project
     psc_endpoint_name = "PSC Rest API endpoint"
@@ -140,9 +140,9 @@ resource "databricks_mws_vpc_endpoint" "workspace" {
 }
 
 resource "databricks_mws_vpc_endpoint" "relay" {
-  provider            = databricks.mws
-  account_id          = var.databricks_account_id
-  vpc_endpoint_name   = "PSC Relay endpoint"
+  provider          = databricks.mws
+  account_id        = var.databricks_account_id
+  vpc_endpoint_name = "PSC Relay endpoint"
   gcp_vpc_endpoint_info {
     project_id        = var.google_project
     psc_endpoint_name = "PSC Relay endpoint"
@@ -155,10 +155,10 @@ Typically the next steps after this would be to create a [databricks_mws_private
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
-  provider                   = databricks.mws
-  account_id                 = var.databricks_account_id
-  workspace_name             = "gcp workspace"
-  location                   = var.subnet_region
+  provider       = databricks.mws
+  account_id     = var.databricks_account_id
+  workspace_name = "gcp workspace"
+  location       = var.subnet_region
   cloud_resource_container {
     gcp {
       project_id = var.google_project

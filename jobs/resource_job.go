@@ -188,6 +188,17 @@ type ContinuousConf struct {
 type Queue struct {
 }
 
+type FileArrival struct {
+	URL                           string `json:"url"`
+	MinTimeBetweenTriggersSeconds int32  `json:"min_time_between_trigger_seconds,omitempty"`
+	WaitAfterLastChangeSeconds    int32  `json:"wait_after_last_change_seconds,omitempty"`
+}
+
+type Trigger struct {
+	FileArrival *FileArrival `json:"file_arrival"`
+	PauseStatus string       `json:"pause_status,omitempty" tf:"computed"`
+}
+
 // JobSettings contains the information for configuring a job on databricks
 type JobSettings struct {
 	Name string `json:"name,omitempty" tf:"default:Untitled"`
@@ -221,6 +232,7 @@ type JobSettings struct {
 
 	Schedule             *CronSchedule         `json:"schedule,omitempty"`
 	Continuous           *ContinuousConf       `json:"continuous,omitempty"`
+	Trigger              *Trigger              `json:"trigger,omitempty"`
 	MaxConcurrentRuns    int32                 `json:"max_concurrent_runs,omitempty"`
 	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
@@ -582,8 +594,9 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			Default:  false,
 			Type:     schema.TypeBool,
 		}
-		s["schedule"].ConflictsWith = []string{"continuous"}
-		s["continuous"].ConflictsWith = []string{"schedule"}
+		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
+		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
+		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
 		return s
 	})
 

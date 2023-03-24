@@ -31,6 +31,7 @@ type NotebookTask struct {
 // SparkPythonTask contains the information for python jobs
 type SparkPythonTask struct {
 	PythonFile string   `json:"python_file"`
+	Source     string   `json:"source,omitempty" tf:"suppress_diff"`
 	Parameters []string `json:"parameters,omitempty"`
 }
 

@@ -260,7 +260,7 @@ resource "databricks_grants" "external_creds" {
 
 resource "databricks_external_location" "some" {
   name = "external"
-  url = format("abfss://%s@%s.dfs.core.windows.net/",
+  url = format("abfss://%s@%s.dfs.core.windows.net",
     azurerm_storage_container.ext_storage.name,
   azurerm_storage_account.ext_storage.name)
 

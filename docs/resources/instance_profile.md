@@ -108,8 +108,10 @@ resource "databricks_group_instance_profile" "all" {
   instance_profile_id = databricks_instance_profile.this.id
 }
 ```
+
 ## Usage with Databricks SQL serverless
-When the instance profile ARN and its associated IAM role ARN don't match and the instance profile is intended for use with Databricks SQL serverless, the `iam_role_arn` parameter can be specified
+
+When the instance profile ARN and its associated IAM role ARN don't match and the instance profile is intended for use with Databricks SQL serverless, the `iam_role_arn` parameter can be specified.
 
 ```hcl
 data "aws_iam_policy_document" "sql_serverless_assume_role" {
@@ -166,5 +168,5 @@ In addition to all arguments above, the following attributes are exported:
 The resource instance profile can be imported using the ARN of it
 
 ```bash
-$ terraform import databricks_instance_profile.this <instance-profile-arn>
+terraform import databricks_instance_profile.this <instance-profile-arn>
 ```

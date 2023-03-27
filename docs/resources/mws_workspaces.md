@@ -344,7 +344,8 @@ On AWS, the following arguments could be modified after the workspace is running
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Canonical unique identifier for the workspace.
+* `id` - (String) Canonical unique identifier for the workspace, of the format `<account-id>/<workspace-id>`
+* `workspace_id` - (String) workspace id
 * `workspace_status_message` - (String) updates on workspace status
 * `workspace_status` - (String) workspace status
 * `creation_time` - (Integer) time when workspace was created

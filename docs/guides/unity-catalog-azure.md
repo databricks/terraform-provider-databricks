@@ -168,11 +168,11 @@ resource "databricks_grants" "sandbox" {
   catalog = databricks_catalog.sandbox.name
   grant {
     principal  = "Data Scientists"
-    privileges = ["USAGE", "CREATE"]
+    privileges = ["USE_CATALOG", "CREATE"]
   }
   grant {
     principal  = "Data Engineers"
-    privileges = ["USAGE"]
+    privileges = ["USE_CATALOG"]
   }
 }
 
@@ -189,7 +189,7 @@ resource "databricks_grants" "things" {
   schema = databricks_schema.things.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["USAGE"]
+    privileges = ["USE_SCHEMA"]
   }
 }
 ```

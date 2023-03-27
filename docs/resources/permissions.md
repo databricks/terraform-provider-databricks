@@ -4,11 +4,13 @@ subcategory: "Security"
 
 # databricks_permissions Resource
 
-This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group. 
+This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
 -> **Note** Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset unless the changes are also reflected in the configuration.
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
+-> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically.
+
+-> **Note** If multiple permission levels are specified for an identity (e.g. `CAN_RESTART` and `CAN_MANAGE` for a cluster), only the highest level permission is returned and will cause permanent drift.
 
 ## Cluster usage
 
@@ -602,7 +604,6 @@ resource "databricks_permissions" "endpoint_usage" {
 
 [SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 
-
 -> **Note** If you do not define an `access_control` block granting `CAN_MANAGE` explictly for the user calling this provider, Databricks Terraform Provider will add `CAN_MANAGE` permission for the caller. This is a failsafe to prevent situations where the caller is locked out from making changes to the targeted `databricks_sql_query` resource when backend API do not apply permission inheritance correctly.
 
 ```hcl
@@ -674,9 +675,11 @@ General Permissions API does not apply to access control for tables and they hav
 Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) resource.
 
 ## Argument Reference
+
 One type argument and at least one access control block argument are required.
 
 ### Type Argument
+
 Exactly one of the following arguments is required:
 
 - `cluster_id` - [cluster](cluster.md) id
@@ -699,6 +702,7 @@ Exactly one of the following arguments is required:
 - `sql_alert_id` - [SQL alert](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) id
 
 ### Access Control Argument
+
 One or more `access_control` blocks are required to actually set the permission levels:
 
 ```hcl
@@ -710,11 +714,12 @@ access_control {
 
 Arguments for the `access_control` block are:
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically. 
+-> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically.
 
 - `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
 
 Exactly one of the below arguments is required:
+
 - `user_name` - (Optional) name of the [user](user.md).
 - `service_principal_name` - (Optional) Application ID of the [service_principal](service_principal.md#application_id).
 - `group_name` - (Optional) name of the [group](group.md). We recommend setting permissions on groups.
@@ -731,11 +736,13 @@ In addition to all arguments above, the following attributes are exported:
 The resource permissions can be imported using the object id
 
 ```bash
-$ terraform import databricks_permissions.this /<object type>/<object id>
+terraform import databricks_permissions.this /<object type>/<object id>
 ```
 
 ### Import Example
+
 Configuration file:
+
 ```hcl
 resource "databricks_mlflow_model" "model" {
   name        = "example_model"
@@ -753,6 +760,7 @@ resource "databricks_permissions" "model_usage" {
 ```
 
 Import command:
+
 ```bash
-$ terraform import databricks_permissions.model_usage /registered-models/<registered_model_id>
+terraform import databricks_permissions.model_usage /registered-models/<registered_model_id>
 ```

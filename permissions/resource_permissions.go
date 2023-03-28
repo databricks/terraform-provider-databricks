@@ -11,8 +11,6 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -179,6 +177,21 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	if strings.HasPrefix(objectID, "/sql/warehouses") {
+		warehouse, err := w.Warehouses.GetById(a.context, strings.ReplaceAll(objectID, "/sql/warehouses/", ""))
+		if err != nil {
+			return err
+		}
+		// add CAN_MANAGE permission for creator
+		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+			UserName:        warehouse.CreatorName,
+			PermissionLevel: "CAN_MANAGE",
+		})
+	}
 	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
@@ -220,8 +233,16 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			}
 		}
 	}
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return err
+	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		job, err := jobs.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 0)
+		if err != nil {
+			return err
+		}
+		job, err := w.Jobs.GetByJobId(a.context, jobId)
 		if err != nil {
 			return err
 		}
@@ -230,7 +251,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			PermissionLevel: "IS_OWNER",
 		})
 	} else if strings.HasPrefix(objectID, "/pipelines") {
-		job, err := pipelines.NewPipelinesAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/pipelines/", ""))
+		job, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
 		if err != nil {
 			return err
 		}

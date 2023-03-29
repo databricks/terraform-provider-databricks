@@ -10,8 +10,27 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/service/scim"
 	"github.com/golang-jwt/jwt/v4"
 )
+
+type CachedCurrentUserService struct {
+	client     *client.DatabricksClient
+	oldImpl    scim.CurrentUserService
+	cachedUser *scim.User
+}
+
+func (a *CachedCurrentUserService) Me(ctx context.Context) (*scim.User, error) {
+	if a.cachedUser.DisplayName != "" {
+		return a.cachedUser, nil
+	}
+	user, err := a.oldImpl.Me(ctx)
+	if err != nil {
+		return user, err
+	}
+	*a.cachedUser = *user
+	return user, err
+}
 
 // DatabricksClient holds properties needed for authentication and HTTP client setup
 // fields with `name` struct tags become Terraform provider attributes. `env` struct tag
@@ -22,10 +41,26 @@ type DatabricksClient struct {
 
 	// callback used to create API1.2 call wrapper, which simplifies unit tessting
 	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
+	cachedUser     scim.User
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
-	return databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
+	// return databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
+	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
+	if err != nil {
+		return nil, err
+	}
+	return c.withCachedCurrentUserApi(w), nil
+}
+
+func (c *DatabricksClient) withCachedCurrentUserApi(w *databricks.WorkspaceClient) *databricks.WorkspaceClient {
+	currentImpl := w.CurrentUser.Impl()
+	w.CurrentUser.WithImpl(&CachedCurrentUserService{
+		client:     c.DatabricksClient,
+		oldImpl:    currentImpl,
+		cachedUser: &c.cachedUser,
+	})
+	return w
 }
 
 // Get on path

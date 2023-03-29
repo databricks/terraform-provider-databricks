@@ -10,7 +10,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
-	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
@@ -816,19 +815,6 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/sql/warehouses/abc?",
-				Response: sql.GetWarehouseResponse{
-					Name:           "foo",
-					ClusterSize:    "Small",
-					Id:             "abc",
-					State:          "RUNNING",
-					CreatorName:    TestingAdminUser,
-					MaxNumClusters: 1,
-					NumClusters:    1,
-				},
-			},
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",

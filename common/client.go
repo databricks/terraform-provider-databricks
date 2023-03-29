@@ -15,13 +15,13 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type cachedCurrentUserService struct {
+type cachedMe struct {
 	internalImpl scim.CurrentUserService
 	cachedUser   *scim.User
 	mu           sync.Mutex
 }
 
-func (a *cachedCurrentUserService) Me(ctx context.Context) (*scim.User, error) {
+func (a *cachedMe) Me(ctx context.Context) (*scim.User, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.cachedUser != nil {
@@ -58,16 +58,12 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	if err != nil {
 		return nil, err
 	}
-	c.cachedWorkspaceClient = w
-	return c.withCachedCurrentUserApi(w), nil
-}
-
-func (c *DatabricksClient) withCachedCurrentUserApi(w *databricks.WorkspaceClient) *databricks.WorkspaceClient {
 	internalImpl := w.CurrentUser.Impl()
-	w.CurrentUser.WithImpl(&cachedCurrentUserService{
+	w.CurrentUser.WithImpl(&cachedMe{
 		internalImpl: internalImpl,
 	})
-	return w
+	c.cachedWorkspaceClient = w
+	return w, nil
 }
 
 // Get on path

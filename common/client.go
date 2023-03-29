@@ -18,20 +18,20 @@ import (
 type cachedCurrentUserService struct {
 	internalImpl scim.CurrentUserService
 	cachedUser   *scim.User
-	mu           *sync.Mutex
+	mu           sync.Mutex
 }
 
 func (a *cachedCurrentUserService) Me(ctx context.Context) (*scim.User, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.cachedUser.DisplayName != "" {
+	if a.cachedUser != nil {
 		return a.cachedUser, nil
 	}
 	user, err := a.internalImpl.Me(ctx)
 	if err != nil {
 		return user, err
 	}
-	*a.cachedUser = *user
+	a.cachedUser = user
 	return user, err
 }
 
@@ -43,16 +43,22 @@ type DatabricksClient struct {
 	*client.DatabricksClient
 
 	// callback used to create API1.2 call wrapper, which simplifies unit tessting
-	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
-	cachedUser     scim.User
-	mu             sync.Mutex
+	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
+	cachedWorkspaceClient *databricks.WorkspaceClient
+	mu                    sync.Mutex
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.cachedWorkspaceClient != nil {
+		return c.cachedWorkspaceClient, nil
+	}
 	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
 	if err != nil {
 		return nil, err
 	}
+	c.cachedWorkspaceClient = w
 	return c.withCachedCurrentUserApi(w), nil
 }
 
@@ -60,8 +66,6 @@ func (c *DatabricksClient) withCachedCurrentUserApi(w *databricks.WorkspaceClien
 	internalImpl := w.CurrentUser.Impl()
 	w.CurrentUser.WithImpl(&cachedCurrentUserService{
 		internalImpl: internalImpl,
-		cachedUser:   &c.cachedUser,
-		mu:           &c.mu,
 	})
 	return w
 }

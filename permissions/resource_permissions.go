@@ -126,7 +126,7 @@ func urlPathForObjectID(objectID string) string {
 // permissions when POSTing permissions changes through the REST API, to avoid accidentally
 // revoking the calling user's ability to manage the current object.
 func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
-	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/queries/"} {
+	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/queries/", "/sql/warehouses"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
 		}
@@ -174,21 +174,6 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 		// Prevent "Cannot change permissions for group 'admins' to None."
 		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 			GroupName:       "admins",
-			PermissionLevel: "CAN_MANAGE",
-		})
-	}
-	w, err := a.client.WorkspaceClient()
-	if err != nil {
-		return err
-	}
-	if strings.HasPrefix(objectID, "/sql/warehouses") {
-		warehouse, err := w.Warehouses.GetById(a.context, strings.ReplaceAll(objectID, "/sql/warehouses/", ""))
-		if err != nil {
-			return err
-		}
-		// add CAN_MANAGE permission for creator
-		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
-			UserName:        warehouse.CreatorName,
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}

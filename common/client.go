@@ -15,20 +15,20 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type CachedCurrentUserService struct {
-	client     *client.DatabricksClient
-	oldImpl    scim.CurrentUserService
-	cachedUser *scim.User
-	mu         *sync.Mutex
+type cachedCurrentUserService struct {
+	client       *client.DatabricksClient
+	internalImpl scim.CurrentUserService
+	cachedUser   *scim.User
+	mu           *sync.Mutex
 }
 
-func (a *CachedCurrentUserService) Me(ctx context.Context) (*scim.User, error) {
+func (a *cachedCurrentUserService) Me(ctx context.Context) (*scim.User, error) {
 	a.mu.Lock()
 	if a.cachedUser.DisplayName != "" {
 		a.mu.Unlock()
 		return a.cachedUser, nil
 	}
-	user, err := a.oldImpl.Me(ctx)
+	user, err := a.internalImpl.Me(ctx)
 	if err != nil {
 		a.mu.Unlock()
 		return user, err
@@ -60,12 +60,12 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 }
 
 func (c *DatabricksClient) withCachedCurrentUserApi(w *databricks.WorkspaceClient) *databricks.WorkspaceClient {
-	currentImpl := w.CurrentUser.Impl()
-	w.CurrentUser.WithImpl(&CachedCurrentUserService{
-		client:     c.DatabricksClient,
-		oldImpl:    currentImpl,
-		cachedUser: &c.cachedUser,
-		mu:         &c.mu,
+	internalImpl := w.CurrentUser.Impl()
+	w.CurrentUser.WithImpl(&cachedCurrentUserService{
+		client:       c.DatabricksClient,
+		internalImpl: internalImpl,
+		cachedUser:   &c.cachedUser,
+		mu:           &c.mu,
 	})
 	return w
 }

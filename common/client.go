@@ -16,7 +16,6 @@ import (
 )
 
 type cachedCurrentUserService struct {
-	client       *client.DatabricksClient
 	internalImpl scim.CurrentUserService
 	cachedUser   *scim.User
 	mu           *sync.Mutex
@@ -24,17 +23,15 @@ type cachedCurrentUserService struct {
 
 func (a *cachedCurrentUserService) Me(ctx context.Context) (*scim.User, error) {
 	a.mu.Lock()
+	defer a.mu.Unlock()
 	if a.cachedUser.DisplayName != "" {
-		a.mu.Unlock()
 		return a.cachedUser, nil
 	}
 	user, err := a.internalImpl.Me(ctx)
 	if err != nil {
-		a.mu.Unlock()
 		return user, err
 	}
 	*a.cachedUser = *user
-	a.mu.Unlock()
 	return user, err
 }
 
@@ -62,7 +59,6 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 func (c *DatabricksClient) withCachedCurrentUserApi(w *databricks.WorkspaceClient) *databricks.WorkspaceClient {
 	internalImpl := w.CurrentUser.Impl()
 	w.CurrentUser.WithImpl(&cachedCurrentUserService{
-		client:       c.DatabricksClient,
 		internalImpl: internalImpl,
 		cachedUser:   &c.cachedUser,
 		mu:           &c.mu,

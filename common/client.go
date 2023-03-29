@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
@@ -18,17 +19,22 @@ type CachedCurrentUserService struct {
 	client     *client.DatabricksClient
 	oldImpl    scim.CurrentUserService
 	cachedUser *scim.User
+	mu         *sync.Mutex
 }
 
 func (a *CachedCurrentUserService) Me(ctx context.Context) (*scim.User, error) {
+	a.mu.Lock()
 	if a.cachedUser.DisplayName != "" {
+		a.mu.Unlock()
 		return a.cachedUser, nil
 	}
 	user, err := a.oldImpl.Me(ctx)
 	if err != nil {
+		a.mu.Unlock()
 		return user, err
 	}
 	*a.cachedUser = *user
+	a.mu.Unlock()
 	return user, err
 }
 
@@ -42,10 +48,10 @@ type DatabricksClient struct {
 	// callback used to create API1.2 call wrapper, which simplifies unit tessting
 	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
 	cachedUser     scim.User
+	mu             sync.Mutex
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
-	// return databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
 	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
 	if err != nil {
 		return nil, err
@@ -59,6 +65,7 @@ func (c *DatabricksClient) withCachedCurrentUserApi(w *databricks.WorkspaceClien
 		client:     c.DatabricksClient,
 		oldImpl:    currentImpl,
 		cachedUser: &c.cachedUser,
+		mu:         &c.mu,
 	})
 	return w
 }

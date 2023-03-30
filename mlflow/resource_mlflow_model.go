@@ -96,7 +96,6 @@ func (a ModelsAPI) ListByFilter(filter string, order_by []string, page_token str
 	return models, nil
 }
 
-// List all jobs
 func (a ModelsAPI) List() (l []Model, err error) {
 	return a.ListByFilter("", nil, "")
 }

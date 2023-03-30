@@ -1,10 +1,13 @@
 package mlflow
 
 import (
+	"context"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func m() Model {
@@ -15,6 +18,85 @@ func m() Model {
 			{Key: "key2", Value: "value2"},
 		},
 	}
+}
+
+func TestJobsAPIList(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/mlflow/registered-models/search?max_results=100",
+			Response: ModelListResponse{
+				Models: []Model{
+					{
+						Name:              "test",
+						RegisteredModelID: "model_id",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewModelsAPI(ctx, client)
+		l, err := a.List()
+		require.NoError(t, err)
+		assert.Len(t, l, 1)
+	})
+}
+
+func TestJobsAPIListMultiplePages(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/mlflow/registered-models/search?max_results=100",
+			Response: ModelListResponse{
+				Models: []Model{
+					{
+						Name:              "test",
+						RegisteredModelID: "model_id",
+					},
+				},
+				NextPageToken: "TOKEN",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/mlflow/registered-models/search?max_results=100&page_token=TOKEN",
+			Response: ModelListResponse{
+				Models: []Model{
+					{
+						Name:              "test2",
+						RegisteredModelID: "model_id2",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewModelsAPI(ctx, client)
+		l, err := a.List()
+		require.NoError(t, err)
+		assert.Len(t, l, 2)
+	})
+}
+
+func TestModelsAPIListByName(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/mlflow/registered-models/search?filter=name%20ilike%20%27model%27&max_results=100",
+			Response: ModelListResponse{
+				Models: []Model{
+					{
+						Name:              "test",
+						RegisteredModelID: "model_id",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewModelsAPI(ctx, client)
+		l, err := a.ListByFilter("name ilike 'model'", nil, "")
+		require.NoError(t, err)
+		assert.Len(t, l, 1)
+	})
 }
 
 func TestModelCreate(t *testing.T) {

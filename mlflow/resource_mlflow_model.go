@@ -23,6 +23,17 @@ type ModelVersion struct {
 	Source               string `json:"source,omitempty"`
 	Status               string `json:"status,omitempty"`
 }
+type ModelListRequest struct {
+	Filter     string   `url:"filter,omitempty"`
+	MaxResults int64    `url:"max_results,omitempty"`
+	OrderBy    []string `url:"order_by,omitempty"`
+	PageToken  string   `url:"page_token,omitempty"`
+}
+
+type ModelListResponse struct {
+	Models        []Model `json:"models"`
+	NextPageToken string  `json:"next_page_token"`
+}
 
 // Model defines the response object from the API
 type Model struct {
@@ -48,6 +59,46 @@ type ModelsAPI struct {
 
 func NewModelsAPI(ctx context.Context, m any) ModelsAPI {
 	return ModelsAPI{m.(*common.DatabricksClient), ctx}
+}
+
+func (a ModelsAPI) ListByFilter(filter string, order_by []string, page_token string) ([]Model, error) {
+	models := []Model{}
+	params := map[string]interface{}{
+		"max_results": 100,
+	}
+
+	if filter != "" {
+		params["filter"] = filter
+	}
+	if len(order_by) > 0 {
+		params["order_by"] = order_by
+	}
+	if page_token != "" {
+		params["page_token"] = page_token
+	}
+
+	ctx := context.WithValue(a.context, common.Api, common.API_2_1)
+	for {
+		var resp ModelListResponse
+		if page_token != "" {
+			params["page_token"] = page_token
+		}
+		err := a.client.Get(ctx, "/mlflow/registered-models/search", params, &resp)
+		if err != nil {
+			return nil, err
+		}
+		models = append(models, resp.Models...)
+		if resp.NextPageToken == "" {
+			break
+		}
+		page_token = resp.NextPageToken
+	}
+	return models, nil
+}
+
+// List all jobs
+func (a ModelsAPI) List() (l []Model, err error) {
+	return a.ListByFilter("", nil, "")
 }
 
 func (a ModelsAPI) Create(m *Model) error {

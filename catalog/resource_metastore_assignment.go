@@ -31,7 +31,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			}
 			create.WorkspaceId = workspaceId
 
-			if c.Config.IsAccountClient() {
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -63,7 +63,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				return err
 			}
 			var ma *unitycatalog.MetastoreAssignment
-			if c.Config.IsAccountClient() {
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -94,7 +94,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			}
 			ma.WorkspaceId = workspaceId
 
-			if c.Config.IsAccountClient() {
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -121,7 +121,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if c.Config.IsAccountClient() {
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err

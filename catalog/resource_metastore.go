@@ -78,7 +78,7 @@ func ResourceMetastore() *schema.Resource {
 
 			var mi *unitycatalog.MetastoreInfo
 
-			if c.Config.IsAccountClient() {
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -114,7 +114,7 @@ func ResourceMetastore() *schema.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var mi *unitycatalog.MetastoreInfo
 
-			if c.Config.IsAccountClient() {
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -139,7 +139,7 @@ func ResourceMetastore() *schema.Resource {
 			var update unitycatalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
 
-			if c.Config.IsAccountClient() {
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -164,7 +164,7 @@ func ResourceMetastore() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			if c.Config.IsAccountClient() {
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err

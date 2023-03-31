@@ -200,7 +200,7 @@ func (ic *importContext) cacheGroups() error {
 	if len(ic.allGroups) == 0 {
 		log.Printf("[INFO] Caching groups in memory ...")
 		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
-		g, err := groupsAPI.Filter("")
+		g, err := groupsAPI.Filter("", true)
 		if err != nil {
 			return err
 		}

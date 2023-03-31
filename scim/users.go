@@ -38,6 +38,8 @@ func (a UsersAPI) Filter(filter string) (u []User, err error) {
 	if filter != "" {
 		req["filter"] = filter
 	}
+	// We exclude roles to reduce load on the scim service
+	req["excludedAttributes"] = "roles"
 	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Users", req, &users)
 	if err != nil {
 		return

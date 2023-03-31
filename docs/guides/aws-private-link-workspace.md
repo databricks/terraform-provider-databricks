@@ -127,6 +127,8 @@ The first step is to create the required AWS objects:
 - A subnet dedicated to your VPC endpoints.
 - A security group dedicated to your VPC endpoints and satisfying required inbound/outbound TCP/HTTPS traffic rules on ports 443 and 6666, respectively.
 
+For workspace with [compliance security profile](https://docs.databricks.com/security/privacy/security-profile.html#prepare-a-workspace-for-the-compliance-security-profile), you need *additionally* allow bidirectional access to port 2443 for FIPS connections. The total set of ports to allow bidirectional access are 443, 2443, and 6666.
+
 ```hcl
 data "aws_vpc" "prod" {
   id = var.vpc_id
@@ -176,36 +178,36 @@ resource "aws_security_group" "dataplane_vpce" {
   description = "Security group shared with relay and workspace endpoints"
   vpc_id      = var.vpc_id
 
-  ingress {
-    description = "Inbound rules"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = concat([var.vpce_subnet_cidr], local.vpc_cidr_blocks)
+  dynamic "ingress" {
+    for_each = toset([
+      443,
+      2443, # FIPS port for CSP
+      6666,
+    ])
+
+    content {
+      description = "Inbound rules"
+      from_port   = ingress.value
+      to_port     = ingress.value
+      protocol    = "tcp"
+      cidr_blocks = concat([var.vpce_subnet_cidr], local.vpc_cidr_blocks)
+    }
   }
 
-  ingress {
-    description = "Inbound rules"
-    from_port   = 6666
-    to_port     = 6666
-    protocol    = "tcp"
-    cidr_blocks = concat([var.vpce_subnet_cidr], local.vpc_cidr_blocks)
-  }
+  dynamic "egress" {
+    for_each = toset([
+      443,
+      2443, # FIPS port for CSP
+      6666,
+    ])
 
-  egress {
-    description = "Outbound rules"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = concat([var.vpce_subnet_cidr], local.vpc_cidr_blocks)
-  }
-
-  egress {
-    description = "Outbound rules"
-    from_port   = 6666
-    to_port     = 6666
-    protocol    = "tcp"
-    cidr_blocks = concat([var.vpce_subnet_cidr], local.vpc_cidr_blocks)
+    content {
+      description = "Outbound rules"
+      from_port   = egress.value
+      to_port     = egress.value
+      protocol    = "tcp"
+      cidr_blocks = concat([var.vpce_subnet_cidr], local.vpc_cidr_blocks)
+    }
   }
 
   tags = merge(data.aws_vpc.prod.tags, {

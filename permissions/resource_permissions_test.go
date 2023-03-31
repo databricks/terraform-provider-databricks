@@ -9,8 +9,8 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -824,6 +824,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
 						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
 					},
 				},
 			},
@@ -837,6 +841,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
 						},
 					},
 				},
@@ -1160,7 +1168,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/jobs/get?job_id=123",
+			Resource: "/api/2.1/jobs/get?job_id=123",
 			Response: jobs.Job{
 				CreatorUserName: "creator@example.com",
 			},
@@ -1215,7 +1223,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/123",
+			Resource: "/api/2.0/pipelines/123?",
 			Response: jobs.Job{
 				CreatorUserName: "creator@example.com",
 			},

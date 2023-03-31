@@ -11,8 +11,6 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -128,7 +126,7 @@ func urlPathForObjectID(objectID string) string {
 // permissions when POSTing permissions changes through the REST API, to avoid accidentally
 // revoking the calling user's ability to manage the current object.
 func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
-	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/queries/"} {
+	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/queries/", "/sql/warehouses"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
 		}
@@ -220,8 +218,16 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			}
 		}
 	}
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return err
+	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		job, err := jobs.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 0)
+		if err != nil {
+			return err
+		}
+		job, err := w.Jobs.GetByJobId(a.context, jobId)
 		if err != nil {
 			return err
 		}
@@ -230,7 +236,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			PermissionLevel: "IS_OWNER",
 		})
 	} else if strings.HasPrefix(objectID, "/pipelines") {
-		job, err := pipelines.NewPipelinesAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/pipelines/", ""))
+		job, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
 		if err != nil {
 			return err
 		}

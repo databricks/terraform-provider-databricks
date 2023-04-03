@@ -64,7 +64,7 @@ func TestDataServicePrincipalsReadNoFilter(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=displayName%20co%20%27%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?",
 				Response: UserList{
 					Resources: []User{
 						{

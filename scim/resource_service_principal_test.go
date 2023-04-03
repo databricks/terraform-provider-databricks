@@ -555,7 +555,7 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
 			Status:   417,
 			Response: apierr.APIError{
 				Message: "cannot find service principal",
@@ -578,7 +578,7 @@ func TestCreateForceOverwriteCannotListAccServicePrincipals(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
 			Response: UserList{
 				TotalResults: 0,
 			},
@@ -600,7 +600,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
 			Response: UserList{
 				Resources: []User{
 					{

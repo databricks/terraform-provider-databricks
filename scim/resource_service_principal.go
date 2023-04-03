@@ -45,6 +45,8 @@ func (a ServicePrincipalsAPI) Filter(filter string) (u []User, err error) {
 	if filter != "" {
 		req["filter"] = filter
 	}
+	// We exclude roles to reduce load on the scim service
+	req["excludedAttributes"] = "roles"
 	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/ServicePrincipals", req, &sps)
 	if err != nil {
 		return

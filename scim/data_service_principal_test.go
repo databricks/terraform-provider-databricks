@@ -12,7 +12,7 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
 				Response: UserList{
 					Resources: []User{
 						{
@@ -56,7 +56,7 @@ func TestDataServicePrincipalReadNotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
 				Response: UserList{},
 			},
 		},
@@ -74,7 +74,7 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
 				Status:   500,
 			},
 		},

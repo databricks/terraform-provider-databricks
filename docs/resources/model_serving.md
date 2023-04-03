@@ -12,26 +12,26 @@ resource "databricks_model_serving" "this" {
   name = "ads-serving-endpoint"
   config {
     served_models {
-      name = "prod_model"
-      model_name = "ads-model"
-      model_version = "2"
-      workload_size = "Small"
+      name                  = "prod_model"
+      model_name            = "ads-model"
+      model_version         = "2"
+      workload_size         = "Small"
       scale_to_zero_enabled = true
     }
     served_models {
-      name = "candidate_model"
-      model_name = "ads-model"
-      model_version = "4"
-      workload_size = "Small"
+      name                  = "candidate_model"
+      model_name            = "ads-model"
+      model_version         = "4"
+      workload_size         = "Small"
       scale_to_zero_enabled = false
     }
     traffic_config {
       routes {
-        served_model_name = "prod_model"
+        served_model_name  = "prod_model"
         traffic_percentage = 90
       }
       routes {
-        served_model_name = "candidate_model"
+        served_model_name  = "candidate_model"
         traffic_percentage = 10
       }
     }

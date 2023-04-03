@@ -43,10 +43,10 @@ resource "databricks_mws_workspaces" "this" {
 or 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
-  provider                   = databricks.mws
-  account_id                 = var.databricks_account_id
-  workspace_name             = "gcp-workspace"
-  location                   = var.subnet_region
+  provider       = databricks.mws
+  account_id     = var.databricks_account_id
+  workspace_name = "gcp-workspace"
+  location       = var.subnet_region
   cloud_resource_container {
     gcp {
       project_id = var.google_project

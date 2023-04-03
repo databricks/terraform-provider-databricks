@@ -157,8 +157,11 @@ func (ic *importContext) Run() error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
-	usersAPI := scim.NewUsersAPI(ic.Context, ic.Client)
-	me, err := usersAPI.Me()
+	w, err := ic.Client.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	me, err := w.CurrentUser.Me(ic.Context)
 	if err != nil {
 		return err
 	}

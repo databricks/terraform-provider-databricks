@@ -59,11 +59,11 @@ terraform {
       source = "databricks/databricks"
     }
     google = {
-      source  = "hashicorp/google"
+      source = "hashicorp/google"
     }
     random = {
       source = "hashicorp/random"
-    }    
+    }
   }
 }
 
@@ -104,7 +104,7 @@ resource "databricks_metastore" "this" {
 resource "databricks_metastore_data_access" "first" {
   metastore_id = databricks_metastore.this.id
   databricks_gcp_service_account {}
-  name         = "the-keys"
+  name       = "the-keys"
   is_default = true
 }
 
@@ -146,11 +146,11 @@ resource "databricks_grants" "sandbox" {
   catalog = databricks_catalog.sandbox.name
   grant {
     principal  = "Data Scientists"
-    privileges = ["USAGE", "CREATE"]
+    privileges = ["USE_CATALOG", "CREATE"]
   }
   grant {
     principal  = "Data Engineers"
-    privileges = ["USAGE"]
+    privileges = ["USE_CATALOG"]
   }
 }
 
@@ -167,7 +167,7 @@ resource "databricks_grants" "things" {
   schema = databricks_schema.things.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["USAGE"]
+    privileges = ["USE_SCHEMA"]
   }
 }
 ```
@@ -297,8 +297,8 @@ resource "databricks_cluster" "dev" {
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 10
   num_workers             = 2
-  data_security_mode = "SINGLE_USER"
-  single_user_name   = each.value.user_name
+  data_security_mode      = "SINGLE_USER"
+  single_user_name        = each.value.user_name
   # need to wait until the metastore is assigned
   depends_on = [
     databricks_metastore_assignment.this

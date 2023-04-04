@@ -1,5 +1,5 @@
 ---
-page_title: "Provisioning Databricks on Azure with Private Link - Simple deployment"
+page_title: "Provisioning Azure Databricks with Private Link - Simple deployment"
 ---
 
 # Deploying pre-requisite resources and enabling Private Link connections - Simple deployment

@@ -80,8 +80,7 @@ func ResourceMwsNetworks() *schema.Resource {
 		s["vpc_id"].ExactlyOneOf = []string{"vpc_id", "gcp_network_info"}
 		s["subnet_ids"].ExactlyOneOf = []string{"subnet_ids", "gcp_network_info"}
 		s["security_group_ids"].ExactlyOneOf = []string{"security_group_ids", "gcp_network_info"}
-		s["vpc_endpoints"].ConflictsWith = []string{"gcp_network_info"}
-		s["gcp_network_info"].ConflictsWith = []string{"vpc_id", "subnet_ids", "security_group_ids", "vpc_endpoints"}
+		s["gcp_network_info"].ConflictsWith = []string{"vpc_id", "subnet_ids", "security_group_ids"}
 
 		return s
 	})

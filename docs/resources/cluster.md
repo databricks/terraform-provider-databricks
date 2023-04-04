@@ -510,8 +510,8 @@ terraform import databricks_cluster.this <cluster-id>
 
 The following resources are often used in the same context:
 
-* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide
-* [End to end workspace management](../guides/workspace-management.md) guide
+* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide.
+* [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_clusters](../data-sources/clusters.md) data to retrieve a list of [databricks_cluster](cluster.md) ids.
 * [databricks_cluster_policy](cluster_policy.md) to create a [databricks_cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules.
 * [databricks_current_user](../data-sources/current_user.md) data to retrieve information about [databricks_user](user.md) or [databricks_service_principal](service_principal.md), that is calling Databricks REST API.

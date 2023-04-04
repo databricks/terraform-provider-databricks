@@ -7,7 +7,7 @@ description: Terraform provider for the Databricks Lakehouse platform
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. Changelog is available [on GitHub](https://github.com/databricks/terraform-provider-databricks/blob/master/CHANGELOG.md).
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md), [AWS](guides/aws-workspace.md) or [GCP](guides/gcp-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. Changelog is available [on GitHub](https://github.com/databricks/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
 ![Resources](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/resources.png)
 
@@ -49,7 +49,7 @@ Databricks SQL
 * Create [databricks_sql_endpoint](resources/sql_endpoint.md) controlled by [databricks_permissions](resources/permissions.md).
 * Manage [queries](resources/sql_query.md) and their [visualizations](resources/sql_visualization.md).
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
-* Provide [global configuration for all SQL Endpoints](docs/resources/sql_global_config.md)
+* Provide [global configuration for all SQL warehouses](docs/resources/sql_global_config.md)
 
 MLFlow
 
@@ -291,7 +291,13 @@ When a workspace is created using a service principal account, that service prin
 
 ## Special configurations for GCP
 
-The provider works with [Google Cloud CLI authentication](https://cloud.google.com/sdk/docs/authorizing) to facilitate local development workflows. For automated scenarios, a service principal auth is necessary using `google_service_account` parameter with [impersonation](https://cloud.google.com/docs/authentication#service-accounts) and Application Default Credentials. and specification of  and `google_credentials` parameters). Alternatively, you could provide the service account key directly by passing it to `google_credentials` parameter (or `GOOGLE_CREDENTIALS` environment variable)
+The provider works with [Google Cloud CLI authentication](https://cloud.google.com/sdk/docs/authorizing) to facilitate local development workflows. For automated scenarios, a service principal auth is necessary using `google_service_account` parameter with [impersonation](https://cloud.google.com/docs/authentication#service-accounts) and Application Default Credentials. Alternatively, you could provide the service account key directly by passing it to `google_credentials` parameter (or `GOOGLE_CREDENTIALS` environment variable)
+
+## Special configuration for Unity Catalog
+
+Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+
+If you are configuring a new Databricks account for the first time, please create at least one workspace and with an identity (user or service principal) that you intend to use for Unity Catalog rollout. You can then configure the provider using that identity and workspace to provision the required Unity Catalog resources.
 
 ## Miscellaneous configuration parameters
 

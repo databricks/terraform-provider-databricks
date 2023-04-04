@@ -84,11 +84,6 @@ func (si *ShareInfo) suppressCDFEnabledDiff() {
 	}
 }
 
-func (a SharesAPI) list() (shares Shares, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/shares", nil, &shares)
-	return
-}
-
 func (a SharesAPI) create(si *ShareInfo) error {
 	si.sortSharesByName()
 	return a.client.Post(a.context, "/unity-catalog/shares", si, si)

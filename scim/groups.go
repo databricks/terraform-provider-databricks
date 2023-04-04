@@ -39,18 +39,22 @@ func (a GroupsAPI) Read(groupID string) (group Group, err error) {
 }
 
 // Filter returns groups matching the filter
-func (a GroupsAPI) Filter(filter string) (GroupList, error) {
+func (a GroupsAPI) Filter(filter string, includeRoles bool) (GroupList, error) {
 	var groups GroupList
 	req := map[string]string{}
 	if filter != "" {
 		req["filter"] = filter
+	}
+	if !includeRoles {
+		// We exclude roles to reduce load on the scim service
+		req["excludedAttributes"] = "roles"
 	}
 	err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
 	return groups, err
 }
 
 func (a GroupsAPI) ReadByDisplayName(displayName string) (group Group, err error) {
-	groupList, err := a.Filter(fmt.Sprintf("displayName eq '%s'", displayName))
+	groupList, err := a.Filter(fmt.Sprintf("displayName eq '%s'", displayName), false)
 	if err != nil {
 		return
 	}
@@ -58,8 +62,9 @@ func (a GroupsAPI) ReadByDisplayName(displayName string) (group Group, err error
 		err = fmt.Errorf("cannot find group: %s", displayName)
 		return
 	}
-	group = groupList.Resources[0]
-	return
+	// We GET the group again to fetch any fields that were excluded the first
+	// time around
+	return a.Read(groupList.Resources[0].ID)
 }
 
 func (a GroupsAPI) Patch(groupID string, r patchRequest) error {

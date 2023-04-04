@@ -69,15 +69,15 @@ Define the required variables
 
 ```hcl
 variable "cidr" {
-  type    = string
+  type = string
 }
 
 variable "rg_name" {
-  type    = string
+  type = string
 }
 
 variable "location" {
-  type    = string
+  type = string
 }
 
 data "azurerm_client_config" "current" {
@@ -207,7 +207,7 @@ resource "azurerm_subnet" "plsubnet" {
   resource_group_name                            = var.rg_name
   virtual_network_name                           = azurerm_virtual_network.this.name
   address_prefixes                               = [cidrsubnet(var.cidr, 3, 2)]
-  enforce_private_link_endpoint_network_policies = true 
+  enforce_private_link_endpoint_network_policies = true
 }
 
 ```
@@ -224,7 +224,7 @@ resource "azurerm_private_endpoint" "uiapi" {
   name                = "uiapipvtendpoint"
   location            = var.location
   resource_group_name = var.rg_name
-  subnet_id           = azurerm_subnet.plsubnet.id 
+  subnet_id           = azurerm_subnet.plsubnet.id
 
   private_service_connection {
     name                           = "ple-${var.workspace_prefix}-uiapi"
@@ -261,7 +261,7 @@ resource "azurerm_private_endpoint" "auth" {
   name                = "aadauthpvtendpoint"
   location            = var.location
   resource_group_name = var.rg_name
-  subnet_id           = azurerm_subnet.plsubnet.id 
+  subnet_id           = azurerm_subnet.plsubnet.id
 
   private_service_connection {
     name                           = "ple-${var.workspace_prefix}-auth"
@@ -300,7 +300,7 @@ resource "azurerm_databricks_workspace" "this" {
     private_subnet_network_security_group_association_id = azurerm_subnet_network_security_group_association.private.id
     storage_account_name                                 = "dbfs"
   }
- 
+
   depends_on = [
     azurerm_subnet_network_security_group_association.public,
     azurerm_subnet_network_security_group_association.private

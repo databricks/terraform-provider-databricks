@@ -20,6 +20,7 @@ resource "databricks_ip_access_list" "allowed-list" {
   label     = "allow_in"
   list_type = "ALLOW"
   ip_addresses = [
+    "1.1.1.1",
     "1.2.3.0/24",
     "1.2.5.0/24"
   ]
@@ -30,8 +31,8 @@ resource "databricks_ip_access_list" "allowed-list" {
 
 The following arguments are supported:
 
-* `list_type` -  Can only be "ALLOW" or "BLOCK"
-* `ip_addresses` -  This is a field to allow the group to have instance pool create privileges.
+* `list_type` -  Can only be "ALLOW" or "BLOCK".
+* `ip_addresses` - A string list of IP addresses and CIDR ranges.
 * `label` -  This is the display name for the given IP ACL List.
 * `enabled` - (Optional) Boolean `true` or `false` indicating whether this list should be active.  Defaults to `true`
 

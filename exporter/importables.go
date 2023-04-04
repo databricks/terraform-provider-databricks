@@ -46,6 +46,7 @@ var (
 	uuidRegex                 = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 	predefinedClusterPolicies = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
 	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
+	sqlParentRegexp           = regexp.MustCompile(`^folders/(\d+)$`)
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -91,6 +92,7 @@ func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) erro
 		block.SetAttributeRaw("client_secret_key", ic.variable(
 			"client_secret_key"+varName,
 			"Key in secret scope that stores app client secret"+textStr))
+		block.SetAttributeValue("initialize_file_system", cty.BoolVal(false))
 	} else if res := adlsGen1Regex.FindStringSubmatch(mount.URL); res != nil {
 		block := b.AppendNewBlock("adl", nil).Body()
 		storageResourceName := res[2]
@@ -1244,6 +1246,16 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 				}
 			}
+			if query.Parent != "" {
+				res := sqlParentRegexp.FindStringSubmatch(query.Parent)
+				if len(res) > 1 {
+					ic.Emit(&resource{
+						Resource:  "databricks_directory",
+						Attribute: "object_id",
+						Value:     res[1],
+					})
+				}
+			}
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
@@ -1256,6 +1268,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "data_source_id", Resource: "databricks_sql_endpoint", Match: "data_source_id"},
 			{Path: "parameter.query.query_id", Resource: "databricks_sql_query", Match: "id"},
+			{Path: "parent", Resource: "databricks_directory", Match: "object_id", MatchType: MatchRegexp,
+				Regexp: sqlParentRegexp},
 		},
 	},
 	"databricks_sql_endpoint": {
@@ -1364,6 +1378,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
+			if dashboard.Parent != "" {
+				res := sqlParentRegexp.FindStringSubmatch(dashboard.Parent)
+				if len(res) > 1 {
+					ic.Emit(&resource{
+						Resource:  "databricks_directory",
+						Attribute: "object_id",
+						Value:     res[1],
+					})
+				}
+			}
 			for _, rv := range dashboard.Widgets {
 				var widget sql_api.Widget
 				err = json.Unmarshal(rv, &widget)
@@ -1415,6 +1439,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			return nil
+		},
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_directory", Match: "object_id", MatchType: MatchRegexp,
+				Regexp: sqlParentRegexp},
 		},
 	},
 	"databricks_sql_widget": {
@@ -1549,12 +1577,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return name
 		},
-		List: func(ic *importContext) error {
-			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			directoryList, err := notebooksAPI.ListDirectories("/", true)
+		Search: func(ic *importContext, r *resource) error {
+			directoryList := ic.getAllDirectories()
+			objId, err := strconv.ParseInt(r.Value, 10, 64)
 			if err != nil {
 				return err
 			}
+			for _, directory := range directoryList {
+				if directory.ObjectID == objId {
+					r.ID = directory.Path
+					return nil
+				}
+			}
+			return fmt.Errorf("can't find directory with object_id: %s", r.Value)
+		},
+		List: func(ic *importContext) error {
+			directoryList := ic.getAllDirectories()
 			for offset, directory := range directoryList {
 				if strings.HasPrefix(directory.Path, "/Repos") {
 					continue
@@ -1571,7 +1609,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			splits := strings.Split(r.Name, "_")
 			directoryId := splits[len(splits)-1]

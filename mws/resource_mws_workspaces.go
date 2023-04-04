@@ -122,6 +122,9 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	if w.NetworkID != "" {
 		workspaceCreationRequest["network_id"] = w.NetworkID
 	}
+	if w.PrivateAccessSettingsID != "" {
+		workspaceCreationRequest["private_access_settings_id"] = w.PrivateAccessSettingsID
+	}
 	if w.GkeConfig != nil {
 		workspaceCreationRequest["gke_config"] = w.GkeConfig
 	}
@@ -557,9 +560,11 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				workspace.CustomerManagedKeyID = ""
 			}
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
-			if err != nil {
-				return err
+			if d.HasChangeExcept("token") {
+				err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return err
+				}
 			}
 			return UpdateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -33,8 +32,10 @@ func TestAccSecretScopeResource(t *testing.T) {
 					acls, err := secretACLAPI.List(id)
 					require.NoError(t, err)
 
-					usersAPI := scim.NewUsersAPI(ctx, client)
-					me, err := usersAPI.Me()
+					w, err := client.WorkspaceClient()
+					require.NoError(t, err)
+
+					me, err := w.CurrentUser.Me(ctx)
 					require.NoError(t, err)
 					assert.Equal(t, 1, len(acls))
 					assert.Equal(t, me.UserName, acls[0].Principal)

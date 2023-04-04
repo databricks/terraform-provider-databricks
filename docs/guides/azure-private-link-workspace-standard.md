@@ -104,7 +104,7 @@ data "external" "me" {
 }
 
 locals {
-  prefix = "abd-pl"
+  prefix = "adb-pl"
   tags = {
     Environment = "Demo"
     Owner       = lookup(data.external.me.result, "name")

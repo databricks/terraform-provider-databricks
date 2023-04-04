@@ -71,6 +71,9 @@ terraform {
 provider "azurerm" {
   features {}
 }
+
+provider "random" {
+}
 ```
 
 Define the required variables
@@ -103,8 +106,15 @@ data "external" "me" {
   program = ["az", "account", "show", "--query", "user"]
 }
 
+resource "random_string" "naming" {
+  special = false
+  upper   = false
+  length  = 6
+}
+
 locals {
   prefix = "adb-pl"
+  dbfsname = join("", ["dbfs", "${random_string.naming.result}"])
   tags = {
     Environment = "Demo"
     Owner       = lookup(data.external.me.result, "name")
@@ -292,7 +302,7 @@ resource "azurerm_databricks_workspace" "web_auth_workspace" {
     public_subnet_name                                   = azurerm_subnet.transit_public.name
     public_subnet_network_security_group_association_id  = azurerm_subnet_network_security_group_association.transit_public.id
     private_subnet_network_security_group_association_id = azurerm_subnet_network_security_group_association.transit_private.id
-    storage_account_name                                 = "dbfstransitd723k4b3"
+    storage_account_name                                 = local.dbfsname
   }
   depends_on = [
     azurerm_subnet_network_security_group_association.transit_public,

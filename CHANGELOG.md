@@ -1,5 +1,12 @@
 # Version changelog
 
+## 1.14.1
+
+ * Allow rotating `token` block in [databricks_mws_workspaces](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_workspaces) resource by only changing `comment` field ([#2114](https://github.com/databricks/terraform-provider-databricks/pull/2114)).
+ * Exclude roles in SCIM API list calls to reduce load on Databricks SCIM service ([#2181](https://github.com/databricks/terraform-provider-databricks/pull/2181)).
+ * Fixed [databricks_service_principals](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/service_principals) data source issue with empty filter ([#2185](https://github.com/databricks/terraform-provider-databricks/pull/2185)).
+ * Update Go SDK to v0.6.0 ([#2186](https://github.com/databricks/terraform-provider-databricks/pull/2186)).
+
 ## 1.14.0
 
  * Added caching of SCIM Me API call to [databricks_current_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/current_user) data source and [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) resource. ([#2170](https://github.com/databricks/terraform-provider-databricks/pull/2170)).

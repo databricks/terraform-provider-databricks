@@ -508,5 +508,5 @@ resource "azurerm_private_endpoint" "app_dpcp" {
 ```
 
 -> **Note** 
-- The public network access to the workspace is disabled. You can access the workspace only through the private connectivity to the on-premises user environment. For testing purposes, you can deploy an Azure VM in the Transit vnet in order to test the frontend connectivity.
+- The public network access to the workspace is disabled. You can access the workspace only through the private connectivity to the on-premises user environment. For testing purposes, you can deploy an Azure VM in the Transit VNet in order to test the frontend connectivity.
 - If you wish to deploy a test VM in the Data Plane VNet, you should configure a peering connection between the two VNets

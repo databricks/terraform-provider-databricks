@@ -8,7 +8,7 @@ page_title: "Provisioning Azure Databricks with Private Link - Simple deployment
 
 -> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
 
-Databricks Private Link support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. 
+[Azure Private Link](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview) support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. 
 
 You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically, using a programmatic approach. 
 

@@ -499,7 +499,7 @@ resource "azurerm_databricks_workspace" "app_workspace" {
 ```hcl
 resource "azurerm_private_endpoint" "app_dpcp" {
   name                = "dpcppvtendpoint"
- resource_group_name  = var.rg_dp
+  resource_group_name  = var.rg_dp
   location            = var.location
   subnet_id           = azurerm_subnet.app_plsubnet.id
 

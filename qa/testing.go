@@ -157,6 +157,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
+	client.Config = client.Config.WithTesting()
 	if f.CommandMock != nil {
 		client.WithCommandMock(f.CommandMock)
 	}

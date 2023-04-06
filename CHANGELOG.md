@@ -1,5 +1,18 @@
 # Version changelog
 
+## 1.14.2
+
+ * Explicitly include SCIM attributes for [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group), [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user), [databricks_user_role](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user_role), [databricks_group_role](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_role), [databricks_group_member](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_member), [databricks_group_instance_profile](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_instance_profile), [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) data, [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group) data, and [databricks_entitlement](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/entitlement) resources ([#2200](https://github.com/databricks/terraform-provider-databricks/pull/2200)).
+ * Added SQL File task to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2199](https://github.com/databricks/terraform-provider-databricks/pull/2199)).
+ * Fix diff detection for [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/share) resource ([#2197](https://github.com/databricks/terraform-provider-databricks/pull/2197)).
+ * Guide to deploy Databricks on Azure with PrivateLink - Standard deployment ([#2066](https://github.com/databricks/terraform-provider-databricks/pull/2066)).
+ * Remove `CREATE_VIEW` from [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) doc ([#2198](https://github.com/databricks/terraform-provider-databricks/pull/2198)).
+
+Updated dependency versions:
+
+ * Bump github.com/databricks/databricks-sdk-go from 0.6.0 to 0.7.0 ([#2195](https://github.com/databricks/terraform-provider-databricks/pull/2195)).
+ * Bump golang.org/x/mod from 0.9.0 to 0.10.0 ([#2192](https://github.com/databricks/terraform-provider-databricks/pull/2192)).
+
 ## 1.14.1
 
  * Allow rotating `token` block in [databricks_mws_workspaces](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_workspaces) resource by only changing `comment` field ([#2114](https://github.com/databricks/terraform-provider-databricks/pull/2114)).

@@ -8,7 +8,7 @@ import (
 func TestUcAccMetastore(t *testing.T) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	switch cloudEnv {
-	case "aws":
+	case "ucacct":
 		unityAccountLevel(t, step{
 			Template: `resource "databricks_metastore" "this" {
 				name = "{var.RANDOM}"
@@ -16,7 +16,7 @@ func TestUcAccMetastore(t *testing.T) {
 				region = "us-east-1"
 			}`,
 		})
-	case "azure":
+	case "azure-ucacct":
 		unityAccountLevel(t, step{
 			Template: `resource "databricks_metastore" "this" {
 				name = "{var.RANDOM}"
@@ -24,7 +24,7 @@ func TestUcAccMetastore(t *testing.T) {
 				region = "eastus"
 			}`,
 		})
-	case "gcp":
+	case "gcp-accounts":
 		unityAccountLevel(t, step{
 			Template: `resource "databricks_metastore" "this" {
 				name = "{var.RANDOM}"

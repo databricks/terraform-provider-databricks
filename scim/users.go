@@ -48,8 +48,8 @@ func (a UsersAPI) Filter(filter string) (u []User, err error) {
 	return
 }
 
-func (a UsersAPI) Read(userID string) (User, error) {
-	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)
+func (a UsersAPI) Read(userID, attributes string) (User, error) {
+	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v?attributes=%s", userID, attributes)
 	return a.readByPath(userPath)
 }
 
@@ -64,8 +64,8 @@ func (a UsersAPI) readByPath(userPath string) (user User, err error) {
 }
 
 // Update replaces user information for given ID
-func (a UsersAPI) Update(userID string, updateRequest User) error {
-	user, err := a.Read(userID)
+func (a UsersAPI) Update(userID, attributes string, updateRequest User) error {
+	user, err := a.Read(userID, attributes)
 	if err != nil {
 		return err
 	}

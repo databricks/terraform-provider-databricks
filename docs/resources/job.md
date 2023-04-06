@@ -214,6 +214,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 * `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
 * `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
 * `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
+* `file` - (Optional) block consisting of single string field: `path` - a relative path to the file (inside the Git repository) with SQL commands to execute.  *Requires `git_source` configuration block*.
 
 Example
 

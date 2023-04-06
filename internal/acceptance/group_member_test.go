@@ -32,7 +32,7 @@ func TestMwsAccGroupMemberResource(t *testing.T) {
 	accountLevel(t, step{
 		Template: groupMemberTest,
 		Callback: func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			g, err := scim.NewGroupsAPI(ctx, client).Read(id)
+			g, err := scim.NewGroupsAPI(ctx, client).Read(id, "members")
 			if err != nil {
 				return err
 			}
@@ -46,7 +46,7 @@ func TestAccGroupMemberResource(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: groupMemberTest,
 		Callback: func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			g, err := scim.NewGroupsAPI(ctx, client).Read(id)
+			g, err := scim.NewGroupsAPI(ctx, client).Read(id, "members")
 			if err != nil {
 				return err
 			}

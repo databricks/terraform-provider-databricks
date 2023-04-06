@@ -16,7 +16,7 @@ func ResourceGroupRole() *schema.Resource {
 			return NewGroupsAPI(ctx, c).Patch(groupID, PatchRequest("add", "roles", role))
 		},
 		ReadContext: func(ctx context.Context, groupID, role string, c *common.DatabricksClient) error {
-			group, err := NewGroupsAPI(ctx, c).Read(groupID)
+			group, err := NewGroupsAPI(ctx, c).Read(groupID, "roles")
 			hasRole := ComplexValues(group.Roles).HasValue(role)
 			if err == nil && !hasRole {
 				return apierr.NotFound("Group has no role")

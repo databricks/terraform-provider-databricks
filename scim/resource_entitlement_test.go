@@ -96,7 +96,7 @@ func TestResourceEntitlementsGroupCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Response: oldGroup,
 			},
 			{
@@ -109,7 +109,7 @@ func TestResourceEntitlementsGroupCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Response: newGroup,
 			},
 		},
@@ -134,7 +134,7 @@ func TestResourceEntitlementsGroupRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Response: oldGroup,
 			},
 		},
@@ -154,7 +154,7 @@ func TestResourceEntitlementsGroupRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Status:   400,
 				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
@@ -175,7 +175,7 @@ func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Response: oldGroup,
 			},
 			{
@@ -188,7 +188,7 @@ func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Response: newGroup,
 			},
 		},
@@ -218,7 +218,7 @@ func TestResourceEntitlementsGroupDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Response: oldGroup,
 			},
 			{
@@ -315,7 +315,7 @@ func TestResourceEntitlementsUserCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Response: oldUser,
 			},
 			{
@@ -328,7 +328,7 @@ func TestResourceEntitlementsUserCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Response: newUser,
 			},
 		},
@@ -353,7 +353,7 @@ func TestResourceEntitlementsUserRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Response: oldUser,
 			},
 		},
@@ -373,7 +373,7 @@ func TestResourceEntitlementsUserRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Status:   400,
 				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
@@ -394,7 +394,7 @@ func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Status:   400,
 				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
@@ -433,7 +433,7 @@ func TestResourceEntitlementsUserUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Response: oldUser,
 			},
 			{
@@ -446,7 +446,7 @@ func TestResourceEntitlementsUserUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Response: newUser,
 			},
 		},
@@ -476,7 +476,7 @@ func TestResourceEntitlementsUserDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Response: oldUser,
 			},
 			{

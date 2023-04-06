@@ -54,7 +54,7 @@ func TestDataSourceGroup(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/eerste",
+				Resource: "/api/2.0/preview/scim/v2/Groups/eerste?attributes=members,roles,entitlements,externalId",
 				Response: Group{
 					DisplayName: "ds",
 					ID:          "eerste",
@@ -91,7 +91,7 @@ func TestDataSourceGroup(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members,roles,entitlements,externalId",
 				Response: Group{
 					DisplayName: "product",
 					ID:          "abc",

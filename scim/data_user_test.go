@@ -46,7 +46,7 @@ func TestDataSourceUserGerUser(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/a",
+			Resource: "/api/2.0/preview/scim/v2/Users/a?attributes=userName,displayName,externalId,applicationId",
 			Response: User{
 				ID: "a",
 			},

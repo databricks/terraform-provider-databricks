@@ -23,7 +23,7 @@ func TestUserRoleCreate_AndGetResourceDrift(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/a",
+				Resource: "/api/2.0/preview/scim/v2/Users/a?attributes=roles",
 				Response: scim.User{},
 			},
 		},

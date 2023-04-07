@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
+	"github.com/databricks/databricks-sdk-go/service/gitcredentials"
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -157,10 +159,10 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: clusters.NodeTypeList{
-					NodeTypes: []clusters.NodeType{
+				Response: clustersApi.ListNodeTypesResponse{
+					NodeTypes: []clustersApi.NodeType{
 						{
-							NodeTypeID: "m5d.large",
+							NodeTypeId: "m5d.large",
 						},
 					},
 				},
@@ -228,7 +230,9 @@ var emptyRepos = qa.HTTPFixture{
 var emptyGitCredentials = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/git-credentials",
-	Response: repos.GitCredentialList{},
+	Response: []gitcredentials.CredentialInfo{
+		{},
+	},
 }
 
 var emptyIpAccessLIst = qa.HTTPFixture{
@@ -336,7 +340,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27spn%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27spn%27",
 				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
@@ -353,7 +357,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/a",
+				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=members",
 				Response: scim.Group{ID: "a", DisplayName: "admins",
 					Members: []scim.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
@@ -365,12 +369,24 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/b",
+				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=displayName,externalId,entitlements",
+				Response: scim.Group{ID: "a", DisplayName: "admins",
+					Members: []scim.ComplexValue{
+						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+						{Display: "Test group", Value: "f", Ref: "Groups/f"},
+						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
+					},
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/b?attributes=displayName,externalId,entitlements",
 				Response: scim.Group{ID: "b", DisplayName: "users"},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/c",
+				Resource: "/api/2.0/preview/scim/v2/Groups/c?attributes=displayName,externalId,entitlements",
 				Response: scim.Group{ID: "c", DisplayName: "test",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
@@ -379,18 +395,18 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/f",
+				Resource: "/api/2.0/preview/scim/v2/Groups/f?attributes=displayName,externalId,entitlements",
 				Response: scim.Group{ID: "f", DisplayName: "nested"},
 			},
 			// TODO: add groups to the output
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/123",
+				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalID,entitlements",
 				Response: scim.User{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test%40test.com%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27test%40test.com%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
@@ -1271,7 +1287,7 @@ func TestImportingUser(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%27",
+				Resource:     "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{
@@ -1438,6 +1454,38 @@ func TestImportingSqlObjects(t *testing.T) {
 			emptyGlobalSQLConfig,
 			{
 				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2F",
+				Response: workspace.ObjectList{
+					Objects: []workspace.ObjectStatus{
+						{
+							Path:       "/Shared",
+							ObjectID:   4451965692354143,
+							ObjectType: workspace.Directory,
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2FShared",
+				Response: workspace.ObjectList{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FShared",
+				Response: workspace.ObjectStatus{
+					Path:       "/Shared",
+					ObjectID:   4451965692354143,
+					ObjectType: workspace.Directory,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/directories/4451965692354143",
+				Response: getJSONObject("test-data/get-directory-permissions.json"),
+			},
+			{
+				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",
 				Response: map[string]any{},
 			},
@@ -1508,8 +1556,8 @@ func TestImportingSqlObjects(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.listing = "sql-dashboards,sql-queries,sql-endpoints,access"
-			ic.services = "sql-dashboards,sql-queries,sql-endpoints,access"
+			ic.listing = "sql-dashboards,sql-queries,sql-endpoints"
+			ic.services = "sql-dashboards,sql-queries,sql-endpoints,access,notebooks"
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -1521,6 +1569,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
+			emptyWorkspace,
 			emptyIpAccessLIst,
 			{
 				Method:   "GET",
@@ -1564,7 +1613,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27user%40domain.com%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27user%40domain.com%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
@@ -1577,7 +1626,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/123",
+				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalID,entitlements",
 				Response: scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
 			},
 			{

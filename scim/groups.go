@@ -30,8 +30,9 @@ func (a GroupsAPI) Create(scimGroupRequest Group) (group Group, err error) {
 }
 
 // Read reads and returns a Group object via SCIM api
-func (a GroupsAPI) Read(groupID string) (group Group, err error) {
-	err = a.client.Scim(a.context, http.MethodGet, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), nil, &group)
+func (a GroupsAPI) Read(groupID, attributes string) (group Group, err error) {
+	err = a.client.Scim(a.context, http.MethodGet, fmt.Sprintf(
+		"/preview/scim/v2/Groups/%v?attributes=%s", groupID, attributes), nil, &group)
 	if err != nil {
 		return
 	}
@@ -39,18 +40,22 @@ func (a GroupsAPI) Read(groupID string) (group Group, err error) {
 }
 
 // Filter returns groups matching the filter
-func (a GroupsAPI) Filter(filter string) (GroupList, error) {
+func (a GroupsAPI) Filter(filter string, includeRoles bool) (GroupList, error) {
 	var groups GroupList
 	req := map[string]string{}
 	if filter != "" {
 		req["filter"] = filter
 	}
+	if !includeRoles {
+		// We exclude roles to reduce load on the scim service
+		req["excludedAttributes"] = "roles"
+	}
 	err := a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Groups", req, &groups)
 	return groups, err
 }
 
-func (a GroupsAPI) ReadByDisplayName(displayName string) (group Group, err error) {
-	groupList, err := a.Filter(fmt.Sprintf("displayName eq '%s'", displayName))
+func (a GroupsAPI) ReadByDisplayName(displayName, attributes string) (group Group, err error) {
+	groupList, err := a.Filter(fmt.Sprintf("displayName eq '%s'", displayName), false)
 	if err != nil {
 		return
 	}
@@ -58,8 +63,9 @@ func (a GroupsAPI) ReadByDisplayName(displayName string) (group Group, err error
 		err = fmt.Errorf("cannot find group: %s", displayName)
 		return
 	}
-	group = groupList.Resources[0]
-	return
+	// We GET the group again to fetch any fields that were excluded the first
+	// time around
+	return a.Read(groupList.Resources[0].ID, attributes)
 }
 
 func (a GroupsAPI) Patch(groupID string, r patchRequest) error {
@@ -67,7 +73,7 @@ func (a GroupsAPI) Patch(groupID string, r patchRequest) error {
 }
 
 func (a GroupsAPI) UpdateNameAndEntitlements(groupID string, name string, externalID string, e entitlements) error {
-	g, err := a.Read(groupID)
+	g, err := a.Read(groupID, "displayName,entitlements,groups,members,externalId")
 	if err != nil {
 		return err
 	}

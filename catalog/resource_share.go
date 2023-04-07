@@ -84,11 +84,6 @@ func (si *ShareInfo) suppressCDFEnabledDiff() {
 	}
 }
 
-func (a SharesAPI) list() (shares Shares, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/shares", nil, &shares)
-	return
-}
-
 func (a SharesAPI) create(si *ShareInfo) error {
 	si.sortSharesByName()
 	return a.client.Post(a.context, "/unity-catalog/shares", si, si)
@@ -133,6 +128,13 @@ func (si ShareInfo) resourceShareMap() map[string]SharedDataObject {
 	return m
 }
 
+func Equal(a, b SharedDataObject) bool {
+	if b.SharedAs == "" {
+		b.SharedAs = a.SharedAs
+	}
+	return reflect.DeepEqual(a, b)
+}
+
 func (si ShareInfo) Diff(other ShareInfo) []ShareDataChange {
 	beforeMap := si.resourceShareMap()
 	afterMap := other.resourceShareMap()
@@ -154,7 +156,7 @@ func (si ShareInfo) Diff(other ShareInfo) []ShareDataChange {
 	for _, afterSdo := range other.Objects {
 		beforeSdo, exists := beforeMap[afterSdo.Name]
 		if exists {
-			if !reflect.DeepEqual(beforeSdo, afterSdo) {
+			if !Equal(beforeSdo, afterSdo) {
 				changes = append(changes, ShareDataChange{
 					Action:     ShareUpdate,
 					DataObject: afterSdo,

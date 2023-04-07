@@ -9,7 +9,7 @@ This data source constructs necessary AWS cross-account policy for you, which is
 
 ## Example Usage
 
-For more detailed usage please see [databricks_aws_assume_role_policy](aws_assume_role_policy.md) or [databricks_aws_s3_mount](../resources/aws_s3_mount.md) pages.
+For more detailed usage please see [databricks_aws_assume_role_policy](aws_assume_role_policy.md) or [databricks_aws_s3_mount](../resources/mount.md) pages.
 
 ```hcl
 data "databricks_aws_crossaccount_policy" "this" {}

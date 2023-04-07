@@ -3,9 +3,7 @@ package clusters
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/client"
-	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/service/clusters"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,93 +15,87 @@ func TestNodeType(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: NodeTypeList{
-					[]NodeType{
+				Response: clusters.ListNodeTypesResponse{
+					NodeTypes: []clusters.NodeType{
 						{
-							NodeTypeID:     "vcpu-worker",
-							InstanceTypeID: "vcpu-worker",
-							MemoryMB:       0,
-							NumCores:       0,
-						},
-						{
-							NodeTypeID:     "m-fleet.xlarge",
-							InstanceTypeID: "m-fleet.xlarge",
-							MemoryMB:       16384,
+							NodeTypeId:     "m-fleet.xlarge",
+							InstanceTypeId: "m-fleet.xlarge",
+							MemoryMb:       16384,
 							NumCores:       4,
 						},
 						{
-							NodeTypeID:     "Random_05",
-							InstanceTypeID: "Random_05",
-							MemoryMB:       1024,
+							NodeTypeId:     "Random_05",
+							InstanceTypeId: "Random_05",
+							MemoryMb:       1024,
 							NumCores:       32,
-							NodeInstanceType: &NodeInstanceType{
+							NodeInstanceType: &clusters.NodeInstanceType{
 								LocalDisks:      3,
-								LocalDiskSizeGB: 100,
+								LocalDiskSizeGb: 100,
 							},
 						},
 						{
-							NodeTypeID:     "Standard_L80s_v2",
-							InstanceTypeID: "Standard_L80s_v2",
-							MemoryMB:       655360,
+							NodeTypeId:     "Standard_L80s_v2",
+							InstanceTypeId: "Standard_L80s_v2",
+							MemoryMb:       655360,
 							NumCores:       80,
-							NodeInstanceType: &NodeInstanceType{
+							NodeInstanceType: &clusters.NodeInstanceType{
 								LocalDisks:      2,
-								InstanceTypeID:  "Standard_L80s_v2",
-								LocalDiskSizeGB: 160,
-								LocalNVMeDisks:  1,
+								InstanceTypeId:  "Standard_L80s_v2",
+								LocalDiskSizeGb: 160,
+								LocalNvmeDisks:  1,
 							},
 						},
 						{
-							NodeTypeID:     "Random_01",
-							InstanceTypeID: "Random_01",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_01",
+							InstanceTypeId: "Random_01",
+							MemoryMb:       8192,
 							NumCores:       8,
-							NodeInstanceType: &NodeInstanceType{
-								InstanceTypeID: "_",
+							NodeInstanceType: &clusters.NodeInstanceType{
+								InstanceTypeId: "_",
 							},
 						},
 						{
-							NodeTypeID:     "Random_02",
-							InstanceTypeID: "Random_02",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_02",
+							InstanceTypeId: "Random_02",
+							MemoryMb:       8192,
 							NumCores:       8,
-							NumGPUs:        2,
-							NodeInstanceType: &NodeInstanceType{
-								InstanceTypeID: "_",
+							NumGpus:        2,
+							NodeInstanceType: &clusters.NodeInstanceType{
+								InstanceTypeId: "_",
 							},
 						},
 						{
-							NodeTypeID:     "Random_03",
-							InstanceTypeID: "Random_03",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_03",
+							InstanceTypeId: "Random_03",
+							MemoryMb:       8192,
 							NumCores:       8,
-							NumGPUs:        1,
-							NodeInstanceType: &NodeInstanceType{
-								InstanceTypeID:      "_",
-								LocalNVMeDisks:      15,
-								LocalNVMeDiskSizeGB: 235,
+							NumGpus:        1,
+							NodeInstanceType: &clusters.NodeInstanceType{
+								InstanceTypeId:      "_",
+								LocalNvmeDisks:      15,
+								LocalNvmeDiskSizeGb: 235,
 							},
 						},
 						{
-							NodeTypeID:     "Random_04",
-							InstanceTypeID: "Random_04",
-							MemoryMB:       32000,
+							NodeTypeId:     "Random_04",
+							InstanceTypeId: "Random_04",
+							MemoryMb:       32000,
 							NumCores:       32,
 							IsDeprecated:   true,
-							NodeInstanceType: &NodeInstanceType{
+							NodeInstanceType: &clusters.NodeInstanceType{
 								LocalDisks:      2,
-								LocalDiskSizeGB: 20,
+								LocalDiskSizeGb: 20,
 							},
 						},
 						{
-							NodeTypeID:     "Standard_F4s",
-							InstanceTypeID: "Standard_F4s",
-							MemoryMB:       8192,
+							NodeTypeId:     "Standard_F4s",
+							InstanceTypeId: "Standard_F4s",
+							MemoryMb:       8192,
 							NumCores:       4,
-							NodeInstanceType: &NodeInstanceType{
+							NodeInstanceType: &clusters.NodeInstanceType{
 								LocalDisks:      1,
-								LocalDiskSizeGB: 16,
-								LocalNVMeDisks:  0,
+								LocalDiskSizeGb: 16,
+								LocalNvmeDisks:  0,
 							},
 						},
 					},
@@ -132,40 +124,40 @@ func TestNodeTypeCategory(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: NodeTypeList{
-					[]NodeType{
+				Response: clusters.ListNodeTypesResponse{
+					NodeTypes: []clusters.NodeType{
 						{
-							NodeTypeID:     "Random_05",
-							InstanceTypeID: "Random_05",
-							MemoryMB:       1024,
+							NodeTypeId:     "Random_05",
+							InstanceTypeId: "Random_05",
+							MemoryMb:       1024,
 							NumCores:       32,
-							NodeInstanceType: &NodeInstanceType{
+							NodeInstanceType: &clusters.NodeInstanceType{
 								LocalDisks:      3,
-								LocalDiskSizeGB: 100,
+								LocalDiskSizeGb: 100,
 							},
 						},
 						{
-							NodeTypeID:     "Random_01",
-							InstanceTypeID: "Random_01",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_01",
+							InstanceTypeId: "Random_01",
+							MemoryMb:       8192,
 							NumCores:       8,
-							NodeInstanceType: &NodeInstanceType{
-								InstanceTypeID: "_",
+							NodeInstanceType: &clusters.NodeInstanceType{
+								InstanceTypeId: "_",
 							},
 							Category: "Memory Optimized",
 						},
 						{
-							NodeTypeID:     "Random_02_GPU",
-							InstanceTypeID: "Random_02_GPU",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_02_GPU",
+							InstanceTypeId: "Random_02_GPU",
+							MemoryMb:       8192,
 							NumCores:       8,
-							NumGPUs:        2,
+							NumGpus:        2,
 							Category:       "Storage Optimized",
 						},
 						{
-							NodeTypeID:     "Random_02",
-							InstanceTypeID: "Random_02",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_02",
+							InstanceTypeId: "Random_02",
+							MemoryMb:       8192,
 							NumCores:       8,
 							Category:       "Storage Optimized",
 						},
@@ -185,78 +177,37 @@ func TestNodeTypeCategory(t *testing.T) {
 	assert.Equal(t, "Random_02", d.Id())
 }
 
-func TestNodeTypeVCPU(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: NodeTypeList{
-					[]NodeType{
-						{
-							NodeTypeID:     "Random_05",
-							InstanceTypeID: "Random_05",
-							MemoryMB:       1024,
-							NumCores:       2,
-							NodeInstanceType: &NodeInstanceType{
-								LocalDisks:      3,
-								LocalDiskSizeGB: 100,
-							},
-						},
-						{
-							NodeTypeID:     "vcpu-worker",
-							InstanceTypeID: "vcpu-worker",
-							MemoryMB:       0,
-							NumCores:       4,
-						},
-					},
-				},
-			},
-		},
-		Read:        true,
-		Resource:    DataSourceNodeType(),
-		NonWritable: true,
-		State: map[string]any{
-			"vcpu": true,
-		},
-		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "vcpu-worker", d.Id())
-}
+// func TestSmallestNodeTypeClouds(t *testing.T) {
+// 	assert.Equal(t, "Standard_D3_v2", ClustersAPI{
+// 		client: &common.DatabricksClient{
+// 			DatabricksClient: &client.DatabricksClient{
+// 				Config: &config.Config{
+// 					Host: "foo.azuredatabricks.net",
+// 				},
+// 			},
+// 		},
+// 	}.defaultSmallestNodeType())
 
-func TestSmallestNodeTypeClouds(t *testing.T) {
-	assert.Equal(t, "Standard_D3_v2", ClustersAPI{
-		client: &common.DatabricksClient{
-			DatabricksClient: &client.DatabricksClient{
-				Config: &config.Config{
-					Host: "foo.azuredatabricks.net",
-				},
-			},
-		},
-	}.defaultSmallestNodeType())
+// 	assert.Equal(t, "n1-standard-4", ClustersAPI{
+// 		client: &common.DatabricksClient{
+// 			DatabricksClient: &client.DatabricksClient{
+// 				Config: &config.Config{
+// 					Host: "foo.gcp.databricks.com",
+// 				},
+// 			},
+// 		},
+// 	}.defaultSmallestNodeType())
 
-	assert.Equal(t, "n1-standard-4", ClustersAPI{
-		client: &common.DatabricksClient{
-			DatabricksClient: &client.DatabricksClient{
-				Config: &config.Config{
-					Host: "foo.gcp.databricks.com",
-				},
-			},
-		},
-	}.defaultSmallestNodeType())
-
-	assert.Equal(t, "i3.xlarge", ClustersAPI{
-		client: &common.DatabricksClient{
-			DatabricksClient: &client.DatabricksClient{
-				Config: &config.Config{
-					Host: "foo.cloud.databricks.com",
-				},
-			},
-		},
-	}.defaultSmallestNodeType())
-}
+// 	assert.Equal(t, "i3.xlarge", ClustersAPI{
+// 		client: &common.DatabricksClient{
+// 			DatabricksClient: &client.DatabricksClient{
+// 				Config: &config.Config{
+// 					Host: "foo.cloud.databricks.com",
+// 				},
+// 			},
+// 		},
+// 	}.defaultSmallestNodeType())
+// }
 
 func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -265,43 +216,45 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: NodeTypeList{
-					[]NodeType{
+				Response: clusters.ListNodeTypesResponse{
+					NodeTypes: []clusters.NodeType{
 						{
-							NodeTypeID:     "Random_05",
-							InstanceTypeID: "Random_05",
-							MemoryMB:       1024,
+							NodeTypeId:     "Random_05",
+							InstanceTypeId: "Random_05",
+							MemoryMb:       1024,
 							NumCores:       32,
-							NodeInstanceType: &NodeInstanceType{
+							NodeInstanceType: &clusters.NodeInstanceType{
 								LocalDisks:      3,
-								LocalDiskSizeGB: 100,
+								LocalDiskSizeGb: 100,
 							},
 						},
 						{
-							NodeTypeID:     "Random_01",
-							InstanceTypeID: "Random_01",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_01",
+							InstanceTypeId: "Random_01",
+							MemoryMb:       8192,
 							NumCores:       8,
-							NodeInstanceType: &NodeInstanceType{
-								InstanceTypeID: "_",
+							NodeInstanceType: &clusters.NodeInstanceType{
+								InstanceTypeId: "_",
 							},
 							Category: "Memory Optimized",
 						},
 						{
-							NodeTypeID:     "Random_02",
-							InstanceTypeID: "Random_02",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_02",
+							InstanceTypeId: "Random_02",
+							MemoryMb:       8192,
 							NumCores:       8,
-							NumGPUs:        2,
+							NumGpus:        2,
 							Category:       "Storage Optimized",
-							NodeInfo: &ClusterCloudProviderNodeInfo{
-								Status: []string{CloudProviderNodeStatusNotAvailableInRegion, CloudProviderNodeStatusNotEnabled},
+							NodeInfo: &clusters.CloudProviderNodeInfo{
+								Status: []clusters.CloudProviderNodeStatus{
+									clusters.CloudProviderNodeStatusNotavailableinregion,
+									clusters.CloudProviderNodeStatusNotenabledonsubscription},
 							},
 						},
 						{
-							NodeTypeID:     "Random_03",
-							InstanceTypeID: "Random_03",
-							MemoryMB:       8192,
+							NodeTypeId:     "Random_03",
+							InstanceTypeId: "Random_03",
+							MemoryMb:       8192,
 							NumCores:       8,
 							Category:       "Storage Optimized",
 						},
@@ -321,22 +274,6 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 	assert.Equal(t, "Random_03", d.Id())
 }
 
-func TestNodeTypeShouldBeSkipped(t *testing.T) {
-	toBeSkipped := NodeType{
-		NodeTypeID:     "Random_02",
-		InstanceTypeID: "Random_02",
-		MemoryMB:       8192,
-		NumCores:       8,
-		NumGPUs:        2,
-		Category:       "Storage Optimized",
-		NodeInfo: &ClusterCloudProviderNodeInfo{
-			Status: []string{CloudProviderNodeStatusNotAvailableInRegion, CloudProviderNodeStatusNotEnabled},
-		},
-	}
-	assert.Equal(t, true, toBeSkipped.shouldBeSkipped())
-	assert.Equal(t, false, NodeType{}.shouldBeSkipped())
-}
-
 func TestNodeTypeFleet(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -344,24 +281,24 @@ func TestNodeTypeFleet(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: NodeTypeList{
-					[]NodeType{
+				Response: clusters.ListNodeTypesResponse{
+					NodeTypes: []clusters.NodeType{
 						{
-							NodeTypeID:     "Random_05",
-							InstanceTypeID: "Random_05",
-							MemoryMB:       1024,
+							NodeTypeId:     "Random_05",
+							InstanceTypeId: "Random_05",
+							MemoryMb:       1024,
 							NumCores:       4,
 						},
 						{
-							NodeTypeID:     "m-fleet.xlarge",
-							InstanceTypeID: "m-fleet.xlarge",
-							MemoryMB:       16384,
+							NodeTypeId:     "m-fleet.xlarge",
+							InstanceTypeId: "m-fleet.xlarge",
+							MemoryMb:       16384,
 							NumCores:       4,
 						},
 						{
-							NodeTypeID:     "m-fleet.2xlarge",
-							InstanceTypeID: "m-fleet.2xlarge",
-							MemoryMB:       32768,
+							NodeTypeId:     "m-fleet.2xlarge",
+							InstanceTypeId: "m-fleet.2xlarge",
+							MemoryMb:       32768,
 							NumCores:       8,
 						},
 					},
@@ -388,7 +325,7 @@ func TestNodeTypeEmptyList(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response:     NodeTypeList{},
+				Response:     clusters.ListNodeTypesResponse{},
 			},
 		},
 		Read:        true,
@@ -409,7 +346,7 @@ func TestNodeTypeFleetEmptyList(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response:     NodeTypeList{},
+				Response:     clusters.ListNodeTypesResponse{},
 			},
 		},
 		Read:        true,
@@ -422,26 +359,4 @@ func TestNodeTypeFleetEmptyList(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "md-fleet.xlarge", d.Id())
-}
-
-func TestNodeTypeVCPUEmptyList(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
-				Response:     NodeTypeList{},
-			},
-		},
-		Read:        true,
-		Resource:    DataSourceNodeType(),
-		NonWritable: true,
-		State: map[string]any{
-			"vcpu": true,
-		},
-		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "vcpu-worker", d.Id())
 }

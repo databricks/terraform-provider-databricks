@@ -10,7 +10,9 @@
   "is_favorite": true,
   "layout": [],
   "name": "Test",
+  "parent": "folders/4451965692354143",
   "options": {
+    "parent": "folders/4451965692354143",
     "refresh_schedules": []
   },
   "permission_tier": "CAN_MANAGE",

@@ -104,6 +104,8 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 func ResourceSqlGlobalConfig() *schema.Resource {
 	s := common.StructToSchema(GlobalConfig{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["enable_serverless_compute"].Deprecated = "This field is intended as an internal API " +
+			"and may be removed from the Databricks Terraform provider in the future"
 		return m
 	})
 	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

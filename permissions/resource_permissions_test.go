@@ -8,10 +8,9 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -410,51 +409,32 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestResourcePermissionsCustomizeDiff_ErrorOnScimMe(t *testing.T) {
+func TestResourcePermissionsCustomizeDiff_ErrorOnCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourcePermissions(),
+		Create:   true,
+		HCL: `
+		cluster_id = "abc"
+		access_control {
+			permission_level = "WHATEVER"
+		}`,
+	}.ExpectError(t, "permission_level WHATEVER is not supported with cluster_id objects")
+}
+
+func TestResourcePermissionsCustomizeDiff_ErrorOnPermissionsDecreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectID:   "/clusters/abc",
-					ObjectType: "clusters",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
-							},
-						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
-							},
-						},
-					},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+			me,
 		},
 		Resource: ResourcePermissions(),
-		Read:     true,
-		ID:       "/clusters/abc",
-	}.ExpectError(t, "Internal error happened")
+		Create:   true,
+		HCL: `
+		cluster_id = "abc"
+		access_control {
+			permission_level = "CAN_ATTACH_TO"
+			user_name = "admin"
+		}`,
+	}.ExpectError(t, "it is not possible to decrease administrative permissions for the current user: admin")
 }
 
 func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
@@ -688,7 +668,7 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 
 func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{},
+		Fixtures: []qa.HTTPFixture{me},
 		Resource: ResourcePermissions(),
 		Create:   true,
 		HCL: `
@@ -699,8 +679,7 @@ func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 		}
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "invalid config supplied. [access_control] "+
-		"It is not possible to restrict any permissions from `admins`.")
+	assert.EqualError(t, err, "it is not possible to restrict any permissions from `admins`")
 }
 
 func TestResourcePermissionsCreate(t *testing.T) {
@@ -844,6 +823,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
 						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
 					},
 				},
 			},
@@ -857,6 +840,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
 						},
 					},
 				},
@@ -1180,7 +1167,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/jobs/get?job_id=123",
+			Resource: "/api/2.1/jobs/get?job_id=123",
 			Response: jobs.Job{
 				CreatorUserName: "creator@example.com",
 			},
@@ -1235,7 +1222,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/123",
+			Resource: "/api/2.0/pipelines/123?",
 			Response: jobs.Job{
 				CreatorUserName: "creator@example.com",
 			},
@@ -1261,14 +1248,6 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		err := p.Delete("/pipelines/123")
 		assert.NoError(t, err)
 	})
-}
-
-func TestCustomizeDiffNoHostYet(t *testing.T) {
-	assert.Nil(t, ResourcePermissions().CustomizeDiff(context.TODO(), nil, &common.DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{},
-		},
-	}))
 }
 
 func TestPathPermissionsResourceIDFields(t *testing.T) {
@@ -1604,6 +1583,112 @@ func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsPasswordUsage(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/authorization/passwords",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							GroupName:       "admins",
+							PermissionLevel: "CAN_USE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/authorization/passwords",
+				Response: ObjectACL{
+					ObjectID:   "/authorization/passwords",
+					ObjectType: "passwords",
+					AccessControlList: []AccessControl{
+						{
+							GroupName:       "admins",
+							PermissionLevel: "CAN_USE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		HCL: `
+		authorization = "passwords"
+		access_control {
+			group_name       = "admins"
+			permission_level = "CAN_USE"
+		}		
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, "admins", firstElem["group_name"])
+	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsRootDirectory(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/directories/0",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+						{
+							GroupName:       "admins",
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/directories/0",
+				Response: ObjectACL{
+					ObjectID:   "/directories/0",
+					ObjectType: "directory",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+						{
+							GroupName:       "admins",
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		HCL: `
+		directory_id = "0"
+		access_control {
+			user_name        = "ben"
+			permission_level = "CAN_READ"
+		}	
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)

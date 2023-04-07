@@ -63,12 +63,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Same as `path`.
 * `file_size` - The file size of the file that is being tracked by this resource in bytes.
-* `dbfs_path` - Path, but with `dbfs:` prefix
+* `dbfs_path` - Path, but with `dbfs:` prefix.
 
 
 ## Import
 
-The resource dbfs file can be imported using the path of the file
+The resource dbfs file can be imported using the path of the file:
 
 ```bash
 $ terraform import databricks_dbfs_file.this <path>

@@ -15,6 +15,7 @@
       "layout": [],
       "name": "Test",
       "options": {
+        "parent": "folders/4451965692354143",
         "refresh_schedules": []
       },
       "refresh_schedules": [],

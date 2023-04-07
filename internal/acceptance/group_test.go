@@ -23,7 +23,7 @@ func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 				// duplicate code between workspace level and account level, because clients
 				// might get different
 				groupsAPI := scim.NewGroupsAPI(ctx, client)
-				group, err := groupsAPI.Read(id)
+				group, err := groupsAPI.Read(id, "displayName,entitlements")
 				if err != nil {
 					return err
 				}
@@ -52,7 +52,7 @@ func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 			resourceCheck("databricks_group.this",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
 					groupsAPI := scim.NewGroupsAPI(ctx, client)
-					group, err := groupsAPI.Read(id)
+					group, err := groupsAPI.Read(id, "displayName,entitlements")
 					if err != nil {
 						return err
 					}

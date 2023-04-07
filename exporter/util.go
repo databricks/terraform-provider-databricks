@@ -20,6 +20,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -139,6 +140,14 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 	}
 }
 
+func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
+	if len(ic.allDirectories) == 0 {
+		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+		ic.allDirectories, _ = notebooksAPI.ListDirectories("/", true)
+	}
+	return ic.allDirectories
+}
+
 func (ic *importContext) emitGroups(u scim.User, principal string) {
 	for _, g := range u.Groups {
 		if g.Type != "direct" {
@@ -191,7 +200,7 @@ func (ic *importContext) cacheGroups() error {
 	if len(ic.allGroups) == 0 {
 		log.Printf("[INFO] Caching groups in memory ...")
 		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
-		g, err := groupsAPI.Filter("")
+		g, err := groupsAPI.Filter("", true)
 		if err != nil {
 			return err
 		}

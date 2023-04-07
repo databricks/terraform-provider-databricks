@@ -122,6 +122,9 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	if w.NetworkID != "" {
 		workspaceCreationRequest["network_id"] = w.NetworkID
 	}
+	if w.PrivateAccessSettingsID != "" {
+		workspaceCreationRequest["private_access_settings_id"] = w.PrivateAccessSettingsID
+	}
 	if w.GkeConfig != nil {
 		workspaceCreationRequest["gke_config"] = w.GkeConfig
 	}
@@ -557,9 +560,11 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				workspace.CustomerManagedKeyID = ""
 			}
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
-			if err != nil {
-				return err
+			if d.HasChangeExcept("token") {
+				err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return err
+				}
 			}
 			return UpdateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
@@ -570,7 +575,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, m any) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			old, new := d.GetChange("private_access_settings_id")
 			if old != "" && new == "" {
 				return fmt.Errorf("cannot remove private access setting from workspace")

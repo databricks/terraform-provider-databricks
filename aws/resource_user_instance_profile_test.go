@@ -26,7 +26,7 @@ func TestResourceUserInstanceProfileCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=roles",
 				Response: scim.User{
 					Schemas:     []scim.URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
@@ -91,7 +91,7 @@ func TestResourceUserInstanceProfileRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=roles",
 				Response: scim.User{
 					Schemas:     []scim.URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
@@ -117,7 +117,7 @@ func TestResourceUserInstanceProfileRead_NoRole(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=roles",
 				Response: scim.User{
 					Schemas:     []scim.URN{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					DisplayName: "Data Scientists",
@@ -137,7 +137,7 @@ func TestResourceUserInstanceProfileRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=roles",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
@@ -157,7 +157,7 @@ func TestResourceUserInstanceProfileRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=roles",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

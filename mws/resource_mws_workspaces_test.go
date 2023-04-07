@@ -152,6 +152,83 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":                   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id":                 "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
+					},
+					"workspace_name": "labdata",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
+			}
+		}
+		private_access_settings_id = "pas_id_a"
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+			master_ip_range = "e"
+		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
 func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -915,6 +992,48 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
 	accountsAPI := []qa.HTTPFixture{
 		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/accounts/c/workspaces/0",
+		},
+	}
+	tokensAPI := []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/token/list",
+			Response: `{}`, // we just need a JSON for this
+		},
+	}
+	tokensAPI = append(tokensAPI, fixtures...)
+	// outer HTTP server is used for inner request for "just created" workspace
+	qa.HTTPFixturesApply(t, tokensAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+		// a bit hacky, but the whole thing is more readable
+		accountsAPI[0].Response = Workspace{
+			WorkspaceStatus: "RUNNING",
+			WorkspaceURL:    wsClient.Config.Host,
+		}
+		state["workspace_url"] = wsClient.Config.Host
+		state["workspace_name"] = "b"
+		state["account_id"] = "c"
+		state["network_id"] = "d"
+		state["is_no_public_ip_enabled"] = "false"
+		qa.ResourceFixture{
+			Fixtures:      accountsAPI,
+			Resource:      ResourceMwsWorkspaces(),
+			InstanceState: state,
+			Update:        true,
+			ID:            "a",
+			HCL: hcl + `
+			workspace_name = "b"
+			account_id = "c",
+			network_id = "d"`,
+		}.Apply(t)
+	})
+}
+
+func updateWorkspaceTokenFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+	accountsAPI := []qa.HTTPFixture{
+		{
 			Method:   "PATCH",
 			Resource: "/api/2.0/accounts/c/workspaces/0",
 		},
@@ -942,6 +1061,7 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 		state["workspace_url"] = wsClient.Config.Host
 		state["workspace_name"] = "b"
 		state["account_id"] = "c"
+		state["storage_customer_managed_key_id"] = "1234"
 		state["is_no_public_ip_enabled"] = "false"
 		qa.ResourceFixture{
 			Fixtures:      accountsAPI,
@@ -951,7 +1071,8 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 			ID:            "a",
 			HCL: hcl + `
 			workspace_name = "b"
-			account_id = "c"`,
+			account_id = "c",
+			storage_customer_managed_key_id = "1234"`,
 		}.Apply(t)
 	})
 }
@@ -977,6 +1098,53 @@ func TestUpdateWorkspace_AddToken(t *testing.T) {
 	}, `token {}`)
 }
 
+func TestUpdateWorkspace_AddTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "Terraform PAT",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "sensitive",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "abcdef",
+				},
+			},
+		},
+	}, map[string]string{
+		"network_id": "alpha",
+		// no token in state
+	}, `
+	network_id = "beta"
+	token {}
+	`)
+}
+
+func TestUpdateWorkspace_DeleteTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+		"network_id":               "alpha",
+	}, `
+	network_id = "beta"
+	`)
+
+}
+
 func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
 		{
@@ -993,6 +1161,44 @@ func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 		"token.0.token_id":         "abcdef",
 		"token.0.token_value":      "sensitive",
 	}, ``)
+}
+
+func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "I am Batman!",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "new-value",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "new-id",
+				},
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+		"network_id":               "alpha",
+	},
+		`
+	network_id = "beta"
+	token { 
+		comment = "I am Batman!"
+	}`)
 }
 
 func TestUpdateWorkspace_ReplaceToken(t *testing.T) {

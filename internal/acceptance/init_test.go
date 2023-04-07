@@ -192,7 +192,7 @@ func run(t *testing.T, steps []step) {
 				if stepConfig == "" {
 					return
 				}
-				logger.Infof("Test %s (%s) step %d config is:\n%s",
+				logger.Infof(ctx, "Test %s (%s) step %d config is:\n%s",
 					t.Name(), cloudEnv, stepNum,
 					commands.TrimLeadingWhitespace(stepConfig))
 			},
@@ -269,6 +269,24 @@ func resourceCheck(name string,
 		return cb(context.Background(), &common.DatabricksClient{
 			DatabricksClient: client,
 		}, rs.Primary.ID)
+	}
+}
+
+// resourceCheckWithState calls back a function with client and resource instance state
+func resourceCheckWithState(name string,
+	cb func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("not found: %s", name)
+		}
+		client, err := client.New(&config.Config{})
+		if err != nil {
+			panic(err)
+		}
+		return cb(context.Background(), &common.DatabricksClient{
+			DatabricksClient: client,
+		}, rs.Primary)
 	}
 }
 
@@ -372,24 +390,28 @@ type stdErrLogger struct {
 	traceEnabled bool
 }
 
-func (l stdErrLogger) Tracef(format string, v ...interface{}) {
+func (l stdErrLogger) Enabled(_ context.Context, level logger.Level) bool {
+	return true
+}
+
+func (l stdErrLogger) Tracef(_ context.Context, format string, v ...interface{}) {
 	if l.traceEnabled {
 		fmt.Fprintf(os.Stderr, "[TRACE] "+format+"\n", v...)
 	}
 }
 
-func (l stdErrLogger) Debugf(format string, v ...interface{}) {
+func (l stdErrLogger) Debugf(_ context.Context, format string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, "\n[DEBUG] "+format+"\n", v...)
 }
 
-func (l stdErrLogger) Infof(format string, v ...interface{}) {
+func (l stdErrLogger) Infof(_ context.Context, format string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, "\n[INFO] "+format+"\n", v...)
 }
 
-func (l stdErrLogger) Warnf(format string, v ...interface{}) {
+func (l stdErrLogger) Warnf(_ context.Context, format string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, "\n[WARN] "+format+"\n", v...)
 }
 
-func (l stdErrLogger) Errorf(format string, v ...interface{}) {
+func (l stdErrLogger) Errorf(_ context.Context, format string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, "[ERROR] "+format+"\n", v...)
 }

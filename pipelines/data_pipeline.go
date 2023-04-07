@@ -21,15 +21,12 @@ func DataSourcePipeline() *schema.Resource {
 
 		if data.Name != "" {
 			searchPattern = fmt.Sprintf("name LIKE '%s'", data.Name)
-			errorMessage = fmt.Errorf("there is no pipeline with name LIKE '%s'; you need to specify `pipeline_name` as an `exact_name` or with wildcards `%s`", data.Name, "%name%")
+			errorMessage = fmt.Errorf("there is no pipeline with name LIKE '%s'; you need to specify `pipeline_name` as an `exact_name` or with percent wildcards", data.Name)
 		}
 
 		pipelines, err := pipelinesAPI.List(100, searchPattern)
-		if err != nil {
-			return err
-		}
-
-		if len(pipelines) == 0 {
+		if err != nil || len(pipelines) == 0 {
+			//return err
 			return errorMessage
 		}
 

@@ -1,0 +1,28 @@
+package acceptance
+
+import (
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"testing"
+)
+
+func TestAccDataSourcePipeline(t *testing.T) {
+	accountLevel(t, step{
+		Template: `
+		data "databricks_pipeline" "this" {
+		}`,
+		Check: func(s *terraform.State) error {
+			r, ok := s.RootModule().Resources["data.databricks_pipeline.this"]
+			if !ok {
+				return fmt.Errorf("data not found in state")
+			}
+			ids := r.Primary.Attributes["ids.%"]
+			if ids == "" {
+				return fmt.Errorf("ids is empty: %v", r.Primary.Attributes)
+			}
+			return nil
+		},
+	})
+}

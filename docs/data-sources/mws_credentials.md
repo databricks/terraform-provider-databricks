@@ -11,7 +11,7 @@ Lists all [databricks_mws_credentials](../resources/mws_credentials.md) in Datab
 
 ## Example Usage
 
-Listing all workspaces in 
+Listing all credentials in 
 
 ```hcl
 provider "databricks" {

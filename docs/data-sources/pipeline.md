@@ -1,32 +1,67 @@
 ---
-subcategory: "Other"
+subcategory: "Compute"
 ---
 # databricks_pipeline Data Source
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
 
-TODO: write me
+Retrieves a name-to-id map of all [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) (DLT) pipelines deployed in a workspace, or those matching the provided search term. 
 
 ## Example Usage
 
-Doing X:
+Get all Delta Live Tables pipelines:
 
 ```hcl
 data "databricks_pipeline" "all" {}
 
-output "all_pipeline" {
+output "all_pipelines" {
   value = data.databricks_pipeline.all
 }
 ```
+
+Filter Delta Live Tables pipelines by name (exact match):
+
+```hcl
+data "databricks_pipeline" "this" {
+  pipeline_name = "my_pipeline"
+}
+
+output "my_pipeline" {
+  value = data.databricks_pipeline.this
+}
+```
+
+Filter Delta Live Tables pipelines by name (wildcard search):
+
+```hcl
+data "databricks_pipeline" "this" {
+  pipeline_name = "%pipeline%"
+}
+
+output "wildcard_pipelines" {
+  value = data.databricks_pipeline.this
+}
+```
+
+## Argument Reference
+
+This data source exports the following attributes:
+
+* `pipeline_name` - (Optional) Filter Delta Live Tables pipelines by a given search term. `%` is the supported wildcard operator.
+  
 
 ## Attribute Reference
 
 This data source exports the following attributes:
 
-* `add_field_name` - write doc
+* `ids` - name-to-id map for [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipelines matching the provided search criteria.
 
 ## Related Resources
 
 The following resources are used in the same context:
 
-* TODO: write me
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_pipeline](../resources/pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
+* [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
+* [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
+* [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).

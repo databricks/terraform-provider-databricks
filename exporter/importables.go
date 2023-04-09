@@ -195,9 +195,26 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_group_role": {
-		Service: "access",
+		Service:      "access",
+		AccountLevel: true,
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
+			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
+		},
+	},
+	"databricks_user_role": {
+		Service:      "access",
+		AccountLevel: true,
+		Depends: []reference{
+			{Path: "user_id", Resource: "databricks_user"},
+			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
+		},
+	},
+	"databricks_service_principal_role": {
+		Service:      "access",
+		AccountLevel: true,
+		Depends: []reference{
+			{Path: "service_principal_id", Resource: "databricks_group"},
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
@@ -530,7 +547,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group": {
-		Service: "groups",
+		Service:      "groups",
+		AccountLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("display_name").(string) + "_" + d.Id()
 		},
@@ -589,16 +607,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if r.ID != g.ID {
 					continue
 				}
-				for _, instanceProfile := range g.Roles {
-					ic.Emit(&resource{
-						Resource: "databricks_instance_profile",
-						ID:       instanceProfile.Value,
-					})
-					ic.Emit(&resource{
-						Resource: "databricks_group_role",
-						ID:       fmt.Sprintf("%s|%s", g.ID, instanceProfile.Value),
-					})
-				}
+				ic.emitRoles("group", g.ID, g.Roles)
 				if g.DisplayName == "users" && !ic.importAllUsers {
 					log.Printf("[INFO] Skipping import of entire user directory ...")
 					continue
@@ -655,7 +664,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group_member": {
-		Service: "groups",
+		Service:      "groups",
+		AccountLevel: true,
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
 			{Path: "member_id", Resource: "databricks_user"},
@@ -664,7 +674,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_user": {
-		Service: "users",
+		Service:      "users",
+		AccountLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			s := d.Get("user_name").(string)
 			// if CLI argument includeUserDomains is set then it includes domain portion as well
@@ -693,11 +704,13 @@ var resourcesMap map[string]importable = map[string]importable{
 				userName = u.UserName
 			}
 			ic.emitGroups(u, userName)
+			ic.emitRoles("user", u.ID, u.Roles)
 			return nil
 		},
 	},
 	"databricks_service_principal": {
-		Service: "users",
+		Service:      "users",
+		AccountLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("display_name").(string)
 			if name == "" {
@@ -737,6 +750,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				spnName = u.ApplicationID
 			}
 			ic.emitGroups(u, spnName)
+			ic.emitRoles("service_principal", u.ID, u.Roles)
 			return nil
 		},
 	},

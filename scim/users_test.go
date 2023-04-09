@@ -32,11 +32,11 @@ func TestUsersFilter(t *testing.T) {
 	defer server.Close()
 	ctx := context.Background()
 	usersAPI := NewUsersAPI(ctx, client)
-	users, err := usersAPI.Filter("")
+	users, err := usersAPI.Filter("", true)
 	require.NoError(t, err)
 	assert.Len(t, users, 1)
 
-	users, err = usersAPI.Filter("userName eq somebody")
+	users, err = usersAPI.Filter("userName eq somebody", true)
 	require.NoError(t, err)
 	assert.Len(t, users, 0)
 }

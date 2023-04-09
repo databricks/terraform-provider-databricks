@@ -80,6 +80,7 @@ type importContext struct {
 	generateDeclaration bool
 	meAdmin             bool
 	prefix              string
+	accountLevel        bool
 }
 
 type mount struct {
@@ -161,16 +162,23 @@ func (ic *importContext) Run() error {
 	if err != nil {
 		return err
 	}
-	me, err := w.CurrentUser.Me(ic.Context)
-	if err != nil {
-		return err
-	}
-	for _, g := range me.Groups {
-		if g.Display == "admins" {
-			ic.meAdmin = true
-			break
+
+	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	if ic.accountLevel {
+		ic.meAdmin = true
+	} else {
+		me, err := w.CurrentUser.Me(ic.Context)
+		if err != nil {
+			return err
+		}
+		for _, g := range me.Groups {
+			if g.Display == "admins" {
+				ic.meAdmin = true
+				break
+			}
 		}
 	}
+
 	for resourceName, ir := range ic.Importables {
 		if ir.List == nil {
 			continue
@@ -178,6 +186,10 @@ func (ic *importContext) Run() error {
 		if !strings.Contains(ic.listing, ir.Service) {
 			log.Printf("[DEBUG] %s (%s service) is not part of listing",
 				resourceName, ir.Service)
+			continue
+		}
+		if ic.accountLevel && !ir.AccountLevel {
+			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
 			continue
 		}
 		if err := ir.List(ic); err != nil {
@@ -473,6 +485,12 @@ func (ic *importContext) Emit(r *resource) {
 	if !ok {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
+	}
+	if ic.accountLevel && !ir.AccountLevel {
+		log.Printf("[DEBUG] %s (%s service) is not part of the account level export",
+			r.Resource, ir.Service)
+		return
+
 	}
 	if !strings.Contains(ic.services, ir.Service) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the import",

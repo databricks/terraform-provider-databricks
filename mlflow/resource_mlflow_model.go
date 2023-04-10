@@ -37,16 +37,6 @@ type Model struct {
 	RegisteredModelID    string         `json:"id,omitempty" tf:"computed,alias:registered_model_id"`
 }
 
-// registeredModel defines response from GET API op
-type registeredModel struct {
-	RegisteredModelDatabricks Model `json:"registered_model_databricks"`
-}
-
-type ModelsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
 func ResourceMlflowModel() *schema.Resource {
 	s := common.StructToSchema(
 		Model{},

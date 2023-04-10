@@ -3,6 +3,7 @@ package mlflow
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/service/mlflow"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -46,37 +47,6 @@ type ModelsAPI struct {
 	context context.Context
 }
 
-func NewModelsAPI(ctx context.Context, m any) ModelsAPI {
-	return ModelsAPI{m.(*common.DatabricksClient), ctx}
-}
-
-func (a ModelsAPI) Create(m *Model) error {
-	return a.client.Post(a.context, "/mlflow/registered-models/create", m, m)
-}
-
-func (a ModelsAPI) Read(name string) (*Model, error) {
-	var m registeredModel
-	err := a.client.Get(a.context, "/mlflow/databricks/registered-models/get", map[string]string{
-		"name": name,
-	}, &m)
-	if err != nil {
-		return nil, err
-	}
-	return &m.RegisteredModelDatabricks, nil
-}
-
-// Update the model entity
-func (a ModelsAPI) Update(m *Model) error {
-	return a.client.Patch(a.context, "/mlflow/registered-models/update", m)
-}
-
-// Delete removes the model by its name
-func (a ModelsAPI) Delete(name string) error {
-	return a.client.Delete(a.context, "/mlflow/registered-models/delete", map[string]string{
-		"name": name,
-	})
-}
-
 func ResourceMlflowModel() *schema.Resource {
 	s := common.StructToSchema(
 		Model{},
@@ -87,28 +57,52 @@ func ResourceMlflowModel() *schema.Resource {
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var m Model
-			common.DataToStructPointer(d, s, &m)
-			if err := NewModelsAPI(ctx, c).Create(&m); err != nil {
-				return err
-			}
-			d.SetId(m.Name)
-			return nil
-		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			m, err := NewModelsAPI(ctx, c).Read(d.Id())
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			return common.StructToData(*m, s, d)
+			model, err := w.RegisteredModels.Create(ctx, mlflow.CreateRegisteredModelRequest{
+				Description: d.Get("description").(string),
+				Name:        d.Get("name").(string),
+				Tags:        d.Get("tags").([]mlflow.RegisteredModelTag),
+			})
+			if err != nil {
+				return err
+			}
+			d.SetId(model.RegisteredModel.Name)
+			return nil
+		},
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			model, err := w.RegisteredModels.GetByName(ctx, d.Id())
+			if err != nil {
+				return err
+			}
+			return common.StructToData(model, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var m Model
-			common.DataToStructPointer(d, s, &m)
-			return NewModelsAPI(ctx, c).Update(&m)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = w.RegisteredModels.Update(ctx, mlflow.UpdateRegisteredModelRequest{
+				Description: d.Get("description").(string),
+				Name:        d.Get("name").(string),
+			})
+			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewModelsAPI(ctx, c).Delete(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = w.RegisteredModels.Delete(ctx, mlflow.DeleteRegisteredModelRequest{
+				Name: d.Get("name").(string),
+			})
+			return err
 		},
 		Schema: s,
 	}.ToResource()

@@ -13,7 +13,7 @@ func TestDataSourcePipeline_Error(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "no pipelines found")
+	}.ExpectError(t, "I'm a teapot")
 }
 
 func TestDataSourcePipelines(t *testing.T) {
@@ -63,7 +63,7 @@ func TestDataSourcePipelines_Search(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?filter=name%20LIKE%20%27Pipeline1%27&max_results=100",
+				Resource: "/api/2.0/pipelines?filter=name+LIKE+%27Pipeline1%27&max_results=100",
 				Response: PipelineListResponse{
 					Statuses: []PipelineStateInfo{
 						{
@@ -93,16 +93,8 @@ func TestDataSourcePipelines_SearchError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?filter=name%20LIKE%20%27Pipeline2%27&max_results=100",
-				Response: PipelineListResponse{
-					Statuses: []PipelineStateInfo{
-						{
-							PipelineID:      "123",
-							Name:            "Pipeline2",
-							CreatorUserName: "user1",
-						},
-					},
-				},
+				Resource: "/api/2.0/pipelines?filter=name+LIKE+%27Pipeline2%27&max_results=100",
+				Response: PipelineListResponse{},
 			},
 		},
 		Resource:    DataSourcePipeline(),
@@ -113,4 +105,23 @@ func TestDataSourcePipelines_SearchError(t *testing.T) {
 		ID: "_",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "there is no pipeline with name LIKE")
+}
+
+func TestDataSourcePipelines_NoneFound(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines?max_results=100",
+				Response: PipelineListResponse{},
+			},
+		},
+		Resource:    DataSourcePipeline(),
+		HCL:         `pipeline_name = ""`,
+		Read:        true,
+		NonWritable: true,
+		//Create:      true,
+		ID: "_",
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "no pipelines found")
 }

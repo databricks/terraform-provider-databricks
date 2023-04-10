@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -13,26 +15,26 @@ func DataSourcePipeline() *schema.Resource {
 		Name string            `json:"pipeline_name,omitempty"`
 		Ids  map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
-	return common.DataResource(pipelineData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
-		data := e.(*pipelineData)
-		pipelinesAPI := NewPipelinesAPI(ctx, c)
-		searchPattern := ""
+	return common.WorkspaceData(func(ctx context.Context, data *pipelineData, w *databricks.WorkspaceClient) error {
 		errorMessage := fmt.Errorf("no pipelines found")
+		pipelineSearch := pipelines.ListPipelines{MaxResults: 100}
 
 		if data.Name != "" {
-			searchPattern = fmt.Sprintf("name LIKE '%s'", data.Name)
+			searchPattern := fmt.Sprintf("name LIKE '%s'", data.Name)
 			errorMessage = fmt.Errorf("there is no pipeline with name LIKE '%s'; you need to specify `pipeline_name` as an `exact_name` or with percent wildcards", data.Name)
+			pipelineSearch = pipelines.ListPipelines{Filter: searchPattern, MaxResults: 100}
 		}
 
-		pipelines, err := pipelinesAPI.List(100, searchPattern)
-		if err != nil || len(pipelines) == 0 {
-			//return err
+		pipelines, err := w.Pipelines.ListPipelinesAll(context.Background(), pipelineSearch)
+		if err != nil {
+			return err
+		} else if len(pipelines) == 0 {
 			return errorMessage
 		}
 
 		data.Ids = make(map[string]string)
 		for _, p := range pipelines {
-			data.Ids[p.Name] = p.PipelineID
+			data.Ids[p.Name] = p.PipelineId
 		}
 
 		return nil

@@ -317,6 +317,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_sql_query"},
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
+			{Path: "task.sql_task.alert.alert_id", Resource: "databricks_sql_alert"},
 			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
@@ -414,6 +415,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.Emit(&resource{
 							Resource: "databricks_sql_dashboard",
 							ID:       task.SqlTask.Dashboard.DashboardID,
+						})
+					}
+					if task.SqlTask.Alert != nil {
+						ic.Emit(&resource{
+							Resource: "databricks_sql_alert",
+							ID:       task.SqlTask.Alert.AlertID,
 						})
 					}
 					if task.SqlTask.WarehouseID != "" {
@@ -746,6 +753,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "cluster_policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "sql_query_id", Resource: "databricks_sql_query"},
+			{Path: "sql_alert_id", Resource: "databricks_sql_alert"},
 			{Path: "sql_dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "sql_endpoint_id", Resource: "databricks_sql_endpoint"},
 			{Path: "registered_model_id", Resource: "databricks_mlflow_model"},
@@ -1463,6 +1471,61 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
+		},
+	},
+	"databricks_sql_alert": {
+		Service: "sql-alerts",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Get("name").(string) + "_" + d.Id()
+		},
+		List: func(ic *importContext) error {
+			wc, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			alerts, err := wc.Alerts.List(ic.Context)
+			if err != nil {
+				return err
+			}
+			for i, alert := range alerts {
+				name := alert.Name
+				if !ic.MatchesName(name) {
+					continue
+				}
+				ic.Emit(&resource{Resource: "databricks_sql_alert", ID: alert.Id})
+				log.Printf("[INFO] Imported %d of %d SQL alerts", i+1, len(alerts))
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			var alert sql.AlertEntity
+			s := ic.Resources["databricks_sql_alert"].Schema
+			common.DataToStructPointer(r.Data, s, &alert)
+			if alert.QueryId != "" {
+				ic.Emit(&resource{Resource: "databricks_sql_query", ID: alert.QueryId})
+			}
+			if alert.Parent != "" {
+				res := sqlParentRegexp.FindStringSubmatch(alert.Parent)
+				if len(res) > 1 {
+					ic.Emit(&resource{
+						Resource:  "databricks_directory",
+						Attribute: "object_id",
+						Value:     res[1],
+					})
+				}
+			}
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/sql/alerts/%s", r.ID),
+					Name:     "sql_alert_" + ic.Importables["databricks_sql_alert"].Name(ic, r.Data)})
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
+			{Path: "parent", Resource: "databricks_directory", Match: "object_id",
+				MatchType: MatchRegexp, Regexp: sqlParentRegexp},
 		},
 	},
 	"databricks_pipeline": {

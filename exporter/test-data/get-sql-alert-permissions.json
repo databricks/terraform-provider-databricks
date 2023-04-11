@@ -1,0 +1,14 @@
+{
+  "access_control_list": [
+    {
+      "permission_level": "CAN_MANAGE",
+      "user_name": "test@domain.com"
+    },
+    {
+      "group_name": "users",
+      "permission_level": "CAN_RUN"
+    }
+  ],
+  "object_id": "alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9",
+  "object_type": "alert"
+}

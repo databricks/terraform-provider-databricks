@@ -9,13 +9,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func directoryPathSuppressDiff(k, old, new string, d *schema.ResourceData) bool {
+	return new == (old + "/")
+}
+
 // ResourceDirectory manages directories
 func ResourceDirectory() *schema.Resource {
 	s := map[string]*schema.Schema{
 		"path": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			DiffSuppressFunc: directoryPathSuppressDiff,
 		},
 		"object_id": {
 			Type:     schema.TypeInt,

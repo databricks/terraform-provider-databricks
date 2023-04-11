@@ -1,7 +1,7 @@
 ---
 subcategory: "Compute"
 ---
-# databricks_pipeline Data Source
+# databricks_pipelines Data Source
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
 
@@ -12,34 +12,34 @@ Retrieves a name-to-id map of all [Delta Live Tables](https://docs.databricks.co
 Get all Delta Live Tables pipelines:
 
 ```hcl
-data "databricks_pipeline" "all" {}
+data "databricks_pipelines" "all" {}
 
 output "all_pipelines" {
-  value = data.databricks_pipeline.all
+  value = data.databricks_pipelines.all
 }
 ```
 
 Filter Delta Live Tables pipelines by name (exact match):
 
 ```hcl
-data "databricks_pipeline" "this" {
+data "databricks_pipelines" "this" {
   pipeline_name = "my_pipeline"
 }
 
 output "my_pipeline" {
-  value = data.databricks_pipeline.this
+  value = data.databricks_pipelines.this
 }
 ```
 
 Filter Delta Live Tables pipelines by name (wildcard search):
 
 ```hcl
-data "databricks_pipeline" "this" {
+data "databricks_pipelines" "this" {
   pipeline_name = "%pipeline%"
 }
 
 output "wildcard_pipelines" {
-  value = data.databricks_pipeline.this
+  value = data.databricks_pipelines.this
 }
 ```
 

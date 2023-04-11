@@ -8,13 +8,13 @@ import (
 	"testing"
 )
 
-func TestAccDataSourcePipeline(t *testing.T) {
+func TestAccDataSourcePipelines(t *testing.T) {
 	accountLevel(t, step{
 		Template: `
-		data "databricks_pipeline" "this" {
+		data "databricks_pipelines" "this" {
 		}`,
 		Check: func(s *terraform.State) error {
-			r, ok := s.RootModule().Resources["data.databricks_pipeline.this"]
+			r, ok := s.RootModule().Resources["data.databricks_pipelines.this"]
 			if !ok {
 				return fmt.Errorf("data not found in state")
 			}

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourcePipeline() *schema.Resource {
+func DataSourcePipelines() *schema.Resource {
 	type pipelineData struct {
 		Name string            `json:"pipeline_name,omitempty"`
 		Ids  map[string]string `json:"ids,omitempty" tf:"computed"`

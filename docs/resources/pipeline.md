@@ -85,7 +85,7 @@ $ terraform import databricks_pipeline.this <pipeline-id>
 The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
-* [databricks_pipeline](../data-sources/pipeline.md) to retrieve [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipeline data.
+* [databricks_pipelines](../data-sources/pipelines.md) to retrieve [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipeline data.
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).

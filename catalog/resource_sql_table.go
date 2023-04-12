@@ -34,7 +34,7 @@ type SqlTableInfo struct {
 	SchemaName            string            `json:"schema_name" tf:"force_new"`
 	TableType             string            `json:"table_type" tf:"force_new"`
 	DataSourceFormat      string            `json:"data_source_format"`
-	ColumnInfos           []SqlColumnInfo   `json:"columns" tf:"alias:column"`
+	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
@@ -46,12 +46,30 @@ type SqlTableInfo struct {
 	exec common.CommandExecutor
 }
 
+type SqlTablesAPI struct {
+	client  *common.DatabricksClient
+	context context.Context
+}
+
+func NewSqlTablesAPI(ctx context.Context, m any) SqlTablesAPI {
+	return SqlTablesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
+}
+
+func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
+	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
+	return
+}
+
+func (a SqlTablesAPI) deleteTable(name string) error {
+	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
+}
+
 func (ti *SqlTableInfo) FullName() string {
 	return fmt.Sprintf("%s.%s.%s", ti.CatalogName, ti.SchemaName, ti.Name)
 }
 
 type SqlTables struct {
-	Tables []TableInfo `json:"tables"`
+	Tables []SqlTableInfo `json:"tables"`
 }
 
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
@@ -87,14 +105,14 @@ func (ti *SqlTableInfo) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (st
 	nodeType := clustersAPI.GetSmallestNodeType(clustersApi.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
 		"terraform-table", clusters.Cluster{
-			ClusterName:            "terraform-table",
+			ClusterName:            "terraform-sql-table",
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
+			DataSecurityMode:       "SINGLE_USER",
 			SparkConf: map[string]string{
-				"spark.databricks.repl.allowedLanguages": "python,sql",
-				"spark.databricks.cluster.profile":       "singleNode",
-				"spark.master":                           "local[*]",
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
 			},
 			CustomTags: map[string]string{
 				"ResourceClass": "SingleNode",
@@ -150,7 +168,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 		createType = "VIEW"
 	}
 
-	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.Name))
+	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.FullName()))
 
 	if len(ti.ColumnInfos) > 0 {
 		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeColumnInfos()))
@@ -173,7 +191,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 			statements = append(statements, fmt.Sprintf("\nLOCATION '%s'", ti.StorageLocation)) // LOCATION '/mnt/csv_files'
 
 			if ti.StorageCredentialName != "" {
-				statements = append(statements, fmt.Sprintf(" WITH CREDENTIAL %s", ti.StorageCredentialName))
+				statements = append(statements, fmt.Sprintf(" WITH (CREDENTIAL `%s`)", ti.StorageCredentialName))
 			}
 		}
 	} else {
@@ -227,7 +245,7 @@ func ResourceSqlTable() *schema.Resource {
 			return update(ctx, d, c)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ti, err := NewTablesAPI(ctx, c).getTable(d.Id())
+			ti, err := NewSqlTablesAPI(ctx, c).getTable(d.Id())
 			if err != nil {
 				return err
 			}
@@ -235,7 +253,7 @@ func ResourceSqlTable() *schema.Resource {
 		},
 		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewTablesAPI(ctx, c).deleteTable(d.Id())
+			return NewSqlTablesAPI(ctx, c).deleteTable(d.Id())
 		},
 	}.ToResource()
 }

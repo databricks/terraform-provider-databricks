@@ -354,7 +354,7 @@ func TestCreateForceOverwriteCannotListGroups(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?excludedAttributes=roles&filter=displayName%20eq%20%27abc%27",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
 			Status:   417,
 			Response: apierr.APIError{
 				Message: "cannot find group",
@@ -376,7 +376,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?excludedAttributes=roles&filter=displayName%20eq%20%27abc%27",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
 			Response: GroupList{
 				Resources: []Group{
 					{
@@ -388,13 +388,6 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Groups/123?attributes=displayName,entitlements,groups,members,externalId",
-			Response: Group{
-				ID: "123",
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/123?attributes=",
 			Response: Group{
 				ID: "123",
 			},

@@ -16,25 +16,20 @@ func DataSourcePipelines() *schema.Resource {
 		Ids  map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
 	return common.WorkspaceData(func(ctx context.Context, data *pipelineData, w *databricks.WorkspaceClient) error {
-		errorMessage := fmt.Errorf("no pipelines found")
 		pipelineSearch := pipelines.ListPipelines{MaxResults: 100}
 
 		if data.Name != "" {
-			searchPattern := fmt.Sprintf("name LIKE '%s'", data.Name)
-			errorMessage = fmt.Errorf("there is no pipeline with name LIKE '%s'; you need to specify `pipeline_name` as the full pipeline name or with percent wildcards", data.Name)
-			pipelineSearch = pipelines.ListPipelines{Filter: searchPattern, MaxResults: 100}
+			pipelineSearch = pipelines.ListPipelines{Filter: fmt.Sprintf("name LIKE '%s'", data.Name), MaxResults: 100}
 		}
 
 		pipelines, err := w.Pipelines.ListPipelinesAll(ctx, pipelineSearch)
 		if err != nil {
 			return err
-		} else if len(pipelines) == 0 {
-			return errorMessage
 		}
 
 		data.Ids = make(map[string]string)
 		for _, p := range pipelines {
-			data.Ids[p.Name] = p.PipelineId
+			data.Ids[p.PipelineId] = p.Name
 		}
 
 		return nil

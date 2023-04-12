@@ -5,7 +5,7 @@ subcategory: "Compute"
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
 
-Retrieves a name-to-id map of all [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) (DLT) pipelines deployed in a workspace, or those matching the provided search term. 
+Retrieves a id-to-name map of all [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) (DLT) pipelines deployed in a workspace, or those matching the provided search term (maximum 100 results). 
 
 ## Example Usage
 
@@ -54,7 +54,7 @@ This data source exports the following attributes:
 
 This data source exports the following attributes:
 
-* `ids` - name-to-id map for [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipelines matching the provided search criteria.
+* `ids` - id-to-name map for [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipelines matching the provided search criteria.
 
 ## Related Resources
 

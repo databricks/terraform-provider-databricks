@@ -360,7 +360,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27spn%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27spn%27",
 				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
@@ -426,7 +426,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27test%40test.com%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test%40test.com%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
@@ -1316,7 +1316,7 @@ func TestImportingUser(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%27",
+				Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{
@@ -1658,7 +1658,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27user%40domain.com%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27user%40domain.com%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},

@@ -36,21 +36,29 @@ resource "databricks_sql_table" "thing" {
   table_type         = "MANAGED"
   data_source_format = "DELTA"
   storage_location   = ""
+
   column {
     name      = "id"
-    position  = 0
-    type_name = "INT"
     type_text = "int"
-    type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
   }
   column {
     name      = "name"
-    position  = 1
-    type_name = "STRING"
     type_text = "varchar(64)"
-    type_json = "{\"name\":\"name\",\"type\":\"varchar(64)\",\"nullable\":true,\"metadata\":{}}"
+    comment   = "name of thing"
   }
   comment = "this table is managed by terraform"
+}
+
+resource "databricks_sql_table" "thing_view" {
+  provider           = databricks.workspace
+  name               = "quickstart_table_view"
+  catalog_name       = databricks_catalog.sandbox.id
+  schema_name        = databricks_schema.things.id
+  table_type         = "VIEW"
+
+  view_definition    = format("SELECT name FROM %s WHERE id == 1", databricks_sql_table.thing.id)
+
+  comment = "this view is managed by terraform"
 }
 ```
 
@@ -61,9 +69,9 @@ The following arguments are required:
 * `name` - Name of table relative to parent catalog and schema. Change forces creation of a new resource.
 * `catalog_name` - Name of parent catalog
 * `schema_name` - Name of parent Schema relative to parent Catalog
-* `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL` or `VIEW`
+* `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL` or `VIEW`. Change forces creation of a new resource.
 * `storage_location` - URL of storage location for Table data (required for EXTERNAL Tables. For Managed Tables, if the path is provided it needs to be a Staging Table path that has been generated through the Staging Table API, otherwise should be empty)
-* `data_source_format` - External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`
+* `data_source_format` - External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`. Change forces creation of a new resource.
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`)
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. This cannot be updated
 * `comment` - (Optional) User-supplied free-form text.
@@ -71,14 +79,10 @@ The following arguments are required:
 
 ### `column` configuration block
 For table columns
+Currently, changing the column definitions for a table will require dropping and re-creating the table
+
 * `name` - User-visible name of column
-* `type_name` - Name of (outer) type
 * `type_text` - Column type spec (with metadata) as SQL text
-* `type_json` - Column type spec (with metadata) as JSON string
-* `position` - Ordinal position of column, starting at 0.
-* `type_precision` - (Optional) Digits of precision; applies to `DECIMAL` columns
-* `type_scale` - (Optional) Digits to right of decimal; applies to `DECIMAL` columns 
-* `type_interval_type` - (Optional) Format of `INTERVAL` columns
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 

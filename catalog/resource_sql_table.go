@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -15,17 +16,10 @@ import (
 )
 
 type SqlColumnInfo struct {
-	Name             string `json:"name"`
-	TypeText         string `json:"type_text"`
-	TypeJson         string `json:"type_json,omitempty"`
-	TypeName         string `json:"type_name"`
-	TypePrecision    int32  `json:"type_precision,omitempty"`
-	TypeScale        int32  `json:"type_scale,omitempty"`
-	TypeIntervalType string `json:"type_interval_type,omitempty"`
-	Position         int32  `json:"position"`
-	Comment          string `json:"comment,omitempty"`
-	Nullable         bool   `json:"nullable,omitempty" tf:"default:true"`
-	PartitionIndex   int32  `json:"partition_index,omitempty"`
+	Name     string `json:"name"`
+	TypeText string `json:"type_text"`
+	Comment  string `json:"comment,omitempty"`
+	Nullable bool   `json:"nullable,omitempty" tf:"default:true"`
 }
 
 type SqlTableInfo struct {
@@ -33,12 +27,11 @@ type SqlTableInfo struct {
 	CatalogName           string            `json:"catalog_name" tf:"force_new"`
 	SchemaName            string            `json:"schema_name" tf:"force_new"`
 	TableType             string            `json:"table_type" tf:"force_new"`
-	DataSourceFormat      string            `json:"data_source_format"`
-	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
+	DataSourceFormat      string            `json:"data_source_format" tf:"force_new"`
+	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed,force_new"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
-	Owner                 string            `json:"owner,omitempty" tf:"computed"`
 	Comment               string            `json:"comment,omitempty"`
 	Properties            map[string]string `json:"properties,omitempty"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
@@ -60,10 +53,6 @@ func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
 	return
 }
 
-func (a SqlTablesAPI) deleteTable(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
-}
-
 func (ti *SqlTableInfo) FullName() string {
 	return fmt.Sprintf("%s.%s.%s", ti.CatalogName, ti.SchemaName, ti.Name)
 }
@@ -73,11 +62,12 @@ type SqlTables struct {
 }
 
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
+	defaultClusterName := "terraform-sql-table"
 	clustersAPI := clusters.NewClustersAPI(ctx, c)
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ti.ClusterID = ci.(string)
 	} else {
-		ti.ClusterID, err = ti.getOrCreateCluster(clustersAPI)
+		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
 		if err != nil {
 			return
 		}
@@ -85,7 +75,7 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 	_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
 	if apierr.IsMissing(err) {
 		// cluster that was previously in a tfstate was deleted
-		ti.ClusterID, err = ti.getOrCreateCluster(clustersAPI)
+		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
 		if err != nil {
 			return
 		}
@@ -98,14 +88,14 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func (ti *SqlTableInfo) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (string, error) {
+func (ti *SqlTableInfo) getOrCreateCluster(clusterName string, clustersAPI clusters.ClustersAPI) (string, error) {
 	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
 		Latest: true,
 	})
 	nodeType := clustersAPI.GetSmallestNodeType(clustersApi.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
-		"terraform-table", clusters.Cluster{
-			ClusterName:            "terraform-sql-table",
+		clusterName, clusters.Cluster{
+			ClusterName:            clusterName,
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
@@ -153,6 +143,23 @@ func (ti *SqlTableInfo) serializeProperties() string {
 	return strings.Join(propsMap[:], ", ") // 'foo'='bar', 'this'='that'
 }
 
+func (ti *SqlTableInfo) buildLocationStatement() string {
+	statements := make([]string, 0, 10)
+	statements = append(statements, fmt.Sprintf("LOCATION '%s'", ti.StorageLocation)) // LOCATION '/mnt/csv_files'
+
+	if ti.StorageCredentialName != "" {
+		statements = append(statements, fmt.Sprintf(" WITH (CREDENTIAL `%s`)", ti.StorageCredentialName))
+	}
+	return strings.Join(statements, "")
+}
+
+func (ti *SqlTableInfo) getTableTypeString() string {
+	if ti.TableType == "VIEW" {
+		return "VIEW"
+	}
+	return "TABLE"
+}
+
 func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	statements := make([]string, 0, 10)
 
@@ -163,10 +170,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 		externalFragment = "EXTERNAL "
 	}
 
-	createType := "TABLE"
-	if isView {
-		createType = "VIEW"
-	}
+	createType := ti.getTableTypeString()
 
 	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.FullName()))
 
@@ -188,11 +192,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 		}
 
 		if ti.StorageLocation != "" {
-			statements = append(statements, fmt.Sprintf("\nLOCATION '%s'", ti.StorageLocation)) // LOCATION '/mnt/csv_files'
-
-			if ti.StorageCredentialName != "" {
-				statements = append(statements, fmt.Sprintf(" WITH (CREDENTIAL `%s`)", ti.StorageCredentialName))
-			}
+			statements = append(statements, "\n"+ti.buildLocationStatement())
 		}
 	} else {
 		statements = append(statements, fmt.Sprintf("\nAS %s", ti.ViewDefinition))
@@ -203,10 +203,68 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	return strings.Join(statements, "")
 }
 
+func (ti *SqlTableInfo) updateTable(ctx context.Context, d *schema.ResourceData, s map[string]*schema.Schema, c *common.DatabricksClient, oldti *SqlTableInfo) error {
+	typestring := ti.getTableTypeString()
+
+	if ti.TableType == "VIEW" {
+		// View only attributes
+		if ti.ViewDefinition != oldti.ViewDefinition {
+			err := ti.applySql(fmt.Sprintf("ALTER VIEW %s AS %s", ti.FullName(), ti.ViewDefinition))
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		// Table only attributes
+		if ti.StorageLocation != oldti.StorageLocation {
+			err := ti.applySql(fmt.Sprintf("ALTER TABLE %s SET %s", ti.FullName(), ti.buildLocationStatement()))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Attributes common to both views and tables
+	if ti.Comment != oldti.Comment {
+		err := ti.applySql(fmt.Sprintf("ALTER %s %s COMMENT '%s'", typestring, ti.FullName(), ti.Comment))
+		if err != nil {
+			return err
+		}
+	}
+
+	if !reflect.DeepEqual(ti.Properties, oldti.Properties) {
+		// First handle removal of properties
+		removeProps := make([]string, 0)
+		for key := range oldti.Properties {
+			if _, ok := ti.Properties[key]; !ok {
+				removeProps = append(removeProps, key)
+			}
+		}
+		if len(removeProps) > 0 {
+			err := ti.applySql(fmt.Sprintf("ALTER %s %s UNSET TBLPROPERTIES IF EXISTS (%s)", typestring, ti.FullName(), strings.Join(removeProps, "")))
+			if err != nil {
+				return err
+			}
+		}
+		// Next handle property changes and additions
+		err := ti.applySql(fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.FullName(), ti.serializeProperties()))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (ti *SqlTableInfo) createTable(ctx context.Context, d *schema.ResourceData, s map[string]*schema.Schema, c *common.DatabricksClient) error {
+	return ti.applySql(ti.buildTableCreateStatement())
+}
 
-	sqlQuery := ti.buildTableCreateStatement()
+func (ti *SqlTableInfo) deleteTable(ctx context.Context, d *schema.ResourceData, s map[string]*schema.Schema, c *common.DatabricksClient) error {
+	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.FullName()))
+}
 
+func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	log.Printf("[INFO] Executing Sql: %s", sqlQuery)
 	r := ti.exec.Execute(ti.ClusterID, "sql", sqlQuery)
 
@@ -218,12 +276,12 @@ func (ti *SqlTableInfo) createTable(ctx context.Context, d *schema.ResourceData,
 
 func ResourceSqlTable() *schema.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			s["data_source_format"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				return strings.ToLower(old) == strings.ToLower(new)
+			}
+			return s
 		})
-	update := updateFunctionFactory("/unity-catalog/tables", []string{
-		"owner", "name", "data_source_format", "columns", "storage_location",
-		"view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
@@ -242,7 +300,7 @@ func ResourceSqlTable() *schema.Resource {
 				return err
 			}
 			d.SetId(ti.FullName())
-			return update(ctx, d, c)
+			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ti, err := NewSqlTablesAPI(ctx, c).getTable(d.Id())
@@ -251,9 +309,22 @@ func ResourceSqlTable() *schema.Resource {
 			}
 			return common.StructToData(ti, tableSchema, d)
 		},
-		Update: update,
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var newti = new(SqlTableInfo)
+			common.DataToStructPointer(d, tableSchema, newti)
+			if err := newti.initCluster(ctx, d, c); err != nil {
+				return err
+			}
+			oldti, err := NewSqlTablesAPI(ctx, c).getTable(d.Id())
+			if err != nil {
+				return err
+			}
+			return newti.updateTable(ctx, d, tableSchema, c, &oldti)
+		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewSqlTablesAPI(ctx, c).deleteTable(d.Id())
+			var ti = new(SqlTableInfo)
+			common.DataToStructPointer(d, tableSchema, ti)
+			return ti.deleteTable(ctx, d, tableSchema, c)
 		},
 	}.ToResource()
 }

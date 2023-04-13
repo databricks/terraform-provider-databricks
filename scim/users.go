@@ -32,14 +32,16 @@ func (a UsersAPI) Create(ru User) (user User, err error) {
 }
 
 // Filter retrieves users by filter
-func (a UsersAPI) Filter(filter string) (u []User, err error) {
+func (a UsersAPI) Filter(filter string, excludeRoles bool) (u []User, err error) {
 	var users UserList
 	req := map[string]string{}
 	if filter != "" {
 		req["filter"] = filter
 	}
 	// We exclude roles to reduce load on the scim service
-	req["excludedAttributes"] = "roles"
+	if excludeRoles {
+		req["excludedAttributes"] = "roles"
+	}
 	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Users", req, &users)
 	if err != nil {
 		return

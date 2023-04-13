@@ -82,6 +82,7 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_group](../resources/group.md) | Yes |
 | [databricks_group_instance_profile](../resources/group_instance_profile.md) | Yes |
 | [databricks_group_member](../resources/group_member.md) | Yes |
+| [databricks_group_role](../resources/group_role.md) | Yes |
 | [databricks_instance_pool](../resources/instance_pool.md) | Yes |
 | [databricks_instance_profile](../resources/instance_profile.md) | Yes |
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes |
@@ -98,6 +99,7 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_secret_acl](../resources/secret_acl.md) | Yes |
 | [databricks_secret_scope](../resources/secret_scope.md) | Yes |
 | [databricks_service_principal](../resources/service_principal.md) | Yes |
+| [databricks_service_principal_role](../resources/service_principal_role.md) | Yes |
 | [databricks_sql_alert](../resources/sql_alert.md) | Yes |
 | [databricks_sql_dashboard](../resources/sql_dashboard.md) | Yes |
 | [databricks_sql_endpoint](../resources/sql_endpoint.md) | Yes |
@@ -109,4 +111,5 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_token](../resources/token.md) | Not Applicable |
 | [databricks_user](../resources/user.md) | Yes |
 | [databricks_user_instance_profile](../resources/user_instance_profile.md) | No (Deprecated) |
+| [databricks_user_role](../resources/user_role.md) | Yes |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) |

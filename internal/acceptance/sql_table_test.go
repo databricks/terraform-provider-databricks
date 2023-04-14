@@ -4,30 +4,30 @@ import (
 	"testing"
 )
 
-func TestAccResourceSqlTable(t *testing.T) {
-	workspaceLevel(t, step{
+func TestAccResourceSqlTable_Managed(t *testing.T) {
+	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
-			name = "foo"
+			name 		 = "foom"
 			catalog_name = "main"
 		}
 
 		resource "databricks_sql_table" "this" {
 			name               = "bar"
 			catalog_name       = "main"
-			schema_name        = "foo"
+			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
-			data_source_format = "DELTA"
+			properties         = {
+				this      = "that"
+				something = "else"
+			}
+
 			column {
 				name      = "id"
-				position  = 0
-				type_name = "INT"
 				type_text = "int"
 			}
 			column {
 				name      = "name"
-				position  = 1
-				type_name = "STRING"
 				type_text = "varchar(64)"
 			}
 			comment = "this table is managed by terraform"
@@ -35,18 +35,157 @@ func TestAccResourceSqlTable(t *testing.T) {
 	}, step{
 		Template: `
 		resource "databricks_schema" "this" {
-			name = "foo"
+			name 		 = "foom"
 			catalog_name = "main"
 		}
 
 		resource "databricks_sql_table" "this" {
 			name               = "bar"
 			catalog_name       = "main"
-			schema_name        = "foo"
-			table_type         = "EXTNERAL"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				that      = "this"
+				something = "else2"
+			}
+			
+			column {
+				name      = "id"
+				type_text = "int"
+			}
+			column {
+				name      = "name"
+				type_text = "string"
+			}
+			comment = "this table is managed by terraform..."
+		}`,
+	})
+}
+
+func TestAccResourceSqlTable_External(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name 		 = "fooe"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "EXTERNAL"
 			data_source_format = "DELTA"
-			storage_location   = "s3://ext-main/foo/bar1"
-			comment = "this table is managed by terraform"
+			storage_location   = "abfss://curated@dwxnpexpdbxpoc440381fe4d.dfs.core.windows.net/fusion_v2" #"s3://ext-main/foo/bar1"
+			comment 		   = "this table is managed by terraform"
+		}`,
+	})
+}
+
+func TestAccResourceSqlTable_View(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "foov"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			comment 		   = "this table is managed by terraform"
+			properties         = {
+				this      = "that"
+				something = "else"
+			}
+
+			column {
+				name      = "id"
+				type_text = "string"
+			}
+		}
+		
+		resource "databricks_sql_table" "view" {
+			name               = "bar_view"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "VIEW"
+			comment 		   = "this view is managed by terraform"
+			view_definition    = format("SELECT id FROM %s", databricks_sql_table.this.id)
+
+			properties         = {
+				this      = "that"
+				something = "else"
+			}
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "foov"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			data_source_format = "DELTA"
+			comment 		   = "this table is managed by terraform..."
+			properties         = {
+				that = "this"
+				else = "something"
+			}
+
+			column {
+				name      = "id"
+				type_text = "string"
+			}
+		}
+		
+		resource "databricks_sql_table" "view" {
+			name               = "bar_view"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "VIEW"
+			comment 		   = "this view is managed by terraform..."
+			view_definition    = format("SELECT id, 1 FROM %s", databricks_sql_table.this.id)
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "foov"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			data_source_format = "DELTA"
+			comment 		   = "this table is managed by terraform..."
+
+			column {
+				name      = "id"
+				type_text = "string"
+			}
+
+			column {
+				name      = "name"
+				type_text = "string"
+			}
+		}
+		
+		resource "databricks_sql_table" "view" {
+			name               = "bar_view"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "VIEW"
+			comment 		   = "this view is managed by terraform..."
+			view_definition    = format("SELECT id, name FROM %s", databricks_sql_table.this.id)
 		}`,
 	})
 }

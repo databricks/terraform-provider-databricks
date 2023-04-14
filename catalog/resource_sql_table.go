@@ -27,13 +27,13 @@ type SqlTableInfo struct {
 	CatalogName           string            `json:"catalog_name" tf:"force_new"`
 	SchemaName            string            `json:"schema_name" tf:"force_new"`
 	TableType             string            `json:"table_type" tf:"force_new"`
-	DataSourceFormat      string            `json:"data_source_format" tf:"force_new"`
+	DataSourceFormat      string            `json:"data_source_format,omitempty" tf:"force_new"`
 	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed,force_new"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Comment               string            `json:"comment,omitempty"`
-	Properties            map[string]string `json:"properties,omitempty"`
+	Properties            map[string]string `json:"properties,omitempty" tf:"computed"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
 
 	exec common.CommandExecutor
@@ -59,6 +59,34 @@ func (ti *SqlTableInfo) FullName() string {
 
 type SqlTables struct {
 	Tables []SqlTableInfo `json:"tables"`
+}
+
+// These properties are added automatically
+// If we do not customize the diff using these then terraform will constantly try to remove them
+// `properties` is essentially a "partially" computed field
+// This needs to be replaced with something a bit more robust in the future
+func sqlTableIsManagedProperty(key string) bool {
+	managedProps := map[string]bool{
+		"delta.lastCommitTimestamp":                                true,
+		"delta.lastUpdateVersion":                                  true,
+		"delta.minReaderVersion":                                   true,
+		"delta.minWriterVersion":                                   true,
+		"view.catalogAndNamespace.numParts":                        true,
+		"view.catalogAndNamespace.part.0":                          true,
+		"view.catalogAndNamespace.part.1":                          true,
+		"view.query.out.col.0":                                     true,
+		"view.query.out.numCols":                                   true,
+		"view.referredTempFunctionsNames":                          true,
+		"view.referredTempViewNames":                               true,
+		"view.sqlConfig.spark.sql.hive.convertCTAS":                true,
+		"view.sqlConfig.spark.sql.legacy.createHiveTableByDefault": true,
+		"view.sqlConfig.spark.sql.parquet.compression.codec":       true,
+		"view.sqlConfig.spark.sql.session.timeZone":                true,
+		"view.sqlConfig.spark.sql.sources.commitProtocolClass":     true,
+		"view.sqlConfig.spark.sql.sources.default":                 true,
+		"view.sqlConfig.spark.sql.streaming.stopTimeout":           true,
+	}
+	return managedProps[key]
 }
 
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
@@ -138,7 +166,9 @@ func (ti *SqlTableInfo) serializeColumnInfos() string {
 func (ti *SqlTableInfo) serializeProperties() string {
 	propsMap := make([]string, 0, len(ti.Properties))
 	for key, value := range ti.Properties {
-		propsMap = append(propsMap, fmt.Sprintf("'%s'='%s'", key, value))
+		if !sqlTableIsManagedProperty(key) {
+			propsMap = append(propsMap, fmt.Sprintf("'%s'='%s'", key, value))
+		}
 	}
 	return strings.Join(propsMap[:], ", ") // 'foo'='bar', 'this'='that'
 }
@@ -178,6 +208,12 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeColumnInfos()))
 	}
 
+	if !isView {
+		if ti.DataSourceFormat != "" {
+			statements = append(statements, fmt.Sprintf("\nUSING %s", ti.DataSourceFormat)) // USING CSV
+		}
+	}
+
 	if ti.Comment != "" {
 		statements = append(statements, fmt.Sprintf("\nCOMMENT '%s'", ti.Comment)) // COMMENT 'this is a comment'
 	}
@@ -187,10 +223,6 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	}
 
 	if !isView {
-		if ti.DataSourceFormat != "" {
-			statements = append(statements, fmt.Sprintf("\nUSING %s", ti.DataSourceFormat)) // USING CSV
-		}
-
 		if ti.StorageLocation != "" {
 			statements = append(statements, "\n"+ti.buildLocationStatement())
 		}
@@ -226,7 +258,7 @@ func (ti *SqlTableInfo) updateTable(ctx context.Context, d *schema.ResourceData,
 
 	// Attributes common to both views and tables
 	if ti.Comment != oldti.Comment {
-		err := ti.applySql(fmt.Sprintf("ALTER %s %s COMMENT '%s'", typestring, ti.FullName(), ti.Comment))
+		err := ti.applySql(fmt.Sprintf("COMMENT ON %s %s IS '%s'", typestring, ti.FullName(), ti.Comment))
 		if err != nil {
 			return err
 		}
@@ -241,7 +273,7 @@ func (ti *SqlTableInfo) updateTable(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 		if len(removeProps) > 0 {
-			err := ti.applySql(fmt.Sprintf("ALTER %s %s UNSET TBLPROPERTIES IF EXISTS (%s)", typestring, ti.FullName(), strings.Join(removeProps, "")))
+			err := ti.applySql(fmt.Sprintf("ALTER %s %s UNSET TBLPROPERTIES IF EXISTS (%s)", typestring, ti.FullName(), strings.Join(removeProps, ",")))
 			if err != nil {
 				return err
 			}
@@ -261,7 +293,7 @@ func (ti *SqlTableInfo) createTable(ctx context.Context, d *schema.ResourceData,
 }
 
 func (ti *SqlTableInfo) deleteTable(ctx context.Context, d *schema.ResourceData, s map[string]*schema.Schema, c *common.DatabricksClient) error {
-	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.FullName()))
+	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), d.Id()))
 }
 
 func (ti *SqlTableInfo) applySql(sqlQuery string) error {
@@ -278,15 +310,33 @@ func ResourceSqlTable() *schema.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["data_source_format"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				return strings.ToLower(old) == strings.ToLower(new)
+				if new == "" {
+					return true
+				}
+				return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
 			}
 			return s
 		})
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			if d.Get("table_type") != "EXTERNAL" {
-				return nil
+			if d.HasChange("properties") {
+				old, new := d.GetChange("properties")
+				oldProps := old.(map[string]interface{})
+				newProps := new.(map[string]interface{})
+				for key := range oldProps {
+					if _, ok := newProps[key]; !ok {
+						if sqlTableIsManagedProperty(key) {
+							newProps[key] = oldProps[key]
+						}
+					}
+				}
+				d.SetNew("properties", newProps)
+			}
+			// No support yet for changing the COMMENT on a VIEW
+			// Once added this can be removed
+			if d.HasChange("comment") && d.Get("table_type") == "VIEW" {
+				d.ForceNew("comment")
 			}
 			return nil
 		},
@@ -324,6 +374,9 @@ func ResourceSqlTable() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, ti)
+			if err := ti.initCluster(ctx, d, c); err != nil {
+				return err
+			}
 			return ti.deleteTable(ctx, d, tableSchema, c)
 		},
 	}.ToResource()

@@ -70,11 +70,11 @@ The following arguments are required:
 * `catalog_name` - Name of parent catalog
 * `schema_name` - Name of parent Schema relative to parent Catalog
 * `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL` or `VIEW`. Change forces creation of a new resource.
-* `storage_location` - URL of storage location for Table data (required for EXTERNAL Tables. For Managed Tables, if the path is provided it needs to be a Staging Table path that has been generated through the Staging Table API, otherwise should be empty)
-* `data_source_format` - External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`. Change forces creation of a new resource.
-* `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`)
+* `storage_location` - URL of storage location for Table data (required for EXTERNAL Tables. For Managed Tables, if the path is provided it needs to be a Staging Table path that has been generated through the Staging Table API, otherwise should be empty). Not supported for `VIEW` table_type.
+* `data_source_format` - External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`. Change forces creation of a new resource. Not supported for `MANAGED` tables.
+* `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`). Not supported for `MANAGED` or `EXTERNAL` table_type.
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. This cannot be updated
-* `comment` - (Optional) User-supplied free-form text.
+* `comment` - (Optional) User-supplied free-form text. Changing comment is not currently supported on `VIEW` table_type.
 * `properties` - (Optional) Extensible Table properties.
 
 ### `column` configuration block

@@ -218,7 +218,6 @@ func TestResourceSqlTableUpdate_Managed(t *testing.T) {
 		column {
 			name = "id"
 			type_text = "string"
-			type_name = "string"
 			position = 0
 		}
 		`,

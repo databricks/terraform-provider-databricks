@@ -216,6 +216,12 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 						continue
 					}
 					scm[fieldName].MaxItems = maxItems
+				case "min_items":
+					minItems, err := strconv.Atoi(tfValue)
+					if err != nil {
+						continue
+					}
+					scm[fieldName].MinItems = minItems
 				}
 			}
 		}

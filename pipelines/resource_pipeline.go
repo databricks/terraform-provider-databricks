@@ -81,6 +81,11 @@ type filters struct {
 	Exclude []string `json:"exclude,omitempty"`
 }
 
+type Notification struct {
+	EmailRecipients []string `json:"email_recipients" tf:"min_items:1"`
+	Alerts          []string `json:"alerts" tf:"min_items:1"`
+}
+
 type PipelineSpec struct {
 	ID                  string            `json:"id,omitempty" tf:"computed"`
 	Name                string            `json:"name,omitempty"`
@@ -97,6 +102,7 @@ type PipelineSpec struct {
 	Photon              bool              `json:"photon,omitempty"`
 	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:ADVANCED"`
 	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
+	Notifications       []Notification    `json:"notifications,omitempty" tf:",alias:notification"`
 }
 
 type createPipelineResponse struct {

@@ -1,5 +1,15 @@
 # Version changelog
 
+## 1.14.3
+
+ * Add exporter support for [databricks_sql_alert](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_alert) ([#2207](https://github.com/databricks/terraform-provider-databricks/pull/2207)).
+ * Add support for notifications in [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) resource ([#2218](https://github.com/databricks/terraform-provider-databricks/pull/2218)).
+ * Add suppress diff for `path` argument of [databricks_directory](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/directory) resource when it ends with `/` ([#2204](https://github.com/databricks/terraform-provider-databricks/pull/2204)).
+ * Exporter: don't export `storage` when [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) was created with default value ([#2203](https://github.com/databricks/terraform-provider-databricks/pull/2203)).
+ * Exporter: phase 1 of support for Account-level exports ([#2205](https://github.com/databricks/terraform-provider-databricks/pull/2205)).
+ * Fixed regression in [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/group) data not to require workspace admin privileges ([#2210](https://github.com/databricks/terraform-provider-databricks/pull/2210)).
+ * Suppress diff for `edition` attribute in [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) ([#2219](https://github.com/databricks/terraform-provider-databricks/pull/2219)).
+
 ## 1.14.2
 
  * Explicitly include SCIM attributes for [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group), [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user), [databricks_user_role](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user_role), [databricks_group_role](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_role), [databricks_group_member](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_member), [databricks_group_instance_profile](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_instance_profile), [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) data, [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group) data, and [databricks_entitlement](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/entitlement) resources ([#2200](https://github.com/databricks/terraform-provider-databricks/pull/2200)).

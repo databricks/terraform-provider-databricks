@@ -299,3 +299,11 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 		},
 	}
 }
+
+func EqualFoldDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	if strings.EqualFold(old, new) {
+		log.Printf("[INFO] Suppressing diff on %s", k)
+		return true
+	}
+	return false
+}

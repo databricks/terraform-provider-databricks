@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -284,21 +283,13 @@ func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-func AutoscaleModeDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
-	if strings.EqualFold(old, new) {
-		log.Printf("[INFO] Suppressing diff on autoscale mode")
-		return true
-	}
-	return false
-}
-
 func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
 	cluster, _ := m["cluster"].Elem.(*schema.Resource)
 	clustersSchema := cluster.Schema
 	clustersSchema["spark_conf"].DiffSuppressFunc = clusters.SparkConfDiffSuppressFunc
 	common.MustSchemaPath(clustersSchema,
 		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
-	common.MustSchemaPath(clustersSchema, "autoscale", "mode").DiffSuppressFunc = AutoscaleModeDiffSuppress
+	common.MustSchemaPath(clustersSchema, "autoscale", "mode").DiffSuppressFunc = common.EqualFoldDiffSuppress
 
 	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
 	gcpAttributesSchema := gcpAttributes.Schema
@@ -312,6 +303,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	}
 	m["channel"].ValidateFunc = validation.StringInSlice([]string{"current", "preview"}, true)
 	m["edition"].ValidateFunc = validation.StringInSlice([]string{"pro", "core", "advanced"}, true)
+	m["edition"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 
 	m["storage"].DiffSuppressFunc = suppressStorageDiff
 	m["storage"].ConflictsWith = []string{"catalog"}

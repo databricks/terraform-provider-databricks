@@ -170,9 +170,7 @@ func validatePath(i interface{}, k string) (_ []string, errors []error) {
 func ResourceRepo() *schema.Resource {
 	s := common.StructToSchema(ReposInformation{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["url"].ValidateFunc = validation.IsURLWithScheme([]string{"https", "http"})
-		s["git_provider"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			return strings.EqualFold(old, new)
-		}
+		s["git_provider"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 		s["branch"].ConflictsWith = []string{"tag"}
 		s["branch"].ValidateFunc = validation.StringIsNotWhiteSpace
 		s["path"].ValidateFunc = validatePath

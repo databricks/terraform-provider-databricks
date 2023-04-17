@@ -19,7 +19,6 @@ func m() mlflow.RegisteredModel {
 }
 
 func TestModelCreateNoTags(t *testing.T) {
-	//model := m()
 	//TODO: getting error: panic: interface conversion: interface {} is []interface {}, not []mlflow.RegisteredModelTag
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -9,17 +9,14 @@ import (
 
 func TestResourceSqlTableCreateStatement_External(t *testing.T) {
 	ti := &SqlTableInfo{
-		Name:             "bar",
-		CatalogName:      "main",
-		SchemaName:       "foo",
-		TableType:        "EXTERNAL",
-		DataSourceFormat: "DELTA",
-		//ColumnInfos:           []SqlColumnInfo,
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "EXTERNAL",
+		DataSourceFormat:      "DELTA",
 		StorageLocation:       "s3://ext-main/foo/bar1",
 		StorageCredentialName: "somecred",
-		//ViewDefinition        string            `json:"view_definition,omitempty"`
-		Comment: "terraform managed",
-		//Properties            map[string]string `json:"properties,omitempty"`
+		Comment:               "terraform managed",
 	}
 	stmt := ti.buildTableCreateStatement()
 	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE main.foo.bar")
@@ -30,17 +27,14 @@ func TestResourceSqlTableCreateStatement_External(t *testing.T) {
 
 func TestResourceSqlTableCreateStatement_View(t *testing.T) {
 	ti := &SqlTableInfo{
-		Name:             "bar",
-		CatalogName:      "main",
-		SchemaName:       "foo",
-		TableType:        "VIEW",
-		DataSourceFormat: "DELTA",
-		//ColumnInfos:           []SqlColumnInfo,
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "VIEW",
+		DataSourceFormat:      "DELTA",
 		StorageLocation:       "s3://ext-main/foo/bar1",
 		StorageCredentialName: "somecred",
-		//ViewDefinition        string            `json:"view_definition,omitempty"`
-		Comment: "terraform managed",
-		//Properties            map[string]string `json:"properties,omitempty"`
+		Comment:               "terraform managed",
 	}
 	stmt := ti.buildTableCreateStatement()
 	assert.Contains(t, stmt, "CREATE VIEW main.foo.bar")

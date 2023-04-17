@@ -57,10 +57,6 @@ func (ti *SqlTableInfo) FullName() string {
 	return fmt.Sprintf("%s.%s.%s", ti.CatalogName, ti.SchemaName, ti.Name)
 }
 
-type SqlTables struct {
-	Tables []SqlTableInfo `json:"tables"`
-}
-
 // These properties are added automatically
 // If we do not customize the diff using these then terraform will constantly try to remove them
 // `properties` is essentially a "partially" computed field
@@ -235,7 +231,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	return strings.Join(statements, "")
 }
 
-func (ti *SqlTableInfo) updateTable(ctx context.Context, d *schema.ResourceData, s map[string]*schema.Schema, c *common.DatabricksClient, oldti *SqlTableInfo) error {
+func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
 	typestring := ti.getTableTypeString()
 
 	if ti.TableType == "VIEW" {
@@ -288,12 +284,12 @@ func (ti *SqlTableInfo) updateTable(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func (ti *SqlTableInfo) createTable(ctx context.Context, d *schema.ResourceData, s map[string]*schema.Schema, c *common.DatabricksClient) error {
+func (ti *SqlTableInfo) createTable() error {
 	return ti.applySql(ti.buildTableCreateStatement())
 }
 
-func (ti *SqlTableInfo) deleteTable(ctx context.Context, d *schema.ResourceData, s map[string]*schema.Schema, c *common.DatabricksClient) error {
-	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), d.Id()))
+func (ti *SqlTableInfo) deleteTable() error {
+	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.FullName()))
 }
 
 func (ti *SqlTableInfo) applySql(sqlQuery string) error {
@@ -346,7 +342,7 @@ func ResourceSqlTable() *schema.Resource {
 			if err := ti.initCluster(ctx, d, c); err != nil {
 				return err
 			}
-			if err := ti.createTable(ctx, d, tableSchema, c); err != nil {
+			if err := ti.createTable(); err != nil {
 				return err
 			}
 			d.SetId(ti.FullName())
@@ -369,7 +365,7 @@ func ResourceSqlTable() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return newti.updateTable(ctx, d, tableSchema, c, &oldti)
+			return newti.updateTable(&oldti)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)
@@ -377,7 +373,7 @@ func ResourceSqlTable() *schema.Resource {
 			if err := ti.initCluster(ctx, d, c); err != nil {
 				return err
 			}
-			return ti.deleteTable(ctx, d, tableSchema, c)
+			return ti.deleteTable()
 		},
 	}.ToResource()
 }

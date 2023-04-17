@@ -231,33 +231,25 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	return strings.Join(statements, "")
 }
 
-func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
+func (ti *SqlTableInfo) Diff(oldti *SqlTableInfo) ([]string, error) {
+	statements := make([]string, 0, 0)
 	typestring := ti.getTableTypeString()
 
 	if ti.TableType == "VIEW" {
 		// View only attributes
 		if ti.ViewDefinition != oldti.ViewDefinition {
-			err := ti.applySql(fmt.Sprintf("ALTER VIEW %s AS %s", ti.FullName(), ti.ViewDefinition))
-			if err != nil {
-				return err
-			}
+			statements = append(statements, fmt.Sprintf("ALTER VIEW %s AS %s", ti.FullName(), ti.ViewDefinition))
 		}
 	} else {
 		// Table only attributes
 		if ti.StorageLocation != oldti.StorageLocation {
-			err := ti.applySql(fmt.Sprintf("ALTER TABLE %s SET %s", ti.FullName(), ti.buildLocationStatement()))
-			if err != nil {
-				return err
-			}
+			statements = append(statements, fmt.Sprintf("ALTER TABLE %s SET %s", ti.FullName(), ti.buildLocationStatement()))
 		}
 	}
 
 	// Attributes common to both views and tables
 	if ti.Comment != oldti.Comment {
-		err := ti.applySql(fmt.Sprintf("COMMENT ON %s %s IS '%s'", typestring, ti.FullName(), ti.Comment))
-		if err != nil {
-			return err
-		}
+		statements = append(statements, fmt.Sprintf("COMMENT ON %s %s IS '%s'", typestring, ti.FullName(), ti.Comment))
 	}
 
 	if !reflect.DeepEqual(ti.Properties, oldti.Properties) {
@@ -269,18 +261,23 @@ func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
 			}
 		}
 		if len(removeProps) > 0 {
-			err := ti.applySql(fmt.Sprintf("ALTER %s %s UNSET TBLPROPERTIES IF EXISTS (%s)", typestring, ti.FullName(), strings.Join(removeProps, ",")))
-			if err != nil {
-				return err
-			}
+			statements = append(statements, fmt.Sprintf("ALTER %s %s UNSET TBLPROPERTIES IF EXISTS (%s)", typestring, ti.FullName(), strings.Join(removeProps, ",")))
 		}
 		// Next handle property changes and additions
-		err := ti.applySql(fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.FullName(), ti.serializeProperties()))
-		if err != nil {
-			return err
-		}
+		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.FullName(), ti.serializeProperties()))
 	}
 
+	return statements, nil
+}
+
+func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
+	statements, err := ti.Diff(oldti)
+	if err != nil {
+		return err
+	}
+	for _, statement := range statements {
+		err = ti.applySql(statement)
+	}
 	return nil
 }
 

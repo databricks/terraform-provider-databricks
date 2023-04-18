@@ -160,7 +160,7 @@ type JobTaskSettings struct {
 	DependsOn   []TaskDependency `json:"depends_on,omitempty"`
 
 	// BEGIN Jobs + RunIf preview
-	RunIf string `json:"run_if,omitempty"`
+	RunIf string `json:"run_if,omitempty" tf:"suppress_diff"`
 	// END Jobs + RunIf preview
 
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`

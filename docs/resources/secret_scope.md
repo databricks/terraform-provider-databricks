@@ -24,7 +24,6 @@ The following arguments are supported:
 
 On Azure it's possible to create and manage secrets in Azure Key Vault and have use Azure Databricks secret redaction & access control functionality for reading them. There has to be a single Key Vault per single secret scope. To define AKV access policies, you must use [azurerm_key_vault_access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) instead of [access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault#access_policy) blocks on `azurerm_key_vault`, otherwise Terraform will remove access policies needed to access the Key Vault and the secret scope won't be in a usable state anymore.
 
--> **Note** Currently, it's only possible to create Azure Key Vault scopes with Azure CLI authentication and not with Service Principal. That means, `az login --service-principal --username $ARM_CLIENT_ID --password $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID` won't work as well. This is the limitation from underlying cloud resources.
 
 ```hcl
 data "azurerm_client_config" "current" {

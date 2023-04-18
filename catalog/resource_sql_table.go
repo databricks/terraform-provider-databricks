@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
-	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -87,43 +87,71 @@ func sqlTableIsManagedProperty(key string) bool {
 
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	defaultClusterName := "terraform-sql-table"
-	clustersAPI := clusters.NewClustersAPI(ctx, c)
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ti.ClusterID = ci.(string)
 	} else {
-		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
+		ti.ClusterID, err = ti.getOrCreateCluster(ctx, defaultClusterName, w)
 		if err != nil {
 			return
 		}
 	}
-	_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
+	_, err = w.Clusters.StartByClusterIdAndWait(ctx, ti.ClusterID)
 	if apierr.IsMissing(err) {
 		// cluster that was previously in a tfstate was deleted
-		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
+		ti.ClusterID, err = ti.getOrCreateCluster(ctx, defaultClusterName, w)
 		if err != nil {
 			return
 		}
-		_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
+		_, err = w.Clusters.StartByClusterIdAndWait(ctx, ti.ClusterID)
 	}
 	if err != nil {
 		return
 	}
 	ti.exec = c.CommandExecutor(ctx)
+
 	return nil
 }
 
-func (ti *SqlTableInfo) getOrCreateCluster(clusterName string, clustersAPI clusters.ClustersAPI) (string, error) {
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
-		Latest: true,
+func (ti *SqlTableInfo) getOrCreateCluster(ctx context.Context, clusterName string, w *databricks.WorkspaceClient) (string, error) {
+	sparkVersions, err := w.Clusters.SparkVersions(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// Choose the latest Long Term Support (LTS) version.
+	latestLTS, err := sparkVersions.Select(clustersApi.SparkVersionRequest{
+		Latest:          true,
+		LongTermSupport: true,
 	})
-	nodeType := clustersAPI.GetSmallestNodeType(clustersApi.NodeTypeRequest{LocalDisk: true})
-	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
-		clusterName, clusters.Cluster{
+	if err != nil {
+		return "", err
+	}
+
+	nodeTypes, err := w.Clusters.ListNodeTypes(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// Select the smallest node type id
+	smallestWithDisk, err := nodeTypes.Smallest(clustersApi.NodeTypeRequest{
+		LocalDisk: true,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	aclCluster, err := w.Clusters.GetOrCreateRunningCluster(ctx,
+		clusterName, clustersApi.CreateCluster{
 			ClusterName:            clusterName,
-			SparkVersion:           sparkVersion,
-			NodeTypeID:             nodeType,
+			SparkVersion:           latestLTS,
+			NodeTypeId:             smallestWithDisk,
 			AutoterminationMinutes: 10,
-			DataSecurityMode:       "SINGLE_USER",
+			//DataSecurityMode:       "SINGLE_USER",
 			SparkConf: map[string]string{
 				"spark.databricks.cluster.profile": "singleNode",
 				"spark.master":                     "local[*]",
@@ -135,7 +163,7 @@ func (ti *SqlTableInfo) getOrCreateCluster(clusterName string, clustersAPI clust
 	if err != nil {
 		return "", err
 	}
-	return aclCluster.ClusterID, nil
+	return aclCluster.ClusterId, nil
 }
 
 func (ti *SqlTableInfo) serializeColumnInfo(col SqlColumnInfo) string {
@@ -231,8 +259,8 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	return strings.Join(statements, "")
 }
 
-func (ti *SqlTableInfo) Diff(oldti *SqlTableInfo) ([]string, error) {
-	statements := make([]string, 0, 0)
+func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
+	statements := make([]string, 0)
 	typestring := ti.getTableTypeString()
 
 	if ti.TableType == "VIEW" {
@@ -271,12 +299,15 @@ func (ti *SqlTableInfo) Diff(oldti *SqlTableInfo) ([]string, error) {
 }
 
 func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
-	statements, err := ti.Diff(oldti)
+	statements, err := ti.diff(oldti)
 	if err != nil {
 		return err
 	}
 	for _, statement := range statements {
 		err = ti.applySql(statement)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

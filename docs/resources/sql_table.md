@@ -43,7 +43,7 @@ resource "databricks_sql_table" "thing" {
   }
   column {
     name      = "name"
-    type_text = "varchar(64)"
+    type_text = "string"
     comment   = "name of thing"
   }
   comment = "this table is managed by terraform"

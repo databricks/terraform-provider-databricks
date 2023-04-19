@@ -39,11 +39,11 @@ resource "databricks_sql_table" "thing" {
 
   column {
     name      = "id"
-    type_text = "int"
+    type      = "int"
   }
   column {
     name      = "name"
-    type_text = "string"
+    type      = "string"
     comment   = "name of thing"
   }
   comment = "this table is managed by terraform"
@@ -84,7 +84,7 @@ For table columns
 Currently, changing the column definitions for a table will require dropping and re-creating the table
 
 * `name` - User-visible name of column
-* `type_text` - Column type spec (with metadata) as SQL text
+* `type` - Column type spec (with metadata) as SQL text
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 

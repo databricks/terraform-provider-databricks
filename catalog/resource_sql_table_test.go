@@ -80,11 +80,11 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 	  
 		column {
 		  name      = "id"
-		  type_text = "int"
+		  type      = "int"
 		}
 		column {
 		  name      = "name"
-		  type_text = "string"
+		  type      = "string"
 		  comment   = "name of thing"
 		}
 		comment = "this table is managed by terraform"
@@ -138,13 +138,13 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 		}
 		column {
 			name      = "one"
-			type_text = "string"
+			type      = "string"
 			comment   = "managed comment"
 			nullable  = false
 		}
 		column {
 			name      = "two"
-			type_text = "string"
+			type      = "string"
 		}
 		`,
 		InstanceState: map[string]string{
@@ -157,11 +157,11 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 			"comment":            "terraform managed",
 			"column.#":           "2",
 			"column.0.name":      "one",
-			"column.0.type_text": "string",
+			"column.0.type":      "string",
 			"column.0.comment":   "old comment",
 			"column.0.nullable":  "false",
 			"column.1.name":      "two",
-			"column.1.type_text": "string",
+			"column.1.type":      "string",
 		},
 		Fixtures: append([]qa.HTTPFixture{
 			{
@@ -184,13 +184,13 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 					ColumnInfos: []SqlColumnInfo{
 						{
 							Name:     "one",
-							TypeText: "string",
+							Type:     "string",
 							Comment:  "managed comment",
 							Nullable: false,
 						},
 						{
-							Name:     "two",
-							TypeText: "string",
+							Name: "two",
+							Type: "string",
 						},
 					},
 				},

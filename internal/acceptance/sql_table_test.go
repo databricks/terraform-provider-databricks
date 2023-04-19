@@ -24,11 +24,11 @@ func TestAccResourceSqlTable_Managed(t *testing.T) {
 
 			column {
 				name      = "id"
-				type_text = "int"
+				type      = "int"
 			}
 			column {
 				name      = "name"
-				type_text = "varchar(64)"
+				type      = "varchar(64)"
 			}
 			comment = "this table is managed by terraform"
 		}`,
@@ -51,11 +51,11 @@ func TestAccResourceSqlTable_Managed(t *testing.T) {
 			
 			column {
 				name      = "id"
-				type_text = "int"
+				typ       = "int"
 			}
 			column {
 				name      = "name"
-				type_text = "string"
+				type      = "string"
 			}
 			comment = "this table is managed by terraform..."
 		}`,
@@ -103,7 +103,7 @@ func TestAccResourceSqlTable_View(t *testing.T) {
 
 			column {
 				name      = "id"
-				type_text = "string"
+				type      = "string"
 			}
 		}
 		
@@ -141,7 +141,7 @@ func TestAccResourceSqlTable_View(t *testing.T) {
 
 			column {
 				name      = "id"
-				type_text = "string"
+				type      = "string"
 			}
 		}
 		
@@ -170,12 +170,12 @@ func TestAccResourceSqlTable_View(t *testing.T) {
 
 			column {
 				name      = "id"
-				type_text = "string"
+				type      = "string"
 			}
 
 			column {
 				name      = "name"
-				type_text = "string"
+				type      = "string"
 			}
 		}
 		

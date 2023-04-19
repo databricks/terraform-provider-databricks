@@ -17,7 +17,7 @@ import (
 
 type SqlColumnInfo struct {
 	Name     string `json:"name"`
-	TypeText string `json:"type_text"`
+	Type     string `json:"type_text" tf:"alias:type"`
 	Comment  string `json:"comment,omitempty"`
 	Nullable bool   `json:"nullable,omitempty" tf:"default:true"`
 }
@@ -176,7 +176,7 @@ func (ti *SqlTableInfo) serializeColumnInfo(col SqlColumnInfo) string {
 	if col.Comment != "" {
 		comment = fmt.Sprintf(" COMMENT %s", col.Comment)
 	}
-	return fmt.Sprintf("%s %s%s%s", col.Name, col.TypeText, notNull, comment) // id INT NOT NULL COMMENT something
+	return fmt.Sprintf("%s %s%s%s", col.Name, col.Type, notNull, comment) // id INT NOT NULL COMMENT something
 }
 
 func (ti *SqlTableInfo) serializeColumnInfos() string {

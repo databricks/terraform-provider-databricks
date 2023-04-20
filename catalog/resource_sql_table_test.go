@@ -448,7 +448,7 @@ var baseClusterFixture = []qa.HTTPFixture{
 var useExistingClusterForSql = append([]qa.HTTPFixture{
 	{
 		Method:   "GET",
-		Resource: "/api/2.0/clusters/list?",
+		Resource: "/api/2.0/clusters/list",
 		Response: clusters.ClusterList{
 			Clusters: []clusters.ClusterInfo{
 				{
@@ -469,7 +469,7 @@ var createClusterForSql = append([]qa.HTTPFixture{
 	{
 		Method:       "GET",
 		ReuseRequest: true,
-		Resource:     "/api/2.0/clusters/list?",
+		Resource:     "/api/2.0/clusters/list",
 		Response:     map[string]any{},
 	},
 	{

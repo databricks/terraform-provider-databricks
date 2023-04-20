@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
+	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -85,6 +85,7 @@ func sqlTableIsManagedProperty(key string) bool {
 	return managedProps[key]
 }
 
+/*
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	defaultClusterName := "terraform-sql-table"
 	w, err := c.WorkspaceClient()
@@ -164,6 +165,60 @@ func (ti *SqlTableInfo) getOrCreateCluster(ctx context.Context, clusterName stri
 		return "", err
 	}
 	return aclCluster.ClusterId, nil
+}
+*/
+
+func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
+	defaultClusterName := "terraform-sql-table"
+	clustersAPI := clusters.NewClustersAPI(ctx, c)
+	if ci, ok := d.GetOk("cluster_id"); ok {
+		ti.ClusterID = ci.(string)
+	} else {
+		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
+		if err != nil {
+			return
+		}
+	}
+	_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
+	if apierr.IsMissing(err) {
+		// cluster that was previously in a tfstate was deleted
+		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
+		if err != nil {
+			return
+		}
+		_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
+	}
+	if err != nil {
+		return
+	}
+	ti.exec = c.CommandExecutor(ctx)
+	return nil
+}
+
+func (ti *SqlTableInfo) getOrCreateCluster(clusterName string, clustersAPI clusters.ClustersAPI) (string, error) {
+	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
+		Latest: true,
+	})
+	nodeType := clustersAPI.GetSmallestNodeType(clustersApi.NodeTypeRequest{LocalDisk: true})
+	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
+		clusterName, clusters.Cluster{
+			ClusterName:            clusterName,
+			SparkVersion:           sparkVersion,
+			NodeTypeID:             nodeType,
+			AutoterminationMinutes: 10,
+			DataSecurityMode:       "SINGLE_USER",
+			SparkConf: map[string]string{
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
+			},
+			CustomTags: map[string]string{
+				"ResourceClass": "SingleNode",
+			},
+		})
+	if err != nil {
+		return "", err
+	}
+	return aclCluster.ClusterID, nil
 }
 
 func (ti *SqlTableInfo) serializeColumnInfo(col SqlColumnInfo) string {

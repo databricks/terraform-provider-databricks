@@ -51,7 +51,7 @@ func TestAccResourceSqlTable_Managed(t *testing.T) {
 			
 			column {
 				name      = "id"
-				typ       = "int"
+				type      = "int"
 			}
 			column {
 				name      = "name"
@@ -76,7 +76,7 @@ func TestAccResourceSqlTable_External(t *testing.T) {
 			schema_name        = databricks_schema.this.name
 			table_type         = "EXTERNAL"
 			data_source_format = "DELTA"
-			storage_location   = "s3://ext-main/foo/bar1"
+			storage_location   = "abfss://curated@dwxnpexpdbxpoc440381fe4d.dfs.core.windows.net/fusion_v2" #"s3://ext-main/foo/bar1" #"s3://ext-main/foo/bar1"
 			comment 		   = "this table is managed by terraform"
 		}`,
 	})

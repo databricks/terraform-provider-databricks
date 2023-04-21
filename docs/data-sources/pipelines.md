@@ -5,7 +5,7 @@ subcategory: "Compute"
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
 
-Retrieves a id-to-name map of all [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) (DLT) pipelines deployed in a workspace, or those matching the provided search term (maximum 100 results). 
+Retrieves a list of all [databricks_pipeline](../resources/pipeline.md) ([Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html)) ids deployed in a workspace, or those matching the provided search term. Maximum 100 results. 
 
 ## Example Usage
 
@@ -15,7 +15,7 @@ Get all Delta Live Tables pipelines:
 data "databricks_pipelines" "all" {}
 
 output "all_pipelines" {
-  value = data.databricks_pipelines.all
+  value = data.databricks_pipelines.all.ids
 }
 ```
 
@@ -27,7 +27,7 @@ data "databricks_pipelines" "this" {
 }
 
 output "my_pipeline" {
-  value = data.databricks_pipelines.this
+  value = data.databricks_pipelines.this.ids
 }
 ```
 
@@ -39,7 +39,7 @@ data "databricks_pipelines" "this" {
 }
 
 output "wildcard_pipelines" {
-  value = data.databricks_pipelines.this
+  value = data.databricks_pipelines.this.ids
 }
 ```
 
@@ -47,14 +47,14 @@ output "wildcard_pipelines" {
 
 This data source exports the following attributes:
 
-* `pipeline_name` - (Optional) Filter Delta Live Tables pipelines by a given search term. `%` is the supported wildcard operator.
+* `pipeline_name` - (Optional) Filter Delta Live Tables pipelines by name for a given search term. `%` is the supported wildcard operator.
   
 
 ## Attribute Reference
 
 This data source exports the following attributes:
 
-* `ids` - id-to-name map for [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipelines matching the provided search criteria.
+* `ids` - List of ids for [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipelines matching the provided search criteria.
 
 ## Related Resources
 

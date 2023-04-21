@@ -3,6 +3,7 @@ package pipelines
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
@@ -11,26 +12,28 @@ import (
 )
 
 func DataSourcePipelines() *schema.Resource {
-	type pipelineData struct {
-		Name string            `json:"pipeline_name,omitempty"`
-		Ids  map[string]string `json:"ids,omitempty" tf:"computed"`
+	type pipelinesData struct {
+		PipelineNameContains string   `json:"pipeline_name,omitempty"`
+		Ids                  []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}
-	return common.WorkspaceData(func(ctx context.Context, data *pipelineData, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceData(func(ctx context.Context, data *pipelinesData, w *databricks.WorkspaceClient) error {
 		pipelineSearch := pipelines.ListPipelines{MaxResults: 100}
 
-		if data.Name != "" {
-			pipelineSearch = pipelines.ListPipelines{Filter: fmt.Sprintf("name LIKE '%s'", data.Name), MaxResults: 100}
+		if data.PipelineNameContains != "" {
+			pipelineSearch = pipelines.ListPipelines{Filter: fmt.Sprintf("name LIKE '%s'", data.PipelineNameContains), MaxResults: 100}
 		}
 
 		pipelines, err := w.Pipelines.ListPipelinesAll(ctx, pipelineSearch)
+
 		if err != nil {
 			return err
 		}
 
-		data.Ids = make(map[string]string)
 		for _, p := range pipelines {
-			data.Ids[p.PipelineId] = p.Name
+			data.Ids = append(data.Ids, p.PipelineId)
 		}
+
+		sort.Strings(data.Ids)
 
 		return nil
 

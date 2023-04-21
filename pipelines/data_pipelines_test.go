@@ -52,8 +52,13 @@ func TestDataSourcePipelines(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
+<<<<<<< Updated upstream
 		"ids": map[string]any{
 			"123": "Pipeline1",
+=======
+		"ids": []string{
+			"123",
+>>>>>>> Stashed changes
 		},
 	})
 }
@@ -82,8 +87,13 @@ func TestDataSourcePipelines_Search(t *testing.T) {
 		//Create:      true,
 		ID: "_",
 	}.ApplyAndExpectData(t, map[string]any{
+<<<<<<< Updated upstream
 		"ids": map[string]any{
 			"123": "Pipeline1",
+=======
+		"ids": []string{
+			"123",
+>>>>>>> Stashed changes
 		},
 	})
 }
@@ -105,7 +115,10 @@ func TestDataSourcePipelines_SearchError(t *testing.T) {
 		//Create:      true,
 		ID: "_",
 	}.ApplyNoError(t)
+<<<<<<< Updated upstream
 	//qa.AssertErrorStartsWith(t, err, "there is no pipeline with name LIKE")
+=======
+>>>>>>> Stashed changes
 }
 
 func TestDataSourcePipelines_NoneFound(t *testing.T) {
@@ -125,5 +138,8 @@ func TestDataSourcePipelines_NoneFound(t *testing.T) {
 		//Create:      true,
 		ID: "_",
 	}.ApplyNoError(t)
+<<<<<<< Updated upstream
 	//qa.AssertErrorStartsWith(t, err, "no pipelines found")
+=======
+>>>>>>> Stashed changes
 }

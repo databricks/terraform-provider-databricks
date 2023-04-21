@@ -51,7 +51,7 @@ type testPtr struct {
 }
 
 type testStruct struct {
-	Integer        int               `json:"integer,omitempty" tf:"default:10,max_items:invalid"`
+	Integer        int               `json:"integer,omitempty" tf:"default:10,min_items:invalid,max_items:invalid"`
 	Float          float64           `json:"float,omitempty"`
 	Bool           bool              `json:"bool,omitempty"`
 	NonOptional    string            `json:"non_optional"`
@@ -201,7 +201,7 @@ type Dummy struct {
 	Enabled     bool              `json:"enabled" tf:"conflicts:workers"`
 	Workers     int               `json:"workers,omitempty" tf:"suppress_diff"`
 	Description string            `json:"description,omitempty"`
-	Addresses   []Address         `json:"addresses,omitempty" tf:"max_items:10"`
+	Addresses   []Address         `json:"addresses,omitempty" tf:"min_items:1,max_items:10"`
 	Unique      []Address         `json:"unique,omitempty" tf:"slice_set"`
 	Things      []string          `json:"things,omitempty" tf:"slice_set"`
 	Tags        map[string]string `json:"tags,omitempty" tf:"max_items:5"`

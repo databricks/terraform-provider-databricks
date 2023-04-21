@@ -166,6 +166,25 @@ func (ic *importContext) emitGroups(u scim.User, principal string) {
 	}
 }
 
+func (ic *importContext) emitRoles(objType string, id string, roles []scim.ComplexValue) {
+	log.Printf("[DEBUG] emitting roles for object type: %s, ID: %s, roles: %v", objType, id, roles)
+	for _, role := range roles {
+		if role.Type != "direct" {
+			continue
+		}
+		if !ic.accountLevel {
+			ic.Emit(&resource{
+				Resource: "databricks_instance_profile",
+				ID:       role.Value,
+			})
+		}
+		ic.Emit(&resource{
+			Resource: fmt.Sprintf("databricks_%s_role", objType),
+			ID:       fmt.Sprintf("%s|%s", id, role.Value),
+		})
+	}
+}
+
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
 	var cll libraries.ClusterLibraryList
 	common.DataToStructPointer(d, s, &cll)
@@ -200,7 +219,7 @@ func (ic *importContext) cacheGroups() error {
 	if len(ic.allGroups) == 0 {
 		log.Printf("[INFO] Caching groups in memory ...")
 		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
-		g, err := groupsAPI.Filter("", true)
+		g, err := groupsAPI.Filter("")
 		if err != nil {
 			return err
 		}
@@ -212,7 +231,7 @@ func (ic *importContext) cacheGroups() error {
 
 func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	a := scim.NewUsersAPI(ic.Context, ic.Client)
-	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name))
+	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name), false)
 	if err != nil {
 		return
 	}
@@ -226,7 +245,7 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 
 func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
 	a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
-	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")))
+	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")), false)
 	if err != nil {
 		return
 	}

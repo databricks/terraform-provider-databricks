@@ -178,3 +178,8 @@ func TestCustomizeDiffRobustness(t *testing.T) {
 	err = r.CustomizeDiff(ctx, nil, nil)
 	assert.EqualError(t, err, "cannot customize diff for sample: panic: oops")
 }
+
+func TestEqualFoldDiffSuppress(t *testing.T) {
+	assert.True(t, EqualFoldDiffSuppress("k", "A", "a", nil))
+	assert.False(t, EqualFoldDiffSuppress("k", "A", "A2", nil))
+}

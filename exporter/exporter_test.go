@@ -45,6 +45,18 @@ func getJSONObject(filename string) any {
 	}
 	return obj
 }
+
+func getJSONArray(filename string) any {
+	data, _ := ioutil.ReadFile(filename)
+	var obj []any
+	err := json.Unmarshal(data, &obj)
+	if err != nil {
+		fmt.Printf("[ERROR] error! err=%v\n", err)
+		fmt.Printf("[ERROR] data=%s\n", string(data))
+	}
+	return obj
+}
+
 func workspaceConfKeysToURL() string {
 	keys := make([]string, 0, len(workspaceConfKeys))
 	for k := range workspaceConfKeys {
@@ -268,6 +280,13 @@ var emptySqlQueries = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptySqlAlerts = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/preview/sql/alerts",
+	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
 var emptyWorkspaceConf = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/workspace-conf?",
@@ -306,6 +325,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlDashboards,
 			emptySqlEndpoints,
 			emptySqlQueries,
+			emptySqlAlerts,
 			emptyPipelines,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfs,
@@ -340,7 +360,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27spn%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27spn%27",
 				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
@@ -406,7 +426,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27test%40test.com%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test%40test.com%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
@@ -517,6 +537,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptySqlEndpoints,
 			emptySqlQueries,
 			emptySqlDashboards,
+			emptySqlAlerts,
 			emptyPipelines,
 			{
 				Method:       "GET",
@@ -1028,6 +1049,14 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 									},
 								},
 							},
+							{
+								TaskKey: "dummy3",
+								SqlTask: &jobs.SqlTask{
+									Alert: &jobs.SqlAlertTask{
+										AlertID: "123",
+									},
+								},
+							},
 						},
 						Name:   "Dummy",
 						Format: "MULTI_TASK",
@@ -1287,7 +1316,7 @@ func TestImportingUser(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%27",
+				Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{
@@ -1549,6 +1578,22 @@ func TestImportingSqlObjects(t *testing.T) {
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/9cb0c8f5-6262-4a1f-a741-2181de76028f",
 				Response: getJSONObject("test-data/get-sql-dashboard-permissions.json"),
 			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/sql/alerts",
+				Response:     getJSONArray("test-data/get-sql-alerts.json"),
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9?",
+				Response: getJSONObject("test-data/get-sql-alert.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/permissions/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9",
+				Response: getJSONObject("test-data/get-sql-alert-permissions.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -1556,8 +1601,8 @@ func TestImportingSqlObjects(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.listing = "sql-dashboards,sql-queries,sql-endpoints"
-			ic.services = "sql-dashboards,sql-queries,sql-endpoints,access,notebooks"
+			ic.listing = "sql-dashboards,sql-queries,sql-endpoints,sql-alerts"
+			ic.services = "sql-dashboards,sql-queries,sql-alerts,sql-endpoints,access,notebooks"
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -1613,7 +1658,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27user%40domain.com%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27user%40domain.com%27",
 				Response: scim.UserList{
 					Resources: []scim.User{
 						{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},

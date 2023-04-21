@@ -137,7 +137,7 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	if (err.Error() != userExistsErrorMessage(userName, false)) && (err.Error() != userExistsErrorMessage(userName, true)) {
 		return err
 	}
-	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName))
+	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName), true)
 	if err != nil {
 		return err
 	}

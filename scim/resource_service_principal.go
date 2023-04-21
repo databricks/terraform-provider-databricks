@@ -39,14 +39,16 @@ func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (sp User, err erro
 	return
 }
 
-func (a ServicePrincipalsAPI) Filter(filter string) (u []User, err error) {
+func (a ServicePrincipalsAPI) Filter(filter string, excludeRoles bool) (u []User, err error) {
 	var sps UserList
 	req := map[string]string{}
 	if filter != "" {
 		req["filter"] = filter
 	}
 	// We exclude roles to reduce load on the scim service
-	req["excludedAttributes"] = "roles"
+	if excludeRoles {
+		req["excludedAttributes"] = "roles"
+	}
 	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/ServicePrincipals", req, &sps)
 	if err != nil {
 		return
@@ -211,7 +213,7 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 	if !slices.Contains(knownErrs, err.Error()) {
 		return err
 	}
-	spList, err := spAPI.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")))
+	spList, err := spAPI.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")), true)
 	if err != nil {
 		return err
 	}

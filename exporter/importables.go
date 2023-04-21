@@ -47,6 +47,7 @@ var (
 	predefinedClusterPolicies = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
 	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp           = regexp.MustCompile(`^folders/(\d+)$`)
+	dltDefaultStorageRegex    = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -195,9 +196,26 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_group_role": {
-		Service: "access",
+		Service:      "access",
+		AccountLevel: true,
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
+			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
+		},
+	},
+	"databricks_user_role": {
+		Service:      "access",
+		AccountLevel: true,
+		Depends: []reference{
+			{Path: "user_id", Resource: "databricks_user"},
+			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
+		},
+	},
+	"databricks_service_principal_role": {
+		Service:      "access",
+		AccountLevel: true,
+		Depends: []reference{
+			{Path: "service_principal_id", Resource: "databricks_group"},
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
@@ -317,6 +335,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_sql_query"},
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
+			{Path: "task.sql_task.alert.alert_id", Resource: "databricks_sql_alert"},
 			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
@@ -414,6 +433,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.Emit(&resource{
 							Resource: "databricks_sql_dashboard",
 							ID:       task.SqlTask.Dashboard.DashboardID,
+						})
+					}
+					if task.SqlTask.Alert != nil {
+						ic.Emit(&resource{
+							Resource: "databricks_sql_alert",
+							ID:       task.SqlTask.Alert.AlertID,
 						})
 					}
 					if task.SqlTask.WarehouseID != "" {
@@ -523,7 +548,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group": {
-		Service: "groups",
+		Service:      "groups",
+		AccountLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("display_name").(string) + "_" + d.Id()
 		},
@@ -582,16 +608,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if r.ID != g.ID {
 					continue
 				}
-				for _, instanceProfile := range g.Roles {
-					ic.Emit(&resource{
-						Resource: "databricks_instance_profile",
-						ID:       instanceProfile.Value,
-					})
-					ic.Emit(&resource{
-						Resource: "databricks_group_role",
-						ID:       fmt.Sprintf("%s|%s", g.ID, instanceProfile.Value),
-					})
-				}
+				ic.emitRoles("group", g.ID, g.Roles)
 				if g.DisplayName == "users" && !ic.importAllUsers {
 					log.Printf("[INFO] Skipping import of entire user directory ...")
 					continue
@@ -648,7 +665,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group_member": {
-		Service: "groups",
+		Service:      "groups",
+		AccountLevel: true,
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
 			{Path: "member_id", Resource: "databricks_user"},
@@ -657,7 +675,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_user": {
-		Service: "users",
+		Service:      "users",
+		AccountLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			s := d.Get("user_name").(string)
 			// if CLI argument includeUserDomains is set then it includes domain portion as well
@@ -686,11 +705,13 @@ var resourcesMap map[string]importable = map[string]importable{
 				userName = u.UserName
 			}
 			ic.emitGroups(u, userName)
+			ic.emitRoles("user", u.ID, u.Roles)
 			return nil
 		},
 	},
 	"databricks_service_principal": {
-		Service: "users",
+		Service:      "users",
+		AccountLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("display_name").(string)
 			if name == "" {
@@ -730,6 +751,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				spnName = u.ApplicationID
 			}
 			ic.emitGroups(u, spnName)
+			ic.emitRoles("service_principal", u.ID, u.Roles)
 			return nil
 		},
 	},
@@ -746,6 +768,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "cluster_policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "sql_query_id", Resource: "databricks_sql_query"},
+			{Path: "sql_alert_id", Resource: "databricks_sql_alert"},
 			{Path: "sql_dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "sql_endpoint_id", Resource: "databricks_sql_endpoint"},
 			{Path: "registered_model_id", Resource: "databricks_mlflow_model"},
@@ -1465,6 +1488,61 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
 		},
 	},
+	"databricks_sql_alert": {
+		Service: "sql-alerts",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Get("name").(string) + "_" + d.Id()
+		},
+		List: func(ic *importContext) error {
+			wc, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			alerts, err := wc.Alerts.List(ic.Context)
+			if err != nil {
+				return err
+			}
+			for i, alert := range alerts {
+				name := alert.Name
+				if !ic.MatchesName(name) {
+					continue
+				}
+				ic.Emit(&resource{Resource: "databricks_sql_alert", ID: alert.Id})
+				log.Printf("[INFO] Imported %d of %d SQL alerts", i+1, len(alerts))
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			var alert sql.AlertEntity
+			s := ic.Resources["databricks_sql_alert"].Schema
+			common.DataToStructPointer(r.Data, s, &alert)
+			if alert.QueryId != "" {
+				ic.Emit(&resource{Resource: "databricks_sql_query", ID: alert.QueryId})
+			}
+			if alert.Parent != "" {
+				res := sqlParentRegexp.FindStringSubmatch(alert.Parent)
+				if len(res) > 1 {
+					ic.Emit(&resource{
+						Resource:  "databricks_directory",
+						Attribute: "object_id",
+						Value:     res[1],
+					})
+				}
+			}
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/sql/alerts/%s", r.ID),
+					Name:     "sql_alert_" + ic.Importables["databricks_sql_alert"].Name(ic, r.Data)})
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
+			{Path: "parent", Resource: "databricks_directory", Match: "object_id",
+				MatchType: MatchRegexp, Regexp: sqlParentRegexp},
+		},
+	},
 	"databricks_pipeline": {
 		Service: "dlt",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
@@ -1549,6 +1627,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 			if res := dltClusterRegex.FindStringSubmatch(pathString); res != nil { // analyze DLT clusters
 				return makeShouldOmitFieldForCluster(dltClusterRegex)(ic, pathString, as, d)
+			}
+			if pathString == "storage" {
+				return dltDefaultStorageRegex.FindStringSubmatch(d.Get("storage").(string)) != nil
 			}
 			return pathString == "creator_user_name" || defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},

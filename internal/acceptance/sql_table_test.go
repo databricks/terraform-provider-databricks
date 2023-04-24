@@ -82,7 +82,7 @@ func TestAccResourceSqlTable_External(t *testing.T) {
 	})
 }
 
-func TestAccResourceSqlTable_View(t *testing.T) {
+func TestUcAccResourceSqlTable_View(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {

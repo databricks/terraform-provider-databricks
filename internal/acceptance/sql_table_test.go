@@ -63,6 +63,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_External(t *testing.T) {
+        GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {

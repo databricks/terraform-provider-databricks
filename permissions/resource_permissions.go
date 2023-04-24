@@ -227,6 +227,9 @@ func (a PermissionsAPI) Delete(objectID string) error {
 		}
 		job, err := w.Jobs.GetByJobId(a.context, jobId)
 		if err != nil {
+			if strings.HasSuffix(err.Error(), " does not exist.") {
+				return nil
+			}
 			return err
 		}
 		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{

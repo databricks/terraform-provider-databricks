@@ -318,8 +318,8 @@ func ResourceSqlTable() *schema.Resource {
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			if d.HasChange("properties") {
 				old, new := d.GetChange("properties")
-				oldProps := old.(map[string]interface{})
-				newProps := new.(map[string]interface{})
+				oldProps := old.(map[string]any)
+				newProps := new.(map[string]any)
 				for key := range oldProps {
 					if _, ok := newProps[key]; !ok {
 						if sqlTableIsManagedProperty(key) {

@@ -19,7 +19,6 @@ func m() mlflow.RegisteredModel {
 }
 
 func TestModelCreateNoTags(t *testing.T) {
-	//TODO: getting error: panic: interface conversion: interface {} is []interface {}, not []mlflow.RegisteredModelTag
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -27,6 +26,16 @@ func TestModelCreateNoTags(t *testing.T) {
 				Resource: "/api/2.0/mlflow/registered-models/create",
 				ExpectedRequest: mlflow.CreateRegisteredModelRequest{
 					Name: "xyz",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+
+				Response: mlflow.CreateRegisteredModelResponse{
+					RegisteredModel: &mlflow.RegisteredModel{
+						Name: "xyz",
+					},
 				},
 			},
 		},
@@ -42,7 +51,6 @@ func TestModelCreateNoTags(t *testing.T) {
 
 func TestModelCreateWithTags(t *testing.T) {
 	model := m()
-	//TODO: getting error: panic: interface conversion: interface {} is []interface {}, not []mlflow.RegisteredModelTag
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccResourceSqlTable_Managed(t *testing.T) {
+func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {

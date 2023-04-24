@@ -63,9 +63,24 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_External(t *testing.T) {
-        GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
+	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	unityWorkspaceLevel(t, step{
 		Template: `
+		resource "databricks_storage_credential" "external" {
+			name = "cred-{var.RANDOM}"
+			aws_iam_role {
+				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
+			}
+			comment = "Managed by TF"
+		}
+		
+		resource "databricks_external_location" "some" {
+			name            = "external"
+			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
+			credential_name = databricks_storage_credential.external.id
+			comment         = "Managed by TF"
+		}
+				
 		resource "databricks_schema" "this" {
 			name 		 = "fooe"
 			catalog_name = "main"
@@ -77,7 +92,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			schema_name        = databricks_schema.this.name
 			table_type         = "EXTERNAL"
 			data_source_format = "DELTA"
-			storage_location   = "s3://ext-main/foo/bar1"
+			storage_location   = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
 			comment 		   = "this table is managed by terraform"
 		}`,
 	})

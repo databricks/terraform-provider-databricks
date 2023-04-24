@@ -74,7 +74,7 @@ resource "databricks_job" "this" {
 
 ## Argument Reference
 
-The following arguments are required:
+The resource supports the following arguments:
 
 * `name` - (Optional) An optional name for the job. The default value is Untitled.
 * `job_cluster` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
@@ -88,7 +88,18 @@ The following arguments are required:
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is documented below.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes and fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
-* `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
+
+### tags Configuration Map
+`tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
+
+Example
+
+```hcl
+  tags = {
+    environment = "dev"
+    owner       = "dream-team"
+  }
+```
 
 ### job_cluster Configuration Block
 

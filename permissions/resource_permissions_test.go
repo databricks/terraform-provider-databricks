@@ -1195,6 +1195,48 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 	})
 }
 
+func TestShouldDeleteNonExistentJob(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/permissions/jobs/123",
+			Response: ObjectACL{
+				ObjectID:   "/jobs/123",
+				ObjectType: "job",
+				AccessControlList: []AccessControl{
+					{
+						GroupName: "admins",
+						AllPermissions: []Permission{
+							{
+								PermissionLevel: "CAN_DO_EVERYTHING",
+								Inherited:       true,
+							},
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/jobs/get?job_id=123",
+			Status:   400,
+			Response: apierr.APIError{
+				StatusCode: 400,
+				Message:    "Job 123 does not exist.",
+				ErrorCode:  "INVALID_PARAMETER_VALUE",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		p := NewPermissionsAPI(ctx, client)
+		err := p.Delete("/jobs/123")
+		assert.NoError(t, err)
+	})
+}
+
 func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

@@ -91,14 +91,15 @@ func TestAccDataSourcePipelines(t *testing.T) {
 		` + dltNotebook + `
 		data "databricks_pipelines" "this" {
 			pipeline_name = local.name
+			depends_on = [databricks_pipeline.this]
 		}`,
 		Check: func(s *terraform.State) error {
 			r, ok := s.RootModule().Resources["data.databricks_pipelines.this"]
 			if !ok {
 				return fmt.Errorf("data not found in state")
 			}
-			ids := r.Primary.Attributes["ids.%"]
-			if ids == "" {
+			ids := r.Primary.Attributes["ids.#"]
+			if ids == "0" {
 				return fmt.Errorf("ids is empty: %v", r.Primary.Attributes)
 			}
 			return nil

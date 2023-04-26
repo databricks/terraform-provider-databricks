@@ -3,6 +3,7 @@ package acceptance
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -56,5 +57,22 @@ func TestAccSecretScopeResource(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 			resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 		),
+	})
+}
+
+func TestAccSecretScopeResourceAkvWithSp(t *testing.T) {
+	if os.Getenv("ARM_CLIENT_ID") == "" {
+		t.Skipf("service principal isn't defined")
+	}
+
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_secret_scope" "my_scope" {
+			name = "tf-{var.RANDOM}"
+			keyvault_metadata {
+				resource_id = "{env.TEST_KEY_VAULT_RESOURCE_ID}"
+				dns_name    = "{env.TEST_KEY_VAULT_DNS_NAME}"
+			}
+		}`,
 	})
 }

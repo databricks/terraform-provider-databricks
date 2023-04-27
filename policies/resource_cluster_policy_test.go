@@ -134,27 +134,17 @@ func TestResourceClusterPolicyCreateConflict(t *testing.T) {
 					PolicyId: "abc",
 				},
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: clusterpolicies.Policy{
-					PolicyId:           "abc",
-					Name:               "Dummy",
-					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
-					CreatedAtTimestamp: 0,
-					MaxClustersPerUser: 3,
-				},
-			},
 		},
 		Resource: ResourceClusterPolicy(),
 		HCL: `
 		name = "Dummy"
 		definition = "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}"
 		policy_family_id = "Test"
+		policy_family_definition_overrides = "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}"
 		max_clusters_per_user = 3
 		`,
 		Create: true,
-	}.ExpectError(t, "invalid config supplied. [definition] Conflicting configuration arguments. [policy_family_id] Conflicting configuration arguments")
+	}.ExpectError(t, "invalid config supplied. [definition] Conflicting configuration arguments. [policy_family_definition_overrides] Conflicting configuration arguments. [policy_family_id] Conflicting configuration arguments")
 }
 
 func TestResourceClusterPolicyCreate_Error(t *testing.T) {

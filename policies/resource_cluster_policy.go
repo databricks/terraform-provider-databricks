@@ -14,9 +14,15 @@ func ResourceClusterPolicy() *schema.Resource {
 	s := common.StructToSchema(
 		clusterpolicies.CreatePolicy{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["policy_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
 			m["definition"].ConflictsWith = []string{"policy_family_definition_overrides", "policy_family_id"}
 			m["policy_family_definition_overrides"].ConflictsWith = []string{"definition"}
 			m["policy_family_id"].ConflictsWith = []string{"definition"}
+			m["policy_family_id"].RequiredWith = []string{"policy_family_definition_overrides"}
+
 			return m
 		})
 

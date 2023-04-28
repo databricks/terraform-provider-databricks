@@ -21,7 +21,7 @@ func ResourceClusterPolicy() *schema.Resource {
 			m["definition"].ConflictsWith = []string{"policy_family_definition_overrides", "policy_family_id"}
 			m["policy_family_definition_overrides"].ConflictsWith = []string{"definition"}
 			m["policy_family_id"].ConflictsWith = []string{"definition"}
-			m["policy_family_id"].RequiredWith = []string{"policy_family_definition_overrides"}
+			m["policy_family_definition_overrides"].RequiredWith = []string{"policy_family_id"}
 
 			return m
 		})
@@ -55,8 +55,7 @@ func ResourceClusterPolicy() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			common.StructToData(resp, s, d)
-			return nil
+			return common.StructToData(resp, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

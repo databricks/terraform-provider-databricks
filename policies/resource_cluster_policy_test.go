@@ -120,21 +120,6 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 
 func TestResourceClusterPolicyCreateConflict(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/policies/clusters/create",
-				ExpectedRequest: clusterpolicies.CreatePolicy{
-					Name:               "Dummy",
-					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
-					PolicyFamilyId:     "Test",
-					MaxClustersPerUser: 3,
-				},
-				Response: clusterpolicies.CreatePolicyResponse{
-					PolicyId: "abc",
-				},
-			},
-		},
 		Resource: ResourceClusterPolicy(),
 		HCL: `
 		name = "Dummy"

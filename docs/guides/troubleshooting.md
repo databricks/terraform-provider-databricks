@@ -111,8 +111,3 @@ You can get this error during provisioning of the Databricks workspace.  It aris
 1. Contact your Databricks representative, like Solutions Architect, Customer Success Engineer, Account Executive, or Partner Solutions Architect to set a deployment prefix for your account.
 
 1. Comment out the `deployment_name` parameter to create workspace with default URL: `dbc-XXXXXX.cloud.databricks.com`.
-
-
-## Azure KeyVault cannot yet be configured for Service Principal authorization
-
-This is a well known limitation of the Azure Databricks - currently you cannot create Azure Key Vault-based secret scope because OBO flow is not supported yet for service principals on Azure Active Directory side.  Use [azure-cli authentication](https://registry.terraform.io/providers/databrickslabs/databricks/latest/docs#authenticating-with-azure-cli) with user principal to create AKV-based secret scope. 

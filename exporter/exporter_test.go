@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/service/clusterpolicies"
 	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
 	"github.com/databricks/databricks-sdk-go/service/gitcredentials"
 	"github.com/databricks/terraform-provider-databricks/access"
@@ -22,7 +23,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
-	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -831,8 +831,8 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
-				Response: policies.ClusterPolicy{
-					PolicyID: "123",
+				Response: clusterpolicies.Policy{
+					PolicyId: "123",
 					Name:     "dummy",
 					Definition: `{
 						"aws_attributes.instance_profile_arn": {
@@ -1077,8 +1077,8 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
-				Response: policies.ClusterPolicy{
-					PolicyID: "123",
+				Response: clusterpolicies.Policy{
+					PolicyId: "123",
 					Name:     "dummy",
 					Definition: `{
 						"aws_attributes.instance_profile_arn": {

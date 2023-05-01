@@ -38,12 +38,13 @@ This data source exports the following attributes:
 * `tags` - Databricks tags all warehouse resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`.
 * `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine).
-* `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse. If this value is true explicitly or through the default, you **must** also set `warehouse_type` field to `pro`.
+* `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse. If this value is `true` explicitly or through the default,  `warehouse_type` must be `pro` (the default if this field is `true`).
 
     - **For AWS**:  If your account needs updated [terms of use](https://docs.databricks.com/sql/admin/serverless.html#accept-terms), workspace admins are prompted in the Databricks SQL UI. A workspace must meet the [requirements](https://docs.databricks.com/sql/admin/serverless.html#requirements) and might require an update its instance profile role to [add a trust relationship](https://docs.databricks.com/sql/admin/serverless.html#aws-instance-profile-setup).
 
     - **For Azure**, you must [enable your workspace for serverless SQL warehouse](https://learn.microsoft.com/azure/databricks/sql/admin/serverless).
-* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/index.html#warehouse-types) or [Azure](https://learn.microsoft.com/azure/databricks/sql/#warehouse-types). Set to `PRO` or `CLASSIC` (default).  If you want to use serverless compute, you must set to `PRO` and **also** set the field `enable_serverless_compute` to `true`.
+
+* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/index.html#warehouse-types) or [Azure](https://learn.microsoft.com/azure/databricks/sql/#warehouse-types). Set to `PRO` or `CLASSIC`.  If the field `enable_serverless_compute` has the value `true` either explicitly or through the default logic, this needs to be set to `PRO`.
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 * `jdbc_url` - JDBC connection string.

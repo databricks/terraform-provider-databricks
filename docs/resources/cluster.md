@@ -256,7 +256,17 @@ There are a few more advanced attributes for S3 log delivery:
 
 To run a particular init script on all clusters within the same workspace, both automated/job and interactive/all-purpose cluster types, please consider the [databricks_global_init_script](global_init_script.md) resource.
 
-It is possible to specify up to 10 different cluster-scoped init scripts per cluster.  Like the `cluster_log_conf` configuration block, init scripts support DBFS and cloud storage locations.
+It is possible to specify up to 10 different cluster-scoped init scripts per cluster.  Init scripts support DBFS, cloud storage locations, and workspace files.
+
+Example of using a Databricks workspace file as init script:
+
+```hcl
+init_scripts {
+  workspace {
+    destination = "/Users/user@domain/install-elk.sh"
+  }
+}
+```
 
 Example of taking init script from DBFS:
 

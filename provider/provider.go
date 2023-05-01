@@ -144,6 +144,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_sql_permissions":             access.ResourceSqlPermissions(),
 			"databricks_sql_query":                   sql.ResourceSqlQuery(),
 			"databricks_sql_alert":                   sql.ResourceSqlAlert(),
+			"databricks_sql_table":                   catalog.ResourceSqlTable(),
 			"databricks_sql_visualization":           sql.ResourceSqlVisualization(),
 			"databricks_sql_widget":                  sql.ResourceSqlWidget(),
 			"databricks_storage_credential":          catalog.ResourceStorageCredential(),

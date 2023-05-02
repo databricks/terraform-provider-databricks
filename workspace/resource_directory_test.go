@@ -258,3 +258,8 @@ func TestResourceDirectoryReadNotDirectory(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "different object type")
 	assert.Equal(t, "", d.Id(), "Id should be empty for different object type read")
 }
+
+func TestDirectoryPathSuppressDiff(t *testing.T) {
+	assert.True(t, directoryPathSuppressDiff("", "/TF_DIR_WITH_SLASH", "/TF_DIR_WITH_SLASH/", nil))
+	assert.False(t, directoryPathSuppressDiff("", "/new_dir", "/TF_DIR_WITH_SLASH/", nil))
+}

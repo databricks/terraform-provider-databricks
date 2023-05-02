@@ -53,6 +53,16 @@ resource "databricks_pipeline" "this" {
   }
 
   continuous = false
+
+  notification {
+    email_recipients = ["user@domain.com", "user1@domain.com"]
+    alerts = [
+      "on-update-failure",
+      "on-update-fatal-failure",
+      "on-update-success",
+      "on-flow-failure"
+    ]
+  }
 }
 ```
 
@@ -72,6 +82,18 @@ The following arguments are supported:
 * `edition` - optional name of the [product edition](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-concepts.html#editions). Supported values are: `core`, `pro`, `advanced` (default).
 * `channel` - optional name of the release channel for Spark version used by DLT pipeline.  Supported values are: `current` (default) and `preview`.
 
+### notification block
+
+DLT allows to specify one or more notification blocks to get notifications about pipeline's execution.  This block consists of following attributes:
+
+* `email_recipients` (Required) non-empty list of emails to notify.
+* `alerts` (Required) non-empty list of alert types. Right now following alert types are supported, consult documentation for actual list
+  * `on-update-success` - a pipeline update completes successfully.
+  * `on-update-failure` - a pipeline update fails with a retryable error.
+  * `on-update-fatal-failure` - a pipeline update fails with a non-retryable (fatal) error.
+  * `on-flow-failure` - a single data flow fails.
+
+
 ## Import
 
 The resource job can be imported using the id of the pipeline
@@ -85,6 +107,7 @@ $ terraform import databricks_pipeline.this <pipeline-id>
 The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_pipelines](../data-sources/pipelines.md) to retrieve [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipeline data.
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).

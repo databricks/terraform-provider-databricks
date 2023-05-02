@@ -21,7 +21,7 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -74,7 +74,7 @@ func TestResourceGroupMemberRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -100,7 +100,7 @@ func TestResourceGroupMemberRead_NoMember(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -120,7 +120,7 @@ func TestResourceGroupMemberRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
@@ -140,7 +140,7 @@ func TestResourceGroupMemberRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

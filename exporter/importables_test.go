@@ -113,6 +113,7 @@ func TestGroup(t *testing.T) {
 			Roles: []scim.ComplexValue{
 				{
 					Value: "abc",
+					Type:  "direct",
 				},
 			},
 			Members: []scim.ComplexValue{

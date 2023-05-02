@@ -14,7 +14,7 @@ func TestUsersFilter(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles",
 
 			Response: UserList{
 				Resources: []User{
@@ -24,7 +24,7 @@ func TestUsersFilter(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20somebody",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20somebody",
 			Response: UserList{},
 		},
 	})
@@ -32,11 +32,11 @@ func TestUsersFilter(t *testing.T) {
 	defer server.Close()
 	ctx := context.Background()
 	usersAPI := NewUsersAPI(ctx, client)
-	users, err := usersAPI.Filter("")
+	users, err := usersAPI.Filter("", true)
 	require.NoError(t, err)
 	assert.Len(t, users, 1)
 
-	users, err = usersAPI.Filter("userName eq somebody")
+	users, err = usersAPI.Filter("userName eq somebody", true)
 	require.NoError(t, err)
 	assert.Len(t, users, 0)
 }

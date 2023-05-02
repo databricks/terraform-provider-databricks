@@ -11,11 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
 
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -128,7 +124,7 @@ func urlPathForObjectID(objectID string) string {
 // permissions when POSTing permissions changes through the REST API, to avoid accidentally
 // revoking the calling user's ability to manage the current object.
 func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
-	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/queries/"} {
+	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/queries/", "/sql/warehouses"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
 		}
@@ -172,7 +168,7 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
-	if objectID == "/authorization/tokens" || objectID == "/registered-models/root" {
+	if objectID == "/authorization/tokens" || objectID == "/registered-models/root" || objectID == "/directories/0" {
 		// Prevent "Cannot change permissions for group 'admins' to None."
 		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 			GroupName:       "admins",
@@ -220,9 +216,20 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			}
 		}
 	}
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return err
+	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		job, err := jobs.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 0)
 		if err != nil {
+			return err
+		}
+		job, err := w.Jobs.GetByJobId(a.context, jobId)
+		if err != nil {
+			if strings.HasSuffix(err.Error(), " does not exist.") {
+				return nil
+			}
 			return err
 		}
 		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
@@ -230,7 +237,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			PermissionLevel: "IS_OWNER",
 		})
 	} else if strings.HasPrefix(objectID, "/pipelines") {
-		job, err := pipelines.NewPipelinesAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/pipelines/", ""))
+		job, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
 		if err != nil {
 			return err
 		}
@@ -366,23 +373,6 @@ func ResourcePermissions() *schema.Resource {
 			}
 		}
 		s["access_control"].MinItems = 1
-		if groupNameSchema, err := common.SchemaPath(s,
-			"access_control", "group_name"); err == nil {
-			groupNameSchema.ValidateDiagFunc = func(i any, p cty.Path) diag.Diagnostics {
-				if v, ok := i.(string); ok {
-					if strings.ToLower(v) == "admins" {
-						return diag.Diagnostics{
-							{
-								Summary:       "It is not possible to restrict any permissions from `admins`.",
-								Severity:      diag.Error,
-								AttributePath: p,
-							},
-						}
-					}
-				}
-				return nil
-			}
-		}
 		return s
 	})
 	return common.Resource{
@@ -441,15 +431,6 @@ func ResourcePermissions() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// this logic was moved from CustomizeDiff because of undeterministic auth behavior
-			// in the corner-case scenarios.
-			// see https://github.com/databricks/terraform-provider-databricks/issues/2052
-			for _, v := range entity.AccessControlList {
-				if v.UserName == me.UserName {
-					format := "it is not possible to decrease administrative permissions for the current user: %s"
-					return fmt.Errorf(format, me.UserName)
-				}
-			}
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
 					id, err := mapping.idRetriever(ctx, w, v.(string))
@@ -457,6 +438,20 @@ func ResourcePermissions() *schema.Resource {
 						return err
 					}
 					objectID := fmt.Sprintf("/%s/%s", mapping.resourceType, id)
+					// this logic was moved from CustomizeDiff because of undeterministic auth behavior
+					// in the corner-case scenarios.
+					// see https://github.com/databricks/terraform-provider-databricks/issues/2052
+					for _, v := range entity.AccessControlList {
+						if v.UserName == me.UserName {
+							format := "it is not possible to decrease administrative permissions for the current user: %s"
+							return fmt.Errorf(format, me.UserName)
+						}
+
+						if v.GroupName == "admins" && mapping.resourceType != "authorization" {
+							// should allow setting admins permissions for passwords and tokens usage
+							return fmt.Errorf("it is not possible to restrict any permissions from `admins`")
+						}
+					}
 					err = NewPermissionsAPI(ctx, c).Update(objectID, AccessControlChangeList{
 						AccessControlList: entity.AccessControlList,
 					})

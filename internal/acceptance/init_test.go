@@ -272,6 +272,24 @@ func resourceCheck(name string,
 	}
 }
 
+// resourceCheckWithState calls back a function with client and resource instance state
+func resourceCheckWithState(name string,
+	cb func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("not found: %s", name)
+		}
+		client, err := client.New(&config.Config{})
+		if err != nil {
+			panic(err)
+		}
+		return cb(context.Background(), &common.DatabricksClient{
+			DatabricksClient: client,
+		}, rs.Primary)
+	}
+}
+
 const fullCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const hexCharset = "0123456789abcdef"
 

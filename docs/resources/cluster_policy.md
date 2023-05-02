@@ -98,8 +98,11 @@ module "engineering_compute_policy" {
 The following arguments are required:
 
 * `name` - (Required) Cluster policy name. This must be unique. Length must be between 1 and 100 characters.
-* `definition` - (Required) Policy definition: JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition).
+* `description` - (Optional) Additional human-readable description of the cluster policy.
+* `definition` - Policy definition: JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition). Cannot be used with `policy_family_id`
 * `max_clusters_per_user` - (Optional, integer) Maximum number of clusters allowed per user. When omitted, there is no limit. If specified, value must be greater than zero.
+* `policy_family_definition_overrides`(Optional) Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition inherited from the policy family. Policy rules specified here are merged into the inherited policy definition.
+* `policy_family_id` (Optional) ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition. Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy definition.
 
 ## Attribute Reference
 
@@ -113,7 +116,7 @@ In addition to all arguments above, the following attributes are exported:
 The resource cluster policy can be imported using the policy id:
 
 ```bash
-$ terraform import databricks_cluster_policy.this <cluster-policy-id>
+terraform import databricks_cluster_policy.this <cluster-policy-id>
 ```
 
 ## Related Resources

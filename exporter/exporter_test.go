@@ -1630,6 +1630,12 @@ func TestImportingDLTPipelines(t *testing.T) {
 				},
 			},
 			{
+				Method:       "GET",
+				Resource:     "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com",
+				Response:     map[string]any{},
+				ReuseRequest: true,
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.0/permissions/repos/123",
 				Response: getJSONObject("test-data/get-repo-permissions.json"),

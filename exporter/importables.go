@@ -1150,7 +1150,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		List: func(ic *importContext) error {
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			notebookList, err := notebooksAPI.List("/", true)
+			notebookList, err := notebooksAPI.List("/", true, true)
 			if err != nil {
 				return err
 			}
@@ -1158,12 +1158,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				if strings.HasPrefix(notebook.Path, "/Repos") {
 					continue
 				}
-				// TODO: emit permissions for notebook folders if non-default,
-				// as per-notebook permission entry would be a noise in the state
-				ic.Emit(&resource{
-					Resource: "databricks_notebook",
-					ID:       notebook.Path,
-				})
+				if notebook.ObjectType == workspace.Notebook {
+					ic.Emit(&resource{
+						Resource: "databricks_notebook",
+						ID:       notebook.Path,
+					})
+				}
 				if offset%50 == 0 {
 					log.Printf("[INFO] Scanned %d of %d notebooks",
 						offset+1, len(notebookList))
@@ -1204,9 +1204,8 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			if ic.meAdmin {
 				ic.Emit(&resource{
-					Resource:  "databricks_directory",
-					Attribute: "path",
-					Value:     directoryPath,
+					Resource: "databricks_directory",
+					ID:       directoryPath,
 				})
 			}
 

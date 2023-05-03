@@ -13,7 +13,7 @@ func DataSourceNotebookPaths() *schema.Resource {
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			path := d.Get("path").(string)
 			recursive := d.Get("recursive").(bool)
-			notebookList, err := NewNotebooksAPI(ctx, m).List(path, recursive)
+			notebookList, err := NewNotebooksAPI(ctx, m).List(path, recursive, false)
 			if err != nil {
 				return diag.FromErr(err)
 			}

@@ -457,7 +457,7 @@ func TestListDirectories(t *testing.T) {
 	ctx := context.Background()
 	notebooksAPI := NewNotebooksAPI(ctx, client)
 
-	directoryList, err := notebooksAPI.ListDirectories("/", true)
+	directoryList, err := notebooksAPI.ListDirectories("/", true, false)
 	var paths []string
 	for _, directory := range directoryList {
 		paths = append(paths, directory.Path)
@@ -546,7 +546,7 @@ func TestListDirectories_NoneRecursive(t *testing.T) {
 	require.NoError(t, err)
 	ctx := context.Background()
 	notebooksAPI := NewNotebooksAPI(ctx, client)
-	directoryList_not_recursive, err := notebooksAPI.ListDirectories("/", false)
+	directoryList_not_recursive, err := notebooksAPI.ListDirectories("/", false, false)
 	var paths []string
 	for _, directory := range directoryList_not_recursive {
 		paths = append(paths, directory.Path)
@@ -586,7 +586,7 @@ func TestListDirectoriesRecursive_Error(t *testing.T) {
 	require.NoError(t, err)
 	ctx := context.Background()
 	notebooksAPI := NewNotebooksAPI(ctx, client)
-	directoryList, err := notebooksAPI.ListDirectories("/", true)
+	directoryList, err := notebooksAPI.ListDirectories("/", true, false)
 	assert.Error(t, err, err)
 	assert.Nil(t, directoryList)
 }

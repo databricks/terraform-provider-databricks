@@ -131,10 +131,10 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 // List will list all objects in a path on the workspace
 // and with the recursive flag it will recursively list
 // all the objects
-func (a NotebooksAPI) List(path string, recursive bool) ([]ObjectStatus, error) {
+func (a NotebooksAPI) List(path string, recursive bool, ignoreErrors bool) ([]ObjectStatus, error) {
 	if recursive {
 		var paths []ObjectStatus
-		err := a.recursiveAddPaths(path, &paths)
+		err := a.recursiveAddPaths(path, &paths, ignoreErrors)
 		if err != nil {
 			return nil, err
 		}
@@ -143,28 +143,28 @@ func (a NotebooksAPI) List(path string, recursive bool) ([]ObjectStatus, error) 
 	return a.list(path)
 }
 
-func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus) error {
+func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
 	notebookInfoList, err := a.list(path)
-	if err != nil {
+	if err != nil && !ignoreErrors {
 		return err
 	}
 	for _, v := range notebookInfoList {
 		if v.ObjectType == Notebook {
 			*pathList = append(*pathList, v)
 		} else if v.ObjectType == Directory {
-			err := a.recursiveAddPaths(v.Path, pathList)
+			err := a.recursiveAddPaths(v.Path, pathList, ignoreErrors)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	return err
+	return nil
 }
 
-func (a NotebooksAPI) ListDirectories(path string, recursive bool) ([]ObjectStatus, error) {
+func (a NotebooksAPI) ListDirectories(path string, recursive bool, ignoreErrors bool) ([]ObjectStatus, error) {
 	if recursive {
 		var paths []ObjectStatus
-		err := a.recursiveAddDirectoryPaths(path, &paths)
+		err := a.recursiveAddDirectoryPaths(path, &paths, ignoreErrors)
 		if err != nil {
 			return nil, err
 		}
@@ -173,21 +173,21 @@ func (a NotebooksAPI) ListDirectories(path string, recursive bool) ([]ObjectStat
 	return a.list(path)
 }
 
-func (a NotebooksAPI) recursiveAddDirectoryPaths(path string, pathList *[]ObjectStatus) error {
+func (a NotebooksAPI) recursiveAddDirectoryPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
 	directoryInfoList, err := a.list(path)
-	if err != nil {
+	if err != nil && !ignoreErrors {
 		return err
 	}
 	for _, v := range directoryInfoList {
 		if v.ObjectType == Directory {
 			*pathList = append(*pathList, v)
-			err := a.recursiveAddDirectoryPaths(v.Path, pathList)
+			err := a.recursiveAddDirectoryPaths(v.Path, pathList, ignoreErrors)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 type ObjectList struct {

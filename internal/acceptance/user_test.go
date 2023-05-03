@@ -8,7 +8,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/logger"
-	"github.com/databricks/databricks-sdk-go/service/scim"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -28,7 +28,7 @@ func TestAccForceUserImport(t *testing.T) {
 			ctx := context.Background()
 			// cleanup of this user will be handled by terraform
 			logger.Infof(ctx, "Creating conflicting user")
-			_, err = w.Users.Create(ctx, scim.User{
+			_, err = w.Users.Create(ctx, iam.User{
 				Active:     true,
 				UserName:   username,
 				ExternalId: qa.RandomName("ext-id"),

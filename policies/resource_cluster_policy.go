@@ -3,7 +3,7 @@ package policies
 import (
 	"context"
 
-	"github.com/databricks/databricks-sdk-go/service/clusterpolicies"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -12,7 +12,7 @@ import (
 // ResourceClusterPolicy ...
 func ResourceClusterPolicy() *schema.Resource {
 	s := common.StructToSchema(
-		clusterpolicies.CreatePolicy{},
+		compute.CreatePolicy{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["policy_id"] = &schema.Schema{
 				Type:     schema.TypeString,
@@ -34,7 +34,7 @@ func ResourceClusterPolicy() *schema.Resource {
 				return err
 			}
 
-			var request clusterpolicies.CreatePolicy
+			var request compute.CreatePolicy
 			common.DataToStructPointer(d, s, &request)
 
 			clusterPolicy, err := w.ClusterPolicies.Create(ctx, request)
@@ -63,7 +63,7 @@ func ResourceClusterPolicy() *schema.Resource {
 				return err
 			}
 
-			var request clusterpolicies.EditPolicy
+			var request compute.EditPolicy
 			common.DataToStructPointer(d, s, &request)
 			request.PolicyId = d.Id()
 

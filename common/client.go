@@ -11,17 +11,17 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/databricks/databricks-sdk-go/service/scim"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/golang-jwt/jwt/v4"
 )
 
 type cachedMe struct {
-	internalImpl scim.CurrentUserService
-	cachedUser   *scim.User
+	internalImpl iam.CurrentUserService
+	cachedUser   *iam.User
 	mu           sync.Mutex
 }
 
-func (a *cachedMe) Me(ctx context.Context) (*scim.User, error) {
+func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if a.cachedUser != nil {

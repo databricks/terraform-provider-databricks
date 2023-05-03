@@ -161,7 +161,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/pipelines/abcd",
+				Resource: "/api/2.0/pipelines/abcd?",
 			},
 			{
 				Method:   "GET",
@@ -212,7 +212,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/pipelines/abcd",
+				Resource: "/api/2.0/pipelines/abcd?",
 			},
 			{
 				Method:   "GET",
@@ -474,7 +474,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/pipelines/abcd",
+				Resource: "/api/2.0/pipelines/abcd?",
 			},
 			{
 				Method:   "GET",
@@ -508,7 +508,7 @@ func TestResourcePipelineDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/pipelines/abcd",
+				Resource: "/api/2.0/pipelines/abcd?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

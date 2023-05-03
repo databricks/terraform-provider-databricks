@@ -72,7 +72,7 @@ type Network struct {
 	GcpNetworkInfo   *GcpNetworkInfo      `json:"gcp_network_info,omitempty"`
 }
 
-// GcpVpcEndpointInfo is the objecy that configures GCP Private Service Connect endpoints.
+// GcpVpcEndpointInfo is the objecy that configures GCP Private Service Connect serving.
 type GcpVpcEndpointInfo struct {
 	PscConnectionId     string `json:"psc_connection_id,omitempty" tf:"computed"`
 	ProjectId           string `json:"project_id"`

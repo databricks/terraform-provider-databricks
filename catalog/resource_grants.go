@@ -240,6 +240,10 @@ var mapping = securableMapping{
 		"CREATE_SHARE":              true,
 		"CREATE_RECIPIENT":          true,
 		"CREATE_PROVIDER":           true,
+		"USE_PROVIDER":              true,
+		"USE_SHARE":                 true,
+		"USE_RECIPIENT":             true,
+		"SET_SHARE_PERMISSION":      true,
 	},
 	"function": {
 		"ALL_PRIVILEGES": true,

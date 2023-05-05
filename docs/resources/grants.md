@@ -37,7 +37,7 @@ Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/s
 
 ## Metastore grants
 
-You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_SHARE`, `CREATE_RECIPIENT` and `CREATE_PROVIDER` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
+You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_SHARE`, `CREATE_RECIPIENT` and `CREATE_PROVIDER`, `USE_PROVIDER`, `USE_SHARE`,`USE_RECIPIENT`, `SET_SHARE_PERMISSION` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
 
 ```hcl
 resource "databricks_grants" "sandbox" {

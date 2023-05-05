@@ -207,9 +207,9 @@ func TestModelUpdate(t *testing.T) {
 			"name": "xyz",
 		},
 		HCL: `
-			name = "xyz"
-			description = "updateddescription"
-			`,
+		name = "xyz"
+		description = "updateddescription"
+		`,
 	}.Apply(t)
 
 	assert.NoError(t, err)
@@ -239,9 +239,9 @@ func TestModelUpdatePatchError(t *testing.T) {
 			"name": "xyz",
 		},
 		HCL: `
-			name = "xyz"
-			description = "updateddescription"
-			`,
+		name = "xyz"
+		description = "updateddescription"
+		`,
 	}.Apply(t)
 
 	assert.Error(t, err)

@@ -320,6 +320,45 @@ resource "databricks_permissions" "notebook_usage" {
 }
 ```
 
+## Workspace file usage
+
+Valid permission levels for [databricks_workspace_file](workspace_file.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
+
+```hcl
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_workspace_file" "this" {
+  content_base64 = base64encode("print('Hello World')")
+  path           = "/Production/ETL/Features.py"
+}
+
+resource "databricks_permissions" "workspace_file_usage" {
+  workspace_file_path = databricks_workspace_file.this.path
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
+```
+
+
 ## Folder usage
 
 Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_directory](directory.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.

@@ -16,12 +16,14 @@ import (
 // ...
 const (
 	Notebook  string = "NOTEBOOK"
+	File      string = "FILE"
 	Directory string = "DIRECTORY"
 	Scala     string = "SCALA"
 	Python    string = "PYTHON"
 	SQL       string = "SQL"
 	R         string = "R"
 	Jupyter   string = "JUPYTER"
+	Auto      string = "AUTO"
 )
 
 type notebookLanguageFormat struct {
@@ -149,7 +151,7 @@ func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus) e
 		return err
 	}
 	for _, v := range notebookInfoList {
-		if v.ObjectType == Notebook {
+		if v.ObjectType == Notebook || v.ObjectType == File {
 			*pathList = append(*pathList, v)
 		} else if v.ObjectType == Directory {
 			err := a.recursiveAddPaths(v.Path, pathList)
@@ -254,10 +256,9 @@ func ResourceNotebook() *schema.Resource {
 			Deprecated: "Always is a notebook",
 		},
 		"object_id": {
-			Type:       schema.TypeInt,
-			Optional:   true,
-			Computed:   true,
-			Deprecated: "Use id argument to retrieve object id",
+			Type:     schema.TypeInt,
+			Optional: true,
+			Computed: true,
 		},
 	})
 	s["content_base64"].RequiredWith = []string{"language"}

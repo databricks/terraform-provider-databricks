@@ -226,7 +226,7 @@ func TestResourceSQLEndpointDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/sql/warehouses/abc",
+				Resource: "/api/2.0/sql/warehouses/abc?",
 			},
 		},
 		Resource: ResourceSqlEndpoint(),

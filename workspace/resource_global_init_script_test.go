@@ -50,10 +50,9 @@ func TestResourceGlobalInitScriptDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:          http.MethodDelete,
-				Resource:        "/api/2.0/global-init-scripts/" + scriptID,
-				Status:          http.StatusOK,
-				ExpectedRequest: map[string]string{"script_id": scriptID},
+				Method:   http.MethodDelete,
+				Resource: "/api/2.0/global-init-scripts/" + scriptID + "?script_id=" + scriptID,
+				Status:   http.StatusOK,
 			},
 		},
 		Resource: ResourceGlobalInitScript(),

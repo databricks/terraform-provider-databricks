@@ -117,7 +117,7 @@ func TestResourceOboTokenDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/token-management/tokens/abc",
+				Resource: "/api/2.0/token-management/tokens/abc?",
 			},
 		},
 		Resource: ResourceOboToken(),

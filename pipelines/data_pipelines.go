@@ -17,10 +17,10 @@ func DataSourcePipelines() *schema.Resource {
 		Ids                  []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}
 	return common.WorkspaceData(func(ctx context.Context, data *pipelinesData, w *databricks.WorkspaceClient) error {
-		pipelineSearch := pipelines.ListPipelines{MaxResults: 100}
+		pipelineSearch := pipelines.ListPipelinesRequest{MaxResults: 100}
 
 		if data.PipelineNameContains != "" {
-			pipelineSearch = pipelines.ListPipelines{Filter: fmt.Sprintf("name LIKE '%s'", data.PipelineNameContains), MaxResults: 100}
+			pipelineSearch = pipelines.ListPipelinesRequest{Filter: fmt.Sprintf("name LIKE '%s'", data.PipelineNameContains), MaxResults: 100}
 		}
 
 		pipelines, err := w.Pipelines.ListPipelinesAll(ctx, pipelineSearch)

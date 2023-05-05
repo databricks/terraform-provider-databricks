@@ -3,7 +3,7 @@ package clusters
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/service/clusters"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,8 +15,8 @@ func TestNodeType(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: clusters.ListNodeTypesResponse{
-					NodeTypes: []clusters.NodeType{
+				Response: compute.ListNodeTypesResponse{
+					NodeTypes: []compute.NodeType{
 						{
 							NodeTypeId:     "m-fleet.xlarge",
 							InstanceTypeId: "m-fleet.xlarge",
@@ -28,7 +28,7 @@ func TestNodeType(t *testing.T) {
 							InstanceTypeId: "Random_05",
 							MemoryMb:       1024,
 							NumCores:       32,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								LocalDisks:      3,
 								LocalDiskSizeGb: 100,
 							},
@@ -38,7 +38,7 @@ func TestNodeType(t *testing.T) {
 							InstanceTypeId: "Standard_L80s_v2",
 							MemoryMb:       655360,
 							NumCores:       80,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								LocalDisks:      2,
 								InstanceTypeId:  "Standard_L80s_v2",
 								LocalDiskSizeGb: 160,
@@ -50,7 +50,7 @@ func TestNodeType(t *testing.T) {
 							InstanceTypeId: "Random_01",
 							MemoryMb:       8192,
 							NumCores:       8,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								InstanceTypeId: "_",
 							},
 						},
@@ -60,7 +60,7 @@ func TestNodeType(t *testing.T) {
 							MemoryMb:       8192,
 							NumCores:       8,
 							NumGpus:        2,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								InstanceTypeId: "_",
 							},
 						},
@@ -70,7 +70,7 @@ func TestNodeType(t *testing.T) {
 							MemoryMb:       8192,
 							NumCores:       8,
 							NumGpus:        1,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								InstanceTypeId:      "_",
 								LocalNvmeDisks:      15,
 								LocalNvmeDiskSizeGb: 235,
@@ -82,7 +82,7 @@ func TestNodeType(t *testing.T) {
 							MemoryMb:       32000,
 							NumCores:       32,
 							IsDeprecated:   true,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								LocalDisks:      2,
 								LocalDiskSizeGb: 20,
 							},
@@ -92,7 +92,7 @@ func TestNodeType(t *testing.T) {
 							InstanceTypeId: "Standard_F4s",
 							MemoryMb:       8192,
 							NumCores:       4,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								LocalDisks:      1,
 								LocalDiskSizeGb: 16,
 								LocalNvmeDisks:  0,
@@ -124,14 +124,14 @@ func TestNodeTypeCategory(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: clusters.ListNodeTypesResponse{
-					NodeTypes: []clusters.NodeType{
+				Response: compute.ListNodeTypesResponse{
+					NodeTypes: []compute.NodeType{
 						{
 							NodeTypeId:     "Random_05",
 							InstanceTypeId: "Random_05",
 							MemoryMb:       1024,
 							NumCores:       32,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								LocalDisks:      3,
 								LocalDiskSizeGb: 100,
 							},
@@ -141,7 +141,7 @@ func TestNodeTypeCategory(t *testing.T) {
 							InstanceTypeId: "Random_01",
 							MemoryMb:       8192,
 							NumCores:       8,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								InstanceTypeId: "_",
 							},
 							Category: "Memory Optimized",
@@ -216,14 +216,14 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: clusters.ListNodeTypesResponse{
-					NodeTypes: []clusters.NodeType{
+				Response: compute.ListNodeTypesResponse{
+					NodeTypes: []compute.NodeType{
 						{
 							NodeTypeId:     "Random_05",
 							InstanceTypeId: "Random_05",
 							MemoryMb:       1024,
 							NumCores:       32,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								LocalDisks:      3,
 								LocalDiskSizeGb: 100,
 							},
@@ -233,7 +233,7 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 							InstanceTypeId: "Random_01",
 							MemoryMb:       8192,
 							NumCores:       8,
-							NodeInstanceType: &clusters.NodeInstanceType{
+							NodeInstanceType: &compute.NodeInstanceType{
 								InstanceTypeId: "_",
 							},
 							Category: "Memory Optimized",
@@ -245,10 +245,10 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 							NumCores:       8,
 							NumGpus:        2,
 							Category:       "Storage Optimized",
-							NodeInfo: &clusters.CloudProviderNodeInfo{
-								Status: []clusters.CloudProviderNodeStatus{
-									clusters.CloudProviderNodeStatusNotavailableinregion,
-									clusters.CloudProviderNodeStatusNotenabledonsubscription},
+							NodeInfo: &compute.CloudProviderNodeInfo{
+								Status: []compute.CloudProviderNodeStatus{
+									compute.CloudProviderNodeStatusNotavailableinregion,
+									compute.CloudProviderNodeStatusNotenabledonsubscription},
 							},
 						},
 						{
@@ -281,8 +281,8 @@ func TestNodeTypeFleet(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: clusters.ListNodeTypesResponse{
-					NodeTypes: []clusters.NodeType{
+				Response: compute.ListNodeTypesResponse{
+					NodeTypes: []compute.NodeType{
 						{
 							NodeTypeId:     "Random_05",
 							InstanceTypeId: "Random_05",
@@ -325,7 +325,7 @@ func TestNodeTypeEmptyList(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response:     clusters.ListNodeTypesResponse{},
+				Response:     compute.ListNodeTypesResponse{},
 			},
 		},
 		Read:        true,
@@ -346,7 +346,7 @@ func TestNodeTypeFleetEmptyList(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response:     clusters.ListNodeTypesResponse{},
+				Response:     compute.ListNodeTypesResponse{},
 			},
 		},
 		Read:        true,

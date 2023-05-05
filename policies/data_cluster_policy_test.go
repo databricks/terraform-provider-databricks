@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	clusterpolicies "github.com/databricks/databricks-sdk-go/service/clusterpolicies"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -14,8 +14,8 @@ func TestDataSourceClusterPolicy(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/list?",
-				Response: clusterpolicies.ListPoliciesResponse{
-					Policies: []clusterpolicies.Policy{
+				Response: compute.ListPoliciesResponse{
+					Policies: []compute.Policy{
 						{
 							PolicyId:   "abc",
 							Name:       "policy",
@@ -62,7 +62,7 @@ func TestDataSourceClusterPolicyNotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/list?",
-				Response: clusterpolicies.ListPoliciesResponse{},
+				Response: compute.ListPoliciesResponse{},
 			},
 		},
 		Read:        true,

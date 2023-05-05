@@ -3,15 +3,15 @@ package mlflow
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/service/mlflow"
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
-func m() mlflow.RegisteredModel {
-	return mlflow.RegisteredModel{
+func m() ml.Model {
+	return ml.Model{
 		Name: "xyz",
-		Tags: []mlflow.RegisteredModelTag{
+		Tags: []ml.ModelTag{
 			{Key: "key1", Value: "value1"},
 			{Key: "key2", Value: "value2"},
 		},
@@ -24,20 +24,20 @@ func TestModelCreateMVP(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: mlflow.CreateRegisteredModelRequest{
+				ExpectedRequest: ml.CreateModelRequest{
 					Name: "xyz",
 				},
-				Response: mlflow.CreateRegisteredModelResponse{
-					RegisteredModel: &mlflow.RegisteredModel{
+				Response: ml.CreateModelResponse{
+					RegisteredModel: &ml.Model{
 						Name: "xyz",
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=",
-				Response: mlflow.GetRegisteredModelResponse{
-					RegisteredModel: &mlflow.RegisteredModel{
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Response: ml.GetModelResponse{
+					RegisteredModel: &ml.ModelDatabricks{
 						Name: "xyz",
 					},
 				},
@@ -58,22 +58,28 @@ func TestModelCreateWithTags(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: mlflow.CreateRegisteredModelRequest{
+				ExpectedRequest: ml.CreateModelRequest{
 					Name: "xyz",
-					Tags: []mlflow.RegisteredModelTag{
+					Tags: []ml.ModelTag{
 						{Key: "key1", Value: "value1"},
 						{Key: "key2", Value: "value2"},
 					},
 				},
-				Response: mlflow.CreateRegisteredModelResponse{
+				Response: ml.CreateModelResponse{
 					RegisteredModel: &model,
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=",
-				Response: mlflow.GetRegisteredModelResponse{
-					RegisteredModel: &model,
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Response: ml.GetModelResponse{
+					RegisteredModel: &ml.ModelDatabricks{
+						Name: "xyz",
+						Tags: []ml.ModelTag{
+							{Key: "key1", Value: "value1"},
+							{Key: "key2", Value: "value2"},
+						},
+					},
 				},
 			},
 		},
@@ -106,14 +112,14 @@ func TestModelCreatePostError(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: mlflow.CreateRegisteredModelRequest{
+				ExpectedRequest: ml.CreateModelRequest{
 					Name: "xyz",
-					Tags: []mlflow.RegisteredModelTag{
+					Tags: []ml.ModelTag{
 						{Key: "key1", Value: "value1"},
 						{Key: "key2", Value: "value2"},
 					},
 				},
-				Response: mlflow.CreateRegisteredModelResponse{
+				Response: ml.CreateModelResponse{
 					RegisteredModel: &model,
 				},
 				Status: 400,
@@ -138,14 +144,15 @@ func TestModelCreatePostError(t *testing.T) {
 }
 
 func TestModelRead(t *testing.T) {
-	model := m()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=",
-				Response: mlflow.GetRegisteredModelResponse{
-					RegisteredModel: &model,
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Response: ml.GetModelResponse{
+					RegisteredModel: &ml.ModelDatabricks{
+						Name: "xyz",
+					},
 				},
 			},
 		},
@@ -159,14 +166,15 @@ func TestModelRead(t *testing.T) {
 }
 
 func TestModelReadGetError(t *testing.T) {
-	model := m()
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=",
-				Response: mlflow.GetRegisteredModelResponse{
-					RegisteredModel: &model,
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Response: ml.GetModelResponse{
+					RegisteredModel: &ml.ModelDatabricks{
+						Name: "xyz",
+					},
 				},
 				Status: 400,
 			},
@@ -182,8 +190,6 @@ func TestModelReadGetError(t *testing.T) {
 func TestModelUpdate(t *testing.T) {
 	pm := m()
 	pm.Description = "thedescription"
-	gm := m()
-	gm.Description = "updateddescription"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -193,9 +199,12 @@ func TestModelUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=",
-				Response: mlflow.GetRegisteredModelResponse{
-					RegisteredModel: &gm,
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Response: ml.GetModelResponse{
+					RegisteredModel: &ml.ModelDatabricks{
+						Name:        "xyz",
+						Description: "updatedddescription",
+					},
 				},
 			},
 		},
@@ -227,7 +236,11 @@ func TestModelUpdatePatchError(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/mlflow/registered-models/update",
-				Response: pm,
+				ExpectedRequest: ml.UpdateModelRequest{
+					Description: "updateddescription",
+					Name:        "xyz",
+				},
+				Response: gm,
 				Status:   400,
 			},
 		},
@@ -251,10 +264,9 @@ func TestModelDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/mlflow/registered-models/delete",
-				ExpectedRequest: mlflow.DeleteRegisteredModelRequest{
-					Name: "xyz",
-				},
+				Resource: "/api/2.0/mlflow/registered-models/delete?name=",
+				Response: nil,
+				Status:   200,
 			},
 		},
 		Resource: ResourceMlflowModel(),
@@ -274,11 +286,8 @@ func TestModelDeleteError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/mlflow/registered-models/delete",
-				ExpectedRequest: mlflow.DeleteRegisteredModelRequest{
-					Name: "xyz",
-				},
-				Status: 400,
+				Resource: "/api/2.0/mlflow/registered-models/delete?name=",
+				Status:   400,
 			},
 		},
 		Resource: ResourceMlflowModel(),

@@ -3,14 +3,14 @@ package mlflow
 import (
 	"context"
 
-	"github.com/databricks/databricks-sdk-go/service/mlflow"
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func ResourceMlflowModel() *schema.Resource {
 	s := common.StructToSchema(
-		mlflow.RegisteredModel{},
+		ml.Model{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			delete(s, "latest_versions")
 			s["name"] = &schema.Schema{
@@ -27,9 +27,9 @@ func ResourceMlflowModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			var req mlflow.CreateRegisteredModelRequest
+			var req ml.CreateModelRequest
 			common.DataToStructPointer(d, s, &req)
-			res, err := w.RegisteredModels.Create(ctx, req)
+			res, err := w.ModelRegistry.CreateModel(ctx, req)
 			if err != nil {
 				return err
 			}
@@ -42,9 +42,9 @@ func ResourceMlflowModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			var req mlflow.GetRegisteredModelRequest
+			var req ml.GetModelRequest
 			common.DataToStructPointer(d, s, &req)
-			res, err := w.RegisteredModels.Get(ctx, req)
+			res, err := w.ModelRegistry.GetModel(ctx, req)
 			if err != nil {
 				return err
 			}
@@ -55,18 +55,18 @@ func ResourceMlflowModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			var req mlflow.UpdateRegisteredModelRequest
+			var req ml.UpdateModelRequest
 			common.DataToStructPointer(d, s, &req)
-			return w.RegisteredModels.Update(ctx, req)
+			return w.ModelRegistry.UpdateModel(ctx, req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			var req mlflow.DeleteRegisteredModelRequest
+			var req ml.DeleteModelRequest
 			common.DataToStructPointer(d, s, &req)
-			return w.RegisteredModels.Delete(ctx, req)
+			return w.ModelRegistry.DeleteModel(ctx, req)
 		},
 		Schema: s,
 	}.ToResource()

@@ -35,7 +35,7 @@ func TestModelCreateMVP(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/registered-models/get?name=",
 				Response: mlflow.GetRegisteredModelResponse{
 					RegisteredModel: &mlflow.RegisteredModel{
 						Name: "xyz",
@@ -71,7 +71,7 @@ func TestModelCreateWithTags(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/registered-models/get?name=",
 				Response: mlflow.GetRegisteredModelResponse{
 					RegisteredModel: &model,
 				},
@@ -143,7 +143,7 @@ func TestModelRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/registered-models/get?name=",
 				Response: mlflow.GetRegisteredModelResponse{
 					RegisteredModel: &model,
 				},
@@ -164,7 +164,7 @@ func TestModelReadGetError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/registered-models/get?name=",
 				Response: mlflow.GetRegisteredModelResponse{
 					RegisteredModel: &model,
 				},
@@ -193,7 +193,7 @@ func TestModelUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/get?name=xyz",
+				Resource: "/api/2.0/mlflow/registered-models/get?name=",
 				Response: mlflow.GetRegisteredModelResponse{
 					RegisteredModel: &gm,
 				},

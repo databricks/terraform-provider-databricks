@@ -34,7 +34,7 @@ func ResourceMlflowModel() *schema.Resource {
 				return err
 			}
 			d.SetId(res.RegisteredModel.Name)
-			d.Set("registered_model_id", res.RegisteredModel.Name)
+			d.Set("registered_model_id", res.RegisteredModel.Name) // alias
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -42,34 +42,31 @@ func ResourceMlflowModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			model, err := w.RegisteredModels.GetByName(ctx, d.Id())
+			var req mlflow.GetRegisteredModelRequest
+			common.DataToStructPointer(d, s, &req)
+			res, err := w.RegisteredModels.Get(ctx, req)
 			if err != nil {
 				return err
 			}
-			return common.StructToData(model, s, d)
+			return common.StructToData(res, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			err = w.RegisteredModels.Update(ctx, mlflow.UpdateRegisteredModelRequest{
-				Description: d.Get("description").(string),
-				Name:        d.Get("name").(string),
-			})
-			return err
+			var req mlflow.UpdateRegisteredModelRequest
+			common.DataToStructPointer(d, s, &req)
+			return w.RegisteredModels.Update(ctx, req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			name := d.Get("name").(string)
 			w, err := c.WorkspaceClient()
-			_ = name
 			if err != nil {
 				return err
 			}
-			err = w.RegisteredModels.Delete(ctx, mlflow.DeleteRegisteredModelRequest{
-				Name: d.Get("name").(string),
-			})
-			return err
+			var req mlflow.DeleteRegisteredModelRequest
+			common.DataToStructPointer(d, s, &req)
+			return w.RegisteredModels.Delete(ctx, req)
 		},
 		Schema: s,
 	}.ToResource()

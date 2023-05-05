@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -116,7 +116,7 @@ func (ti *SqlTableInfo) getOrCreateCluster(clusterName string, clustersAPI clust
 	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
 		Latest: true,
 	})
-	nodeType := clustersAPI.GetSmallestNodeType(clustersApi.NodeTypeRequest{LocalDisk: true})
+	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
 		clusterName, clusters.Cluster{
 			ClusterName:            clusterName,

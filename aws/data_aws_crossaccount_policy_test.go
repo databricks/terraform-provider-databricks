@@ -16,7 +16,7 @@ func TestDataAwsCrossAccountPolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 2759, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 3294, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsCrossAccountPolicy_WithPassRoles(t *testing.T) {
@@ -29,5 +29,5 @@ func TestDataAwsCrossAccountPolicy_WithPassRoles(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 2895, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 3430, "Strange length for policy: %s", j)
 }

@@ -4,6 +4,7 @@ package access
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -270,7 +271,7 @@ func TestIPACLDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.0/ip-access-lists/" + TestingID,
+				Resource: fmt.Sprintf("/api/2.0/ip-access-lists/%s?", TestingID),
 			},
 		},
 		Resource: ResourceIPAccessList(),
@@ -286,7 +287,7 @@ func TestIPACLDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.0/ip-access-lists/" + TestingID,
+				Resource: fmt.Sprintf("/api/2.0/ip-access-lists/%s?", TestingID),
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",

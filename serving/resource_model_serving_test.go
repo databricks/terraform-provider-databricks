@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/endpoints"
+	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -19,10 +19,10 @@ func TestModelServingCreate(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/serving-endpoints",
-				ExpectedRequest: endpoints.CreateServingEndpoint{
+				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: endpoints.EndpointCoreConfigInput{
-						ServedModels: []endpoints.ServedModelInput{
+					Config: serving.EndpointCoreConfigInput{
+						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",
 								ModelName:          "ads1",
@@ -38,8 +38,8 @@ func TestModelServingCreate(t *testing.T) {
 								ScaleToZeroEnabled: false,
 							},
 						},
-						TrafficConfig: &endpoints.TrafficConfig{
-							Routes: []endpoints.Route{
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
 								{
 									ServedModelName:   "prod_model",
 									TrafficPercentage: 90,
@@ -52,31 +52,31 @@ func TestModelServingCreate(t *testing.T) {
 						},
 					},
 				},
-				Response: endpoints.ServingEndpointDetailed{
+				Response: serving.ServingEndpointDetailed{
 					Name: "test-endpoint",
 				},
 			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: endpoints.ServingEndpointDetailed{
+				Response: serving.ServingEndpointDetailed{
 					Name: "test-endpoint",
-					State: &endpoints.EndpointState{
-						ConfigUpdate: endpoints.EndpointStateConfigUpdateNotUpdating,
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
 					},
 				},
 			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: endpoints.ServingEndpointDetailed{
+				Response: serving.ServingEndpointDetailed{
 					Id:   "test-endpoint",
 					Name: "test-endpoint",
-					State: &endpoints.EndpointState{
-						ConfigUpdate: endpoints.EndpointStateConfigUpdateNotUpdating,
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
 					},
-					Config: &endpoints.EndpointCoreConfigOutput{
-						ServedModels: []endpoints.ServedModelOutput{
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedModels: []serving.ServedModelOutput{
 							{
 								Name:               "prod_model",
 								ModelName:          "ads1",
@@ -90,8 +90,8 @@ func TestModelServingCreate(t *testing.T) {
 								ScaleToZeroEnabled: false,
 							},
 						},
-						TrafficConfig: &endpoints.TrafficConfig{
-							Routes: []endpoints.Route{
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
 								{
 									ServedModelName:   "prod_model",
 									TrafficPercentage: 90,
@@ -164,14 +164,14 @@ func TestModelServingRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: endpoints.ServingEndpointDetailed{
+				Response: serving.ServingEndpointDetailed{
 					Id:   "test-endpoint",
 					Name: "test-endpoint",
-					State: &endpoints.EndpointState{
-						ConfigUpdate: endpoints.EndpointStateConfigUpdateNotUpdating,
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
 					},
-					Config: &endpoints.EndpointCoreConfigOutput{
-						ServedModels: []endpoints.ServedModelOutput{
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedModels: []serving.ServedModelOutput{
 							{
 								Name:               "prod_model",
 								ModelName:          "ads1",
@@ -185,8 +185,8 @@ func TestModelServingRead(t *testing.T) {
 								ScaleToZeroEnabled: false,
 							},
 						},
-						TrafficConfig: &endpoints.TrafficConfig{
-							Routes: []endpoints.Route{
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
 								{
 									ServedModelName:   "prod_model",
 									TrafficPercentage: 90,
@@ -232,9 +232,9 @@ func TestModelServingUpdate(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint/config",
-				ExpectedRequest: endpoints.EndpointCoreConfigInput{
+				ExpectedRequest: serving.EndpointCoreConfigInput{
 					Name: "test-endpoint",
-					ServedModels: []endpoints.ServedModelInput{
+					ServedModels: []serving.ServedModelInput{
 						{
 							Name:               "prod_model",
 							ModelName:          "ads1",
@@ -243,8 +243,8 @@ func TestModelServingUpdate(t *testing.T) {
 							ScaleToZeroEnabled: true,
 						},
 					},
-					TrafficConfig: &endpoints.TrafficConfig{
-						Routes: []endpoints.Route{
+					TrafficConfig: &serving.TrafficConfig{
+						Routes: []serving.Route{
 							{
 								ServedModelName:   "prod_model",
 								TrafficPercentage: 100,
@@ -252,31 +252,31 @@ func TestModelServingUpdate(t *testing.T) {
 						},
 					},
 				},
-				Response: endpoints.ServingEndpointDetailed{
+				Response: serving.ServingEndpointDetailed{
 					Name: "test-endpoint",
 				},
 			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: endpoints.ServingEndpointDetailed{
+				Response: serving.ServingEndpointDetailed{
 					Name: "test-endpoint",
-					State: &endpoints.EndpointState{
-						ConfigUpdate: endpoints.EndpointStateConfigUpdateNotUpdating,
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
 					},
 				},
 			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: endpoints.ServingEndpointDetailed{
+				Response: serving.ServingEndpointDetailed{
 					Id:   "test-endpoint",
 					Name: "test-endpoint",
-					State: &endpoints.EndpointState{
-						ConfigUpdate: endpoints.EndpointStateConfigUpdateNotUpdating,
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
 					},
-					Config: &endpoints.EndpointCoreConfigOutput{
-						ServedModels: []endpoints.ServedModelOutput{
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedModels: []serving.ServedModelOutput{
 							{
 								Name:               "prod_model",
 								ModelName:          "ads1",
@@ -284,8 +284,8 @@ func TestModelServingUpdate(t *testing.T) {
 								ScaleToZeroEnabled: true,
 							},
 						},
-						TrafficConfig: &endpoints.TrafficConfig{
-							Routes: []endpoints.Route{
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
 								{
 									ServedModelName:   "prod_model",
 									TrafficPercentage: 100,
@@ -368,10 +368,7 @@ func TestModelServingDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.0/serving-endpoints/test-endpoint",
-				ExpectedRequest: endpoints.DeleteServingEndpointRequest{
-					Name: "test-endpoint",
-				},
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
 				Response: "",
 			},
 		},
@@ -386,7 +383,7 @@ func TestModelServingDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.0/serving-endpoints/test-endpoint",
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

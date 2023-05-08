@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/service/unitycatalog"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
@@ -16,8 +16,8 @@ func TestTablesData(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
-				Response: unitycatalog.ListTablesResponse{
-					Tables: []unitycatalog.TableInfo{
+				Response: catalog.ListTablesResponse{
+					Tables: []catalog.TableInfo{
 						{
 							FullName: "a.b.c",
 							Name:     "c",
@@ -48,8 +48,8 @@ func TestTablesDataIssue1264(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
-				Response: unitycatalog.ListTablesResponse{
-					Tables: []unitycatalog.TableInfo{
+				Response: catalog.ListTablesResponse{
+					Tables: []catalog.TableInfo{
 						{
 							Name:     "a",
 							FullName: "a.b.a",
@@ -80,8 +80,8 @@ func TestTablesDataIssue1264(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
-				Response: unitycatalog.ListTablesResponse{
-					Tables: []unitycatalog.TableInfo{
+				Response: catalog.ListTablesResponse{
+					Tables: []catalog.TableInfo{
 						{
 							Name:     "c",
 							FullName: "a.b.c",

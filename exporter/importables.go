@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"github.com/databricks/databricks-sdk-go/service/workspaceconf"
+	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -1060,7 +1060,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			_, err = w.WorkspaceConf.GetStatus(ic.Context, workspaceconf.GetStatus{
+			_, err = w.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
 				Keys: "zDummyKey",
 			})
 			/* this is done to pass the TestImportingNoResourcesError test in exporter_test.go
@@ -1088,7 +1088,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				keyNames = append(keyNames, k)
 			}
 			sort.Strings(keyNames)
-			conf, err := w.WorkspaceConf.GetStatus(ic.Context, workspaceconf.GetStatus{
+			conf, err := w.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
 				Keys: strings.Join(keyNames, ","),
 			})
 			if err != nil {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	clusterpolicies "github.com/databricks/databricks-sdk-go/service/clusterpolicies"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +15,7 @@ func TestResourceClusterPolicyRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: clusterpolicies.Policy{
+				Response: compute.Policy{
 					PolicyId:           "abc",
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
@@ -84,19 +84,19 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/create",
-				ExpectedRequest: clusterpolicies.CreatePolicy{
+				ExpectedRequest: compute.CreatePolicy{
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
 					MaxClustersPerUser: 3,
 				},
-				Response: clusterpolicies.CreatePolicyResponse{
+				Response: compute.CreatePolicyResponse{
 					PolicyId: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: clusterpolicies.Policy{
+				Response: compute.Policy{
 					PolicyId:           "abc",
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
@@ -162,7 +162,7 @@ func TestResourceClusterPolicyUpdate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/edit",
-				ExpectedRequest: clusterpolicies.EditPolicy{
+				ExpectedRequest: compute.EditPolicy{
 					PolicyId:   "abc",
 					Name:       "Dummy Updated",
 					Definition: "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
@@ -171,7 +171,7 @@ func TestResourceClusterPolicyUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: clusterpolicies.Policy{
+				Response: compute.Policy{
 					PolicyId:           "abc",
 					Name:               "Dummy Updated",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",

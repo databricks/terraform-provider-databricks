@@ -12,9 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/databricks/databricks-sdk-go/service/clusterpolicies"
-	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
-	"github.com/databricks/databricks-sdk-go/service/gitcredentials"
+	"github.com/databricks/databricks-sdk-go/service/compute"
+	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -171,8 +170,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/list-node-types",
-				Response: clustersApi.ListNodeTypesResponse{
-					NodeTypes: []clustersApi.NodeType{
+				Response: compute.ListNodeTypesResponse{
+					NodeTypes: []compute.NodeType{
 						{
 							NodeTypeId: "m5d.large",
 						},
@@ -242,7 +241,7 @@ var emptyRepos = qa.HTTPFixture{
 var emptyGitCredentials = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/git-credentials",
-	Response: []gitcredentials.CredentialInfo{
+	Response: []workspaceApi.CredentialInfo{
 		{},
 	},
 }
@@ -831,7 +830,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
-				Response: clusterpolicies.Policy{
+				Response: compute.Policy{
 					PolicyId: "123",
 					Name:     "dummy",
 					Definition: `{
@@ -1077,7 +1076,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
-				Response: clusterpolicies.Policy{
+				Response: compute.Policy{
 					PolicyId: "123",
 					Name:     "dummy",
 					Definition: `{

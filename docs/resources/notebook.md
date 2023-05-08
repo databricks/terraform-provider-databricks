@@ -63,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Access Control
 
-* [databricks_permissions](permissions.md#Notebook-usage) can control which groups or individual users can access notebooks or folders.
+* [databricks_permissions](permissions.md#notebook-usage) can control which groups or individual users can access notebooks or folders.
 
 ## Import
 

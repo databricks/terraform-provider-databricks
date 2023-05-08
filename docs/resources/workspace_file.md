@@ -19,15 +19,16 @@ resource "databricks_workspace_file" "module" {
 }
 ```
 
-You can also create a managed notebook with inline sources through `content_base64`  attribute.
+You can also create a managed workspace file with inline sources through `content_base64`  attribute.
 
 ```hcl
 resource "databricks_workspace_file" "init_script" {
   content_base64 = base64encode(<<-EOT
     #!/bin/bash
     echo "Hello World"
+    EOT
   )
-  path     = "/Shared/init-script.sh"
+  path = "/Shared/init-script.sh"
 }
 ```
 
@@ -39,26 +40,26 @@ The size of a workspace file source code must not exceed a few megabytes. The fo
 
 * `path` -  (Required) The absolute path of the workspace file, beginning with "/", e.g. "/Demo".
 * `source` - Path to file on local filesystem. Conflicts with `content_base64`.
-* `content_base64` - The base64-encoded file content. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a notebook with configuration properties for a data pipeline.
+* `content_base64` - The base64-encoded file content. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a workspace file with configuration properties for a data pipeline.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` -  Path of notebook on workspace
-* `url` - Routable URL of the notebook
-* `object_id` -  Unique identifier for a NOTEBOOK
+* `id` -  Path of workspace file
+* `url` - Routable URL of the workspace file
+* `object_id` -  Unique identifier for a workspace file
 
 ## Access Control
 
-* [databricks_permissions](permissions.md#workspace-file-usage) can control which groups or individual users can access notebooks or folders.
+* [databricks_permissions](permissions.md#workspace-file-usage) can control which groups or individual users can access workspace file.
 
 ## Import
 
-The resource notebook can be imported using notebook path
+The workspace file resource can be imported using workspace file path
 
 ```bash
-$ terraform import databricks_workspace_file.this /path/to/notebook
+$ terraform import databricks_workspace_file.this /path/to/file
 ```
 
 ## Related Resources

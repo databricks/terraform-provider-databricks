@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -109,7 +110,7 @@ func TestResourceWorkspaceFileCreate(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ImportPath{
+				ExpectedRequest: ws_api.Import{
 					Content:   "YWJjCg==",
 					Path:      "/foo/path.py",
 					Overwrite: true,
@@ -150,7 +151,7 @@ func TestResourceWorkspaceFileCreateSource(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ImportPath{
+				ExpectedRequest: ws_api.Import{
 					Content: "LS0gRGF0YWJyaWNrcyBub3RlYm9vayBzb3VyY2UKU0VMRUNUIDEwKjIwC" +
 						"gotLSBDT01NQU5EIC0tLS0tLS0tLS0KClNFTEVDVCAyMCoxMDAKCi0tIE" +
 						"NPTU1BTkQgLS0tLS0tLS0tLQoKCg==",
@@ -231,7 +232,7 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/import",
-				ExpectedRequest: ImportPath{
+				ExpectedRequest: ws_api.Import{
 					Format:    "AUTO",
 					Overwrite: true,
 					Content:   "YWJjCg==",

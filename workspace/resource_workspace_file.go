@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"path/filepath"
 
+	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,22 +32,26 @@ func ResourceWorkspaceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			notebooksAPI := NewNotebooksAPI(ctx, c)
+			client, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			notebooksAPI := client.Workspace
 			path := d.Get("path").(string)
 			parent := filepath.ToSlash(filepath.Dir(path))
 			if parent != "/" {
-				err = notebooksAPI.Mkdirs(parent)
+				err = notebooksAPI.MkdirsByPath(ctx, parent)
 				if err != nil {
 					return err
 				}
 			}
-			createNotebook := ImportPath{
+			createNotebook := ws_api.Import{
 				Content:   base64.StdEncoding.EncodeToString(content),
-				Format:    Auto,
+				Format:    ws_api.ExportFormatAuto,
 				Path:      path,
 				Overwrite: true,
 			}
-			err = notebooksAPI.Create(createNotebook)
+			err = notebooksAPI.Import(ctx, createNotebook)
 			if err != nil {
 				return err
 			}
@@ -54,8 +59,11 @@ func ResourceWorkspaceFile() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			notebooksAPI := NewNotebooksAPI(ctx, c)
-			objectStatus, err := notebooksAPI.Read(d.Id())
+			client, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			objectStatus, err := client.Workspace.GetStatusByPath(ctx, d.Id())
 			if err != nil {
 				return err
 			}
@@ -63,20 +71,27 @@ func ResourceWorkspaceFile() *schema.Resource {
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			notebooksAPI := NewNotebooksAPI(ctx, c)
+			client, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			content, err := ReadContent(d)
 			if err != nil {
 				return err
 			}
-			return notebooksAPI.Create(ImportPath{
+			return client.Workspace.Import(ctx, ws_api.Import{
 				Content:   base64.StdEncoding.EncodeToString(content),
-				Format:    Auto,
+				Format:    ws_api.ExportFormatAuto,
 				Overwrite: true,
 				Path:      d.Id(),
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewNotebooksAPI(ctx, c).Delete(d.Id(), true)
+			client, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return client.Workspace.Delete(ctx, ws_api.Delete{Path: d.Id(), Recursive: true})
 		},
 	}.ToResource()
 }

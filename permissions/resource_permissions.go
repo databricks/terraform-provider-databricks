@@ -296,6 +296,8 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"directory_id", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"directory_path", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
+		{"workspace_file_id", "file", "files", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
+		{"workspace_file_path", "file", "files", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"repo_id", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
@@ -336,7 +338,12 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			continue
 		}
 		entity.ObjectType = mapping.objectType
-		pathVariant := d.Get(mapping.objectType + "_path")
+		var pathVariant any
+		if mapping.objectType == "file" {
+			pathVariant = d.Get("workspace_file_path")
+		} else {
+			pathVariant = d.Get(mapping.objectType + "_path")
+		}
 		if pathVariant != nil && pathVariant.(string) != "" {
 			// we're not importing and it's a path... it's set, so let's not re-set it
 			return entity, nil

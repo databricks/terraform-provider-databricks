@@ -973,6 +973,80 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
+func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
+				Response: workspace.ObjectStatus{
+					ObjectID:   988765,
+					ObjectType: workspace.File,
+				},
+			},
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/files/988765",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/files/988765",
+				Response: ObjectACL{
+					ObjectID:   "/files/988765",
+					ObjectType: "file",
+					AccessControlList: []AccessControl{
+						{
+							UserName: TestingUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_READ",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_MANAGE",
+									Inherited:       false,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"workspace_file_path": "/Development/Init",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_READ",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
 func TestResourcePermissionsCreate_error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

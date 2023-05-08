@@ -36,22 +36,20 @@ func ResourceWorkspaceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			notebooksAPI := client.Workspace
 			path := d.Get("path").(string)
 			parent := filepath.ToSlash(filepath.Dir(path))
 			if parent != "/" {
-				err = notebooksAPI.MkdirsByPath(ctx, parent)
+				err = client.Workspace.MkdirsByPath(ctx, parent)
 				if err != nil {
 					return err
 				}
 			}
-			createNotebook := ws_api.Import{
+			err = client.Workspace.Import(ctx, ws_api.Import{
 				Content:   base64.StdEncoding.EncodeToString(content),
 				Format:    ws_api.ExportFormatAuto,
 				Path:      path,
 				Overwrite: true,
-			}
-			err = notebooksAPI.Import(ctx, createNotebook)
+			})
 			if err != nil {
 				return err
 			}

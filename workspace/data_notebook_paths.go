@@ -20,10 +20,12 @@ func DataSourceNotebookPaths() *schema.Resource {
 			d.SetId(path)
 			var notebookPathList []map[string]string
 			for _, v := range notebookList {
-				notebookPathMap := map[string]string{}
-				notebookPathMap["path"] = v.Path
-				notebookPathMap["language"] = string(v.Language)
-				notebookPathList = append(notebookPathList, notebookPathMap)
+				if v.ObjectType == Notebook {
+					notebookPathMap := map[string]string{}
+					notebookPathMap["path"] = v.Path
+					notebookPathMap["language"] = string(v.Language)
+					notebookPathList = append(notebookPathList, notebookPathMap)
+				}
 			}
 			// nolint
 			d.Set("notebook_path_list", notebookPathList)

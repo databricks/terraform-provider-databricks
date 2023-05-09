@@ -35,7 +35,7 @@ func TestModelCreateMVP(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
 					RegisteredModel: &ml.ModelDatabricks{
 						Name: "xyz",
@@ -71,7 +71,7 @@ func TestModelCreateWithTags(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
 					RegisteredModel: &ml.ModelDatabricks{
 						Name: "xyz",
@@ -148,7 +148,7 @@ func TestModelRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
 					RegisteredModel: &ml.ModelDatabricks{
 						Name: "xyz",
@@ -170,7 +170,7 @@ func TestModelReadGetError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
 					RegisteredModel: &ml.ModelDatabricks{
 						Name: "xyz",
@@ -199,7 +199,7 @@ func TestModelUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
 					RegisteredModel: &ml.ModelDatabricks{
 						Name:        "xyz",
@@ -264,7 +264,7 @@ func TestModelDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/mlflow/registered-models/delete?name=",
+				Resource: "/api/2.0/mlflow/registered-models/delete?name=xyz",
 				Response: nil,
 				Status:   200,
 			},
@@ -286,7 +286,7 @@ func TestModelDeleteError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/mlflow/registered-models/delete?name=",
+				Resource: "/api/2.0/mlflow/registered-models/delete?name=xyz",
 				Status:   400,
 			},
 		},

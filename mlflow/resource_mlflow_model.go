@@ -44,6 +44,7 @@ func ResourceMlflowModel() *schema.Resource {
 			}
 			var req ml.GetModelRequest
 			common.DataToStructPointer(d, s, &req)
+			req.Name = d.Id()
 			res, err := w.ModelRegistry.GetModel(ctx, req)
 			if err != nil {
 				return err
@@ -66,6 +67,7 @@ func ResourceMlflowModel() *schema.Resource {
 			}
 			var req ml.DeleteModelRequest
 			common.DataToStructPointer(d, s, &req)
+			req.Name = d.Id()
 			return w.ModelRegistry.DeleteModel(ctx, req)
 		},
 		Schema: s,

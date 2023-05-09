@@ -570,6 +570,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						OnSuccess: []Webhook{{ID: "id2"}},
 						OnFailure: []Webhook{{ID: "id3"}},
 					},
+					NotificationSettings: &NotificationSettings{
+						NoAlertForSkippedRuns:  true,
+						NoAlertForCanceledRuns: true,
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -596,6 +600,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 							OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
 							OnSuccess: []Webhook{{ID: "id2"}},
 							OnFailure: []Webhook{{ID: "id3"}},
+						},
+						NotificationSettings: &NotificationSettings{
+							NoAlertForSkippedRuns:  true,
+							NoAlertForCanceledRuns: true,
 						},
 					},
 				},
@@ -628,7 +636,12 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 			on_failure {
 				id = "id3" 
 			}
-		}`,
+		}
+		notification_settings {
+			no_alert_for_skipped_runs = true
+			no_alert_for_canceled_runs = true
+		  }
+	`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())

@@ -114,6 +114,12 @@ type WebhookNotifications struct {
 	OnFailure []Webhook `json:"on_failure,omitempty"`
 }
 
+// NotificationSettings control the notification settings for a job
+type NotificationSettings struct {
+	NoAlertForSkippedRuns  bool `json:"no_alert_for_skipped_runs,omitempty"`
+	NoAlertForCanceledRuns bool `json:"no_alert_for_canceled_runs,omitempty"`
+}
+
 func (wn *WebhookNotifications) Sort() {
 	if wn == nil {
 		return
@@ -242,6 +248,7 @@ type JobSettings struct {
 	MaxConcurrentRuns    int32                 `json:"max_concurrent_runs,omitempty"`
 	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings *NotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string     `json:"tags,omitempty"`
 	Queue                *Queue                `json:"queue,omitempty"`
 }

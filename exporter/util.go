@@ -143,7 +143,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allDirectories, _ = notebooksAPI.ListDirectories("/", true)
+		ic.allDirectories, _ = notebooksAPI.ListDirectories("/", true, true)
 	}
 	return ic.allDirectories
 }

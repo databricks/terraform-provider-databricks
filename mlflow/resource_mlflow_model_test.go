@@ -42,6 +42,15 @@ func TestModelCreateMVP(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
+				Response: ml.GetModelResponse{
+					RegisteredModel: &ml.ModelDatabricks{
+						Name: "xyz",
+					},
+				},
+			},
 		},
 		Resource: ResourceMlflowModel(),
 		Create:   true,
@@ -67,6 +76,19 @@ func TestModelCreateWithTags(t *testing.T) {
 				},
 				Response: ml.CreateModelResponse{
 					RegisteredModel: &model,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
+				Response: ml.GetModelResponse{
+					RegisteredModel: &ml.ModelDatabricks{
+						Name: "xyz",
+						Tags: []ml.ModelTag{
+							{Key: "key1", Value: "value1"},
+							{Key: "key2", Value: "value2"},
+						},
+					},
 				},
 			},
 			{

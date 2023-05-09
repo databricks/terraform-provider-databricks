@@ -33,8 +33,14 @@ func ResourceMlflowModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.SetId(res.RegisteredModel.Name)
-			d.Set("registered_model_id", res.RegisteredModel.Name) // alias
+			model, err := w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{
+				Name: res.RegisteredModel.Name,
+			})
+			if err != nil {
+				return err
+			}
+			d.SetId(model.RegisteredModel.Name)
+			d.Set("registered_model_id", model.RegisteredModel.Id) // alias
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -18,9 +18,9 @@ resource "databricks_group" "my_group" {
   display_name = "my_group_name"
 }
 
-resource "databricks_group_instance_profile" "my_group_instance_profile" {
-  group_id            = databricks_group.my_group.id
-  instance_profile_id = databricks_instance_profile.instance_profile.id
+resource "databricks_group_role" "my_group_instance_profile" {
+  group_id = databricks_group.my_group.id
+  role     = databricks_instance_profile.instance_profile.id
 }
 ```
 

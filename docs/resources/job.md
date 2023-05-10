@@ -141,7 +141,7 @@ This block is used to specify Git repository information & branch/tag/commit tha
 * `on_start` - (Optional) (List) list of emails to notify when the run starts.
 * `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
 * `on_failure` - (Optional) (List) list of emails to notify when the run fails.
-* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
+* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs. (It's recommended to use the corresponding setting in the `notification_settings` configuration block).
 
 ### webhook_notifications Configuration Block
 
@@ -168,6 +168,13 @@ webhook_notifications {
 * `id` - ID of the system notification that is notified when an event defined in `webhook_notifications` is triggered.
 
 -> **Note** The following configuration blocks can be standalone or nested inside a `task` block
+
+###  notification_settings Configuration Block
+
+This block controls notification settings for both email & webhook notifications:
+
+* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
+* `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
 
 ### spark_jar_task Configuration Block
 

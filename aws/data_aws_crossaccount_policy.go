@@ -69,6 +69,7 @@ func DataAwsCrossaccountPolicy() *schema.Resource {
 							"ec2:DescribeInstances",
 							"ec2:DescribeInternetGateways",
 							"ec2:DescribeLaunchTemplates",
+							"ec2:DescribeLaunchTemplateVersions",
 							"ec2:DescribeNatGateways",
 							"ec2:DescribeNetworkAcls",
 							"ec2:DescribePlacementGroups",

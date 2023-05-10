@@ -110,6 +110,8 @@ var workspaceConfKeys = map[string]any{
 	"maxTokenLifetimeDays":                             0,
 	"maxUserInactiveDays":                              0,
 	"storeInteractiveNotebookResultsInCustomerAccount": false,
+	"enableDeprecatedClusterNamedInitScripts":          false,
+	"enableDeprecatedGlobalInitScripts":                false,
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
@@ -392,7 +394,8 @@ func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
 			continue
 		}
 		for _, i := range sr.Instances {
-			if i.Attributes[k].(string) == v {
+			tv, ok := i.Attributes[k].(string)
+			if ok && tv == v {
 				return true
 			}
 		}

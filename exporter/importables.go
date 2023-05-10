@@ -1202,6 +1202,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
+			// TODO: it's not completely correct condition - we need to make emit smarter - emit only if permissions are different from their parent's permission.
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_directory",
@@ -1677,6 +1678,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if strings.HasPrefix(directory.Path, "/Repos") {
 					continue
 				}
+				// TODO: don't emit directories for deleted users/SPs (how to identify them?)
 				ic.Emit(&resource{
 					Resource: "databricks_directory",
 					ID:       directory.Path,
@@ -1693,7 +1695,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			splits := strings.Split(r.Name, "_")
 			directoryId := splits[len(splits)-1]
 
-			if ic.meAdmin {
+			// Existing permissions API doesn't allow to set permissions for
+			if ic.meAdmin && r.ID != "/Shared" {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/directories/%s", directoryId),

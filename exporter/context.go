@@ -110,6 +110,8 @@ var workspaceConfKeys = map[string]any{
 	"maxTokenLifetimeDays":                             0,
 	"maxUserInactiveDays":                              0,
 	"storeInteractiveNotebookResultsInCustomerAccount": false,
+	"enableDeprecatedClusterNamedInitScripts":          false,
+	"enableDeprecatedGlobalInitScripts":                false,
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {

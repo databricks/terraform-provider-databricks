@@ -33,8 +33,8 @@ resource "databricks_schema" "things" {
 resource "databricks_sql_table" "thing" {
   provider           = databricks.workspace
   name               = "quickstart_table"
-  catalog_name       = databricks_catalog.sandbox.id
-  schema_name        = databricks_schema.things.id
+  catalog_name       = databricks_catalog.sandbox.name
+  schema_name        = databricks_schema.things.name
   table_type         = "MANAGED"
   data_source_format = "DELTA"
   storage_location   = ""
@@ -54,8 +54,8 @@ resource "databricks_sql_table" "thing" {
 resource "databricks_sql_table" "thing_view" {
   provider           = databricks.workspace
   name               = "quickstart_table_view"
-  catalog_name       = databricks_catalog.sandbox.id
-  schema_name        = databricks_schema.things.id
+  catalog_name       = databricks_catalog.sandbox.name
+  schema_name        = databricks_schema.things.name
   table_type         = "VIEW"
   cluster_id         = "0423-201305-xsrt82qn"
 

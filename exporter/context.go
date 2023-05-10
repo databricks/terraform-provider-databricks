@@ -392,7 +392,8 @@ func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
 			continue
 		}
 		for _, i := range sr.Instances {
-			if i.Attributes[k].(string) == v {
+			tv, ok := i.Attributes[k].(string)
+			if ok && tv == v {
 				return true
 			}
 		}

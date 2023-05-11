@@ -452,29 +452,32 @@ func (a JobsAPI) Start(jobID int64, timeout time.Duration) error {
 	return a.waitForRunState(runID, "RUNNING", timeout)
 }
 
-func (a JobsAPI) Restart(id string, timeout time.Duration) error {
-	jobID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return err
-	}
+var errTooManyActiveRuns = errors.New("too many active runs")
+
+func (a JobsAPI) CancelActiveRun(jobID int64, timeout time.Duration) error {
 	runs, err := a.RunsList(JobRunsListRequest{JobID: jobID, ActiveOnly: true})
 	if err != nil {
 		return err
 	}
 	if len(runs.Runs) == 0 {
 		// nothing to cancel
-		return a.Start(jobID, timeout)
-	}
-	if len(runs.Runs) > 1 {
-		return fmt.Errorf("`always_running` must be specified only with "+
-			"`max_concurrent_runs = 1`. There are %d active runs", len(runs.Runs))
+	} else if len(runs.Runs) > 1 {
+		return fmt.Errorf("%w: there are %d active runs", errTooManyActiveRuns, len(runs.Runs))
 	}
 	if len(runs.Runs) == 1 {
 		activeRun := runs.Runs[0]
 		err = a.RunsCancel(activeRun.RunID, timeout)
 		if err != nil {
-			return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunID, err)
+			return fmt.Errorf("cannot cancel run %d: %w", activeRun.RunID, err)
 		}
+	}
+	return nil
+}
+
+func (a JobsAPI) Restart(jobID int64, timeout time.Duration) error {
+	err := a.CancelActiveRun(jobID, timeout)
+	if err != nil {
+		return err
 	}
 	return a.Start(jobID, timeout)
 }
@@ -499,26 +502,18 @@ func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 }
 
 // Update updates a job given the id and a new set of job settings
-func (a JobsAPI) Update(id string, jobSettings JobSettings) error {
-	jobID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return err
-	}
+func (a JobsAPI) Update(jobID int64, jobSettings JobSettings) error {
 	return wrapMissingJobError(a.client.Post(a.context, "/jobs/reset", UpdateJobRequest{
 		JobID:       jobID,
 		NewSettings: &jobSettings,
-	}, nil), id)
+	}, nil), jobID)
 }
 
 // Read returns the job object with all the attributes
-func (a JobsAPI) Read(id string) (job Job, err error) {
-	jobID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return
-	}
+func (a JobsAPI) Read(jobID int64) (job Job, err error) {
 	err = wrapMissingJobError(a.client.Get(a.context, "/jobs/get", map[string]int64{
 		"job_id": jobID,
-	}, &job), id)
+	}, &job), jobID)
 	if job.Settings != nil {
 		job.Settings.sortTasksByKey()
 		job.Settings.sortWebhooksByID()
@@ -527,17 +522,17 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 }
 
 // Delete deletes the job given a job id
-func (a JobsAPI) Delete(id string) error {
-	jobID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return err
-	}
+func (a JobsAPI) Delete(jobID int64) error {
 	return wrapMissingJobError(a.client.Post(a.context, "/jobs/delete", map[string]int64{
 		"job_id": jobID,
-	}, nil), id)
+	}, nil), jobID)
 }
 
-func wrapMissingJobError(err error, id string) error {
+func parseJobId(id string) (int64, error) {
+	return strconv.ParseInt(id, 10, 64)
+}
+
+func wrapMissingJobError(err error, jobID int64) error {
 	if err == nil {
 		return nil
 	}
@@ -550,7 +545,7 @@ func wrapMissingJobError(err error, id string) error {
 	}
 	// fix non-compliant error code
 	if strings.Contains(apiErr.Message,
-		fmt.Sprintf("Job %s does not exist.", id)) {
+		fmt.Sprintf("Job %d does not exist.", jobID)) {
 		apiErr.StatusCode = 404
 		return apiErr
 	}
@@ -670,7 +665,11 @@ func ResourceJob() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			job, err := NewJobsAPI(ctx, c).Read(d.Id())
+			jobID, err := parseJobId(d.Id())
+			if err != nil {
+				return err
+			}
+			job, err := NewJobsAPI(ctx, c).Read(jobID)
 			if err != nil {
 				return err
 			}
@@ -684,18 +683,31 @@ func ResourceJob() *schema.Resource {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
 			jobsAPI := NewJobsAPI(ctx, c)
-			err := jobsAPI.Update(d.Id(), js)
+			jobID, err := parseJobId(d.Id())
+			if err != nil {
+				return err
+			}
+			err = jobsAPI.Update(jobID, js)
 			if err != nil {
 				return err
 			}
 			if d.Get("always_running").(bool) {
-				return jobsAPI.Restart(d.Id(), d.Timeout(schema.TimeoutUpdate))
+				err = jobsAPI.CancelActiveRun(jobID, d.Timeout(schema.TimeoutUpdate))
+				if errors.Is(err, errTooManyActiveRuns) {
+					return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`. %w", err)
+				} else {
+					return err
+				}
 			}
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			return NewJobsAPI(ctx, c).Delete(d.Id())
+			jobID, err := parseJobId(d.Id())
+			if err != nil {
+				return err
+			}
+			return NewJobsAPI(ctx, c).Delete(jobID)
 		},
 	}.ToResource()
 }

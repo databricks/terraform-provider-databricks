@@ -1125,7 +1125,7 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
 
-func TestJobRestarts(t *testing.T) {
+func TestResourceJobRestart(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:       "POST",
@@ -1270,25 +1270,129 @@ func TestJobRestarts(t *testing.T) {
 		assert.EqualError(t, err, "run is SOMETHING: Checking...")
 
 		// no active runs for the first time
-		err = ja.Restart("123", timeout)
+		err = ja.Restart(123, timeout)
 		assert.NoError(t, err)
 
 		// one active run for the second time
-		err = ja.Restart("123", timeout)
+		err = ja.Restart(123, timeout)
 		assert.NoError(t, err)
 
-		err = ja.Restart("111", timeout)
+		err = ja.Restart(111, timeout)
 		assert.EqualError(t, err, "cannot cancel run 567: nope")
 
-		err = ja.Restart("a", timeout)
-		assert.EqualError(t, err, "strconv.ParseInt: parsing \"a\": invalid syntax")
-
-		err = ja.Restart("222", timeout)
+		err = ja.Restart(222, timeout)
 		assert.EqualError(t, err, "nope")
 
-		err = ja.Restart("678", timeout)
-		assert.EqualError(t, err, "`always_running` must be specified only "+
-			"with `max_concurrent_runs = 1`. There are 2 active runs")
+		err = ja.Restart(678, timeout)
+		assert.EqualError(t, err, "too many active runs: there are 2 active runs")
+	})
+}
+
+func TestResourceJobCancelActiveRun(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		// 111 has no active runes
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=111",
+			Response: JobRunsList{
+				Runs: []JobRun{},
+			},
+		},
+		// 222 has one active run, which should be cancelled. The run is cancelled after two polls.
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=222",
+			Response: JobRunsList{
+				Runs: []JobRun{
+					{
+						RunID: 2221,
+					},
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/runs/cancel",
+			ExpectedRequest: map[string]any{
+				"run_id": 2221,
+			},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/jobs/runs/get?run_id=2221",
+			ReuseRequest: true,
+			Response: JobRun{
+				State: RunState{
+					LifeCycleState: "TERMINATED",
+				},
+			},
+		},
+		// 333 has two active runs, so no cancellation is attempted.
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=333",
+			Response: JobRunsList{
+				Runs: []JobRun{
+					{
+						RunID: 3331,
+					},
+					{
+						RunID: 3332,
+					},
+				},
+			},
+		},
+		// 444 cannot have runs listed
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=444",
+			Status:   400,
+			Response: apierr.APIError{
+				Message: "nope",
+			},
+		},
+		// 555 has one active run which fails to cancel
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=555",
+			Response: JobRunsList{
+				Runs: []JobRun{
+					{
+						RunID: 5551,
+					},
+				},
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/jobs/runs/cancel",
+			ExpectedRequest: map[string]any{
+				"run_id": 5551,
+			},
+			Status: 400,
+			Response: apierr.APIError{
+				Message: "nope",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ja := NewJobsAPI(ctx, client)
+		timeout := 500 * time.Millisecond
+
+		// no-op for no active runs
+		err := ja.CancelActiveRun(111, timeout)
+		assert.NoError(t, err)
+
+		err = ja.CancelActiveRun(222, timeout)
+		assert.NoError(t, err)
+
+		err = ja.CancelActiveRun(333, timeout)
+		assert.EqualError(t, err, "too many active runs: there are 2 active runs")
+
+		err = ja.CancelActiveRun(444, timeout)
+		assert.EqualError(t, err, "nope")
+
+		err = ja.CancelActiveRun(555, timeout)
+		assert.EqualError(t, err, "cannot cancel run 5551: nope")
 	})
 }
 

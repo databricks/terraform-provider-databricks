@@ -33,7 +33,11 @@ func DataSourceJob() *schema.Resource {
 		} else {
 			// otherwise, just read the job
 			var job Job
-			job, err = jobsAPI.Read(data.Id)
+			jobID, err := parseJobId(data.Id)
+			if err != nil {
+				return err
+			}
+			job, err = jobsAPI.Read(jobID)
 			if err != nil {
 				return err
 			}

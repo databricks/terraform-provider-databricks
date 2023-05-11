@@ -683,9 +683,10 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// Jobs which are always running must be restarted after update. All jobs must be cancelled. For
-			// non-continuous jobs, we must also start them again. Continuous jobs are started by the jobs
-			// service, so the provider need not do so.
+			// Jobs which are always running must be restarted after update. Regardless of the job type, active
+			// runs must be cancelled for the job to start with the new job configuration. For non-continuous jobs,
+			// the provider must also start them again. Continuous jobs are restarted by the jobs service, so the
+			// provider need not do so.
 			if d.Get("always_running").(bool) {
 				err = jobsAPI.CancelActiveRun(jobID, d.Timeout(schema.TimeoutUpdate))
 				if errors.Is(err, errTooManyActiveRuns) {

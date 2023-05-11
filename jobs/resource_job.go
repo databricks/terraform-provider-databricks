@@ -474,14 +474,6 @@ func (a JobsAPI) CancelActiveRun(jobID int64, timeout time.Duration) error {
 	return nil
 }
 
-func (a JobsAPI) Restart(jobID int64, timeout time.Duration) error {
-	err := a.CancelActiveRun(jobID, timeout)
-	if err != nil {
-		return err
-	}
-	return a.Start(jobID, timeout)
-}
-
 // Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
@@ -691,12 +683,18 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			// Jobs which are always running must be restarted after update. All jobs must be cancelled. For
+			// non-continuous jobs, we must also start them again. Continuous jobs are started by the jobs
+			// service, so the provider need not do so.
 			if d.Get("always_running").(bool) {
 				err = jobsAPI.CancelActiveRun(jobID, d.Timeout(schema.TimeoutUpdate))
 				if errors.Is(err, errTooManyActiveRuns) {
 					return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`. %w", err)
-				} else {
+				} else if err != nil {
 					return err
+				}
+				if pauseStatus, ok := d.GetOk("continuous.pause_status"); !ok || pauseStatus.(string) == "PAUSED" {
+					return jobsAPI.Start(jobID, d.Timeout(schema.TimeoutUpdate))
 				}
 			}
 			return nil

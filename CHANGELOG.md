@@ -1,5 +1,16 @@
 # Version changelog
 
+## 1.16.0
+
+ * Added [databricks_workspace_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file) resource ([#2266](https://github.com/databricks/terraform-provider-databricks/pull/2266)).
+ * Added `notification_settings` block to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2276](https://github.com/databricks/terraform-provider-databricks/pull/2276)).
+ * Added missing permission to [databricks_aws_crossaccount_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/aws_crossaccount_policy) data source ([#2283](https://github.com/databricks/terraform-provider-databricks/pull/2283)).
+ * Fixed [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) doc ([#2281](https://github.com/databricks/terraform-provider-databricks/pull/2281)).
+ * Fixed doc on tag propagation and tag conflict for [databricks_instance_pool](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/instance_pool) resource ([#2242](https://github.com/databricks/terraform-provider-databricks/pull/2242)).
+ * Document & export [databricks_workspace_conf](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_conf) parameters for legacy init scripts ([#2280](https://github.com/databricks/terraform-provider-databricks/pull/2280)).
+ * Removed deprecated `CREATE_VIEW` from code of [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) resource ([#2230](https://github.com/databricks/terraform-provider-databricks/pull/2230)).
+ * Exporter: relax handling of problematic files/directories ([#2258](https://github.com/databricks/terraform-provider-databricks/pull/2258)).
+
 ## 1.15.0
 
  * Added _experimental_ [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) resource to manage tables in the Unity Catalog ([#2213](https://github.com/databricks/terraform-provider-databricks/pull/2213)).

@@ -125,3 +125,4 @@ The following resources are often used in the same context:
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
 * [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](<https://docs.databricks>.
+* [databricks-service-principal-secret](service_principal_secret.md) to manage secrets for the service principal (only for AWS deployments)

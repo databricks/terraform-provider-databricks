@@ -31,7 +31,8 @@ Storage
 Security
 
 * Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
-* Create [databricks_service_principal](resources/service_principal.md) with [databricks_obo_token](resources/obo_token.md) to enable even more restricted access control.
+* Create [databricks_service_principal](resources/service_principal.md) with [databricks_obo_token](resources/obo_token.md) to enable even more restricted access control
+* Create [databricks_service_principal](resources/service_principal.md) with [databricks_service_principal_secret](resources/service_principal_secret.md) to authenticate with service principal OAuth tokens (Only for AWS deployments)
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
 * Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
 * Generically manage [databricks_permissions](resources/permissions.md)
@@ -169,6 +170,48 @@ You can use `host` and `token` parameters to supply credentials to the workspace
 provider "databricks" {
   host  = "https://abc-cdef-ghi.cloud.databricks.com"
   token = "dapitokenhere"
+}
+```
+
+### Authenticating with hostname, client_id and client_secret
+
+You can use the `client_id` + `client_secret` attribute to authenticate the provider on both account level and workspace level. Here `client_id` is the UUID of the service principal and `client_secret` is the secret you generate for the service principal. Respective `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` environment variables are applicable as well.
+
+``` hcl
+provider "databricks" {
+  host          = "https://abc-cdef-ghi.cloud.databricks.com"
+  client_id     = var.client_id
+  client_secret = var.client_secret
+}
+```
+
+To create the resources on both account and workspace, you can create two provider as below
+
+``` hcl
+provider "databricks" {
+  alias         = "accounts"
+  host          = "https://accounts.cloud.databricks.com"
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  account_id    = "00000000-0000-0000-0000-000000000000"
+}
+
+provider "databricks" {
+  alias         = "workspace"
+  host          = var.workspace_host
+  client_id     = var.client_id
+  client_secret = var.client_secret
+}
+```
+
+Then you can specify the corresponding provider when creating the resource. E.g. you can use workspace provider to a workspace group
+
+``` hcl
+resource "databricks_group" "account_admin" {
+  provider                   = databricks.workspace
+  display_name               = "account_admin"
+  allow_cluster_create       = true
+  allow_instance_pool_create = false
 }
 ```
 

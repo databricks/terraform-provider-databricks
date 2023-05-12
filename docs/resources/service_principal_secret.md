@@ -3,13 +3,14 @@ subcategory: "Security"
 ---
 # databricks_service_principal_service Resource
 
-With this resource you can create a secret under given [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html)
-
-With the secret you can configure Databricks Terraform Provider to authenticate with service principal UUID and secret. See [Authenticating with service principal ID and secret](../index.md#authenticating-with-hostname-client_id-and-client_secret).
-
-You can also use the secret to request OAuth tokens for the service prinicipal, which can be used to authenticate to Databricks APIs. See [Authentication using OAuth tokens for service principals](https://docs.databricks.com/dev-tools/api/latest/authentication-oauth.html).
-
 -> **Note** This resource in only available in AWS.
+
+With this resource you can create a secret under the given [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html)
+
+This secret can be used to configure the Databricks Terraform Provider to authenticate with the service principal. See [Authenticating with service principal](../index.md#authenticating-with-service-principal).
+
+Additionally, the secret can be used to request OAuth tokens for the service principal, which can be used to authenticate to Databricks REST APIs. See [Authentication using OAuth tokens for service principals](https://docs.databricks.com/dev-tools/authentication-oauth.html).
+
 
 ## Example Usage
 

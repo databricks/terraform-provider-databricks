@@ -240,16 +240,16 @@ provider "databricks" {
 Next, you can specify the corresponding provider when creating the resource. For example, you can use the workspace provider to create a workspace group
 
 ``` hcl
-resource "databricks_group" "account_admin" {
+resource "databricks_group" "cluster_admin" {
   provider                   = databricks.workspace
-  display_name               = "account_admin"
+  display_name               = "cluster_admin"
   allow_cluster_create       = true
   allow_instance_pool_create = false
 }
 ```
 
-* `client_id` - UUID of the service principal. Alternatively, you can provide this value as an environment variable DATABRICKS_CLIENT_ID.
-* `client_secret` - Secret of the service principal. Alternatively, you can provide this value as an environment variable DATABRICKS_CLIENT_SECRET.
+* `client_id` - UUID of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_ID`.
+* `client_secret` - Secret of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_SECRET`.
 
 ## Special configurations for Azure
 

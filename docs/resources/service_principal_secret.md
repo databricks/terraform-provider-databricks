@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_service_principal_service Resource
 
--> **Note** This resource in only available in AWS.
+-> **Note** This resource in only available in Databricks AWS.
 
 With this resource you can create a secret under the given [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html)
 

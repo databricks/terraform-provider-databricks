@@ -22,7 +22,7 @@ The following arguments are supported:
 
 ## keyvault_metadata
 
-On Azure it's possible to create and manage secrets in Azure Key Vault and use Azure Databricks secret redaction & access control functionality for reading them. There has to be a single Key Vault per single secret scope. 
+On Azure, it is possible to create Azure Databricks secret scopes backed by Azure Key Vault. Secrets are stored in Azure Key Vault and can be accessed through the Azure Databricks secrets utilities, making use of Azure Databricks access control and secret redaction. A secret scope may be configured with at most one Key Vault. 
 
 -> **Warning** To create a secret scope from Azure Key Vault you need to use one of the [Azure-specific authentication methods](../index.md#special-configurations-for-azure). You can't create such secret scope using personal access token (PAT).
 

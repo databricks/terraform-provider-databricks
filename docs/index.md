@@ -32,6 +32,7 @@ Security
 
 * Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
 * Create [databricks_service_principal](resources/service_principal.md) with [databricks_obo_token](resources/obo_token.md) to enable even more restricted access control.
+* Create [databricks_service_principal](resources/service_principal.md) with [databricks_service_principal_secret](resources/service_principal_secret.md) to authenticate with the service principal OAuth tokens (Only for AWS deployments)
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
 * Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
 * Generically manage [databricks_permissions](resources/permissions.md)
@@ -202,6 +203,53 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 `DEFAULT`.
 * `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
 * `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-credentials`, and `google-id`.
+
+## Special configurations for AWS
+
+### Authenticating with Service Principal
+
+You can use the `client_id` + `client_secret` attributes to authenticate with a service principal at both the account and workspace levels. The `client_id` is the UUID of the service principal and `client_secret` is its secret. You can generate the secret from Databricks Accounts Console (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)) or by using the Terraform resource [databricks_service_principal_secret](resources/service_principal_secret.md).
+
+``` hcl
+provider "databricks" {
+  host          = "https://abc-cdef-ghi.cloud.databricks.com"
+  client_id     = var.client_id
+  client_secret = var.client_secret
+}
+```
+
+To create resources at both the account and workspace levels, you can create two providers as shown below
+
+``` hcl
+provider "databricks" {
+  alias         = "accounts"
+  host          = "https://accounts.cloud.databricks.com"
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  account_id    = "00000000-0000-0000-0000-000000000000"
+}
+
+provider "databricks" {
+  alias         = "workspace"
+  host          = var.workspace_host
+  client_id     = var.client_id
+  client_secret = var.client_secret
+}
+```
+
+Next, you can specify the corresponding provider when creating the resource. For example, you can use the workspace provider to create a workspace group
+
+``` hcl
+resource "databricks_group" "cluster_admin" {
+  provider                   = databricks.workspace
+  display_name               = "cluster_admin"
+  allow_cluster_create       = true
+  allow_instance_pool_create = false
+}
+```
+
+* `client_id` - UUID of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_ID`.
+* `client_secret` - Secret of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_SECRET`.
 
 ## Special configurations for Azure
 

@@ -79,7 +79,7 @@ The following arguments are supported:
 * `development` - A flag indicating whether to run the pipeline in development mode. The default value is `true`.
 * `photon` - A flag indicating whether to use Photon engine. The default value is `false`.
 * `catalog` - The name of catalog in Unity Catalog. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `storage`).
-* `target` - The name of a database (Hive Metastore or in the UC Catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
+* `target` - The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
 * `edition` - optional name of the [product edition](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-concepts.html#editions). Supported values are: `core`, `pro`, `advanced` (default).
 * `channel` - optional name of the release channel for Spark version used by DLT pipeline.  Supported values are: `current` (default) and `preview`.
 

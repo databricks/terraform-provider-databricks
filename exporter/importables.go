@@ -215,7 +215,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:      "access",
 		AccountLevel: true,
 		Depends: []reference{
-			{Path: "service_principal_id", Resource: "databricks_group"},
+			{Path: "service_principal_id", Resource: "databricks_service_principal"},
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},

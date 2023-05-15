@@ -18,7 +18,7 @@ Create service principal secret
 
 ```hcl
 resource "databricks_service_principal_secret" "terraform_sp" {
-  service_principal_id = "123456789012345"
+  service_principal_id = databricks_service_principal.this.id
 }
 ```
 

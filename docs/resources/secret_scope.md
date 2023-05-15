@@ -24,7 +24,7 @@ The following arguments are supported:
 
 On Azure, it is possible to create Azure Databricks secret scopes backed by Azure Key Vault. Secrets are stored in Azure Key Vault and can be accessed through the Azure Databricks secrets utilities, making use of Azure Databricks access control and secret redaction. A secret scope may be configured with at most one Key Vault. 
 
--> **Warning** To create a secret scope from Azure Key Vault you need to use one of the [Azure-specific authentication methods](../index.md#special-configurations-for-azure). You can't create such secret scope using personal access token (PAT).
+-> **Warning** To create a secret scope from Azure Key Vault, you must use one of the [Azure-specific authentication methods](../index.md#special-configurations-for-azure). Secret scopes backed by Azure Key Vault cannot be created using personal access tokens (PAT).
 
 To define AKV access policies, you must use [azurerm_key_vault_access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) instead of [access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault#access_policy) blocks on `azurerm_key_vault`, otherwise Terraform will remove access policies needed to access the Key Vault and the secret scope won't be in a usable state anymore.
 

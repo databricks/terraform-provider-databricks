@@ -95,10 +95,13 @@ The resource supports the following arguments:
 Example
 
 ```hcl
+resource "databricks_job" "this" {
+  # ...
   tags = {
     environment = "dev"
     owner       = "dream-team"
   }
+}
 ```
 
 ### job_cluster Configuration Block

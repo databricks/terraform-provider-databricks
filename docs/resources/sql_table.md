@@ -40,26 +40,26 @@ resource "databricks_sql_table" "thing" {
   storage_location   = ""
 
   column {
-    name      = "id"
-    type      = "int"
+    name = "id"
+    type = "int"
   }
   column {
-    name      = "name"
-    type      = "string"
-    comment   = "name of thing"
+    name    = "name"
+    type    = "string"
+    comment = "name of thing"
   }
   comment = "this table is managed by terraform"
 }
 
 resource "databricks_sql_table" "thing_view" {
-  provider           = databricks.workspace
-  name               = "quickstart_table_view"
-  catalog_name       = databricks_catalog.sandbox.name
-  schema_name        = databricks_schema.things.name
-  table_type         = "VIEW"
-  cluster_id         = "0423-201305-xsrt82qn"
+  provider     = databricks.workspace
+  name         = "quickstart_table_view"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "VIEW"
+  cluster_id   = "0423-201305-xsrt82qn"
 
-  view_definition    = format("SELECT name FROM %s WHERE id == 1", databricks_sql_table.thing.id)
+  view_definition = format("SELECT name FROM %s WHERE id == 1", databricks_sql_table.thing.id)
 
   comment = "this view is managed by terraform"
 }

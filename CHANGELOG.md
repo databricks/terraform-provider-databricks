@@ -1,5 +1,14 @@
 # Version changelog
 
+## 1.16.1
+
+ * Added [databricks_service_principal_secret](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal_secret) documentation ([#2296](https://github.com/databricks/terraform-provider-databricks/pull/2296)).
+ * Documentation about Unity Catalog integration in [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) ([#2289](https://github.com/databricks/terraform-provider-databricks/pull/2289)).
+ * Exporter: don't emit [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) for `/Shared` directory ([#2288](https://github.com/databricks/terraform-provider-databricks/pull/2288)).
+ * Fix dependency when exporting [databricks_service_principal_role](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal_role) ([#2285](https://github.com/databricks/terraform-provider-databricks/pull/2285)).
+ * Removed reference to deprecated [databricks_group_instance_profile](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_instance_profile) from [databricks_group_role](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_role) docs ([#2290](https://github.com/databricks/terraform-provider-databricks/pull/2290)).
+ * Updated documentation for [databricks_secret_scope](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/secret_scope) resource ([#2297](https://github.com/databricks/terraform-provider-databricks/pull/2297)).
+
 ## 1.16.0
 
  * Added [databricks_workspace_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file) resource ([#2266](https://github.com/databricks/terraform-provider-databricks/pull/2266)).

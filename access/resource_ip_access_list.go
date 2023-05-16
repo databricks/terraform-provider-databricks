@@ -3,6 +3,7 @@ package access
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,54 +44,6 @@ type ipAccessListUpdateRequest struct {
 	Enabled     bool     `json:"enabled,omitempty" tf:"default:true"`
 }
 
-// Preview feature: https://docs.databricks.com/security/network/ip-access-list.html
-// REST API: https://docs.databricks.com/dev-tools/api/latest/ip-access-list.html#operation/create-list
-type ipAccessListsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-// NewIPAccessListsAPI ...
-func NewIPAccessListsAPI(ctx context.Context, m any) ipAccessListsAPI {
-	return ipAccessListsAPI{
-		client:  m.(*common.DatabricksClient),
-		context: ctx,
-	}
-}
-
-// Create creates the IP Access List to given the instance pool configuration
-func (a ipAccessListsAPI) Create(cr createIPAccessListRequest) (status IpAccessListStatus, err error) {
-	wrapper := IpAccessListStatusWrapper{}
-	err = a.client.Post(a.context, "/ip-access-lists", cr, &wrapper)
-	if err != nil {
-		return
-	}
-	status = wrapper.IPAccessList
-	return
-}
-
-func (a ipAccessListsAPI) Update(objectID string, ur ipAccessListUpdateRequest) error {
-	return a.client.Put(a.context, "/ip-access-lists/"+objectID, ur)
-}
-
-func (a ipAccessListsAPI) Delete(objectID string) (err error) {
-	err = a.client.Delete(a.context, "/ip-access-lists/"+objectID, map[string]any{})
-	return
-}
-
-func (a ipAccessListsAPI) Read(objectID string) (status IpAccessListStatus, err error) {
-	wrapper := IpAccessListStatusWrapper{}
-	err = a.client.Get(a.context, "/ip-access-lists/"+objectID, nil, &wrapper)
-	status = wrapper.IPAccessList
-	return
-}
-
-func (a ipAccessListsAPI) List() (listResponse ListIPAccessListsResponse, err error) {
-	listResponse = ListIPAccessListsResponse{}
-	err = a.client.Get(a.context, "/ip-access-lists", nil, &listResponse)
-	return
-}
-
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() *schema.Resource {
 	s := common.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -105,17 +58,25 @@ func ResourceIPAccessList() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var iacl createIPAccessListRequest
-			common.DataToStructPointer(d, s, &iacl)
-			status, err := NewIPAccessListsAPI(ctx, c).Create(iacl)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			d.SetId(status.ListID)
+			var iacl settings.CreateIpAccessList
+			common.DataToStructPointer(d, s, &iacl)
+			status, err := w.IpAccessLists.Create(ctx, iacl)
+			if err != nil {
+				return err
+			}
+			d.SetId(status.IpAccessList.ListId)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			status, err := NewIPAccessListsAPI(ctx, c).Read(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			status, err := w.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
 			if err != nil {
 				return err
 			}
@@ -123,12 +84,20 @@ func ResourceIPAccessList() *schema.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var iacl ipAccessListUpdateRequest
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			var iacl settings.UpdateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
-			return NewIPAccessListsAPI(ctx, c).Update(d.Id(), iacl)
+			return w.IpAccessLists.Update(ctx, iacl)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewIPAccessListsAPI(ctx, c).Delete(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
 		},
 	}.ToResource()
 }

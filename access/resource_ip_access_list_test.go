@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
@@ -303,7 +304,9 @@ func TestIPACLDelete_Error(t *testing.T) {
 }
 
 func TestListIpAccessLists(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+	w, err := databricks.NewWorkspaceClient()
+	require.NoError(t, err)
+	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/ip-access-lists",
@@ -314,7 +317,8 @@ func TestListIpAccessLists(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	ipLists, err := NewIPAccessListsAPI(ctx, client).List()
+	ipLists, err := w.IpAccessLists.Impl().List(ctx)
+
 	require.NoError(t, err)
-	assert.Equal(t, len(ipLists.ListIPAccessListsResponse), 0)
+	assert.Equal(t, 0, len(ipLists.IpAccessLists))
 }

@@ -102,6 +102,7 @@ type PipelineSpec struct {
 	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:ADVANCED"`
 	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
 	Notifications       []Notification    `json:"notifications,omitempty" tf:"alias:notification"`
+	Serverless          bool              `json:"serverless,omitempty"`
 }
 
 type createPipelineResponse struct {

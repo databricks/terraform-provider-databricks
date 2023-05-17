@@ -10,43 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type ListIPAccessListsResponse struct {
-	ListIPAccessListsResponse []IpAccessListStatus `json:"ip_access_lists,omitempty"`
-}
-
-type createIPAccessListRequest struct {
-	Label       string   `json:"label"`
-	ListType    string   `json:"list_type"`
-	IPAddresses []string `json:"ip_addresses"`
-}
-
-type IpAccessListStatus struct {
-	ListID        string   `json:"list_id"`
-	Label         string   `json:"label"`
-	ListType      string   `json:"list_type"`
-	IPAddresses   []string `json:"ip_addresses"`
-	AddressCount  int      `json:"address_count,omitempty"`
-	CreatedAt     int64    `json:"created_at,omitempty"`
-	CreatorUserID int64    `json:"creator_user_id,omitempty"`
-	UpdatedAt     int64    `json:"updated_at,omitempty"`
-	UpdatorUserID int64    `json:"updator_user_id,omitempty"`
-	Enabled       bool     `json:"enabled,omitempty"`
-}
-
-type IpAccessListStatusWrapper struct {
-	IPAccessList IpAccessListStatus `json:"ip_access_list,omitempty"`
-}
-
-type ipAccessListUpdateRequest struct {
-	Label       string   `json:"label"`
-	ListType    string   `json:"list_type"`
-	IPAddresses []string `json:"ip_addresses"`
-	Enabled     bool     `json:"enabled,omitempty" tf:"default:true"`
-}
-
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() *schema.Resource {
-	s := common.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(struct {
+		Label       string   `json:"label"`
+		ListType    string   `json:"list_type"`
+		IPAddresses []string `json:"ip_addresses"`
+		Enabled     bool     `json:"enabled,omitempty" tf:"default:true"`
+	}{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
 		s["ip_addresses"].Elem = &schema.Schema{

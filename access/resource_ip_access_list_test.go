@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ var (
 	TestingID               = "234567"
 	TestingLabel            = "Naughty"
 	TestingListTypeString   = "BLOCK"
-	TestingListType         = "BLOCK"
+	TestingListType         = settings.ListType("BLOCK")
 	TestingEnabled          = true
 	TestingIPAddresses      = []string{"1.2.3.4", "1.2.4.0/24"}
 	TestingIPAddressesState = []any{"1.2.3.4", "1.2.4.0/24"}
@@ -32,41 +32,41 @@ func TestIPACLCreate(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/ip-access-lists",
-				ExpectedRequest: createIPAccessListRequest{
+				ExpectedRequest: settings.CreateIpAccessList{
 					Label:       TestingLabel,
 					ListType:    TestingListType,
-					IPAddresses: TestingIPAddresses,
+					IpAddresses: TestingIPAddresses,
 				},
-				Response: IpAccessListStatusWrapper{
-					IPAccessList: IpAccessListStatus{
-						ListID:        TestingID,
-						Label:         TestingLabel,
-						ListType:      TestingListType,
-						IPAddresses:   TestingIPAddresses,
-						AddressCount:  2,
-						CreatedAt:     87939234,
-						CreatorUserID: 1234556,
-						UpdatedAt:     87939234,
-						UpdatorUserID: 1234556,
-						Enabled:       TestingEnabled,
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:       TestingID,
+						Label:        TestingLabel,
+						ListType:     TestingListType,
+						IpAddresses:  TestingIPAddresses,
+						AddressCount: 2,
+						CreatedAt:    87939234,
+						CreatedBy:    1234556,
+						UpdatedAt:    87939234,
+						UpdatedBy:    1234556,
+						Enabled:      TestingEnabled,
 					},
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: IpAccessListStatusWrapper{
-					IPAccessList: IpAccessListStatus{
-						ListID:        TestingID,
-						Label:         TestingLabel,
-						ListType:      TestingListType,
-						IPAddresses:   TestingIPAddresses,
-						AddressCount:  2,
-						CreatedAt:     87939234,
-						CreatorUserID: 1234556,
-						UpdatedAt:     87939234,
-						UpdatorUserID: 1234556,
-						Enabled:       TestingEnabled,
+				Resource: "/api/2.0/ip-access-lists/" + TestingID + "?",
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:       TestingID,
+						Label:        TestingLabel,
+						ListType:     TestingListType,
+						IpAddresses:  TestingIPAddresses,
+						AddressCount: 2,
+						CreatedAt:    87939234,
+						CreatedBy:    1234556,
+						UpdatedAt:    87939234,
+						UpdatedBy:    1234556,
+						Enabled:      TestingEnabled,
 					},
 				},
 			},
@@ -118,37 +118,37 @@ func TestIPACLUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: IpAccessListStatusWrapper{
-					IPAccessList: IpAccessListStatus{
-						ListID:        TestingID,
-						Label:         TestingLabel,
-						ListType:      TestingListType,
-						IPAddresses:   TestingIPAddresses,
-						AddressCount:  2,
-						CreatedAt:     87939234,
-						CreatorUserID: 1234556,
-						UpdatedAt:     87939234,
-						UpdatorUserID: 1234556,
-						Enabled:       TestingEnabled,
+				Resource: "/api/2.0/ip-access-lists/" + TestingID + "?",
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:       TestingID,
+						Label:        TestingLabel,
+						ListType:     TestingListType,
+						IpAddresses:  TestingIPAddresses,
+						AddressCount: 2,
+						CreatedAt:    87939234,
+						CreatedBy:    1234556,
+						UpdatedAt:    87939234,
+						UpdatedBy:    1234556,
+						Enabled:      TestingEnabled,
 					},
 				},
 			},
 			{
 				Method:   http.MethodPut,
-				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: IpAccessListStatusWrapper{
-					IPAccessList: IpAccessListStatus{
-						ListID:        TestingID,
-						Label:         TestingLabel,
-						ListType:      TestingListType,
-						IPAddresses:   TestingIPAddresses,
-						AddressCount:  2,
-						CreatedAt:     87939234,
-						CreatorUserID: 1234556,
-						UpdatedAt:     87939234,
-						UpdatorUserID: 1234556,
-						Enabled:       TestingEnabled,
+				Resource: "/api/2.0/ip-access-lists/" + TestingID + "?",
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:       TestingID,
+						Label:        TestingLabel,
+						ListType:     TestingListType,
+						IpAddresses:  TestingIPAddresses,
+						AddressCount: 2,
+						CreatedAt:    87939234,
+						CreatedBy:    1234556,
+						UpdatedAt:    87939234,
+						UpdatedBy:    1234556,
+						Enabled:      TestingEnabled,
 					},
 				},
 			},
@@ -170,6 +170,7 @@ func TestIPACLUpdate(t *testing.T) {
 	assert.Equal(t, 2, d.Get("ip_addresses.#"))
 }
 
+// tanmaytodo
 func TestIPACLUpdate_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -190,24 +191,25 @@ func TestIPACLUpdate_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Something unexpected")
 }
 
+// tanmaytodo
 func TestIPACLRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingID,
-				Response: IpAccessListStatusWrapper{
-					IPAccessList: IpAccessListStatus{
-						ListID:        TestingID,
-						Label:         TestingLabel,
-						ListType:      TestingListType,
-						IPAddresses:   TestingIPAddresses,
-						AddressCount:  2,
-						CreatedAt:     87939234,
-						CreatorUserID: 1234556,
-						UpdatedAt:     87939234,
-						UpdatorUserID: 1234556,
-						Enabled:       TestingEnabled,
+				Resource: "/api/2.0/ip-access-lists/" + TestingID + "?",
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:       TestingID,
+						Label:        TestingLabel,
+						ListType:     TestingListType,
+						IpAddresses:  TestingIPAddresses,
+						AddressCount: 2,
+						CreatedAt:    87939234,
+						CreatedBy:    1234556,
+						UpdatedAt:    87939234,
+						UpdatedBy:    1234556,
+						Enabled:      TestingEnabled,
 					},
 				},
 			},
@@ -230,7 +232,7 @@ func TestIPACLRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingID,
+				Resource: "/api/2.0/ip-access-lists/" + TestingID + "?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Can't find an IP access list with id: " + TestingID + ".",
@@ -250,7 +252,7 @@ func TestIPACLRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/ip-access-lists/" + TestingID,
+				Resource: "/api/2.0/ip-access-lists/" + TestingID + "?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
@@ -304,15 +306,18 @@ func TestIPACLDelete_Error(t *testing.T) {
 }
 
 func TestListIpAccessLists(t *testing.T) {
-	w, err := databricks.NewWorkspaceClient()
-	require.NoError(t, err)
-	_, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/ip-access-lists",
 			Response: map[string]any{},
 		},
 	})
+	require.NoError(t, err)
+
+	w, err := client.WorkspaceClient()
+	require.NoError(t, err)
+
 	defer server.Close()
 	require.NoError(t, err)
 

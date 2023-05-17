@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/settings"
 	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
-	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -1404,17 +1404,17 @@ func TestImportingRepos(t *testing.T) {
 }
 
 func TestImportingIPAccessLists(t *testing.T) {
-	resp := access.IpAccessListStatus{
-		ListID:       "123",
+	resp := settings.IpAccessListInfo{
+		ListId:       "123",
 		Label:        "block_list",
 		ListType:     "BLOCK",
-		IPAddresses:  []string{"1.2.3.4"},
+		IpAddresses:  []string{"1.2.3.4"},
 		AddressCount: 2,
 		Enabled:      true,
 	}
 	resp2 := resp
-	resp2.IPAddresses = []string{}
-	resp2.ListID = "124"
+	resp2.IpAddresses = []string{}
+	resp2.ListId = "124"
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
@@ -1430,22 +1430,22 @@ func TestImportingIPAccessLists(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists",
-				Response: access.ListIPAccessListsResponse{
-					ListIPAccessListsResponse: []access.IpAccessListStatus{resp, resp2},
+				Response: settings.GetIpAccessListsResponse{
+					IpAccessLists: []settings.IpAccessListInfo{resp, resp2},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists/123",
-				Response: access.IpAccessListStatusWrapper{
-					IPAccessList: resp,
+				Response: settings.GetIpAccessListResponse{
+					IpAccessLists: []settings.IpAccessListInfo{resp},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists/124",
-				Response: access.IpAccessListStatusWrapper{
-					IPAccessList: resp2,
+				Response: settings.GetIpAccessListResponse{
+					IpAccessLists: []settings.IpAccessListInfo{resp2},
 				},
 			},
 			{
@@ -1840,6 +1840,3 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 			assert.NoError(t, err)
 		})
 }
-
-// 			emptyRepos,
-// emptyIpAccessLIst,

@@ -82,7 +82,6 @@ The following arguments are supported:
 * `target` - The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
 * `edition` - optional name of the [product edition](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-concepts.html#editions). Supported values are: `core`, `pro`, `advanced` (default).
 * `channel` - optional name of the release channel for Spark version used by DLT pipeline.  Supported values are: `current` (default) and `preview`.
-* `serverless` - A flag to indicate whether serverless compute is enabled for this pipeline. The default value is `false`.
 
 ### notification block
 

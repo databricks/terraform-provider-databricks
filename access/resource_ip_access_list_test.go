@@ -170,7 +170,6 @@ func TestIPACLUpdate(t *testing.T) {
 	assert.Equal(t, 2, d.Get("ip_addresses.#"))
 }
 
-// tanmaytodo
 func TestIPACLUpdate_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -191,7 +190,6 @@ func TestIPACLUpdate_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Something unexpected")
 }
 
-// tanmaytodo
 func TestIPACLRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

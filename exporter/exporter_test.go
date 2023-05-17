@@ -1436,14 +1436,14 @@ func TestImportingIPAccessLists(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/ip-access-lists/123",
+				Resource: "/api/2.0/ip-access-lists/123?",
 				Response: settings.GetIpAccessListResponse{
 					IpAccessLists: []settings.IpAccessListInfo{resp},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/ip-access-lists/124",
+				Resource: "/api/2.0/ip-access-lists/124?",
 				Response: settings.GetIpAccessListResponse{
 					IpAccessLists: []settings.IpAccessListInfo{resp2},
 				},

@@ -598,3 +598,103 @@ func TestStorageSuppressDiff(t *testing.T) {
 	require.False(t, suppressStorageDiff(k, generated, "/tmp/abc", nil))
 	require.False(t, suppressStorageDiff(k, "/tmp/abc", "", nil))
 }
+
+func TestResourcePipelineCreateServerless(t *testing.T) {
+	var serverlessPipelineSpec = PipelineSpec{
+		Name:    "test-pipeline-serverless",
+		Storage: "/test/storage",
+		Configuration: map[string]string{
+			"key1": "value1",
+			"key2": "value2",
+		},
+		Clusters: []pipelineCluster{
+			{
+				Label: "default",
+				CustomTags: map[string]string{
+					"cluster_tag1": "cluster_value1",
+				},
+			},
+		},
+		Libraries: []PipelineLibrary{
+			{
+				Notebook: &NotebookLibrary{
+					Path: "/TestServerless",
+				},
+			},
+		},
+		Filters: &filters{
+			Include: []string{"com.databricks.include"},
+			Exclude: []string{"com.databricks.exclude"},
+		},
+		Serverless: true,
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
+				Response: createPipelineResponse{
+					PipelineID: "serverless",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/serverless",
+				Response: map[string]any{
+					"id":    "serverless",
+					"name":  "test-pipeline-serverless",
+					"state": "DEPLOYING",
+					"spec":  serverlessPipelineSpec,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/serverless",
+				Response: map[string]any{
+					"id":    "serverless",
+					"name":  "test-pipeline-serverless",
+					"state": "RUNNING",
+					"spec":  serverlessPipelineSpec,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/serverless",
+				Response: map[string]any{
+					"id":    "serverless",
+					"name":  "test-pipeline-serverless",
+					"state": "RUNNING",
+					"spec":  serverlessPipelineSpec,
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline-serverless"
+		storage = "/test/storage"
+		configuration = {
+		  key1 = "value1"
+		  key2 = "value2"
+		}
+		cluster {
+		  label = "default"
+		  custom_tags = {
+			"cluster_tag1" = "cluster_value1"
+		  }
+		}
+		library {
+		  notebook {
+			path = "/TestServerless"
+		  }
+		}
+		filters {
+		  include = ["com.databricks.include"]
+		  exclude = ["com.databricks.exclude"]
+		}
+		continuous = false
+		serverless = true
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "serverless", d.Id())
+}

@@ -113,7 +113,6 @@ func TestAPIACLCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
-// tanmaytodo
 func TestIPACLUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -221,6 +220,11 @@ func TestIPACLRead(t *testing.T) {
 					},
 				},
 			},
+		},
+		State: map[string]any{
+			"label":        TestingLabel,
+			"list_type":    TestingListTypeString,
+			"ip_addresses": TestingIpAddressesState,
 		},
 		Resource: ResourceIPAccessList(),
 		Read:     true,

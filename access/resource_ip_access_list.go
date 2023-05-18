@@ -10,14 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type ipAccessListUpdateRequest struct {
+	Label       string            `json:"label"`
+	ListType    settings.ListType `json:"list_type"`
+	IpAddresses []string          `json:"ip_addresses"`
+	Enabled     bool              `json:"enabled,omitempty" tf:"default:true"`
+}
+
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() *schema.Resource {
-	s := common.StructToSchema(struct {
-		Label       string   `json:"label"`
-		ListType    string   `json:"list_type"`
-		IPAddresses []string `json:"ip_addresses"`
-		Enabled     bool     `json:"enabled,omitempty" tf:"default:true"`
-	}{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
 		s["ip_addresses"].Elem = &schema.Schema{
@@ -61,6 +63,7 @@ func ResourceIPAccessList() *schema.Resource {
 			}
 			var iacl settings.UpdateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
+			iacl.IpAccessListId = d.Id()
 			return w.IpAccessLists.Update(ctx, iacl)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -100,8 +100,8 @@ type DbtTask struct {
 
 // RunJobTask contains information about RunJobTask
 type RunJobTask struct {
-   JobID             string   `json:"job_id"`
-   JobParameters     string   `json:"job_parameters,omitempty"`
+	JobID         string `json:"job_id"`
+	JobParameters string `json:"job_parameters,omitempty"`
 }
 
 // EmailNotifications contains the information for email notifications after job or task run start or completion
@@ -187,6 +187,7 @@ type JobTaskSettings struct {
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask                *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type`
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`

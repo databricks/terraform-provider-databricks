@@ -229,7 +229,6 @@ You also need to include a `git_source` block to configure the repository that c
 ### run_job_task Configuration Block
 
 * `job_id` - (Required) ID of the job
-* `parameters` - (Optional) Parameters for the task
 * `job_parameters` - (Optional) Job parameters for the task
 
 ### sql_task Configuration Block

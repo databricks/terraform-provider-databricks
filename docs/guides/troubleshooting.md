@@ -111,3 +111,7 @@ You can get this error during provisioning of the Databricks workspace.  It aris
 1. Contact your Databricks representative, like Solutions Architect, Customer Success Engineer, Account Executive, or Partner Solutions Architect to set a deployment prefix for your account.
 
 1. Comment out the `deployment_name` parameter to create workspace with default URL: `dbc-XXXXXX.cloud.databricks.com`.
+
+## Error: 'strconv.ParseInt parsing "...." value out of range' or "Attribute must be a whole number, got N.NNNNe+XX"
+
+This kind of errors happens when the 32-bit version of Databricks Terraform provider is used, usually on Microsoft Windows.  To fix the issue you need to switch to use of the 64-bit versions of Terraform and Databricks Terraform provider.

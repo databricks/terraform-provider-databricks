@@ -208,7 +208,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 
 ### Authenticating with Service Principal
 
-You can use the `client_id` + `client_secret` attributes to authenticate with a service principal at both the account and workspace levels. The `client_id` is the UUID of the service principal and `client_secret` is its secret. You can generate the secret from Databricks Accounts Console (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)) or by using the Terraform resource [databricks_service_principal_secret](resources/service_principal_secret.md).
+You can use the `client_id` + `client_secret` attributes to authenticate with a service principal at both the account and workspace levels. The `client_id` is the application_id of the [Service Principal](resources/service_principal.md) and `client_secret` is its secret. You can generate the secret from Databricks Accounts Console (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)) or by using the Terraform resource [databricks_service_principal_secret](resources/service_principal_secret.md).
 
 ``` hcl
 provider "databricks" {
@@ -248,7 +248,7 @@ resource "databricks_group" "cluster_admin" {
 }
 ```
 
-* `client_id` - UUID of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_ID`.
+* `client_id` - The `application_id` of the [Service Principal](resources/service_principal.md). Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_ID`.
 * `client_secret` - Secret of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_SECRET`.
 
 ## Special configurations for Azure

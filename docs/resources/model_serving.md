@@ -72,7 +72,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Serving endpoint identifier (equal to `name` argument).
+* `id` - Equal to the `name` argument and used to identify the serving endpoint.
 * `serving_endpoint_id` - Unique identifier of the serving endpoint primarily used to set permissions and refer to this instance for other operations.
 
 ## Access Control

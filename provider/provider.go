@@ -37,10 +37,16 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
+var IsPulumi string = "false"
+
 func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
-	useragent.WithProduct("databricks-tf-provider", common.Version())
+	BaseUserAgent := "databricks-tf-provider"
+	if IsPulumi == "true" {
+		BaseUserAgent = "databricks-pulumi-provider"
+	}
+	useragent.WithProduct(BaseUserAgent, common.Version())
 }
 
 // DatabricksProvider returns the entire terraform provider object

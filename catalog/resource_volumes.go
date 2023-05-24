@@ -8,8 +8,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type UpdateVolumeRequestContent struct {
+	// The name of the catalog where the schema and the volume are
+	CatalogName string `json:"catalog_name"`
+	// The comment attached to the volume
+	Comment string `json:"comment,omitempty"`
+	// The name of the schema where the volume is
+	SchemaName  string `json:"schema_name"`
+	FullNameArg string `json:"-" url:"-"`
+	// The name of the volume
+	Name string `json:"name"`
+	// The identifier of the user who owns the volume
+	Owner      string             `json:"owner,omitempty"`
+	VolumeType catalog.VolumeType `json:"volume_type"`
+	// The storage location on the cloud
+	StorageLocation string `json:"storage_location,omitempty"`
+}
+
 func ResourceVolumes() *schema.Resource {
-	s := common.StructToSchema(catalog.CreateVolumeRequestContent{}, // This has to be done manually because catalog.UpdateVolumeRequestContent doesn't contain all the necessary fields
+	s := common.StructToSchema(UpdateVolumeRequestContent{}, // This has to be done manually because catalog.UpdateVolumeRequestContent doesn't contain all the necessary fields
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
@@ -34,13 +51,11 @@ func ResourceVolumes() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// Full name = catalog_name . schema_name . name
 			v, err := w.Volumes.ReadByFullNameArg(ctx, d.Id())
 			if err != nil {
 				return err
 			}
-			common.StructToData(v, s, d)
-			return nil
+			return common.StructToData(v, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -49,9 +64,8 @@ func ResourceVolumes() *schema.Resource {
 			}
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
-			updateVolumeRequestContent.FullNameArg = d.Id() // to check
-			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
-			_ = v
+			updateVolumeRequestContent.FullNameArg = d.Id()
+			_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
 			if err != nil {
 				return err
 			}

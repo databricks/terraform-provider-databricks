@@ -1,18 +1,21 @@
 package catalog
 
 import (
+	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
 	TestingName             = "testName"
-	TestingVolumeType       = VolumeType("testVolumeType")
+	TestingVolumeType       = catalog.VolumeType("testVolumeType")
 	TestingVolumeTypeString = "testVolumeType"
 	TestingCatalogName      = "testCatalogName"
 	TestingSchemaName       = "testSchemaName"
+	TestingFullName         = "testCatalogName.testSchemaName.testName"
 	TestingComment          = "This is a test comment."
 )
 
@@ -24,30 +27,46 @@ func TestCreateVolumes(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "POST",
+				Method:   http.MethodPost,
 				Resource: "/api/2.1/unity-catalog/volumes",
-				ExpectedRequest: CreateVolumeRequestContent{
+				ExpectedRequest: catalog.CreateVolumeRequestContent{
 					Name:        TestingName,
 					VolumeType:  TestingVolumeType,
 					CatalogName: TestingCatalogName,
 					SchemaName:  TestingSchemaName,
 					Comment:     TestingComment,
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/volumes/testName",
-				Response: VolumeInfo{
+				Response: catalog.VolumeInfo{
 					Name:        TestingName,
 					VolumeType:  TestingVolumeType,
 					CatalogName: TestingCatalogName,
 					SchemaName:  TestingSchemaName,
 					Comment:     TestingComment,
+					FullName:    TestingFullName,
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/volumes/" + TestingFullName + "?",
+				Response: catalog.VolumeInfo{
+					Name:        TestingName,
+					VolumeType:  TestingVolumeType,
+					CatalogName: TestingCatalogName,
+					SchemaName:  TestingSchemaName,
+					Comment:     TestingComment,
+					FullName:    TestingFullName,
 				},
 			},
 		},
 		Resource: ResourceVolumes(),
-		Create:   true,
+		State: map[string]any{
+			"name":         TestingName,
+			"volume_type":  TestingVolumeType,
+			"catalog_name": TestingCatalogName,
+			"schema_name":  TestingSchemaName,
+			"comment":      TestingComment,
+		},
+		Create: true,
 		HCL: `
 		name = "testName"
 		volume_type = "testVolumeType"

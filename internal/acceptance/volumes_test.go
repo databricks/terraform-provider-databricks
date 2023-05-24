@@ -7,23 +7,35 @@ import (
 func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: `
+		resource "databricks_schema" "this" {
+			name 		 = "testschema"
+			catalog_name = "main"
+		}
+
 		resource "databricks_volumes" "this" {
-			name = "tf-{var.RANDOM}"
-			owner = "abc"
-			comment = "comment abc"
-			catalog_name = "catalog abc"
-			volume_type = "volume abc"
-			schema_name = "schema abc" 
+			name = "name-abc"
+			owner = "owner-abc"
+			comment = "comment-abc"
+			catalog_name = "main"
+			schema_name = databricks_schema.this.name 
+			volume_type = "EXTERNAL"
+			storage_location   = "s3://{env.TEST_BUCKET}/sometestingpath"
 		}`,
 	}, step{
 		Template: `
+		resource "databricks_schema" "this" {
+			name 		 = "testschema"
+			catalog_name = "main"
+		}
+
 		resource "databricks_volumes" "this" {
-			name = "tf-{var.RANDOM}"
-			owner = "def"
-			comment = "comment def"
-			catalog_name = "catalog def"
-			volume_type = "volume def"
-			schema_name = "schema def" 
+			name = "name-def"
+			owner = "owner-def"
+			comment = "comment-def"
+			catalog_name = "main"
+			schema_name = databricks_schema.this.name 
+			volume_type = "EXTERNAL"
+			storage_location   = "s3://{env.TEST_BUCKET}/sometestingpath"
 		}`,
 	})
 }

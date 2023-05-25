@@ -68,6 +68,41 @@ func TestVolumesCreate(t *testing.T) {
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
 }
 
+func TestVolumesRead(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Response: catalog.VolumeInfo{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a test comment.",
+					FullName:    "testCatalogName.testSchemaName.testName",
+				},
+			},
+		},
+		Resource: ResourceVolumes(),
+		Read:     true,
+		ID:       "testCatalogName.testSchemaName.testName",
+		HCL: `
+		name = "testName"
+		volume_type = "testVolumeType"
+		catalog_name = "testCatalogName"
+		schema_name = "testSchemaName"
+		comment = "This is a test comment."
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "testName", d.Get("name"))
+	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
+	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
+	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
+	assert.Equal(t, "This is a test comment.", d.Get("comment"))
+}
+
 func TestVolumesUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -121,41 +156,6 @@ func TestVolumesUpdate(t *testing.T) {
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
 }
 
-func TestVolumesRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
-				Response: catalog.VolumeInfo{
-					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
-				},
-			},
-		},
-		Resource: ResourceVolumes(),
-		Read:     true,
-		ID:       "testCatalogName.testSchemaName.testName",
-		HCL: `
-		name = "testName"
-		volume_type = "testVolumeType"
-		catalog_name = "testCatalogName"
-		schema_name = "testSchemaName"
-		comment = "This is a test comment."
-		`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "testName", d.Get("name"))
-	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
-	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
-	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
-	assert.Equal(t, "This is a test comment.", d.Get("comment"))
-}
-
 func TestVolumeDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -172,7 +172,7 @@ func TestVolumeDelete(t *testing.T) {
 	assert.Equal(t, "testCatalogName.testSchemaName.testName", d.Id())
 }
 
-func TestVolumesLists(t *testing.T) {
+func TestVolumesList(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   http.MethodGet,

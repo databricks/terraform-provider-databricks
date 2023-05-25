@@ -1,19 +1,23 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestAccVolumesResourceFullLifecycle(t *testing.T) {
+	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	workspaceLevel(t, step{
-		Template: `
+		Template: fmt.Sprintf(`
 		resource "databricks_schema" "this" {
-			name 		 = "schema-{var.RANDOM}"
+			name 		 = "schema-%[1]s"
 			catalog_name = "main"
 		}
 
 		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.RANDOM}"
+			name = "cred-%[1]s"
 			aws_iam_role {
 				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
@@ -21,8 +25,8 @@ func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 		}
 
 		resource "databricks_external_location" "some" {
-			name            = "external-{var.RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
+			name            = "external-%[1]s"
+			url             = "s3://{env.TEST_BUCKET}/somepath-%[1]s"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
 		}
@@ -34,16 +38,16 @@ func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
-		}`,
+		}`, randomName),
 	}, step{
-		Template: `
+		Template: fmt.Sprintf(`
 		resource "databricks_schema" "this" {
-			name 		 = "schema-{var.RANDOM}"
+			name 		 = "schema-%[1]s"
 			catalog_name = "main"
 		}
 
 		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.RANDOM}"
+			name = "cred-%[1]s"
 			aws_iam_role {
 				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
@@ -51,19 +55,19 @@ func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 		}
 
 		resource "databricks_external_location" "some" {
-			name            = "external-{var.RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
+			name            = "external-%[1]s"
+			url             = "s3://{env.TEST_BUCKET}/somepath-%[1]s"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
 		}
 
 		resource "databricks_volumes" "this" {
-			name = "name-def"
+			name = "name-abc"
 			comment = "comment-def"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
-		}`,
+		}`, randomName),
 	})
 }

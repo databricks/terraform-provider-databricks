@@ -1,5 +1,19 @@
 # Version changelog
 
+## 1.17.0
+
+ * **Removed support for releasing 32-bit binaries** ([#2315](https://github.com/databricks/terraform-provider-databricks/pull/2315), [#2320](https://github.com/databricks/terraform-provider-databricks/pull/2320)).
+ * Added more information on impact of using a cluster policy in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource ([#2313](https://github.com/databricks/terraform-provider-databricks/pull/2313)).
+ * Added missing `serverless` option to [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) ([#2308](https://github.com/databricks/terraform-provider-databricks/pull/2308)).
+ * Updated `channel` and `edition` values in [databricks_pipeline](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/pipeline) docs ([#2322](https://github.com/databricks/terraform-provider-databricks/pull/2322)).
+ * Automatically add `CAN_MANAGE` permission on [databricks_instance_pool](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/instance_pool) for calling user ([#2298](https://github.com/databricks/terraform-provider-databricks/pull/2298)).
+ * Migrated [databricks_ip_access_list](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/ip_access_list) resource to Go SDK ([#2306](https://github.com/databricks/terraform-provider-databricks/pull/2306)).
+
+Updated dependency versions:
+
+ * Bump github.com/stretchr/testify from 1.8.2 to 1.8.3 ([#2317](https://github.com/databricks/terraform-provider-databricks/pull/2317)).
+ * Bump github.com/databricks/databricks-sdk-go from v0.8.1 to v0.9.0 ([#2327](https://github.com/databricks/terraform-provider-databricks/pull/2327)).
+
 ## 1.16.1
 
  * Added [databricks_service_principal_secret](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal_secret) documentation ([#2296](https://github.com/databricks/terraform-provider-databricks/pull/2296)).

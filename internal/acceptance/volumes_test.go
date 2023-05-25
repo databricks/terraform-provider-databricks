@@ -5,6 +5,7 @@ import (
 )
 
 func TestAccVolumesResourceFullLifecycle(t *testing.T) {
+	t.Skip("Not running until we have UC Volumes enabled in our aws test workspace")
 	workspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -19,7 +20,7 @@ func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
-			storage_location   = "s3://{env.TEST_BUCKET}/sometestingpath"
+			storage_location   = "s3://{env.TEST_BUCKET}/sometestpath-for-uc-volumes"
 		}`,
 	}, step{
 		Template: `
@@ -35,7 +36,7 @@ func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
-			storage_location   = "s3://{env.TEST_BUCKET}/sometestingpath"
+			storage_location   = "s3://{env.TEST_BUCKET}/sometestpath-for-uc-volumes"
 		}`,
 	})
 }

@@ -26,7 +26,8 @@ type UpdateVolumeRequestContent struct {
 }
 
 func ResourceVolumes() *schema.Resource {
-	s := common.StructToSchema(UpdateVolumeRequestContent{}, // This has to be done manually because catalog.UpdateVolumeRequestContent doesn't contain all the necessary fields
+	// We cannot use catalog.UpdateVolumeRequestContent because it doesn't contain all the necessary fields
+	s := common.StructToSchema(UpdateVolumeRequestContent{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})

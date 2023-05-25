@@ -19,7 +19,7 @@ type UpdateVolumeRequestContent struct {
 	// The name of the volume
 	Name string `json:"name"`
 	// The identifier of the user who owns the volume
-	Owner      string             `json:"owner,omitempty"`
+	Owner      string             `json:"owner,omitempty" tf:"computed"`
 	VolumeType catalog.VolumeType `json:"volume_type"`
 	// The storage location on the cloud
 	StorageLocation string `json:"storage_location,omitempty"`

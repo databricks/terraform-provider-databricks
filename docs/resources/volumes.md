@@ -54,8 +54,8 @@ The following arguments are supported:
 
 ## Import
 
-This resource can be imported by `name`
+This resource can be imported by `full_name` which is comprised under a 3-level namespace `<catalog>.<schema>.<volume>`
 
 ```bash
-$ terraform import databricks_volumes.this <name>
+$ terraform import databricks_volumes.this <catalog_name>.<schema_name>.<name>
 ```

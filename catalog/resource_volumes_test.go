@@ -110,29 +110,31 @@ func TestVolumesUpdate(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
 				Response: catalog.VolumeInfo{
-					Name:        "testName",
+					Name:        "testNameNew",
 					VolumeType:  catalog.VolumeType("testVolumeType"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
+					Comment:     "This is a new test comment.",
+					FullName:    "testCatalogName.testSchemaName.testNameNew",
+					Owner:       "testOwnerNew",
 				},
 			},
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testName",
-					Comment: "This is a test comment.",
-					Owner:   "testOwner",
+					Name:    "testNameNew",
+					Comment: "This is a new test comment.",
+					Owner:   "testOwnerNew",
 				},
 				Response: catalog.VolumeInfo{
-					Name:        "testName",
+					Name:        "testNameNew",
 					VolumeType:  catalog.VolumeType("testVolumeType"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
+					Comment:     "This is a new test comment.",
 					FullName:    "testCatalogName.testSchemaName.testName",
+					Owner:       "testOwnerNew",
 				},
 			},
 		},
@@ -140,20 +142,20 @@ func TestVolumesUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "testCatalogName.testSchemaName.testName",
 		HCL: `
-		name = "testName"
+		name = "testNameNew"
 		volume_type = "testVolumeType"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
-		comment = "This is a test comment."
-		owner = "testOwner"
+		comment = "This is a new test comment."
+		owner = "testOwnerNew"
 		`,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "testName", d.Get("name"))
+	assert.Equal(t, "testNameNew", d.Get("name"))
 	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
-	assert.Equal(t, "This is a test comment.", d.Get("comment"))
+	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
 }
 
 func TestVolumeDelete(t *testing.T) {

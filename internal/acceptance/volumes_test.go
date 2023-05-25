@@ -62,7 +62,7 @@ func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 		}
 
 		resource "databricks_volumes" "this" {
-			name = "name-abc"
+			name = "name-def"
 			comment = "comment-def"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 

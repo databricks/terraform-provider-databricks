@@ -66,7 +66,8 @@ func ResourceVolumes() *schema.Resource {
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
 			updateVolumeRequestContent.FullNameArg = d.Id()
-			_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
+			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
+			d.SetId(v.FullName)
 			if err != nil {
 				return err
 			}

@@ -25,7 +25,7 @@ type UpdateVolumeRequestContent struct {
 	VolumeType      catalog.VolumeType `json:"volume_type"`
 }
 
-func ResourceVolumes() *schema.Resource {
+func ResourceVolume() *schema.Resource {
 	// We cannot use catalog.UpdateVolumeRequestContent because it doesn't contain all the necessary fields
 	s := common.StructToSchema(UpdateVolumeRequestContent{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

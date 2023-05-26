@@ -68,7 +68,7 @@ func TestVolumesCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVolumes(),
+		Resource: ResourceVolume(),
 		Create:   true,
 		HCL: `
 		name = "testName"
@@ -102,7 +102,7 @@ func TestVolumesRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVolumes(),
+		Resource: ResourceVolume(),
 		Read:     true,
 		ID:       "testCatalogName.testSchemaName.testName",
 		HCL: `
@@ -156,7 +156,7 @@ func TestVolumesUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceVolumes(),
+		Resource: ResourceVolume(),
 		Update:   true,
 		ID:       "testCatalogName.testSchemaName.testName",
 		HCL: `
@@ -184,7 +184,7 @@ func TestVolumeDelete(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
 			},
 		},
-		Resource: ResourceVolumes(),
+		Resource: ResourceVolume(),
 		Delete:   true,
 		ID:       "testCatalogName.testSchemaName.testName",
 	}.Apply(t)

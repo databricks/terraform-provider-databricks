@@ -147,7 +147,7 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
 }
 
-func TestVolumeCreate_Error(t *testing.T) {
+func TestVolumesCreateWithoutInitialOwner_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -174,6 +174,66 @@ func TestVolumeCreate_Error(t *testing.T) {
 	assert.Error(t, err)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestVolumesCreateWithInitialOwner_Error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.1/unity-catalog/volumes",
+				ExpectedRequest: catalog.CreateVolumeRequestContent{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a test comment.",
+				},
+				Response: catalog.VolumeInfo{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a test comment.",
+					FullName:    "testCatalogName.testSchemaName.testName",
+					Owner:       "initialOwner",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Response: catalog.VolumeInfo{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a test comment.",
+					FullName:    "testCatalogName.testSchemaName.testName",
+					Owner:       "testOwner",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName",
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+		},
+		Resource: ResourceVolume(),
+		Create:   true,
+		HCL: `
+		name = "testName"
+		owner = "testOwner"
+		volume_type = "testVolumeType"
+		catalog_name = "testCatalogName"
+		schema_name = "testSchemaName"
+		comment = "This is a test comment."
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected")
 }
 
 func TestVolumesRead(t *testing.T) {

@@ -19,10 +19,10 @@ type UpdateVolumeRequestContent struct {
 	// The name of the volume
 	Name string `json:"name"`
 	// The identifier of the user who owns the volume
-	Owner      string             `json:"owner,omitempty" tf:"computed"`
-	VolumeType catalog.VolumeType `json:"volume_type"`
+	Owner string `json:"owner,omitempty" tf:"computed"`
 	// The storage location on the cloud
-	StorageLocation string `json:"storage_location,omitempty"`
+	StorageLocation string             `json:"storage_location,omitempty"`
+	VolumeType      catalog.VolumeType `json:"volume_type"`
 }
 
 func ResourceVolumes() *schema.Resource {
@@ -45,6 +45,15 @@ func ResourceVolumes() *schema.Resource {
 				return err
 			}
 			d.SetId(v.FullName)
+
+			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
+			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
+			updateVolumeRequestContent.FullNameArg = d.Id()
+			_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

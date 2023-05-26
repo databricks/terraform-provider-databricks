@@ -34,6 +34,7 @@ func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 		resource "databricks_volumes" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
+			owner = "owner-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
@@ -64,6 +65,7 @@ func TestAccVolumesResourceFullLifecycle(t *testing.T) {
 		resource "databricks_volumes" "this" {
 			name = "name-def"
 			comment = "comment-def"
+			owner = "owner-def"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"

@@ -31,7 +31,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerFullLifecycle(t *testing.T) {
 			comment         = "Managed by TF"
 		}
 
-		resource "databricks_volumes" "this" {
+		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
@@ -61,7 +61,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerFullLifecycle(t *testing.T) {
 			comment         = "Managed by TF"
 		}
 
-		resource "databricks_volumes" "this" {
+		resource "databricks_volume" "this" {
 			name = "name-def"
 			comment = "comment-def"
 			owner = "account users"
@@ -97,7 +97,7 @@ func TestUcAccVolumesResourceWithInitialOnwerFullLifecycle(t *testing.T) {
 			comment         = "Managed by TF"
 		}
 
-		resource "databricks_volumes" "this" {
+		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			owner = "account users"
@@ -128,7 +128,7 @@ func TestUcAccVolumesResourceWithInitialOnwerFullLifecycle(t *testing.T) {
 			comment         = "Managed by TF"
 		}
 
-		resource "databricks_volumes" "this" {
+		resource "databricks_volume" "this" {
 			name = "name-def"
 			comment = "comment-def"
 			owner = "{env.TEST_DATA_ENG_GROUP}"

@@ -1,7 +1,7 @@
 ---
 subcategory: "Unity Catalog"
 ---
-# databricks_volumes (Resource)
+# databricks_volume (Resource)
 Volumes are a new Unity Catalog (UC) capability for accessing, storing, governing, and organizing files. Volumes unlock new processing capabilities for data governed by the Unity Catalog, including support for most machine learning and data science workloads. You can use volumes to store and access files in any format; data can be structured, semi-structured, or unstructured.
 
 With Volumes, files managed centrally in Unity Catalogare are organized under a 3-level namespace: `<catalog>.<schema>.<volume>`.
@@ -29,7 +29,7 @@ resource "databricks_schema" "things" {
   }
 }
 
-resource "databricks_volumes" "this" {
+resource "databricks_volume" "this" {
   name = "quickstart_volume"
   catalog_name = databricks_catalog.sandbox.name
   schema_name = databricks_schema.things.name 
@@ -57,5 +57,5 @@ The following arguments are supported:
 This resource can be imported by `full_name` which is comprised under a 3-level namespace `<catalog>.<schema>.<volume>`
 
 ```bash
-$ terraform import databricks_volumes.this <catalog_name>.<schema_name>.<name>
+$ terraform import databricks_volume.this <catalog_name>.<schema_name>.<name>
 ```

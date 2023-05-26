@@ -46,12 +46,15 @@ func ResourceVolumes() *schema.Resource {
 			}
 			d.SetId(v.FullName)
 
-			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
-			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
-			updateVolumeRequestContent.FullNameArg = d.Id()
-			_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
-			if err != nil {
-				return err
+			// Update owner if it is provided
+			if d.Get("owner") != "" {
+				var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
+				common.DataToStructPointer(d, s, &updateVolumeRequestContent)
+				updateVolumeRequestContent.FullNameArg = d.Id()
+				_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil

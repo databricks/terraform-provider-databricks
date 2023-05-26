@@ -26,7 +26,9 @@ type UpdateVolumeRequestContent struct {
 }
 
 func ResourceVolume() *schema.Resource {
-	// We cannot use catalog.UpdateVolumeRequestContent because it doesn't contain all the necessary fields
+	// We cannot use catalog.UpdateVolumeRequestContent because it doesn't contain all the necessary fields, example - SchemaName, CatalogName,
+	// We also cannot use catalog.CreateVolumeRequestContent because it doesn't contain Owner and FullNameArg
+	// We also need to do tf:"computed" for the Owner field hence cannot use a struct in Go SDK.
 	s := common.StructToSchema(UpdateVolumeRequestContent{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m

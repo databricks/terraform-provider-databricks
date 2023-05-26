@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
-func TestAccVolumesResourceWithoutInitialOwnerFullLifecycle(t *testing.T) {
+func TestUcAccVolumesResourceWithoutInitialOwnerFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	workspaceLevel(t, step{
+	unityWorkspaceLevel(t, step{
 		Template: fmt.Sprintf(`
 		resource "databricks_schema" "this" {
 			name 		 = "schema-%[1]s"
@@ -73,9 +73,9 @@ func TestAccVolumesResourceWithoutInitialOwnerFullLifecycle(t *testing.T) {
 	})
 }
 
-func TestAccVolumesResourceWithInitialOnwerFullLifecycle(t *testing.T) {
+func TestUcAccVolumesResourceWithInitialOnwerFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	workspaceLevel(t, step{
+	unityWorkspaceLevel(t, step{
 		Template: fmt.Sprintf(`
 		resource "databricks_schema" "this" {
 			name 		 = "schema-%[1]s"

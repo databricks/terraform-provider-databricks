@@ -7,7 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
-func TestUcAccVolumesResourceWithoutInitialOwnerFullLifecycle(t *testing.T) {
+func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
+	GetEnvOrSkipTest(t, "TEST_BUCKET")
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	unityWorkspaceLevel(t, step{
 		Template: fmt.Sprintf(`
@@ -73,7 +74,8 @@ func TestUcAccVolumesResourceWithoutInitialOwnerFullLifecycle(t *testing.T) {
 	})
 }
 
-func TestUcAccVolumesResourceWithInitialOnwerFullLifecycle(t *testing.T) {
+func TestUcAccVolumesResourceWithInitialOnwerAWSFullLifecycle(t *testing.T) {
+	GetEnvOrSkipTest(t, "TEST_BUCKET")
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	unityWorkspaceLevel(t, step{
 		Template: fmt.Sprintf(`

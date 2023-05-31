@@ -420,7 +420,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			// TODO: add groups to the output
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalID,entitlements",
+				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalId,entitlements",
 				Response: scim.User{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 			},
 			{
@@ -1676,7 +1676,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalID,entitlements",
+				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalId,entitlements",
 				Response: scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
 			},
 			{

@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type UpdateVolumeRequestContent struct {
+// This structure contains the fields of catalog.UpdateVolumeRequestContent and catalog.CreateVolumeRequestContent
+// We need to create this because we need Owner, FullNameArg, SchemaName and CatalogName which aren't present in a single of them.
+// We also need to annotate tf:"computed" for the Owner field.
+type VolumeInfo struct {
 	// The name of the catalog where the schema and the volume are
 	CatalogName string `json:"catalog_name"`
 	// The comment attached to the volume
@@ -26,10 +29,7 @@ type UpdateVolumeRequestContent struct {
 }
 
 func ResourceVolume() *schema.Resource {
-	// We cannot use catalog.UpdateVolumeRequestContent because it doesn't contain all the necessary fields, example - SchemaName, CatalogName,
-	// We also cannot use catalog.CreateVolumeRequestContent because it doesn't contain Owner and FullNameArg
-	// We also need to do tf:"computed" for the Owner field hence cannot use a struct in Go SDK.
-	s := common.StructToSchema(UpdateVolumeRequestContent{},
+	s := common.StructToSchema(VolumeInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
@@ -81,6 +81,8 @@ func ResourceVolume() *schema.Resource {
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
 			updateVolumeRequestContent.FullNameArg = d.Id()
 			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
+			// We need to update the resource data because Name is updatable and FullName consists of Name,
+			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
 			d.SetId(v.FullName)
 			if err != nil {
 				return err

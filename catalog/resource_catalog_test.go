@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,28 +21,37 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/catalogs",
-				ExpectedRequest: CatalogInfo{
+				ExpectedRequest: catalog.CreateCatalog{
 					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",
 					},
 				},
-			},
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/a.default",
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				Response: CatalogInfo{
+				Response: catalog.CatalogInfo{
 					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",
 					},
-					MetastoreID: "e",
+					MetastoreId: "e",
+					Owner:       "f",
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					MetastoreId: "e",
 					Owner:       "f",
 				},
 			},
@@ -64,15 +74,14 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/catalogs",
-				ExpectedRequest: CatalogInfo{
+				ExpectedRequest: catalog.CreateCatalog{
 					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",
 					},
-					Owner: "administrators",
 				},
-				Response: CatalogInfo{
+				Response: catalog.CatalogInfo{
 					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
@@ -83,25 +92,30 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/a.default",
+				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: map[string]any{
-					"owner": "administrators",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				Response: CatalogInfo{
+				ExpectedRequest: catalog.UpdateCatalog{
 					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",
 					},
-					MetastoreID: "e",
+					Owner: "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					MetastoreId: "e",
 					Owner:       "administrators",
 				},
 			},
@@ -125,21 +139,28 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/catalogs",
-				ExpectedRequest: CatalogInfo{
+				ExpectedRequest: catalog.CatalogInfo{
 					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",
 					},
 				},
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					Owner: "testers",
+				},
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/a.default",
+				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
 				Status:   400,
 				Response: apierr.APIErrorBody{
-					ScimDetail: "Something",
-					ScimStatus: "Else",
+					Message: "Something",
 				},
 			},
 		},
@@ -155,6 +176,7 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 	}.Apply(t)
 	require.Error(t, err)
 	assert.Equal(t, "cannot remove new catalog default schema: Something", fmt.Sprint(err))
+
 }
 
 func TestUpdateCatalog(t *testing.T) {
@@ -163,16 +185,24 @@ func TestUpdateCatalog(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: map[string]any{
-					"owner": "administrators",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Name:    "a",
+					Comment: "c",
+					Owner:   "administrators",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				Response: CatalogInfo{
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
 					Name:        "a",
-					MetastoreID: "d",
+					MetastoreId: "d",
 					Comment:     "c",
 					Owner:       "administrators",
 				},
@@ -264,7 +294,7 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/catalogs",
-				ExpectedRequest: CatalogInfo{
+				ExpectedRequest: catalog.CatalogInfo{
 					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
@@ -273,11 +303,7 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 					ProviderName: "foo",
 					ShareName:    "bar",
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				Response: CatalogInfo{
+				Response: catalog.CatalogInfo{
 					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
@@ -285,7 +311,22 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 					},
 					ProviderName: "foo",
 					ShareName:    "bar",
-					MetastoreID:  "e",
+					MetastoreId:  "e",
+					Owner:        "f",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					ProviderName: "foo",
+					ShareName:    "bar",
+					MetastoreId:  "e",
 					Owner:        "f",
 				},
 			},

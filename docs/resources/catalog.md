@@ -24,7 +24,7 @@ resource "databricks_catalog" "sandbox" {
 
 The following arguments are required:
 
-* `name` - Name of Catalog relative to parent metastore. Change forces creation of a new resource.
+* `name` - Name of Catalog relative to parent metastore.
 * `storage_root` - (Optional) Managed location of the catalog. Location in cloud storage where data for managed tables will be stored. If not specified, the location will default to the metastore root location. Change forces creation of a new resource.
 * `provider_name` - (Optional) For Delta Sharing Catalogs: the name of the delta sharing provider. Change forces creation of a new resource.
 * `share_name` - (Optional) For Delta Sharing Catalogs: the name of the share under the share provider. Change forces creation of a new resource.

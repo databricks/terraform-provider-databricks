@@ -3,10 +3,19 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func ucDirectoryPathSuppressDiff(k, old, new string, d *schema.ResourceData) bool {
+	if (new == (old + "/")) || (old == (new + "/")) {
+		log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
+		return true
+	}
+	return false
+}
 
 type CatalogsAPI struct {
 	client  *common.DatabricksClient
@@ -68,6 +77,7 @@ func ResourceCatalog() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			}
+			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSuppressDiff
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/catalogs", []string{"owner", "comment", "properties"})

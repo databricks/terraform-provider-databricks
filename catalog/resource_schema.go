@@ -73,6 +73,7 @@ func ResourceSchema() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			}
+			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSuppressDiff
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/schemas", []string{"owner", "comment", "properties"})

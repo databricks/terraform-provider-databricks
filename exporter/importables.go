@@ -15,7 +15,6 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
-	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
@@ -1110,15 +1109,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("list_type").(string) + "_" + d.Get("label").(string)
 		},
 		List: func(ic *importContext) error {
-			ipListsResp, err := access.NewIPAccessListsAPI(ic.Context, ic.Client).List()
+			w, err := ic.Client.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			ipLists := ipListsResp.ListIPAccessListsResponse
+			ipListsResp, err := w.IpAccessLists.Impl().List(ic.Context)
+
+			if err != nil {
+				return err
+			}
+			ipLists := ipListsResp.IpAccessLists
 			for offset, ipList := range ipLists {
 				ic.Emit(&resource{
 					Resource: "databricks_ip_access_list",
-					ID:       ipList.ListID,
+					ID:       ipList.ListId,
 				})
 				log.Printf("[INFO] Scanned %d of %d IP Access Lists", offset+1, len(ipLists))
 			}

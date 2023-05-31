@@ -48,7 +48,6 @@ func ResourceExternalLocation() *schema.Resource {
 			m["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			}
 			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old == "false" && new == "true"

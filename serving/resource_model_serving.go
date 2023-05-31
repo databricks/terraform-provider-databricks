@@ -21,6 +21,14 @@ func ResourceModelServing() *schema.Resource {
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
 			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
+
+			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
+
+			m["serving_endpoint_id"] = &schema.Schema{
+				Computed: true,
+				Type:     schema.TypeString,
+			}
+
 			return m
 		})
 
@@ -48,7 +56,12 @@ func ResourceModelServing() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(*endpoint, s, d)
+			err = common.StructToData(*endpoint, s, d)
+			if err != nil {
+				return err
+			}
+			d.Set("serving_endpoint_id", endpoint.Id)
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

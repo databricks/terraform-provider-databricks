@@ -48,17 +48,18 @@ func ResourceVolume() *schema.Resource {
 			}
 			d.SetId(v.FullName)
 
-			// Update owner if it is provided
-			if d.Get("owner") != "" {
-				var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
-				common.DataToStructPointer(d, s, &updateVolumeRequestContent)
-				updateVolumeRequestContent.FullNameArg = d.Id()
-				_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
-				if err != nil {
-					return err
-				}
+			// Don't update owner if it is not provided
+			if d.Get("owner") == "" {
+				return nil
 			}
 
+			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
+			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
+			updateVolumeRequestContent.FullNameArg = d.Id()
+			_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

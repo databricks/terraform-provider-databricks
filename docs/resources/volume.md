@@ -29,13 +29,26 @@ resource "databricks_schema" "things" {
   }
 }
 
+resource "databricks_storage_credential" "external" {
+  name = "creds"
+  aws_iam_role {
+    role_arn = "role"
+  }
+}
+
+resource "databricks_external_location" "some" {
+  name            = "external-location"
+  url             = "some-url"
+  credential_name = databricks_storage_credential.external.id
+}
+
 resource "databricks_volume" "this" {
   name = "quickstart_volume"
   catalog_name = databricks_catalog.sandbox.name
   schema_name = databricks_schema.things.name 
   owner = "volume_owner"
   volume_type = "EXTERNAL"
-  storage_location   = ""
+  storage_location   = databricks_external_location.some.url 
   comment = "this volume is managed by terraform"
 }
 ```
@@ -49,7 +62,7 @@ The following arguments are supported:
 * `schema_name` - Name of parent Schema relative to parent Catalog
 * `volume_type` - URL of storage location. Currently only `EXTERNAL` is supported
 * `owner` - (Optional) Name of the volume owner
-* `storage_location` - (Optional) If `EXTERNAL` volume type is used, then location of that volume
+* `storage_location` - (Optional) If `EXTERNAL` volume type is used, then location of that volume. 
 * `comment` - (Optional) User-supplied free-form text.
 
 ## Import

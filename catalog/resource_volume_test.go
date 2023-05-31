@@ -41,7 +41,7 @@ func TestVolumesCreateWithoutInitialOwner(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
 					VolumeType:  catalog.VolumeType("testVolumeType"),
@@ -97,7 +97,7 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
 					VolumeType:  catalog.VolumeType("testVolumeType"),
@@ -201,7 +201,7 @@ func TestVolumesCreateWithInitialOwner_Error(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
 					VolumeType:  catalog.VolumeType("testVolumeType"),
@@ -241,7 +241,7 @@ func TestVolumesRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
 					VolumeType:  catalog.VolumeType("testVolumeType"),
@@ -276,7 +276,7 @@ func TestResourceVolumeRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -297,7 +297,7 @@ func TestVolumesUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
 					VolumeType:  catalog.VolumeType("testVolumeType"),
@@ -385,7 +385,7 @@ func TestVolumeDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName?",
 			},
 		},
 		Resource: ResourceVolume(),
@@ -401,7 +401,7 @@ func TestVolumeDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName" + "?",
+				Resource: "/api/2.1/unity-catalog/volumes/" + "testCatalogName.testSchemaName.testName?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",

@@ -62,7 +62,7 @@ The following arguments are supported:
 * `schema_name` - Name of parent Schema relative to parent Catalog
 * `volume_type` - URL of storage location. Currently only `EXTERNAL` is supported
 * `owner` - (Optional) Name of the volume owner
-* `storage_location` - (Optional) If `EXTERNAL` volume type is used, then location of that volume. 
+* `storage_location` - (Optional) If `EXTERNAL` volume type is used, then location of that volume 
 * `comment` - (Optional) User-supplied free-form text.
 
 ## Import

@@ -32,13 +32,13 @@ resource "databricks_schema" "things" {
 resource "databricks_storage_credential" "external" {
   name = "creds"
   aws_iam_role {
-    role_arn = "role"
+    role_arn = aws_iam_role.external_data_access.arn"
   }
 }
 
 resource "databricks_external_location" "some" {
   name            = "external-location"
-  url             = "some-url"
+  url             = "s3://${aws_s3_bucket.external.id}/some"
   credential_name = databricks_storage_credential.external.id
 }
 

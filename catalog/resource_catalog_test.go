@@ -303,3 +303,12 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestUcDirectoryPathSuppressDiff(t *testing.T) {
+	assert.True(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH",
+		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/", nil))
+	assert.True(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/",
+		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH", nil))
+	assert.False(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/new_dir",
+		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/", nil))
+}

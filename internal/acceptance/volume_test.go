@@ -69,7 +69,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 	})
 }
 
-func TestUcAccVolumesResourceWithInitialOnwerAWSFullLifecycle(t *testing.T) {
+func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {

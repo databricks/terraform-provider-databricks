@@ -1,24 +1,19 @@
 package acceptance
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
-	GetEnvOrSkipTest(t, "TEST_BUCKET")
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	unityWorkspaceLevel(t, step{
-		Template: fmt.Sprintf(`
+		Template: `
 		resource "databricks_schema" "this" {
-			name 		 = "schema-%[1]s"
+			name 		 = "schema-{var.STICKY_RANDOM}"
 			catalog_name = "main"
 		}
 
 		resource "databricks_storage_credential" "external" {
-			name = "cred-%[1]s"
+			name = "cred-{var.STICKY_RANDOM}"
 			aws_iam_role {
 				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
@@ -26,8 +21,8 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 		}
 
 		resource "databricks_external_location" "some" {
-			name            = "external-%[1]s"
-			url             = "s3://{env.TEST_BUCKET}/somepath-%[1]s"
+			name            = "external-{var.STICKY_RANDOM}"
+			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
 		}
@@ -39,16 +34,16 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
-		}`, randomName),
+		}`,
 	}, step{
-		Template: fmt.Sprintf(`
+		Template: `
 		resource "databricks_schema" "this" {
-			name 		 = "schema-%[1]s"
+			name 		 = "schema-{var.STICKY_RANDOM}"
 			catalog_name = "main"
 		}
 
 		resource "databricks_storage_credential" "external" {
-			name = "cred-%[1]s"
+			name = "cred-{var.STICKY_RANDOM}"
 			aws_iam_role {
 				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
@@ -56,8 +51,8 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 		}
 
 		resource "databricks_external_location" "some" {
-			name            = "external-%[1]s"
-			url             = "s3://{env.TEST_BUCKET}/somepath-%[1]s"
+			name            = "external-{var.STICKY_RANDOM}"
+			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
 		}
@@ -70,22 +65,20 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
-		}`, randomName),
+		}`,
 	})
 }
 
 func TestUcAccVolumesResourceWithInitialOnwerAWSFullLifecycle(t *testing.T) {
-	GetEnvOrSkipTest(t, "TEST_BUCKET")
-	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	unityWorkspaceLevel(t, step{
-		Template: fmt.Sprintf(`
+		Template: `
 		resource "databricks_schema" "this" {
-			name 		 = "schema-%[1]s"
+			name 		 = "schema-{var.STICKY_RANDOM}"
 			catalog_name = "main"
 		}
 
 		resource "databricks_storage_credential" "external" {
-			name = "cred-%[1]s"
+			name = "cred-{var.STICKY_RANDOM}"
 			aws_iam_role {
 				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
@@ -93,8 +86,8 @@ func TestUcAccVolumesResourceWithInitialOnwerAWSFullLifecycle(t *testing.T) {
 		}
 
 		resource "databricks_external_location" "some" {
-			name            = "external-%[1]s"
-			url             = "s3://{env.TEST_BUCKET}/somepath-%[1]s"
+			name            = "external-{var.STICKY_RANDOM}"
+			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
 		}
@@ -107,16 +100,16 @@ func TestUcAccVolumesResourceWithInitialOnwerAWSFullLifecycle(t *testing.T) {
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
-		}`, randomName),
+		}`,
 	}, step{
-		Template: fmt.Sprintf(`
+		Template: `
 		resource "databricks_schema" "this" {
-			name 		 = "schema-%[1]s"
+			name 		 = "schema-{var.STICKY_RANDOM}"
 			catalog_name = "main"
 		}
 
 		resource "databricks_storage_credential" "external" {
-			name = "cred-%[1]s"
+			name = "cred-{var.STICKY_RANDOM}"
 			aws_iam_role {
 				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
@@ -124,8 +117,8 @@ func TestUcAccVolumesResourceWithInitialOnwerAWSFullLifecycle(t *testing.T) {
 		}
 
 		resource "databricks_external_location" "some" {
-			name            = "external-%[1]s"
-			url             = "s3://{env.TEST_BUCKET}/somepath-%[1]s"
+			name            = "external-{var.STICKY_RANDOM}"
+			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
 		}
@@ -138,6 +131,6 @@ func TestUcAccVolumesResourceWithInitialOnwerAWSFullLifecycle(t *testing.T) {
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
-		}`, randomName),
+		}`,
 	})
 }

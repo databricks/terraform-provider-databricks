@@ -5,7 +5,7 @@ import (
 )
 
 func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
-	workspaceLevel(t, step{
+	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"

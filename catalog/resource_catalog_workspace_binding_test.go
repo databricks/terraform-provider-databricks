@@ -8,26 +8,25 @@ import (
 )
 
 func TestCatalogWorkspaceBindingsCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceCatalogWorkspaceBinding())
+	qa.ResourceCornerCases(t, ResourceCatalogWorkspaceBinding(), qa.CornerCaseID("my_catalog|1234567890101112"))
 }
 
-func TestCatalogWorkspaceBindingsAssign(t *testing.T) {
+func TestCatalogWorkspaceBindings_Create(t *testing.T) {
 	resource := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/my_catalog",
-				Response: catalog.CurrentWorkspaceBindings{
-					Workspaces: []int64{1234567890101112},
-				},
-			},
-			{
 				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/my_catalog",
+				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/",
 				ExpectedRequest: catalog.UpdateWorkspaceBindings{
 					Name:             "my_catalog",
 					AssignWorkspaces: []int64{1234567890101112},
 				},
+				Response: catalog.CurrentWorkspaceBindings{
+					Workspaces: []int64{1234567890101112},
+				},
+			}, {
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/my_catalog",
 				Response: catalog.CurrentWorkspaceBindings{
 					Workspaces: []int64{1234567890101112},
 				},
@@ -40,8 +39,7 @@ func TestCatalogWorkspaceBindingsAssign(t *testing.T) {
 		workspace = 1234567890101112
 		`,
 	}
-
-	// panic: interface conversion: interface {} is nil, not int64
+	// workspace: '' expected type 'int', got unconvertible type 'string', value: '1234567890101112'
 	resource.ApplyNoError(t)
 	// resource.ApplyAndExpectData(t, map[string]any{"workspaces": []int64{1234567890}})
 }

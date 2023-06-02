@@ -79,9 +79,9 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 				return err
 			}
 			workspaces := []int64{int64(d.Get("workspace").(int))}
-			var createBindingRequest catalog.UpdateWorkspaceBindings
-			createBindingRequest.UnassignWorkspaces = workspaces
-			_, err = w.WorkspaceBindings.Update(ctx, createBindingRequest)
+			var removeBindingRequest catalog.UpdateWorkspaceBindings
+			removeBindingRequest.UnassignWorkspaces = workspaces
+			_, err = w.WorkspaceBindings.Update(ctx, removeBindingRequest)
 			if err != nil {
 				return err
 			}

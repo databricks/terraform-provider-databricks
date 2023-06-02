@@ -47,7 +47,7 @@ func TestResourceJobCreate(t *testing.T) {
 					MaxConcurrentRuns:      1,
 					Queue:                  &Queue{},
 					RunAs: &JobRunAs{
-						userName: "user@mail.com",
+						UserName: "user@mail.com",
 					},
 				},
 				Response: Job{

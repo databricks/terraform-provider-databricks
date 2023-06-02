@@ -201,8 +201,8 @@ type Queue struct {
 }
 
 type JobRunAs struct {
-	userName             string `json:"user_name,omitempty"`
-	servicePrincipalName string `json:"service_principal_name,omitempty"`
+	UserName             string `json:"user_name,omitempty"`
+	ServicePrincipalName string `json:"service_principal_name,omitempty"`
 }
 
 type FileArrival struct {

@@ -29,6 +29,7 @@ The following arguments are required:
 * `provider_name` - (Optional) For Delta Sharing Catalogs: the name of the delta sharing provider. Change forces creation of a new resource.
 * `share_name` - (Optional) For Delta Sharing Catalogs: the name of the share under the share provider. Change forces creation of a new resource.
 * `owner` - (Optional) Username/groupname/sp application_id of the catalog owner.
+* `isolation_mode` - (Optional) Whether the catalog is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATED` or `OPEN`.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Catalog properties.
 * `force_destroy` - (Optional) Delete catalog regardless of its contents.

@@ -19,14 +19,15 @@ func ucDirectoryPathSuppressDiff(k, old, new string, d *schema.ResourceData) boo
 }
 
 type CatalogInfo struct {
-	Name         string            `json:"name"`
-	Comment      string            `json:"comment,omitempty"`
-	StorageRoot  string            `json:"storage_root,omitempty" tf:"force_new"`
-	ProviderName string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	ShareName    string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	Properties   map[string]string `json:"properties,omitempty"`
-	Owner        string            `json:"owner,omitempty" tf:"computed"`
-	MetastoreID  string            `json:"metastore_id,omitempty" tf:"computed"`
+	Name          string            `json:"name"`
+	Comment       string            `json:"comment,omitempty"`
+	StorageRoot   string            `json:"storage_root,omitempty" tf:"force_new"`
+	ProviderName  string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	ShareName     string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	Properties    map[string]string `json:"properties,omitempty"`
+	Owner         string            `json:"owner,omitempty" tf:"computed"`
+	IsolationMode string            `json:"isolation_mode,omitempty" tf:"computed"`
+	MetastoreID   string            `json:"metastore_id,omitempty" tf:"computed"`
 }
 
 func ResourceCatalog() *schema.Resource {
@@ -63,8 +64,8 @@ func ResourceCatalog() *schema.Resource {
 
 			d.SetId(ci.Name)
 
-			// Update owner if it is provided
-			if d.Get("owner") == "" {
+			// Update owner or isolation mode if it is provided
+			if d.Get("owner") == "" && d.Get("isolation_mode") == "" {
 				return nil
 			}
 			var updateCatalogRequest catalog.UpdateCatalog
@@ -96,12 +97,14 @@ func ResourceCatalog() *schema.Resource {
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
-			// We need to update the resource data because Name is updatable
-			// So if we don't update the field then the requests would be made to old Name which doesn't exists.
-			d.SetId(ci.Name)
 			if err != nil {
 				return err
 			}
+
+			// We need to update the resource data because Name is updatable
+			// So if we don't update the field then the requests would be made to old Name which doesn't exists.
+			d.SetId(ci.Name)
+
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

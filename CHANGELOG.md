@@ -4,11 +4,11 @@
 
  * Added [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resource in Unity Catalog ([#2324](https://github.com/databricks/terraform-provider-databricks/pull/2324)).
  * Added [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) support to [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) ([#2331](https://github.com/databricks/terraform-provider-databricks/pull/2331)).
- * Added suppress diff for URL change that only change `/` (remove or add) in UC resources ([#2336](https://github.com/databricks/terraform-provider-databricks/pull/2336)).
+ * Added suppress diff for URL change that only changes `/` (remove or add) in UC resources ([#2336](https://github.com/databricks/terraform-provider-databricks/pull/2336)).
  * Fixed attributes typo in SCIM API ([#2344](https://github.com/databricks/terraform-provider-databricks/pull/2344)).
  * Fixed updates for [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/share) resource ([#2307](https://github.com/databricks/terraform-provider-databricks/pull/2307)).
  * Updated documentation for [databricks_service_principal_secret](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal_secret) ([#2332](https://github.com/databricks/terraform-provider-databricks/pull/2332)).
- * Updated documentation for troubleshooting guide with typical error when creating groups/users on the Account level ([#2338](https://github.com/databricks/terraform-provider-databricks/pull/2338)).
+ * Updated documentation for troubleshooting guide with a typical error when creating groups/users on the Account level ([#2338](https://github.com/databricks/terraform-provider-databricks/pull/2338)).
  * Other testing infrastructure improvements ([#2350](https://github.com/databricks/terraform-provider-databricks/pull/2350), [#2355](https://github.com/databricks/terraform-provider-databricks/pull/2355), [#2358](https://github.com/databricks/terraform-provider-databricks/pull/2358)).
 
 Updated dependency versions:

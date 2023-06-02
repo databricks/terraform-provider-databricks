@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type CatalogWorkspaceBindingInfo struct {
+type catalogWorkspaceBindingInfo struct {
 	Name      string `json:"name" tf:"force_new"`
 	Workspace int64  `json:"workspace" tf:"force_new"`
 }
@@ -24,7 +24,7 @@ func contains_int64(s []int64, e int64) bool {
 }
 
 func ResourceCatalogWorkspaceBinding() *schema.Resource {
-	s := common.StructToSchema(CatalogWorkspaceBindingInfo{},
+	s := common.StructToSchema(catalogWorkspaceBindingInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
@@ -63,7 +63,7 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			cwbInfo := CatalogWorkspaceBindingInfo{
+			cwbInfo := catalogWorkspaceBindingInfo{
 				Name:      name,
 				Workspace: workspaceId,
 			}

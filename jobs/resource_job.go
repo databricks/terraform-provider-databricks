@@ -200,6 +200,11 @@ type ContinuousConf struct {
 type Queue struct {
 }
 
+type JobRunAs struct {
+	userName             string `json:"user_name,omitempty"`
+	servicePrincipalName string `json:"service_principal_name,omitempty"`
+}
+
 type FileArrival struct {
 	URL                           string `json:"url"`
 	MinTimeBetweenTriggersSeconds int32  `json:"min_time_between_trigger_seconds,omitempty"`
@@ -251,6 +256,7 @@ type JobSettings struct {
 	NotificationSettings *NotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string     `json:"tags,omitempty"`
 	Queue                *Queue                `json:"queue,omitempty"`
+	RunAs                *JobRunAs             `json:"run_as,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -277,6 +283,7 @@ type JobListResponse struct {
 type Job struct {
 	JobID           int64        `json:"job_id,omitempty"`
 	CreatorUserName string       `json:"creator_user_name,omitempty"`
+	RunAsUserName   string       `json:"run_as_user_name,omitempty" tf:"computed"`
 	Settings        *JobSettings `json:"settings,omitempty"`
 	CreatedTime     int64        `json:"created_time,omitempty"`
 }

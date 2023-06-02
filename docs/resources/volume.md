@@ -6,7 +6,7 @@ Volumes are a new Unity Catalog (UC) capability for accessing, storing, governin
 
 Volumes are organized under a 3-level namespace: `<catalog>.<schema>.<volume>`.
 
-This resource supports Create, Get, Update, Delete and List Unity Catalog Volumes.
+This resource manages Volumes in Unity Catalog.
 
 ## Example Usage
 

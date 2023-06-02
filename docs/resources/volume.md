@@ -60,7 +60,7 @@ The following arguments are supported:
 * `catalog_name` - Name of parent Catalog
 * `schema_name` - Name of parent Schema relative to parent Catalog
 * `volume_type` - Volume type. `EXTERNAL` or `MANAGED`.
-* `owner` - (Optional) Name of the volume owner. Can only be used for Update.
+* `owner` - (Optional) Name of the volume owner. 
 * `storage_location` - (Optional) Path inside an External Location. Only used for `EXTERNAL` Volumes.
 * `comment` - (Optional) Free-form text.
 

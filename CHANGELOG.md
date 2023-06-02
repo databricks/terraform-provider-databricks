@@ -1,5 +1,22 @@
 # Version changelog
 
+## 1.18.0
+
+ * Added [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resource in Unity Catalog ([#2324](https://github.com/databricks/terraform-provider-databricks/pull/2324)).
+ * Added [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) support to [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) ([#2331](https://github.com/databricks/terraform-provider-databricks/pull/2331)).
+ * Added suppress diff for URL change that only changes `/` (remove or add) in UC resources ([#2336](https://github.com/databricks/terraform-provider-databricks/pull/2336)).
+ * Fixed attributes typo in SCIM API ([#2344](https://github.com/databricks/terraform-provider-databricks/pull/2344)).
+ * Fixed updates for [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/share) resource ([#2307](https://github.com/databricks/terraform-provider-databricks/pull/2307)).
+ * Updated documentation for [databricks_service_principal_secret](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal_secret) ([#2332](https://github.com/databricks/terraform-provider-databricks/pull/2332)).
+ * Updated documentation for troubleshooting guide with a typical error when creating groups/users on the Account level ([#2338](https://github.com/databricks/terraform-provider-databricks/pull/2338)).
+ * Other testing infrastructure improvements ([#2350](https://github.com/databricks/terraform-provider-databricks/pull/2350), [#2355](https://github.com/databricks/terraform-provider-databricks/pull/2355), [#2358](https://github.com/databricks/terraform-provider-databricks/pull/2358)).
+
+Updated dependency versions:
+
+ * Bump github.com/hashicorp/hcl/v2 from 2.16.2 to 2.17.0 ([#2359](https://github.com/databricks/terraform-provider-databricks/pull/2359)).
+ * Bump github.com/stretchr/testify from 1.8.3 to 1.8.4 ([#2354](https://github.com/databricks/terraform-provider-databricks/pull/2354)).
+ * Bump github.com/zclconf/go-cty from 1.13.1 to 1.13.2 ([#2329](https://github.com/databricks/terraform-provider-databricks/pull/2329)).
+
 ## 1.17.0
 
  * **Removed support for releasing 32-bit binaries** ([#2315](https://github.com/databricks/terraform-provider-databricks/pull/2315), [#2320](https://github.com/databricks/terraform-provider-databricks/pull/2320)).

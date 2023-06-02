@@ -112,7 +112,7 @@ func TestResourceJobCreate(t *testing.T) {
 		}
 		queue {}
 		run_as {
-			user_name: "user@mail.com"
+			user_name = "user@mail.com"
 		}`,
 	}.Apply(t)
 	assert.NoError(t, err)

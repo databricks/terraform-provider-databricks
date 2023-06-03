@@ -491,6 +491,24 @@ resource "databricks_cluster" "with_nfs" {
 }
 ```
 
+## workload_type block
+
+It's possible to restrict which workloads may run on the given cluster - notebooks and/or jobs. It's done by defining a `workload_type` block that consists of a single block `clients` with following attributes:
+
+* `notebooks` - (Optional) boolean flag defining if it's possible to run notebooks on this cluster. Default: `true`.
+* `jobs` - (Optional) boolean flag defining if it's possible to run Databricks Jobs on this cluster. Default: `true`.
+
+```hcl
+resource "databricks_cluster" "with_nfs" {
+  # ...
+  workload_type {
+    clients {
+      jobs      = false
+      notebooks = true
+    }
+  }
+}
+```
 
 ## Attribute Reference
 

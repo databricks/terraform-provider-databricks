@@ -82,12 +82,12 @@ func ResourceVolume() *schema.Resource {
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
 			updateVolumeRequestContent.FullNameArg = d.Id()
 			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
-			// We need to update the resource data because Name is updatable and FullName consists of Name,
-			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
-			d.SetId(v.FullName)
 			if err != nil {
 				return err
 			}
+			// We need to update the resource data because Name is updatable and FullName consists of Name,
+			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
+			d.SetId(v.FullName)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

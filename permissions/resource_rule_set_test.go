@@ -1,4 +1,4 @@
-package rule_sets
+package permissions
 
 import (
 	"fmt"

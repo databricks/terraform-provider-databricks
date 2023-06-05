@@ -28,7 +28,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/repos"
-	"github.com/databricks/terraform-provider-databricks/rule_sets"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	"github.com/databricks/terraform-provider-databricks/serving"
@@ -131,7 +130,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_provider":                    catalog.ResourceProvider(),
 			"databricks_recipient":                   catalog.ResourceRecipient(),
 			"databricks_repo":                        repos.ResourceRepo(),
-			"databricks_rule_set":                    rule_sets.ResourceRuleSet(),
+			"databricks_rule_set":                    permissions.ResourceRuleSet(),
 			"databricks_schema":                      catalog.ResourceSchema(),
 			"databricks_secret":                      secrets.ResourceSecret(),
 			"databricks_secret_scope":                secrets.ResourceSecretScope(),

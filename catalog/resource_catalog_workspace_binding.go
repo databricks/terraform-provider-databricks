@@ -10,15 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func contains_int64(s []int64, e int64) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
 func ResourceCatalogWorkspaceBinding() *schema.Resource {
 	return common.NewPairID("catalog_name", "workspace_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -45,7 +36,7 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if !contains_int64(bindings.Workspaces, i64WorkspaceId) {
+			if !contains(bindings.Workspaces, i64WorkspaceId) {
 				return apierr.NotFound("Catalog has no binding to this workspace")
 			}
 			return err

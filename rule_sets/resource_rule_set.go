@@ -80,6 +80,30 @@ func ResourceRuleSet() *schema.Resource {
 		}
 		return rsGet.Etag, nil
 	}
+	handleConflictAndUpdate := func(ruleSet RuleSet, rsApi RuleSetApi) (string, error) {
+		err := rsApi.Update(UpdateRuleSetRequest{
+			Name: ruleSet.Name,
+			RS: RuleSet{
+				Name:       ruleSet.Name,
+				Etag:       ruleSet.Etag,
+				GrantRules: ruleSet.GrantRules,
+			},
+		})
+		if err != nil {
+			if err.Error() == "Conflict with another RuleSet operation" {
+				// we need to get and update
+				etag, err := getAndUpdateRuleSet(ruleSet, rsApi)
+				return etag, err
+			}
+			return "", err
+		}
+		// get new etag and update
+		updatedRuleSet, err := rsApi.Read(ReadRuleSetRequest{
+			Name: ruleSet.Name,
+			Etag: "",
+		})
+		return updatedRuleSet.Etag, err
+	}
 	return common.Resource{
 		Schema: ruleSetSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -90,20 +114,18 @@ func ResourceRuleSet() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			etagKey := fmt.Sprintf("%s:etag", ruleSet.Name)
-			d.Set(etagKey, etag)
+			d.Set("etag", etag)
 			d.SetId(ruleSet.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			name := d.Id()
-			etagKey := fmt.Sprintf("%s:etag", name)
 			rsApi := NewRuleSetApi(ctx, c)
 			readRuleSetRequest := ReadRuleSetRequest{
 				Name: name,
 				Etag: "",
 			}
-			if etag, ok := d.GetOk(etagKey); ok {
+			if etag, ok := d.GetOk("etag"); ok {
 				readRuleSetRequest = ReadRuleSetRequest{
 					Name: name,
 					Etag: fmt.Sprintf("%v", etag),
@@ -119,57 +141,40 @@ func ResourceRuleSet() *schema.Resource {
 			var ruleSet RuleSet
 			common.DataToStructPointer(d, ruleSetSchema, &ruleSet)
 			rsApi := NewRuleSetApi(ctx, c)
-			etagKey := fmt.Sprintf("%s:etag", ruleSet.Name)
-			if etag, ok := d.GetOk(etagKey); ok {
-				err := rsApi.Update(UpdateRuleSetRequest{
-					Name: ruleSet.Name,
-					RS: RuleSet{
-						Name:       ruleSet.Name,
-						Etag:       fmt.Sprintf("%v", etag),
-						GrantRules: ruleSet.GrantRules,
-					},
-				})
-				if err != nil && err.Error() == "Conflict with another RuleSet operation" {
-					// we need to get and updated
-					etag, err = getAndUpdateRuleSet(ruleSet, rsApi)
-					d.Set(etagKey, etag)
+			if etag, ok := d.GetOk("etag"); ok {
+				ruleSet.Etag = fmt.Sprintf("%v", etag)
+				updatedEtag, err := handleConflictAndUpdate(ruleSet, rsApi)
+				if err != nil {
 					return err
 				}
-				return err
+				d.Set("etag", updatedEtag)
+				return nil
 			}
 			etag, err := getAndUpdateRuleSet(ruleSet, rsApi)
 			if err != nil {
 				return err
 			}
-			d.Set(etagKey, etag)
+			d.Set("etag", etag)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			name := d.Id()
-			etagKey := fmt.Sprintf("%s:etag", name)
 			rsApi := NewRuleSetApi(ctx, c)
 			deleteRuleSet := RuleSet{Name: name}
-			if etag, ok := d.GetOk(etagKey); ok {
-				err := rsApi.Update(UpdateRuleSetRequest{
-					Name: name,
-					RS: RuleSet{
-						Name: name,
-						Etag: fmt.Sprintf("%v", etag),
-					},
-				})
-				if err != nil && err.Error() == "Conflict with another RuleSet operation" {
-					// we need to get and updated
-					etag, err = getAndUpdateRuleSet(deleteRuleSet, rsApi)
-					d.Set(etagKey, etag)
+			if etag, ok := d.GetOk("etag"); ok {
+				deleteRuleSet.Etag = fmt.Sprintf("%v", etag)
+				updatedEtag, err := handleConflictAndUpdate(deleteRuleSet, rsApi)
+				if err != nil {
 					return err
 				}
-				return err
+				d.Set("etag", updatedEtag)
+				return nil
 			}
 			etag, err := getAndUpdateRuleSet(deleteRuleSet, rsApi)
 			if err != nil {
 				return err
 			}
-			d.Set(etagKey, etag)
+			d.Set("etag", etag)
 			return nil
 		},
 	}.ToResource()

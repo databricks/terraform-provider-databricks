@@ -36,7 +36,7 @@ func TestCatalogWorkspaceBindings_Create(t *testing.T) {
 		Create:   true,
 		HCL: `
 		catalog_name = "my_catalog"
-		workspace_id = 1234567890101112
+		workspace_id = "1234567890101112"
 		`,
 	}
 	resource.ApplyNoError(t)

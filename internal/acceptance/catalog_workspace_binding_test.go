@@ -8,11 +8,13 @@ func TestUcAccCatalogWorkspaceBinding(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: `
 		resource "databricks_catalog" "dev" {
-			name = "dev{var.RANDOM}"
+			name           = "dev{var.RANDOM}"
+			isolation_mode = "ISOLATED"
 		}
 
 		resource "databricks_catalog" "test" {
-			name = "test{var.RANDOM}"
+			name           = "test{var.RANDOM}"
+			isolation_mode = "ISOLATED"
 		}
 
 		resource "databricks_catalog" "prod" {

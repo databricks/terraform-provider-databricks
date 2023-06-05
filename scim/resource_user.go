@@ -47,7 +47,7 @@ func ResourceUser() *schema.Resource {
 			m["disable_as_user_deletion"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default: true,
+				Default:  true,
 			}
 			m["force_delete_repos"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -109,7 +109,7 @@ func ResourceUser() *schema.Resource {
 			user := NewUsersAPI(ctx, c)
 			userName := d.Get("user_name").(string)
 			isDisable := d.Get("disable_as_user_deletion").(bool)
-                        var err error
+			var err error
 			if isDisable {
 				err = user.Disable(d.Id())
 			} else {
@@ -123,7 +123,7 @@ func ResourceUser() *schema.Resource {
 			}
 			if d.Get("force_delete_repos").(bool) {
 				if isDisable {
-					return fmt.Errorf("The flag force_delete_repos is not supported if disable_as_user_deletion is set to true")
+					return fmt.Errorf("force_delete_repos is not supported if disable_as_user_deletion is set to true")
 				} else {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
 					if err != nil {
@@ -133,7 +133,7 @@ func ResourceUser() *schema.Resource {
 			}
 			if d.Get("force_delete_home_dir").(bool) {
 				if isDisable {
-					return fmt.Errorf("The flag force_delete_home_dir is not supported if disable_as_user_deletion is set to true")
+					return fmt.Errorf("force_delete_home_dir is not supported if disable_as_user_deletion is set to true")
 				} else {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
 					if err != nil {

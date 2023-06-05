@@ -631,7 +631,7 @@ func TestResourceUserDeleteAsDisableWithForceDeleteRepos(t *testing.T) {
 			force_delete_repos = true
 		`,
 	}.Apply(t)
-        require.Error(t, err, err)
+	require.Error(t, err, err)
 }
 
 func TestResourceUserDeleteAsDisableWithForceDeleteHomeDir(t *testing.T) {
@@ -651,7 +651,7 @@ func TestResourceUserDeleteAsDisableWithForceDeleteHomeDir(t *testing.T) {
 			force_delete_home_dir = true
 		`,
 	}.Apply(t)
-        require.Error(t, err, err)
+	require.Error(t, err, err)
 }
 
 func TestResourceUserDelete_NoErrorEmptyParams(t *testing.T) {

@@ -44,6 +44,11 @@ func ResourceUser() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			m["disable_as_user_deletion"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default: true,
+			}
 			m["force_delete_repos"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -103,7 +108,13 @@ func ResourceUser() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			user := NewUsersAPI(ctx, c)
 			userName := d.Get("user_name").(string)
-			err := user.Delete(d.Id())
+			isDisable := d.Get("disable_as_user_deletion").(bool)
+                        var err error
+			if isDisable {
+				err = user.Disable(d.Id())
+			} else {
+				err = user.Delete(d.Id())
+			}
 			if err != nil {
 				return err
 			}
@@ -111,15 +122,23 @@ func ResourceUser() *schema.Resource {
 				return nil
 			}
 			if d.Get("force_delete_repos").(bool) {
-				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
-				if err != nil {
-					return fmt.Errorf("force_delete_repos: %w", err)
+				if isDisable {
+					return fmt.Errorf("The flag force_delete_repos is not supported if disable_as_user_deletion is set to true")
+				} else {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_repos: %w", err)
+					}
 				}
 			}
 			if d.Get("force_delete_home_dir").(bool) {
-				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
-				if err != nil {
-					return fmt.Errorf("force_delete_home_dir: %w", err)
+				if isDisable {
+					return fmt.Errorf("The flag force_delete_home_dir is not supported if disable_as_user_deletion is set to true")
+				} else {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_home_dir: %w", err)
+					}
 				}
 			}
 			return nil

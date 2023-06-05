@@ -16,7 +16,7 @@ func TestCatalogWorkspaceBindings_Create(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/",
+				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/my_catalog",
 				ExpectedRequest: catalog.UpdateWorkspaceBindings{
 					Name:             "my_catalog",
 					AssignWorkspaces: []int64{1234567890101112},
@@ -26,7 +26,7 @@ func TestCatalogWorkspaceBindings_Create(t *testing.T) {
 				},
 			}, {
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/my_catalog",
+				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/my_catalog?",
 				Response: catalog.CurrentWorkspaceBindings{
 					Workspaces: []int64{1234567890101112},
 				},
@@ -35,11 +35,9 @@ func TestCatalogWorkspaceBindings_Create(t *testing.T) {
 		Resource: ResourceCatalogWorkspaceBinding(),
 		Create:   true,
 		HCL: `
-		name = "my_catalog"
-		workspace = 1234567890101112
+		catalog_name = "my_catalog"
+		workspace_id = 1234567890101112
 		`,
 	}
-	// workspace: '' expected type 'int', got unconvertible type 'string', value: '1234567890101112'
 	resource.ApplyNoError(t)
-	// resource.ApplyAndExpectData(t, map[string]any{"workspaces": []int64{1234567890}})
 }

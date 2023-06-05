@@ -4,15 +4,11 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-type catalogWorkspaceBindingInfo struct {
-	Name      string `json:"name" tf:"force_new"`
-	Workspace int64  `json:"workspace" tf:"force_new"`
-}
 
 func contains_int64(s []int64, e int64) bool {
 	for _, a := range s {
@@ -24,68 +20,47 @@ func contains_int64(s []int64, e int64) bool {
 }
 
 func ResourceCatalogWorkspaceBinding() *schema.Resource {
-	s := common.StructToSchema(catalogWorkspaceBindingInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
-	pi := common.NewPairID("name", "workspace")
-	return common.Resource{
-		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+	return common.NewPairID("catalog_name", "workspace_id").Schema(func(
+		m map[string]*schema.Schema) map[string]*schema.Schema {
+		return m
+	}).BindResource(common.BindResource{
+		CreateContext: func(ctx context.Context, catalogName, workspaceId string, c *common.DatabricksClient) error {
+			i64WorkspaceId, err := strconv.ParseInt(workspaceId, 10, 64)
 			if err != nil {
 				return err
 			}
-			workspaces := []int64{int64(d.Get("workspace").(int))}
-			var createBindingRequest catalog.UpdateWorkspaceBindings
-			createBindingRequest.AssignWorkspaces = workspaces
-			_, err = w.WorkspaceBindings.Update(ctx, createBindingRequest)
-			if err != nil {
-				return err
+			createBindingRequest := catalog.UpdateWorkspaceBindings{
+				Name:             catalogName,
+				AssignWorkspaces: []int64{i64WorkspaceId},
 			}
-			pi.Pack(d)
-			return nil
+			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, createBindingRequest)
+			return err
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+		ReadContext: func(ctx context.Context, catalogName, workspaceId string, c *common.DatabricksClient) error {
+			i64WorkspaceId, err := strconv.ParseInt(workspaceId, 10, 64)
 			if err != nil {
 				return err
 			}
-			name, workspace, err := pi.Unpack(d)
+			bindings, err := catalog.NewWorkspaceBindings(c.DatabricksClient).GetByName(ctx, catalogName)
 			if err != nil {
 				return err
 			}
-			workspaceId, err := strconv.ParseInt(workspace, 10, 64)
-			if err != nil {
-				return err
+			if !contains_int64(bindings.Workspaces, i64WorkspaceId) {
+				return apierr.NotFound("Catalog has no binding to this workspace")
 			}
-			bindings, err := w.WorkspaceBindings.GetByName(ctx, name)
-			if err != nil {
-				return err
-			}
-			cwbInfo := catalogWorkspaceBindingInfo{
-				Name:      name,
-				Workspace: workspaceId,
-			}
-			if contains_int64(bindings.Workspaces, workspaceId) {
-				return common.StructToData(&cwbInfo, s, d)
-			} else {
-				return nil
-			}
+			return err
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+		DeleteContext: func(ctx context.Context, catalogName, workspaceId string, c *common.DatabricksClient) error {
+			i64WorkspaceId, err := strconv.ParseInt(workspaceId, 10, 64)
 			if err != nil {
 				return err
 			}
-			workspaces := []int64{int64(d.Get("workspace").(int))}
-			var removeBindingRequest catalog.UpdateWorkspaceBindings
-			removeBindingRequest.UnassignWorkspaces = workspaces
-			_, err = w.WorkspaceBindings.Update(ctx, removeBindingRequest)
-			if err != nil {
-				return err
+			removeBindingRequest := catalog.UpdateWorkspaceBindings{
+				Name:               catalogName,
+				UnassignWorkspaces: []int64{i64WorkspaceId},
 			}
-			return nil
+			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, removeBindingRequest)
+			return err
 		},
-	}.ToResource()
+	})
 }

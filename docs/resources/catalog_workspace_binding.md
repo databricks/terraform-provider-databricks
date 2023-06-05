@@ -11,9 +11,8 @@ By default, Databricks assigns the catalog to all workspaces attached to the cur
 
 ```hcl
 resource "databricks_catalog_workspace_binding" "sandbox" {
-  name      = databricks_catalog.this.name
-  # Will this work or is the wokspace id exported as a string?
-  workspace = databricks_mws_workspaces.prod.workspace_id
+  catalog_name = databricks_catalog.this.name
+  workspace_id = databricks_mws_workspaces.prod.workspace_id # Will this work or is the wokspace id exported as a string?
 }
 ```
 
@@ -21,8 +20,8 @@ resource "databricks_catalog_workspace_binding" "sandbox" {
 
 The following arguments are required:
 
-* `name` - Name of Catalog. Change forces creation of a new resource.
-* `workspace` - ID of the workspace. Change forces creation of a new resource.
+* `catalog_name` - Name of Catalog. Change forces creation of a new resource.
+* `workspace_id` - ID of the workspace. Change forces creation of a new resource.
 
 ## Import
 

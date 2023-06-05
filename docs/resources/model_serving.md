@@ -68,6 +68,17 @@ The following arguments are supported:
 * `served_model_name` - (Required) The name of the served model this route configures traffic for. This needs to match the name of a `served_models` block
 * `traffic_percentage` - (Required) The percentage of endpoint traffic to send to this route. It must be an integer between 0 and 100 inclusive.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Equal to the `name` argument and used to identify the serving endpoint.
+* `serving_endpoint_id` - Unique identifier of the serving endpoint primarily used to set permissions and refer to this instance for other operations.
+
+## Access Control
+
+* [databricks_permissions](permissions.md#model-serving-usage) can control which groups or individual users can *Manage*, *Query* or *View* individual serving endpoints.
+
 ## Timeouts
 
 The `timeouts` block allows you to specify `create` and `update` timeouts. The default right now is 45 minutes for both operations.

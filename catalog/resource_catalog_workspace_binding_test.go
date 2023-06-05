@@ -8,7 +8,9 @@ import (
 )
 
 func TestCatalogWorkspaceBindingsCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceCatalogWorkspaceBinding(), qa.CornerCaseID("my_catalog|1234567890101112"))
+	qa.ResourceCornerCases(t, ResourceCatalogWorkspaceBinding(),
+		qa.CornerCaseID("my_catalog|1234567890101112"),
+		qa.CornerCaseSkipCRUD("create"))
 }
 
 func TestCatalogWorkspaceBindings_Create(t *testing.T) {

@@ -85,7 +85,7 @@ func ResourceVolume() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// We need to update the resource data because Name is updatable and FullName consists of Name,
+			// We need to update the resource Id because Name is updatable and FullName consists of Name,
 			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
 			d.SetId(v.FullName)
 			return nil

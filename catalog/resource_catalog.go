@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -73,6 +74,26 @@ func ResourceCatalog() *schema.Resource {
 			_, err = w.Catalogs.Update(ctx, updateCatalogRequest)
 			if err != nil {
 				return err
+			}
+
+			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
+			if d.Get("isolation_mode") == "ISOLATED" {
+				currentMetastoreAssignment, err := catalog.NewMetastores(c.DatabricksClient).Current(ctx)
+				if err != nil {
+					return err
+				}
+				currentWorkspaceId, err := strconv.ParseInt(currentMetastoreAssignment.WorkspaceId, 10, 64)
+				if err != nil {
+					return err
+				}
+				createBindingRequest := catalog.UpdateWorkspaceBindings{
+					Name:             ci.Name,
+					AssignWorkspaces: []int64{currentWorkspaceId},
+				}
+				_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, createBindingRequest)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil

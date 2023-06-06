@@ -184,18 +184,6 @@ func TestCreateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
 					Name: "a",
-					Objects: []SharedDataObject{
-						{
-							Name:           "main.a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-						{
-							Name:           "main.b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-					},
 				},
 				Response: RecipientInfo{
 					Name: "a",
@@ -431,18 +419,6 @@ func TestCreateShare_ThrowError(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
 					Name: "a",
-					Objects: []SharedDataObject{
-						{
-							Name:           "main.a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-						{
-							Name:           "main.b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-					},
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
@@ -479,18 +455,6 @@ func TestCreateShareButPatchFails(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
 					Name: "a",
-					Objects: []SharedDataObject{
-						{
-							Name:           "main.a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-						{
-							Name:           "main.b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-					},
 				},
 				Response: RecipientInfo{
 					Name: "a",
@@ -527,7 +491,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/shares/a",
+				Resource: "/api/2.1/unity-catalog/shares/a?",
 			},
 		},
 		Resource: ResourceShare(),

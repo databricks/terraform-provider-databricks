@@ -88,7 +88,6 @@ The resource supports the following arguments:
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is documented below.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes and fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
-* `run_as` - (Optional) An optional identifier of the user or the service principal that the job runs as. If not specified, the job runs as the user who created the job. This field is a block and is documented below.
 
 ### tags Configuration Map
 `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
@@ -106,6 +105,9 @@ resource "databricks_job" "this" {
 ```
 
 ### run_as Configuration Block
+
+The `run_as` block allows specifying the user or the service principal that the job runs as. If not specified, the job runs as the user or service
+principal that created the job.
 
 * `user_name` - (Optional) The email of an active workspace user. Non-admin users can only set this field to their own email.
 * `service_principal_name` - (Optional) The application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role.

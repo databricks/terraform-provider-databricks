@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/sql"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,8 +36,10 @@ type SqlTableInfo struct {
 	Comment               string            `json:"comment,omitempty"`
 	Properties            map[string]string `json:"properties,omitempty" tf:"computed"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
+	WarehouseID           string            `json:"warehouse_id,omitempty" tf:"computed"`
 
-	exec common.CommandExecutor
+	exec    common.CommandExecutor
+	sqlExec sql.StatementAPI
 }
 
 type SqlTablesAPI struct {
@@ -88,27 +91,33 @@ func sqlTableIsManagedProperty(key string) bool {
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	defaultClusterName := "terraform-sql-table"
 	clustersAPI := clusters.NewClustersAPI(ctx, c)
+
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ti.ClusterID = ci.(string)
+	} else if wi, ok := d.GetOk("warehouse_id"); ok {
+		ti.WarehouseID = wi.(string)
 	} else {
 		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
 		if err != nil {
 			return
 		}
 	}
-	_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
-	if apierr.IsMissing(err) {
-		// cluster that was previously in a tfstate was deleted
-		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
+	if ti.WarehouseID == "" {
+		_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
+		if apierr.IsMissing(err) {
+			// cluster that was previously in a tfstate was deleted
+			ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
+			if err != nil {
+				return
+			}
+			_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
+		}
 		if err != nil {
 			return
 		}
-		_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
-	}
-	if err != nil {
-		return
 	}
 	ti.exec = c.CommandExecutor(ctx)
+	ti.sqlExec = sql.NewStatementAPI(ctx, c)
 	return nil
 }
 
@@ -294,8 +303,11 @@ func (ti *SqlTableInfo) deleteTable() error {
 
 func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	log.Printf("[INFO] Executing Sql: %s", sqlQuery)
-	r := ti.exec.Execute(ti.ClusterID, "sql", sqlQuery)
+	if ti.WarehouseID != "" {
+		return ti.sqlExec.Execute(ti.WarehouseID, sqlQuery)
+	}
 
+	r := ti.exec.Execute(ti.ClusterID, "sql", sqlQuery)
 	if !r.Failed() {
 		return nil
 	}

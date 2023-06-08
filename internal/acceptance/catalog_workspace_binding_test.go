@@ -28,7 +28,7 @@ func TestUcAccCatalogWorkspaceBinding(t *testing.T) {
 
 		resource "databricks_catalog_workspace_binding" "test" {
 			catalog_name = databricks_catalog.test.name
-			workspace_id = {env.THIS_WORKSPACE_ID}
+			workspace_id = {env.TEST_WORKSPACE_ID}
 		}
 		`,
 	})

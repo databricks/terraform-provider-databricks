@@ -20,11 +20,10 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			createBindingRequest := catalog.UpdateWorkspaceBindings{
+			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, catalog.UpdateWorkspaceBindings{
 				Name:             catalogName,
 				AssignWorkspaces: []int64{i64WorkspaceId},
-			}
-			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, createBindingRequest)
+			})
 			return err
 		},
 		ReadContext: func(ctx context.Context, catalogName, workspaceId string, c *common.DatabricksClient) error {
@@ -39,18 +38,17 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			if !contains(bindings.Workspaces, i64WorkspaceId) {
 				return apierr.NotFound("Catalog has no binding to this workspace")
 			}
-			return err
+			return nil
 		},
 		DeleteContext: func(ctx context.Context, catalogName, workspaceId string, c *common.DatabricksClient) error {
 			i64WorkspaceId, err := strconv.ParseInt(workspaceId, 10, 64)
 			if err != nil {
 				return err
 			}
-			removeBindingRequest := catalog.UpdateWorkspaceBindings{
+			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, catalog.UpdateWorkspaceBindings{
 				Name:               catalogName,
 				UnassignWorkspaces: []int64{i64WorkspaceId},
-			}
-			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, removeBindingRequest)
+			})
 			return err
 		},
 	})

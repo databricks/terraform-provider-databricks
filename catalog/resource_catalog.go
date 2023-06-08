@@ -76,24 +76,25 @@ func ResourceCatalog() *schema.Resource {
 				return err
 			}
 
+			if d.Get("isolation_mode") != "ISOLATED" {
+				return nil
+			}
 			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
-			if d.Get("isolation_mode") == "ISOLATED" {
-				currentMetastoreAssignment, err := catalog.NewMetastores(c.DatabricksClient).Current(ctx)
-				if err != nil {
-					return err
-				}
-				currentWorkspaceId, err := strconv.ParseInt(currentMetastoreAssignment.WorkspaceId, 10, 64)
-				if err != nil {
-					return err
-				}
-				createBindingRequest := catalog.UpdateWorkspaceBindings{
-					Name:             ci.Name,
-					AssignWorkspaces: []int64{currentWorkspaceId},
-				}
-				_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, createBindingRequest)
-				if err != nil {
-					return err
-				}
+			currentMetastoreAssignment, err := catalog.NewMetastores(c.DatabricksClient).Current(ctx)
+			if err != nil {
+				return err
+			}
+			currentWorkspaceId, err := strconv.ParseInt(currentMetastoreAssignment.WorkspaceId, 10, 64)
+			if err != nil {
+				return err
+			}
+			createBindingRequest := catalog.UpdateWorkspaceBindings{
+				Name:             ci.Name,
+				AssignWorkspaces: []int64{currentWorkspaceId},
+			}
+			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, createBindingRequest)
+			if err != nil {
+				return err
 			}
 
 			return nil

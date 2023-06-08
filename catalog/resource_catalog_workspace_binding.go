@@ -16,22 +16,30 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 		return m
 	}).BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, catalogName, workspaceId string, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			i64WorkspaceId, err := strconv.ParseInt(workspaceId, 10, 64)
 			if err != nil {
 				return err
 			}
-			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, catalog.UpdateWorkspaceBindings{
+			_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
 				Name:             catalogName,
 				AssignWorkspaces: []int64{i64WorkspaceId},
 			})
 			return err
 		},
 		ReadContext: func(ctx context.Context, catalogName, workspaceId string, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			i64WorkspaceId, err := strconv.ParseInt(workspaceId, 10, 64)
 			if err != nil {
 				return err
 			}
-			bindings, err := catalog.NewWorkspaceBindings(c.DatabricksClient).GetByName(ctx, catalogName)
+			bindings, err := w.WorkspaceBindings.GetByName(ctx, catalogName)
 			if err != nil {
 				return err
 			}
@@ -41,11 +49,15 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			return nil
 		},
 		DeleteContext: func(ctx context.Context, catalogName, workspaceId string, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			i64WorkspaceId, err := strconv.ParseInt(workspaceId, 10, 64)
 			if err != nil {
 				return err
 			}
-			_, err = catalog.NewWorkspaceBindings(c.DatabricksClient).Update(ctx, catalog.UpdateWorkspaceBindings{
+			_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
 				Name:               catalogName,
 				UnassignWorkspaces: []int64{i64WorkspaceId},
 			})

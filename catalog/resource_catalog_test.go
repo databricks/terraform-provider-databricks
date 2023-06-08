@@ -389,8 +389,9 @@ func TestCatalogCreateIsolated(t *testing.T) {
 					Properties: map[string]string{
 						"c": "d",
 					},
-					MetastoreId: "e",
-					Owner:       "f",
+					IsolationMode: "ISOLATED",
+					MetastoreId:   "e",
+					Owner:         "f",
 				},
 			},
 			{
@@ -423,8 +424,9 @@ func TestCatalogCreateIsolated(t *testing.T) {
 					Properties: map[string]string{
 						"c": "d",
 					},
-					MetastoreId: "e",
-					Owner:       "f",
+					IsolationMode: "ISOLATED",
+					MetastoreId:   "e",
+					Owner:         "f",
 				},
 			},
 		},

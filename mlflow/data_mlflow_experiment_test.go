@@ -35,7 +35,7 @@ func TestDataSourceExperiment(t *testing.T) {
 		HCL:         fmt.Sprintf(`name = "%s"`, experimentName),
 	}.ApplyAndExpectData(t, map[string]any{
 		"artifact_location": "dbfs:/databricks/mlflow-tracking/1234567890",
-		"experiment_id":     "1234567890",
+		"id":                "1234567890",
 		"lifecycle_stage":   "active",
 		"name":              experimentName,
 	})

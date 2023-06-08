@@ -11,7 +11,7 @@ import (
 
 func DataSourceExperiment() *schema.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
-		ExperimentId     string `json:"experiment_id,omitempty" tf:"computed"`
+		ExperimentId     string `json:"id,omitempty" tf:"computed"`
 		Name             string `json:"name,omitempty" tf:"computed"`
 		ArtifactLocation string `json:"artifact_location,omitempty" tf:"computed"`
 		LifecycleStage   string `json:"lifecycle_stage,omitempty" tf:"computed"`

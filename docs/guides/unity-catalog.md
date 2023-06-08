@@ -131,8 +131,8 @@ locals {
 The first step is to create the required AWS objects:
 
 - An S3 bucket, which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
-- An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket.
-- An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog.
+- An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket. Note that `<KMS_KEY>` is *optional*.If encryption is enabled, provide the name of the KMS key that encrypts the S3 bucket contents. *If encryption is disabled, remove the entire KMS section of the IAM policy.*
+- An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog. 
 
 ```hcl
 resource "aws_s3_bucket" "metastore" {
@@ -188,22 +188,32 @@ data "aws_iam_policy_document" "passrole_for_uc" {
 
 resource "aws_iam_policy" "unity_metastore" {
   policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = "${local.prefix}-databricks-unity-metastore"
-    Statement = [
+    "Version" : "2012-10-17",
+    "Statement" : [
       {
         "Action" : [
           "s3:GetObject",
-          "s3:GetObjectVersion",
           "s3:PutObject",
-          "s3:PutObjectAcl",
           "s3:DeleteObject",
           "s3:ListBucket",
-          "s3:GetBucketLocation"
+          "s3:GetBucketLocation",
+          "s3:GetLifecycleConfiguration",
+          "s3:PutLifecycleConfiguration"
         ],
         "Resource" : [
           aws_s3_bucket.metastore.arn,
           "${aws_s3_bucket.metastore.arn}/*"
+        ],
+        "Effect" : "Allow"
+      },
+      {
+        "Action" : [
+          "kms:Decrypt",
+          "kms:Encrypt",
+          "kms:GenerateDataKey*"
+        ],
+        "Resource" : [
+          "arn:aws:kms:<KMS_KEY>"
         ],
         "Effect" : "Allow"
       }

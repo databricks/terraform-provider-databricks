@@ -116,10 +116,10 @@ Example
 
 ```hcl
 resource "databricks_job" "this" {
-    # ...
-    run_as {
-      service_principal_name =  "8d23ae77-912e-4a19-81e4-b9c3f5cc9349"
-    }
+  # ...
+  run_as {
+    service_principal_name = "8d23ae77-912e-4a19-81e4-b9c3f5cc9349"
+  }
 }
 ```
 

@@ -176,7 +176,7 @@ data "aws_iam_policy_document" "passrole_for_uc" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = ["arn:aws:iam::${var.aws_account_id}:root"]
     }
     condition {
       test     = "ArnLike"

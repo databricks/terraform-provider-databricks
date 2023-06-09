@@ -360,9 +360,9 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 		Update: true,
 		ID:     "abc",
 		HCL: `
-			display_name = "Changed Name"
-			allow_cluster_create = false
-			allow_instance_pool_create = true
+		display_name = "Changed Name"
+		allow_cluster_create = false
+		allow_instance_pool_create = true
 		`,
 	}.ExpectError(t, "I'm a teapot")
 }
@@ -376,12 +376,9 @@ func TestResourceServicePrincipalDelete(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
+		HCL:      `display_name = "Squanchy"`,
 		Delete:   true,
 		ID:       "abc",
-		HCL: `
-			display_name = "Squanchy"
-			disable_as_user_deletion = false
-		`,
 	}.ApplyNoError(t)
 }
 
@@ -421,9 +418,6 @@ func TestResourceServicePrincipalDelete_NoErrorEmtpyParams(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
-		HCL: `
-			disable_as_user_deletion = false
-		`,
 	}.ApplyNoError(t)
 }
 
@@ -449,7 +443,6 @@ func TestResourceServicePrinicpalforce_delete_reposError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			application_id = "abc"
-			disable_as_user_deletion = false
 			force_delete_repos = true
 		`,
 	}.Apply(t)
@@ -482,7 +475,6 @@ func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			application_id = "abc"
-			disable_as_user_deletion = false
 			force_delete_repos = true	
 		`,
 	}.Apply(t)
@@ -511,7 +503,6 @@ func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			application_id = "abc"
-			disable_as_user_deletion = false
 			force_delete_home_dir = true
 		`,
 	}.Apply(t)
@@ -544,7 +535,6 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 		 	application_id = "abc"
-			disable_as_user_deletion = false
 			force_delete_home_dir = true	
 		`,
 	}.Apply(t)

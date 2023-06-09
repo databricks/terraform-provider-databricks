@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/require"
 )
 
 var expectedUserDisablePatchRequest = patchRequest{
@@ -24,10 +23,11 @@ var expectedUserDisablePatchRequest = patchRequest{
 
 func TestResourceUserDeleteAsDisable_NoError(t *testing.T) {
 	qa.ResourceFixture{
+		AccountID: "00000000-0000-0000-0000-000000000001",
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
-				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
+				Resource:        "/api/2.0/accounts/00000000-0000-0000-0000-000000000001/scim/v2/Users/abc",
 				ExpectedRequest: expectedUserDisablePatchRequest,
 			},
 		},
@@ -41,40 +41,13 @@ func TestResourceUserDeleteAsDisable_NoError(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestResourceUserDeleteAsDisable_ErrorForceDeleteRepos(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource: ResourceUser(),
-		Delete:   true,
-		ID:       "abc",
-		HCL: `
-			user_name    = "abc"
-			disable_as_user_deletion = true
-			force_delete_repos = true
-		`,
-	}.Apply(t)
-	require.Error(t, err, err)
-}
-
-func TestResourceUserDeleteAsDisable_ErrorForceDeleteHomeDir(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource: ResourceUser(),
-		Delete:   true,
-		ID:       "abc",
-		HCL: `
-			user_name    = "abc"
-			disable_as_user_deletion = true
-			force_delete_home_dir = true
-		`,
-	}.Apply(t)
-	require.Error(t, err, err)
-}
-
 func TestResourceUserDeleteAsDisable_NoErrorEmptyParams(t *testing.T) {
 	qa.ResourceFixture{
+		AccountID: "00000000-0000-0000-0000-000000000001",
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          "PATCH",
-				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
+				Resource:        "/api/2.0/accounts/00000000-0000-0000-0000-000000000001/scim/v2/Users/abc",
 				ExpectedRequest: expectedUserDisablePatchRequest,
 			},
 		},
@@ -83,6 +56,24 @@ func TestResourceUserDeleteAsDisable_NoErrorEmptyParams(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceUserDeleteAsDisable_IgnoreIfNotAccount(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name = "abc"
+			disable_as_user_deletion = true
 		`,
 	}.ApplyNoError(t)
 }

@@ -108,55 +108,32 @@ func ResourceUser() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			user := NewUsersAPI(ctx, c)
 			userName := d.Get("user_name").(string)
-			isDisable := d.Get("disable_as_user_deletion").(bool)
-			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
-			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
-			var err error
-			// Validate input
-			if isDisable {
-				if isForceDeleteRepos {
-					return fmt.Errorf("force_delete_repos: not supported if disable_as_user_deletion is set to true")
+			var err error = nil
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+				if d.Get("disable_as_user_deletion").(bool) {
+					r := PatchRequest("replace", "active", "false")
+					err = user.Patch(d.Id(), r)
+				} else {
+					err = user.Delete(d.Id())
 				}
-				if isForceDeleteHomeDir {
-					return fmt.Errorf("force_delete_home_dir: not supported if disable_as_user_deletion is set to true")
-				}
-			}
-			// Disable or delete
-			if isDisable {
-				r := PatchRequest("replace", "active", "false")
-				err = user.Patch(d.Id(), r)
 			} else {
 				err = user.Delete(d.Id())
-			}
-			if err != nil {
-				return err
-			}
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
-				return nil
-			}
-			// Force delete repos
-			if isForceDeleteRepos {
-				if isDisable {
-					// Validations should prevent getting here. Double checking as this is destructive.
-					return fmt.Errorf("force_delete_repos: internal error")
-				}
-				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
-				if err != nil {
-					return fmt.Errorf("force_delete_repos: %w", err)
+				if err == nil {
+					if d.Get("force_delete_repos").(bool) {
+						err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
+						if err != nil {
+							return fmt.Errorf("force_delete_repos: %w", err)
+						}
+					}
+					if d.Get("force_delete_home_dir").(bool) {
+						err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
+						if err != nil {
+							return fmt.Errorf("force_delete_home_dir: %w", err)
+						}
+					}
 				}
 			}
-			// Force delete home dir
-			if isForceDeleteHomeDir {
-				if isDisable {
-					// Validations should prevent getting here. Double checking as this is destructive.
-					return fmt.Errorf("force_delete_home_dir: internal error")
-				}
-				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
-				if err != nil {
-					return fmt.Errorf("force_delete_home_dir: %w", err)
-				}
-			}
-			return nil
+			return err
 		},
 	}.ToResource()
 }

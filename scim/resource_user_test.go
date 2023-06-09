@@ -424,9 +424,8 @@ func TestResourceUserDelete_NoError(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
-			user_name = "abc"
-			disable_as_user_deletion = false
-			force_delete_repos = false
+			user_name = "abc",
+			force_delete_repos = false,
 			force_delete_home_dir = false 
 		`,
 	}.ApplyNoError(t)
@@ -470,7 +469,6 @@ func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			disable_as_user_deletion = false
 		`,
 	}.ApplyNoError(t)
 }
@@ -497,7 +495,6 @@ func TestResourceUserforce_delete_reposError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			disable_as_user_deletion = false
 			force_delete_repos = true
 		`,
 	}.Apply(t)
@@ -529,7 +526,6 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			disable_as_user_deletion = false
 			force_delete_repos = true
 		`,
 	}.Apply(t)
@@ -558,7 +554,6 @@ func TestResourceUserDelete_DirError(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			disable_as_user_deletion = false
 			force_delete_home_dir = true
 		`,
 	}.Apply(t)
@@ -590,7 +585,6 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 		ID:       "abc",
 		HCL: `
 			user_name    = "abc"
-			disable_as_user_deletion = false
 			force_delete_home_dir = true
 		`,
 	}.Apply(t)

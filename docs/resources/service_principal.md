@@ -96,9 +96,9 @@ The following arguments are available:
 * `workspace_access` - (Optional) This is a field to allow the group to have access to Databricks Workspace.
 * `active` - (Optional) Either service principal is active or not. True by default, but can be set to false in case of service principal deactivation with preserving service principal assets.
 * `force` - (Optional) Ignore `cannot create service principal: Service principal with application ID X already exists` errors and implicitly import the specified service principal into Terraform state, enforcing entitlements defined in the instance of resource. _This functionality is experimental_ and is designed to simplify corner cases, like Azure Active Directory synchronisation.
-* `disable_as_user_deletion` - (Optional) When deleting a user through SCIM DELETE, deactivate the user instead of actually deleting the user. The user can be recovered by re-enabling the user through a SCIM API PATCH. True by default.
-* `force_delete_repos` - (Optional) This flag determines whether the service principal's repo directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. Not supported if disable_as_user_deletion is set. False by default.
-* `force_delete_home_dir` - (Optional) This flag determines whether the service principal's home directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. Not supported if disable_as_user_deletion is set. False by default.
+* `force_delete_repos` - (Optional) This flag determines whether the service principal's repo directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.
+* `force_delete_home_dir` - (Optional) This flag determines whether the service principal's home directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.
+* `disable_as_user_deletion` - (Optional) When deleting a service principal, set the service principal's active flag to false instead of actually deleting the service principal. Only takes effect when in the accounts SCIM API. True by default.
 
 ## Attribute Reference
 

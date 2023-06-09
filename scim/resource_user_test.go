@@ -441,7 +441,7 @@ func TestResourceUserDelete_Error(t *testing.T) {
 	}.ExpectError(t, "I'm a teapot")
 }
 
-func TestResourceUserDelete_NoErrorNoDisable(t *testing.T) {
+func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -595,80 +595,6 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 		`,
 	}.Apply(t)
 	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
-}
-func TestResourceUserDeleteAsDisable(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-			},
-		},
-		Resource: ResourceUser(),
-		Delete:   true,
-		ID:       "abc",
-		HCL: `
-			user_name    = "abc"
-			disable_as_user_deletion = true
-		`,
-	}.ApplyNoError(t)
-}
-
-func TestResourceUserDeleteAsDisableWithForceDeleteRepos(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-			},
-		},
-		Resource: ResourceUser(),
-		Delete:   true,
-		ID:       "abc",
-		HCL: `
-			user_name    = "abc"
-			disable_as_user_deletion = true
-			force_delete_repos = true
-		`,
-	}.Apply(t)
-	require.Error(t, err, err)
-}
-
-func TestResourceUserDeleteAsDisableWithForceDeleteHomeDir(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-			},
-		},
-		Resource: ResourceUser(),
-		Delete:   true,
-		ID:       "abc",
-		HCL: `
-			user_name    = "abc"
-			disable_as_user_deletion = true
-			force_delete_home_dir = true
-		`,
-	}.Apply(t)
-	require.Error(t, err, err)
-}
-
-func TestResourceUserDelete_NoErrorEmptyParams(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-			},
-		},
-		Resource: ResourceUser(),
-		Delete:   true,
-		ID:       "abc",
-		HCL: `
-			user_name    = "abc"
-		`,
-	}.ApplyNoError(t)
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {

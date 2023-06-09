@@ -137,7 +137,8 @@ func ResourceUser() *schema.Resource {
 			// Force delete repos
 			if isForceDeleteRepos {
 				if isDisable {
-					return fmt.Errorf("force_delete_home_dir: internal error")
+					// Validations should prevent getting here. Double checking as this is destructive.
+					return fmt.Errorf("force_delete_repos: internal error")
 				}
 				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
 				if err != nil {
@@ -147,6 +148,7 @@ func ResourceUser() *schema.Resource {
 			// Force delete home dir
 			if isForceDeleteHomeDir {
 				if isDisable {
+					// Validations should prevent getting here. Double checking as this is destructive.
 					return fmt.Errorf("force_delete_home_dir: internal error")
 				}
 				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)

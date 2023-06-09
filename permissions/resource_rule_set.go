@@ -3,33 +3,13 @@ package permissions
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-type GrantRule struct {
-	Principals []string `json:"principals" tf:"slice_set"`
-	Role       string   `json:"role"`
-}
-
-type RuleSet struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description,omitempty" tf:"optional"`
-	Etag        string      `json:"etag" tf:"optional,computed"`
-	GrantRules  []GrantRule `json:"grant_rules" tf:"slice_set,alias:grant_rule"`
-}
-
-type ReadRuleSetRequest struct {
-	Name string `url:"name"`
-	Etag string `url:"etag"`
-}
-
-type UpdateRuleSetRequest struct {
-	Name string  `json:"name"`
-	RS   RuleSet `json:"rule_set"`
-}
 
 type RuleSetApi struct {
 	client *common.DatabricksClient
@@ -40,117 +20,126 @@ func NewRuleSetApi(ctx context.Context, m interface{}) RuleSetApi {
 	return RuleSetApi{m.(*common.DatabricksClient), ctx}
 }
 
-func (a RuleSetApi) Read(readRuleSetReq ReadRuleSetRequest) (ruleSet RuleSet, err error) {
-	err = a.client.Get(a.ctx, "/preview/accounts/access-control/rule-sets", readRuleSetReq, &ruleSet)
-	return
+func (a RuleSetApi) Read(getRuleSetReq iam.GetRuleSetRequest) (*iam.RuleSetResponse, error) {
+	if a.client.Config.AccountID != "" {
+		accountClient, err := a.client.AccountClient()
+		if err != nil {
+			return nil, err
+		}
+		return accountClient.AccessControl.GetRuleSet(a.ctx, getRuleSetReq)
+	}
+	workspaceClient, err := a.client.WorkspaceClient()
+	if err != nil {
+		return nil, err
+	}
+	return workspaceClient.AccountAccessControlProxy.GetRuleSet(a.ctx, getRuleSetReq)
 }
 
-func (a RuleSetApi) Update(updateRuleSetReq UpdateRuleSetRequest) error {
-	return a.client.Put(a.ctx, "/preview/accounts/access-control/rule-sets", updateRuleSetReq)
+func (a RuleSetApi) Update(updateRuleSetReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
+	if a.client.Config.AccountID != "" {
+		accountClient, err := a.client.AccountClient()
+		if err != nil {
+			return nil, err
+		}
+		return accountClient.AccessControl.UpdateRuleSet(a.ctx, updateRuleSetReq)
+	}
+	workspaceClient, err := a.client.WorkspaceClient()
+	if err != nil {
+		return nil, err
+	}
+	return workspaceClient.AccountAccessControlProxy.UpdateRuleSet(a.ctx, updateRuleSetReq)
 }
 
 func ResourceRuleSet() *schema.Resource {
-	ruleSetSchema := common.StructToSchema(RuleSet{}, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
-	getAndUpdateRuleSet := func(ruleSet RuleSet, rsApi RuleSetApi) (string, error) {
-		rsGet, err := rsApi.Read(ReadRuleSetRequest{
-			Name: ruleSet.Name,
+	s := common.StructToSchema(
+		iam.RuleSetUpdateRequest{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["name"].Required = true
+			m["etag"] = &schema.Schema{
+				Computed: true,
+				Type:     schema.TypeString,
+			}
+			m["grant_rules"].Type = schema.TypeSet
+			common.MustSchemaPath(m, "grant_rules", "principals").Type = schema.TypeSet
+
+			return m
+		})
+	getAndUpdateRuleSet := func(ruleSetUpdateReq iam.UpdateRuleSetRequest, rsApi RuleSetApi) (string, error) {
+		ruleSetGetRes, err := rsApi.Read(iam.GetRuleSetRequest{
+			Name: ruleSetUpdateReq.Name,
 			Etag: "",
 		})
 		if err != nil {
 			return "", err
 		}
-		err = rsApi.Update(UpdateRuleSetRequest{
-			Name: ruleSet.Name,
-			RS: RuleSet{
-				Name:       ruleSet.Name,
-				Etag:       rsGet.Etag,
-				GrantRules: ruleSet.GrantRules,
-			},
-		})
+		ruleSetUpdateReq.RuleSet.Etag = ruleSetGetRes.Etag
+		ruleSetUpdateRes, err := rsApi.Update(ruleSetUpdateReq)
 		if err != nil {
 			return "", err
 		}
-		// Get again for new etag
-		rsGet, err = rsApi.Read(ReadRuleSetRequest{
-			Name: ruleSet.Name,
-			Etag: "",
-		})
-		if err != nil {
-			return "", err
-		}
-		return rsGet.Etag, nil
+		return ruleSetUpdateRes.Etag, nil
 	}
-	handleConflictAndUpdate := func(ruleSet RuleSet, rsApi RuleSetApi) (string, error) {
-		err := rsApi.Update(UpdateRuleSetRequest{
-			Name: ruleSet.Name,
-			RS: RuleSet{
-				Name:       ruleSet.Name,
-				Etag:       ruleSet.Etag,
-				GrantRules: ruleSet.GrantRules,
-			},
-		})
+	handleConflictAndUpdate := func(ruleSetUpdateReq iam.UpdateRuleSetRequest, rsApi RuleSetApi) (string, error) {
+		ruleSetUpdateRes, err := rsApi.Update(ruleSetUpdateReq)
 		if err != nil {
-			if err.Error() == "Conflict with another RuleSet operation" {
+			if strings.EqualFold(err.Error(), "Conflict with another RuleSet operation") {
 				// we need to get and update
-				etag, err := getAndUpdateRuleSet(ruleSet, rsApi)
+				etag, err := getAndUpdateRuleSet(ruleSetUpdateReq, rsApi)
 				return etag, err
 			}
 			return "", err
 		}
-		// get new etag and update
-		updatedRuleSet, err := rsApi.Read(ReadRuleSetRequest{
-			Name: ruleSet.Name,
-			Etag: "",
-		})
-		return updatedRuleSet.Etag, err
+		return ruleSetUpdateRes.Etag, err
 	}
 	return common.Resource{
-		Schema: ruleSetSchema,
+		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ruleSet RuleSet
-			common.DataToStructPointer(d, ruleSetSchema, &ruleSet)
+			var ruleSetUpdateReq iam.UpdateRuleSetRequest
+			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
+			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
 			rsApi := NewRuleSetApi(ctx, c)
-			etag, err := getAndUpdateRuleSet(ruleSet, rsApi)
+			etag, err := getAndUpdateRuleSet(ruleSetUpdateReq, rsApi)
 			if err != nil {
 				return err
 			}
 			d.Set("etag", etag)
-			d.SetId(ruleSet.Name)
+			d.SetId(ruleSetUpdateReq.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			name := d.Id()
 			rsApi := NewRuleSetApi(ctx, c)
-			readRuleSetRequest := ReadRuleSetRequest{
+			getRuleSetReq := iam.GetRuleSetRequest{
 				Name: name,
 				Etag: "",
 			}
 			if etag, ok := d.GetOk("etag"); ok {
-				readRuleSetRequest = ReadRuleSetRequest{
+				getRuleSetReq = iam.GetRuleSetRequest{
 					Name: name,
 					Etag: fmt.Sprintf("%v", etag),
 				}
 			}
-			data, err := rsApi.Read(readRuleSetRequest)
+			data, err := rsApi.Read(getRuleSetReq)
 			if err != nil {
 				return err
 			}
-			return common.StructToData(data, ruleSetSchema, d)
+			return common.StructToData(data, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ruleSet RuleSet
-			common.DataToStructPointer(d, ruleSetSchema, &ruleSet)
+			var ruleSetUpdateReq iam.UpdateRuleSetRequest
+			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
+			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
 			rsApi := NewRuleSetApi(ctx, c)
 			if etag, ok := d.GetOk("etag"); ok {
-				ruleSet.Etag = fmt.Sprintf("%v", etag)
-				updatedEtag, err := handleConflictAndUpdate(ruleSet, rsApi)
+				ruleSetUpdateReq.RuleSet.Etag = fmt.Sprintf("%v", etag)
+				updatedEtag, err := handleConflictAndUpdate(ruleSetUpdateReq, rsApi)
 				if err != nil {
 					return err
 				}
 				d.Set("etag", updatedEtag)
 				return nil
 			}
-			etag, err := getAndUpdateRuleSet(ruleSet, rsApi)
+			etag, err := getAndUpdateRuleSet(ruleSetUpdateReq, rsApi)
 			if err != nil {
 				return err
 			}
@@ -158,19 +147,26 @@ func ResourceRuleSet() *schema.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// we remove all grant rules. Account admins will still be able to update rule set
 			name := d.Id()
 			rsApi := NewRuleSetApi(ctx, c)
-			deleteRuleSet := RuleSet{Name: name}
+			updateRuleSetReq := iam.UpdateRuleSetRequest{
+				Name: name,
+				RuleSet: iam.RuleSetUpdateRequest{
+					Name: name,
+					Etag: "",
+				},
+			}
 			if etag, ok := d.GetOk("etag"); ok {
-				deleteRuleSet.Etag = fmt.Sprintf("%v", etag)
-				updatedEtag, err := handleConflictAndUpdate(deleteRuleSet, rsApi)
+				updateRuleSetReq.RuleSet.Etag = fmt.Sprintf("%v", etag)
+				updatedEtag, err := handleConflictAndUpdate(updateRuleSetReq, rsApi)
 				if err != nil {
 					return err
 				}
 				d.Set("etag", updatedEtag)
 				return nil
 			}
-			etag, err := getAndUpdateRuleSet(deleteRuleSet, rsApi)
+			etag, err := getAndUpdateRuleSet(updateRuleSetReq, rsApi)
 			if err != nil {
 				return err
 			}

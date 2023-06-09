@@ -5,9 +5,12 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 var (
@@ -22,11 +25,10 @@ func TestResourceRuleSetCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
-				Response: RuleSet{
-					Name:        SERVICE_PRINCIPAL_RULE_SET_NAME,
-					Description: "",
-					Etag:        "etagEx=",
-					GrantRules: []GrantRule{
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx=",
+					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"users/abc@example.com"},
 							Role:       "roles/servicePrincipal.manager",
@@ -37,12 +39,12 @@ func TestResourceRuleSetCreate(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
-				ExpectedRequest: UpdateRuleSetRequest{
+				ExpectedRequest: iam.UpdateRuleSetRequest{
 					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
-					RS: RuleSet{
+					RuleSet: iam.RuleSetUpdateRequest{
 						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
 						Etag: "etagEx=",
-						GrantRules: []GrantRule{
+						GrantRules: []iam.GrantRule{
 							{
 								Principals: []string{"users/abc@example.com"},
 								Role:       "roles/servicePrincipal.manager",
@@ -54,15 +56,10 @@ func TestResourceRuleSetCreate(t *testing.T) {
 						},
 					},
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
-				Response: RuleSet{
-					Name:        SERVICE_PRINCIPAL_RULE_SET_NAME,
-					Description: "",
-					Etag:        "etagEx2=",
-					GrantRules: []GrantRule{
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx2=",
+					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"users/abc@example.com"},
 							Role:       "roles/servicePrincipal.manager",
@@ -77,11 +74,10 @@ func TestResourceRuleSetCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=%s&name=%s", url.QueryEscape("etagEx2="), url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
-				Response: RuleSet{
-					Name:        SERVICE_PRINCIPAL_RULE_SET_NAME,
-					Description: "",
-					Etag:        "etagEx2=",
-					GrantRules: []GrantRule{
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx2=",
+					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"users/abc@example.com"},
 							Role:       "roles/servicePrincipal.manager",
@@ -98,13 +94,13 @@ func TestResourceRuleSetCreate(t *testing.T) {
 		Create:   true,
 		HCL: `
 		name    = "accounts/cb376b18-60fa-4058-b2cd-dd85acf63165/servicePrincipals/1686b74b-a611-4360-8feb-3ef226ad1145/ruleSets/default"
-		grant_rule {
+		grant_rules {
 			principals = [
 				"users/abc@example.com"
 			]
 			role = "roles/servicePrincipal.manager"
 		}
-		grant_rule {
+		grant_rules {
 			principals = [
 				"groups/new_group"
 			]
@@ -120,11 +116,10 @@ func TestResourceRuleSetRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
-				Response: RuleSet{
-					Name:        SERVICE_PRINCIPAL_RULE_SET_NAME,
-					Description: "",
-					Etag:        "etagEx=",
-					GrantRules: []GrantRule{
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx=",
+					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"users/abc@example.com"},
 							Role:       "roles/servicePrincipal.manager",
@@ -154,12 +149,12 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
-				ExpectedRequest: UpdateRuleSetRequest{
+				ExpectedRequest: iam.UpdateRuleSetRequest{
 					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
-					RS: RuleSet{
+					RuleSet: iam.RuleSetUpdateRequest{
 						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
 						Etag: "etagEx=",
-						GrantRules: []GrantRule{
+						GrantRules: []iam.GrantRule{
 							{
 								Principals: []string{"users/abc@example.com"},
 								Role:       "roles/servicePrincipal.manager",
@@ -167,15 +162,10 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 						},
 					},
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
-				Response: RuleSet{
-					Name:        SERVICE_PRINCIPAL_RULE_SET_NAME,
-					Description: "",
-					Etag:        "etagEx2=",
-					GrantRules: []GrantRule{
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx2=",
+					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"users/abc@example.com"},
 							Role:       "roles/servicePrincipal.manager",
@@ -186,11 +176,10 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=%s&name=%s", url.QueryEscape("etagEx2="), url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
-				Response: RuleSet{
-					Name:        SERVICE_PRINCIPAL_RULE_SET_NAME,
-					Description: "",
-					Etag:        "etagEx2=",
-					GrantRules: []GrantRule{
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx2=",
+					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"users/abc@example.com"},
 							Role:       "roles/servicePrincipal.manager",
@@ -209,11 +198,150 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 		HCL: `
 		name = "accounts/cb376b18-60fa-4058-b2cd-dd85acf63165/servicePrincipals/1686b74b-a611-4360-8feb-3ef226ad1145/ruleSets/default"
 
-		grant_rule {
+		grant_rules {
 			principals = [
 				"users/abc@example.com"
 			]
 			role = "roles/servicePrincipal.manager"
 		}`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceRuleSetUpdateConflict(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
+				ExpectedRequest: iam.UpdateRuleSetRequest{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					RuleSet: iam.RuleSetUpdateRequest{
+						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+						Etag: "etagEx=",
+						GrantRules: []iam.GrantRule{
+							{
+								Principals: []string{"users/abc@example.com"},
+								Role:       "roles/servicePrincipal.manager",
+							},
+						},
+					},
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_CONFLICT",
+					Message:   "Conflict with another RuleSet operation",
+				},
+				Status: 409,
+			},
+			{
+				Method:   "GET",
+				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx2=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"groups/testgroup"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
+				ExpectedRequest: iam.UpdateRuleSetRequest{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					RuleSet: iam.RuleSetUpdateRequest{
+						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+						Etag: "etagEx2=",
+						GrantRules: []iam.GrantRule{
+							{
+								Principals: []string{"users/abc@example.com"},
+								Role:       "roles/servicePrincipal.manager",
+							},
+						},
+					},
+				},
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx3=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=%s&name=%s", url.QueryEscape("etagEx3="), url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx3=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceRuleSet(),
+		Update:   true,
+		ID:       SERVICE_PRINCIPAL_RULE_SET_NAME,
+		InstanceState: map[string]string{
+			"name": SERVICE_PRINCIPAL_RULE_SET_NAME,
+			"etag": "etagEx=",
+		},
+		HCL: `
+		name = "accounts/cb376b18-60fa-4058-b2cd-dd85acf63165/servicePrincipals/1686b74b-a611-4360-8feb-3ef226ad1145/ruleSets/default"
+
+		grant_rules {
+			principals = [
+				"users/abc@example.com"
+			]
+			role = "roles/servicePrincipal.manager"
+		}`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceRuleSetDelete(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx=",
+					GrantRules: []iam.GrantRule{
+						{
+							Principals: []string{"users/abc@example.com"},
+							Role:       "roles/servicePrincipal.manager",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
+				ExpectedRequest: iam.UpdateRuleSetRequest{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					RuleSet: iam.RuleSetUpdateRequest{
+						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+						Etag: "etagEx=",
+					},
+				},
+				Response: iam.RuleSetResponse{
+					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Etag: "etagEx2=",
+				},
+			},
+		},
+		Resource: ResourceRuleSet(),
+		Delete:   true,
+		ID:       SERVICE_PRINCIPAL_RULE_SET_NAME,
 	}.ApplyNoError(t)
 }

@@ -44,8 +44,23 @@ type DatabricksClient struct {
 
 	// callback used to create API1.2 call wrapper, which simplifies unit tessting
 	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
+	cachedAccountClient   *databricks.AccountClient
 	cachedWorkspaceClient *databricks.WorkspaceClient
 	mu                    sync.Mutex
+}
+
+func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.cachedAccountClient != nil {
+		return c.cachedAccountClient, nil
+	}
+	a, err := databricks.NewAccountClient((*databricks.Config)(c.DatabricksClient.Config))
+	if err != nil {
+		return nil, err
+	}
+	c.cachedAccountClient = a
+	return a, nil
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {

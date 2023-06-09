@@ -86,12 +86,6 @@ func (a UsersAPI) Patch(userID string, r patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
 }
 
-// Disable will disable the user given the user id
-func (a UsersAPI) Disable(userID string) error {
-	r := PatchRequest("replace", "active", "false")
-	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Users/%v", userID), r, nil)
-}
-
 // Delete will delete the user given the user id
 func (a UsersAPI) Delete(userID string) error {
 	userPath := fmt.Sprintf("/preview/scim/v2/Users/%v", userID)

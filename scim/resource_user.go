@@ -111,7 +111,8 @@ func ResourceUser() *schema.Resource {
 			isDisable := d.Get("disable_as_user_deletion").(bool)
 			var err error
 			if isDisable {
-				err = user.Disable(d.Id())
+                        	r := PatchRequest("replace", "active", "false")
+				err = user.Patch(d.Id(), r)
 			} else {
 				err = user.Delete(d.Id())
 			}

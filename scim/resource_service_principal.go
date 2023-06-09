@@ -114,6 +114,11 @@ func ResourceServicePrincipal() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			m["disable_as_user_deletion"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			}
 			m["force_delete_repos"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -176,7 +181,14 @@ func ResourceServicePrincipal() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			appId := d.Get("application_id").(string)
-			err := spAPI.Delete(d.Id())
+			isDisable := d.Get("disable_as_user_deletion").(bool)
+			var err error
+			if isDisable {
+                        	r := PatchRequest("replace", "active", "false")
+				err = spAPI.Patch(d.Id(), r)
+			} else {
+				err = spAPI.Delete(d.Id())
+			}
 			if err != nil {
 				return err
 			}
@@ -184,15 +196,23 @@ func ResourceServicePrincipal() *schema.Resource {
 				return nil
 			}
 			if d.Get("force_delete_repos").(bool) {
-				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
-				if err != nil {
-					return fmt.Errorf("force_delete_repos: %w", err)
+				if isDisable {
+					return fmt.Errorf("force_delete_repos is not supported if disable_as_user_deletion is set to true")
+				} else {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_repos: %w", err)
+					}
 				}
 			}
 			if d.Get("force_delete_home_dir").(bool) {
-				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
-				if err != nil {
-					return fmt.Errorf("force_delete_home_dir: %w", err)
+				if isDisable {
+					return fmt.Errorf("force_delete_home_dir is not supported if disable_as_user_deletion is set to true")
+				} else {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_home_dir: %w", err)
+					}
 				}
 			}
 			return nil

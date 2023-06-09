@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var expectedDisablePatchRequest = patchRequest{
+var expectedUserDisablePatchRequest = patchRequest{
 	Operations: []patchOperation{
 		patchOperation{
 			Op:   "replace",
@@ -28,7 +28,7 @@ func TestResourceUserDeleteAsDisable_NoError(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: expectedDisablePatchRequest,
+				ExpectedRequest: expectedUserDisablePatchRequest,
 			},
 		},
 		Resource: ResourceUser(),
@@ -47,7 +47,7 @@ func TestResourceUserDeleteAsDisable_ForceDeleteRepos(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: expectedDisablePatchRequest,
+				ExpectedRequest: expectedUserDisablePatchRequest,
 			},
 		},
 		Resource: ResourceUser(),
@@ -68,7 +68,7 @@ func TestResourceUserDeleteAsDisable_ForceDeleteHomeDir(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: expectedDisablePatchRequest,
+				ExpectedRequest: expectedUserDisablePatchRequest,
 			},
 		},
 		Resource: ResourceUser(),
@@ -89,7 +89,7 @@ func TestResourceUserDeleteAsDisable_NoErrorEmptyParams(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: expectedDisablePatchRequest,
+				ExpectedRequest: expectedUserDisablePatchRequest,
 			},
 		},
 		Resource: ResourceUser(),

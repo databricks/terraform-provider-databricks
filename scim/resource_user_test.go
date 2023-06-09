@@ -424,9 +424,9 @@ func TestResourceUserDelete_NoError(t *testing.T) {
 		Delete:   true,
 		ID:       "abc",
 		HCL: `
-			user_name = "abc",
+			user_name = "abc"
 			disable_as_user_deletion = false
-			force_delete_repos = false,
+			force_delete_repos = false
 			force_delete_home_dir = false 
 		`,
 	}.ApplyNoError(t)

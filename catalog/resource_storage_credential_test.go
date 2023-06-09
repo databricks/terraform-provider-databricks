@@ -108,7 +108,7 @@ func TestCreateStorageCredentialsReadOnly(t *testing.T) {
 					Aws: &AwsIamRole{
 						RoleARN: "def",
 					},
-					Comment: "c",
+					Comment:  "c",
 					ReadOnly: true,
 				},
 				Response: StorageCredentialInfo{
@@ -124,7 +124,7 @@ func TestCreateStorageCredentialsReadOnly(t *testing.T) {
 						RoleARN: "def",
 					},
 					MetastoreID: "d",
-					ReadOnly: true,
+					ReadOnly:    true,
 				},
 			},
 		},

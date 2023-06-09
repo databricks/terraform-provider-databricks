@@ -10,7 +10,55 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func TestDataSourceExperiment(t *testing.T) {
+func TestDataSourceExperimentById(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=1234567890",
+				Response: &ml.Experiment{
+					Name:             "/Users/databricks/my-experiment",
+					ExperimentId:     "1234567890",
+					ArtifactLocation: "dbfs:/databricks/mlflow-tracking/1234567890",
+					LifecycleStage:   "active",
+				},
+			},
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceExperiment(),
+		ID:          ".",
+		HCL:         fmt.Sprintf(`id = "%s"`, "1234567890"),
+	}.ApplyAndExpectData(t, map[string]any{
+		"artifact_location": "dbfs:/databricks/mlflow-tracking/1234567890",
+		"id":                "1234567890",
+		"lifecycle_stage":   "active",
+		"name":              "/Users/databricks/my-experiment",
+	})
+}
+
+func TestDataSourceExperimentByIdNotFound(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=0987654321",
+				Status:   404,
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Node ID 0987654321 does not exist.",
+				},
+			},
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceExperiment(),
+		ID:          ".",
+		HCL:         fmt.Sprintf(`id = "%s"`, "0987654321"),
+	}.ExpectError(t, "Node ID 0987654321 does not exist.")
+}
+
+func TestDataSourceExperimentByName(t *testing.T) {
 	experimentName := "/Users/databricks/my-experiment"
 
 	qa.ResourceFixture{
@@ -41,7 +89,7 @@ func TestDataSourceExperiment(t *testing.T) {
 	})
 }
 
-func TestDataSourceExperimentNotFound(t *testing.T) {
+func TestDataSourceExperimentByNameNotFound(t *testing.T) {
 	experimentName := "/Users/databricks/non-existent-experiment"
 
 	qa.ResourceFixture{
@@ -64,7 +112,7 @@ func TestDataSourceExperimentNotFound(t *testing.T) {
 	}.ExpectError(t, "Node /Users/databricks/non-existent-experiment does not exist.")
 }
 
-func TestDataSourceExperimentInvalidPath(t *testing.T) {
+func TestDataSourceExperimentByNameInvalidPath(t *testing.T) {
 	experimentName := "invalid_path"
 
 	qa.ResourceFixture{

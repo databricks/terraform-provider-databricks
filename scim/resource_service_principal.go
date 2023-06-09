@@ -184,7 +184,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			isDisable := d.Get("disable_as_user_deletion").(bool)
 			var err error
 			if isDisable {
-                        	r := PatchRequest("replace", "active", "false")
+				r := PatchRequest("replace", "active", "false")
 				err = spAPI.Patch(d.Id(), r)
 			} else {
 				err = spAPI.Delete(d.Id())

@@ -41,15 +41,8 @@ func TestResourceUserDeleteAsDisable_NoError(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestResourceUserDeleteAsDisable_ForceDeleteRepos(t *testing.T) {
+func TestResourceUserDeleteAsDisable_ErrorForceDeleteRepos(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:          "PATCH",
-				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: expectedUserDisablePatchRequest,
-			},
-		},
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
@@ -62,15 +55,8 @@ func TestResourceUserDeleteAsDisable_ForceDeleteRepos(t *testing.T) {
 	require.Error(t, err, err)
 }
 
-func TestResourceUserDeleteAsDisable_ForceDeleteHomeDir(t *testing.T) {
+func TestResourceUserDeleteAsDisable_ErrorForceDeleteHomeDir(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:          "PATCH",
-				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
-				ExpectedRequest: expectedUserDisablePatchRequest,
-			},
-		},
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",

@@ -182,7 +182,19 @@ func ResourceServicePrincipal() *schema.Resource {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			appId := d.Get("application_id").(string)
 			isDisable := d.Get("disable_as_user_deletion").(bool)
+			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
+			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
 			var err error
+			// Validate input
+			if isDisable {
+				if isForceDeleteRepos {
+					return fmt.Errorf("force_delete_repos: not supported if disable_as_user_deletion is set to true")
+				}
+				if isForceDeleteHomeDir {
+					return fmt.Errorf("force_delete_home_dir: not supported if disable_as_user_deletion is set to true")
+				}
+			}
+			// Disable or delete
 			if isDisable {
 				r := PatchRequest("replace", "active", "false")
 				err = spAPI.Patch(d.Id(), r)
@@ -195,24 +207,24 @@ func ResourceServicePrincipal() *schema.Resource {
 			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				return nil
 			}
-			if d.Get("force_delete_repos").(bool) {
+			// Force delete repos
+			if isForceDeleteRepos {
 				if isDisable {
-					return fmt.Errorf("force_delete_repos is not supported if disable_as_user_deletion is set to true")
-				} else {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
-					if err != nil {
-						return fmt.Errorf("force_delete_repos: %w", err)
-					}
+					return fmt.Errorf("force_delete_home_dir: internal error")
+				}
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
+				if err != nil {
+					return fmt.Errorf("force_delete_repos: %w", err)
 				}
 			}
-			if d.Get("force_delete_home_dir").(bool) {
+			// Force delete home dir
+			if isForceDeleteHomeDir {
 				if isDisable {
-					return fmt.Errorf("force_delete_home_dir is not supported if disable_as_user_deletion is set to true")
-				} else {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
-					if err != nil {
-						return fmt.Errorf("force_delete_home_dir: %w", err)
-					}
+					return fmt.Errorf("force_delete_home_dir: internal error")
+				}
+				err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
+				if err != nil {
+					return fmt.Errorf("force_delete_home_dir: %w", err)
 				}
 			}
 			return nil

@@ -41,7 +41,8 @@ func DataSourceGroup() *schema.Resource {
 			var this entity
 			common.DataToStructPointer(d, s, &this)
 			groupsAPI := NewGroupsAPI(ctx, m)
-			group, err := groupsAPI.ReadByDisplayName(this.DisplayName)
+			groupAttributes := "members,roles,entitlements,externalId"
+			group, err := groupsAPI.ReadByDisplayName(this.DisplayName, groupAttributes)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -69,7 +70,7 @@ func DataSourceGroup() *schema.Resource {
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
 					if this.Recursive {
-						childGroup, err := groupsAPI.Read(x.Value)
+						childGroup, err := groupsAPI.Read(x.Value, groupAttributes)
 						if err != nil {
 							return diag.FromErr(err)
 						}

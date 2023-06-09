@@ -176,7 +176,7 @@ data "aws_iam_policy_document" "passrole_for_uc" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = ["arn:aws:iam::${var.aws_account_id}:root"]
     }
     condition {
       test     = "ArnLike"
@@ -338,11 +338,11 @@ resource "databricks_grants" "sandbox" {
   catalog  = databricks_catalog.sandbox.name
   grant {
     principal  = "Data Scientists"
-    privileges = ["USAGE", "CREATE"]
+    privileges = ["USE_CATALOG", "CREATE"]
   }
   grant {
     principal  = "Data Engineers"
-    privileges = ["USAGE"]
+    privileges = ["USE_CATALOG"]
   }
 }
 
@@ -361,7 +361,7 @@ resource "databricks_grants" "things" {
   schema   = databricks_schema.things.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["USAGE"]
+    privileges = ["USE_SCHEMA"]
   }
 }
 ```

@@ -49,7 +49,7 @@
     ],
     "name": "Test DLT",
     "photon": false,
-    "storage": "/tmp/test",
+    "storage": "dbfs:/pipelines/9ab12322-ccef-4539-8bf1-a43a95667dac",
     "target": "test"
   },
   "state": "IDLE"

@@ -1,7 +1,13 @@
 package acceptance
 
 import (
+	"context"
 	"testing"
+
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/tokens"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMwsAccWorkspaces(t *testing.T) {
@@ -52,6 +58,129 @@ func TestMwsAccWorkspaces(t *testing.T) {
 			}
 		}`,
 	})
+}
+
+func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
+	accountLevel(t, step{
+		Template: `
+		resource "databricks_mws_credentials" "this" {
+			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
+			credentials_name = "credentials-ws-{var.RANDOM}"
+			role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
+		}
+		resource "databricks_mws_customer_managed_keys" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			aws_key_info {
+				key_arn   = "{env.TEST_MANAGED_KMS_KEY_ARN}"
+				key_alias = "{env.TEST_MANAGED_KMS_KEY_ALIAS}"
+			}
+			use_cases = ["MANAGED_SERVICES"]
+		}
+		resource "databricks_mws_storage_configurations" "this" {
+			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
+			storage_configuration_name = "storage-ws-{var.RANDOM}"
+			bucket_name                = "{env.TEST_ROOT_BUCKET}"
+		}
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "terra-{var.RANDOM}"
+			aws_region      = "{env.AWS_REGION}"
+	
+			credentials_id = databricks_mws_credentials.this.credentials_id
+			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
+			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+
+			token {
+				comment = "test foo"
+			}
+		}`,
+		Check: resourceCheckWithState("databricks_mws_workspaces.this",
+			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
+				workspaceUrl, ok := state.Attributes["workspace_url"]
+				assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
+
+				workspaceClient, err := client.ClientForHost(ctx, workspaceUrl)
+				assert.NoError(t, err)
+
+				tokensAPI := tokens.NewTokensAPI(ctx, workspaceClient)
+				tokens, err := tokensAPI.List()
+				assert.NoError(t, err)
+
+				foundFoo := false
+				foundBar := false
+				for _, token := range tokens {
+					if token.Comment == "test foo" {
+						foundFoo = true
+					}
+					if token.Comment == "test bar" {
+						foundBar = true
+					}
+				}
+				assert.True(t, foundFoo)
+				assert.False(t, foundBar)
+				return nil
+			}),
+	},
+		step{
+			Template: `
+		resource "databricks_mws_credentials" "this" {
+			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
+			credentials_name = "credentials-ws-{var.RANDOM}"
+			role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
+		}
+		resource "databricks_mws_customer_managed_keys" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			aws_key_info {
+				key_arn   = "{env.TEST_MANAGED_KMS_KEY_ARN}"
+				key_alias = "{env.TEST_MANAGED_KMS_KEY_ALIAS}"
+			}
+			use_cases = ["MANAGED_SERVICES"]
+		}
+		resource "databricks_mws_storage_configurations" "this" {
+			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
+			storage_configuration_name = "storage-ws-{var.RANDOM}"
+			bucket_name                = "{env.TEST_ROOT_BUCKET}"
+		}
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "terra-{var.RANDOM}"
+			aws_region      = "{env.AWS_REGION}"
+	
+			credentials_id = databricks_mws_credentials.this.credentials_id
+			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
+			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+
+			token {
+				comment = "test bar"
+			}
+		}`,
+			Check: resourceCheckWithState("databricks_mws_workspaces.this",
+				func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
+					workspaceUrl, ok := state.Attributes["workspace_url"]
+					assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
+
+					workspaceClient, err := client.ClientForHost(ctx, workspaceUrl)
+					assert.NoError(t, err)
+
+					tokensAPI := tokens.NewTokensAPI(ctx, workspaceClient)
+					tokens, err := tokensAPI.List()
+					assert.NoError(t, err)
+
+					foundFoo := false
+					foundBar := false
+					for _, token := range tokens {
+						if token.Comment == "test foo" {
+							foundFoo = true
+						}
+						if token.Comment == "test bar" {
+							foundBar = true
+						}
+					}
+					assert.False(t, foundFoo)
+					assert.True(t, foundBar)
+					return nil
+				}),
+		})
 }
 
 func TestMwsAccGcpWorkspaces(t *testing.T) {

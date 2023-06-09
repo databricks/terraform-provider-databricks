@@ -37,7 +37,7 @@ Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/s
 
 ## Metastore grants
 
-You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_SHARE`, `CREATE_RECIPIENT` and `CREATE_PROVIDER` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
+You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_SHARE`, `CREATE_RECIPIENT` and `CREATE_PROVIDER`, `USE_PROVIDER`, `USE_SHARE`,`USE_RECIPIENT`, `SET_SHARE_PERMISSION` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
 
 ```hcl
 resource "databricks_grants" "sandbox" {
@@ -55,7 +55,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Catalog grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_SCHEMA`, `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VIEW`, `EXECUTE`, `MODIFY`, `SELECT` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
+You can grant `ALL_PRIVILEGES`, `CREATE_SCHEMA`, `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `EXECUTE`, `MODIFY`, `SELECT` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -86,7 +86,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Schema grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VIEW` and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY` and `SELECT` at the schema level to apply them to the pertinent current and future securable objects within the schema:
+You can grant `ALL_PRIVILEGES`, `CREATE_FUNCTION`, `CREATE_TABLE`, and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY` and `SELECT` at the schema level to apply them to the pertinent current and future securable objects within the schema:
 
 ```hcl
 resource "databricks_schema" "things" {

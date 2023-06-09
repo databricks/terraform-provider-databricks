@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	clustersApi "github.com/databricks/databricks-sdk-go/service/clusters"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -205,6 +205,11 @@ type LocalFileInfo struct {
 	Destination string `json:"destination,omitempty"`
 }
 
+// WorkspaceFileInfo represents a file in the Databricks workspace.
+type WorkspaceFileInfo struct {
+	Destination string `json:"destination,omitempty"`
+}
+
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
 type StorageInfo struct {
 	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
@@ -213,11 +218,12 @@ type StorageInfo struct {
 
 // InitScriptStorageInfo captures the allowed sources of init scripts.
 type InitScriptStorageInfo struct {
-	Dbfs  *DbfsStorageInfo  `json:"dbfs,omitempty" tf:"group:storage"`
-	Gcs   *GcsStorageInfo   `json:"gcs,omitempty" tf:"group:storage"`
-	S3    *S3StorageInfo    `json:"s3,omitempty" tf:"group:storage"`
-	Abfss *AbfssStorageInfo `json:"abfss,omitempty" tf:"group:storage"`
-	File  *LocalFileInfo    `json:"file,omitempty"`
+	Dbfs      *DbfsStorageInfo   `json:"dbfs,omitempty" tf:"group:storage"`
+	Gcs       *GcsStorageInfo    `json:"gcs,omitempty" tf:"group:storage"`
+	S3        *S3StorageInfo     `json:"s3,omitempty" tf:"group:storage"`
+	Abfss     *AbfssStorageInfo  `json:"abfss,omitempty" tf:"group:storage"`
+	File      *LocalFileInfo     `json:"file,omitempty"`
+	Workspace *WorkspaceFileInfo `json:"workspace,omitempty"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -867,7 +873,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 			}
 		}
 	}
-	smallestNodeType := a.GetSmallestNodeType(clustersApi.NodeTypeRequest{
+	smallestNodeType := a.GetSmallestNodeType(compute.NodeTypeRequest{
 		LocalDisk: true,
 	})
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)

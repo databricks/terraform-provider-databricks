@@ -8,7 +8,7 @@ func TestUcAccMetastoreDataAccessOnAws(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_metastore" "this" {
-			name          = "primary"
+			name          = "primary-{var.RANDOM}"
 			storage_root  = "s3://{env.TEST_BUCKET}/test{var.RANDOM}"
 			force_destroy = true
 		}

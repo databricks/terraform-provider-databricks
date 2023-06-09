@@ -45,6 +45,10 @@ func TestResourceJobCreate(t *testing.T) {
 					MinRetryIntervalMillis: 5000,
 					RetryOnTimeout:         true,
 					MaxConcurrentRuns:      1,
+					Queue:                  &Queue{},
+					RunAs: &JobRunAs{
+						UserName: "user@mail.com",
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -54,7 +58,8 @@ func TestResourceJobCreate(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
 				Response: Job{
-					JobID: 789,
+					JobID:         789,
+					RunAsUserName: "user@mail.com",
 					Settings: &JobSettings{
 						ExistingClusterID: "abc",
 						SparkJarTask: &SparkJarTask{
@@ -78,6 +83,7 @@ func TestResourceJobCreate(t *testing.T) {
 							TimezoneID:           "America/Los_Angeles",
 							PauseStatus:          "PAUSED",
 						},
+						Queue: &Queue{},
 					},
 				},
 			},
@@ -103,6 +109,10 @@ func TestResourceJobCreate(t *testing.T) {
 		}
 		library {
 			jar = "dbfs://ff/gg/hh.jar"
+		}
+		queue {}
+		run_as {
+			user_name = "user@mail.com"
 		}`,
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -567,6 +577,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						OnSuccess: []Webhook{{ID: "id2"}},
 						OnFailure: []Webhook{{ID: "id3"}},
 					},
+					NotificationSettings: &NotificationSettings{
+						NoAlertForSkippedRuns:  true,
+						NoAlertForCanceledRuns: true,
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -593,6 +607,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 							OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
 							OnSuccess: []Webhook{{ID: "id2"}},
 							OnFailure: []Webhook{{ID: "id3"}},
+						},
+						NotificationSettings: &NotificationSettings{
+							NoAlertForSkippedRuns:  true,
+							NoAlertForCanceledRuns: true,
 						},
 					},
 				},
@@ -625,7 +643,12 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 			on_failure {
 				id = "id3" 
 			}
-		}`,
+		}
+		notification_settings {
+			no_alert_for_skipped_runs = true
+			no_alert_for_canceled_runs = true
+		  }
+	`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())

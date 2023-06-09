@@ -3,10 +3,10 @@ package acceptance
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -33,8 +33,10 @@ func TestAccSecretScopeResource(t *testing.T) {
 					acls, err := secretACLAPI.List(id)
 					require.NoError(t, err)
 
-					usersAPI := scim.NewUsersAPI(ctx, client)
-					me, err := usersAPI.Me()
+					w, err := client.WorkspaceClient()
+					require.NoError(t, err)
+
+					me, err := w.CurrentUser.Me(ctx)
 					require.NoError(t, err)
 					assert.Equal(t, 1, len(acls))
 					assert.Equal(t, me.UserName, acls[0].Principal)
@@ -55,5 +57,22 @@ func TestAccSecretScopeResource(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 			resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 		),
+	})
+}
+
+func TestAccSecretScopeResourceAkvWithSp(t *testing.T) {
+	if os.Getenv("ARM_CLIENT_ID") == "" {
+		t.Skipf("service principal isn't defined")
+	}
+
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_secret_scope" "my_scope" {
+			name = "tf-{var.RANDOM}"
+			keyvault_metadata {
+				resource_id = "{env.TEST_KEY_VAULT_RESOURCE_ID}"
+				dns_name    = "{env.TEST_KEY_VAULT_DNS_NAME}"
+			}
+		}`,
 	})
 }

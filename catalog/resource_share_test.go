@@ -184,18 +184,6 @@ func TestCreateShare(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
 					Name: "a",
-					Objects: []SharedDataObject{
-						{
-							Name:           "main.a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-						{
-							Name:           "main.b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-					},
 				},
 				Response: RecipientInfo{
 					Name: "a",
@@ -289,7 +277,7 @@ func TestUpdateShare(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
-				Response: ShareUpdates{
+				ExpectedRequest: ShareUpdates{
 					Updates: []ShareDataChange{
 						{
 							Action: "REMOVE",
@@ -310,7 +298,7 @@ func TestUpdateShare(t *testing.T) {
 						{
 							Action: "ADD",
 							DataObject: SharedDataObject{
-								Comment:        "d",
+								Comment:        "c",
 								DataObjectType: "TABLE",
 								Name:           "b",
 							},
@@ -431,18 +419,6 @@ func TestCreateShare_ThrowError(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
 					Name: "a",
-					Objects: []SharedDataObject{
-						{
-							Name:           "main.a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-						{
-							Name:           "main.b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-					},
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
@@ -479,18 +455,6 @@ func TestCreateShareButPatchFails(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
 					Name: "a",
-					Objects: []SharedDataObject{
-						{
-							Name:           "main.a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-						{
-							Name:           "main.b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-					},
 				},
 				Response: RecipientInfo{
 					Name: "a",
@@ -527,7 +491,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/shares/a",
+				Resource: "/api/2.1/unity-catalog/shares/a?",
 			},
 		},
 		Resource: ResourceShare(),
@@ -549,4 +513,89 @@ func TestCreateShareButPatchFails(t *testing.T) {
 
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestUpdateShareComplexDiff(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "a",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+							SharedAs:       "b",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: ShareUpdates{
+					Updates: []ShareDataChange{
+						{
+							Action: "ADD",
+							DataObject: SharedDataObject{
+								Comment:        "c",
+								DataObjectType: "TABLE",
+								Name:           "b",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "a",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+						{
+							Name:           "b",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+		},
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name": "abc",
+		},
+		HCL: `
+			name = "abc"
+			object {
+				name = "a"
+				comment = "c"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = "b"
+				comment = "c"
+				data_object_type = "TABLE"
+			}
+		`,
+		Resource: ResourceShare(),
+	}.ApplyNoError(t)
 }

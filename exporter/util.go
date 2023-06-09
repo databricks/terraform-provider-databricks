@@ -143,7 +143,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allDirectories, _ = notebooksAPI.ListDirectories("/", true)
+		ic.allDirectories, _ = notebooksAPI.ListDirectories("/", true, true)
 	}
 	return ic.allDirectories
 }
@@ -162,6 +162,25 @@ func (ic *importContext) emitGroups(u scim.User, principal string) {
 			Resource: "databricks_group_member",
 			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
 			Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, principal),
+		})
+	}
+}
+
+func (ic *importContext) emitRoles(objType string, id string, roles []scim.ComplexValue) {
+	log.Printf("[DEBUG] emitting roles for object type: %s, ID: %s, roles: %v", objType, id, roles)
+	for _, role := range roles {
+		if role.Type != "direct" {
+			continue
+		}
+		if !ic.accountLevel {
+			ic.Emit(&resource{
+				Resource: "databricks_instance_profile",
+				ID:       role.Value,
+			})
+		}
+		ic.Emit(&resource{
+			Resource: fmt.Sprintf("databricks_%s_role", objType),
+			ID:       fmt.Sprintf("%s|%s", id, role.Value),
 		})
 	}
 }
@@ -212,7 +231,7 @@ func (ic *importContext) cacheGroups() error {
 
 func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	a := scim.NewUsersAPI(ic.Context, ic.Client)
-	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name))
+	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name), false)
 	if err != nil {
 		return
 	}
@@ -226,7 +245,7 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 
 func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
 	a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
-	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")))
+	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")), false)
 	if err != nil {
 		return
 	}

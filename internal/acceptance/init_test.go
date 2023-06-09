@@ -166,6 +166,7 @@ func run(t *testing.T, steps []step) {
 	}
 	vars := map[string]string{
 		"CWD":            cwd,
+		"STICKY_RANDOM":  qa.RandomName("s"),
 		"AWS_ATTRIBUTES": awsAttrs,
 	}
 	ts := []resource.TestStep{}
@@ -269,6 +270,24 @@ func resourceCheck(name string,
 		return cb(context.Background(), &common.DatabricksClient{
 			DatabricksClient: client,
 		}, rs.Primary.ID)
+	}
+}
+
+// resourceCheckWithState calls back a function with client and resource instance state
+func resourceCheckWithState(name string,
+	cb func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("not found: %s", name)
+		}
+		client, err := client.New(&config.Config{})
+		if err != nil {
+			panic(err)
+		}
+		return cb(context.Background(), &common.DatabricksClient{
+			DatabricksClient: client,
+		}, rs.Primary)
 	}
 }
 

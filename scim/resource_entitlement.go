@@ -37,13 +37,13 @@ func ResourceEntitlements() *schema.Resource {
 			}
 			switch strings.ToLower(split[0]) {
 			case "group":
-				group, err := NewGroupsAPI(ctx, c).Read(split[1])
+				group, err := NewGroupsAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
 				return group.Entitlements.readIntoData(d)
 			case "user":
-				user, err := NewUsersAPI(ctx, c).Read(split[1])
+				user, err := NewUsersAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}

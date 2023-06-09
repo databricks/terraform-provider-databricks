@@ -7,7 +7,7 @@ description: Terraform provider for the Databricks Lakehouse platform
 
 # Databricks Provider
 
-Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md) or [AWS](guides/aws-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. Changelog is available [on GitHub](https://github.com/databricks/terraform-provider-databricks/blob/master/CHANGELOG.md).
+Use the Databricks Terraform provider to interact with almost all of [Databricks](http://databricks.com/) resources. If you're new to Databricks, please follow guide to create a workspace on [Azure](guides/azure-workspace.md), [AWS](guides/aws-workspace.md) or [GCP](guides/gcp-workspace.md) and then this [workspace management](guides/workspace-management.md) tutorial. Changelog is available [on GitHub](https://github.com/databricks/terraform-provider-databricks/blob/master/CHANGELOG.md).
 
 ![Resources](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/resources.png)
 
@@ -32,6 +32,7 @@ Security
 
 * Organize [databricks_user](resources/user.md) into [databricks_group](resources/group.md) through [databricks_group_member](resources/group_member.md), also reading [metadata](data-sources/group.md)
 * Create [databricks_service_principal](resources/service_principal.md) with [databricks_obo_token](resources/obo_token.md) to enable even more restricted access control.
+* Create [databricks_service_principal](resources/service_principal.md) with [databricks_service_principal_secret](resources/service_principal_secret.md) to authenticate with the service principal OAuth tokens (Only for AWS deployments)
 * Manage data access with [databricks_instance_profile](resources/instance_profile.md), which can be assigned through [databricks_group_instance_profile](resources/group_instance_profile.md) and [databricks_user_instance_profile](resources/user_instance_profile.md)
 * Control which networks can access workspace with [databricks_ip_access_list](resources/ip_access_list.md)
 * Generically manage [databricks_permissions](resources/permissions.md)
@@ -49,7 +50,7 @@ Databricks SQL
 * Create [databricks_sql_endpoint](resources/sql_endpoint.md) controlled by [databricks_permissions](resources/permissions.md).
 * Manage [queries](resources/sql_query.md) and their [visualizations](resources/sql_visualization.md).
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
-* Provide [global configuration for all SQL Endpoints](docs/resources/sql_global_config.md)
+* Provide [global configuration for all SQL warehouses](docs/resources/sql_global_config.md)
 
 MLFlow
 
@@ -203,6 +204,53 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
 * `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-credentials`, and `google-id`.
 
+## Special configurations for AWS
+
+### Authenticating with Service Principal
+
+You can use the `client_id` + `client_secret` attributes to authenticate with a service principal at both the account and workspace levels. The `client_id` is the `application_id` of the [Service Principal](resources/service_principal.md) and `client_secret` is its secret. You can generate the secret from Databricks Accounts Console (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)) or by using the Terraform resource [databricks_service_principal_secret](resources/service_principal_secret.md).
+
+``` hcl
+provider "databricks" {
+  host          = "https://abc-cdef-ghi.cloud.databricks.com"
+  client_id     = var.client_id
+  client_secret = var.client_secret
+}
+```
+
+To create resources at both the account and workspace levels, you can create two providers as shown below
+
+``` hcl
+provider "databricks" {
+  alias         = "accounts"
+  host          = "https://accounts.cloud.databricks.com"
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  account_id    = "00000000-0000-0000-0000-000000000000"
+}
+
+provider "databricks" {
+  alias         = "workspace"
+  host          = var.workspace_host
+  client_id     = var.client_id
+  client_secret = var.client_secret
+}
+```
+
+Next, you can specify the corresponding provider when creating the resource. For example, you can use the workspace provider to create a workspace group
+
+``` hcl
+resource "databricks_group" "cluster_admin" {
+  provider                   = databricks.workspace
+  display_name               = "cluster_admin"
+  allow_cluster_create       = true
+  allow_instance_pool_create = false
+}
+```
+
+* `client_id` - The `application_id` of the [Service Principal](resources/service_principal.md). Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_ID`.
+* `client_secret` - Secret of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_SECRET`.
+
 ## Special configurations for Azure
 
 The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_use_msi`, `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
@@ -291,7 +339,13 @@ When a workspace is created using a service principal account, that service prin
 
 ## Special configurations for GCP
 
-The provider works with [Google Cloud CLI authentication](https://cloud.google.com/sdk/docs/authorizing) to facilitate local development workflows. For automated scenarios, a service principal auth is necessary using `google_service_account` parameter with [impersonation](https://cloud.google.com/docs/authentication#service-accounts) and Application Default Credentials. and specification of  and `google_credentials` parameters). Alternatively, you could provide the service account key directly by passing it to `google_credentials` parameter (or `GOOGLE_CREDENTIALS` environment variable)
+The provider works with [Google Cloud CLI authentication](https://cloud.google.com/sdk/docs/authorizing) to facilitate local development workflows. For automated scenarios, a service principal auth is necessary using `google_service_account` parameter with [impersonation](https://cloud.google.com/docs/authentication#service-accounts) and Application Default Credentials. Alternatively, you could provide the service account key directly by passing it to `google_credentials` parameter (or `GOOGLE_CREDENTIALS` environment variable)
+
+## Special configuration for Unity Catalog
+
+Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+
+If you are configuring a new Databricks account for the first time, please create at least one workspace and with an identity (user or service principal) that you intend to use for Unity Catalog rollout. You can then configure the provider using that identity and workspace to provision the required Unity Catalog resources.
 
 ## Miscellaneous configuration parameters
 

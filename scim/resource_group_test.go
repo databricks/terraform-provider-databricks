@@ -39,7 +39,7 @@ func TestResourceGroupCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -101,7 +101,7 @@ func TestResourceGroupRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -137,7 +137,7 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -162,7 +162,7 @@ func TestResourceGroupRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
@@ -182,7 +182,7 @@ func TestResourceGroupRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -201,7 +201,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,entitlements,groups,members,externalId",
 				Response: Group{
 					Members: []ComplexValue{
 						{
@@ -256,7 +256,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					DisplayName: "Data Ninjas",
 					Entitlements: entitlements{
@@ -298,7 +298,7 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,entitlements,groups,members,externalId",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -387,7 +387,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/123",
+			Resource: "/api/2.0/preview/scim/v2/Groups/123?attributes=displayName,entitlements,groups,members,externalId",
 			Response: Group{
 				ID: "123",
 			},

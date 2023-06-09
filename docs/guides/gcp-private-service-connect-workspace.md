@@ -58,8 +58,8 @@ resource "google_compute_router_nat" "nat" {
 }
 
 resource "databricks_mws_vpc_endpoint" "backend_rest_vpce" {
-  account_id          = var.databricks_account_id
-  vpc_endpoint_name   = "vpce-backend-rest-${random_string.suffix.result}"
+  account_id        = var.databricks_account_id
+  vpc_endpoint_name = "vpce-backend-rest-${random_string.suffix.result}"
   gcp_vpc_endpoint_info {
     project_id        = var.google_project
     psc_endpoint_name = var.backend_rest_psce
@@ -68,8 +68,8 @@ resource "databricks_mws_vpc_endpoint" "backend_rest_vpce" {
 }
 
 resource "databricks_mws_vpc_endpoint" "relay_vpce" {
-  account_id          = var.databricks_account_id
-  vpc_endpoint_name   = "vpce-relay-${random_string.suffix.result}"
+  account_id        = var.databricks_account_id
+  vpc_endpoint_name = "vpce-relay-${random_string.suffix.result}"
   gcp_vpc_endpoint_info {
     project_id        = var.google_project
     psc_endpoint_name = var.relay_psce
@@ -127,7 +127,7 @@ resource "databricks_mws_workspaces" "this" {
   }
 
   private_service_connect_id = databricks_mws_private_access_settings.pas.private_access_settings_id
-  network_id = databricks_mws_networks.this.network_id
+  network_id                 = databricks_mws_networks.this.network_id
   gke_config {
     connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
     master_ip_range   = "10.3.0.0/28"

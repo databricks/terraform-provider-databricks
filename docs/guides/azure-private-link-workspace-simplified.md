@@ -1,15 +1,16 @@
 ---
-page_title: "Provisioning Databricks on Azure with Private Link - Simple deployment"
+page_title: "Provisioning Azure Databricks with Private Link - Simple deployment"
 ---
 
-# Deploying pre-requisite resources and enabling Private Link connections
+# Deploying pre-requisite resources and enabling Private Link connections - Simple deployment
+
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
 
 -> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
 
-Databricks Private Link support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. 
+[Azure Private Link](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview) support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. 
 
 You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically, using a programmatic approach. 
-
 
 This guide covers a [simple deployment](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/private-link-simplified) to configure Azure Databricks with Private Link:
 * No separate VNet separates user access from the VNet that you use for your compute resources in the Classic data plane
@@ -18,7 +19,7 @@ This guide covers a [simple deployment](https://learn.microsoft.com/en-us/azure/
 * A separate private endpoint is used for web authentication
 * The same Databricks workspace is used for web authentication traffic but Databricks strongly recommends creating a separate workspace called a private web auth workspace for each region to host the web auth private network settings.
 
-![Private Link backend](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/azure-private-link-simplified.png)
+![Azure Databricks with Private Link - Simple deployment](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/azure-private-link-simplified.png)
 
 This guide uses the following variables:
 
@@ -68,15 +69,15 @@ Define the required variables
 
 ```hcl
 variable "cidr" {
-  type    = string
+  type = string
 }
 
 variable "rg_name" {
-  type    = string
+  type = string
 }
 
 variable "location" {
-  type    = string
+  type = string
 }
 
 data "azurerm_client_config" "current" {
@@ -206,7 +207,7 @@ resource "azurerm_subnet" "plsubnet" {
   resource_group_name                            = var.rg_name
   virtual_network_name                           = azurerm_virtual_network.this.name
   address_prefixes                               = [cidrsubnet(var.cidr, 3, 2)]
-  enforce_private_link_endpoint_network_policies = true 
+  enforce_private_link_endpoint_network_policies = true
 }
 
 ```
@@ -223,7 +224,7 @@ resource "azurerm_private_endpoint" "uiapi" {
   name                = "uiapipvtendpoint"
   location            = var.location
   resource_group_name = var.rg_name
-  subnet_id           = azurerm_subnet.plsubnet.id 
+  subnet_id           = azurerm_subnet.plsubnet.id
 
   private_service_connection {
     name                           = "ple-${var.workspace_prefix}-uiapi"
@@ -260,7 +261,7 @@ resource "azurerm_private_endpoint" "auth" {
   name                = "aadauthpvtendpoint"
   location            = var.location
   resource_group_name = var.rg_name
-  subnet_id           = azurerm_subnet.plsubnet.id 
+  subnet_id           = azurerm_subnet.plsubnet.id
 
   private_service_connection {
     name                           = "ple-${var.workspace_prefix}-auth"
@@ -299,7 +300,7 @@ resource "azurerm_databricks_workspace" "this" {
     private_subnet_network_security_group_association_id = azurerm_subnet_network_security_group_association.private.id
     storage_account_name                                 = "dbfs"
   }
- 
+
   depends_on = [
     azurerm_subnet_network_security_group_association.public,
     azurerm_subnet_network_security_group_association.private

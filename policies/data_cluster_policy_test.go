@@ -1,28 +1,30 @@
 package policies
 
 import (
-	"context"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDataSourceClusterPolicy(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/policies/clusters/list",
-				Response: ClusterPolicyList{
-					Policies: []ClusterPolicy{
+				Resource: "/api/2.0/policies/clusters/list?",
+				Response: compute.ListPoliciesResponse{
+					Policies: []compute.Policy{
 						{
-							PolicyID:   "abc",
-							Name:       "policy",
-							Definition: `{"abc":"123"}`,
+							PolicyId:                        "abc",
+							Name:                            "policy",
+							Definition:                      `{"abc":"123"}`,
+							Description:                     "A description",
+							PolicyFamilyId:                  "def",
+							PolicyFamilyDefinitionOverrides: `{"def":"456"}`,
+							IsDefault:                       true,
+							MaxClustersPerUser:              42,
 						},
 					},
 				},
@@ -32,37 +34,51 @@ func TestDataSourceClusterPolicy(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceClusterPolicy(),
 		ID:          ".",
-		State: map[string]any{
-			"name": "policy",
+		HCL:         `name = "policy"`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":                                 "abc",
+		"definition":                         `{"abc":"123"}`,
+		"description":                        "A description",
+		"policy_family_id":                   "def",
+		"policy_family_definition_overrides": `{"def":"456"}`,
+		"is_default":                         true,
+		"max_clusters_per_user":              42,
+	})
+}
+
+func TestDataSourceClusterPolicyError(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/policies/clusters/list?",
+				Status:   404,
+				Response: apierr.APIError{
+					Message: "searching_error",
+				},
+			},
 		},
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "abc", d.Id())
-	assert.Equal(t, `{"abc":"123"}`, d.Get("definition").(string))
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceClusterPolicy(),
+		ID:          ".",
+		HCL:         `name = "policy"`,
+	}.ExpectError(t, "searching_error")
 }
 
 func TestDataSourceClusterPolicyNotFound(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/policies/clusters/list",
-			Status:   404,
-			Response: apierr.APIError{
-				Message: "searching_error",
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/policies/clusters/list?",
+				Response: compute.ListPoliciesResponse{},
 			},
 		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/policies/clusters/list",
-			Response: ClusterPolicyList{},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		poolsAPI := NewClusterPoliciesAPI(ctx, client)
-
-		_, err := getPolicy(poolsAPI, "searching_error")
-		assert.EqualError(t, err, "searching_error")
-
-		_, err = getPolicy(poolsAPI, "unknown")
-		assert.EqualError(t, err, "cluster policy 'unknown' wasn't found")
-	})
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceClusterPolicy(),
+		ID:          ".",
+		HCL:         `name = "policy"`,
+	}.ExpectError(t, "Policy named 'policy' does not exist")
 }

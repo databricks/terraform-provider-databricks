@@ -12,26 +12,26 @@ resource "databricks_model_serving" "this" {
   name = "ads-serving-endpoint"
   config {
     served_models {
-      name = "prod_model"
-      model_name = "ads-model"
-      model_version = "2"
-      workload_size = "Small"
+      name                  = "prod_model"
+      model_name            = "ads-model"
+      model_version         = "2"
+      workload_size         = "Small"
       scale_to_zero_enabled = true
     }
     served_models {
-      name = "candidate_model"
-      model_name = "ads-model"
-      model_version = "4"
-      workload_size = "Small"
+      name                  = "candidate_model"
+      model_name            = "ads-model"
+      model_version         = "4"
+      workload_size         = "Small"
       scale_to_zero_enabled = false
     }
     traffic_config {
       routes {
-        served_model_name = "prod_model"
+        served_model_name  = "prod_model"
         traffic_percentage = 90
       }
       routes {
-        served_model_name = "candidate_model"
+        served_model_name  = "candidate_model"
         traffic_percentage = 10
       }
     }
@@ -67,6 +67,17 @@ The following arguments are supported:
 
 * `served_model_name` - (Required) The name of the served model this route configures traffic for. This needs to match the name of a `served_models` block
 * `traffic_percentage` - (Required) The percentage of endpoint traffic to send to this route. It must be an integer between 0 and 100 inclusive.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Equal to the `name` argument and used to identify the serving endpoint.
+* `serving_endpoint_id` - Unique identifier of the serving endpoint primarily used to set permissions and refer to this instance for other operations.
+
+## Access Control
+
+* [databricks_permissions](permissions.md#model-serving-usage) can control which groups or individual users can *Manage*, *Query* or *View* individual serving endpoints.
 
 ## Timeouts
 

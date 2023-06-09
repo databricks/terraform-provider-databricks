@@ -31,6 +31,7 @@ type NotebookTask struct {
 // SparkPythonTask contains the information for python jobs
 type SparkPythonTask struct {
 	PythonFile string   `json:"python_file"`
+	Source     string   `json:"source,omitempty" tf:"suppress_diff"`
 	Parameters []string `json:"parameters,omitempty"`
 }
 
@@ -71,12 +72,17 @@ type SqlAlertTask struct {
 	AlertID string `json:"alert_id"`
 }
 
+type SqlFileTask struct {
+	Path string `json:"path"`
+}
+
 // SqlTask contains information about DBSQL task
 // TODO: add validation & conflictsWith
 type SqlTask struct {
 	Query       *SqlQueryTask     `json:"query,omitempty"`
 	Dashboard   *SqlDashboardTask `json:"dashboard,omitempty"`
 	Alert       *SqlAlertTask     `json:"alert,omitempty"`
+	File        *SqlFileTask      `json:"file,omitempty"`
 	WarehouseID string            `json:"warehouse_id,omitempty"`
 	Parameters  map[string]string `json:"parameters,omitempty"`
 }
@@ -106,6 +112,12 @@ type WebhookNotifications struct {
 	OnStart   []Webhook `json:"on_start,omitempty"`
 	OnSuccess []Webhook `json:"on_success,omitempty"`
 	OnFailure []Webhook `json:"on_failure,omitempty"`
+}
+
+// NotificationSettings control the notification settings for a job
+type NotificationSettings struct {
+	NoAlertForSkippedRuns  bool `json:"no_alert_for_skipped_runs,omitempty"`
+	NoAlertForCanceledRuns bool `json:"no_alert_for_canceled_runs,omitempty"`
 }
 
 func (wn *WebhookNotifications) Sort() {
@@ -153,6 +165,10 @@ type JobTaskSettings struct {
 	Description string           `json:"description,omitempty"`
 	DependsOn   []TaskDependency `json:"depends_on,omitempty"`
 
+	// BEGIN Jobs + RunIf preview
+	RunIf string `json:"run_if,omitempty" tf:"suppress_diff"`
+	// END Jobs + RunIf preview
+
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	JobClusterKey          string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
@@ -179,6 +195,25 @@ type JobCluster struct {
 
 type ContinuousConf struct {
 	PauseStatus string `json:"pause_status,omitempty" tf:"computed"`
+}
+
+type Queue struct {
+}
+
+type JobRunAs struct {
+	UserName             string `json:"user_name,omitempty"`
+	ServicePrincipalName string `json:"service_principal_name,omitempty"`
+}
+
+type FileArrival struct {
+	URL                           string `json:"url"`
+	MinTimeBetweenTriggersSeconds int32  `json:"min_time_between_trigger_seconds,omitempty"`
+	WaitAfterLastChangeSeconds    int32  `json:"wait_after_last_change_seconds,omitempty"`
+}
+
+type Trigger struct {
+	FileArrival *FileArrival `json:"file_arrival"`
+	PauseStatus string       `json:"pause_status,omitempty" tf:"computed"`
 }
 
 // JobSettings contains the information for configuring a job on databricks
@@ -214,10 +249,14 @@ type JobSettings struct {
 
 	Schedule             *CronSchedule         `json:"schedule,omitempty"`
 	Continuous           *ContinuousConf       `json:"continuous,omitempty"`
+	Trigger              *Trigger              `json:"trigger,omitempty"`
 	MaxConcurrentRuns    int32                 `json:"max_concurrent_runs,omitempty"`
 	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings *NotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string     `json:"tags,omitempty"`
+	Queue                *Queue                `json:"queue,omitempty"`
+	RunAs                *JobRunAs             `json:"run_as,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -244,6 +283,7 @@ type JobListResponse struct {
 type Job struct {
 	JobID           int64        `json:"job_id,omitempty"`
 	CreatorUserName string       `json:"creator_user_name,omitempty"`
+	RunAsUserName   string       `json:"run_as_user_name,omitempty" tf:"computed"`
 	Settings        *JobSettings `json:"settings,omitempty"`
 	CreatedTime     int64        `json:"created_time,omitempty"`
 }
@@ -574,8 +614,9 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			Default:  false,
 			Type:     schema.TypeBool,
 		}
-		s["schedule"].ConflictsWith = []string{"continuous"}
-		s["continuous"].ConflictsWith = []string{"schedule"}
+		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
+		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
+		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
 		return s
 	})
 

@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go/service/gitcredentials"
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func ResourceGitCredential() *schema.Resource {
-	s := common.StructToSchema(gitcredentials.CreateCredentials{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(workspace.CreateCredentials{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["force"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -34,7 +34,7 @@ func ResourceGitCredential() *schema.Resource {
 				return err
 			}
 
-			var req gitcredentials.CreateCredentials
+			var req workspace.CreateCredentials
 			common.DataToStructPointer(d, s, &req)
 			resp, err := w.GitCredentials.Create(ctx, req)
 
@@ -49,7 +49,7 @@ func ResourceGitCredential() *schema.Resource {
 				if len(creds) != 1 {
 					return fmt.Errorf("list of credentials is either empty or have more than one entry (%d)", len(creds))
 				}
-				var req gitcredentials.UpdateCredentials
+				var req workspace.UpdateCredentials
 				common.DataToStructPointer(d, s, &req)
 				req.CredentialId = creds[0].CredentialId
 
@@ -71,7 +71,7 @@ func ResourceGitCredential() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			resp, err := w.GitCredentials.Get(ctx, gitcredentials.Get{CredentialId: cred_id})
+			resp, err := w.GitCredentials.Get(ctx, workspace.GetGitCredentialRequest{CredentialId: cred_id})
 			if err != nil {
 				return err
 			}
@@ -80,7 +80,7 @@ func ResourceGitCredential() *schema.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var req gitcredentials.UpdateCredentials
+			var req workspace.UpdateCredentials
 
 			common.DataToStructPointer(d, s, &req)
 			cred_id, err := strconv.ParseInt(d.Id(), 10, 0)

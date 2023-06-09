@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -84,11 +85,6 @@ func (si *ShareInfo) suppressCDFEnabledDiff() {
 	}
 }
 
-func (a SharesAPI) create(si *ShareInfo) error {
-	si.sortSharesByName()
-	return a.client.Post(a.context, "/unity-catalog/shares", si, si)
-}
-
 func (a SharesAPI) get(name string) (si ShareInfo, err error) {
 	err = a.client.Get(a.context, "/unity-catalog/shares/"+name+"?include_shared_data=true", nil, &si)
 	si.sortSharesByName()
@@ -101,10 +97,6 @@ func (a SharesAPI) update(name string, su ShareUpdates) error {
 		return nil
 	}
 	return a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
-}
-
-func (a SharesAPI) delete(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/shares/"+name, nil)
 }
 
 func (si ShareInfo) shareChanges(action string) ShareUpdates {
@@ -128,12 +120,23 @@ func (si ShareInfo) resourceShareMap() map[string]SharedDataObject {
 	return m
 }
 
-func (si ShareInfo) Diff(other ShareInfo) []ShareDataChange {
-	beforeMap := si.resourceShareMap()
-	afterMap := other.resourceShareMap()
+func (sdo SharedDataObject) Equal(other SharedDataObject) bool {
+	if other.SharedAs == "" {
+		other.SharedAs = sdo.SharedAs
+	}
+	//don't compare computed fields
+	other.AddedAt = sdo.AddedAt
+	other.AddedBy = sdo.AddedBy
+	other.Status = sdo.Status
+	return reflect.DeepEqual(sdo, other)
+}
+
+func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
+	beforeMap := beforeSi.resourceShareMap()
+	afterMap := afterSi.resourceShareMap()
 	changes := []ShareDataChange{}
 	// not in after so remove
-	for _, beforeSdo := range si.Objects {
+	for _, beforeSdo := range beforeSi.Objects {
 		_, exists := afterMap[beforeSdo.Name]
 		if exists {
 			continue
@@ -146,10 +149,12 @@ func (si ShareInfo) Diff(other ShareInfo) []ShareDataChange {
 
 	// not in before so add
 	// if in before but diff then update
-	for _, afterSdo := range other.Objects {
+	for _, afterSdo := range afterSi.Objects {
 		beforeSdo, exists := beforeMap[afterSdo.Name]
 		if exists {
-			if !reflect.DeepEqual(beforeSdo, afterSdo) {
+			if !beforeSdo.Equal(afterSdo) {
+				// do not send SharedAs
+				afterSdo.SharedAs = ""
 				changes = append(changes, ShareDataChange{
 					Action:     ShareUpdate,
 					DataObject: afterSdo,
@@ -172,16 +177,24 @@ func ResourceShare() *schema.Resource {
 	return common.Resource{
 		Schema: shareSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var si ShareInfo
-			common.DataToStructPointer(d, shareSchema, &si)
-			if err := NewSharesAPI(ctx, c).create(&si); err != nil {
+			w, err := c.WorkspaceClient()
+			if err != nil {
 				return err
 			}
+
+			var createRequest sharing.CreateShare
+			common.DataToStructPointer(d, shareSchema, &createRequest)
+			if _, err := w.Shares.Create(ctx, createRequest); err != nil {
+				return err
+			}
+
 			//can only create empty share, objects have to be added using update API
+			var si ShareInfo
+			common.DataToStructPointer(d, shareSchema, &si)
 			shareChanges := si.shareChanges(ShareAdd)
 			if err := NewSharesAPI(ctx, c).update(si.Name, shareChanges); err != nil {
 				//delete orphaned share if update fails
-				if d_err := NewSharesAPI(ctx, c).delete(si.Name); d_err != nil {
+				if d_err := w.Shares.DeleteByName(ctx, si.Name); d_err != nil {
 					return d_err
 				}
 				return err
@@ -197,19 +210,23 @@ func ResourceShare() *schema.Resource {
 			return common.StructToData(si, shareSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			si, err := NewSharesAPI(ctx, c).get(d.Id())
+			beforeSi, err := NewSharesAPI(ctx, c).get(d.Id())
 			if err != nil {
 				return err
 			}
-			var shareInfo ShareInfo
-			common.DataToStructPointer(d, shareSchema, &shareInfo)
-			changes := si.Diff(shareInfo)
+			var afterSi ShareInfo
+			common.DataToStructPointer(d, shareSchema, &afterSi)
+			changes := beforeSi.Diff(afterSi)
 			return NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
 				Updates: changes,
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewSharesAPI(ctx, c).delete(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.Shares.DeleteByName(ctx, d.Id())
 		},
 	}.ToResource()
 }

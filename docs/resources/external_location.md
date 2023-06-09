@@ -55,7 +55,7 @@ resource "databricks_storage_credential" "external" {
 
 resource "databricks_external_location" "some" {
   name = "external"
-  url = format("abfss://%s@%s.dfs.core.windows.net/",
+  url = format("abfss://%s@%s.dfs.core.windows.net",
     azurerm_storage_container.ext_storage.name,
   azurerm_storage_account.ext_storage.name)
   credential_name = databricks_storage_credential.external.id
@@ -101,6 +101,7 @@ The following arguments are required:
 - `owner` - (Optional) Username/groupname/sp application_id of the external Location owner.
 - `comment` - (Optional) User-supplied free-form text.
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the external location
+- `force_destroy` - (Optional) Destroy external location regardless of its dependents.
 
 ## Import
 

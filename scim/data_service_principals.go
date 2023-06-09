@@ -19,7 +19,12 @@ func DataSourceServicePrincipals() *schema.Resource {
 		response := e.(*spnsData)
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
 
-		spList, err := spnAPI.Filter(fmt.Sprintf("displayName co '%s'", response.DisplayNameContains))
+		var filter string
+
+		if response.DisplayNameContains != "" {
+			filter = fmt.Sprintf("displayName co '%s'", response.DisplayNameContains)
+		}
+		spList, err := spnAPI.Filter(filter, true)
 		if err != nil {
 			return err
 		}

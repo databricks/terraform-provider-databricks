@@ -166,7 +166,7 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/statements?statement_id=statement1&warehouse_id=",
+				Resource: "/api/2.0/sql/statements/statement1?statement_id=statement1&warehouse_id=",
 				Response: sql.Statement{
 					StatementID: "statement1",
 					Status: &sql.Status{
@@ -249,7 +249,7 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouseLongRunning(t *testing.
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/statements?statement_id=statement1&warehouse_id=",
+				Resource: "/api/2.0/sql/statements/statement1?statement_id=statement1&warehouse_id=",
 				Response: sql.Statement{
 					StatementID: "statement1",
 					Status: &sql.Status{
@@ -259,7 +259,7 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouseLongRunning(t *testing.
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/statements?statement_id=statement1&warehouse_id=",
+				Resource: "/api/2.0/sql/statements/statement1?statement_id=statement1&warehouse_id=",
 				Response: sql.Statement{
 					StatementID: "statement1",
 					Status: &sql.Status{

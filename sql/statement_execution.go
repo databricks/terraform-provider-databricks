@@ -92,7 +92,7 @@ func (a StatementAPI) executeStatement(warehouseID, statementStr string) (*State
 
 func (a StatementAPI) getStatement(statementID string) (*Statement, error) {
 	var statement Statement
-	err := a.client.Get(a.context, "/sql/statements", genericStatementRequest{
+	err := a.client.Get(a.context, fmt.Sprintf("/sql/statements/%s", statementID), genericStatementRequest{
 		StatementID: statementID,
 	}, &statement)
 	return &statement, err

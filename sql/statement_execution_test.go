@@ -38,7 +38,7 @@ func commonFixtureWithStatusResponse(response Statement) []qa.HTTPFixture {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/sql/statements?statement_id=statement1&warehouse_id=",
+			Resource:     "/api/2.0/sql/statements/statement1?statement_id=statement1&warehouse_id=",
 			Response:     response,
 		},
 	}

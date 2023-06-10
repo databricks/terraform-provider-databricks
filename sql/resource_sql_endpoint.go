@@ -106,7 +106,7 @@ func (a SQLEndpointsAPI) List() (lst EndpointList, err error) {
 
 // Start ..
 func (a SQLEndpointsAPI) Start(endpointID string, timeout time.Duration) error {
-	err := a.client.Post(a.context, fmt.Sprintf("/sql/warehouses/%s/start", endpointID), nil, nil)
+	err := a.client.Post(a.context, fmt.Sprintf("/sql/warehouses/%s/start", endpointID), `{}`, nil)
 	if err != nil {
 		return err
 	}

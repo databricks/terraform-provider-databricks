@@ -46,6 +46,9 @@ func TestResourceJobCreate(t *testing.T) {
 					RetryOnTimeout:         true,
 					MaxConcurrentRuns:      1,
 					Queue:                  &Queue{},
+					RunAs: &JobRunAs{
+						UserName: "user@mail.com",
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -55,7 +58,8 @@ func TestResourceJobCreate(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
 				Response: Job{
-					JobID: 789,
+					JobID:         789,
+					RunAsUserName: "user@mail.com",
 					Settings: &JobSettings{
 						ExistingClusterID: "abc",
 						SparkJarTask: &SparkJarTask{
@@ -106,7 +110,10 @@ func TestResourceJobCreate(t *testing.T) {
 		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}
-		queue {}`,
+		queue {}
+		run_as {
+			user_name = "user@mail.com"
+		}`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())

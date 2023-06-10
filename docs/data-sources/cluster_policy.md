@@ -35,4 +35,8 @@ Data source exposes the following attributes:
 
 - `id` - The id of the cluster policy.
 - `definition` - Policy definition: JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition).
-- `max_clusters_per_user` - Max number of clusters per user that can be active using this policy
+- `description` - Additional human-readable description of the cluster policy.
+- `policy_family_id` - ID of the policy family.
+- `policy_family_definition_overrides` - Policy definition JSON document expressed in Databricks [Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definitions).
+- `is_default` - If true, policy is a default policy created and managed by Databricks.
+- `max_clusters_per_user` - Max number of clusters per user that can be active using this policy.

@@ -17,9 +17,14 @@ func TestDataSourceClusterPolicy(t *testing.T) {
 				Response: compute.ListPoliciesResponse{
 					Policies: []compute.Policy{
 						{
-							PolicyId:   "abc",
-							Name:       "policy",
-							Definition: `{"abc":"123"}`,
+							PolicyId:                        "abc",
+							Name:                            "policy",
+							Definition:                      `{"abc":"123"}`,
+							Description:                     "A description",
+							PolicyFamilyId:                  "def",
+							PolicyFamilyDefinitionOverrides: `{"def":"456"}`,
+							IsDefault:                       true,
+							MaxClustersPerUser:              42,
 						},
 					},
 				},
@@ -31,8 +36,13 @@ func TestDataSourceClusterPolicy(t *testing.T) {
 		ID:          ".",
 		HCL:         `name = "policy"`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id":         "abc",
-		"definition": `{"abc":"123"}`,
+		"id":                                 "abc",
+		"definition":                         `{"abc":"123"}`,
+		"description":                        "A description",
+		"policy_family_id":                   "def",
+		"policy_family_definition_overrides": `{"def":"456"}`,
+		"is_default":                         true,
+		"max_clusters_per_user":              42,
 	})
 }
 

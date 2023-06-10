@@ -98,7 +98,7 @@ The following arguments are available:
 * `force` - (Optional) Ignore `cannot create service principal: Service principal with application ID X already exists` errors and implicitly import the specified service principal into Terraform state, enforcing entitlements defined in the instance of resource. _This functionality is experimental_ and is designed to simplify corner cases, like Azure Active Directory synchronisation.
 * `force_delete_repos` - (Optional) This flag determines whether the service principal's repo directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.
 * `force_delete_home_dir` - (Optional) This flag determines whether the service principal's home directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.
-* `disable_as_user_deletion` - (Optional) When deleting a service principal, set the service principal's active flag to false instead of actually deleting the service principal. Only takes effect when in the accounts SCIM API. True by default.
+* `disable_as_user_deletion` - (Optional) When deleting a user, set the user's active flag to false instead of actually deleting the user. This flag is exclusive to force_delete_repos and force_delete_home_dir flags. True by default for accounts SCIM API, false otherwise.
 
 ## Attribute Reference
 

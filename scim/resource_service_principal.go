@@ -114,16 +114,15 @@ func ResourceServicePrincipal() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			}
-			m["disable_as_user_deletion"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			}
 			m["force_delete_repos"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
 			m["force_delete_home_dir"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["disable_as_user_deletion"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
@@ -182,27 +181,43 @@ func ResourceServicePrincipal() *schema.Resource {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			appId := d.Get("application_id").(string)
 			var err error = nil
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
-				if d.Get("disable_as_user_deletion").(bool) {
-					r := PatchRequest("replace", "active", "false")
-					err = spAPI.Patch(d.Id(), r)
-				} else {
-					err = spAPI.Delete(d.Id())
-				}
+			isAccount := c.Config.IsAccountClient() && c.Config.AccountID != ""
+			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
+			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
+			// Determine if disable or delete
+			var isDisable bool
+			if isDisableP, exists := d.GetOkExists("disable_as_user_deletion"); exists {
+				isDisable = isDisableP.(bool)
+			} else {
+				// Default is true for Account SCIM, false otherwise
+				isDisable = isAccount
+			}
+			// Validate input
+			if !isAccount && isDisable && isForceDeleteRepos {
+				return fmt.Errorf("force_delete_repos: cannot force delete if disable_as_user_deletion is set")
+			}
+			if !isAccount && isDisable && isForceDeleteHomeDir {
+				return fmt.Errorf("force_delete_home_dir: cannot force delete if disable_as_user_deletion is set")
+			}
+			// Disable or delete
+			if isDisable {
+				r := PatchRequest("replace", "active", "false")
+				err = spAPI.Patch(d.Id(), r)
 			} else {
 				err = spAPI.Delete(d.Id())
-				if err == nil {
-					if d.Get("force_delete_repos").(bool) {
-						err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
-						if err != nil {
-							return fmt.Errorf("force_delete_repos: %w", err)
-						}
+			}
+			// Handle force delete flags
+			if !isAccount && !isDisable && err == nil {
+				if isForceDeleteRepos {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_repos: %w", err)
 					}
-					if d.Get("force_delete_home_dir").(bool) {
-						err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
-						if err != nil {
-							return fmt.Errorf("force_delete_home_dir: %w", err)
-						}
+				}
+				if isForceDeleteHomeDir {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_home_dir: %w", err)
 					}
 				}
 			}

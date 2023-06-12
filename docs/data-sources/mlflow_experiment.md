@@ -5,7 +5,7 @@ subcategory: "MLflow"
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
 
-Retrieves the settings of [databricks_mlflow_experiment](../resources/mlflow_experiment.md) by name.
+Retrieves the settings of [databricks_mlflow_experiment](../resources/mlflow_experiment.md) by id or name.
 
 ## Example Usage
 

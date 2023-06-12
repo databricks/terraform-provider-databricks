@@ -91,6 +91,7 @@ The following arguments are required:
 `databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
 
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
+- `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
 
 ## Import
 

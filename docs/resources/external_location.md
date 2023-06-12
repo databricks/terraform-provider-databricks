@@ -101,6 +101,7 @@ The following arguments are required:
 - `owner` - (Optional) Username/groupname/sp application_id of the external Location owner.
 - `comment` - (Optional) User-supplied free-form text.
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the external location
+- `read_only` - (Optional) Indicates whether the external location is read-only.
 - `force_destroy` - (Optional) Destroy external location regardless of its dependents.
 
 ## Import

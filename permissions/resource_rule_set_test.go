@@ -14,19 +14,24 @@ import (
 )
 
 var (
-	TEST_ACCOUNT_ID                 = "cb376b18-60fa-4058-b2cd-dd85acf63165"
-	TEST_SERVICE_PRINCIPAL_ID       = "1686b74b-a611-4360-8feb-3ef226ad1145"
-	SERVICE_PRINCIPAL_RULE_SET_NAME = fmt.Sprintf("accounts/%s/servicePrincipals/%s/ruleSets/default", TEST_ACCOUNT_ID, TEST_SERVICE_PRINCIPAL_ID)
+	testAccountId                   = "cb376b18-60fa-4058-b2cd-dd85acf63165"
+	testServicePrincipalId          = "1686b74b-a611-4360-8feb-3ef226ad1145"
+	testServicePrincipalRuleSetName = fmt.Sprintf("accounts/%s/servicePrincipals/%s/ruleSets/default", testAccountId, testServicePrincipalId)
+	ruleSetApiPath                  = "/api/2.0/preview/accounts/access-control/rule-sets"
 )
+
+func getResourceName(name string, etag string) string {
+	return fmt.Sprintf("%s?etag=%s&name=%s", ruleSetApiPath, url.QueryEscape(etag), url.QueryEscape(name))
+}
 
 func TestResourceRuleSetCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -38,11 +43,11 @@ func TestResourceRuleSetCreate(t *testing.T) {
 			},
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
+				Resource: ruleSetApiPath,
 				ExpectedRequest: iam.UpdateRuleSetRequest{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					RuleSet: iam.RuleSetUpdateRequest{
-						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+						Name: testServicePrincipalRuleSetName,
 						Etag: "etagEx=",
 						GrantRules: []iam.GrantRule{
 							{
@@ -57,7 +62,7 @@ func TestResourceRuleSetCreate(t *testing.T) {
 					},
 				},
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx2=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -73,9 +78,9 @@ func TestResourceRuleSetCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=%s&name=%s", url.QueryEscape("etagEx2="), url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx2="),
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx2=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -115,9 +120,9 @@ func TestResourceRuleSetRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -135,11 +140,11 @@ func TestResourceRuleSetRead(t *testing.T) {
 		Resource: ResourceRuleSet(),
 		New:      true,
 		Read:     true,
-		ID:       SERVICE_PRINCIPAL_RULE_SET_NAME,
+		ID:       testServicePrincipalRuleSetName,
 	}.Apply(t)
 	require.NoError(t, err, err)
-	assert.Equal(t, SERVICE_PRINCIPAL_RULE_SET_NAME, d.Id(), "Id should not be empty")
-	assert.Equal(t, SERVICE_PRINCIPAL_RULE_SET_NAME, d.Get("name"))
+	assert.Equal(t, testServicePrincipalRuleSetName, d.Id(), "Id should not be empty")
+	assert.Equal(t, testServicePrincipalRuleSetName, d.Get("name"))
 	assert.Equal(t, "etagEx=", d.Get("etag"))
 }
 
@@ -148,11 +153,11 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
+				Resource: ruleSetApiPath,
 				ExpectedRequest: iam.UpdateRuleSetRequest{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					RuleSet: iam.RuleSetUpdateRequest{
-						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+						Name: testServicePrincipalRuleSetName,
 						Etag: "etagEx=",
 						GrantRules: []iam.GrantRule{
 							{
@@ -163,7 +168,7 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 					},
 				},
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx2=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -175,9 +180,9 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=%s&name=%s", url.QueryEscape("etagEx2="), url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx2="),
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx2=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -190,9 +195,9 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 		},
 		Resource: ResourceRuleSet(),
 		Update:   true,
-		ID:       SERVICE_PRINCIPAL_RULE_SET_NAME,
+		ID:       testServicePrincipalRuleSetName,
 		InstanceState: map[string]string{
-			"name": SERVICE_PRINCIPAL_RULE_SET_NAME,
+			"name": testServicePrincipalRuleSetName,
 			"etag": "etagEx=",
 		},
 		HCL: `
@@ -212,11 +217,11 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
+				Resource: ruleSetApiPath,
 				ExpectedRequest: iam.UpdateRuleSetRequest{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					RuleSet: iam.RuleSetUpdateRequest{
-						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+						Name: testServicePrincipalRuleSetName,
 						Etag: "etagEx=",
 						GrantRules: []iam.GrantRule{
 							{
@@ -234,9 +239,9 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: ruleSetApiPath,
 					Etag: "etagEx2=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -248,11 +253,11 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 			},
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
+				Resource: ruleSetApiPath,
 				ExpectedRequest: iam.UpdateRuleSetRequest{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					RuleSet: iam.RuleSetUpdateRequest{
-						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+						Name: testServicePrincipalRuleSetName,
 						Etag: "etagEx2=",
 						GrantRules: []iam.GrantRule{
 							{
@@ -263,7 +268,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 					},
 				},
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx3=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -275,9 +280,9 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=%s&name=%s", url.QueryEscape("etagEx3="), url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx3="),
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx3=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -290,9 +295,9 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 		},
 		Resource: ResourceRuleSet(),
 		Update:   true,
-		ID:       SERVICE_PRINCIPAL_RULE_SET_NAME,
+		ID:       testServicePrincipalRuleSetName,
 		InstanceState: map[string]string{
-			"name": SERVICE_PRINCIPAL_RULE_SET_NAME,
+			"name": testServicePrincipalRuleSetName,
 			"etag": "etagEx=",
 		},
 		HCL: `
@@ -312,9 +317,9 @@ func TestResourceRuleSetDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/access-control/rule-sets?etag=&name=%s", url.QueryEscape(SERVICE_PRINCIPAL_RULE_SET_NAME)),
+				Resource: getResourceName(testServicePrincipalRuleSetName, "etagEx="),
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx=",
 					GrantRules: []iam.GrantRule{
 						{
@@ -326,22 +331,26 @@ func TestResourceRuleSetDelete(t *testing.T) {
 			},
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/preview/accounts/access-control/rule-sets",
+				Resource: ruleSetApiPath,
 				ExpectedRequest: iam.UpdateRuleSetRequest{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					RuleSet: iam.RuleSetUpdateRequest{
-						Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+						Name: testServicePrincipalRuleSetName,
 						Etag: "etagEx=",
 					},
 				},
 				Response: iam.RuleSetResponse{
-					Name: SERVICE_PRINCIPAL_RULE_SET_NAME,
+					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx2=",
 				},
 			},
 		},
 		Resource: ResourceRuleSet(),
 		Delete:   true,
-		ID:       SERVICE_PRINCIPAL_RULE_SET_NAME,
+		ID:       testServicePrincipalRuleSetName,
+		InstanceState: map[string]string{
+			"name": testServicePrincipalRuleSetName,
+			"etag": "etagEx=",
+		},
 	}.ApplyNoError(t)
 }

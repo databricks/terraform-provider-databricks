@@ -10,7 +10,7 @@ To configure rule sets through the Databricks account, the provider must be conf
 
 ## Example usage
 
-Rule set management through Databricks workspace:
+Rule set management through AWS Databricks workspace:
 
 ```hcl
 locals {
@@ -84,6 +84,7 @@ resource "databricks_group" "ds" {
 }
 
 resource "databricks_service_principal" "automation_sp" {
+  application_id = "00000000-0000-0000-0000-000000000000"
   display_name = "SP_FOR_AUTOMATION"
 }
 

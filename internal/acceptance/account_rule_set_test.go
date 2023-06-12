@@ -8,10 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/permissions"
 )
 
-func TestAccountRuleSetsFullLifeCycle(t *testing.T) {
+func TestAccAccountRuleSetsFullLifeCycle(t *testing.T) {
 	accountLevel(t, step{
 		Template: `
 		resource "databricks_service_principal" "this" {
@@ -31,11 +30,14 @@ func TestAccountRuleSetsFullLifeCycle(t *testing.T) {
 		}`,
 		Check: resourceCheck("databricks_rule_set.sp_rule_set",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				getRuleSetReq := iam.GetRuleSetRequest{
+				a, err := client.AccountClient()
+				if err != nil {
+					return err
+				}
+				ruleSetRes, err := a.AccessControl.GetRuleSet(ctx, iam.GetRuleSetRequest{
 					Name: id,
 					Etag: "",
-				}
-				ruleSetRes, err := permissions.NewRuleSetApi(ctx, client).Read(getRuleSetReq)
+				})
 				if err != nil {
 					return err
 				}

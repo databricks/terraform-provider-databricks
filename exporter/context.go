@@ -221,15 +221,20 @@ func (ic *importContext) Run() error {
 			`terraform {
 				required_providers {
 			  		databricks = {
-						source = "databricks/databricks"
+						source  = "databricks/databricks"
 						version = "` + common.Version() + `"
 				  	}
 				}
 		  	}
 
 		  	provider "databricks" {
-		  	}
 		  	`)
+		if ic.accountLevel {
+			dcfile.WriteString(fmt.Sprintf(`	host       = "%s"
+				account_id = "%s"
+			`, ic.Client.Config.Host, ic.Client.Config.AccountID))
+		}
+		dcfile.WriteString(`}`)
 		dcfile.Close()
 	}
 	ic.generateHclForResources(sh)

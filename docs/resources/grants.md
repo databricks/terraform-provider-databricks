@@ -22,9 +22,10 @@ The securable objects are:
 
 - `METASTORE`: The top-level container for metadata. Each metastore exposes a three-level namespace (`catalog`.`schema`.`table`) that organizes your data.
 - `CATALOG`: The first layer of the object hierarchy, used to organize your data assets.
-- `SCHEMA`: Also known as databases, schemas are the second layer of the object hierarchy and contain tables and views.
+- `SCHEMA`: Also known as databases, schemas are the second layer of the object hierarchy and contain tables, volumes and views.
 - `TABLE`: The lowest level in the object hierarchy, tables can be  _external_ (stored in external locations in your cloud storage of choice) or _managed_ tables (stored in a storage container in your cloud storage that you create expressly for UC).
 - `VIEW`: A read-only object created from one or more tables that is contained within a schema.
+- `VOLUME`: An object contained within a schema that allows accessing, storing, governing, and organizing files. Volumes unlock new processing capabilities for data governed by the Unity Catalog, including support for most machine learning and data science workloads.
 - `EXTERNAL LOCATION`: An object that contains a reference to a storage credential and a cloud storage path that is contained within a metatore.
 - `STORAGE CREDENTIAL`: An object that encapsulates a long-term cloud credential that provides access to cloud storage that is contained within a metatore.
 - `SHARE`: A logical grouping for the tables you intend to share using Delta Sharing. A share is contained within a Unity Catalog metastore.
@@ -37,7 +38,7 @@ Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/s
 
 ## Metastore grants
 
-You can grant `CREATE_CATALOG`, `CREATE_EXTERNAL_LOCATION`, `CREATE_SHARE`, `CREATE_RECIPIENT` and `CREATE_PROVIDER`, `USE_PROVIDER`, `USE_SHARE`,`USE_RECIPIENT`, `SET_SHARE_PERMISSION` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
+You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `SET_SHARE_PERMISSION`, `USE_CONNECTION`, `USE_PROVIDER`, `USE_RECIPIENT` and `USE_SHARE` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
 
 ```hcl
 resource "databricks_grants" "sandbox" {
@@ -55,7 +56,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Catalog grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_SCHEMA`, `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `EXECUTE`, `MODIFY`, `SELECT` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
+You can grant `ALL_PRIVILEGES`, `CREATE_SCHEMA`, `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME`, `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -86,7 +87,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Schema grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_FUNCTION`, `CREATE_TABLE`, and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY` and `SELECT` at the schema level to apply them to the pertinent current and future securable objects within the schema:
+You can grant `ALL_PRIVILEGES`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME` and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` at the schema level to apply them to the pertinent current and future securable objects within the schema:
 
 ```hcl
 resource "databricks_schema" "things" {
@@ -179,6 +180,29 @@ resource "databricks_grants" "customers" {
 }
 ```
 
+## Volum grants
+
+You can grant `ALL_PRIVILEGES`, `READ_VOLUME` and `WRITE_VOLUME` privileges to [_`catalog.schema.volume`_](volumes.md) specified in the `volume` attribute.
+
+```hcl
+resource "databricks_volume" "this" {
+  name             = "quickstart_volume"
+  catalog_name     = databricks_catalog.sandbox.name
+  schema_name      = databricks_schema.things.name
+  volume_type      = "EXTERNAL"
+  storage_location = databricks_external_location.some.url
+  comment          = "this volume is managed by terraform"
+}
+
+resource "databricks_grants" "volume" {
+  volume = databricks_volume.this.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["WRITE_VOLUME"]
+  }
+}
+```
+
 ## Storage credential grants
 
 You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
@@ -203,7 +227,7 @@ resource "databricks_grants" "external_creds" {
 
 ## Storage location grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `CREATE_MANAGED_STORAGE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `CREATE_MANAGED_STORAGE`, `CREATE EXTERNAL VOLUME`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
 
 ```hcl
 resource "databricks_external_location" "some" {

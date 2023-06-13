@@ -43,12 +43,12 @@ resource "databricks_external_location" "some" {
 }
 
 resource "databricks_volume" "this" {
-  name = "quickstart_volume"
-  catalog_name = databricks_catalog.sandbox.name
-  schema_name = databricks_schema.things.name
-  volume_type = "EXTERNAL"
-  storage_location   = databricks_external_location.some.url 
-  comment = "this volume is managed by terraform"
+  name             = "quickstart_volume"
+  catalog_name     = databricks_catalog.sandbox.name
+  schema_name      = databricks_schema.things.name
+  volume_type      = "EXTERNAL"
+  storage_location = databricks_external_location.some.url
+  comment          = "this volume is managed by terraform"
 }
 ```
 

@@ -1,5 +1,18 @@
 # Version changelog
 
+## 1.19.0
+
+ * Added `run_as` and `run_as_user_name` fields to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2388](https://github.com/databricks/terraform-provider-databricks/pull/2388)).
+ * Added more attributes to [databricks_cluster_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/cluster_policy) data source ([#2351](https://github.com/databricks/terraform-provider-databricks/pull/2351)).
+ * Added `force_destroy` to [databricks_external_location](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/external_location) resource ([#2353](https://github.com/databricks/terraform-provider-databricks/pull/2353)).
+ * Added less permissive principal for self assuming UC role ([#2386](https://github.com/databricks/terraform-provider-databricks/pull/2386)).
+ * Document `workload_type` block in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource ([#2370](https://github.com/databricks/terraform-provider-databricks/pull/2370)).
+ * Expose `read_only` option in [databricks_external_location](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/external_location) and [databricks_storage_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/storage_credential) ([#2391](https://github.com/databricks/terraform-provider-databricks/pull/2391)).
+ * Migrate [databricks_catalog](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/catalog) to Go SDK ([#2357](https://github.com/databricks/terraform-provider-databricks/pull/2357)).
+ * Update `FullName` in [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resource only if no error is returned. ([#2374](https://github.com/databricks/terraform-provider-databricks/pull/2374)).
+ * Updated test to use databricks-sdk library as Faker library isn't being installed correctly ([#2397](https://github.com/databricks/terraform-provider-databricks/pull/2397)).
+ * Explicit conversion of strings to int64. ([#2346](https://github.com/databricks/terraform-provider-databricks/pull/2346)).
+
 ## 1.18.0
 
  * Added [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resource in Unity Catalog ([#2324](https://github.com/databricks/terraform-provider-databricks/pull/2324)).

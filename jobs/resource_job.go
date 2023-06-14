@@ -16,8 +16,8 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/clusters"
-	"github.com/databricks/terraform-provider-databricks/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/compute"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/repos"
 )
@@ -173,7 +173,7 @@ type JobTaskSettings struct {
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	JobClusterKey          string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	ComputeKey          string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	ComputeKey             string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	NotebookTask           *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -196,8 +196,8 @@ type JobCluster struct {
 }
 
 type JobCompute struct {
-	ComputeKey string                          `json:"compute_key,omitempty" tf:"group:cluster_type"`
-	ComputeSpec    *compute.ComputeSpec        `json:"spec,omitempty" tf:"group:cluster_type"`
+	ComputeKey  string               `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	ComputeSpec *compute.ComputeSpec `json:"spec,omitempty" tf:"group:cluster_type"`
 }
 
 type ContinuousConf struct {

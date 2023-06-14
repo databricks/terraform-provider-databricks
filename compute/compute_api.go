@@ -1,6 +1,5 @@
 package compute
 
-
 type ComputeSpec struct {
-    Kind string                                `json:"kind"`
+	Kind string `json:"kind"`
 }

@@ -84,6 +84,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 					EnableServerlessCompute:    false,
 					SecurityPolicy:             "PASSTHROUGH",
 					InstanceProfileARN:         "arn:...",
+					GoogleServiceAccount:       "poc@databricks-test-poc.iam.gserviceaccount.com",
 				},
 			},
 			{
@@ -96,6 +97,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 						{Key: "spark.sql.session.timeZone", Value: "UTC"},
 					},
 					InstanceProfileARN: "arn:...",
+					GoogleServiceAccount: "poc@databricks-test-poc.iam.gserviceaccount.com",
 					SqlConfigurationParameters: &repeatedEndpointConfPairs{
 						ConfigPairs: []confPair{
 							{Key: "ANSI_MODE", Value: "true"},
@@ -109,6 +111,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 		State: map[string]any{
 			"security_policy":      "PASSTHROUGH",
 			"instance_profile_arn": "arn:...",
+			"google_service_account": "poc@databricks-test-poc.iam.gserviceaccount.com",
 			"data_access_config": map[string]any{
 				"spark.sql.session.timeZone": "UTC",
 			},
@@ -130,6 +133,7 @@ func TestResourceSQLGlobalConfigCreateError(t *testing.T) {
 		State: map[string]any{
 			"security_policy":      "PASSTHROUGH",
 			"instance_profile_arn": "arn:...",
+			"google_service_account": "poc@databricks-test-poc.iam.gserviceaccount.com",
 			"data_access_config": map[string]any{
 				"spark.sql.session.timeZone": "UTC",
 			},

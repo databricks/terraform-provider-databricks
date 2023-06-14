@@ -28,7 +28,7 @@ func ResourceEntitlements() *schema.Resource {
 	addEntitlementsToSchema(&entitlementSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return patchEntitlements(ctx, d, c, "add")
+			return patchEntitlements(ctx, d, c, "replace")
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			split := strings.SplitN(d.Id(), "/", 2)

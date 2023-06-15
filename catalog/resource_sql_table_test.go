@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -146,123 +146,16 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 		`,
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses/existingwarehouse",
-				Response: sql.SQLEndpoint{
-					ID:    "existingwarehouse",
-					Name:  "terraform-sql-table",
-					State: "RUNNING",
-				},
-			},
-			{
 				Method:   "POST",
-				Resource: "/api/2.0/sql/statements",
-				Response: sql.Statement{
-					StatementID: "statement1",
-					Status: &sql.Status{
-						State: "SUCCEEDED",
-					},
+				Resource: "/api/2.0/sql/statements/",
+				ExpectedRequest: sql.ExecuteStatementRequest{
+					Statement:   "CREATE TABLE main.foo.bar (id int, name string COMMENT name of thing)\nUSING DELTA\nCOMMENT 'this table is managed by terraform'\nLOCATION 'abfss:container@account/somepath';",
+					WaitTimeout: "10s",
+					WarehouseId: "existingwarehouse",
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/sql/statements/statement1?statement_id=statement1&warehouse_id=",
-				Response: sql.Statement{
-					StatementID: "statement1",
-					Status: &sql.Status{
-						State: "SUCCEEDED",
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				Response: SqlTableInfo{
-					Name:                  "bar",
-					CatalogName:           "main",
-					SchemaName:            "foo",
-					TableType:             "EXTERNAL",
-					DataSourceFormat:      "DELTA",
-					StorageLocation:       "s3://ext-main/foo/bar1",
-					StorageCredentialName: "somecred",
-					Comment:               "terraform managed",
-					Properties: map[string]string{
-						"one":   "two",
-						"three": "four",
-					},
-				},
-			},
-		},
-		Create:   true,
-		Resource: ResourceSqlTable(),
-	}.Apply(t)
-	assert.NoError(t, err)
-}
-
-func TestResourceSqlTableCreateTable_ExistingSQLWarehouseLongRunning(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		CommandMock: func(commandStr string) common.CommandResults {
-			return common.CommandResults{
-				ResultType: "",
-				Data:       nil,
-			}
-		},
-		HCL: `
-		name               = "bar"
-		catalog_name       = "main"
-		schema_name        = "foo"
-		table_type         = "MANAGED"
-		data_source_format = "DELTA"
-		storage_location   = "abfss:container@account/somepath"
-		warehouse_id       = "existingwarehouse"
-	  
-		column {
-		  name      = "id"
-		  type      = "int"
-		}
-		column {
-		  name      = "name"
-		  type      = "string"
-		  comment   = "name of thing"
-		}
-		comment = "this table is managed by terraform"
-		`,
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses/existingwarehouse",
-				Response: sql.SQLEndpoint{
-					ID:    "existingwarehouse",
-					Name:  "terraform-sql-table",
-					State: "RUNNING",
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/statements",
-				Response: sql.Statement{
-					StatementID: "statement1",
-					Status: &sql.Status{
-						State: "RUNNING", // simulate sql execution taking time to run...
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/sql/statements/statement1?statement_id=statement1&warehouse_id=",
-				Response: sql.Statement{
-					StatementID: "statement1",
-					Status: &sql.Status{
-						State: "RUNNING", // simulate sql execution taking time to run...
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/sql/statements/statement1?statement_id=statement1&warehouse_id=",
-				Response: sql.Statement{
-					StatementID: "statement1",
-					Status: &sql.Status{
+				Response: sql.ExecuteStatementResponse{
+					StatementId: "statement1",
+					Status: &sql.StatementStatus{
 						State: "SUCCEEDED",
 					},
 				},

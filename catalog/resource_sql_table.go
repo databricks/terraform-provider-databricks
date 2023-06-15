@@ -6,12 +6,13 @@ import (
 	"log"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/sql"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -39,7 +40,7 @@ type SqlTableInfo struct {
 	WarehouseID           string            `json:"warehouse_id,omitempty" tf:"computed"`
 
 	exec    common.CommandExecutor
-	sqlExec sql.StatementAPI
+	sqlExec *sql.StatementExecutionAPI
 }
 
 type SqlTablesAPI struct {
@@ -117,7 +118,11 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 	ti.exec = c.CommandExecutor(ctx)
-	ti.sqlExec = sql.NewStatementAPI(ctx, c)
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	ti.sqlExec = w.StatementExecution
 	return nil
 }
 
@@ -304,7 +309,20 @@ func (ti *SqlTableInfo) deleteTable() error {
 func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	log.Printf("[INFO] Executing Sql: %s", sqlQuery)
 	if ti.WarehouseID != "" {
-		return ti.sqlExec.Execute(ti.WarehouseID, sqlQuery)
+		execCtx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+		sqlRes, err := ti.sqlExec.ExecuteStatement(execCtx, sql.ExecuteStatementRequest{
+			Statement:   sqlQuery,
+			WaitTimeout: "10s",
+			WarehouseId: ti.WarehouseID,
+		})
+		if err != nil {
+			return err
+		}
+		if sqlRes.Status.State != "SUCCEEDED" {
+			return fmt.Errorf("statement failed to execute: %s", sqlRes.Status.State)
+		}
+		return nil
 	}
 
 	r := ti.exec.Execute(ti.ClusterID, "sql", sqlQuery)

@@ -31,6 +31,7 @@ type VolumeInfo struct {
 func ResourceVolume() *schema.Resource {
 	s := common.StructToSchema(VolumeInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["storage_location"].DiffSuppressFunc = ucDirectoryPathSuppressDiff
 			return m
 		})
 	return common.Resource{

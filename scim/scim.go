@@ -55,10 +55,14 @@ var possibleEntitlements = []string{
 
 type entitlements []ComplexValue
 
-func (e entitlements) readIntoData(d *schema.ResourceData) error {
+func (e entitlements) generateEmpty(d *schema.ResourceData) error {
 	for _, entitlement := range possibleEntitlements {
 		d.Set(entitlementMapping[entitlement], false)
 	}
+	return nil
+}
+
+func (e entitlements) readIntoData(d *schema.ResourceData) error {
 	for _, ent := range e {
 		field_name := entitlementMapping[ent.Value]
 		if err := d.Set(field_name, true); err != nil {

@@ -41,18 +41,21 @@ func ResourceEntitlements() *schema.Resource {
 				if err != nil {
 					return err
 				}
+				group.Entitlements.generateEmpty(d)
 				return group.Entitlements.readIntoData(d)
 			case "user":
 				user, err := NewUsersAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
+				user.Entitlements.generateEmpty(d)
 				return user.Entitlements.readIntoData(d)
 			case "spn":
 				spn, err := NewServicePrincipalsAPI(ctx, c).Read(split[1])
 				if err != nil {
 					return err
 				}
+				spn.Entitlements.generateEmpty(d)
 				return spn.Entitlements.readIntoData(d)
 			}
 			return nil

@@ -341,6 +341,8 @@ func ResourceSqlTable() *schema.Resource {
 				}
 				return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
 			}
+			s["cluster_id"].ConflictsWith = []string{"warehouse_id"}
+			s["warehouse_id"].ConflictsWith = []string{"cluster_id"}
 			return s
 		})
 	return common.Resource{

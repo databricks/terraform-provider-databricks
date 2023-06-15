@@ -25,6 +25,7 @@ type ExternalLocationInfo struct {
 	SkipValidation bool   `json:"skip_validation,omitempty"`
 	Owner          string `json:"owner,omitempty" tf:"computed"`
 	MetastoreID    string `json:"metastore_id,omitempty" tf:"computed"`
+	ReadOnly       bool   `json:"read_only,omitempty"`
 }
 
 func (a ExternalLocationsAPI) create(el *ExternalLocationInfo) error {

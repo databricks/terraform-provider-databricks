@@ -434,7 +434,7 @@ func TestStructToDataNoSkipEmpty(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, schema.TypeString, sp.Type)
 
-	dummy := Dummy{
+	dummyOrig := Dummy{
 		Enabled:     false,
 		Workers:     1004,
 		Description: "something",
@@ -466,10 +466,10 @@ func TestStructToDataNoSkipEmpty(t *testing.T) {
 
 	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	d.MarkNewResource()
-	err = StructToData(dummy, s, d)
+	err = StructToData(dummyOrig, s, d)
 	assert.NoError(t, err)
 
-	dummy1 := Dummy{
+	dummyUpdate := Dummy{
 		Enabled:     false,
 		Workers:     1004,
 		Description: "something",
@@ -483,10 +483,13 @@ func TestStructToDataNoSkipEmpty(t *testing.T) {
 		},
 	}
 
-	err = StructToDataNoSkipEmpty(dummy1, s, d, []string{"addresses"})
+	err = StructToDataNoSkipEmpty(dummyUpdate, s, d, []string{"addresses"})
 	assert.NoError(t, err)
 
+	// This was overwritten with empty list from dummtUpdate
 	assert.Equal(t, 0, d.Get("addresses.#"))
+	// This is not overwritten, so it retains the list from dummyOrig
+	assert.Equal(t, 1, d.Get("unique.#"))
 }
 
 func TestDiffSuppressor(t *testing.T) {

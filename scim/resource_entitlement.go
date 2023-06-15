@@ -74,6 +74,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	groupId := d.Get("group_id").(string)
 	userId := d.Get("user_id").(string)
 	spnId := d.Get("service_principal_id").(string)
+	noEntitlementMessage := "invalidPath No such attribute with the name : entitlements in the current resource"
 	request := PatchRequestComplexValue([]patchOperation{
 		{
 			op,
@@ -84,7 +85,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	if groupId != "" {
 		groupsAPI := NewGroupsAPI(ctx, c)
 		err := groupsAPI.UpdateEntitlements(groupId, request)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
 		d.SetId("group/" + groupId)
@@ -92,7 +93,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	if userId != "" {
 		usersAPI := NewUsersAPI(ctx, c)
 		err := usersAPI.UpdateEntitlements(userId, request)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
 		d.SetId("user/" + userId)
@@ -100,7 +101,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	if spnId != "" {
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
 		err := spnAPI.UpdateEntitlements(spnId, request)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
 		d.SetId("spn/" + spnId)

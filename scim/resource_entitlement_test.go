@@ -277,6 +277,39 @@ func TestResourceEntitlementsGroupDelete(t *testing.T) {
 	}.Apply(t)
 }
 
+func TestResourceEntitlementsGroupDeleteEmptyEntitlement(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: emptyGroup,
+			},
+			{
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
+				ExpectedRequest: deleteRequest,
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_PATH",
+					Message:   "invalidPath No such attribute with the name : entitlements in the current resource",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceEntitlements(),
+		Delete:   true,
+		ID:       "group/abc",
+		InstanceState: map[string]string{
+			"group_id":             "abc",
+			"allow_cluster_create": "true",
+		},
+		HCL: `
+		group_id    = "abc"
+		allow_cluster_create = true
+		`,
+	}.Apply(t)
+}
+
 var oldUser = User{
 	DisplayName: "Example user",
 	Active:      true,

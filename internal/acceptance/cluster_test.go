@@ -31,7 +31,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 			library {
 				pypi {
 					repo = "https://pypi.org/simple"
-					package = "Faker"
+					package = "databricks-sdk"
 				}
 			}
 			library {

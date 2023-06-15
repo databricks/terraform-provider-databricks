@@ -67,7 +67,7 @@ func ResourceGitCredential() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			cred_id, err := strconv.ParseInt(d.Id(), 10, 0)
+			cred_id, err := strconv.ParseInt(d.Id(), 10, 64)
 			if err != nil {
 				return err
 			}
@@ -83,7 +83,7 @@ func ResourceGitCredential() *schema.Resource {
 			var req workspace.UpdateCredentials
 
 			common.DataToStructPointer(d, s, &req)
-			cred_id, err := strconv.ParseInt(d.Id(), 10, 0)
+			cred_id, err := strconv.ParseInt(d.Id(), 10, 64)
 			if err != nil {
 				return err
 			}
@@ -99,7 +99,7 @@ func ResourceGitCredential() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			cred_id, err := strconv.ParseInt(d.Id(), 10, 0)
+			cred_id, err := strconv.ParseInt(d.Id(), 10, 64)
 			if err != nil {
 				return err
 			}

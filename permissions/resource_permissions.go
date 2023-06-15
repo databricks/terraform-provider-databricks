@@ -221,7 +221,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 		return err
 	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 0)
+		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
 		if err != nil {
 			return err
 		}

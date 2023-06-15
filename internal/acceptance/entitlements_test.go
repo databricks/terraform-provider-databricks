@@ -20,6 +20,10 @@ func TestAccEntitlementResource(t *testing.T) {
 		allow_cluster_create       = true
 		allow_instance_pool_create = true		
 	}
+
+	resource "databricks_group" "third" {
+		display_name = "{var.RANDOM} group 2"
+	}	
 	
 	resource "databricks_entitlements" "first_entitlements" {
 		user_id                    = databricks_user.first.id
@@ -31,6 +35,14 @@ func TestAccEntitlementResource(t *testing.T) {
 		group_id                   = databricks_group.second.id
 		allow_cluster_create       = true
 		allow_instance_pool_create = true
+	}
+	
+	resource "databricks_entitlements" "third_entitlements" {
+		group_id                   = databricks_group.third.id
+		allow_cluster_create       = false
+		allow_instance_pool_create = false
+		databricks_sql_access      = false
+		workspace_access           = false
 	}`
 	workspaceLevel(t, step{
 		Template: conf,

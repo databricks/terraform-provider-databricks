@@ -535,18 +535,6 @@ var useExistingClusterForSql = append([]qa.HTTPFixture{
 	},
 }, baseClusterFixture...)
 
-// var useExistingWarehouseForSql = []qa.HTTPFixture{
-// 	{
-// 		Method:   "GET",
-// 		Resource: "/api/2.0/sql/warehouses/existingwarehouse",
-// 		Response: sql.SQLEndpoint{
-// 			ID:    "existingwarehouse",
-// 			Name:  "terraform-sql-table",
-// 			State: "RUNNING",
-// 		},
-// 	},
-// }
-
 var createClusterForSql = append([]qa.HTTPFixture{
 	{
 		Method:       "GET",

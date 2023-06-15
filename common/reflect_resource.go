@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"golang.org/x/exp/slices"
 )
 
 var kindMap = map[reflect.Kind]string{
@@ -437,6 +438,11 @@ func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
 
 // StructToData reads result using schema onto resource data
 func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceData) error {
+	return StructToDataNoSkipEmpty(result, s, d, []string{})
+}
+
+// StructToDataNoSkipEmpty reads result using schema onto resource data, optionally overwriting fields even when they are empty
+func StructToDataNoSkipEmpty(result any, s map[string]*schema.Schema, d *schema.ResourceData, doNotSkipEmpty []string) error {
 	v := reflect.ValueOf(result)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -448,7 +454,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			return nil
 		}
 		fieldPath := strings.Join(path, ".")
-		if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
+		if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) && !slices.Contains(doNotSkipEmpty, fieldPath) {
 			return nil
 		}
 		_, configured := d.GetOk(fieldPath)
@@ -470,7 +476,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			if err != nil {
 				return fmt.Errorf("%s: %v", fieldPath, err)
 			}
-			if len(nv) == 0 {
+			if len(nv) == 0 && !slices.Contains(doNotSkipEmpty, fieldPath) {
 				return nil
 			}
 			log.Printf("[TRACE] set %s %#v", fieldPath, nv)

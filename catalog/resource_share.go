@@ -207,7 +207,7 @@ func ResourceShare() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(si, shareSchema, d)
+			return common.StructToDataNoSkipEmpty(si, shareSchema, d, []string{"object"})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			beforeSi, err := NewSharesAPI(ctx, c).get(d.Id())

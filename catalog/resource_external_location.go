@@ -53,7 +53,7 @@ func ResourceExternalLocation() *schema.Resource {
 			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old == "false" && new == "true"
 			}
-			m["url"].DiffSuppressFunc = ucDirectoryPathSuppressDiff
+			m["url"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/external-locations", []string{"owner", "comment", "url", "credential_name"})

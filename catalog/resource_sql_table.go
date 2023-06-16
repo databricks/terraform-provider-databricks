@@ -311,7 +311,7 @@ func ResourceSqlTable() *schema.Resource {
 				}
 				return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
 			}
-			s["storage_location"].DiffSuppressFunc = ucDirectoryPathSuppressDiff
+			s["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
 			return s
 		})
 	return common.Resource{

@@ -190,6 +190,7 @@ var mapping = securableMapping{
 		"CREATE_TABLE":             true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"CREATE_VOLUME":            true,
 		"EXECUTE":                  true,
 		"MODIFY":                   true,
 		"SELECT":                   true,
@@ -205,6 +206,7 @@ var mapping = securableMapping{
 		"CREATE_TABLE":             true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"CREATE_VOLUME":            true,
 		"EXECUTE":                  true,
 		"MODIFY":                   true,
 		"SELECT":                   true,
@@ -229,15 +231,18 @@ var mapping = securableMapping{
 		"ALL_PRIVILEGES":         true,
 		"CREATE_EXTERNAL_TABLE":  true,
 		"CREATE_MANAGED_STORAGE": true,
+		"CREATE_EXTERNAL_VOLUME": true,
 	},
 	"metastore": {
 		// v1.0
 		"CREATE_CATALOG":            true,
+		"CREATE_CONNECTION":         true,
 		"CREATE_EXTERNAL_LOCATION":  true,
 		"CREATE_STORAGE_CREDENTIAL": true,
 		"CREATE_SHARE":              true,
 		"CREATE_RECIPIENT":          true,
 		"CREATE_PROVIDER":           true,
+		"USE_CONNECTION":            true,
 		"USE_PROVIDER":              true,
 		"USE_SHARE":                 true,
 		"USE_RECIPIENT":             true,
@@ -254,6 +259,11 @@ var mapping = securableMapping{
 	},
 	"share": {
 		"SELECT": true,
+	},
+	"volume": {
+		"ALL_PRIVILEGES": true,
+		"READ_VOLUME":    true,
+		"WRITE_VOLUME":   true,
 	},
 }
 

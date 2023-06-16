@@ -82,7 +82,7 @@ func (a PermissionAssignmentAPI) List(workspaceId int64) (list PermissionAssignm
 }
 
 func mustInt64(s string) int64 {
-	n, err := strconv.ParseInt(s, 10, 0)
+	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
 		panic(err)
 	}

@@ -25,6 +25,7 @@ type ExternalLocationInfo struct {
 	SkipValidation bool   `json:"skip_validation,omitempty"`
 	Owner          string `json:"owner,omitempty" tf:"computed"`
 	MetastoreID    string `json:"metastore_id,omitempty" tf:"computed"`
+	ReadOnly       bool   `json:"read_only,omitempty"`
 }
 
 func (a ExternalLocationsAPI) create(el *ExternalLocationInfo) error {
@@ -36,13 +37,19 @@ func (a ExternalLocationsAPI) get(name string) (el ExternalLocationInfo, err err
 	return
 }
 
-func (a ExternalLocationsAPI) delete(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), nil)
+func (a ExternalLocationsAPI) delete(name string, force bool) error {
+	return a.client.Delete(a.context, "/unity-catalog/external-locations/"+url.PathEscape(name), map[string]any{
+		"force": force,
+	})
 }
 
 func ResourceExternalLocation() *schema.Resource {
 	s := common.StructToSchema(ExternalLocationInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["force_destroy"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
 			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old == "false" && new == "true"
 			}
@@ -72,7 +79,8 @@ func ResourceExternalLocation() *schema.Resource {
 		},
 		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewExternalLocationsAPI(ctx, c).delete(d.Id())
+			force := d.Get("force_destroy").(bool)
+			return NewExternalLocationsAPI(ctx, c).delete(d.Id(), force)
 		},
 	}.ToResource()
 }

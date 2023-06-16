@@ -97,6 +97,50 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateStorageCredentialsReadOnly(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "def",
+					},
+					Comment:  "c",
+					ReadOnly: true,
+				},
+				Response: StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				Response: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "def",
+					},
+					MetastoreID: "d",
+					ReadOnly:    true,
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		aws_iam_role {
+			role_arn = "def"
+		}
+		comment = "c"
+		read_only = true
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateStorageCredentials(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

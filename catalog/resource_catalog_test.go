@@ -400,7 +400,7 @@ func TestCatalogCreateIsolated(t *testing.T) {
 
 				Response: catalog.MetastoreAssignment{
 					MetastoreId: "e",
-					WorkspaceId: "123456789101112",
+					WorkspaceId: 123456789101112,
 				},
 			},
 			{

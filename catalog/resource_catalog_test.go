@@ -345,11 +345,114 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCatalogCreateIsolated(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/catalogs",
+				ExpectedRequest: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+				},
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					MetastoreId: "e",
+					Owner:       "f",
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					IsolationMode: "ISOLATED",
+				},
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					IsolationMode: "ISOLATED",
+					MetastoreId:   "e",
+					Owner:         "f",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "e",
+					WorkspaceId: 123456789101112,
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/a",
+				ExpectedRequest: catalog.UpdateWorkspaceBindings{
+					Name:             "a",
+					AssignWorkspaces: []int64{123456789101112},
+				},
+
+				Response: catalog.CurrentWorkspaceBindings{
+					Workspaces: []int64{123456789101112},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					IsolationMode: "ISOLATED",
+					MetastoreId:   "e",
+					Owner:         "f",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		comment = "b"
+		properties = {
+			c = "d"
+		}
+		isolation_mode = "ISOLATED"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUcDirectoryPathSuppressDiff(t *testing.T) {
-	assert.True(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH",
+	assert.True(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH",
 		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/", nil))
-	assert.True(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/",
+	assert.True(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/",
 		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH", nil))
-	assert.False(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/new_dir",
+	assert.False(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/new_dir",
 		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/", nil))
+	//
+	assert.True(t, ucDirectoryPathSlashAndEmptySuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/",
+		"", nil))
+	assert.False(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/new_dir",
+		"abfss://test@test.dfs.core.windows.net/OTHER/", nil))
 }

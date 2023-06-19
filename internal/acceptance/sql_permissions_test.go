@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
@@ -23,13 +24,18 @@ func TestAccTableACL(t *testing.T) {
 			w := databricks.Must(databricks.NewWorkspaceClient())
 			info, err := w.Clusters.GetOrCreateRunningCluster(ctx, "tf-dummy")
 			require.NoError(t, err)
-			cr := w.CommandExecutor.Execute(ctx, info.ClusterId, "python",
-				fmt.Sprintf("spark.range(10).write.saveAsTable('%s')", talbeName))
+
+			executor, err := w.CommandExecution.Start(ctx, info.ClusterId, compute.LanguagePython)
+			require.NoError(t, err)
+			defer executor.Destroy(ctx)
+
+			cr, err := executor.Execute(ctx, fmt.Sprintf("spark.range(10).write.saveAsTable('%s')", talbeName))
+			require.NoError(t, err)
 			require.False(t, cr.Failed(), cr.Error())
 
 			t.Cleanup(func() {
-				cr := w.CommandExecutor.Execute(ctx, info.ClusterId, "sql",
-					fmt.Sprintf("DROP TABLE %s", talbeName))
+				cr, err = executor.Execute(ctx, fmt.Sprintf(`spark.sql("DROP TABLE %s")`, talbeName))
+				require.NoError(t, err)
 				require.False(t, cr.Failed(), cr.Error())
 			})
 			return nil

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -54,8 +55,14 @@ func TestAccModelServing(t *testing.T) {
 		`, name),
 		Check: func(s *terraform.State) error {
 			w := databricks.Must(databricks.NewWorkspaceClient())
-			id := s.RootModule().Resources["databricks_cluster.this"].Primary.ID
-			w.CommandExecutor.Execute(context.Background(), id, "python", fmt.Sprintf(`
+			clusterID := s.RootModule().Resources["databricks_cluster.this"].Primary.ID
+			ctx := context.Background()
+			executor, err := w.CommandExecution.Start(ctx, clusterID, compute.LanguagePython)
+			if err != nil {
+				return err
+			}
+			defer executor.Destroy(ctx)
+			results, err := executor.Execute(ctx, fmt.Sprintf(`
 				import time
 				import mlflow
 				import mlflow.pyfunc
@@ -82,7 +89,10 @@ func TestAccModelServing(t *testing.T) {
 				while client.get_model_version(name="%[1]s-model", version="2").getStatus() != ModelRegistry.ModelVersionStatus.READY:
 					time.sleep(10)
 			`, name))
-			return nil
+			if err != nil {
+				return err
+			}
+			return results.Err()
 		},
 	},
 		step{

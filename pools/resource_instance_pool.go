@@ -80,7 +80,7 @@ type InstancePool struct {
 	AzureAttributes                    *InstancePoolAzureAttributes    `json:"azure_attributes,omitempty" tf:"force_new,suppress_diff"`
 	GcpAttributes                      *InstancePoolGcpAttributes      `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`
 	NodeTypeID                         string                          `json:"node_type_id,omitempty" tf:"suppress_diff,force_new,conflicts:instance_pool_fleet_attributes"`
-	CustomTags                         map[string]string               `json:"custom_tags,omitempty" tf:"force_new"`
+	CustomTags                         map[string]string               `json:"custom_tags" tf:"optional"`
 	EnableElasticDisk                  bool                            `json:"enable_elastic_disk,omitempty" tf:"force_new,suppress_diff"`
 	DiskSpec                           *InstancePoolDiskSpec           `json:"disk_spec,omitempty" tf:"force_new"`
 	PreloadedSparkVersions             []string                        `json:"preloaded_spark_versions,omitempty" tf:"force_new"`

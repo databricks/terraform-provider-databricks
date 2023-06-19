@@ -12,7 +12,6 @@ import (
 )
 
 func TestAccModelServing(t *testing.T) {
-	t.Skip("created ticket for ML Prod team to fix this test")
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	switch cloudEnv {
 	case "aws", "azure":

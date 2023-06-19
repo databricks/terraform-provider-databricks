@@ -10,8 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ucDirectoryPathSuppressDiff(k, old, new string, d *schema.ResourceData) bool {
+func ucDirectoryPathSlashOnlySuppressDiff(k, old, new string, d *schema.ResourceData) bool {
 	if (new == (old + "/")) || (old == (new + "/")) {
+		log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
+		return true
+	}
+	return false
+}
+
+func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.ResourceData) bool {
+	if (new == (old + "/")) || (old == (new + "/")) || (new == "" && old != "") {
 		log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
 		return true
 	}
@@ -38,7 +46,7 @@ func ResourceCatalog() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			}
-			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSuppressDiff
+			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
 			return m
 		})
 	return common.Resource{

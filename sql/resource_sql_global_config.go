@@ -27,6 +27,7 @@ type GlobalConfig struct {
 	SecurityPolicy          string            `json:"security_policy,omitempty" tf:"default:DATA_ACCESS_CONTROL"`
 	DataAccessConfig        map[string]string `json:"data_access_config,omitempty"`
 	InstanceProfileARN      string            `json:"instance_profile_arn,omitempty"`
+	GoogleServiceAccount    string            `json:"google_service_account,omitempty"`
 	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"default:false"`
 	SqlConfigParams         map[string]string `json:"sql_config_params,omitempty"`
 }
@@ -36,6 +37,7 @@ type GlobalConfigForRead struct {
 	SecurityPolicy             string                     `json:"security_policy"`
 	DataAccessConfig           []confPair                 `json:"data_access_config"`
 	InstanceProfileARN         string                     `json:"instance_profile_arn,omitempty"`
+	GoogleServiceAccount       string                     `json:"google_service_account,omitempty"`
 	EnableServerlessCompute    bool                       `json:"enable_serverless_compute"`
 	SqlConfigurationParameters *repeatedEndpointConfPairs `json:"sql_configuration_parameters,omitempty"`
 }
@@ -67,6 +69,13 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 			return fmt.Errorf("can't use instance_profile_arn outside of AWS")
 		}
 	}
+	if gc.GoogleServiceAccount != "" {
+		if a.client.IsGcp() {
+			data["google_service_account"] = gc.GoogleServiceAccount
+		} else {
+			return fmt.Errorf("can't use google_service_account outside of GCP")
+		}
+	}
 	cfg := make([]confPair, 0, len(gc.DataAccessConfig))
 	for k, v := range gc.DataAccessConfig {
 		cfg = append(cfg, confPair{Key: k, Value: v})
@@ -91,6 +100,7 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 		return gc, err
 	}
 	gc.InstanceProfileARN = gcr.InstanceProfileARN
+	gc.GoogleServiceAccount = gcr.GoogleServiceAccount
 	gc.SecurityPolicy = gcr.SecurityPolicy
 	gc.EnableServerlessCompute = gcr.EnableServerlessCompute
 	gc.DataAccessConfig = make(map[string]string, len(gcr.DataAccessConfig))

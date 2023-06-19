@@ -346,10 +346,15 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 }
 
 func TestUcDirectoryPathSuppressDiff(t *testing.T) {
-	assert.True(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH",
+	assert.True(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH",
 		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/", nil))
-	assert.True(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/",
+	assert.True(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/",
 		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH", nil))
-	assert.False(t, ucDirectoryPathSuppressDiff("", "abfss://test@test.dfs.core.windows.net/new_dir",
+	assert.False(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/new_dir",
 		"abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/", nil))
+	//
+	assert.True(t, ucDirectoryPathSlashAndEmptySuppressDiff("", "abfss://test@test.dfs.core.windows.net/TF_DIR_WITH_SLASH/",
+		"", nil))
+	assert.False(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/new_dir",
+		"abfss://test@test.dfs.core.windows.net/OTHER/", nil))
 }

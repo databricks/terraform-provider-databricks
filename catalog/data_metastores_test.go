@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/service/unitycatalog"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -14,7 +14,7 @@ func TestMetastoresData(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/metastores",
 				Response: MetastoresData{
-					Metastores: []unitycatalog.MetastoreInfo{
+					Metastores: []catalog.MetastoreInfo{
 						{
 							Name:                      "a",
 							StorageRoot:               "",
@@ -50,7 +50,7 @@ func TestMetastoresDataContainsName(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/metastores",
 				Response: MetastoresData{
-					Metastores: []unitycatalog.MetastoreInfo{
+					Metastores: []catalog.MetastoreInfo{
 						{
 							Name:                      "a",
 							StorageRoot:               "abc",

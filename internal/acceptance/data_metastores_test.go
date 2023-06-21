@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccDataSourceMetastore(t *testing.T) {
+func TestUcAccDataSourceMetastore(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: `
 		data "databricks_metastores" "this" {}

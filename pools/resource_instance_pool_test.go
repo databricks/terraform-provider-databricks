@@ -160,7 +160,7 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/edit",
-				ExpectedRequest: InstancePoolAndStats{
+				ExpectedRequest: InstancePool{
 					EnableElasticDisk:                  true,
 					InstancePoolID:                     "abc",
 					MaxCapacity:                        500,

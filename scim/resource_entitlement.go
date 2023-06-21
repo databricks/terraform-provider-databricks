@@ -28,7 +28,7 @@ func ResourceEntitlements() *schema.Resource {
 	addEntitlementsToSchema(&entitlementSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return patchEntitlements(ctx, d, c, "add")
+			return patchEntitlements(ctx, d, c, "replace")
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			split := strings.SplitN(d.Id(), "/", 2)
@@ -41,18 +41,21 @@ func ResourceEntitlements() *schema.Resource {
 				if err != nil {
 					return err
 				}
+				group.Entitlements.generateEmpty(d)
 				return group.Entitlements.readIntoData(d)
 			case "user":
 				user, err := NewUsersAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
+				user.Entitlements.generateEmpty(d)
 				return user.Entitlements.readIntoData(d)
 			case "spn":
 				spn, err := NewServicePrincipalsAPI(ctx, c).Read(split[1])
 				if err != nil {
 					return err
 				}
+				spn.Entitlements.generateEmpty(d)
 				return spn.Entitlements.readIntoData(d)
 			}
 			return nil
@@ -71,6 +74,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	groupId := d.Get("group_id").(string)
 	userId := d.Get("user_id").(string)
 	spnId := d.Get("service_principal_id").(string)
+	noEntitlementMessage := "invalidPath No such attribute with the name : entitlements in the current resource"
 	request := PatchRequestComplexValue([]patchOperation{
 		{
 			op,
@@ -81,7 +85,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	if groupId != "" {
 		groupsAPI := NewGroupsAPI(ctx, c)
 		err := groupsAPI.UpdateEntitlements(groupId, request)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
 		d.SetId("group/" + groupId)
@@ -89,7 +93,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	if userId != "" {
 		usersAPI := NewUsersAPI(ctx, c)
 		err := usersAPI.UpdateEntitlements(userId, request)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
 		d.SetId("user/" + userId)
@@ -97,7 +101,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	if spnId != "" {
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
 		err := spnAPI.UpdateEntitlements(spnId, request)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
 		d.SetId("spn/" + spnId)

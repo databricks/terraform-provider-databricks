@@ -37,9 +37,15 @@ var newGroup = Group{
 	},
 }
 
+var emptyGroup = Group{
+	Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
+	DisplayName: "Data Scientists",
+	ID:          "abc",
+}
+
 var addRequest = PatchRequestComplexValue([]patchOperation{
 	{
-		"add", "entitlements", []ComplexValue{
+		"replace", "entitlements", []ComplexValue{
 			{
 				Value: "allow-cluster-create",
 			},
@@ -48,6 +54,16 @@ var addRequest = PatchRequestComplexValue([]patchOperation{
 			},
 			{
 				Value: "databricks-sql-access",
+			},
+		},
+	},
+})
+
+var emptyAddRequest = PatchRequestComplexValue([]patchOperation{
+	{
+		"replace", "entitlements", []ComplexValue{
+			{
+				Value: "",
 			},
 		},
 	},
@@ -85,20 +101,19 @@ var updateRequest = PatchRequestComplexValue([]patchOperation{
 	},
 })
 
-var deleteRequest = PatchRequestComplexValue([]patchOperation{{"remove", "entitlements", []ComplexValue{
+var deleteRequest = PatchRequestComplexValue([]patchOperation{
 	{
-		Value: "allow-cluster-create",
+		"remove", "entitlements", []ComplexValue{
+			{
+				Value: "allow-cluster-create",
+			},
+		},
 	},
-}}})
+})
 
 func TestResourceEntitlementsGroupCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
-				Response: oldGroup,
-			},
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
@@ -149,6 +164,29 @@ func TestResourceEntitlementsGroupRead(t *testing.T) {
 	})
 }
 
+func TestResourceEntitlementsGroupReadEmpty(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: emptyGroup,
+			},
+		},
+		Resource: ResourceEntitlements(),
+		HCL:      `group_id = "abc"`,
+		New:      true,
+		Read:     true,
+		ID:       "group/abc",
+	}.ApplyAndExpectData(t, map[string]any{
+		"group_id":                   "abc",
+		"allow_cluster_create":       false,
+		"workspace_access":           false,
+		"allow_instance_pool_create": false,
+		"databricks_sql_access":      false,
+	})
+}
+
 func TestResourceEntitlementsGroupRead_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -173,11 +211,6 @@ func TestResourceEntitlementsGroupRead_Error(t *testing.T) {
 func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
-				Response: oldGroup,
-			},
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
@@ -228,6 +261,39 @@ func TestResourceEntitlementsGroupDelete(t *testing.T) {
 				Response: Group{
 					ID: "abc",
 				},
+			},
+		},
+		Resource: ResourceEntitlements(),
+		Delete:   true,
+		ID:       "group/abc",
+		InstanceState: map[string]string{
+			"group_id":             "abc",
+			"allow_cluster_create": "true",
+		},
+		HCL: `
+		group_id    = "abc"
+		allow_cluster_create = true
+		`,
+	}.Apply(t)
+}
+
+func TestResourceEntitlementsGroupDeleteEmptyEntitlement(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: emptyGroup,
+			},
+			{
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
+				ExpectedRequest: deleteRequest,
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_PATH",
+					Message:   "invalidPath No such attribute with the name : entitlements in the current resource",
+				},
+				Status: 400,
 			},
 		},
 		Resource: ResourceEntitlements(),
@@ -313,11 +379,6 @@ var newUser = User{
 func TestResourceEntitlementsUserCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
-				Response: oldUser,
-			},
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
@@ -432,11 +493,6 @@ func TestResourceEntitlementsUserUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
-				Response: oldUser,
-			},
-			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
 				ExpectedRequest: updateRequest,
@@ -505,11 +561,6 @@ func TestResourceEntitlementsUserDelete(t *testing.T) {
 func TestResourceEntitlementsSPNCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: oldUser,
-			},
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
@@ -613,11 +664,6 @@ func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: oldUser,
-			},
-			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				ExpectedRequest: updateRequest,
@@ -681,4 +727,39 @@ func TestResourceEntitlementsSPNDelete(t *testing.T) {
 		allow_cluster_create = true
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestResourceEntitlementsGroupCreateEmpty(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "PATCH",
+				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
+				ExpectedRequest: emptyAddRequest,
+				Response: Group{
+					ID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: emptyGroup,
+			},
+		},
+		Resource: ResourceEntitlements(),
+		HCL: `
+		group_id = "abc"
+		allow_instance_pool_create = false
+		allow_cluster_create = false
+		databricks_sql_access = false
+		workspace_access = false
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "group/abc", d.Id())
+	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
+	assert.Equal(t, false, d.Get("databricks_sql_access"))
+	assert.Equal(t, false, d.Get("workspace_access"))
 }

@@ -31,7 +31,7 @@ resource "databricks_rule_set" "automation_sp_rule_set" {
 
   grant_rules {
     principals = ["groups/${data.databricks_group.ds.display_name}"]
-    role = "roles/servicePrincipal.user"
+    role       = "roles/servicePrincipal.user"
   }
 }
 ```
@@ -62,7 +62,7 @@ resource "databricks_rule_set" "automation_sp_rule_set" {
 
   grant_rules {
     principals = ["groups/${databricks_group.ds.display_name}"]
-    role = "roles/servicePrincipal.user"
+    role       = "roles/servicePrincipal.user"
   }
 }
 ```
@@ -85,7 +85,7 @@ resource "databricks_group" "ds" {
 
 resource "databricks_service_principal" "automation_sp" {
   application_id = "00000000-0000-0000-0000-000000000000"
-  display_name = "SP_FOR_AUTOMATION"
+  display_name   = "SP_FOR_AUTOMATION"
 }
 
 resource "databricks_rule_set" "automation_sp_rule_set" {
@@ -93,7 +93,7 @@ resource "databricks_rule_set" "automation_sp_rule_set" {
 
   grant_rules {
     principals = ["groups/${databricks_group.ds.display_name}"]
-    role = "roles/servicePrincipal.user"
+    role       = "roles/servicePrincipal.user"
   }
 }
 ```
@@ -102,12 +102,12 @@ resource "databricks_rule_set" "automation_sp_rule_set" {
 
 Rule set name and grant rules block argument are required.
 
-### Name Argument
+### name
 
 Unique identifier of a rule set. Currently, only default rule sets are supported. The following rule set formats are supported:
 * accounts/{account_id}/servicePrincipals/{service_principal_application_id}/ruleSets/default
 
-### Grant Rules Argument
+### grant_rules block
 
 One or more `grant_rules` blocks are required to actually set access rules.
 

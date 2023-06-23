@@ -193,7 +193,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	createType := ti.getTableTypeString()
 
-	if !isView &&  ti.DataSourceFormat == "DELTA" {
+	if !isView && ti.DataSourceFormat == "DELTA" {
 		statements = append(statements, fmt.Sprintf("CREATE OR REPLACE %s %s", createType, ti.FullName()))
 	} else {
 		statements = append(statements, fmt.Sprintf("CREATE %s %s", createType, ti.FullName()))

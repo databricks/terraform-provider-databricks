@@ -371,7 +371,7 @@ func ResourceSqlTable() *schema.Resource {
 			var ti = new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, ti)
 			if ti.DataSourceFormat == "DELTA" {
-				log.Printf("[INFO] DataSourceFormat is: %s. Skiping DROP TABLE", ti.DataSourceFormat)
+				log.Printf("[INFO] DataSourceFormat is: %s. Skipping DROP TABLE", ti.DataSourceFormat)
 				return nil
 			} else {
 				log.Printf("[INFO] DataSourceFormat is: %s. Initiating DROP TABLE", ti.DataSourceFormat)

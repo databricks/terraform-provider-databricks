@@ -12,7 +12,7 @@ func TestMetastoresData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores",
+				Resource: "/api/2.0/accounts/testaccount/metastores",
 				Response: MetastoresData{
 					Metastores: []catalog.MetastoreInfo{
 						{
@@ -40,6 +40,7 @@ func TestMetastoresData(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
+		AccountID:   "testaccount",
 	}.ApplyNoError(t)
 }
 
@@ -48,7 +49,7 @@ func TestMetastoresDataContainsName(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores",
+				Resource: "/api/2.0/accounts/testaccount/metastores",
 				Response: MetastoresData{
 					Metastores: []catalog.MetastoreInfo{
 						{
@@ -73,10 +74,7 @@ func TestMetastoresDataContainsName(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-		HCL: `metastores {
-			name = "a"
-			storage_root = "abc"
-		}`,
+		AccountID:   "testaccount",
 	}.ApplyAndExpectData(t, map[string]any{
 		"metastores.0.name": "a",
 	})
@@ -89,5 +87,6 @@ func TestMetastoresData_Error(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
+		AccountID:   "_",
 	}.ExpectError(t, "I'm a teapot")
 }

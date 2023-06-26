@@ -9,13 +9,12 @@ import (
 )
 
 func DataSourceMetastores() *schema.Resource {
-	return common.WorkspaceData(func(ctx context.Context, data *MetastoresData, w *databricks.WorkspaceClient) error {
-		metastores, err := w.Metastores.ListAll(ctx)
+	return common.AccountData(func(ctx context.Context, data *MetastoresData, acc *databricks.AccountClient) error {
+		metastores, err := acc.Metastores.List(ctx)
 		if err != nil {
 			return err
 		}
-		data.Metastores = metastores
-
+		data.Metastores = metastores.Metastores
 		return nil
 	})
 }

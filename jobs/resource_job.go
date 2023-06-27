@@ -164,7 +164,7 @@ type JobTaskSettings struct {
 	TaskKey     string           `json:"task_key,omitempty"`
 	Description string           `json:"description,omitempty"`
 	DependsOn   []TaskDependency `json:"depends_on,omitempty"`
-	RunIf       string           `json:"run_if,omitempty" tf:"default:ALL_SUCCESS"`
+	RunIf       string           `json:"run_if,omitempty" tf:"suppress_diff"`
 
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`

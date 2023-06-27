@@ -9,7 +9,7 @@ The `databricks_job` resource allows you to manage [Databricks Jobs](https://doc
 
 -> **Note** In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
-It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. Single task is defined with the `task` block containing one of the `*_task` block, `task_key`, `libraries`, `email_notifications`, `timeout_seconds`, `max_retries`, `min_retry_interval_millis`, `retry_on_timeout` attributes and `depends_on` blocks to define cross-task dependencies.
+It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. A single task is defined with the `task` block containing one of the `*_task` blocks, `task_key`, `libraries`, `email_notifications`, `timeout_seconds`, `max_retries`, `min_retry_interval_millis`, `retry_on_timeout`, `run_if` attributes and `depends_on` blocks to define cross-task dependencies.
 
 ```hcl
 resource "databricks_job" "this" {
@@ -193,12 +193,26 @@ webhook_notifications {
 
 -> **Note** The following configuration blocks can be standalone or nested inside a `task` block
 
-###  notification_settings Configuration Block
+### notification_settings Configuration Block
 
 This block controls notification settings for both email & webhook notifications:
 
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
 * `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
+
+### task Configuration Block
+
+This block defines a single task within a Databricks job and must contain one of the `*_task` blocks below. The block also supports the following arguments:
+
+* `task_key` - (Required) A unique name for the task.
+* `depends_on` - (Optional) A configuration block specifying another task this task depends on.
+* `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. When omitted, defaults to `ALL_SUCCESS`.
+
+### depends_on Configuration Block
+
+This block defines a task this task depends on.
+
+* `task_key` - (Required) The name of a task this task depends on.
 
 ### spark_jar_task Configuration Block
 

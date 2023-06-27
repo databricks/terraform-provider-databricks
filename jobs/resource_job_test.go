@@ -201,6 +201,12 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 		task {
 			task_key = "b"
 
+			depends_on {
+				task_key = "a"
+			}
+
+			run_if = "ALL_DONE"
+
 			new_cluster {
 				spark_version = "a"
 				node_type_id = "b"

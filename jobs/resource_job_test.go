@@ -142,6 +142,12 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 						},
 						{
 							TaskKey: "b",
+							DependsOn: []TaskDependency{
+								{
+									TaskKey: "a",
+								},
+							},
+							RunIf: "ALL_DONE",
 							NewCluster: &clusters.Cluster{
 								SparkVersion: "a",
 								NodeTypeID:   "b",

@@ -102,7 +102,7 @@ resource "databricks_rule_set" "automation_sp_rule_set" {
 
 Rule set name and grant rules block argument are required.
 
-!> **Warning** Name uniquely identifies a rule set resource. Ensure all the grant_rules blocks for a rule set name are present in one rule_set resource block. After applying changes, users might lose their role assignment even if that was not intended.
+!> **Warning** Name uniquely identifies a rule set resource. Ensure all the grant_rules blocks for a rule set name are present in one rule_set resource block. Otherwise, after applying changes, users might lose their role assignment even if that was not intended.
 
 ### name
 

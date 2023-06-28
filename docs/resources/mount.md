@@ -60,7 +60,9 @@ resource "databricks_mount" "this" {
 
 ### Example mounting ADLS Gen2 with AAD passthrough
 
-**Note** You can't create AAD passthrough mount using service principal!
+-> **Note** Please note that AAD passthrough is considered a legacy data access pattern, please use Unity Catalog for fine grained data access control.
+
+-> **Note** You can't create AAD passthrough mount using service principal!
 
 To mount ALDS Gen2 with Azure Active Directory Credentials passthrough we need to execute the mount commands using the cluster configured with AAD Credentials passthrough & provide necessary configuration parameters (see [documentation](https://docs.microsoft.com/en-us/azure/databricks/security/credential-passthrough/adls-passthrough#--mount-azure-data-lake-storage-to-dbfs-using-credential-passthrough) for more details).
 

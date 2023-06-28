@@ -205,7 +205,7 @@ This block controls notification settings for both email & webhook notifications
 This block defines a single task within a Databricks job and must contain one of the `*_task` blocks below. The block also supports the following arguments:
 
 * `task_key` - (Required) A unique name for the task.
-* `depends_on` - (Optional) A configuration block specifying another task this task depends on.
+* `depends_on` - (Optional) A configuration block specifying another task this task depends on. A task can have zero or more dependencies.
 * `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. When omitted, defaults to `ALL_SUCCESS`.
 
 ### depends_on Configuration Block

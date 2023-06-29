@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -40,7 +39,7 @@ type MetastoreInfo struct {
 }
 
 type MetastoresData struct {
-	Metastores []catalog.MetastoreInfo `json:"metastores,omitempty" tf:"computed"`
+	Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
 }
 
 type CreateMetastore struct {

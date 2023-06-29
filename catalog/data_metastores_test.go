@@ -13,7 +13,7 @@ func TestMetastoresData(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/testaccount/metastores",
-				Response: MetastoresData{
+				Response: catalog.ListMetastoresResponse{
 					Metastores: []catalog.MetastoreInfo{
 						{
 							Name:                      "a",
@@ -50,7 +50,7 @@ func TestMetastoresDataContainsName(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/testaccount/metastores",
-				Response: MetastoresData{
+				Response: catalog.ListMetastoresResponse{
 					Metastores: []catalog.MetastoreInfo{
 						{
 							Name:                      "a",

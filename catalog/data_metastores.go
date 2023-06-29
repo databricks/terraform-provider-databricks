@@ -9,10 +9,7 @@ import (
 )
 
 func DataSourceMetastores() *schema.Resource {
-	type metastoresData struct {
-		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
-	}
-	return common.AccountData(func(ctx context.Context, data *metastoresData, acc *databricks.AccountClient) error {
+	return common.AccountData(func(ctx context.Context, data *MetastoresData, acc *databricks.AccountClient) error {
 		metastores, err := acc.Metastores.List(ctx)
 		if err != nil {
 			return err

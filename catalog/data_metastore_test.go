@@ -5,10 +5,11 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMetastoreData(t *testing.T) {
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -39,7 +40,9 @@ func TestMetastoreData(t *testing.T) {
 		NonWritable: true,
 		ID:          "abc",
 		AccountID:   "testaccount",
-	}.ApplyNoError(t)
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
 }
 
 func TestMetastoreData_Error(t *testing.T) {

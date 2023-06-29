@@ -244,7 +244,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 	}
 }
 
-// WorkspaceData is a generic way to define data resources in Terraform provider.
+// WorkspaceData is a generic way to define workspace data resources in Terraform provider.
 //
 // Example usage:
 //
@@ -256,51 +256,22 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //		...
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
-	var dummy T
-	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		// `id` attribute must be marked as computed, otherwise it's not set!
-		if v, ok := m["id"]; ok {
-			v.Computed = true
-			v.Required = false
-		}
-		return m
-	})
-	return &schema.Resource{
-		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {
-			defer func() {
-				// using recoverable() would cause more complex rewrapping of DataToStructPointer & StructToData
-				if panic := recover(); panic != nil {
-					diags = diag.Errorf("panic: %v", panic)
-				}
-			}()
-			ptr := reflect.New(reflect.ValueOf(dummy).Type())
-			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
-			client := m.(*DatabricksClient)
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				err = nicerError(ctx, err, "read data")
-				return diag.FromErr(err)
-			}
-			err = read(ctx, ptr.Interface().(*T), w)
-			if err != nil {
-				err = nicerError(ctx, err, "read data")
-				diags = diag.FromErr(err)
-			}
-			StructToData(ptr.Elem().Interface(), s, d)
-			// check if the resource schema has the `id` attribute (marked with `json:"id"` in the provided structure).
-			// and if yes, then use it as resource ID. If not, then use default value for resource ID (`_`)
-			if _, ok := s["id"]; ok {
-				d.SetId(d.Get("id").(string))
-			} else {
-				d.SetId("_")
-			}
-			return
-		},
-	}
+	return GenericDatabricksData(func(c *DatabricksClient) (*databricks.WorkspaceClient, error) {
+		return c.WorkspaceClient()
+	}, read)
 }
 
+// AccountData is a generic way to define account data resources in Terraform provider.
+//
+// Example usage:
+// <Will be updated in next PR which contains account level resource that uses AccountData>
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) *schema.Resource {
+	return GenericDatabricksData(func(c *DatabricksClient) (*databricks.AccountClient, error) {
+		return c.AccountClient()
+	}, read)
+}
+
+func GenericDatabricksData[T any, C any](getClient func(*DatabricksClient) (C, error), read func(context.Context, *T, C) error) *schema.Resource {
 	var dummy T
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		// `id` attribute must be marked as computed, otherwise it's not set!
@@ -322,12 +293,12 @@ func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient
 			ptr := reflect.New(reflect.ValueOf(dummy).Type())
 			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
 			client := m.(*DatabricksClient)
-			acc, err := client.AccountClient()
+			c, err := getClient(client)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 				return diag.FromErr(err)
 			}
-			err = read(ctx, ptr.Interface().(*T), acc)
+			err = read(ctx, ptr.Interface().(*T), c)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 				diags = diag.FromErr(err)

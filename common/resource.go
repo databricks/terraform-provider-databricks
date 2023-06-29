@@ -264,7 +264,14 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 // AccountData is a generic way to define account data resources in Terraform provider.
 //
 // Example usage:
-// <Will be updated in next PR which contains account level resource that uses AccountData>
+//
+//	type metastoresData struct {
+//		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
+//	}
+//	return common.AccountData(func(ctx context.Context, d *metastoresData, acc *databricks.AccountClient) error {
+//		metastores, err := acc.Metastores.List(ctx)
+//		...
+//	})
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) *schema.Resource {
 	return GenericDatabricksData(func(c *DatabricksClient) (*databricks.AccountClient, error) {
 		return c.AccountClient()

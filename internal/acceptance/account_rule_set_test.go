@@ -10,7 +10,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-func TestAccAccountRuleSetsFullLifeCycle(t *testing.T) {
+func TestMwsAccAccountRuleSetsFullLifeCycle(t *testing.T) {
 	accountLevel(t, step{
 		Template: `
 		resource "databricks_service_principal" "this" {

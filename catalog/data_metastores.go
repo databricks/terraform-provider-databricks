@@ -9,12 +9,17 @@ import (
 )
 
 func DataSourceMetastores() *schema.Resource {
-	return common.AccountData(func(ctx context.Context, data *MetastoresData, acc *databricks.AccountClient) error {
+	type metastoresData struct {
+		Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
+	}
+	return common.AccountData(func(ctx context.Context, data *metastoresData, acc *databricks.AccountClient) error {
 		metastores, err := acc.Metastores.List(ctx)
 		if err != nil {
 			return err
 		}
-		data.Metastores = metastores.Metastores
+		for _, v := range metastores.Metastores {
+			data.Ids = append(data.Ids, v.MetastoreId)
+		}
 		return nil
 	})
 }

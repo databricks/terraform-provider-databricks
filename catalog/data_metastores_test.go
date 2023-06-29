@@ -76,7 +76,7 @@ func TestMetastoresDataContainsName(t *testing.T) {
 		ID:          "_",
 		AccountID:   "testaccount",
 	}.ApplyAndExpectData(t, map[string]any{
-		"metastores.0.name": "a",
+		"ids": []string{"abc", "ded"},
 	})
 }
 

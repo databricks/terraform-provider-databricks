@@ -256,7 +256,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //		...
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
-	return GenericDatabricksData(func(c *DatabricksClient) (*databricks.WorkspaceClient, error) {
+	return genericDatabricksData(func(c *DatabricksClient) (*databricks.WorkspaceClient, error) {
 		return c.WorkspaceClient()
 	}, read)
 }
@@ -273,12 +273,13 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 //		...
 //	})
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) *schema.Resource {
-	return GenericDatabricksData(func(c *DatabricksClient) (*databricks.AccountClient, error) {
+	return genericDatabricksData(func(c *DatabricksClient) (*databricks.AccountClient, error) {
 		return c.AccountClient()
 	}, read)
 }
 
-func GenericDatabricksData[T any, C any](getClient func(*DatabricksClient) (C, error), read func(context.Context, *T, C) error) *schema.Resource {
+// genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients
+func genericDatabricksData[T any, C any](getClient func(*DatabricksClient) (C, error), read func(context.Context, *T, C) error) *schema.Resource {
 	var dummy T
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		// `id` attribute must be marked as computed, otherwise it's not set!

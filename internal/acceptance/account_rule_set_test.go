@@ -10,7 +10,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-func TestAccAccountRuleSetsFullLifeCycle(t *testing.T) {
+func TestMwsAccAccountRuleSetsFullLifeCycle(t *testing.T) {
 	accountLevel(t, step{
 		Template: `
 		resource "databricks_service_principal" "this" {
@@ -19,7 +19,7 @@ func TestAccAccountRuleSetsFullLifeCycle(t *testing.T) {
 		resource "databricks_group" "this" {
 			display_name = "Group {var.RANDOM}"
 		}
-		resource "databricks_rule_set" "sp_rule_set" {
+		resource "databricks_access_control_rule_set" "sp_rule_set" {
 			name = "accounts/{env.DATABRICKS_ACCOUNT_ID}/servicePrincipals/${databricks_service_principal.this.application_id}/ruleSets/default"
 			grant_rules {
 				principals = [
@@ -28,7 +28,7 @@ func TestAccAccountRuleSetsFullLifeCycle(t *testing.T) {
 				role = "roles/servicePrincipal.manager"
 			}
 		}`,
-		Check: resourceCheck("databricks_rule_set.sp_rule_set",
+		Check: resourceCheck("databricks_access_control_rule_set.sp_rule_set",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				a, err := client.AccountClient()
 				if err != nil {

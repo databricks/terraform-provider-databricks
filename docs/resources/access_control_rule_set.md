@@ -2,15 +2,17 @@
 subcategory: "Security"
 ---
 
-# databricks_rule_set Resource
+# databricks_access_control_rule_set Resource
 
 This resource allows you to manage access rules on Databricks account level resources. For convenience we allow accessing this resource through the Databricks account and workspace.
 
-To configure rule sets through the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments
+-> **Note** Currently, we only support managing access rules on service principal resources through databricks_access_control_rule_set.
+
+-> **Warning** databricks_access_control_rule_set cannot be used to manage access rules for resources supported by [databricks_permission](permissions.md). Refer to it's documentation for more information.
 
 ## Example usage
 
-Rule set management through AWS Databricks workspace:
+Rule set management through a Databricks workspace:
 
 ```hcl
 locals {
@@ -58,7 +60,7 @@ resource "databricks_service_principal" "automation_sp" {
 }
 
 resource "databricks_rule_set" "automation_sp_rule_set" {
-  name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
+  name = "accounts/${provider.databricks.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
     principals = ["groups/${databricks_group.ds.display_name}"]
@@ -89,7 +91,36 @@ resource "databricks_service_principal" "automation_sp" {
 }
 
 resource "databricks_rule_set" "automation_sp_rule_set" {
-  name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
+  name = "accounts/${provider.databricks.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
+
+  grant_rules {
+    principals = ["groups/${databricks_group.ds.display_name}"]
+    role       = "roles/servicePrincipal.user"
+  }
+}
+```
+
+Rule set management through GCP Databricks account:
+
+```hcl
+// initialize provider at account-level
+provider "databricks" {
+  alias      = "mws"
+  host       = "https://accounts.gcp.databricks.com"
+  account_id = "00000000-0000-0000-0000-000000000000"
+}
+
+// account level group creation
+resource "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+resource "databricks_service_principal" "automation_sp" {
+  display_name = "SP_FOR_AUTOMATION"
+}
+
+resource "databricks_rule_set" "automation_sp_rule_set" {
+  name = "accounts/${provider.databricks.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
     principals = ["groups/${databricks_group.ds.display_name}"]

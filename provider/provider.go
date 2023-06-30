@@ -82,6 +82,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_zones":                   clusters.DataSourceClusterZones(),
 		},
 		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
+			"databricks_access_control_rule_set":     permissions.ResourceAccessControlRuleSet(),
 			"databricks_aws_s3_mount":                storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount":       storage.ResourceAzureAdlsGen1Mount(),
 			"databricks_azure_adls_gen2_mount":       storage.ResourceAzureAdlsGen2Mount(),
@@ -131,7 +132,6 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_provider":                    catalog.ResourceProvider(),
 			"databricks_recipient":                   catalog.ResourceRecipient(),
 			"databricks_repo":                        repos.ResourceRepo(),
-			"databricks_rule_set":                    permissions.ResourceRuleSet(),
 			"databricks_schema":                      catalog.ResourceSchema(),
 			"databricks_secret":                      secrets.ResourceSecret(),
 			"databricks_secret_scope":                secrets.ResourceSecretScope(),

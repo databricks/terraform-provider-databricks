@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceRuleSet() *schema.Resource {
+func ResourceAccessControlRuleSet() *schema.Resource {
 	s := common.StructToSchema(
 		iam.RuleSetUpdateRequest{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

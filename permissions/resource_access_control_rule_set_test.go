@@ -95,7 +95,7 @@ func TestResourceRuleSetCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceRuleSet(),
+		Resource: ResourceAccessControlRuleSet(),
 		Create:   true,
 		HCL: `
 		name    = "accounts/cb376b18-60fa-4058-b2cd-dd85acf63165/servicePrincipals/1686b74b-a611-4360-8feb-3ef226ad1145/ruleSets/default"
@@ -137,7 +137,7 @@ func TestResourceRuleSetRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceRuleSet(),
+		Resource: ResourceAccessControlRuleSet(),
 		New:      true,
 		Read:     true,
 		ID:       testServicePrincipalRuleSetName,
@@ -193,7 +193,7 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceRuleSet(),
+		Resource: ResourceAccessControlRuleSet(),
 		Update:   true,
 		ID:       testServicePrincipalRuleSetName,
 		InstanceState: map[string]string{
@@ -293,7 +293,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceRuleSet(),
+		Resource: ResourceAccessControlRuleSet(),
 		Update:   true,
 		ID:       testServicePrincipalRuleSetName,
 		InstanceState: map[string]string{
@@ -345,7 +345,7 @@ func TestResourceRuleSetDelete(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceRuleSet(),
+		Resource: ResourceAccessControlRuleSet(),
 		Delete:   true,
 		ID:       testServicePrincipalRuleSetName,
 		InstanceState: map[string]string{

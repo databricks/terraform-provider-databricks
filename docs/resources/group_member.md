@@ -50,7 +50,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+You can import a `databricks_group_member` resource with name `my_group_member` like the following:
+
+```bash
+$ terraform import databricks_group_member.my_group_member "<group_id>|<member_id>"
+```
 
 ## Related Resources
 

@@ -122,7 +122,7 @@ func ResourceAccessControlRuleSet() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			// we remove all grant rules. Account admins will still be able to update rule set
-			updatedEtag, err := handleConflictAndUpdate(ctx, c, iam.UpdateRuleSetRequest{
+			_, err := handleConflictAndUpdate(ctx, c, iam.UpdateRuleSetRequest{
 				Name: d.Id(),
 				RuleSet: iam.RuleSetUpdateRequest{
 					Name: d.Id(),
@@ -132,7 +132,6 @@ func ResourceAccessControlRuleSet() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("etag", updatedEtag)
 			return nil
 		},
 	}.ToResource()

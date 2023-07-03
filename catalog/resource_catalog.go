@@ -137,6 +137,21 @@ func ResourceCatalog() *schema.Resource {
 				return err
 			}
 			force := d.Get("force_destroy").(bool)
+			// If the workspace has isolation mode ISOLATED, we need to add the current workspace to its
+			// bindings before deleting.
+			if d.Get("isolation_mode").(string) == "ISOLATED" {
+				currentMetastoreAssignment, err := w.Metastores.Current(ctx)
+				if err != nil {
+					return err
+				}
+				_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
+					Name:             d.Id(),
+					AssignWorkspaces: []int64{currentMetastoreAssignment.WorkspaceId},
+				})
+				if err != nil {
+					return err
+				}
+			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
 	}.ToResource()

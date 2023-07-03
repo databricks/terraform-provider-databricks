@@ -9,7 +9,7 @@ Retrieves information about a [databricks_sql_warehouse](../resources/sql_wareho
 
 ## Example usage
 
-Retrieve attributes of each SQL warehouses in a workspace
+* Retrieve attributes of each SQL warehouses in a workspace:
 
 ```hcl
 data "databricks_sql_warehouses" "all" {
@@ -19,18 +19,25 @@ data "databricks_sql_warehouse" "all" {
   for_each = data.databricks_sql.warehouses.ids
   id       = each.value
 }
+```
 
+* Search for a specific SQL Warehouse by name:
+
+```hcl
+data "databricks_sql_warehouse" "all" {
+  name = "Starter Warehouse"
+}
 ```
 
 ## Argument reference
 
-* `id` - (Required) The ID of the SQL warehouse
+* `id` - (Required, if `name` isn't specified) The ID of the SQL warehouse.
+* `name` - (Required, if `ud` isn't specified) Name of the SQL warehouse to search (case-insensitive).
 
 ## Attribute reference
 
 This data source exports the following attributes:
 
-* `name` - Name of the SQL warehouse. Must be unique.
 * `cluster_size` - The size of the clusters allocated to the warehouse: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large".
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running.

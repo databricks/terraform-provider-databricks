@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"log"
 	"sort"
 	"strconv"
@@ -58,33 +59,6 @@ type PythonWheelTask struct {
 // PipelineTask contains the information for pipeline jobs
 type PipelineTask struct {
 	PipelineID string `json:"pipeline_id"`
-}
-
-type SqlQueryTask struct {
-	QueryID string `json:"query_id"`
-}
-
-type SqlDashboardTask struct {
-	DashboardID string `json:"dashboard_id"`
-}
-
-type SqlAlertTask struct {
-	AlertID string `json:"alert_id"`
-}
-
-type SqlFileTask struct {
-	Path string `json:"path"`
-}
-
-// SqlTask contains information about DBSQL task
-// TODO: add validation & conflictsWith
-type SqlTask struct {
-	Query       *SqlQueryTask     `json:"query,omitempty"`
-	Dashboard   *SqlDashboardTask `json:"dashboard,omitempty"`
-	Alert       *SqlAlertTask     `json:"alert,omitempty"`
-	File        *SqlFileTask      `json:"file,omitempty"`
-	WarehouseID string            `json:"warehouse_id,omitempty"`
-	Parameters  map[string]string `json:"parameters,omitempty"`
 }
 
 // DbtTask contains information about DBT task
@@ -179,7 +153,7 @@ type JobTaskSettings struct {
 	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
-	SqlTask                *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
+	SqlTask                *jobs.SqlTask       `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`

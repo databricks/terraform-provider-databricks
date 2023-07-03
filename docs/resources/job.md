@@ -249,16 +249,33 @@ You also need to include a `git_source` block to configure the repository that c
 
 ### sql_task Configuration Block
 
-One of the `query`, `dashboard` or `alert` needs to be provided.
+One of the `query`, `dashboard`, `alert` or `file` needs to be provided.
 
 * `warehouse_id` - (Required) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now.
 * `parameters` - (Optional) (Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters.
-* `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
-* `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
-* `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
-* `file` - (Optional) block consisting of single string field: `path` - a relative path to the file (inside the Git repository) with SQL commands to execute.  *Requires `git_source` configuration block*.
 
-Example
+#### query Configuration Block
+
+* `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
+
+#### dashboard Configuration Block
+
+* `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
+* `custom_subject` - (Optional) subject of the email sent to subscribers of this task.
+* `pause_subscriptions` - (Optional) if true, the dashboard snapshot is not taken, and emails are not sent to subscribers.
+* `subscriptions` - (Optional) if specified, dashboard snapshots are sent to subscriptions.
+
+#### alert Configuration Block
+
+* `alert_id` - identifier of the Databricks SQL Alert.
+* `pause_subscriptions` - (Optional) if true, the alert notifications are not sent to subscribers.
+* `subscriptions` - (Optional) if specified, alert notifications are sent to subscribers.
+
+#### file Configuration Block
+
+* `path` - a relative path to the file (inside the Git repository) with SQL commands to execute.  *Requires `git_source` configuration block*.
+
+#### Example
 
 ```hcl
 resource "databricks_job" "sql_aggregation_job" {

@@ -87,9 +87,9 @@ func TestAccModelServing(t *testing.T) {
 				client = MlflowClient()
 				client.create_model_version(name="%[1]s-model", source=source, run_id=run1_id)
 				client.create_model_version(name="%[1]s-model", source=source, run_id=run1_id)
-				while client.get_model_version(name="%[1]s-model", version="1").getStatus() != ModelRegistry.ModelVersionStatus.READY:
+				while client.get_model_version(name="%[1]s-model", version="1").status != "READY":
 					time.sleep(10)
-				while client.get_model_version(name="%[1]s-model", version="2").getStatus() != ModelRegistry.ModelVersionStatus.READY:
+				while client.get_model_version(name="%[1]s-model", version="2").status != "READY":
 					time.sleep(10)
 			`, name))
 			if err != nil {

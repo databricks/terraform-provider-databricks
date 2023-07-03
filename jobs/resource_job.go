@@ -146,10 +146,6 @@ type CronSchedule struct {
 	PauseStatus          string `json:"pause_status,omitempty" tf:"computed"`
 }
 
-type TaskDependency struct {
-	TaskKey string `json:"task_key,omitempty"`
-}
-
 // BEGIN Jobs + Repo integration preview
 type GitSource struct {
 	Url      string `json:"git_url" tf:"alias:url"`

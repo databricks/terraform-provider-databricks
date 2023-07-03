@@ -32,7 +32,7 @@ data "databricks_sql_warehouse" "all" {
 ## Argument reference
 
 * `id` - (Required, if `name` isn't specified) The ID of the SQL warehouse.
-* `name` - (Required, if `ud` isn't specified) Name of the SQL warehouse to search (case-insensitive).
+* `name` - (Required, if `id` isn't specified) Name of the SQL warehouse to search (case-insensitive).
 
 ## Attribute reference
 

@@ -37,7 +37,7 @@ func TestModelCreateMVP(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
-					RegisteredModel: &ml.ModelDatabricks{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name: "xyz",
 					},
 				},
@@ -46,7 +46,7 @@ func TestModelCreateMVP(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
-					RegisteredModel: &ml.ModelDatabricks{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name: "xyz",
 					},
 				},
@@ -82,7 +82,7 @@ func TestModelCreateWithTags(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
-					RegisteredModel: &ml.ModelDatabricks{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name: "xyz",
 						Tags: []ml.ModelTag{
 							{Key: "key1", Value: "value1"},
@@ -95,7 +95,7 @@ func TestModelCreateWithTags(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
-					RegisteredModel: &ml.ModelDatabricks{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name: "xyz",
 						Tags: []ml.ModelTag{
 							{Key: "key1", Value: "value1"},
@@ -172,7 +172,7 @@ func TestModelRead(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
-					RegisteredModel: &ml.ModelDatabricks{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name: "xyz",
 					},
 				},
@@ -194,7 +194,7 @@ func TestModelReadGetError(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
-					RegisteredModel: &ml.ModelDatabricks{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name: "xyz",
 					},
 				},
@@ -223,7 +223,7 @@ func TestModelUpdate(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
 				Response: ml.GetModelResponse{
-					RegisteredModel: &ml.ModelDatabricks{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name:        "xyz",
 						Description: "updatedddescription",
 					},

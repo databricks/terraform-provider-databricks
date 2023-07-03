@@ -1,5 +1,22 @@
 # Version changelog
 
+## 1.20.0
+
+ * Added suppress diff for `storage_location` in [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) and [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resources ([#2408](https://github.com/databricks/terraform-provider-databricks/pull/2408)).
+ * Added option disable_as_user_deletion to disable instead of delete [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) and [databricks_service_principal](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal), enabled by default for user management at the account level ([#2378](https://github.com/databricks/terraform-provider-databricks/pull/2378)).
+ * Added support for Unity Catalog [databricks_catalog_workspace_binding](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/catalog_workspace_binding) resource ([#2364](https://github.com/databricks/terraform-provider-databricks/pull/2364)).
+ * Allowed assigning GCP SA in [databricks_sql_global_config](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_global_config) resource ([#2405](https://github.com/databricks/terraform-provider-databricks/pull/2405)).
+ * Allowed changing `custom_tags` in [databricks_instance_pool](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/instance_pool) resource without recreating a pool ([#2400](https://github.com/databricks/terraform-provider-databricks/pull/2400)).
+ * Bumped Go SDK version to 0.12.0 ([#2442](https://github.com/databricks/terraform-provider-databricks/pull/2442), [#2414](https://github.com/databricks/terraform-provider-databricks/pull/2414)).
+ * Bumped golang.org/x/mod from 0.10.0 to 0.11.0 ([#2406](https://github.com/databricks/terraform-provider-databricks/pull/2406)).
+ * Enabled model serving acceptance tests ([#2420](https://github.com/databricks/terraform-provider-databricks/pull/2420)).
+ * Improved export of users/groups at the account level ([#2398](https://github.com/databricks/terraform-provider-databricks/pull/2398)).
+ * Fixed [databricks_entitlements](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/entitlements) resource edge behaviour ([#2409](https://github.com/databricks/terraform-provider-databricks/pull/2409)).
+ * Improved descriptions for [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resource ([#2413](https://github.com/databricks/terraform-provider-databricks/pull/2413)).
+ * Skipped TestAccClusterResource_CreateClusterWithLibraries integration test ([#2404](https://github.com/databricks/terraform-provider-databricks/pull/2404)).
+ * Updated [databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant) resource with latest set of permissions ([#2399](https://github.com/databricks/terraform-provider-databricks/pull/2399)).
+ * Used separate suppress diff function for [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) and [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) ([#2412](https://github.com/databricks/terraform-provider-databricks/pull/2412)).
+
 ## 1.19.0
 
  * Added `run_as` and `run_as_user_name` fields to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2388](https://github.com/databricks/terraform-provider-databricks/pull/2388)).

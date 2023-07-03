@@ -24,27 +24,6 @@ func TestAccModelServing(t *testing.T) {
 	if clusterID == "" {
 		t.Skipf("default cluster not available")
 	}
-	// data "databricks_spark_version" "latest" {
-	// }
-	// resource "databricks_cluster" "this" {
-	// 	cluster_name = "singlenode-{var.RANDOM}"
-	// 	spark_version = data.databricks_spark_version.latest.id
-	// 	instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-	// 	num_workers = 0
-	// 	autotermination_minutes = 10
-	// 	spark_conf = {
-	// 		"spark.databricks.cluster.profile" = "singleNode"
-	// 		"spark.master" = "local[*]"
-	// 	}
-	// 	custom_tags = {
-	// 		"ResourceClass" = "SingleNode"
-	// 	}
-	// 	library {
-	// 		pypi {
-	// 			package = "mlflow"
-	// 		}
-	// 	}
-	// }
 
 	name := fmt.Sprintf("terraform-test-model-serving-%[1]s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
@@ -56,6 +35,13 @@ func TestAccModelServing(t *testing.T) {
 		resource "databricks_mlflow_model" "model" {
 			name = "%[1]s-model"
 		}
+		resource "databricks_library" "fbprophet" {
+			cluster_id = "{env.TEST_DEFAULT_CLUSTER_ID}"
+			pypi {
+			  package = "mlflow"
+			}
+		  }
+		  
 		`, name),
 		Check: func(s *terraform.State) error {
 			w := databricks.Must(databricks.NewWorkspaceClient())

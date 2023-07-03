@@ -3,7 +3,6 @@ package sql
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,9 +39,8 @@ func DataSourceWarehouse() *schema.Resource {
 				return err
 			}
 			selected := []SQLEndpoint{}
-			lname := strings.ToLower(data.Name)
 			for _, endpoint := range endpoints.Endpoints {
-				if strings.ToLower(endpoint.Name) == lname {
+				if endpoint.Name == data.Name {
 					selected = append(selected, endpoint)
 				}
 			}

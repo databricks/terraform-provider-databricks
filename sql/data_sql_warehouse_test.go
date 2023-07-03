@@ -101,7 +101,7 @@ func TestWarehouseDataByName_DuplicatesError(t *testing.T) {
 							State:       "RUNNING",
 						},
 						{
-							Name:        "Abc",
+							Name:        "abc",
 							ClusterSize: "Small",
 							ID:          "abc2",
 							State:       "RUNNING",

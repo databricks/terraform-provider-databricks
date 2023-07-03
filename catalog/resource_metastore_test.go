@@ -134,7 +134,10 @@ func TestDeleteMetastore(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?force=false",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]bool{
+					"force": false,
+				},
 			},
 		},
 		Resource: ResourceMetastore(),
@@ -152,7 +155,10 @@ func TestForceDeleteMetastore(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?force=true",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]bool{
+					"force": true,
+				},
 			},
 		},
 		Resource: ResourceMetastore(),

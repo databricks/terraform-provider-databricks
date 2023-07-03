@@ -22,7 +22,11 @@ The following arguments are supported:
 
 ## keyvault_metadata
 
-On Azure it's possible to create and manage secrets in Azure Key Vault and have use Azure Databricks secret redaction & access control functionality for reading them. There has to be a single Key Vault per single secret scope. To define AKV access policies, you must use [azurerm_key_vault_access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) instead of [access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault#access_policy) blocks on `azurerm_key_vault`, otherwise Terraform will remove access policies needed to access the Key Vault and the secret scope won't be in a usable state anymore.
+On Azure, it is possible to create Azure Databricks secret scopes backed by Azure Key Vault. Secrets are stored in Azure Key Vault and can be accessed through the Azure Databricks secrets utilities, making use of Azure Databricks access control and secret redaction. A secret scope may be configured with at most one Key Vault. 
+
+-> **Warning** To create a secret scope from Azure Key Vault, you must use one of the [Azure-specific authentication methods](../index.md#special-configurations-for-azure). Secret scopes backed by Azure Key Vault cannot be created using personal access tokens (PAT).
+
+To define AKV access policies, you must use [azurerm_key_vault_access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) instead of [access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault#access_policy) blocks on `azurerm_key_vault`, otherwise Terraform will remove access policies needed to access the Key Vault and the secret scope won't be in a usable state anymore.
 
 
 ```hcl
@@ -44,7 +48,7 @@ resource "azurerm_key_vault_access_policy" "this" {
   key_vault_id       = azurerm_key_vault.this.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
   object_id          = data.azurerm_client_config.current.object_id
-  secret_permissions = ["delete", "get", "list", "set"]
+  secret_permissions = ["Delete", "Get", "List", "Set"]
 }
 
 resource "databricks_secret_scope" "kv" {

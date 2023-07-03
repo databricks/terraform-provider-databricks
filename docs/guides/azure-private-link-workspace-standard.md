@@ -80,23 +80,23 @@ Define the required variables
 
 ```hcl
 variable "cidr_transit" {
-  type    = string
+  type = string
 }
 
 variable "cidr_dp" {
-  type    = string
+  type = string
 }
 
 variable "rg_transit" {
-  type    = string
+  type = string
 }
 
 variable "rg_dp" {
-  type    = string
+  type = string
 }
 
 variable "location" {
-  type    = string
+  type = string
 }
 
 data "azurerm_client_config" "current" {
@@ -113,7 +113,7 @@ resource "random_string" "naming" {
 }
 
 locals {
-  prefix = "adb-pl"
+  prefix   = "adb-pl"
   dbfsname = join("", ["dbfs", "${random_string.naming.result}"])
   tags = {
     Environment = "Demo"
@@ -271,7 +271,7 @@ resource "azurerm_private_endpoint" "transit_auth" {
   name                = "aadauthpvtendpoint-transit"
   location            = var.location
   resource_group_name = var.rg_transit
-  subnet_id           = azurerm_subnet.transit_plsubnet.id 
+  subnet_id           = azurerm_subnet.transit_plsubnet.id
 
   private_service_connection {
     name                           = "ple-${var.prefix}-auth"
@@ -318,7 +318,7 @@ resource "azurerm_private_endpoint" "front_pe" {
   name                = "frontprivatendpoint"
   location            = var.location
   resource_group_name = var.rg_transit
-  subnet_id           = azurerm_subnet.transit_plsubnet.id 
+  subnet_id           = azurerm_subnet.transit_plsubnet.id
 
   private_service_connection {
     name                           = "ple-${var.prefix}-uiapi"
@@ -395,7 +395,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "uiapidnszonevnetlink" 
   name                  = "dpcpvnetconnection"
   resource_group_name   = var.rg_dp
   private_dns_zone_name = azurerm_private_dns_zone.dnsdpcp.name
-  virtual_network_id    = azurerm_virtual_network.app_vnet.id 
+  virtual_network_id    = azurerm_virtual_network.app_vnet.id
 }
 ```
 
@@ -465,7 +465,7 @@ resource "azurerm_subnet" "app_plsubnet" {
   resource_group_name                            = var.rg_dp
   virtual_network_name                           = azurerm_virtual_network.app_vnet.name
   address_prefixes                               = [cidrsubnet(local.cidr_dp, 6, 2)]
-  enforce_private_link_endpoint_network_policies = true 
+  enforce_private_link_endpoint_network_policies = true
 }
 
 resource "azurerm_databricks_workspace" "app_workspace" {
@@ -486,7 +486,7 @@ resource "azurerm_databricks_workspace" "app_workspace" {
     private_subnet_network_security_group_association_id = azurerm_subnet_network_security_group_association.app_private.id
     storage_account_name                                 = "dbfsapp723k4b3"
   }
-  
+
   depends_on = [
     azurerm_subnet_network_security_group_association.app_public,
     azurerm_subnet_network_security_group_association.app_private
@@ -499,7 +499,7 @@ resource "azurerm_databricks_workspace" "app_workspace" {
 ```hcl
 resource "azurerm_private_endpoint" "app_dpcp" {
   name                = "dpcppvtendpoint"
-  resource_group_name  = var.rg_dp
+  resource_group_name = var.rg_dp
   location            = var.location
   subnet_id           = azurerm_subnet.app_plsubnet.id
 

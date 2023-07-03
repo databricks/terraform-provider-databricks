@@ -15,7 +15,6 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
-	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
@@ -215,7 +214,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:      "access",
 		AccountLevel: true,
 		Depends: []reference{
-			{Path: "service_principal_id", Resource: "databricks_group"},
+			{Path: "service_principal_id", Resource: "databricks_service_principal"},
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
@@ -557,7 +556,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err := ic.cacheGroups(); err != nil {
 				return err
 			}
-			// TODO: don't export users and admins group
 			for offset, g := range ic.allGroups {
 				if !ic.MatchesName(g.DisplayName) {
 					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
@@ -585,8 +583,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			groupName := r.Data.Get("display_name").(string)
-			if groupName == "admins" || groupName == "users" {
-				// admins & users are to be imported through "data block"
+			if (!ic.accountLevel && (groupName == "admins" || groupName == "users")) ||
+				(ic.accountLevel && groupName == "account users") {
+				// Workspace admins & users or Account users are to be imported through "data block"
 				r.Mode = "data"
 				r.Data.Set("workspace_access", false)
 				r.Data.Set("databricks_sql_access", false)
@@ -609,7 +608,8 @@ var resourcesMap map[string]importable = map[string]importable{
 					continue
 				}
 				ic.emitRoles("group", g.ID, g.Roles)
-				if g.DisplayName == "users" && !ic.importAllUsers {
+				builtInUserGroup := (ic.accountLevel && g.DisplayName == "account users") || (!ic.accountLevel && g.DisplayName == "users")
+				if builtInUserGroup && !ic.importAllUsers {
 					log.Printf("[INFO] Skipping import of entire user directory ...")
 					continue
 				}
@@ -631,32 +631,47 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 				for i, x := range g.Members {
-					if strings.Contains(x.Ref, "Users/") {
+					if strings.HasPrefix(x.Ref, "Users/") {
 						ic.Emit(&resource{
 							Resource: "databricks_user",
 							ID:       x.Value,
 						})
+						if !builtInUserGroup {
+							ic.Emit(&resource{
+								Resource: "databricks_group_member",
+								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
+							})
+						}
 					}
-					if strings.Contains(x.Ref, "ServicePrincipals/") {
+					if strings.HasPrefix(x.Ref, "ServicePrincipals/") {
 						ic.Emit(&resource{
 							Resource: "databricks_service_principal",
 							ID:       x.Value,
 						})
+						if !builtInUserGroup {
+							ic.Emit(&resource{
+								Resource: "databricks_group_member",
+								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
+							})
+						}
 					}
-					if strings.Contains(x.Ref, "Groups/") {
+					if strings.HasPrefix(x.Ref, "Groups/") {
 						ic.Emit(&resource{
 							Resource: "databricks_group",
 							ID:       x.Value,
 						})
-						ic.Emit(&resource{
-							Resource: "databricks_group_member",
-							ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
-							Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
-						})
+						if !builtInUserGroup {
+							ic.Emit(&resource{
+								Resource: "databricks_group_member",
+								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
+							})
+						}
 					}
 					if len(g.Members) > 10 {
-						log.Printf("[INFO] Imported %d of %d members of %s",
-							i, len(g.Members), g.DisplayName)
+						log.Printf("[INFO] Imported %d of %d members of %s", i+1, len(g.Members), g.DisplayName)
 					}
 				}
 			}
@@ -1110,15 +1125,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("list_type").(string) + "_" + d.Get("label").(string)
 		},
 		List: func(ic *importContext) error {
-			ipListsResp, err := access.NewIPAccessListsAPI(ic.Context, ic.Client).List()
+			w, err := ic.Client.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			ipLists := ipListsResp.ListIPAccessListsResponse
+			ipListsResp, err := w.IpAccessLists.Impl().List(ic.Context)
+
+			if err != nil {
+				return err
+			}
+			ipLists := ipListsResp.IpAccessLists
 			for offset, ipList := range ipLists {
 				ic.Emit(&resource{
 					Resource: "databricks_ip_access_list",
-					ID:       ipList.ListID,
+					ID:       ipList.ListId,
 				})
 				log.Printf("[INFO] Scanned %d of %d IP Access Lists", offset+1, len(ipLists))
 			}
@@ -1202,6 +1222,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
+			// TODO: it's not completely correct condition - we need to make emit smarter - emit only if permissions are different from their parent's permission.
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_directory",
@@ -1677,6 +1698,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if strings.HasPrefix(directory.Path, "/Repos") {
 					continue
 				}
+				// TODO: don't emit directories for deleted users/SPs (how to identify them?)
 				ic.Emit(&resource{
 					Resource: "databricks_directory",
 					ID:       directory.Path,
@@ -1693,7 +1715,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			splits := strings.Split(r.Name, "_")
 			directoryId := splits[len(splits)-1]
 
-			if ic.meAdmin {
+			// Existing permissions API doesn't allow to set permissions for
+			if ic.meAdmin && r.ID != "/Shared" {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/directories/%s", directoryId),

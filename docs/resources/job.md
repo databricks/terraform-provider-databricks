@@ -95,11 +95,35 @@ The resource supports the following arguments:
 Example
 
 ```hcl
+resource "databricks_job" "this" {
+  # ...
   tags = {
     environment = "dev"
     owner       = "dream-team"
   }
+}
 ```
+
+### run_as Configuration Block
+
+The `run_as` block allows specifying the user or the service principal that the job runs as. If not specified, the job runs as the user or service
+principal that created the job.
+
+* `user_name` - (Optional) The email of an active workspace user. Non-admin users can only set this field to their own email.
+* `service_principal_name` - (Optional) The application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role.
+
+Example
+
+```hcl
+resource "databricks_job" "this" {
+  # ...
+  run_as {
+    service_principal_name = "8d23ae77-912e-4a19-81e4-b9c3f5cc9349"
+  }
+}
+```
+
+
 
 ### job_cluster Configuration Block
 
@@ -123,7 +147,7 @@ Example
 * `pause_status` - (Optional) Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 * `file_arrival` - (Required) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) string with URL under the Unity Catalog external location that will be monitored for new files. Please note that have a trailing slash character (`/`).
-  * `min_time_between_trigger_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
+  * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
   * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
 
 ### git_source Configuration Block

@@ -97,7 +97,8 @@ The following arguments are available:
 * `active` - (Optional) Either service principal is active or not. True by default, but can be set to false in case of service principal deactivation with preserving service principal assets.
 * `force` - (Optional) Ignore `cannot create service principal: Service principal with application ID X already exists` errors and implicitly import the specified service principal into Terraform state, enforcing entitlements defined in the instance of resource. _This functionality is experimental_ and is designed to simplify corner cases, like Azure Active Directory synchronisation.
 * `force_delete_repos` - (Optional) This flag determines whether the service principal's repo directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.
-* `force_delete_home_dir` - (Optional) This flag determines whether the service principal's home directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default. 
+* `force_delete_home_dir` - (Optional) This flag determines whether the service principal's home directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.
+* `disable_as_user_deletion` - (Optional) When deleting a user, set the user's active flag to false instead of actually deleting the user. This flag is exclusive to force_delete_repos and force_delete_home_dir flags. True by default for accounts SCIM API, false otherwise.
 
 ## Attribute Reference
 
@@ -125,3 +126,4 @@ The following resources are often used in the same context:
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_permissions](permissions.md) to manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace.
 * [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](<https://docs.databricks>.
+* [databricks-service-principal-secret](service_principal_secret.md) to manage secrets for the service principal (only for AWS deployments)

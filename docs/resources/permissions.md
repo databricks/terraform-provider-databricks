@@ -517,6 +517,52 @@ resource "databricks_permissions" "model_usage" {
 }
 ```
 
+## Model serving usage
+
+Valid permission levels for [databricks_model_serving](model_serving.md) are: `CAN_VIEW`, `CAN_QUERY`, and `CAN_MANAGE`.
+
+```hcl
+resource "databricks_model_serving" "this" {
+  name = "tf-test"
+  config {
+    served_models {
+      name                  = "prod_model"
+      model_name            = "test"
+      model_version         = "1"
+      workload_size         = "Small"
+      scale_to_zero_enabled = true
+    }
+  }
+}
+
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "ml_serving_usage" {
+  serving_endpoint_id = databricks_model_serving.this.serving_endpoint_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_VIEW"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_MANAGE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_QUERY"
+  }
+}
+```
+
 ## Passwords usage
 
 By default on AWS deployments, all admin users can sign in to Databricks using either SSO or their username and password, and all API users can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users’ and API users’ ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.
@@ -734,6 +780,7 @@ Exactly one of the following arguments is required:
 - `repo_path` - path of databricks repo directory(`/Repos/<username>/...`)
 - `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
 - `registered_model_id` - [MLflow registered model](mlflow_model.md) id
+- `serving_endpoint_id` - [Model Serving](model_serving.md) endpoint id.
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id

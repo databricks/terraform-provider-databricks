@@ -46,7 +46,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 			}
 			err = client.Workspace.Import(ctx, ws_api.Import{
 				Content:   base64.StdEncoding.EncodeToString(content),
-				Format:    ws_api.ExportFormatAuto,
+				Format:    ws_api.ImportFormatAuto,
 				Path:      path,
 				Overwrite: true,
 			})
@@ -79,7 +79,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 			}
 			return client.Workspace.Import(ctx, ws_api.Import{
 				Content:   base64.StdEncoding.EncodeToString(content),
-				Format:    ws_api.ExportFormatAuto,
+				Format:    ws_api.ImportFormatAuto,
 				Overwrite: true,
 				Path:      d.Id(),
 			})

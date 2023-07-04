@@ -27,7 +27,10 @@ func TestAccTableACL(t *testing.T) {
 
 			executor, err := w.CommandExecution.Start(ctx, info.ClusterId, compute.LanguagePython)
 			require.NoError(t, err)
-			defer executor.Destroy(ctx)
+			t.Cleanup(func() {
+				err = executor.Destroy(ctx)
+				require.NoError(t, err)
+			})
 
 			cr, err := executor.Execute(ctx, fmt.Sprintf("spark.range(10).write.saveAsTable('%s')", talbeName))
 			require.NoError(t, err)

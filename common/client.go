@@ -46,6 +46,7 @@ type DatabricksClient struct {
 	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
 	cachedAccountClient   *databricks.AccountClient
 	cachedWorkspaceClient *databricks.WorkspaceClient
+	cachedAccountClient   *databricks.AccountClient
 	mu                    sync.Mutex
 }
 
@@ -79,6 +80,20 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	})
 	c.cachedWorkspaceClient = w
 	return w, nil
+}
+
+func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.cachedAccountClient != nil {
+		return c.cachedAccountClient, nil
+	}
+	acc, err := databricks.NewAccountClient((*databricks.Config)(c.DatabricksClient.Config))
+	if err != nil {
+		return nil, err
+	}
+	c.cachedAccountClient = acc
+	return acc, nil
 }
 
 // Get on path

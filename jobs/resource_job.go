@@ -214,7 +214,7 @@ type JobRunAs struct {
 
 type FileArrival struct {
 	URL                           string `json:"url"`
-	MinTimeBetweenTriggersSeconds int32  `json:"min_time_between_trigger_seconds,omitempty"`
+	MinTimeBetweenTriggersSeconds int32  `json:"min_time_between_triggers_seconds,omitempty"`
 	WaitAfterLastChangeSeconds    int32  `json:"wait_after_last_change_seconds,omitempty"`
 }
 

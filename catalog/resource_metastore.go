@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go/service/unitycatalog"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -71,25 +71,27 @@ func ResourceMetastore() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var create unitycatalog.CreateMetastore
-			var update unitycatalog.UpdateMetastore
+			var create catalog.CreateMetastore
+			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &create)
 			common.DataToStructPointer(d, s, &update)
-
-			var mi *unitycatalog.MetastoreInfo
-
 			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
 				}
-				mi, err = acc.AccountMetastores.Create(ctx, create)
+				mi, err := acc.Metastores.Create(ctx,
+					catalog.AccountsCreateMetastore{
+						MetastoreInfo: &create,
+					})
 				if err != nil {
 					return err
 				}
-				d.SetId(mi.MetastoreId)
-				update.MetastoreId = mi.MetastoreId
-				_, err = acc.AccountMetastores.Update(ctx, update)
+				d.SetId(mi.MetastoreInfo.MetastoreId)
+				_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+					MetastoreId:   mi.MetastoreInfo.MetastoreId,
+					MetastoreInfo: &update,
+				})
 				if err != nil {
 					return err
 				}
@@ -98,7 +100,7 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				mi, err = w.Metastores.Create(ctx, create)
+				mi, err := w.Metastores.Create(ctx, create)
 				if err != nil {
 					return err
 				}
@@ -112,40 +114,45 @@ func ResourceMetastore() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var mi *unitycatalog.MetastoreInfo
-
 			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
 				}
-				mi, err = acc.AccountMetastores.GetByMetastoreId(ctx, d.Id())
+				mi, err := acc.Metastores.GetByMetastoreId(ctx, d.Id())
 				if err != nil {
 					return err
 				}
+				return common.StructToData(mi, s, d)
+
 			} else {
 				w, err := c.WorkspaceClient()
 				if err != nil {
 					return err
 				}
-				mi, err = w.Metastores.GetById(ctx, d.Id())
+
+				mi, err := w.Metastores.GetById(ctx, d.Id())
 				if err != nil {
 					return err
 				}
+				return common.StructToData(mi, s, d)
+
 			}
-			return common.StructToData(mi, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var update unitycatalog.UpdateMetastore
+			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
+			update.Id = d.Id()
 
 			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
 				}
-				update.MetastoreId = d.Id()
-				_, err = acc.AccountMetastores.Update(ctx, update)
+				_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+					MetastoreId:   d.Id(),
+					MetastoreInfo: &update,
+				})
 				if err != nil {
 					return err
 				}
@@ -154,7 +161,6 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				update.Id = d.Id()
 				_, err = w.Metastores.Update(ctx, update)
 				if err != nil {
 					return err
@@ -169,13 +175,13 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				return acc.AccountMetastores.DeleteByMetastoreId(ctx, d.Id())
+				return acc.Metastores.DeleteByMetastoreId(ctx, d.Id())
 			} else {
 				w, err := c.WorkspaceClient()
 				if err != nil {
 					return err
 				}
-				return w.Metastores.Delete(ctx, unitycatalog.DeleteMetastoreRequest{Force: force, Id: d.Id()})
+				return w.Metastores.Delete(ctx, catalog.DeleteMetastoreRequest{Force: force, Id: d.Id()})
 			}
 		},
 	}.ToResource()

@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/service/unitycatalog"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -17,7 +17,7 @@ func TestCreateMetastore(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/metastores",
-				ExpectedRequest: unitycatalog.CreateMetastore{
+				ExpectedRequest: catalog.CreateMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
@@ -28,7 +28,7 @@ func TestCreateMetastore(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
+				ExpectedRequest: catalog.UpdateMetastore{
 					Name: "a",
 				},
 			},
@@ -56,7 +56,7 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/metastores",
-				ExpectedRequest: unitycatalog.CreateMetastore{
+				ExpectedRequest: catalog.CreateMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
@@ -67,7 +67,7 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
+				ExpectedRequest: catalog.UpdateMetastore{
 					Name:  "a",
 					Owner: "administrators",
 				},
@@ -98,7 +98,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/metastores",
-				ExpectedRequest: unitycatalog.CreateMetastore{
+				ExpectedRequest: catalog.CreateMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
@@ -117,7 +117,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
+				ExpectedRequest: catalog.UpdateMetastore{
 					Name:              "a",
 					Owner:             "administrators",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
@@ -145,9 +145,6 @@ func TestDeleteMetastore(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: unitycatalog.DeleteMetastoreRequest{
-					Force: false,
-				},
 			},
 		},
 		Resource: ResourceMetastore(),
@@ -164,11 +161,9 @@ func TestForceDeleteMetastore(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: unitycatalog.DeleteMetastoreRequest{
-					Force: true,
-				},
+				Method:          "DELETE",
+				Resource:        "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: map[string]interface{}{"-": "abc", "force": true},
 			},
 		},
 		Resource: ResourceMetastore(),
@@ -197,7 +192,7 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
+				ExpectedRequest: catalog.UpdateMetastore{
 					Name:              "abc",
 					Owner:             "admin",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
@@ -232,7 +227,7 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
+				ExpectedRequest: catalog.UpdateMetastore{
 					Name:              "abc",
 					Owner:             "admin",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
@@ -275,27 +270,35 @@ func TestCreateAccountMetastore(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/100/metastores",
-				ExpectedRequest: MetastoreInfo{
-					StorageRoot: "s3://b",
-					Name:        "a",
+				ExpectedRequest: catalog.AccountsCreateMetastore{
+					MetastoreInfo: &catalog.CreateMetastore{
+						StorageRoot: "s3://b",
+						Name:        "a",
+					},
 				},
-				Response: MetastoreInfo{
-					MetastoreID: "abc",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						MetastoreId: "abc",
+					},
 				},
 			},
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
-					Name: "a",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Name: "a",
+					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRoot: "s3://b/abc",
+						Name:        "a",
+					},
 				},
 			},
 		},
@@ -315,29 +318,37 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/100/metastores",
-				ExpectedRequest: MetastoreInfo{
-					StorageRoot: "s3://b",
-					Name:        "a",
+				ExpectedRequest: catalog.AccountsCreateMetastore{
+					MetastoreInfo: &catalog.CreateMetastore{
+						StorageRoot: "s3://b",
+						Name:        "a",
+					},
 				},
-				Response: MetastoreInfo{
-					MetastoreID: "abc",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						MetastoreId: "abc",
+					},
 				},
 			},
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
-					Name:  "a",
-					Owner: "administrators",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Name:  "a",
+						Owner: "administrators",
+					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
-					Owner:       "administrators",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRoot: "s3://b/abc",
+						Name:        "a",
+						Owner:       "administrators",
+					},
 				},
 			},
 		},
@@ -358,31 +369,39 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/100/metastores",
-				ExpectedRequest: MetastoreInfo{
-					StorageRoot: "s3://b",
-					Name:        "a",
+				ExpectedRequest: catalog.AccountsCreateMetastore{
+					MetastoreInfo: &catalog.CreateMetastore{
+						StorageRoot: "s3://b",
+						Name:        "a",
+					},
 				},
-				Response: MetastoreInfo{
-					MetastoreID: "abc",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						MetastoreId: "abc",
+					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRoot: "s3://b/abc",
+						Name:        "a",
+					},
 				},
 			},
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
-					Name:              "a",
-					Owner:             "administrators",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 0,
-					DeltaSharingOrganizationName:                "acme",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Name:              "a",
+						Owner:             "administrators",
+						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+						DeltaSharingRecipientTokenLifetimeInSeconds: 0,
+						DeltaSharingOrganizationName:                "acme",
+					},
 				},
 			},
 		},
@@ -405,10 +424,7 @@ func TestDeleteAccountMetastore(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/accounts/100/metastores/abc",
-				ExpectedRequest: unitycatalog.DeleteMetastoreRequest{
-					Force: false,
-				},
+				Resource: "/api/2.0/accounts/100/metastores/abc?",
 			},
 		},
 		Resource:  ResourceMetastore(),
@@ -418,30 +434,6 @@ func TestDeleteAccountMetastore(t *testing.T) {
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"
-		`,
-	}.ApplyNoError(t)
-}
-
-func TestForceDeleteAccountMetastore(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.0/accounts/100/metastores/abc",
-				ExpectedRequest: unitycatalog.DeleteMetastoreRequest{
-					Force: true,
-				},
-			},
-		},
-		Resource:  ResourceMetastore(),
-		AccountID: "100",
-		Delete:    true,
-		ID:        "abc",
-		HCL: `
-		name = "a"
-		storage_root = "s3://b"
-
-		force_destroy = true
 		`,
 	}.ApplyNoError(t)
 }
@@ -452,19 +444,23 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRoot: "s3://b/abc",
+						Name:        "a",
+					},
 				},
 			},
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
-					Name:              "abc",
-					Owner:             "admin",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Name:              "abc",
+						Owner:             "admin",
+						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+						DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+					},
 				},
 			},
 		},
@@ -496,19 +492,23 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/metastores/abc",
-				ExpectedRequest: unitycatalog.UpdateMetastore{
-					Name:              "abc",
-					Owner:             "admin",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Name:              "abc",
+						Owner:             "admin",
+						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+						DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRoot: "s3://b/abc",
+						Name:        "a",
+					},
 				},
 			},
 		},

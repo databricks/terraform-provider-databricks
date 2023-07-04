@@ -43,11 +43,14 @@ Rule set management through AWS Databricks account:
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias      = "mws"
   host       = "https://accounts.cloud.databricks.com"
   account_id = "00000000-0000-0000-0000-000000000000"
   username   = var.databricks_account_username
   password   = var.databricks_account_password
+}
+
+locals {
+  account_id = "00000000-0000-0000-0000-000000000000"
 }
 
 // account level group creation
@@ -60,7 +63,7 @@ resource "databricks_service_principal" "automation_sp" {
 }
 
 resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
-  name = "accounts/${provider.databricks.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
+  name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
     principals = ["groups/${databricks_group.ds.display_name}"]
@@ -74,10 +77,13 @@ Rule set management through Azure Databricks account:
 ```hcl
 // initialize provider at Azure account-level
 provider "databricks" {
-  alias      = "azure_account"
   host       = "https://accounts.azuredatabricks.net"
   account_id = "00000000-0000-0000-0000-000000000000"
   auth_type  = "azure-cli"
+}
+
+locals {
+  account_id = "00000000-0000-0000-0000-000000000000"
 }
 
 // account level group creation
@@ -91,7 +97,7 @@ resource "databricks_service_principal" "automation_sp" {
 }
 
 resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
-  name = "accounts/${provider.databricks.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
+  name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
     principals = ["groups/${databricks_group.ds.display_name}"]
@@ -105,8 +111,11 @@ Rule set management through GCP Databricks account:
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias      = "mws"
   host       = "https://accounts.gcp.databricks.com"
+  account_id = "00000000-0000-0000-0000-000000000000"
+}
+
+locals {
   account_id = "00000000-0000-0000-0000-000000000000"
 }
 
@@ -120,7 +129,7 @@ resource "databricks_service_principal" "automation_sp" {
 }
 
 resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
-  name = "accounts/${provider.databricks.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
+  name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
     principals = ["groups/${databricks_group.ds.display_name}"]
@@ -153,7 +162,7 @@ grant_rules {
 
 Arguments of the `grant_rules` block are:
 
-- `role` - (Required) Role to be granted. The following roles are supported:
+- `role` - (Required) Role to be granted. The supported roles are listed below. For more information about these roles, refer to [service principal roles](https://docs.databricks.com/security/auth-authz/access-control/service-principal-acl.html#service-principal-roles).
   * roles/servicePrincipal.manager - Manager of a service principal.
   * roles/servicePrincipal.user - User of a service principal.
 - `principals` - (Required) a list of principals who are granted a role. The following format is supported:

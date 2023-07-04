@@ -9,6 +9,8 @@ A `databricks_share` is contained within [databricks_metastore](metastore.md) an
 
 ## Example Usage
 
+-> **Note** In Terraform configuration, it is recommended to define objects in alphabetical order of their `name` arguments, so that you get consistent and readable diff. Whenever objects are added or removed, or `name` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `object` blocks as an ordered list. Alternatively, `object` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
+
 Creating a Delta Sharing share and add some existing tables to it
 
 ```hcl
@@ -72,7 +74,7 @@ The following arguments are required:
 * `name` (Required) - Full name of the object, e.g. `catalog.schema.name` for a table.
 * `data_object_type` (Required) - Type of the object, currently only `TABLE` is allowed.
 * `comment` (Optional) -  Description about the object.
-* `shared_as` (Optional) - A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share.
+* `shared_as` (Optional) - A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share. Change forces creation of a new resource.
 * `cdf_enabled` (Optional) - Whether to enable Change Data Feed (cdf) on the shared object. When this field is set, field `history_data_sharing_status` can not be set.
 * `start_version` (Optional) -  The start version associated with the object for cdf. This allows data providers to control the lowest object version that is accessible by clients.
 * `history_data_sharing_status` (Optional) - Whether to enable history sharing, one of: `ENABLED`, `DISABLED`. When a table has history sharing enabled, recipients can query table data by version, starting from the current table version. If not specified, clients can only query starting from the version of the object at the time it was added to the share. *NOTE*: The start_version should be less than or equal the current version of the object. When this field is set, field `cdf_enabled` can not be set.

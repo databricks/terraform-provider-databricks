@@ -24,7 +24,7 @@ func DataSourceServicePrincipals() *schema.Resource {
 		if response.DisplayNameContains != "" {
 			filter = fmt.Sprintf("displayName co '%s'", response.DisplayNameContains)
 		}
-		spList, err := spnAPI.Filter(filter)
+		spList, err := spnAPI.Filter(filter, true)
 		if err != nil {
 			return err
 		}

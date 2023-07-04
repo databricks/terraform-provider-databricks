@@ -54,6 +54,8 @@ type importable struct {
 	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
+	// Defines if specific service is account level
+	AccountLevel bool
 }
 
 type MatchType string

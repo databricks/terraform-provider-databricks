@@ -80,6 +80,7 @@ type importContext struct {
 	generateDeclaration bool
 	meAdmin             bool
 	prefix              string
+	accountLevel        bool
 }
 
 type mount struct {
@@ -109,6 +110,8 @@ var workspaceConfKeys = map[string]any{
 	"maxTokenLifetimeDays":                             0,
 	"maxUserInactiveDays":                              0,
 	"storeInteractiveNotebookResultsInCustomerAccount": false,
+	"enableDeprecatedClusterNamedInitScripts":          false,
+	"enableDeprecatedGlobalInitScripts":                false,
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
@@ -161,16 +164,23 @@ func (ic *importContext) Run() error {
 	if err != nil {
 		return err
 	}
-	me, err := w.CurrentUser.Me(ic.Context)
-	if err != nil {
-		return err
-	}
-	for _, g := range me.Groups {
-		if g.Display == "admins" {
-			ic.meAdmin = true
-			break
+
+	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	if ic.accountLevel {
+		ic.meAdmin = true
+	} else {
+		me, err := w.CurrentUser.Me(ic.Context)
+		if err != nil {
+			return err
+		}
+		for _, g := range me.Groups {
+			if g.Display == "admins" {
+				ic.meAdmin = true
+				break
+			}
 		}
 	}
+
 	for resourceName, ir := range ic.Importables {
 		if ir.List == nil {
 			continue
@@ -178,6 +188,10 @@ func (ic *importContext) Run() error {
 		if !strings.Contains(ic.listing, ir.Service) {
 			log.Printf("[DEBUG] %s (%s service) is not part of listing",
 				resourceName, ir.Service)
+			continue
+		}
+		if ic.accountLevel && !ir.AccountLevel {
+			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
 			continue
 		}
 		if err := ir.List(ic); err != nil {
@@ -207,15 +221,20 @@ func (ic *importContext) Run() error {
 			`terraform {
 				required_providers {
 			  		databricks = {
-						source = "databricks/databricks"
+						source  = "databricks/databricks"
 						version = "` + common.Version() + `"
 				  	}
 				}
 		  	}
 
 		  	provider "databricks" {
-		  	}
 		  	`)
+		if ic.accountLevel {
+			dcfile.WriteString(fmt.Sprintf(`	host       = "%s"
+				account_id = "%s"
+			`, ic.Client.Config.Host, ic.Client.Config.AccountID))
+		}
+		dcfile.WriteString(`}`)
 		dcfile.Close()
 	}
 	ic.generateHclForResources(sh)
@@ -380,7 +399,8 @@ func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
 			continue
 		}
 		for _, i := range sr.Instances {
-			if i.Attributes[k].(string) == v {
+			tv, ok := i.Attributes[k].(string)
+			if ok && tv == v {
 				return true
 			}
 		}
@@ -473,6 +493,12 @@ func (ic *importContext) Emit(r *resource) {
 	if !ok {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
+	}
+	if ic.accountLevel && !ir.AccountLevel {
+		log.Printf("[DEBUG] %s (%s service) is not part of the account level export",
+			r.Resource, ir.Service)
+		return
+
 	}
 	if !strings.Contains(ic.services, ir.Service) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the import",

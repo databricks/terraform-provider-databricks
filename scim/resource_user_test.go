@@ -19,7 +19,7 @@ func TestResourceUserRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					ID:          "abc",
 					DisplayName: "Example user",
@@ -56,7 +56,7 @@ func TestResourceUserRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   404,
 			},
 		},
@@ -73,7 +73,7 @@ func TestResourceUserRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   400,
 				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
@@ -113,7 +113,7 @@ func TestResourceUserCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -177,7 +177,7 @@ func TestResourceUserCreateInactive(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      false,
@@ -271,7 +271,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -309,7 +309,7 @@ func TestResourceUserUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: newUser,
 			},
 		},
@@ -340,7 +340,7 @@ func TestResourceUserUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   400,
 			},
 		},
@@ -362,7 +362,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -658,7 +658,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 			Response: User{
 				ID: "abc",
 			},
@@ -700,7 +700,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 			Response: User{
 				ID: "abc",
 			},

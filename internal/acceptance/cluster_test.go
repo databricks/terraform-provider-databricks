@@ -5,6 +5,7 @@ import (
 )
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
+	t.Skip("Waiting for maintenance release for fix")
 	workspaceLevel(t, step{
 		Template: `data "databricks_spark_version" "latest" {
 		}
@@ -31,7 +32,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 			library {
 				pypi {
 					repo = "https://pypi.org/simple"
-					package = "Faker"
+					package = "databricks-sdk"
 				}
 			}
 			library {

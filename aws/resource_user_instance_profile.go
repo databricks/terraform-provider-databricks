@@ -22,7 +22,7 @@ func ResourceUserInstanceProfile() *schema.Resource {
 			return scim.NewUsersAPI(ctx, c).Patch(userID, scim.PatchRequest("add", "roles", roleARN))
 		},
 		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			user, err := scim.NewUsersAPI(ctx, c).Read(userID)
+			user, err := scim.NewUsersAPI(ctx, c).Read(userID, "roles")
 			hasRole := scim.ComplexValues(user.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
 				return apierr.NotFound("User has no role")

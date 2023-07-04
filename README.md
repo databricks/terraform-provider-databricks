@@ -60,6 +60,7 @@
 | [databricks_obo_token](docs/resources/obo_token.md)
 | [databricks_permissions](docs/resources/permissions.md)
 | [databricks_pipeline](docs/resources/pipeline.md)
+| [databricks_pipelines](docs/data-sources/pipelines.md) data
 | [databricks_repo](docs/resources/repo.md)
 | [databricks_schema](docs/resources/schema.md)
 | [databricks_schemas](docs/data-sources/schema.md) data
@@ -86,6 +87,7 @@
 | [databricks_user_role](docs/resources/user_role.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
 | [databricks_views](docs/data-sources/views.md) data
+| [databricks_volume](docs/resources/volume.md)
 | [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [databricks_zones](docs/data-sources/zones.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)

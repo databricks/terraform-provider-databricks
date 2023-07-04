@@ -124,7 +124,7 @@ func urlPathForObjectID(objectID string) string {
 // permissions when POSTing permissions changes through the REST API, to avoid accidentally
 // revoking the calling user's ability to manage the current object.
 func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
-	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/queries/", "/sql/warehouses"} {
+	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/instance-pools/", "/serving-endpoints/", "/queries/", "/sql/warehouses"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
 		}
@@ -221,12 +221,15 @@ func (a PermissionsAPI) Delete(objectID string) error {
 		return err
 	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 0)
+		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
 		if err != nil {
 			return err
 		}
 		job, err := w.Jobs.GetByJobId(a.context, jobId)
 		if err != nil {
+			if strings.HasSuffix(err.Error(), " does not exist.") {
+				return nil
+			}
 			return err
 		}
 		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
@@ -293,6 +296,8 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"directory_id", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"directory_path", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
+		{"workspace_file_id", "file", "files", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
+		{"workspace_file_path", "file", "files", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"repo_id", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
@@ -304,6 +309,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"experiment_id", "mlflowExperiment", "experiments", []string{"CAN_READ", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"registered_model_id", "registered-model", "registered-models", []string{
 			"CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE"}, SIMPLE},
+		{"serving_endpoint_id", "serving-endpoint", "serving-endpoints", []string{"CAN_VIEW", "CAN_QUERY", "CAN_MANAGE"}, SIMPLE},
 	}
 }
 
@@ -333,7 +339,12 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			continue
 		}
 		entity.ObjectType = mapping.objectType
-		pathVariant := d.Get(mapping.objectType + "_path")
+		var pathVariant any
+		if mapping.objectType == "file" {
+			pathVariant = d.Get("workspace_file_path")
+		} else {
+			pathVariant = d.Get(mapping.objectType + "_path")
+		}
 		if pathVariant != nil && pathVariant.(string) != "" {
 			// we're not importing and it's a path... it's set, so let's not re-set it
 			return entity, nil

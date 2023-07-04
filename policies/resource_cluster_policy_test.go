@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,17 +15,18 @@ func TestResourceClusterPolicyRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: ClusterPolicy{
-					PolicyID:           "abc",
+				Response: compute.Policy{
+					PolicyId:           "abc",
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
-					CreatedAtTimeStamp: 0,
+					CreatedAtTimestamp: 0,
 					MaxClustersPerUser: 5,
 				},
 			},
 		},
 		Resource: ResourceClusterPolicy(),
 		Read:     true,
+		New:      true,
 		ID:       "abc",
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -82,24 +84,23 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/create",
-				ExpectedRequest: ClusterPolicy{
+				ExpectedRequest: compute.CreatePolicy{
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
-					CreatedAtTimeStamp: 0,
 					MaxClustersPerUser: 3,
 				},
-				Response: ClusterPolicy{
-					PolicyID: "abc",
+				Response: compute.CreatePolicyResponse{
+					PolicyId: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: ClusterPolicy{
-					PolicyID:           "abc",
+				Response: compute.Policy{
+					PolicyId:           "abc",
 					Name:               "Dummy",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
-					CreatedAtTimeStamp: 0,
+					CreatedAtTimestamp: 0,
 					MaxClustersPerUser: 3,
 				},
 			},
@@ -115,6 +116,20 @@ func TestResourceClusterPolicyCreate(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, 3, d.Get("max_clusters_per_user"))
+}
+
+func TestResourceClusterPolicyCreateConflict(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceClusterPolicy(),
+		HCL: `
+		name = "Dummy"
+		definition = "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}"
+		policy_family_id = "Test"
+		policy_family_definition_overrides = "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}"
+		max_clusters_per_user = 3
+		`,
+		Create: true,
+	}.ExpectError(t, "invalid config supplied. [definition] Conflicting configuration arguments. [policy_family_definition_overrides] Conflicting configuration arguments. [policy_family_id] Conflicting configuration arguments")
 }
 
 func TestResourceClusterPolicyCreate_Error(t *testing.T) {
@@ -147,21 +162,20 @@ func TestResourceClusterPolicyUpdate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/policies/clusters/edit",
-				ExpectedRequest: ClusterPolicy{
-					PolicyID:           "abc",
-					Name:               "Dummy Updated",
-					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
-					CreatedAtTimeStamp: 0,
+				ExpectedRequest: compute.EditPolicy{
+					PolicyId:   "abc",
+					Name:       "Dummy Updated",
+					Definition: "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=abc",
-				Response: ClusterPolicy{
-					PolicyID:           "abc",
+				Response: compute.Policy{
+					PolicyId:           "abc",
 					Name:               "Dummy Updated",
 					Definition:         "{\"spark_conf.foo\": {\"type\": \"fixed\", \"value\": \"bar\"}}",
-					CreatedAtTimeStamp: 0,
+					CreatedAtTimestamp: 0,
 				},
 			},
 		},

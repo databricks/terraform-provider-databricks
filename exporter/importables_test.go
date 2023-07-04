@@ -113,6 +113,7 @@ func TestGroup(t *testing.T) {
 			Roles: []scim.ComplexValue{
 				{
 					Value: "abc",
+					Type:  "direct",
 				},
 			},
 			Members: []scim.ComplexValue{
@@ -444,7 +445,7 @@ func TestUserSearchFails(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27dbc%27",
+			Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27dbc%27",
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
@@ -473,7 +474,7 @@ func TestSpnSearchFails(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27dbc%27",
+			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27dbc%27",
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
@@ -502,7 +503,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27dbc%27",
+			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27dbc%27",
 			Response: scim.UserList{Resources: []scim.User{
 				{ID: "321", DisplayName: "spn", ApplicationID: "dbc"},
 			}},
@@ -556,7 +557,7 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27dbc%27",
+			Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27dbc%27",
 			Response: scim.UserList{
 				Resources: []scim.User{
 					{

@@ -1,6 +1,7 @@
 package mlflow
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -252,10 +253,7 @@ func TestWebookDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/mlflow/registry-webhooks/delete",
-				ExpectedRequest: map[string]any{
-					"id": testWhID,
-				},
+				Resource: fmt.Sprintf("/api/2.0/mlflow/registry-webhooks/delete?id=%s", testWhID),
 			},
 		},
 		Resource: ResourceMlflowWebhook(),
@@ -270,11 +268,8 @@ func TestWebookDeleteError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/mlflow/registry-webhooks/delete",
-				ExpectedRequest: map[string]any{
-					"id": testWhID,
-				},
-				Status: 400,
+				Resource: fmt.Sprintf("/api/2.0/mlflow/registry-webhooks/delete?id=%s", testWhID),
+				Status:   400,
 			},
 		},
 		Resource: ResourceMlflowWebhook(),

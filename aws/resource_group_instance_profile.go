@@ -19,7 +19,7 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 		return m
 	}).BindResource(common.BindResource{
 		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
-			group, err := scim.NewGroupsAPI(ctx, c).Read(groupID)
+			group, err := scim.NewGroupsAPI(ctx, c).Read(groupID, "roles")
 			hasRole := scim.ComplexValues(group.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
 				return apierr.NotFound("Group has no instance profile")

@@ -46,7 +46,7 @@ func ResourceGroup() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			group, err := NewGroupsAPI(ctx, c).Read(d.Id())
+			group, err := NewGroupsAPI(ctx, c).Read(d.Id(), "displayName,externalId,entitlements")
 			if err != nil {
 				return err
 			}
@@ -78,7 +78,7 @@ func createForceOverridesManuallyAddedGroup(err error, d *schema.ResourceData, g
 	if err.Error() != force {
 		return err
 	}
-	group, err := groupsAPI.ReadByDisplayName(groupName)
+	group, err := groupsAPI.ReadByDisplayName(groupName, "")
 	if err != nil {
 		return err
 	}

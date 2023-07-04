@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -46,6 +47,9 @@ func TestResourceJobCreate(t *testing.T) {
 					RetryOnTimeout:         true,
 					MaxConcurrentRuns:      1,
 					Queue:                  &Queue{},
+					RunAs: &JobRunAs{
+						UserName: "user@mail.com",
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -55,7 +59,8 @@ func TestResourceJobCreate(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/jobs/get?job_id=789",
 				Response: Job{
-					JobID: 789,
+					JobID:         789,
+					RunAsUserName: "user@mail.com",
 					Settings: &JobSettings{
 						ExistingClusterID: "abc",
 						SparkJarTask: &SparkJarTask{
@@ -106,7 +111,10 @@ func TestResourceJobCreate(t *testing.T) {
 		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}
-		queue {}`,
+		queue {}
+		run_as {
+			user_name = "user@mail.com"
+		}`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
@@ -323,6 +331,78 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "17", d.Id())
+}
+
+func TestResourceJobCreate_JobCompute(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "JobComputed",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey:    "b",
+							ComputeKey: "j",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/Stuff",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+					Compute: []JobCompute{
+						{
+							ComputeKey: "j",
+							ComputeSpec: &compute.ComputeSpec{
+								Kind: "t",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 18,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=18",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobComputed"
+
+		compute {
+			compute_key = "j"
+			spec {
+			  kind   	= "t"
+			}
+		}
+
+		task {
+			task_key = "b"
+
+			compute_key = "j"
+
+			notebook_task {
+				notebook_path = "/Stuff"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "18", d.Id())
 }
 
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
@@ -570,6 +650,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						OnSuccess: []Webhook{{ID: "id2"}},
 						OnFailure: []Webhook{{ID: "id3"}},
 					},
+					NotificationSettings: &NotificationSettings{
+						NoAlertForSkippedRuns:  true,
+						NoAlertForCanceledRuns: true,
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -596,6 +680,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 							OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
 							OnSuccess: []Webhook{{ID: "id2"}},
 							OnFailure: []Webhook{{ID: "id3"}},
+						},
+						NotificationSettings: &NotificationSettings{
+							NoAlertForSkippedRuns:  true,
+							NoAlertForCanceledRuns: true,
 						},
 					},
 				},
@@ -628,7 +716,12 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 			on_failure {
 				id = "id3" 
 			}
-		}`,
+		}
+		notification_settings {
+			no_alert_for_skipped_runs = true
+			no_alert_for_canceled_runs = true
+		  }
+	`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())

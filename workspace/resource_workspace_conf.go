@@ -12,7 +12,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/databricks/databricks-sdk-go/service/workspaceconf"
+	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -26,7 +26,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 			return fmt.Errorf("internal type casting error")
 		}
 		log.Printf("[DEBUG] Old workspace config: %v, new: %v", old, new)
-		patch := workspaceconf.WorkspaceConf{}
+		patch := settings.WorkspaceConf{}
 		for k, v := range new {
 			patch[k] = fmt.Sprint(v)
 		}
@@ -82,7 +82,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 			if len(keys) == 0 {
 				return nil
 			}
-			remote, err := w.WorkspaceConf.GetStatus(ctx, workspaceconf.GetStatus{
+			remote, err := w.WorkspaceConf.GetStatus(ctx, settings.GetStatusRequest{
 				Keys: strings.Join(keys, ","),
 			})
 			if err != nil {
@@ -95,7 +95,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 			return d.Set("custom_config", config)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			patch := workspaceconf.WorkspaceConf{}
+			patch := settings.WorkspaceConf{}
 			config := d.Get("custom_config").(map[string]any)
 			for k, v := range config {
 				switch r := v.(type) {

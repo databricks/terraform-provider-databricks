@@ -74,7 +74,7 @@ resource "databricks_job" "this" {
 
 ## Argument Reference
 
-The following arguments are required:
+The resource supports the following arguments:
 
 * `name` - (Optional) An optional name for the job. The default value is Untitled.
 * `job_cluster` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
@@ -88,7 +88,42 @@ The following arguments are required:
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is documented below.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes and fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
-* `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
+
+### tags Configuration Map
+`tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
+
+Example
+
+```hcl
+resource "databricks_job" "this" {
+  # ...
+  tags = {
+    environment = "dev"
+    owner       = "dream-team"
+  }
+}
+```
+
+### run_as Configuration Block
+
+The `run_as` block allows specifying the user or the service principal that the job runs as. If not specified, the job runs as the user or service
+principal that created the job.
+
+* `user_name` - (Optional) The email of an active workspace user. Non-admin users can only set this field to their own email.
+* `service_principal_name` - (Optional) The application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role.
+
+Example
+
+```hcl
+resource "databricks_job" "this" {
+  # ...
+  run_as {
+    service_principal_name = "8d23ae77-912e-4a19-81e4-b9c3f5cc9349"
+  }
+}
+```
+
+
 
 ### job_cluster Configuration Block
 
@@ -112,7 +147,7 @@ The following arguments are required:
 * `pause_status` - (Optional) Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 * `file_arrival` - (Required) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) string with URL under the Unity Catalog external location that will be monitored for new files. Please note that have a trailing slash character (`/`).
-  * `min_time_between_trigger_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
+  * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
   * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
 
 ### git_source Configuration Block
@@ -130,7 +165,7 @@ This block is used to specify Git repository information & branch/tag/commit tha
 * `on_start` - (Optional) (List) list of emails to notify when the run starts.
 * `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
 * `on_failure` - (Optional) (List) list of emails to notify when the run fails.
-* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
+* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs. (It's recommended to use the corresponding setting in the `notification_settings` configuration block).
 
 ### webhook_notifications Configuration Block
 
@@ -157,6 +192,13 @@ webhook_notifications {
 * `id` - ID of the system notification that is notified when an event defined in `webhook_notifications` is triggered.
 
 -> **Note** The following configuration blocks can be standalone or nested inside a `task` block
+
+###  notification_settings Configuration Block
+
+This block controls notification settings for both email & webhook notifications:
+
+* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
+* `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
 
 ### spark_jar_task Configuration Block
 
@@ -214,6 +256,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 * `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
 * `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
 * `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
+* `file` - (Optional) block consisting of single string field: `path` - a relative path to the file (inside the Git repository) with SQL commands to execute.  *Requires `git_source` configuration block*.
 
 Example
 

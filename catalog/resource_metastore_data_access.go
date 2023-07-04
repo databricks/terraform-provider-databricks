@@ -2,20 +2,11 @@ package catalog
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-type DataAccessConfigurationsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-func NewDataAccessConfigurationsAPI(ctx context.Context, m any) DataAccessConfigurationsAPI {
-	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
-}
 
 type AwsIamRole struct {
 	RoleARN string `json:"role_arn"`
@@ -54,22 +45,6 @@ type DataAccessConfiguration struct {
 
 var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity", "gcp_service_account_key", "databricks_gcp_service_account"}
 
-func (a DataAccessConfigurationsAPI) Create(metastoreID string, dac *DataAccessConfiguration) error {
-	path := fmt.Sprintf("/unity-catalog/metastores/%s/data-access-configurations", metastoreID)
-	return a.client.Post(a.context, path, dac, dac)
-}
-
-func (a DataAccessConfigurationsAPI) Get(metastoreID, dacID string) (dac DataAccessConfiguration, err error) {
-	path := fmt.Sprintf("/unity-catalog/metastores/%s/data-access-configurations/%s", metastoreID, dacID)
-	err = a.client.Get(a.context, path, nil, &dac)
-	return
-}
-
-func (a DataAccessConfigurationsAPI) Delete(metastoreID, dacID string) error {
-	path := fmt.Sprintf("/unity-catalog/metastores/%s/data-access-configurations/%s", metastoreID, dacID)
-	return a.client.Delete(a.context, path, nil)
-}
-
 func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
 	//ignore changes in private_key
 	return !d.HasChanges("gcp_service_account_key.0.email", "gcp_service_account_key.0.private_key_id")
@@ -103,44 +78,132 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var dac DataAccessConfiguration
-			common.DataToStructPointer(d, s, &dac)
-			metastoreID := d.Get("metastore_id").(string)
-			if err := NewDataAccessConfigurationsAPI(ctx, c).Create(metastoreID, &dac); err != nil {
-				return err
+			metastoreId := d.Get("metastore_id").(string)
+
+			//common.DataToStructPointer(d, s, &create) will error out because of DatabricksGcpServiceAccount any
+			tmpSchema := make(map[string]*schema.Schema)
+			for k, v := range s {
+				tmpSchema[k] = v
 			}
-			d.Set("id", dac.ID)
+
+			delete(tmpSchema, "databricks_gcp_service_account")
+
+			var create catalog.CreateStorageCredential
+			common.DataToStructPointer(d, tmpSchema, &create)
+
+			var dac *catalog.StorageCredentialInfo
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+				acc, err := c.AccountClient()
+				if err != nil {
+					return err
+				}
+				dac, err = acc.StorageCredentials.Create(ctx,
+					catalog.AccountsCreateStorageCredential{
+						MetastoreId:    metastoreId,
+						CredentialInfo: &create,
+					})
+				if err != nil {
+					return err
+				}
+				if d.Get("is_default").(bool) {
+					_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+						MetastoreId: metastoreId,
+						MetastoreInfo: &catalog.UpdateMetastore{
+							StorageRootCredentialId: dac.Id,
+						},
+					})
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				dac, err = w.StorageCredentials.Create(ctx, create)
+				if err != nil {
+					return err
+				}
+				if d.Get("is_default").(bool) {
+					_, err = w.Metastores.Update(ctx, catalog.UpdateMetastore{
+						Id:                      metastoreId,
+						StorageRootCredentialId: dac.Id,
+					})
+				}
+				if err != nil {
+					return err
+				}
+			}
+			d.Set("id", dac.Id)
 			p.Pack(d)
-			if d.Get("is_default").(bool) {
-				return NewMetastoresAPI(ctx, c).updateMetastore(metastoreID, map[string]any{
-					"default_data_access_config_id": dac.ID,
-				})
-			}
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			metastoreID, dacID, err := p.Unpack(d)
+			metastoreId, dacId, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
-			dac, err := NewDataAccessConfigurationsAPI(ctx, c).Get(metastoreID, dacID)
-			if err != nil {
-				return err
+			var storageCredential *catalog.StorageCredentialInfo
+			var metastore *catalog.MetastoreInfo
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+				acc, err := c.AccountClient()
+				if err != nil {
+					return err
+				}
+				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
+					MetastoreId: metastoreId,
+					Name:        dacId,
+				})
+				if err != nil {
+					return err
+				}
+				m, err := acc.Metastores.GetByMetastoreId(ctx, metastoreId)
+				metastore = m.MetastoreInfo
+				if err != nil {
+					return err
+				}
+			} else {
+				//calling workspace-level API if using workspace client
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacId)
+				if err != nil {
+					return err
+				}
+				metastore, err = w.Metastores.GetById(ctx, metastoreId)
+				if err != nil {
+					return err
+				}
 			}
-			metastore, err := NewMetastoresAPI(ctx, c).getMetastore(metastoreID)
-			if err != nil {
-				return err
-			}
-			isDefault := metastore.DefaultDacID == dacID
+			isDefault := metastore.StorageRootCredentialId == dacId
 			d.Set("is_default", isDefault)
-			return common.StructToData(dac, s, d)
+			return common.StructToData(storageCredential, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			metastoreID, dacID, err := p.Unpack(d)
+			metastoreId, dacId, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
-			return NewDataAccessConfigurationsAPI(ctx, c).Delete(metastoreID, dacID)
+			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+				acc, err := c.AccountClient()
+				if err != nil {
+					return err
+				}
+				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
+					MetastoreId: metastoreId,
+					Name:        dacId,
+				})
+			} else {
+				//calling workspace-level API if using workspace client
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				return w.StorageCredentials.DeleteByName(ctx, dacId)
+			}
 		},
 	}.ToResource()
 }

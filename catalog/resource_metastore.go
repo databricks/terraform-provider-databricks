@@ -24,6 +24,7 @@ type MetastoreInfo struct {
 	Name                                        string  `json:"name"`
 	StorageRoot                                 string  `json:"storage_root" tf:"force_new"`
 	DefaultDacID                                string  `json:"default_data_access_config_id,omitempty" tf:"suppress_diff"`
+	StorageRootCredentialId                     string  `json:"storage_root_credential_id,omitempty" tf:"suppress_diff"`
 	Owner                                       string  `json:"owner,omitempty" tf:"computed"`
 	MetastoreID                                 string  `json:"metastore_id,omitempty" tf:"computed"`
 	WorkspaceIDs                                []int64 `json:"workspace_ids,omitempty" tf:"computed"`
@@ -37,15 +38,6 @@ type MetastoreInfo struct {
 	DeltaSharingScope                           string  `json:"delta_sharing_scope,omitempty" tf:"suppress_diff"`
 	DeltaSharingRecipientTokenLifetimeInSeconds int64   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
 	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
-}
-
-func (a MetastoresAPI) getMetastore(id string) (mi MetastoreInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/metastores/"+id, nil, &mi)
-	return
-}
-
-func (a MetastoresAPI) updateMetastore(metastoreID string, update map[string]any) error {
-	return a.client.Patch(a.context, "/unity-catalog/metastores/"+metastoreID, update)
 }
 
 func ResourceMetastore() *schema.Resource {

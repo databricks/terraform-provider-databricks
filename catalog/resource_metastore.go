@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,11 +68,7 @@ func ResourceMetastore() *schema.Resource {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &create)
 			common.DataToStructPointer(d, s, &update)
-			if c.Config.IsAccountClient() {
-				acc, err := c.AccountClient()
-				if err != nil {
-					return err
-				}
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				mi, err := acc.Metastores.Create(ctx,
 					catalog.AccountsCreateMetastore{
 						MetastoreInfo: &create,
@@ -87,11 +84,8 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
-			} else {
-				w, err := c.WorkspaceClient()
-				if err != nil {
-					return err
-				}
+				return nil
+			}, func(w *databricks.WorkspaceClient) error {
 				mi, err := w.Metastores.Create(ctx, create)
 				if err != nil {
 					return err
@@ -102,61 +96,45 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
-			}
-			return nil
+				return nil
+			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if c.Config.IsAccountClient() {
-				acc, err := c.AccountClient()
-				if err != nil {
-					return err
-				}
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				mi, err := acc.Metastores.GetByMetastoreId(ctx, d.Id())
 				if err != nil {
 					return err
 				}
 				return common.StructToData(mi, s, d)
-			} else {
-				w, err := c.WorkspaceClient()
-				if err != nil {
-					return err
-				}
-
+			}, func(w *databricks.WorkspaceClient) error {
 				mi, err := w.Metastores.GetById(ctx, d.Id())
 				if err != nil {
 					return err
 				}
 				return common.StructToData(mi, s, d)
-			}
+			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
 
-			if c.Config.IsAccountClient() {
-				acc, err := c.AccountClient()
-				if err != nil {
-					return err
-				}
-				_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+				_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   d.Id(),
 					MetastoreInfo: &update,
 				})
 				if err != nil {
 					return err
 				}
-			} else {
-				w, err := c.WorkspaceClient()
-				if err != nil {
-					return err
-				}
+				return nil
+			}, func(w *databricks.WorkspaceClient) error {
 				update.Id = d.Id()
-				_, err = w.Metastores.Update(ctx, update)
+				_, err := w.Metastores.Update(ctx, update)
 				if err != nil {
 					return err
 				}
-			}
-			return nil
+				return nil
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)

@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -84,13 +85,8 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
 
-			var dac *catalog.StorageCredentialInfo
-			if c.Config.IsAccountClient() {
-				acc, err := c.AccountClient()
-				if err != nil {
-					return err
-				}
-				dac, err = acc.StorageCredentials.Create(ctx,
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+				dac, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{
 						MetastoreId:    metastoreId,
 						CredentialInfo: &create,
@@ -109,12 +105,11 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 						return err
 					}
 				}
-			} else {
-				w, err := c.WorkspaceClient()
-				if err != nil {
-					return err
-				}
-				dac, err = w.StorageCredentials.Create(ctx, create)
+				d.Set("id", dac.Id)
+				p.Pack(d)
+				return nil
+			}, func(w *databricks.WorkspaceClient) error {
+				dac, err := w.StorageCredentials.Create(ctx, create)
 				if err != nil {
 					return err
 				}
@@ -127,10 +122,10 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				if err != nil {
 					return err
 				}
-			}
-			d.Set("id", dac.Id)
-			p.Pack(d)
-			return nil
+				d.Set("id", dac.Id)
+				p.Pack(d)
+				return nil
+			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId, dacId, err := p.Unpack(d)
@@ -139,11 +134,8 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			}
 			var storageCredential *catalog.StorageCredentialInfo
 			var metastore *catalog.MetastoreInfo
-			if c.Config.IsAccountClient() {
-				acc, err := c.AccountClient()
-				if err != nil {
-					return err
-				}
+
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId: metastoreId,
 					Name:        dacId,
@@ -156,12 +148,10 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				if err != nil {
 					return err
 				}
-			} else {
-				//calling workspace-level API if using workspace client
-				w, err := c.WorkspaceClient()
-				if err != nil {
-					return err
-				}
+				isDefault := metastore.StorageRootCredentialId == dacId
+				d.Set("is_default", isDefault)
+				return common.StructToData(storageCredential, s, d)
+			}, func(w *databricks.WorkspaceClient) error {
 				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacId)
 				if err != nil {
 					return err
@@ -170,33 +160,24 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				if err != nil {
 					return err
 				}
-			}
-			isDefault := metastore.StorageRootCredentialId == dacId
-			d.Set("is_default", isDefault)
-			return common.StructToData(storageCredential, s, d)
+				isDefault := metastore.StorageRootCredentialId == dacId
+				d.Set("is_default", isDefault)
+				return common.StructToData(storageCredential, s, d)
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId, dacId, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
-			if c.Config.IsAccountClient() {
-				acc, err := c.AccountClient()
-				if err != nil {
-					return err
-				}
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					MetastoreId: metastoreId,
 					Name:        dacId,
 				})
-			} else {
-				//calling workspace-level API if using workspace client
-				w, err := c.WorkspaceClient()
-				if err != nil {
-					return err
-				}
+			}, func(w *databricks.WorkspaceClient) error {
 				return w.StorageCredentials.DeleteByName(ctx, dacId)
-			}
+			})
 		},
 	}.ToResource()
 }

@@ -129,7 +129,7 @@ resource "databricks_cluster" "single_node" {
 
 ### (Legacy) High-Concurrency clusters
 
--> **Note** This is a legacy cluster type, not related to the real serverless compute!
+-> **Note** This is a legacy cluster type, not related to the real serverless compute. See [Clusters UI changes and cluster access modes](https://docs.databricks.com/archive/compute/cluster-ui-preview.html#legacy) for information on what access mode to use when creating new clusters.
 
 To create High-Concurrency cluster, following settings should be provided:
 

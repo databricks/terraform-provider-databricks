@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -23,19 +24,33 @@ func TestCreateStorageCredentials(t *testing.T) {
 					},
 					Comment: "c",
 				},
-				Response: StorageCredentialInfo{
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "def",
+					},
+					Comment: "c",
+				},
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
 					},
-					MetastoreID: "d",
+					MetastoreId: "d",
 				},
 			},
 		},
@@ -64,23 +79,35 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 					},
 					Comment: "c",
 				},
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]any{
-					"owner": "administrators",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
+				ExpectedRequest: StorageCredentialInfo{
 					Name: "a",
 					Aws: &AwsIamRole{
 						RoleARN: "def",
 					},
-					MetastoreID: "d",
+					Comment: "c",
+					Owner:   "administrators",
+				},
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
+					},
+					MetastoreId: "d",
+					Owner:       "administrators",
 				},
 			},
 		},
@@ -111,19 +138,34 @@ func TestCreateStorageCredentialsReadOnly(t *testing.T) {
 					Comment:  "c",
 					ReadOnly: true,
 				},
-				Response: StorageCredentialInfo{
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "def",
+					},
+					Comment:  "c",
+					ReadOnly: true,
+				},
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
 					},
-					MetastoreID: "d",
+					MetastoreId: "d",
 					ReadOnly:    true,
 				},
 			},
@@ -147,21 +189,24 @@ func TestUpdateStorageCredentials(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]any{
-					"aws_iam_role": map[string]any{
-						"role_arn": "CHANGED",
+				ExpectedRequest: StorageCredentialInfo{
+					Name: "a",
+					Aws: &AwsIamRole{
+						RoleARN: "CHANGED",
 					},
+					Comment: "c",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
 				Response: StorageCredentialInfo{
 					Name: "a",
 					Aws: &AwsIamRole{
 						RoleARN: "CHANGED",
 					},
 					MetastoreID: "d",
+					Comment:     "c",
 				},
 			},
 		},
@@ -195,19 +240,33 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 					},
 					Comment: "c",
 				},
-				Response: StorageCredentialInfo{
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: StorageCredentialInfo{
+					Name: "a",
+					AzMI: &AzureManagedIdentity{
+						AccessConnectorID: "def",
+					},
+					Comment: "c",
+				},
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "def",
+					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "def",
 					},
-					MetastoreID: "d",
+					MetastoreId: "d",
 				},
 			},
 		},
@@ -223,77 +282,33 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestCreateStorageCredentialWithGcpSA(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: StorageCredentialInfo{
-					Name: "a",
-					GcpSAKey: &GcpServiceAccountKey{
-						Email:        "a@example.com",
-						PrivateKeyId: "b",
-						PrivateKey:   "abcdefg",
-					},
-					Comment: "c",
-				},
-				Response: StorageCredentialInfo{
-					Name: "a",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
-					Name: "a",
-					GcpSAKey: &GcpServiceAccountKey{
-						Email:        "a@example.com",
-						PrivateKeyId: "b",
-					},
-					MetastoreID: "d",
-				},
-			},
-		},
-		Resource: ResourceStorageCredential(),
-		Create:   true,
-		HCL: `
-		name = "a"
-		gcp_service_account_key {
-			email = "a@example.com"
-			private_key_id = "b"
-			private_key = "abcdefg"
-		}
-		comment = "c"
-		`,
-	}.ApplyNoError(t)
-}
-
 func TestUpdateAzStorageCredentials(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]any{
-					"azure_service_principal": map[string]any{
-						"directory_id":   "CHANGED",
-						"application_id": "CHANGED",
-						"client_secret":  "CHANGED",
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
-					Name: "a",
+				ExpectedRequest: StorageCredentialInfo{
+					Name:    "a",
+					Comment: "c",
 					Azure: &AzureServicePrincipal{
 						DirectoryID:   "CHANGED",
 						ApplicationID: "CHANGED",
 						ClientSecret:  "CHANGED",
 					},
-					MetastoreID: "d",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+					AzureServicePrincipal: &catalog.AzureServicePrincipal{
+						DirectoryId:   "CHANGED",
+						ApplicationId: "CHANGED",
+						ClientSecret:  "CHANGED",
+					},
+					MetastoreId: "d",
 				},
 			},
 		},
@@ -324,22 +339,38 @@ func TestCreateStorageCredentialWithDbGcpSA(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: StorageCredentialInfo{
 					Name:    "a",
-					DBGcpSA: &DbGcpServiceAccount{},
 					Comment: "c",
 				},
-				Response: StorageCredentialInfo{
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
+						Email: "a@example.com",
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: StorageCredentialInfo{
+					Name:    "a",
+					Comment: "c",
+				},
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
+						Email: "a@example.com",
+					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					DBGcpSA: &DbGcpServiceAccount{
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
 						Email: "a@example.com",
 					},
-					MetastoreID: "d",
+					MetastoreId: "d",
 				},
 			},
 		},
@@ -359,21 +390,23 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]any{
-					"azure_managed_identity": map[string]any{
-						"access_connector_id": "CHANGED",
+				ExpectedRequest: StorageCredentialInfo{
+					Name:    "a",
+					Comment: "c",
+					AzMI: &AzureManagedIdentity{
+						AccessConnectorID: "CHANGED",
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "CHANGED",
+					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "CHANGED",
 					},
-					MetastoreID: "d",
+					MetastoreId: "d",
 				},
 			},
 		},
@@ -388,93 +421,6 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 		name = "a"
 		azure_managed_identity {
 			access_connector_id = "CHANGED"
-		}
-		comment = "c"
-		`,
-	}.ApplyNoError(t)
-}
-
-func TestUpdateGcpSAStorageCredential(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: map[string]any{
-					"gcp_service_account_key": map[string]any{
-						"email":          "a@example.com",
-						"private_key_id": "b",
-						"private_key":    "abcdefg",
-					},
-				},
-				Response: StorageCredentialInfo{
-					Name: "a",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
-					Name: "a",
-					GcpSAKey: &GcpServiceAccountKey{
-						Email:        "a@example.com",
-						PrivateKeyId: "b",
-					},
-					MetastoreID: "d",
-				},
-			},
-		},
-		Resource: ResourceStorageCredential(),
-		Update:   true,
-		ID:       "a",
-		InstanceState: map[string]string{
-			"name":    "a",
-			"comment": "c",
-		},
-		HCL: `
-		name = "a"
-		gcp_service_account_key {
-			email = "a@example.com"
-			private_key_id = "b"
-			private_key = "abcdefg"
-		}
-		comment = "c"
-		`,
-	}.ApplyNoError(t)
-}
-
-func TestUpdateGcpSAStorageCredentialNoChange(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				Response: StorageCredentialInfo{
-					Name: "a",
-					GcpSAKey: &GcpServiceAccountKey{
-						Email:        "a@example.com",
-						PrivateKeyId: "b",
-					},
-					MetastoreID: "d",
-				},
-			},
-		},
-		Resource: ResourceStorageCredential(),
-		Update:   true,
-		ID:       "a",
-		InstanceState: map[string]string{
-			"name":                            "a",
-			"gcp_service_account_key.0.email": "a@example.com",
-			"gcp_service_account_key.0.private_key_id": "b",
-			"gcp_service_account_key.0.private_key":    "",
-			"comment":                                  "c",
-		},
-		HCL: `
-		name = "a"
-		gcp_service_account_key {
-			email = "a@example.com"
-			private_key_id = "b"
-			private_key = "abcdefg"
 		}
 		comment = "c"
 		`,

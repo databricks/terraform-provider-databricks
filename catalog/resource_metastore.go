@@ -116,7 +116,6 @@ func ResourceMetastore() *schema.Resource {
 					return err
 				}
 				return common.StructToData(mi, s, d)
-
 			} else {
 				w, err := c.WorkspaceClient()
 				if err != nil {
@@ -128,7 +127,6 @@ func ResourceMetastore() *schema.Resource {
 					return err
 				}
 				return common.StructToData(mi, s, d)
-
 			}
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

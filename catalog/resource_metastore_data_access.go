@@ -80,14 +80,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId := d.Get("metastore_id").(string)
 
-			//common.DataToStructPointer(d, s, &create) will error out because of DatabricksGcpServiceAccount any
-			tmpSchema := make(map[string]*schema.Schema)
-			for k, v := range s {
-				tmpSchema[k] = v
-			}
-
-			delete(tmpSchema, "databricks_gcp_service_account")
-
+			tmpSchema := removeGcpSaField(s)
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
 

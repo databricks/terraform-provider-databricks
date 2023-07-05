@@ -61,7 +61,7 @@ func ResourceStorageCredential() *schema.Resource {
 			common.DataToStructPointer(d, tmpSchema, &update)
 
 			var storageCredential *catalog.StorageCredentialInfo
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -101,7 +101,7 @@ func ResourceStorageCredential() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -131,7 +131,7 @@ func ResourceStorageCredential() *schema.Resource {
 			var update catalog.UpdateStorageCredential
 			common.DataToStructPointer(d, s, &update)
 
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -158,7 +158,7 @@ func ResourceStorageCredential() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err

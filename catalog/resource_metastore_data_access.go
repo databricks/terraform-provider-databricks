@@ -85,7 +85,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			common.DataToStructPointer(d, tmpSchema, &create)
 
 			var dac *catalog.StorageCredentialInfo
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -139,7 +139,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			}
 			var storageCredential *catalog.StorageCredentialInfo
 			var metastore *catalog.MetastoreInfo
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -180,7 +180,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err

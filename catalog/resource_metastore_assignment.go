@@ -27,7 +27,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			var create catalog.CreateMetastoreAssignment
 			common.DataToStructPointer(d, s, &create)
 			create.WorkspaceId = workspaceId
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -64,7 +64,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				return err
 			}
 			// calling account-level API if using account client
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -93,7 +93,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			var update catalog.UpdateMetastoreAssignment
 			common.DataToStructPointer(d, s, &update)
 			update.WorkspaceId = workspaceId
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -125,7 +125,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err

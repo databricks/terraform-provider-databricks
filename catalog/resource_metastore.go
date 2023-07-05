@@ -67,7 +67,7 @@ func ResourceMetastore() *schema.Resource {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &create)
 			common.DataToStructPointer(d, s, &update)
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -106,7 +106,7 @@ func ResourceMetastore() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -132,9 +132,8 @@ func ResourceMetastore() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
-			update.Id = d.Id()
 
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err
@@ -151,6 +150,7 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
+				update.Id = d.Id()
 				_, err = w.Metastores.Update(ctx, update)
 				if err != nil {
 					return err
@@ -160,7 +160,7 @@ func ResourceMetastore() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			if c.Config.IsAccountClient() && c.Config.AccountID != "" {
+			if c.Config.IsAccountClient() {
 				acc, err := c.AccountClient()
 				if err != nil {
 					return err

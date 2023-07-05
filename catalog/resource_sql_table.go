@@ -343,7 +343,7 @@ func ResourceSqlTable() *schema.Resource {
 			}
 			s["cluster_id"].ConflictsWith = []string{"warehouse_id"}
 			s["warehouse_id"].ConflictsWith = []string{"cluster_id"}
-			s["storage_location"].DiffSuppressFunc = ucDirectoryPathSuppressDiff
+			s["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
 			return s
 		})
 	return common.Resource{

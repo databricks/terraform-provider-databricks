@@ -244,7 +244,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 	}
 }
 
-// WorkspaceData is a generic way to define data resources in Terraform provider.
+// WorkspaceData is a generic way to define workspace data resources in Terraform provider.
 //
 // Example usage:
 //
@@ -256,6 +256,30 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //		...
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
+	return genericDatabricksData(func(c *DatabricksClient) (*databricks.WorkspaceClient, error) {
+		return c.WorkspaceClient()
+	}, read)
+}
+
+// AccountData is a generic way to define account data resources in Terraform provider.
+//
+// Example usage:
+//
+//	type metastoresData struct {
+//		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
+//	}
+//	return common.AccountData(func(ctx context.Context, d *metastoresData, acc *databricks.AccountClient) error {
+//		metastores, err := acc.Metastores.List(ctx)
+//		...
+//	})
+func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) *schema.Resource {
+	return genericDatabricksData(func(c *DatabricksClient) (*databricks.AccountClient, error) {
+		return c.AccountClient()
+	}, read)
+}
+
+// genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients
+func genericDatabricksData[T any, C any](getClient func(*DatabricksClient) (C, error), read func(context.Context, *T, C) error) *schema.Resource {
 	var dummy T
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		// `id` attribute must be marked as computed, otherwise it's not set!
@@ -277,12 +301,12 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 			ptr := reflect.New(reflect.ValueOf(dummy).Type())
 			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
 			client := m.(*DatabricksClient)
-			w, err := client.WorkspaceClient()
+			c, err := getClient(client)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 				return diag.FromErr(err)
 			}
-			err = read(ctx, ptr.Interface().(*T), w)
+			err = read(ctx, ptr.Interface().(*T), c)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 				diags = diag.FromErr(err)

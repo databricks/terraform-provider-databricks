@@ -10,8 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ucDirectoryPathSuppressDiff(k, old, new string, d *schema.ResourceData) bool {
+func ucDirectoryPathSlashOnlySuppressDiff(k, old, new string, d *schema.ResourceData) bool {
 	if (new == (old + "/")) || (old == (new + "/")) {
+		log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
+		return true
+	}
+	return false
+}
+
+func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.ResourceData) bool {
+	if (new == (old + "/")) || (old == (new + "/")) || (new == "" && old != "") {
 		log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
 		return true
 	}
@@ -38,7 +46,7 @@ func ResourceCatalog() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			}
-			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSuppressDiff
+			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
 			return m
 		})
 	return common.Resource{
@@ -71,6 +79,22 @@ func ResourceCatalog() *schema.Resource {
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			_, err = w.Catalogs.Update(ctx, updateCatalogRequest)
+			if err != nil {
+				return err
+			}
+
+			if d.Get("isolation_mode") != "ISOLATED" {
+				return nil
+			}
+			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
+			currentMetastoreAssignment, err := w.Metastores.Current(ctx)
+			if err != nil {
+				return err
+			}
+			_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
+				Name:             ci.Name,
+				AssignWorkspaces: []int64{currentMetastoreAssignment.WorkspaceId},
+			})
 			if err != nil {
 				return err
 			}
@@ -113,6 +137,21 @@ func ResourceCatalog() *schema.Resource {
 				return err
 			}
 			force := d.Get("force_destroy").(bool)
+			// If the workspace has isolation mode ISOLATED, we need to add the current workspace to its
+			// bindings before deleting.
+			if d.Get("isolation_mode").(string) == "ISOLATED" {
+				currentMetastoreAssignment, err := w.Metastores.Current(ctx)
+				if err != nil {
+					return err
+				}
+				_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
+					Name:             d.Id(),
+					AssignWorkspaces: []int64{currentMetastoreAssignment.WorkspaceId},
+				})
+				if err != nil {
+					return err
+				}
+			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
 	}.ToResource()

@@ -7,12 +7,12 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccModelServing(t *testing.T) {
-	t.Skip("created ticket for ML Prod team to fix this test")
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	switch cloudEnv {
 	case "aws", "azure":
@@ -20,42 +20,38 @@ func TestAccModelServing(t *testing.T) {
 		t.Skipf("not available on %s", cloudEnv)
 	}
 
+	clusterID := os.Getenv("TEST_DEFAULT_CLUSTER_ID")
+	if clusterID == "" {
+		t.Skipf("default cluster not available")
+	}
+
 	name := fmt.Sprintf("terraform-test-model-serving-%[1]s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
 	workspaceLevel(t, step{
 		Template: fmt.Sprintf(`
-		data "databricks_spark_version" "latest" {
-		}
-		resource "databricks_cluster" "this" {
-			cluster_name = "singlenode-{var.RANDOM}"
-			spark_version = data.databricks_spark_version.latest.id
-			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-			num_workers = 0
-			autotermination_minutes = 10
-			spark_conf = {
-				"spark.databricks.cluster.profile" = "singleNode"
-				"spark.master" = "local[*]"
-			}
-			custom_tags = {
-				"ResourceClass" = "SingleNode"
-			}
-			library {
-				pypi {
-					package = "mlflow"
-				}
-			}
-		}
 		resource "databricks_mlflow_experiment" "exp" {
 			name = "/Shared/%[1]s-exp"
 		}
 		resource "databricks_mlflow_model" "model" {
 			name = "%[1]s-model"
 		}
+		resource "databricks_library" "fbprophet" {
+			cluster_id = "{env.TEST_DEFAULT_CLUSTER_ID}"
+			pypi {
+			  package = "mlflow"
+			}
+		  }
+		  
 		`, name),
 		Check: func(s *terraform.State) error {
 			w := databricks.Must(databricks.NewWorkspaceClient())
-			id := s.RootModule().Resources["databricks_cluster.this"].Primary.ID
-			w.CommandExecutor.Execute(context.Background(), id, "python", fmt.Sprintf(`
+			ctx := context.Background()
+			executor, err := w.CommandExecution.Start(ctx, clusterID, compute.LanguagePython)
+			if err != nil {
+				return err
+			}
+			defer executor.Destroy(ctx)
+			results, err := executor.Execute(ctx, fmt.Sprintf(`
 				import time
 				import mlflow
 				import mlflow.pyfunc
@@ -77,12 +73,15 @@ func TestAccModelServing(t *testing.T) {
 				client = MlflowClient()
 				client.create_model_version(name="%[1]s-model", source=source, run_id=run1_id)
 				client.create_model_version(name="%[1]s-model", source=source, run_id=run1_id)
-				while client.get_model_version(name="%[1]s-model", version="1").getStatus() != ModelRegistry.ModelVersionStatus.READY:
+				while client.get_model_version(name="%[1]s-model", version="1").status != "READY":
 					time.sleep(10)
-				while client.get_model_version(name="%[1]s-model", version="2").getStatus() != ModelRegistry.ModelVersionStatus.READY:
+				while client.get_model_version(name="%[1]s-model", version="2").status != "READY":
 					time.sleep(10)
 			`, name))
-			return nil
+			if err != nil {
+				return err
+			}
+			return results.Err()
 		},
 	},
 		step{

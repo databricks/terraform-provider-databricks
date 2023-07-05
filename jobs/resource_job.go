@@ -459,18 +459,10 @@ func (a JobsAPI) Start(jobID int64, timeout time.Duration) error {
 	return a.waitForRunState(runID, "RUNNING", timeout)
 }
 
-func (a JobsAPI) Restart(id string, timeout time.Duration) error {
-	jobID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return err
-	}
+func (a JobsAPI) StopActiveRun(jobID int64, timeout time.Duration) error {
 	runs, err := a.RunsList(JobRunsListRequest{JobID: jobID, ActiveOnly: true})
 	if err != nil {
 		return err
-	}
-	if len(runs.Runs) == 0 {
-		// nothing to cancel
-		return a.Start(jobID, timeout)
 	}
 	if len(runs.Runs) > 1 {
 		return fmt.Errorf("`always_running` must be specified only with "+
@@ -483,7 +475,7 @@ func (a JobsAPI) Restart(id string, timeout time.Duration) error {
 			return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunID, err)
 		}
 	}
-	return a.Start(jobID, timeout)
+	return nil
 }
 
 // Create creates a job on the workspace given the job settings
@@ -507,7 +499,7 @@ func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 
 // Update updates a job given the id and a new set of job settings
 func (a JobsAPI) Update(id string, jobSettings JobSettings) error {
-	jobID, err := strconv.ParseInt(id, 10, 64)
+	jobID, err := parseJobId(id)
 	if err != nil {
 		return err
 	}
@@ -519,7 +511,7 @@ func (a JobsAPI) Update(id string, jobSettings JobSettings) error {
 
 // Read returns the job object with all the attributes
 func (a JobsAPI) Read(id string) (job Job, err error) {
-	jobID, err := strconv.ParseInt(id, 10, 64)
+	jobID, err := parseJobId(id)
 	if err != nil {
 		return
 	}
@@ -535,7 +527,7 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 
 // Delete deletes the job given a job id
 func (a JobsAPI) Delete(id string) error {
-	jobID, err := strconv.ParseInt(id, 10, 64)
+	jobID, err := parseJobId(id)
 	if err != nil {
 		return err
 	}
@@ -610,15 +602,96 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			Computed: true,
 		}
 		s["always_running"] = &schema.Schema{
-			Optional: true,
-			Default:  false,
-			Type:     schema.TypeBool,
+			Optional:      true,
+			Default:       false,
+			Type:          schema.TypeBool,
+			Deprecated:    "always_running will be replaced by control_run_state in the next major release.",
+			ConflictsWith: []string{"control_run_state"},
+		}
+		s["control_run_state"] = &schema.Schema{
+			Optional:      true,
+			Default:       false,
+			Type:          schema.TypeBool,
+			ConflictsWith: []string{"always_running"},
 		}
 		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
 		return s
 	})
+
+func parseJobId(id string) (int64, error) {
+	return strconv.ParseInt(id, 10, 64)
+}
+
+func getJobLifecycleManager(d *schema.ResourceData, m any) jobLifecycleManager {
+	if d.Get("always_running").(bool) {
+		return alwaysRunningLifecycleManager{d: d, m: m}
+	}
+	if d.Get("control_run_state").(bool) {
+		return controlRunStateLifecycleManager{d: d, m: m}
+	}
+	return noopLifecycleManager{}
+}
+
+type jobLifecycleManager interface {
+	OnCreate(ctx context.Context) error
+	OnUpdate(ctx context.Context) error
+}
+
+type noopLifecycleManager struct{}
+
+func (n noopLifecycleManager) OnCreate(ctx context.Context) error {
+	return nil
+}
+func (n noopLifecycleManager) OnUpdate(ctx context.Context) error {
+	return nil
+}
+
+type alwaysRunningLifecycleManager struct {
+	d *schema.ResourceData
+	m any
+}
+
+func (a alwaysRunningLifecycleManager) OnCreate(ctx context.Context) error {
+	jobID, err := parseJobId(a.d.Id())
+	if err != nil {
+		return err
+	}
+	return NewJobsAPI(ctx, a.m).Start(jobID, a.d.Timeout(schema.TimeoutCreate))
+}
+func (a alwaysRunningLifecycleManager) OnUpdate(ctx context.Context) error {
+	api := NewJobsAPI(ctx, a.m)
+	jobID, err := parseJobId(a.d.Id())
+	if err != nil {
+		return err
+	}
+	err = api.StopActiveRun(jobID, a.d.Timeout(schema.TimeoutUpdate))
+	if err != nil {
+		return err
+	}
+	return api.Start(jobID, a.d.Timeout(schema.TimeoutUpdate))
+}
+
+type controlRunStateLifecycleManager struct {
+	d *schema.ResourceData
+	m any
+}
+
+func (c controlRunStateLifecycleManager) OnCreate(ctx context.Context) error {
+	jobID, err := parseJobId(c.d.Id())
+	if err != nil {
+		return err
+	}
+	return NewJobsAPI(ctx, c.m).Start(jobID, c.d.Timeout(schema.TimeoutCreate))
+}
+func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
+	jobID, err := parseJobId(c.d.Id())
+	if err != nil {
+		return err
+	}
+	return NewJobsAPI(ctx, c.m).StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
+}
 
 func ResourceJob() *schema.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
@@ -642,6 +715,10 @@ func ResourceJob() *schema.Resource {
 			alwaysRunning := d.Get("always_running").(bool)
 			if alwaysRunning && js.MaxConcurrentRuns > 1 {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
+			}
+			controlRunState := d.Get("control_run_state").(bool)
+			if controlRunState && js.MaxConcurrentRuns > 1 {
+				return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 			}
 			for _, task := range js.Tasks {
 				if task.NewCluster == nil {
@@ -670,10 +747,7 @@ func ResourceJob() *schema.Resource {
 				return err
 			}
 			d.SetId(job.ID())
-			if d.Get("always_running").(bool) {
-				return jobsAPI.Start(job.JobID, d.Timeout(schema.TimeoutCreate))
-			}
-			return nil
+			return getJobLifecycleManager(d, c).OnCreate(ctx)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
@@ -695,10 +769,7 @@ func ResourceJob() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			if d.Get("always_running").(bool) {
-				return jobsAPI.Restart(d.Id(), d.Timeout(schema.TimeoutUpdate))
-			}
-			return nil
+			return getJobLifecycleManager(d, c).OnUpdate(ctx)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)

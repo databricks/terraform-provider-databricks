@@ -195,7 +195,7 @@ type JobTaskSettings struct {
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask                *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
-	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type`
+	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	// ConditionTask is in private preview
 	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
@@ -252,7 +252,7 @@ type JobSettings struct {
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
-	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type`
+	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`

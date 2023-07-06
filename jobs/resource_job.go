@@ -66,12 +66,22 @@ type SqlQueryTask struct {
 	QueryID string `json:"query_id"`
 }
 
+type SqlSubscription struct {
+	UserName      string `json:"user_name,omitempty"`
+	DestinationID string `json:"destination_id,omitempty"`
+}
+
 type SqlDashboardTask struct {
-	DashboardID string `json:"dashboard_id"`
+	DashboardID        string            `json:"dashboard_id"`
+	Subscriptions      []SqlSubscription `json:"subscriptions,omitempty"`
+	CustomSubject      string            `json:"custom_subject,omitempty"`
+	PauseSubscriptions bool              `json:"pause_subscriptions,omitempty"`
 }
 
 type SqlAlertTask struct {
-	AlertID string `json:"alert_id"`
+	AlertID            string            `json:"alert_id"`
+	Subscriptions      []SqlSubscription `json:"subscriptions"`
+	PauseSubscriptions bool              `json:"pause_subscriptions,omitempty"`
 }
 
 type SqlFileTask struct {

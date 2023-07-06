@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"log"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -644,6 +645,21 @@ func parseJobId(id string) (int64, error) {
 	return strconv.ParseInt(id, 10, 64)
 }
 
+// Callbacks to manage runs for jobs after creation and update.
+//
+// There are three types of lifecycle management for jobs:
+//  1. always_running: When enabled, a new run will be started after the job configuration is updated.
+//     An existing active run will be cancelled if applicable.
+//  2. control_run_state: When enabled, stops the active run of continuous jobs after the job configuration is updated.
+//     It is a no-op for non-continuous jobs.
+//  3. Noop: No lifecycle management.
+//
+// always_running is deprecated but still supported for backwards compatibility.
+type jobLifecycleManager interface {
+	OnCreate(ctx context.Context) error
+	OnUpdate(ctx context.Context) error
+}
+
 func getJobLifecycleManager(d *schema.ResourceData, m any) jobLifecycleManager {
 	if d.Get("always_running").(bool) {
 		return alwaysRunningLifecycleManager{d: d, m: m}
@@ -652,11 +668,6 @@ func getJobLifecycleManager(d *schema.ResourceData, m any) jobLifecycleManager {
 		return controlRunStateLifecycleManager{d: d, m: m}
 	}
 	return noopLifecycleManager{}
-}
-
-type jobLifecycleManager interface {
-	OnCreate(ctx context.Context) error
-	OnUpdate(ctx context.Context) error
 }
 
 type noopLifecycleManager struct{}
@@ -699,13 +710,22 @@ type controlRunStateLifecycleManager struct {
 }
 
 func (c controlRunStateLifecycleManager) OnCreate(ctx context.Context) error {
+	if c.d.Get("continuous.pause_status").(string) != "UNPAUSED" {
+		return nil
+	}
+
 	jobID, err := parseJobId(c.d.Id())
 	if err != nil {
 		return err
 	}
 	return NewJobsAPI(ctx, c.m).Start(jobID, c.d.Timeout(schema.TimeoutCreate))
 }
+
 func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
+	if c.d.Get("continuous") != nil {
+		return nil
+	}
+
 	jobID, err := parseJobId(c.d.Id())
 	if err != nil {
 		return err
@@ -737,8 +757,13 @@ func ResourceJob() *schema.Resource {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
 			}
 			controlRunState := d.Get("control_run_state").(bool)
-			if controlRunState && js.MaxConcurrentRuns > 1 {
-				return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
+			if controlRunState {
+				if js.MaxConcurrentRuns > 1 {
+					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
+				}
+				if js.Continuous == nil {
+					return fmt.Errorf("`control_run_state` must be specified only with `continuous`")
+				}
 			}
 			for _, task := range js.Tasks {
 				if task.NewCluster == nil {

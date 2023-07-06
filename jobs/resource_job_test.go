@@ -1479,26 +1479,35 @@ func TestJobRestarts(t *testing.T) {
 		err = ja.waitForRunState(890, "RUNNING", timeout)
 		assert.EqualError(t, err, "run is SOMETHING: Checking...")
 
+		testRestart := func(jobID int64, stopErr, startErr string) {
+			err := ja.StopActiveRun(jobID, timeout)
+			if stopErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, stopErr)
+			}
+			if stopErr == "" {
+				err = ja.Start(jobID, timeout)
+				if startErr == "" {
+					assert.NoError(t, err)
+				} else {
+					assert.EqualError(t, err, startErr)
+				}
+			}
+		}
+
 		// no active runs for the first time
-		err = ja.Restart("123", timeout)
-		assert.NoError(t, err)
+		testRestart(123, "", "")
 
 		// one active run for the second time
-		err = ja.Restart("123", timeout)
-		assert.NoError(t, err)
+		testRestart(123, "", "")
 
-		err = ja.Restart("111", timeout)
-		assert.EqualError(t, err, "cannot cancel run 567: nope")
+		testRestart(111, "cannot cancel run 567: nope", "")
 
-		err = ja.Restart("a", timeout)
-		assert.EqualError(t, err, "strconv.ParseInt: parsing \"a\": invalid syntax")
+		testRestart(222, "nope", "")
 
-		err = ja.Restart("222", timeout)
-		assert.EqualError(t, err, "nope")
-
-		err = ja.Restart("678", timeout)
-		assert.EqualError(t, err, "`always_running` must be specified only "+
-			"with `max_concurrent_runs = 1`. There are 2 active runs")
+		testRestart(678, "`always_running` must be specified only "+
+			"with `max_concurrent_runs = 1`. There are 2 active runs", "")
 	})
 }
 

@@ -113,7 +113,7 @@ type DbtTask struct {
 // RunJobTask contains information about RunJobTask
 type RunJobTask struct {
 	JobID         string `json:"job_id"`
-	JobParameters string `json:"job_parameters,omitempty"`
+	JobParameters map[string]string `json:"job_parameters,omitempty"`
 }
 
 // EmailNotifications contains the information for email notifications after job or task run start or completion

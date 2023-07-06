@@ -72,7 +72,7 @@ module "marketing_compute_policy" {
   source = "../modules/databricks-cluster-policy"
   team   = "marketing"
   policy_overrides = {
-    // only marketing guys will benefit from delta cache this way
+    // only the marketing team will benefit from delta cache this way
     "spark_conf.spark.databricks.io.cache.enabled" : {
       "type" : "fixed",
       "value" : "true"
@@ -86,7 +86,7 @@ module "engineering_compute_policy" {
   policy_overrides = {
     "dbus_per_hour" : {
       "type" : "range",
-      // only engineering guys can spin up big clusters
+      // only the engineering team are allowed to spin up big clusters
       "maxValue" : 50
     },
   }

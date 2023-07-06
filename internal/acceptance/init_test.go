@@ -166,6 +166,7 @@ func run(t *testing.T, steps []step) {
 	}
 	vars := map[string]string{
 		"CWD":            cwd,
+		"STICKY_RANDOM":  qa.RandomName("s"),
 		"AWS_ATTRIBUTES": awsAttrs,
 	}
 	ts := []resource.TestStep{}

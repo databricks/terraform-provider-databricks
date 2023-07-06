@@ -14,12 +14,7 @@ builds:
     - darwin
   goarch:
     - amd64
-    - '386'
-    - arm
     - arm64
-  ignore:
-    - goos: darwin
-      goarch: '386'
 archives:
 - format: zip
   name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_{{ .Os }}_{{ .Arch }}'

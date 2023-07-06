@@ -26,6 +26,7 @@ type StorageCredentialInfo struct {
 	GcpSAKey    *GcpServiceAccountKey  `json:"gcp_service_account_key,omitempty" tf:"group:access"`
 	DBGcpSA     *DbGcpServiceAccount   `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
+	ReadOnly    bool                   `json:"read_only,omitempty"`
 }
 
 func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo) error {

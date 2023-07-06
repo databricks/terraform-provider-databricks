@@ -183,21 +183,25 @@ type JobTaskSettings struct {
 	RunIf string `json:"run_if,omitempty" tf:"suppress_diff"`
 	// END Jobs + RunIf preview
 
-	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
-	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
-	JobClusterKey          string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	NotebookTask           *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
-	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
-	SparkPythonTask        *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
-	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
-	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
-	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
-	SqlTask                *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
-	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
-	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
+	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+
+	NotebookTask    *NotebookTask    `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask    *SparkJarTask    `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask *SparkPythonTask `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask *SparkSubmitTask `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask    *PipelineTask    `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask *PythonWheelTask `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask         *SqlTask         `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask         *DbtTask         `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask      `json:"run_job_task,omitempty" tf:"group:task_type"`
+
 	// ConditionTask is in private preview
 	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`

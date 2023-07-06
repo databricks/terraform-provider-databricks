@@ -458,14 +458,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				if task.RunJobTask != nil {
 					if task.RunJobTask.JobID != "" {
 						ic.Emit(&resource{
-							Resource: "databricks_sql_endpoint",
+							Resource: "databricks_job",
 							ID:       task.RunJobTask.JobID,
-						})
-					}
-					if task.RunJobTask.JobParameters != "" {
-						ic.Emit(&resource{
-							Resource: "databricks_sql_endpoint",
-							ID:       task.RunJobTask.JobParameters,
 						})
 					}
 				}

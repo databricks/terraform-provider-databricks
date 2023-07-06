@@ -1041,7 +1041,6 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 								},
 								RunJobTask: &jobs.RunJobTask{
 									JobID:         "123",
-									JobParameters: "etc",
 								},
 							},
 							{

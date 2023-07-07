@@ -112,7 +112,7 @@ type DbtTask struct {
 
 // RunJobTask contains information about RunJobTask
 type RunJobTask struct {
-	JobID string `json:"job_id"`
+	JobID         string            `json:"job_id"`
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
 }
 

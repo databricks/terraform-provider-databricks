@@ -2,7 +2,7 @@
 
 ## 1.21.0
 
- * Added condition_task to the [`databricks_job`](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource (private preview) ([#2459](https://github.com/databricks/terraform-provider-databricks/pull/2459)).
+ * Added condition_task to the [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource (private preview) ([#2459](https://github.com/databricks/terraform-provider-databricks/pull/2459)).
  * Added `AccountData`, `AccountClient` and define generic databricks data utilites for defining workspace and account-level data sources ([#2429](https://github.com/databricks/terraform-provider-databricks/pull/2429)).
  * Added documentation link to existing Databricks Terraform modules ([#2439](https://github.com/databricks/terraform-provider-databricks/pull/2439)).
  * Added experimental compute field to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2401](https://github.com/databricks/terraform-provider-databricks/pull/2401)).

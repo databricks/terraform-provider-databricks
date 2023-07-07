@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"log"
 	"sort"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -64,12 +66,22 @@ type SqlQueryTask struct {
 	QueryID string `json:"query_id"`
 }
 
+type SqlSubscription struct {
+	UserName      string `json:"user_name,omitempty"`
+	DestinationID string `json:"destination_id,omitempty"`
+}
+
 type SqlDashboardTask struct {
-	DashboardID string `json:"dashboard_id"`
+	DashboardID        string            `json:"dashboard_id"`
+	Subscriptions      []SqlSubscription `json:"subscriptions,omitempty"`
+	CustomSubject      string            `json:"custom_subject,omitempty"`
+	PauseSubscriptions bool              `json:"pause_subscriptions,omitempty"`
 }
 
 type SqlAlertTask struct {
-	AlertID string `json:"alert_id"`
+	AlertID            string            `json:"alert_id"`
+	Subscriptions      []SqlSubscription `json:"subscriptions"`
+	PauseSubscriptions bool              `json:"pause_subscriptions,omitempty"`
 }
 
 type SqlFileTask struct {
@@ -145,10 +157,6 @@ type CronSchedule struct {
 	PauseStatus          string `json:"pause_status,omitempty" tf:"computed"`
 }
 
-type TaskDependency struct {
-	TaskKey string `json:"task_key,omitempty"`
-}
-
 // BEGIN Jobs + Repo integration preview
 type GitSource struct {
 	Url      string `json:"git_url" tf:"alias:url"`
@@ -161,26 +169,32 @@ type GitSource struct {
 // End Jobs + Repo integration preview
 
 type JobTaskSettings struct {
-	TaskKey     string           `json:"task_key,omitempty"`
-	Description string           `json:"description,omitempty"`
-	DependsOn   []TaskDependency `json:"depends_on,omitempty"`
+	TaskKey     string                `json:"task_key,omitempty"`
+	Description string                `json:"description,omitempty"`
+	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
 
 	// BEGIN Jobs + RunIf preview
 	RunIf string `json:"run_if,omitempty" tf:"suppress_diff"`
 	// END Jobs + RunIf preview
 
-	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
-	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
-	JobClusterKey          string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	NotebookTask           *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
-	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
-	SparkPythonTask        *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
-	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
-	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
-	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
-	SqlTask                *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
-	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+
+	NotebookTask    *NotebookTask    `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask    *SparkJarTask    `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask *SparkPythonTask `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask *SparkSubmitTask `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask    *PipelineTask    `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask *PythonWheelTask `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask         *SqlTask         `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask         *DbtTask         `json:"dbt_task,omitempty" tf:"group:task_type"`
+
+	// ConditionTask is in private preview
+	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+
 	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`
@@ -191,6 +205,11 @@ type JobTaskSettings struct {
 type JobCluster struct {
 	JobClusterKey string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	NewCluster    *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+}
+
+type JobCompute struct {
+	ComputeKey  string               `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	ComputeSpec *compute.ComputeSpec `json:"spec,omitempty" tf:"group:cluster_type"`
 }
 
 type ContinuousConf struct {
@@ -207,7 +226,7 @@ type JobRunAs struct {
 
 type FileArrival struct {
 	URL                           string `json:"url"`
-	MinTimeBetweenTriggersSeconds int32  `json:"min_time_between_trigger_seconds,omitempty"`
+	MinTimeBetweenTriggersSeconds int32  `json:"min_time_between_triggers_seconds,omitempty"`
 	WaitAfterLastChangeSeconds    int32  `json:"wait_after_last_change_seconds,omitempty"`
 }
 
@@ -241,6 +260,7 @@ type JobSettings struct {
 	Tasks       []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
 	Format      string            `json:"format,omitempty" tf:"computed"`
 	JobClusters []JobCluster      `json:"job_clusters,omitempty" tf:"alias:job_cluster"`
+	Compute     []JobCompute      `json:"compute,omitempty" tf:"alias:compute"`
 	// END Jobs API 2.1
 
 	// BEGIN Jobs + Repo integration preview

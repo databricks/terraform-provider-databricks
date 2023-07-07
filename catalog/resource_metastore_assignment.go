@@ -108,7 +108,10 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				return acc.MetastoreAssignments.DeleteByWorkspaceIdAndMetastoreId(ctx, workspaceId, metastoreId)
 			}, func(w *databricks.WorkspaceClient) error {
-				return w.Metastores.UnassignByWorkspaceId(ctx, workspaceId)
+				return w.Metastores.Unassign(ctx, catalog.UnassignRequest{
+					MetastoreId: metastoreId,
+					WorkspaceId: workspaceId,
+				})
 			})
 		},
 	}.ToResource()

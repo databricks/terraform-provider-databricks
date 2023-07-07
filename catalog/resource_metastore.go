@@ -29,7 +29,7 @@ type MetastoreInfo struct {
 	Owner                                       string  `json:"owner,omitempty" tf:"computed"`
 	MetastoreID                                 string  `json:"metastore_id,omitempty" tf:"computed"`
 	WorkspaceIDs                                []int64 `json:"workspace_ids,omitempty" tf:"computed"`
-	Region                                      string  `json:"region,omitempty"`
+	Region                                      string  `json:"region,omitempty" tf:"computed"`
 	Cloud                                       string  `json:"cloud,omitempty" tf:"computed"`
 	GlobalMetastoreId                           string  `json:"global_metastore_id,omitempty" tf:"computed"`
 	CreatedAt                                   int64   `json:"created_at,omitempty" tf:"computed"`

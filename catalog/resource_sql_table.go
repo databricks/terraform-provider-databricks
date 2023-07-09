@@ -253,7 +253,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 
 	// Attributes common to both views and tables
 	if ti.Comment != oldti.Comment {
-		statements = append(statements, fmt.Sprintf("COMMENT ON %s %s IS '%s'", typestring, ti.FullName(), ti.Comment))
+		statements = append(statements, fmt.Sprintf("COMMENT ON %s %s IS '%s'", typestring, ti.FullName(), parseComment(ti.Comment)))
 	}
 
 	if !reflect.DeepEqual(ti.Properties, oldti.Properties) {

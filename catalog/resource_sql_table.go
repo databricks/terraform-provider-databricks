@@ -57,6 +57,10 @@ func (ti *SqlTableInfo) FullName() string {
 	return fmt.Sprintf("%s.%s.%s", ti.CatalogName, ti.SchemaName, ti.Name)
 }
 
+func parseComment(s string) string {
+	return strings.ReplaceAll(s, "'", `\'`)
+}
+
 // These properties are added automatically
 // If we do not customize the diff using these then terraform will constantly try to remove them
 // `properties` is essentially a "partially" computed field
@@ -146,9 +150,9 @@ func (ti *SqlTableInfo) serializeColumnInfo(col SqlColumnInfo) string {
 
 	comment := ""
 	if col.Comment != "" {
-		comment = fmt.Sprintf(" COMMENT %s", col.Comment)
+		comment = fmt.Sprintf(" COMMENT '%s'", parseComment(col.Comment))
 	}
-	return fmt.Sprintf("%s %s%s%s", col.Name, col.Type, notNull, comment) // id INT NOT NULL COMMENT something
+	return fmt.Sprintf("%s %s%s%s", col.Name, col.Type, notNull, comment) // id INT NOT NULL COMMENT 'something'
 }
 
 func (ti *SqlTableInfo) serializeColumnInfos() string {
@@ -211,7 +215,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	}
 
 	if ti.Comment != "" {
-		statements = append(statements, fmt.Sprintf("\nCOMMENT '%s'", ti.Comment)) // COMMENT 'this is a comment'
+		statements = append(statements, fmt.Sprintf("\nCOMMENT '%s'", parseComment(ti.Comment))) // COMMENT 'this is a comment'
 	}
 
 	if len(ti.Properties) > 0 {

@@ -1050,7 +1050,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 									Commands:    []string{"dbt init"},
 								},
 								RunJobTask: &jobs.RunJobTask{
-									JobID: "14",
+									JobID: "123",
 								},
 							},
 							{

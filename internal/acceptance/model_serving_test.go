@@ -51,6 +51,13 @@ func TestAccModelServing(t *testing.T) {
 				return err
 			}
 			defer executor.Destroy(ctx)
+			installResults, err := executor.Execute(ctx, `%pip install mlflow`)
+			if err != nil {
+				return err
+			}
+			if installResults.Err() != nil {
+				return installResults.Err()
+			}
 			results, err := executor.Execute(ctx, fmt.Sprintf(`
 				import time
 				import mlflow

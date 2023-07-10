@@ -1,5 +1,17 @@
 # Version changelog
 
+## 1.21.0
+
+ * Added condition_task to the [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource (private preview) ([#2459](https://github.com/databricks/terraform-provider-databricks/pull/2459)).
+ * Added `AccountData`, `AccountClient` and define generic databricks data utilites for defining workspace and account-level data sources ([#2429](https://github.com/databricks/terraform-provider-databricks/pull/2429)).
+ * Added documentation link to existing Databricks Terraform modules ([#2439](https://github.com/databricks/terraform-provider-databricks/pull/2439)).
+ * Added experimental compute field to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2401](https://github.com/databricks/terraform-provider-databricks/pull/2401)).
+ * Added import example to doc for [databricks_group_member](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_member) resource ([#2453](https://github.com/databricks/terraform-provider-databricks/pull/2453)).
+ * Added support for subscriptions in dashboards & alert SQL tasks in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2447](https://github.com/databricks/terraform-provider-databricks/pull/2447)).
+ * Fixed model serving integration test ([#2460](https://github.com/databricks/terraform-provider-databricks/pull/2460), [#2461](https://github.com/databricks/terraform-provider-databricks/pull/2461)).
+ * Fixed [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource file arrival trigger parameter name ([#2438](https://github.com/databricks/terraform-provider-databricks/pull/2438)).
+ * Fixed catalog_workspace_binding_test ([#2463](https://github.com/databricks/terraform-provider-databricks/pull/2463), [#2451](https://github.com/databricks/terraform-provider-databricks/pull/2451)).
+
 ## 1.20.0
 
  * Added suppress diff for `storage_location` in [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) and [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resources ([#2408](https://github.com/databricks/terraform-provider-databricks/pull/2408)).

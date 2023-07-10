@@ -992,6 +992,16 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
 			},
 			{
+				Method:       "GET",
+				Resource:     "/api/2.1/jobs/get?job_id=123",
+				ReuseRequest: true,
+				Response:     jobs.Job{
+					JobID: 123,
+					Settings: &jobs.JobSettings{
+						Name: "Referenced Job",
+				},
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.1/jobs/get?job_id=14",
 				Response: jobs.Job{

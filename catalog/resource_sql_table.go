@@ -58,7 +58,7 @@ func (ti *SqlTableInfo) FullName() string {
 }
 
 func parseComment(s string) string {
-	return strings.ReplaceAll(s, "'", `\'`)
+	return strings.ReplaceAll(strings.ReplaceAll(s, `\'`, `'`), `'`, `\'`)
 }
 
 // These properties are added automatically

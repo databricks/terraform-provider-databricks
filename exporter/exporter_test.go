@@ -993,16 +993,6 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=123",
-				Response: jobs.Job{
-					JobID: 123,
-					Settings: &jobs.JobSettings{
-						Name:   "Child Job",
-					},
-				},
-			},
-			{
-				Method:   "GET",
 				Resource: "/api/2.1/jobs/get?job_id=14",
 				Response: jobs.Job{
 					JobID: 14,
@@ -1050,7 +1040,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 									Commands:    []string{"dbt init"},
 								},
 								RunJobTask: &jobs.RunJobTask{
-									JobID: "123",
+									JobID: "14",
 								},
 							},
 							{

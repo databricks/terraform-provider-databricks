@@ -114,7 +114,6 @@ func TestAccModelServing(t *testing.T) {
 						model_name = "%[1]s-model"
 						model_version = "2"
 						workload_size = "Small"
-						scale_to_zero_enabled = false
 					}
 					traffic_config {
 						routes {

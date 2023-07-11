@@ -2,7 +2,6 @@ package mlflow
 
 import (
 	"context"
-	"fmt"
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -11,15 +10,11 @@ import (
 
 func DataSourceModel() *schema.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
-		Name         string            `json:"name,omitempty" tf:"computed"`
-		Version      string            `json:"version,omitempty" tf:"computed"`
+		Name         string            `json:"name"`
+		Version      string            `json:"version,omitempty"`
 		ModelVersion []ml.ModelVersion `json:"model_versions,omitempty" tf:"computed"`
 	}, w *databricks.WorkspaceClient) error {
 		var model []ml.ModelVersion
-
-		if data.Name == "" {
-			return fmt.Errorf("you need to specify a `name`")
-		}
 
 		// Get latest version models for each requests stage if no version is specified.
 		if data.Version == "" {

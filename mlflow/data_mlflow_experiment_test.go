@@ -28,10 +28,10 @@ func TestDataSourceExperimentById(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceExperiment(),
 		ID:          ".",
-		HCL:         fmt.Sprintf(`id = "%s"`, "1234567890"),
+		HCL:         fmt.Sprintf(`experiment_id = "%s"`, "1234567890"),
 	}.ApplyAndExpectData(t, map[string]any{
 		"artifact_location": "dbfs:/databricks/mlflow-tracking/1234567890",
-		"id":                "1234567890",
+		"experiment_id":     "1234567890",
 		"lifecycle_stage":   "active",
 		"name":              "/Users/databricks/my-experiment",
 	})
@@ -54,7 +54,7 @@ func TestDataSourceExperimentByIdNotFound(t *testing.T) {
 		NonWritable: true,
 		Resource:    DataSourceExperiment(),
 		ID:          ".",
-		HCL:         fmt.Sprintf(`id = "%s"`, "0987654321"),
+		HCL:         fmt.Sprintf(`experiment_id = "%s"`, "0987654321"),
 	}.ExpectError(t, "Node ID 0987654321 does not exist.")
 }
 
@@ -83,7 +83,7 @@ func TestDataSourceExperimentByName(t *testing.T) {
 		HCL:         fmt.Sprintf(`name = "%s"`, experimentName),
 	}.ApplyAndExpectData(t, map[string]any{
 		"artifact_location": "dbfs:/databricks/mlflow-tracking/1234567890",
-		"id":                "1234567890",
+		"experiment_id":     "1234567890",
 		"lifecycle_stage":   "active",
 		"name":              experimentName,
 	})

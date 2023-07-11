@@ -12,7 +12,7 @@ Retrieves the settings of [databricks_mlflow_experiment](../resources/mlflow_exp
 
 ```hcl
 data "databricks_mlflow_experiment" "this" {
-  id = "1234567890"
+  experiment_id = "1234567890"
 }
 
 data "databricks_mlflow_experiment" "this" {
@@ -22,8 +22,8 @@ data "databricks_mlflow_experiment" "this" {
 
 ## Argument Reference
 
-* `id` - (Required if `name` isn't specified) Unique identifier for the experiment.
-* `name` - (Required if `id` isn't specified) Path to experiment.
+* `experiment_id` - (Required if `name` isn't specified) Unique identifier for the experiment.
+* `name` - (Required if `experiment_id` isn't specified) Path to experiment.
 
 ## Attribute Reference
 
@@ -32,4 +32,4 @@ This data source exports the following attributes:
 * `artifact_location` - Location where artifacts for the experiment are stored.
 * `name` - Path to experiment.
 * `lifecycle_stage` - Current life cycle stage of the experiment: `active` or `deleted`.
-* `id` - Unique identifier for the experiment.
+* `experiment_id` - Unique identifier for the experiment.

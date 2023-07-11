@@ -63,16 +63,17 @@ func TestWarehouseDataByName_NotFoundError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
-
-				Response: EndpointList{
-					Endpoints: []SQLEndpoint{
-						{
-							Name:        "foo",
-							ClusterSize: "Small",
-							ID:          "abc",
-							State:       "RUNNING",
-						},
+				Resource: "/api/2.0/preview/sql/data_sources",
+				Response: []DataSource{
+					{
+						ID:         "d7c9d05c-7496-4c69-b089-48823edad401",
+						EndpointID: "def",
+						Name:       "test",
+					},
+					{
+						ID:         "d7c9d05c-7496-4c69-b089-48823edad40c",
+						EndpointID: "abc",
+						Name:       "abc2",
 					},
 				},
 			},
@@ -90,22 +91,17 @@ func TestWarehouseDataByName_DuplicatesError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
-
-				Response: EndpointList{
-					Endpoints: []SQLEndpoint{
-						{
-							Name:        "abc",
-							ClusterSize: "Small",
-							ID:          "abc",
-							State:       "RUNNING",
-						},
-						{
-							Name:        "abc",
-							ClusterSize: "Small",
-							ID:          "abc2",
-							State:       "RUNNING",
-						},
+				Resource: "/api/2.0/preview/sql/data_sources",
+				Response: []DataSource{
+					{
+						ID:         "d7c9d05c-7496-4c69-b089-48823edad401",
+						EndpointID: "def",
+						Name:       "abc",
+					},
+					{
+						ID:         "d7c9d05c-7496-4c69-b089-48823edad40c",
+						EndpointID: "abc",
+						Name:       "abc",
 					},
 				},
 			},
@@ -123,22 +119,17 @@ func TestWarehouseDataByName(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
-
-				Response: EndpointList{
-					Endpoints: []SQLEndpoint{
-						{
-							Name:        "foo",
-							ClusterSize: "Small",
-							ID:          "abc2",
-							State:       "RUNNING",
-						},
-						{
-							Name:        "test",
-							ClusterSize: "Small",
-							ID:          "abc",
-							State:       "RUNNING",
-						},
+				Resource: "/api/2.0/preview/sql/data_sources",
+				Response: []DataSource{
+					{
+						ID:         "d7c9d05c-7496-4c69-b089-48823edad401",
+						EndpointID: "def",
+						Name:       "abc",
+					},
+					{
+						ID:         "d7c9d05c-7496-4c69-b089-48823edad40c",
+						EndpointID: "abc",
+						Name:       "test",
 					},
 				},
 			},
@@ -153,7 +144,6 @@ func TestWarehouseDataByName(t *testing.T) {
 					State:       "RUNNING",
 				},
 			},
-			dataSourceListHTTPFixture,
 		},
 		Resource:    DataSourceWarehouse(),
 		Read:        true,

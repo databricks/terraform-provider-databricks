@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,38 +33,36 @@ func DataSourceWarehouse() *schema.Resource {
 	return common.DataResource(SQLWarehouseInfo{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
 		data := e.(*SQLWarehouseInfo)
 		var id string
-		endpointsAPI := NewSQLEndpointsAPI(ctx, c)
-		if data.Name != "" {
-			endpoints, err := endpointsAPI.List()
-			if err != nil {
-				return err
-			}
-			selected := []SQLEndpoint{}
-			for _, endpoint := range endpoints.Endpoints {
-				if endpoint.Name == data.Name {
-					selected = append(selected, endpoint)
-				}
-			}
-			if len(selected) == 0 {
-				return fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
-			}
-			if len(selected) > 1 {
-				return fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
-			}
-			id = selected[0].ID
-		} else if data.ID != "" {
-			id = data.ID
-		} else {
+		if data.ID == "" && data.Name == "" {
 			return fmt.Errorf("either 'id' or 'name' should be provided")
 		}
-		err := c.Get(ctx, fmt.Sprintf("/sql/warehouses/%s", id), nil, data)
+		endpointsAPI := NewSQLEndpointsAPI(ctx, c)
+		selected := []DataSource{}
+		dataSources, err := endpointsAPI.listDataSources()
 		if err != nil {
 			return err
 		}
-		data.DataSourceID, err = endpointsAPI.ResolveDataSourceID(data.ID)
+		for _, source := range dataSources {
+			log.Printf("[DEBUG] source=%v", source)
+			if data.Name != "" && source.Name == data.Name {
+				selected = append(selected, source)
+			} else if data.ID != "" && source.EndpointID == data.ID {
+				selected = append(selected, source)
+				break
+			}
+		}
+		if len(selected) == 0 {
+			return fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
+		}
+		if len(selected) > 1 {
+			return fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
+		}
+		id = selected[0].EndpointID
+		err = c.Get(ctx, fmt.Sprintf("/sql/warehouses/%s", id), nil, data)
 		if err != nil {
 			return err
 		}
+		data.DataSourceID = selected[0].ID
 		return nil
 	})
 }

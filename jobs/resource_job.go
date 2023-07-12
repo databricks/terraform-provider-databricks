@@ -334,11 +334,11 @@ type RunState struct {
 
 // JobRun is a simplified representation of corresponding entity
 type JobRun struct {
-	JobID       int64    `json:"job_id"`
-	RunID       int64    `json:"run_id"`
-	NumberInJob int64    `json:"number_in_job"`
+	JobID       int64    `json:"job_id,omitempty"`
+	RunID       int64    `json:"run_id,omitempty"`
+	NumberInJob int64    `json:"number_in_job,omitempty"`
 	StartTime   int64    `json:"start_time,omitempty"`
-	State       RunState `json:"state"`
+	State       RunState `json:"state,omitempty"`
 	Trigger     string   `json:"trigger,omitempty"`
 	RuntType    string   `json:"run_type,omitempty"`
 
@@ -710,15 +710,7 @@ type controlRunStateLifecycleManager struct {
 }
 
 func (c controlRunStateLifecycleManager) OnCreate(ctx context.Context) error {
-	if c.d.Get("continuous.pause_status").(string) != "UNPAUSED" {
-		return nil
-	}
-
-	jobID, err := parseJobId(c.d.Id())
-	if err != nil {
-		return err
-	}
-	return NewJobsAPI(ctx, c.m).Start(jobID, c.d.Timeout(schema.TimeoutCreate))
+	return nil
 }
 
 func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
@@ -730,7 +722,14 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return NewJobsAPI(ctx, c.m).StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
+
+	api := NewJobsAPI(ctx, c.m)
+	_, err = api.RunNow(jobID)
+	if err == nil {
+		return nil
+	}
+
+	return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
 }
 
 func ResourceJob() *schema.Resource {

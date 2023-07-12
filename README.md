@@ -42,6 +42,7 @@
 | [databricks_mlflow_model](docs/resources/mlflow_model.md)
 | [databricks_mlflow_experiment](docs/resources/mlflow_experiment.md)
 | [databricks_mlflow_webhook](docs/resources/mlflow_webhook.md)
+| [databricks_model_serving](docs/resources/model_serving.md)
 | [databricks_mount](docs/resources/mount.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)
 | [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)

@@ -615,6 +615,18 @@ func TestResourceJobCreate_AlwaysRunning_Conflict(t *testing.T) {
 	}.ExpectError(t, "`always_running` must be specified only with `max_concurrent_runs = 1`")
 }
 
+func TestResourceJobCreate_ControlRunState_AlwaysRunningConflict(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `control_run_state = true
+		always_running = true
+		continuous {
+			pause_status = "UNPAUSED"
+		}`,
+	}.ExpectError(t, "invalid config supplied. [always_running] Conflicting configuration arguments. [control_run_state] Conflicting configuration arguments")
+}
+
 func TestResourceJobCreate_ControlRunState_NoContinuous(t *testing.T) {
 	qa.ResourceFixture{
 		Create:   true,

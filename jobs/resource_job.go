@@ -649,9 +649,8 @@ func parseJobId(id string) (int64, error) {
 //
 // There are three types of lifecycle management for jobs:
 //  1. always_running: When enabled, a new run will be started after the job configuration is updated.
-//     An existing active run will be cancelled if applicable.
+//     An existing active run will be cancelled if one exists.
 //  2. control_run_state: When enabled, stops the active run of continuous jobs after the job configuration is updated.
-//     It is a no-op for non-continuous jobs.
 //  3. Noop: No lifecycle management.
 //
 // always_running is deprecated but still supported for backwards compatibility.

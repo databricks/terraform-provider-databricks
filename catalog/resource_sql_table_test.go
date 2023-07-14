@@ -493,19 +493,19 @@ func TestParseComment_empty(t *testing.T) {
 }
 
 func TestParseComment_noquote(t *testing.T) {
-	cmt:= "Comment without single quote"
+	cmt := "Comment without single quote"
 	prsd := parseComment(cmt)
 	assert.Equal(t, "Comment without single quote", prsd)
 }
 
 func TestParseComment_escapedquote(t *testing.T) {
-	cmt:= `\'Comment with\'escaped quotes\'`
+	cmt := `\'Comment with\'escaped quotes\'`
 	prsd := parseComment(cmt)
 	assert.Equal(t, `\'Comment with\'escaped quotes\'`, prsd)
 }
 
 func TestParseComment_unescapedquote(t *testing.T) {
-	cmt:= "Comment with' unescaped quotes '"
+	cmt := "Comment with' unescaped quotes '"
 	prsd := parseComment(cmt)
-	assert.Equal(t,`Comment with\' unescaped quotes \'`,prsd)
+	assert.Equal(t, `Comment with\' unescaped quotes \'`, prsd)
 }

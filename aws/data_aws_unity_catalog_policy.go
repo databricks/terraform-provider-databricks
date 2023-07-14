@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"regexp"
 )
 
 func DataAwsUnityCatalogPolicy() *schema.Resource {
@@ -37,17 +39,6 @@ func DataAwsUnityCatalogPolicy() *schema.Resource {
 					{
 						Effect: "Allow",
 						Actions: []string{
-							"kms:Decrypt",
-							"kms:Encrypt",
-							"kms:GenerateDataKey*",
-						},
-						Resources: []string{
-							fmt.Sprintf("arn:aws:kms:%s", kmsKey),
-						},
-					},
-					{
-						Effect: "Allow",
-						Actions: []string{
 							"sts:AssumeRole",
 						},
 						Resources: []string{
@@ -55,6 +46,19 @@ func DataAwsUnityCatalogPolicy() *schema.Resource {
 						},
 					},
 				},
+			}
+			if _, ok := d.GetOk("kms_name"); ok {
+				policy.Statements = append(policy.Statements, &awsIamPolicyStatement{
+					Effect: "Allow",
+					Actions: []string{
+						"kms:Decrypt",
+						"kms:Encrypt",
+						"kms:GenerateDataKey*",
+					},
+					Resources: []string{
+						fmt.Sprintf("arn:aws:kms:%s", kmsKey),
+					},
+				})
 			}
 			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
@@ -66,6 +70,28 @@ func DataAwsUnityCatalogPolicy() *schema.Resource {
 			return nil
 		},
 		Schema: map[string]*schema.Schema{
+			"kms_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[0-9a-zA-Z/_-]+$`),
+					"must contain only alphanumeric, hyphens, forward slashes, and underscores characters"),
+			},
+			"bucket_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[0-9a-zA-Z_-]+$`),
+					"must contain only alphanumeric, underscore, and hyphen characters"),
+			},
+			"role_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"aws_account_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"json": {
 				Type:     schema.TypeString,
 				Computed: true,

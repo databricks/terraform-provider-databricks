@@ -648,7 +648,7 @@ var resourcesMap map[string]importable = map[string]importable{
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
 								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
-								Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
+								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
 							})
 						}
 					}
@@ -661,7 +661,7 @@ var resourcesMap map[string]importable = map[string]importable{
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
 								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
-								Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
+								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
 							})
 						}
 					}
@@ -674,7 +674,7 @@ var resourcesMap map[string]importable = map[string]importable{
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
 								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
-								Name:     fmt.Sprintf("%s_%s_%s", g.DisplayName, g.ID, x.Display),
+								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
 							})
 						}
 					}
@@ -704,9 +704,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := d.Get("user_name").(string)
 			// if CLI argument includeUserDomains is set then it includes domain portion as well
 			if ic.includeUserDomains {
-				return nameNormalizationRegex.ReplaceAllString(s, "_")
+				return nameNormalizationRegex.ReplaceAllString(s, "_") + "_" + d.Id()
 			}
-			return nameNormalizationRegex.ReplaceAllString(strings.Split(s, "@")[0], "_")
+			return nameNormalizationRegex.ReplaceAllString(strings.Split(s, "@")[0], "_") + "_" + d.Id()
 		},
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findUserByName(r.Value)

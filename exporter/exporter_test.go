@@ -1257,7 +1257,7 @@ func TestResourceName(t *testing.T) {
 	norm := ic.ResourceName(&resource{
 		Name: "9721431b_bcd3_4526_b90f_f5de2befec8c-dbutils_extensions_2_11_0_0_1-18dc8.jar",
 	})
-	assert.Equal(t, "dbutils_extensions_jar", norm)
+	assert.Equal(t, "dbutils_extensions_2_11_0_0_1_18dc8_jar", norm)
 
 	norm = ic.ResourceName(&resource{
 		Name: "9721431b_bcd3_4526_b90f_f5de2befec8c|8737798193",

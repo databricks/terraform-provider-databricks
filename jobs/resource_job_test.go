@@ -592,7 +592,6 @@ func TestResourceJobCreate_RunJobTask(t *testing.T) {
 	assert.Equal(t, "123", d.Id())
 }
 
-
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

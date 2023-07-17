@@ -147,7 +147,7 @@ resource "databricks_job" "this" {
 * `pause_status` - (Optional) Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 * `file_arrival` - (Required) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) string with URL under the Unity Catalog external location that will be monitored for new files. Please note that have a trailing slash character (`/`).
-  * `min_time_between_trigger_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
+  * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
   * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
 
 ### git_source Configuration Block
@@ -268,8 +268,15 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 * `warehouse_id` - (Required) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now.
 * `parameters` - (Optional) (Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters.
 * `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
-* `dashboard` - (Optional) block consisting of single string field: `dashboard_id` - identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
-* `alert` - (Optional) block consisting of single string field: `alert_id` - identifier of the Databricks SQL Alert.
+* `dashboard` - (Optional) block consisting of following fields:
+  * `dashboard_id` - (Required) (String) identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
+  * `subscriptions` - (Optional) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
+  * `custom_subject` - (Optional) string specifying a custom subject of email sent.
+  * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
+* `alert` - (Optional) block consisting of following fields: 
+  * `alert_id` - (Required) (String) identifier of the Databricks SQL Alert.
+  * `subscriptions` - (Required) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
+  * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `file` - (Optional) block consisting of single string field: `path` - a relative path to the file (inside the Git repository) with SQL commands to execute.  *Requires `git_source` configuration block*.
 
 Example
@@ -283,6 +290,30 @@ resource "databricks_job" "sql_aggregation_job" {
       warehouse_id = databricks_sql_endpoint.sql_job_warehouse.id
       query {
         query_id = databricks_sql_query.agg_query.id
+      }
+    }
+  }
+  task {
+    task_key = "run_dashboard"
+    sql_task {
+      warehouse_id = databricks_sql_endpoint.sql_job_warehouse.id
+      dashboard {
+        dashboard_id = databricks_sql_dashboard.dash.id
+        subscriptions {
+          user_name = "user@domain.com"
+        }
+      }
+    }
+  }
+  task {
+    task_key = "run_alert"
+    sql_task {
+      warehouse_id = databricks_sql_endpoint.sql_job_warehouse.id
+      alert {
+        alert_id = databricks_sql_alert.alert.id
+        subscriptions {
+          user_name = "user@domain.com"
+        }
       }
     }
   }

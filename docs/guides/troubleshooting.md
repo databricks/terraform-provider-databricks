@@ -120,3 +120,6 @@ This kind of errors happens when the 32-bit version of Databricks Terraform prov
 
 This error may appear when creating Databricks users/groups/service principals on Databricks account level when no `account_id` is specified in the provider's configuration.  Make sure that `account_id` is specified & has a correct value.
 
+## Error: oauth-m2m: oidc: parse .well-known: invalid character '<' looking for beginning of value.
+
+This similar to previous item.  Make sure that `account_id` is specified in the provider configuration & it has a correct value.

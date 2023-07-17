@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -342,6 +343,208 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "17", d.Id())
+}
+
+func TestResourceJobCreate_JobCompute(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "JobComputed",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey:    "b",
+							ComputeKey: "j",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/Stuff",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+					Compute: []JobCompute{
+						{
+							ComputeKey: "j",
+							ComputeSpec: &compute.ComputeSpec{
+								Kind: "t",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 18,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=18",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobComputed"
+
+		compute {
+			compute_key = "j"
+			spec {
+			  kind   	= "t"
+			}
+		}
+
+		task {
+			task_key = "b"
+
+			compute_key = "j"
+
+			notebook_task {
+				notebook_path = "/Stuff"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "18", d.Id())
+}
+
+func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name:              "TF SQL task subscriptions",
+					MaxConcurrentRuns: 1,
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "a",
+							SqlTask: &SqlTask{
+								WarehouseID: "dca3a0ba199040eb",
+								Alert: &SqlAlertTask{
+									AlertID: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+									Subscriptions: []SqlSubscription{
+										{UserName: "user@domain.com"},
+										{DestinationID: "Test"},
+									},
+									PauseSubscriptions: true,
+								},
+							},
+						},
+						{
+							TaskKey: "d",
+							SqlTask: &SqlTask{
+								WarehouseID: "dca3a0ba199040eb",
+								Dashboard: &SqlDashboardTask{
+									DashboardID: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
+									Subscriptions: []SqlSubscription{
+										{UserName: "user@domain.com"},
+										{DestinationID: "Test"},
+									},
+									CustomSubject: "test",
+								},
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						Name: "TF SQL task subscriptions",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "a",
+								SqlTask: &SqlTask{
+									WarehouseID: "dca3a0ba199040eb",
+									Alert: &SqlAlertTask{
+										AlertID: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+										Subscriptions: []SqlSubscription{
+											{UserName: "user@domain.com"},
+											{DestinationID: "Test"},
+										},
+										PauseSubscriptions: true,
+									},
+								},
+							},
+							{
+								TaskKey: "d",
+								SqlTask: &SqlTask{
+									WarehouseID: "dca3a0ba199040eb",
+									Dashboard: &SqlDashboardTask{
+										DashboardID: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
+										Subscriptions: []SqlSubscription{
+											{UserName: "user@domain.com"},
+											{DestinationID: "Test"},
+										},
+										CustomSubject: "test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "TF SQL task subscriptions"
+
+		task {
+		  task_key = "a"
+	  
+		  sql_task {
+			warehouse_id = "dca3a0ba199040eb"
+			alert {
+			  subscriptions {
+				user_name = "user@domain.com"
+			  }
+			  subscriptions {
+				destination_id = "Test"
+			  }
+			  pause_subscriptions = true
+			  alert_id = "3cf91a42-6217-4f3c-a6f0-345d489051b9"
+			}
+		  }
+		}
+	  
+		task {
+		  task_key = "d"
+	  
+		  sql_task {
+			warehouse_id = "dca3a0ba199040eb"
+			dashboard {
+			  subscriptions {
+				user_name = "user@domain.com"
+			  }
+			  subscriptions {
+				destination_id = "Test"
+			  }
+			  pause_subscriptions = false
+			  dashboard_id = "d81a7760-7fd2-443e-bf41-95a60c2f4c7c"
+			  custom_subject = "test"
+			}
+		  }
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
 }
 
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -143,7 +144,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 						},
 						{
 							TaskKey: "b",
-							DependsOn: []TaskDependency{
+							DependsOn: []jobs.TaskDependency{
 								{
 									TaskKey: "a",
 								},

@@ -47,6 +47,7 @@ var (
 	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp           = regexp.MustCompile(`^folders/(\d+)$`)
 	dltDefaultStorageRegex    = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	ignoreIdeFolderRegex      = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -1169,21 +1170,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		List: func(ic *importContext) error {
-			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			notebookList, err := notebooksAPI.List("/", true, true)
-			if err != nil {
-				return err
-			}
+			notebookList := ic.getAllWorkspaceObjects()
 			for offset, notebook := range notebookList {
-				if strings.HasPrefix(notebook.Path, "/Repos") {
+				if notebook.ObjectType != workspace.Notebook || strings.HasPrefix(notebook.Path, "/Repos") {
 					continue
 				}
-				if notebook.ObjectType == workspace.Notebook {
-					ic.Emit(&resource{
-						Resource: "databricks_notebook",
-						ID:       notebook.Path,
-					})
+				if res := ignoreIdeFolderRegex.FindStringSubmatch(notebook.Path); res != nil {
+					continue
 				}
+				ic.Emit(&resource{
+					Resource: "databricks_notebook",
+					ID:       notebook.Path,
+				})
+
 				if offset%50 == 0 {
 					log.Printf("[INFO] Scanned %d of %d notebooks",
 						offset+1, len(notebookList))
@@ -1695,7 +1694,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		List: func(ic *importContext) error {
 			directoryList := ic.getAllDirectories()
 			for offset, directory := range directoryList {
-				if strings.HasPrefix(directory.Path, "/Repos") {
+				res := ignoreIdeFolderRegex.FindStringSubmatch(directory.Path)
+				if strings.HasPrefix(directory.Path, "/Repos") || res != nil {
 					continue
 				}
 				// TODO: don't emit directories for deleted users/SPs (how to identify them?)

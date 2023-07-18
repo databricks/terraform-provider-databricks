@@ -142,10 +142,22 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
-		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allDirectories, _ = notebooksAPI.ListDirectories("/", true, true)
+		objects := ic.getAllWorkspaceObjects()
+		for _, v := range objects {
+			if v.ObjectType == workspace.Directory {
+				ic.allDirectories = append(ic.allDirectories, v)
+			}
+		}
 	}
 	return ic.allDirectories
+}
+
+func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
+	if len(ic.allWorkspaceObjects) == 0 {
+		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+		ic.allWorkspaceObjects, _ = notebooksAPI.List("/", true, true)
+	}
+	return ic.allWorkspaceObjects
 }
 
 func (ic *importContext) emitGroups(u scim.User, principal string) {

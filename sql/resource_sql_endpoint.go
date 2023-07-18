@@ -29,7 +29,7 @@ type SQLEndpoint struct {
 	MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"default:1"`
 	NumClusters             int             `json:"num_clusters,omitempty" tf:"suppress_diff"`
 	EnablePhoton            bool            `json:"enable_photon" tf:"optional,default:true"`
-	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty" tf:"suppress_diff"`
+	EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty" tf:"suppress_diff,force_new"`
 	InstanceProfileARN      string          `json:"instance_profile_arn,omitempty"`
 	State                   string          `json:"state,omitempty" tf:"computed"`
 	JdbcURL                 string          `json:"jdbc_url,omitempty" tf:"computed"`

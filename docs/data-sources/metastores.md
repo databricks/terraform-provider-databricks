@@ -11,7 +11,7 @@ Retrieves a mapping of name to id of [databricks_metastore](../resources/metasto
 
 ## Example Usage
 
-Listing ids of all catalogs:
+Mapping of name to id of all metastores:
 
 ```hcl
 data "databricks_metastores" "all" {}

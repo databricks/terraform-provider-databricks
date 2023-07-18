@@ -38,10 +38,6 @@ type MetastoreInfo struct {
 	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
 
-type MetastoresData struct {
-	Ids []string `json:"ids,omitempty" tf:"computed,slice_set"`
-}
-
 type CreateMetastore struct {
 	Name        string `json:"name"`
 	StorageRoot string `json:"storage_root"`

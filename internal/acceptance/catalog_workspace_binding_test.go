@@ -7,6 +7,12 @@ import (
 func TestUcAccCatalogWorkspaceBindingToOtherWorkspace(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
+		# The dummy workspace needs to be assigned to the metastore for this test to pass
+		resource "databricks_metastore_assignment" "this" {
+			metastore_id = "{env.TEST_METASTORE_ID}"
+			workspace_id = {env.TEST_WORKSPACE_ID}
+		}
+
 		resource "databricks_catalog" "dev" {
 			name           = "dev{var.RANDOM}"
 			isolation_mode = "ISOLATED"

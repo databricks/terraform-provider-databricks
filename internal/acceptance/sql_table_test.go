@@ -8,7 +8,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
-			name 		 = "foom"
+			name         = "{var.STICKY_RANDOM}"
 			catalog_name = "main"
 		}
 
@@ -35,7 +35,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 	}, step{
 		Template: `
 		resource "databricks_schema" "this" {
-			name 		 = "foom"
+			name         = "{var.STICKY_RANDOM}"
 			catalog_name = "main"
 		}
 
@@ -82,7 +82,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 		}
 				
 		resource "databricks_schema" "this" {
-			name 		 = "fooe"
+			name         = "{var.STICKY_RANDOM}"
 			catalog_name = "main"
 		}
 

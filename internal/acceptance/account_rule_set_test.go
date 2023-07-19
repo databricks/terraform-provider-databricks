@@ -23,7 +23,7 @@ func TestMwsAccAccountRuleSetsFullLifeCycle(t *testing.T) {
 			name = "accounts/{env.DATABRICKS_ACCOUNT_ID}/servicePrincipals/${databricks_service_principal.this.application_id}/ruleSets/default"
 			grant_rules {
 				principals = [
-					"groups/${databricks_group.this.display_name}"
+					databricks_group.this.acl_principal_id
 				]
 				role = "roles/servicePrincipal.manager"
 			}

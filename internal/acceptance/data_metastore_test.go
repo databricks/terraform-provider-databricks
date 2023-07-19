@@ -1,25 +1,28 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestUcAccDataSourceMetastore(t *testing.T) {
 	accountLevel(t, step{
 		Template: `
-
-		resource "databricks_metastore" "test" {
-			name          = "primary-{var.RANDOM}"
-			storage_root  = "s3://{env.TEST_BUCKET}/test{var.RANDOM}"
-			force_destroy = true
-		}
-
 		data "databricks_metastore" "this" {
-			id = databricks_metastore.test.id
-		}
-
-		output "some_metastore" {
-			value = data.databricks_metastore.this.metastore_info
+			metastore_id = "{env.TEST_METASTORE_ID}"
 		}`,
+		Check: func(s *terraform.State) error {
+			r, ok := s.RootModule().Resources["data.databricks_metastore.this"]
+			if !ok {
+				return fmt.Errorf("data not found in state")
+			}
+			metastore_info := r.Primary.Attributes["metastore_info.0.%"]
+			if metastore_info == "" {
+				return fmt.Errorf("metastoreInfo is empty: %v", r.Primary.Attributes)
+			}
+			return nil
+		},
 	})
 }

@@ -12,7 +12,9 @@ Retrieves information about metastore for a given id of [databricks_metastore](.
 MetastoreInfo response for a given metastore id
 
 ```hcl
-data "databricks_metastore" "this" {}
+data "databricks_metastore" "this" {
+  id = 
+}
 
 output "some_metastore" {
   value = data.databricks_metastore.this.metastore_info
@@ -20,13 +22,19 @@ output "some_metastore" {
 ```
 
 ## Argument Reference
-* `id` - id of metastore to be fetched
+* `metastore_id` - Id of metastore to be fetched
 
 ## Attribute Reference
 
 This data source exports the following attributes:
-* `id` - id of the metastore
-* `metastore_info` - MetastoreInfo object for an id of [databricks_metastore](../resources/metastore.md)
+* `metastore_info` - MetastoreInfo object for a [databricks_metastore](../resources/metastore.md). This contains the following attributes:
+  * `name` - Name of metastore.
+  * `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource.
+  * `owner` - Username/groupname/sp application_id of the metastore owner.
+  * `delta_sharing_scope` - Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
+  * `delta_sharing_recipient_token_lifetime_in_seconds` - Used to set expiration duration in seconds on recipient data access tokens.
+  * `delta_sharing_organization_name` - The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing. 
+
 
 ## Related Resources
 

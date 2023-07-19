@@ -11,8 +11,8 @@ import (
 
 func DataSourceMetastore() *schema.Resource {
 	type AccountMetastoreByID struct {
-		Id        string                 `json:"id"`
-		Metastore *catalog.MetastoreInfo `json:"metastore_info,omitempty"`
+		Id        string                 `json:"metastore_id"`
+		Metastore *catalog.MetastoreInfo `json:"metastore_info,omitempty" tf:"computed" `
 	}
 	return common.AccountData(func(ctx context.Context, data *AccountMetastoreByID, acc *databricks.AccountClient) error {
 		metastore, err := acc.Metastores.GetByMetastoreId(ctx, data.Id)

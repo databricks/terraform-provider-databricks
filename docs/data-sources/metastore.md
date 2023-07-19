@@ -1,0 +1,36 @@
+---
+subcategory: "Unity Catalog"
+---
+# databricks_metastore Data Source
+
+Retrieves information about metastore for a given id of [databricks_metastore](../resources/metastore.md) object, that was created by Terraform or manually, so that special handling could be applied.
+
+-> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
+
+## Example Usage
+
+MetastoreInfo response for a given metastore id
+
+```hcl
+data "databricks_metastore" "this" {}
+
+output "some_metastore" {
+  value = data.databricks_metastore.this.metastore_info
+}
+```
+
+## Argument Reference
+* `id` - id of metastore to be fetched
+
+## Attribute Reference
+
+This data source exports the following attributes:
+* `id` - id of the metastore
+* `metastore_info` - MetastoreInfo object for an id of [databricks_metastore](../resources/metastore.md)
+
+## Related Resources
+
+The following resources are used in the same context:
+* [databricks_metastores] (./metastores.md) to get list of all metastores
+* [databricks_metastore](../resources/metastore.md) to manage Metastores within Unity Catalog.
+* [databricks_catalog](../resources/catalog.md) to manage catalogs within Unity Catalog.

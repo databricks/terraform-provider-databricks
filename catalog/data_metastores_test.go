@@ -7,43 +7,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func TestMetastoresData(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/testaccount/metastores",
-				Response: catalog.ListMetastoresResponse{
-					Metastores: []catalog.MetastoreInfo{
-						{
-							Name:                      "a",
-							StorageRoot:               "",
-							DefaultDataAccessConfigId: "sth",
-							Owner:                     "John.Doe@example.com",
-							MetastoreId:               "abc",
-							Region:                    "",
-							Cloud:                     "",
-							GlobalMetastoreId:         "",
-							CreatedAt:                 0,
-							CreatedBy:                 "",
-							UpdatedAt:                 0,
-							UpdatedBy:                 "",
-							DeltaSharingScope:         "",
-							DeltaSharingRecipientTokenLifetimeInSeconds: 0,
-							DeltaSharingOrganizationName:                "",
-						},
-					},
-				},
-			},
-		},
-		Resource:    DataSourceMetastores(),
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-		AccountID:   "testaccount",
-	}.ApplyNoError(t)
-}
-
 func TestMetastoresDataContainsName(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

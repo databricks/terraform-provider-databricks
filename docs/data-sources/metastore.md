@@ -12,17 +12,26 @@ Retrieves information about metastore for a given id of [databricks_metastore](.
 MetastoreInfo response for a given metastore id
 
 ```hcl
+
+resource "databricks_metastore" "this" {
+  provider      = databricks.workspace
+  name          = "primary"
+  storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
+  owner         = var.unity_admin_group
+  force_destroy = true
+}
+
 data "databricks_metastore" "this" {
-  id = 
+  id = databricks_metastore.this.id
 }
 
 output "some_metastore" {
-  value = data.databricks_metastore.this.metastore_info
+  value = data.databricks_metastore.this.metastore_info[0]
 }
 ```
 
 ## Argument Reference
-* `metastore_id` - Id of metastore to be fetched
+* `metastore_id` - Id of the metastore to be fetched
 
 ## Attribute Reference
 

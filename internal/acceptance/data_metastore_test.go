@@ -20,7 +20,7 @@ func TestUcAccDataSourceMetastore(t *testing.T) {
 			}
 			metastore_info := r.Primary.Attributes["metastore_info.0.%"]
 			if metastore_info == "" {
-				return fmt.Errorf("metastoreInfo is empty: %v", r.Primary.Attributes)
+				return fmt.Errorf("MetastoreInfo is empty: %v", r.Primary.Attributes)
 			}
 			return nil
 		},

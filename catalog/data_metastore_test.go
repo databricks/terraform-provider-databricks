@@ -34,19 +34,29 @@ func TestMetastoreDataVerify(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/testaccount/metastores/abc?",
-				Response: catalog.MetastoreInfo{
-					Name:        "xyz",
-					MetastoreId: "abc",
-					Owner:       "pqr",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						Name:        "xyz",
+						MetastoreId: "abc",
+						Owner:       "pqr",
+					},
 				},
 			},
 		},
 		Resource:    DataSourceMetastore(),
 		Read:        true,
 		NonWritable: true,
-		ID:          "abc",
+		ID:          "_",
 		AccountID:   "testaccount",
-	}.ApplyAndExpectData(t, map[string]any{})
+		HCL: `
+		metastore_id = "abc"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"metastore_info.0.name":         "xyz",
+		"metastore_info.0.owner":        "pqr",
+		"metastore_info.0.metastore_id": "abc",
+	},
+	)
 }
 
 func TestMetastoreData_Error(t *testing.T) {

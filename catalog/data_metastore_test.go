@@ -7,27 +7,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func TestMetastoreDataApply(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/testaccount/metastores/abc?",
-				Response: catalog.MetastoreInfo{
-					Name:        "xyz",
-					MetastoreId: "abc",
-					Owner:       "pqr",
-				},
-			},
-		},
-		Resource:    DataSourceMetastore(),
-		Read:        true,
-		NonWritable: true,
-		ID:          "abc",
-		AccountID:   "testaccount",
-	}.ApplyNoError(t)
-}
-
 func TestMetastoreDataVerify(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -55,11 +34,10 @@ func TestMetastoreDataVerify(t *testing.T) {
 		"metastore_info.0.name":         "xyz",
 		"metastore_info.0.owner":        "pqr",
 		"metastore_info.0.metastore_id": "abc",
-	},
-	)
+	})
 }
 
-func TestMetastoreData_Error(t *testing.T) {
+func TestMetastoreDataError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,
 		Resource:    DataSourceMetastore(),

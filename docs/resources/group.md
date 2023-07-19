@@ -96,6 +96,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` -  The id for the group object.
+* `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `groups/Some Group`.
 
 ## Import
 

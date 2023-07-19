@@ -32,7 +32,7 @@ resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
   name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
-    principals = ["groups/${data.databricks_group.ds.display_name}"]
+    principals = [data.databricks_group.ds.acl_principal_id]
     role       = "roles/servicePrincipal.user"
   }
 }
@@ -66,7 +66,7 @@ resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
   name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
-    principals = ["groups/${databricks_group.ds.display_name}"]
+    principals = [databricks_group.ds.acl_principal_id]
     role       = "roles/servicePrincipal.user"
   }
 }
@@ -100,7 +100,7 @@ resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
   name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
-    principals = ["groups/${databricks_group.ds.display_name}"]
+    principals = [databricks_group.ds.acl_principal_id]
     role       = "roles/servicePrincipal.user"
   }
 }
@@ -132,7 +132,7 @@ resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
   name = "accounts/${local.account_id}/servicePrincipals/${databricks_service_principal.automation_sp.application_id}/ruleSets/default"
 
   grant_rules {
-    principals = ["groups/${databricks_group.ds.display_name}"]
+    principals = [databricks_group.ds.acl_principal_id]
     role       = "roles/servicePrincipal.user"
   }
 }
@@ -154,7 +154,7 @@ One or more `grant_rules` blocks are required to actually set access rules.
 ```hcl
 grant_rules {
   principals = [
-    "groups/{databricks_group.ds.display_name}"
+    databricks_group.ds.acl_principal_id
   ]
   role = "roles/servicePrincipal.user"
 }
@@ -166,9 +166,9 @@ Arguments of the `grant_rules` block are:
   * `roles/servicePrincipal.manager` - Manager of a service principal.
   * `roles/servicePrincipal.user` - User of a service principal.
 - `principals` - (Required) a list of principals who are granted a role. The following format is supported:
-  * `users/{username}`
-  * `groups/{groupname}`
-  * `servicePrincipals/{applicationId}`
+  * `users/{username}` (also exposed as `acl_principal_id` attribute of `databricks_user` resource).
+  * `groups/{groupname}` (also exposed as `acl_principal_id` attribute of `databricks_group` resource).
+  * `servicePrincipals/{applicationId}` (also exposed as `acl_principal_id` attribute of `databricks_service_principal` resource).
 
 ## Related Resources
 

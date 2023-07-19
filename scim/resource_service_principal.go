@@ -126,6 +126,11 @@ func ResourceServicePrincipal() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
+			m["acl_principal_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
 			return m
 		})
 	spFromData := func(d *schema.ResourceData) User {
@@ -158,6 +163,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			}
 			d.Set("home", fmt.Sprintf("/Users/%s", sp.ApplicationID))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", sp.ApplicationID))
+			d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID))
 			err = common.StructToData(sp, servicePrincipalSchema, d)
 			if err != nil {
 				return err

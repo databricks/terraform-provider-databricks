@@ -9,10 +9,13 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
+
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/qa"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -140,6 +143,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 							SparkJarTask: &SparkJarTask{
 								MainClassName: "com.labs.BarMain",
 							},
+							Health: &JobHealth{
+								Rules: []JobHealthRule{
+									{
+										Metric:    "RUN_DURATION_SECONDS",
+										Operation: "GREATER_THAN",
+										Value:     3600,
+									},
+								},
+							},
 						},
 						{
 							TaskKey: "b",
@@ -157,6 +169,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 						},
 					},
 					MaxConcurrentRuns: 1,
+					Health: &JobHealth{
+						Rules: []JobHealthRule{
+							{
+								Metric:    "RUN_DURATION_SECONDS",
+								Operation: "GREATER_THAN",
+								Value:     3600,
+							},
+						},
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -184,7 +205,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 		Resource: ResourceJob(),
 		HCL: `
 		name = "Featurizer"
-		
+
+		health {
+			rules {
+				metric = "RUN_DURATION_SECONDS"
+				op     = "GREATER_THAN"
+				value  = 3600						  
+			}
+		}
+
 		task {
 			task_key = "a"
 
@@ -197,6 +226,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 			library {
 				jar = "dbfs://aa/bb/cc.jar"
 			}
+
+			health {
+				rules {
+					metric = "RUN_DURATION_SECONDS"
+					op     = "GREATER_THAN"
+					value  = 3600						  
+				}
+			}
+	
 		}
 
 		task {
@@ -982,7 +1020,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						OnSuccess: []Webhook{{ID: "id2"}},
 						OnFailure: []Webhook{{ID: "id3"}},
 					},
-					NotificationSettings: &NotificationSettings{
+					NotificationSettings: &jobs.JobNotificationSettings{
 						NoAlertForSkippedRuns:  true,
 						NoAlertForCanceledRuns: true,
 					},
@@ -1013,7 +1051,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 							OnSuccess: []Webhook{{ID: "id2"}},
 							OnFailure: []Webhook{{ID: "id3"}},
 						},
-						NotificationSettings: &NotificationSettings{
+						NotificationSettings: &jobs.JobNotificationSettings{
 							NoAlertForSkippedRuns:  true,
 							NoAlertForCanceledRuns: true,
 						},

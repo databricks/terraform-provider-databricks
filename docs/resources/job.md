@@ -10,7 +10,7 @@ The `databricks_job` resource allows you to manage [Databricks Jobs](https://doc
 
 -> **Note** In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
-It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. Single task is defined with the `task` block containing one of the `*_task` block, `task_key`, `libraries`, `email_notifications`, `timeout_seconds`, `max_retries`, `min_retry_interval_millis`, `retry_on_timeout` attributes and `depends_on` blocks to define cross-task dependencies.
+It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. Single task is defined with the `task` block containing one of the `*_task` block, `task_key` and other arguments described below.
 
 ```hcl
 resource "databricks_job" "this" {
@@ -88,13 +88,36 @@ The resource supports the following arguments:
   ```
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
-* `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a FAILED or INTERNAL_ERROR lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: PENDING, RUNNING, TERMINATING, TERMINATED, SKIPPED or INTERNAL_ERROR
+* `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is documented below.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes and fails. The default behavior is to not send any notifications. This field is a block and is documented below.
+* `notification_settings` - (Optional) block described below controlling notification settings on the job level.
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
+* `health` - (Optional) block described below that specifies health conditions for a given job.
+
+### task Configuration Block
+
+This block describes individual tasks:
+
+* `task_key` - (Required) string specifying an unique key for a given task.
+* `*_task` - (Required) one of the specific task blocks described below: `notebook_task`, `spark_python_task`, ...
+* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
+* `depends_on` - (Optional) block specifying dependency(-ies) for a given task.
+* `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
+* `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`.
+* `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
+* `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
+* `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is documented below.
+* `health` - (Optional) block described below that specifies health conditions for a given task.
+
+### depends_on Configuration Block
+
+This block describes dependencies of a given task:
+
+* `task_key` - (Required) The name of the task this task depends on.
 
 ### tags Configuration Map
 `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
@@ -129,8 +152,6 @@ resource "databricks_job" "this" {
   }
 }
 ```
-
-
 
 ### job_cluster Configuration Block
 
@@ -172,6 +193,7 @@ This block is used to specify Git repository information & branch/tag/commit tha
 * `on_start` - (Optional) (List) list of emails to notify when the run starts.
 * `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
 * `on_failure` - (Optional) (List) list of emails to notify when the run fails.
+* `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in the `health` block.
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs. (It's recommended to use the corresponding setting in the `notification_settings` configuration block).
 
 ### webhook_notifications Configuration Block
@@ -181,6 +203,7 @@ Each entry in `webhook_notification` block takes a list `webhook` blocks. The fi
 * `on_start` - (Optional) (List) list of notification IDs to call when the run starts. A maximum of 3 destinations can be specified.
 * `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
 * `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
+* `on_duration_warning_threshold_exceeded` - (Optional) (List) list of notification IDs to call when the duration of a run exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in the `health` block.
 
 Note that the `id` is not to be confused with the name of the alert destination. The `id` can be retrieved through the API or the URL of Databricks UI `https://<workspace host>/sql/destinations/<notification id>?o=<workspace id>`
 
@@ -200,12 +223,29 @@ webhook_notifications {
 
 -> **Note** The following configuration blocks can be standalone or nested inside a `task` block
 
-###  notification_settings Configuration Block
+###  notification_settings Configuration Block (Job Level)
 
-This block controls notification settings for both email & webhook notifications:
+This block controls notification settings for both email & webhook notifications on a job level:
 
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
 * `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
+
+###  notification_settings Configuration Block (Task Level)
+
+This block controls notification settings for both email & webhook notifications on a task level:
+
+* `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
+* `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
+* `alert_on_last_attempt` - (Optional) (Bool) do not send notifications to recipients specified in `on_start` for the retried runs and do not send notifications to recipients specified in `on_failure` until the last retry of the run.
+
+### health Configuration Block
+
+This block describes health conditions for a given job or an individual task. It consists of following attributes:
+
+* `rules` - (List) list of rules that are represented as objects with following attributes (rules validation happens on backend):
+  * `metric` - (Optional) string specifying a metric to check.  Right now only `RUN_DURATION_SECONDS` metric is available (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create)) for latest information.
+  * `op` - (Optional) string specifying operation on a given metric.  Right now only `GREATER_THAN` operation is available.
+  * `value` - (Optional) integer value that will be used on the right side of condition.
 
 ### spark_jar_task Configuration Block
 

@@ -73,6 +73,7 @@ func TestResourceGroupCreate(t *testing.T) {
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
+	assert.Equal(t, "groups/Data Scientists", d.Get("acl_principal_id"))
 }
 
 func TestResourceGroupCreate_Error(t *testing.T) {

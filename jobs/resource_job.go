@@ -713,7 +713,7 @@ func (c controlRunStateLifecycleManager) OnCreate(ctx context.Context) error {
 }
 
 func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
-	if c.d.Get("continuous") != nil {
+	if c.d.Get("continuous") == nil {
 		return nil
 	}
 

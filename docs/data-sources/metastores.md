@@ -29,5 +29,6 @@ This data source exports the following attributes:
 
 The following resources are used in the same context:
 
+* [databricks_metastore](./metastore.md) to get information about a single metastore.
 * [databricks_metastore](../resources/metastore.md) to manage Metastores within Unity Catalog.
 * [databricks_catalog](../resources/catalog.md) to manage catalogs within Unity Catalog.

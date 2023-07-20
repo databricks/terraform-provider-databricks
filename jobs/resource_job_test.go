@@ -795,6 +795,16 @@ func TestResourceJobCreate_ControlRunState_ContinuousUpdateCancel(t *testing.T) 
 					"run_id": 567,
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/get?run_id=567",
+				Response: JobRun{
+					RunID: 567,
+					State: RunState{
+						LifeCycleState: "TERMINATED",
+					},
+				},
+			},
 		},
 		HCL: `
 		continuous {

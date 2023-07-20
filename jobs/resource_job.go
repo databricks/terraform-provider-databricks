@@ -767,11 +767,11 @@ func ResourceJob() *schema.Resource {
 			}
 			controlRunState := d.Get("control_run_state").(bool)
 			if controlRunState {
-				if js.MaxConcurrentRuns > 1 {
-					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
-				}
 				if js.Continuous == nil {
 					return fmt.Errorf("`control_run_state` must be specified only with `continuous`")
+				}
+				if js.MaxConcurrentRuns > 1 {
+					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}
 			for _, task := range js.Tasks {

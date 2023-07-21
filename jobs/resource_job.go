@@ -723,25 +723,25 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 	}
 
 	api := NewJobsAPI(ctx, c.m)
+
+	// Only use RunNow to stop the active run if the job is unpaused.
 	pauseStatus := c.d.Get("continuous.0.pause_status").(string)
-	if pauseStatus == "PAUSED" {
-		return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
-	}
+	if pauseStatus == "UNPAUSED" {
+		// Previously, RunNow() was not supported for continuous jobs. Now, calling RunNow()
+		// on a continuous job works, cancelling the active run if there is one, and resetting
+		// the exponential backoff timer. So, we try to call RunNow() first, and if it fails,
+		// we call StopActiveRun() instead.
+		_, err = api.RunNow(jobID)
 
-	// Previously, RunNow() was not supported for continuous jobs. Now, calling RunNow()
-	// on a continuous job works, cancelling the active run if there is one, and resetting
-	// the exponential backoff timer. So, we try to call RunNow() first, and if it fails,
-	// we call StopActiveRun() instead.
-	_, err = api.RunNow(jobID)
+		if err == nil {
+			return nil
+		}
 
-	if err == nil {
-		return nil
-	}
-
-	// RunNow() returns 404 when the feature is disabled.
-	var apiErr *apierr.APIError
-	if errors.As(err, &apiErr) && apiErr.StatusCode != 404 {
-		return err
+		// RunNow() returns 404 when the feature is disabled.
+		var apiErr *apierr.APIError
+		if errors.As(err, &apiErr) && apiErr.StatusCode != 404 {
+			return err
+		}
 	}
 
 	return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))

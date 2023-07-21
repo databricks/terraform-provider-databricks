@@ -9,6 +9,7 @@ import (
 	"path"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,18 +27,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (ic *importContext) importCluster(c *clusters.Cluster) {
-	if c == nil {
-		return
-	}
-	for _, is := range c.InitScripts {
+func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorageInfo) {
+	for _, is := range initScripts {
 		if is.Dbfs != nil {
 			ic.Emit(&resource{
 				Resource: "databricks_dbfs_file",
 				ID:       is.Dbfs.Destination,
 			})
 		}
+		if is.Workspace != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_workspace_file",
+				ID:       is.Workspace.Destination,
+			})
+		}
 	}
+
+}
+
+func (ic *importContext) importCluster(c *clusters.Cluster) {
+	if c == nil {
+		return
+	}
+	ic.emitInitScripts(c.InitScripts)
 	if c.AwsAttributes != nil {
 		ic.Emit(&resource{
 			Resource: "databricks_instance_profile",
@@ -108,21 +120,15 @@ func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) 
 }
 
 func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) bool {
-	if strings.HasPrefix(path, prefix) {
-		parts := strings.SplitN(path, "/", 4)
-		if len(parts) == 3 {
-			userOrSPName := parts[2]
-			if strings.Contains(userOrSPName, "@") || uuidRegex.MatchString(userOrSPName) {
-				return true
-			} else {
-				return false
-			}
-		} else {
-			return false
-		}
-	} else {
+	if !strings.HasPrefix(path, prefix) {
 		return false
 	}
+	parts := strings.SplitN(path, "/", 4)
+	if len(parts) == 3 || (len(parts) == 4 && parts[3] == "") {
+		userOrSPName := parts[2]
+		return strings.Contains(userOrSPName, "@") || uuidRegex.MatchString(userOrSPName)
+	}
+	return false
 }
 
 func (ic *importContext) emitNotebookOrRepo(path string) {
@@ -142,10 +148,22 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
-		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allDirectories, _ = notebooksAPI.ListDirectories("/", true, true)
+		objects := ic.getAllWorkspaceObjects()
+		for _, v := range objects {
+			if v.ObjectType == workspace.Directory {
+				ic.allDirectories = append(ic.allDirectories, v)
+			}
+		}
 	}
 	return ic.allDirectories
+}
+
+func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
+	if len(ic.allWorkspaceObjects) == 0 {
+		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+		ic.allWorkspaceObjects, _ = notebooksAPI.List("/", true, true)
+	}
+	return ic.allWorkspaceObjects
 }
 
 func (ic *importContext) emitGroups(u scim.User, principal string) {
@@ -575,4 +593,38 @@ func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource
 
 func generateUniqueID(v string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
+}
+
+func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) string {
+	name := d.Get("path").(string)
+	if name == "" {
+		return d.Id()
+	} else {
+		name = nameNormalizationRegex.ReplaceAllString(name[1:], "_") + "_" +
+			strconv.FormatInt(int64(d.Get("object_id").(int)), 10)
+	}
+	return name
+}
+
+func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
+	return func(ic *importContext) error {
+		objectsList := ic.getAllWorkspaceObjects()
+		for offset, object := range objectsList {
+			if object.ObjectType != objType || strings.HasPrefix(object.Path, "/Repos") {
+				continue
+			}
+			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
+				continue
+			}
+			ic.Emit(&resource{
+				Resource: resourceType,
+				ID:       object.Path,
+			})
+
+			if offset%50 == 0 {
+				log.Printf("[INFO] Scanned %d of %d %ss", offset+1, len(objectsList), objName)
+			}
+		}
+		return nil
+	}
 }

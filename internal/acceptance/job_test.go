@@ -97,7 +97,7 @@ func TestAccJobTasks(t *testing.T) {
 // that a job run was triggered within 5 minutes of the job creation. Then, the test updates the
 // job, verifying that the existing run was cancelled within 5 minutes of the update.
 func TestAccJobControlRunState(t *testing.T) {
-	getJobTemplate := func(name string) string {
+	getJobTemplate := func(name string, continuousBlock string) string {
 		return `
 		data "databricks_current_user" "me" {}
 		data "databricks_spark_version" "latest" {}
@@ -136,7 +136,7 @@ func TestAccJobControlRunState(t *testing.T) {
 			}
 
 			continuous {
-				pause_status = "UNPAUSED"
+				` + continuousBlock + `
 			}
 
 			control_run_state = true
@@ -159,31 +159,58 @@ func TestAccJobControlRunState(t *testing.T) {
 		}
 		return false, nil
 	}
-	waitForRunToStart := func(ctx context.Context, client *common.DatabricksClient, id string) error {
+	checkIfAllRunsHaveEnded := func(ctx context.Context, w *databricks.WorkspaceClient, jobID int64) (bool, error) {
+		runs, err := w.Jobs.ListRunsAll(ctx, jobs.ListRunsRequest{JobId: jobID})
+		assert.NoError(t, err)
+		for _, run := range runs {
+			if run.State.LifeCycleState == "RUNNING" {
+				return false, nil
+			}
+		}
+		return true, nil
+	}
+	retryFor := func(ctx context.Context, client *common.DatabricksClient, id string, lastErr error, f func(context.Context, *databricks.WorkspaceClient, int64) (bool, error)) error {
 		ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 		w, err := client.WorkspaceClient()
 		assert.NoError(t, err)
 		jobID, err := strconv.ParseInt(id, 10, 64)
 		assert.NoError(t, err)
 		for i := 0; i < 100; i++ {
-			started, err := checkIfRunHasStarted(ctx, w, jobID)
-			assert.NoError(t, err)
-			if started {
+			success, err := f(ctx, w, jobID)
+			if err != nil {
+				return err
+			}
+			if success {
 				return nil
 			}
 			// sleep for 5 seconds
 			time.Sleep(5 * time.Second)
 		}
-		return errors.New("timed out waiting for job run to start")
+		return lastErr
+	}
+	waitForRunToStart := func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		return retryFor(ctx, client, id, errors.New("timed out waiting for job run to start"), checkIfRunHasStarted)
+	}
+	waitForAllRunsToEnd := func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		return retryFor(ctx, client, id, errors.New("timed out waiting for job run to end"), checkIfAllRunsHaveEnded)
 	}
 	randomName1 := RandomName("notebook-")
 	randomName2 := RandomName("updated-notebook-")
 	workspaceLevel(t, step{
-		Template: getJobTemplate(randomName1),
+		// A new continuous job with empty block should be started automatically
+		Template: getJobTemplate(randomName1, ``),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
 	}, step{
-		Template: getJobTemplate(randomName2),
+		// Updating the notebook should cancel the existing run
+		Template: getJobTemplate(randomName2, ``),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
-	},
-	)
+	}, step{
+		// Marking the job as paused should cancel existing run and not start a new one
+		Template: getJobTemplate(randomName2, `pause_status = "PAUSED"`),
+		Check:    resourceCheck("databricks_job.this", waitForAllRunsToEnd),
+	}, step{
+		// No pause status should be the equivalent of unpaused
+		Template: getJobTemplate(randomName2, `pause_status = "UNPAUSED"`),
+		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
+	})
 }

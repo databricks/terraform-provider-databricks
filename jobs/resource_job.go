@@ -627,7 +627,7 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			Default:       false,
 			Type:          schema.TypeBool,
 			Deprecated:    "always_running will be replaced by control_run_state in the next major release.",
-			ConflictsWith: []string{"control_run_state"},
+			ConflictsWith: []string{"control_run_state", "continuous"},
 		}
 		s["control_run_state"] = &schema.Schema{
 			Optional:      true,
@@ -723,6 +723,11 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 	}
 
 	api := NewJobsAPI(ctx, c.m)
+	pauseStatus := c.d.Get("continuous.0.pause_status").(string)
+	if pauseStatus == "PAUSED" {
+		return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
+	}
+
 	// Previously, RunNow() was not supported for continuous jobs. Now, calling RunNow()
 	// on a continuous job works, cancelling the active run if there is one, and resetting
 	// the exponential backoff timer. So, we try to call RunNow() first, and if it fails,

@@ -84,9 +84,7 @@ The resource supports the following arguments:
 
   When migrating from `always_running` to `control_run_state`, set `continuous` as follows:
   ```
-  continuous {
-    pause_status = "UNPAUSED"
-  }
+  continuous { }
   ```
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.

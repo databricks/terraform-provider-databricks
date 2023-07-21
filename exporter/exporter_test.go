@@ -253,9 +253,10 @@ var emptyIpAccessLIst = qa.HTTPFixture{
 }
 
 var emptyWorkspace = qa.HTTPFixture{
-	Method:   "GET",
-	Resource: "/api/2.0/workspace/list?path=%2F",
-	Response: workspace.ObjectList{},
+	Method:       "GET",
+	Resource:     "/api/2.0/workspace/list?path=%2F",
+	Response:     workspace.ObjectList{},
+	ReuseRequest: true,
 }
 
 var emptySqlEndpoints = qa.HTTPFixture{
@@ -1618,7 +1619,6 @@ func TestImportingDLTPipelines(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=50",
-
 				Response: pipelines.PipelineListResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
@@ -1740,6 +1740,27 @@ func TestImportingDLTPipelines(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2Finit.sh",
+				Response: workspace.ObjectStatus{
+					ObjectID:   789,
+					ObjectType: workspace.File,
+					Path:       "/init.sh",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2Finit.sh",
+				Response: workspace.ExportPath{
+					Content: "dGVzdA==",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/files/789",
+				Response: getJSONObject("test-data/get-workspace-file-permissions.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -1835,6 +1856,69 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.listing = "sql-endpoints"
 			ic.services = "sql-endpoints"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
+	fileStatus := workspace.ObjectStatus{
+		ObjectID:   123,
+		ObjectType: workspace.File,
+		Path:       "/File",
+	}
+	notebookStatus := workspace.ObjectStatus{
+		ObjectID:   456,
+		ObjectType: workspace.Notebook,
+		Path:       "/Notebook",
+		Language:   "PYTHON",
+	}
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2F",
+				Response: workspace.ObjectList{
+					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FNotebook",
+				Response: notebookStatus,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FFile",
+				Response: fileStatus,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2FFile",
+				Response: workspace.ExportPath{
+					Content: "dGVzdA==",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FNotebook",
+				Response: workspace.ExportPath{
+					Content: "dGVzdA==",
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "notebooks"
+			ic.services = "notebooks"
 
 			err := ic.Run()
 			assert.NoError(t, err)

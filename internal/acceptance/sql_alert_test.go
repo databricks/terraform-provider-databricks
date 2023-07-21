@@ -37,7 +37,7 @@ func TestAccAlert(t *testing.T) {
 			options {
 				column = "p1"
 				op = ">="
-				value = "2"
+				value = "3"
 				muted = false
 			}
 		}`,

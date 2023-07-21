@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSqlAlertRead(t *testing.T) {
+func TestSqlAlertReadStringValue(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -37,8 +37,10 @@ func TestSqlAlertRead(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
+}
 
-	d, err = qa.ResourceFixture{
+func TestSqlAlertReadNumberValue(t *testing.T) {
+	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -66,5 +68,4 @@ func TestSqlAlertRead(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
-
 }

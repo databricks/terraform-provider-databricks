@@ -193,7 +193,7 @@ This block is used to specify Git repository information & branch/tag/commit tha
 * `on_start` - (Optional) (List) list of emails to notify when the run starts.
 * `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
 * `on_failure` - (Optional) (List) list of emails to notify when the run fails.
-* `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in the `health` block.
+* `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs. (It's recommended to use the corresponding setting in the `notification_settings` configuration block).
 
 ### webhook_notifications Configuration Block

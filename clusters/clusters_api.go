@@ -401,10 +401,10 @@ type Cluster struct {
 	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`
 	EnableLocalDiskEncryption bool       `json:"enable_local_disk_encryption,omitempty" tf:"computed"`
 
-	NodeTypeID             string           `json:"node_type_id,omitempty" tf:"group:node_type"`
-	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type"`
+	NodeTypeID             string           `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
+	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type,computed"`
 	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
-	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type"`
+	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type,computed"`
 	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`

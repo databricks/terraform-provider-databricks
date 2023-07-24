@@ -2,6 +2,8 @@ package sql
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -70,13 +72,25 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Sc
 	a.Parent = apiAlert.Parent
 	a.QueryId = apiAlert.Query.Id
 	a.Rearm = apiAlert.Rearm
+
 	a.Options = &AlertOptions{
 		Column:        apiAlert.Options.Column,
 		Op:            apiAlert.Options.Op,
-		Value:         apiAlert.Options.Value,
 		Muted:         apiAlert.Options.Muted,
 		CustomBody:    apiAlert.Options.CustomBody,
 		CustomSubject: apiAlert.Options.CustomSubject,
+	}
+
+	// value can be a string or a float64 - unfortunately this can't be encoded in OpenAPI yet
+	switch value := apiAlert.Options.Value.(type) {
+	case string:
+		a.Options.Value = value
+	case float64:
+		a.Options.Value = strconv.FormatFloat(value, 'f', 0, 64)
+	case bool:
+		a.Options.Value = strconv.FormatBool(value)
+	default:
+		return fmt.Errorf("unexpected type for value: %T", value)
 	}
 
 	return common.StructToData(a, s, data)

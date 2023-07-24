@@ -357,7 +357,7 @@ func skipf(t *testing.T) func(format string, args ...any) {
 // detects if test is run from "debug test" feature in VSCode
 func isInDebug() bool {
 	ex, _ := os.Executable()
-	return path.Base(ex) == "__debug_bin"
+	return strings.HasPrefix(path.Base(ex), "__debug_bin")
 }
 
 // loads debug environment from ~/.databricks/debug-env.json

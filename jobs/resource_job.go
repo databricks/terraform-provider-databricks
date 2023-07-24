@@ -749,16 +749,16 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 
 func prepareJobSettingsForUpdate(js JobSettings) {
 	if js.NewCluster != nil {
-		js.NewCluster.ResolveComputedAttributesForAPIRequest()
+		js.NewCluster.ModifyRequestOnInstancePool()
 	}
 	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
-			task.NewCluster.ResolveComputedAttributesForAPIRequest()
+			task.NewCluster.ModifyRequestOnInstancePool()
 		}
 	}
 	for _, jc := range js.JobClusters {
 		if jc.NewCluster != nil {
-			jc.NewCluster.ResolveComputedAttributesForAPIRequest()
+			jc.NewCluster.ModifyRequestOnInstancePool()
 		}
 	}
 }

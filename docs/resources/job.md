@@ -243,7 +243,7 @@ This block controls notification settings for both email & webhook notifications
 This block describes health conditions for a given job or an individual task. It consists of following attributes:
 
 * `rules` - (List) list of rules that are represented as objects with following attributes (rules validation happens on backend):
-  * `metric` - (Optional) string specifying a metric to check.  Right now only `RUN_DURATION_SECONDS` metric is available (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create)) for latest information.
+  * `metric` - (Optional) string specifying the metric to check.  The only supported metric is `RUN_DURATION_SECONDS` (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create)) for the latest information.
   * `op` - (Optional) string specifying operation on a given metric.  Right now only `GREATER_THAN` operation is available.
   * `value` - (Optional) integer value that will be used on the right side of condition.
 

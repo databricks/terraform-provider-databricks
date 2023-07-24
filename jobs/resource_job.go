@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"log"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -267,16 +268,17 @@ type JobSettings struct {
 	GitSource *GitSource `json:"git_source,omitempty"`
 	// END Jobs + Repo integration preview
 
-	Schedule             *CronSchedule         `json:"schedule,omitempty"`
-	Continuous           *ContinuousConf       `json:"continuous,omitempty"`
-	Trigger              *Trigger              `json:"trigger,omitempty"`
-	MaxConcurrentRuns    int32                 `json:"max_concurrent_runs,omitempty"`
-	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
-	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
-	NotificationSettings *NotificationSettings `json:"notification_settings,omitempty"`
-	Tags                 map[string]string     `json:"tags,omitempty"`
-	Queue                *Queue                `json:"queue,omitempty"`
-	RunAs                *JobRunAs             `json:"run_as,omitempty"`
+	Schedule             *CronSchedule           `json:"schedule,omitempty"`
+	Continuous           *ContinuousConf         `json:"continuous,omitempty"`
+	Trigger              *Trigger                `json:"trigger,omitempty"`
+	MaxConcurrentRuns    int32                   `json:"max_concurrent_runs,omitempty"`
+	EmailNotifications   *EmailNotifications     `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications *WebhookNotifications   `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings *NotificationSettings   `json:"notification_settings,omitempty"`
+	Tags                 map[string]string       `json:"tags,omitempty"`
+	Queue                *Queue                  `json:"queue,omitempty"`
+	RunAs                *JobRunAs               `json:"run_as,omitempty"`
+	Parameters           *JobParameterDefinition `json:"parameters,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -324,6 +326,18 @@ type RunParameters struct {
 	SparkSubmitParams []string          `json:"spark_submit_params,omitempty"`
 }
 
+// JobParameters used 
+type JobParameters struct {
+	Name    string `json:"name,omitempty"`
+	Default string `json:"default,omitempty"`
+	Value   string `json:"value,omitempty"`
+}
+
+type JobParameterDefinition struct {
+	Name    string `json:"name,omitempty"`
+	Default string `json:"default,omitempty"`
+}
+
 // RunState of the job
 type RunState struct {
 	ResultState    string `json:"result_state,omitempty"`
@@ -333,13 +347,14 @@ type RunState struct {
 
 // JobRun is a simplified representation of corresponding entity
 type JobRun struct {
-	JobID       int64    `json:"job_id"`
-	RunID       int64    `json:"run_id"`
-	NumberInJob int64    `json:"number_in_job"`
-	StartTime   int64    `json:"start_time,omitempty"`
-	State       RunState `json:"state"`
-	Trigger     string   `json:"trigger,omitempty"`
-	RuntType    string   `json:"run_type,omitempty"`
+	JobID         int64           `json:"job_id"`
+	RunID         int64           `json:"run_id"`
+	NumberInJob   int64           `json:"number_in_job"`
+	StartTime     int64           `json:"start_time,omitempty"`
+	State         RunState        `json:"state"`
+	Trigger       string          `json:"trigger,omitempty"`
+	RuntType      string          `json:"run_type,omitempty"`
+	JobParameters []JobParameters `json:"job_parameters,omitempty"`
 
 	OverridingParameters RunParameters `json:"overriding_parameters,omitempty"`
 }

@@ -10,7 +10,7 @@ The `databricks_job` resource allows you to manage [Databricks Jobs](https://doc
 
 -> **Note** In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
-It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. Single task is defined with the `task` block containing one of the `*_task` block, `task_key` and other arguments described below.
+It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. Single task is defined with the `task` block containing one of the `*_task` block, `task_key`, and additional arguments described below.
 
 ```hcl
 resource "databricks_job" "this" {

@@ -244,7 +244,7 @@ This block describes health conditions for a given job or an individual task. It
 
 * `rules` - (List) list of rules that are represented as objects with the following attributes:
   * `metric` - (Optional) string specifying the metric to check.  The only supported metric is `RUN_DURATION_SECONDS` (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create)) for the latest information.
-  * `op` - (Optional) string specifying operation on a given metric.  Right now only `GREATER_THAN` operation is available.
+  * `op` - (Optional) string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`.
   * `value` - (Optional) integer value that will be used on the right side of condition.
 
 ### spark_jar_task Configuration Block

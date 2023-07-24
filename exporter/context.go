@@ -78,6 +78,8 @@ type importContext struct {
 	listing             string
 	match               string
 	lastActiveDays      int64
+	lastActiveMs        int64
+	lastActiveStr       string
 	generateDeclaration bool
 	meAdmin             bool
 	prefix              string

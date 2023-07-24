@@ -609,11 +609,17 @@ func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) strin
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
 		objectsList := ic.getAllWorkspaceObjects()
+		lastActiveMs := ic.getLastActiveMs()
 		for offset, object := range objectsList {
 			if object.ObjectType != objType || strings.HasPrefix(object.Path, "/Repos") {
 				continue
 			}
 			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
+				continue
+			}
+			if object.ModifiedAt != 0 && object.ModifiedAt < lastActiveMs {
+				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
+					object.ModifiedAt, ic.lastActiveMs)
 				continue
 			}
 			ic.Emit(&resource{
@@ -627,4 +633,18 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 		}
 		return nil
 	}
+}
+
+func (ic *importContext) getLastActiveMs() int64 {
+	if ic.lastActiveMs == 0 {
+		ic.lastActiveMs = (time.Now().Unix() - ic.lastActiveDays*24*60*60) * 1000
+	}
+	return ic.lastActiveMs
+}
+
+func (ic *importContext) getLastActiveStr() string {
+	if ic.lastActiveStr == "" {
+		ic.lastActiveStr = time.Now().UTC().AddDate(0, 0, -int(ic.lastActiveDays)).Format(time.RFC3339)
+	}
+	return ic.lastActiveStr
 }

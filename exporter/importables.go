@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"golang.org/x/exp/slices"
 
@@ -280,7 +279,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			lastActiveMs := ic.lastActiveDays * 24 * 60 * 60 * 1000
+			lastActiveMs := ic.getLastActiveMs()
 			for offset, c := range clusters {
 				if c.ClusterSource == "JOB" {
 					log.Printf("[INFO] Skipping job cluster %s", c.ClusterID)
@@ -294,7 +293,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Skipping %s because it doesn't match %s", c.ClusterName, ic.match)
 					continue
 				}
-				if c.LastActivityTime < time.Now().Unix()-lastActiveMs {
+				if c.LastActivityTime < lastActiveMs {
 					log.Printf("[INFO] Older inactive cluster %s", c.ClusterName)
 					continue
 				}
@@ -1306,9 +1305,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
+			lastActiveStr := ic.getLastActiveStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
+					continue
+				}
+				updateAt := q["updated_at"].(string)
+				if updateAt < lastActiveStr {
+					log.Printf("[DEBUG] skipping query '%s' that was modified at %s (last active=%s)", name,
+						updateAt, lastActiveStr)
 					continue
 				}
 				ic.Emit(&resource{
@@ -1447,9 +1453,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
+			lastActiveStr := ic.getLastActiveStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
+					continue
+				}
+				updateAt := q["updated_at"].(string)
+				if updateAt < lastActiveStr {
+					log.Printf("[DEBUG] skipping dashboard '%s' that was modified at %s (last active=%s)", name,
+						updateAt, lastActiveStr)
 					continue
 				}
 				ic.Emit(&resource{
@@ -1571,6 +1584,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
+			lastActiveStr := ic.getLastActiveStr()
 			alerts, err := wc.Alerts.List(ic.Context)
 			if err != nil {
 				return err
@@ -1580,6 +1594,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				if !ic.MatchesName(name) {
 					continue
 				}
+				if alert.UpdatedAt < lastActiveStr {
+					log.Printf("[DEBUG] skipping alert '%s' that was modified at %s (last active=%s)", name,
+						alert.UpdatedAt, lastActiveStr)
+					continue
+				}
+
 				ic.Emit(&resource{Resource: "databricks_sql_alert", ID: alert.Id})
 				log.Printf("[INFO] Imported %d of %d SQL alerts", i+1, len(alerts))
 			}
@@ -1714,7 +1734,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_directory": {
-		Service: "notebooks",
+		Service: "directories",
 		Name:    workspaceObjectResouceName,
 		Search: func(ic *importContext, r *resource) error {
 			directoryList := ic.getAllDirectories()

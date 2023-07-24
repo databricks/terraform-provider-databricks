@@ -240,7 +240,7 @@ This block controls notification settings for both email & webhook notifications
 
 ### health Configuration Block
 
-This block describes health conditions for a given job or an individual task. It consists of following attributes:
+This block describes health conditions for a given job or an individual task. It consists of the following attributes:
 
 * `rules` - (List) list of rules that are represented as objects with the following attributes:
   * `metric` - (Optional) string specifying the metric to check.  The only supported metric is `RUN_DURATION_SECONDS` (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create)) for the latest information.

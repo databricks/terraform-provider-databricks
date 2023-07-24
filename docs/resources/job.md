@@ -96,7 +96,7 @@ The resource supports the following arguments:
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes and fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `notification_settings` - (Optional) An optional block controlling the notification settings on the job level (described below).
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
-* `health` - (Optional) block described below that specifies health conditions for a given job.
+* `health` - (Optional) An optional block that specifies the health conditions for the job (described below).
 
 ### task Configuration Block
 

@@ -1424,7 +1424,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/jobs/reset",
+				Resource: "/api/2.1/jobs/reset",
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
@@ -1433,6 +1433,26 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 							DriverInstancePoolID: "instance-pool-driver",
 							SparkVersion:         "spark-1",
 							NumWorkers:           1,
+						},
+						Tasks: []JobTaskSettings{
+							{
+								NewCluster: &clusters.Cluster{
+									InstancePoolID:       "instance-pool-worker-task",
+									DriverInstancePoolID: "instance-pool-driver-task",
+									SparkVersion:         "spark-2",
+									NumWorkers:           2,
+								},
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								NewCluster: &clusters.Cluster{
+									InstancePoolID:       "instance-pool-worker-job",
+									DriverInstancePoolID: "instance-pool-driver-job",
+									SparkVersion:         "spark-3",
+									NumWorkers:           3,
+								},
+							},
 						},
 						Name:                   "Featurizer New",
 						MaxRetries:             3,
@@ -1444,7 +1464,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1465,8 +1485,12 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 		Update:   true,
 		Resource: ResourceJob(),
 		InstanceState: map[string]string{
-			"new_cluster.0.node_type_id":        "node-type-id",
-			"new_cluster.0.driver_node_type_id": "driver-node-type-id",
+			"new_cluster.0.node_type_id":                      "node-type-id",
+			"new_cluster.0.driver_node_type_id":               "driver-node-type-id",
+			"task.0.new_cluster.0.node_type_id":               "node-type-id-task",
+			"task.0.new_cluster.0.driver_node_type_id":        "driver-node-type-id-task",
+			"job_cluster.0.new_cluster.0.node_type_id":        "node-type-id-job",
+			"job_cluster.0.new_cluster.0.driver_node_type_id": "driver-node-type-id-job",
 		},
 		HCL: `
 		new_cluster = {
@@ -1474,6 +1498,22 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 			driver_instance_pool_id = "instance-pool-driver"
 			spark_version = "spark-1"
 			num_workers = 1
+		}
+		task = {
+			new_cluster = {
+				instance_pool_id = "instance-pool-worker-task"
+				driver_instance_pool_id = "instance-pool-driver-task"
+				spark_version = "spark-2"
+				num_workers = 2
+			}
+		}
+		job_cluster = {
+			new_cluster = {
+				instance_pool_id = "instance-pool-worker-job"
+				driver_instance_pool_id = "instance-pool-driver-job"
+				spark_version = "spark-3"
+				num_workers = 3
+			}
 		}
 		max_concurrent_runs = 1
 		max_retries = 3

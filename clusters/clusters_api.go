@@ -444,6 +444,19 @@ func (cluster Cluster) Validate() error {
 	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
 }
 
+// ResolveComputedAttributesForAPIRequest prepocesses the cluster configuration to remove conflicting computed attributes before we can make an API request.
+func (cluster *Cluster) ResolveComputedAttributesForAPIRequest() {
+	// NodeTypeID cannot be set in jobsAPI.Update if InstancePoolID is specified.
+	// If both are specified, assume InstancePoolID takes precedence and NodeTypeID is only computed.
+	if cluster.InstancePoolID != "" {
+		cluster.NodeTypeID = ""
+	}
+	// Same for Driver.
+	if cluster.DriverInstancePoolID != "" {
+		cluster.DriverNodeTypeID = ""
+	}
+}
+
 // ModifyRequestOnInstancePool helps remove all request fields that should not be submitted when instance pool is selected.
 func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	// Instance profile id does not exist or not set

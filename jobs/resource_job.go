@@ -823,15 +823,21 @@ func ResourceJob() *schema.Resource {
 			if js.isMultiTask() {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
-			// NodeTypeID cannot be set in jobsAPI.Update if InstancePoolID is specified.
-			// If both are specified, assume InstancePoolID takes precedence and NodeTypeID is only computed.
-			if js.NewCluster != nil && js.NewCluster.InstancePoolID != "" {
-				js.NewCluster.NodeTypeID = ""
+
+			if js.NewCluster != nil {
+				js.NewCluster.ResolveComputedAttributesForAPIRequest()
 			}
-			// Same for Driver.
-			if js.NewCluster != nil && js.NewCluster.DriverInstancePoolID != "" {
-				js.NewCluster.DriverNodeTypeID = ""
+			for _, task := range js.Tasks {
+				if task.NewCluster != nil {
+					task.NewCluster.ResolveComputedAttributesForAPIRequest()
+				}
 			}
+			for _, jc := range js.JobClusters {
+				if jc.NewCluster != nil {
+					jc.NewCluster.ResolveComputedAttributesForAPIRequest()
+				}
+			}
+
 			jobsAPI := NewJobsAPI(ctx, c)
 			err := jobsAPI.Update(d.Id(), js)
 			if err != nil {

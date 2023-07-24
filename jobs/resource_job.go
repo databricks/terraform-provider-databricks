@@ -326,7 +326,7 @@ type RunParameters struct {
 	SparkSubmitParams []string          `json:"spark_submit_params,omitempty"`
 }
 
-// JobParameters used 
+// JobParameters used
 type JobParameters struct {
 	Name    string `json:"name,omitempty"`
 	Default string `json:"default,omitempty"`

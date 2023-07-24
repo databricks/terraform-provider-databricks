@@ -1485,12 +1485,12 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 		Update:   true,
 		Resource: ResourceJob(),
 		InstanceState: map[string]string{
-			"new_cluster.0.node_type_id":                      "node-type-id",
-			"new_cluster.0.driver_node_type_id":               "driver-node-type-id",
-			"task.0.new_cluster.0.node_type_id":               "node-type-id-task",
-			"task.0.new_cluster.0.driver_node_type_id":        "driver-node-type-id-task",
-			"job_cluster.0.new_cluster.0.node_type_id":        "node-type-id-job",
-			"job_cluster.0.new_cluster.0.driver_node_type_id": "driver-node-type-id-job",
+			"new_cluster.0.node_type_id":                      "node-type-id-worker",
+			"new_cluster.0.driver_node_type_id":               "node-type-id-driver",
+			"task.0.new_cluster.0.node_type_id":               "node-type-id-worker-task",
+			"task.0.new_cluster.0.driver_node_type_id":        "node-type-id-driver-task",
+			"job_cluster.0.new_cluster.0.node_type_id":        "node-type-id-worker-job",
+			"job_cluster.0.new_cluster.0.driver_node_type_id": "node-type-id-driver-job",
 		},
 		HCL: `
 		new_cluster = {

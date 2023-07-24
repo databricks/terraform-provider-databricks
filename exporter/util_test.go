@@ -108,6 +108,10 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 	assert.True(t, result_true_user_directory)
 
 	ic = importContextForTest()
+	result_true_user_directory = ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/", "/Users")
+	assert.True(t, result_true_user_directory)
+
+	ic = importContextForTest()
 	result_true_sp_directory := ic.IsUserOrServicePrincipalDirectory("/Users/0e561119-c5a0-4f29-b246-5a953adb9575", "/Users")
 	assert.True(t, result_true_sp_directory)
 }

@@ -113,3 +113,5 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_user_instance_profile](../resources/user_instance_profile.md) | No (Deprecated) |
 | [databricks_user_role](../resources/user_role.md) | Yes |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) |
+| [databricks_workspace_file](../resources/workspace_file.md) | Yes |
+

@@ -628,6 +628,208 @@ func TestResourceJobCreate_AlwaysRunning_Conflict(t *testing.T) {
 	}.ExpectError(t, "`always_running` must be specified only with `max_concurrent_runs = 1`")
 }
 
+func TestResourceJobCreate_ControlRunState_AlwaysRunningConflict(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `control_run_state = true
+		always_running = true
+		continuous {
+			pause_status = "UNPAUSED"
+		}`,
+	}.ExpectError(t, "invalid config supplied. [always_running] Conflicting configuration arguments. [control_run_state] Conflicting configuration arguments")
+}
+
+func TestResourceJobCreate_ControlRunState_NoContinuous(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL:      `control_run_state = true`,
+	}.ExpectError(t, "`control_run_state` must be specified only with `continuous`")
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					MaxConcurrentRuns: 1,
+					Name:              "Test",
+					Continuous: &ContinuousConf{
+						PauseStatus: "UNPAUSED",
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters{
+					JobID: 789,
+				},
+				Response: JobRun{},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousUpdateCancel(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters{
+					JobID: 789,
+				},
+				Response: apierr.APIError{StatusCode: 404},
+				Status:   404,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=789",
+				Response: JobRunsList{
+					Runs: []JobRun{
+						{
+							RunID: 567,
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/runs/cancel",
+				ExpectedRequest: map[string]any{
+					"run_id": 567,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/get?run_id=567",
+				Response: JobRun{
+					RunID: 567,
+					State: RunState{
+						LifeCycleState: "TERMINATED",
+					},
+				},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
 func TestResourceJobCreateSingleNode(t *testing.T) {
 	cluster := clusters.Cluster{
 		NumWorkers: 0, SparkVersion: "7.3.x-scala2.12", NodeTypeID: "Standard_DS3_v2",
@@ -1492,26 +1694,35 @@ func TestJobRestarts(t *testing.T) {
 		err = ja.waitForRunState(890, "RUNNING", timeout)
 		assert.EqualError(t, err, "run is SOMETHING: Checking...")
 
+		testRestart := func(jobID int64, stopErr, startErr string) {
+			err := ja.StopActiveRun(jobID, timeout)
+			if stopErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, stopErr)
+			}
+			if stopErr == "" {
+				err = ja.Start(jobID, timeout)
+				if startErr == "" {
+					assert.NoError(t, err)
+				} else {
+					assert.EqualError(t, err, startErr)
+				}
+			}
+		}
+
 		// no active runs for the first time
-		err = ja.Restart("123", timeout)
-		assert.NoError(t, err)
+		testRestart(123, "", "")
 
 		// one active run for the second time
-		err = ja.Restart("123", timeout)
-		assert.NoError(t, err)
+		testRestart(123, "", "")
 
-		err = ja.Restart("111", timeout)
-		assert.EqualError(t, err, "cannot cancel run 567: nope")
+		testRestart(111, "cannot cancel run 567: nope", "")
 
-		err = ja.Restart("a", timeout)
-		assert.EqualError(t, err, "strconv.ParseInt: parsing \"a\": invalid syntax")
+		testRestart(222, "nope", "")
 
-		err = ja.Restart("222", timeout)
-		assert.EqualError(t, err, "nope")
-
-		err = ja.Restart("678", timeout)
-		assert.EqualError(t, err, "`always_running` must be specified only "+
-			"with `max_concurrent_runs = 1`. There are 2 active runs")
+		testRestart(678, "`always_running` must be specified only "+
+			"with `max_concurrent_runs = 1`. There are 2 active runs", "")
 	})
 }
 

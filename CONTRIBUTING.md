@@ -116,33 +116,7 @@ provider_installation {
 }
 ```
 
-After installing necessary software for building provider from sources, you should install `staticcheck` and `gotestsum` in order to run `make test`.
-
-Make sure you have `$GOPATH/bin` in your `$PATH`:
-
-```bash
-echo "export PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bash_profile
-```
-
-Installing `staticcheck` (the version that works with Go 1.18):
-
-```bash
-go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
-```
-
-Installing `gotestsum`:
-
-```bash
-go install gotest.tools/gotestsum@latest
-```
-
-Installing `goimports`:
-
-```bash
-go install golang.org/x/tools/cmd/goimports@latest
-```
-
-After this, you should be able to run `make coverage` to run the tests and see the coverage.
+After installing the necessary software for building provider from sources, you should be able to run `make coverage` to run the tests and see the coverage.
 
 ## Debugging
 

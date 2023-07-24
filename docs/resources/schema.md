@@ -43,10 +43,10 @@ The following arguments are required:
 
 ## Import
 
-This resource can be imported by name:
+This resource can be imported by its full name:
 
 ```bash
-$ terraform import databricks_schema.this <name>
+$ terraform import databricks_schema.this <catalog_name>.<name>
 ```
 
 ## Related Resources

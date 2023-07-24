@@ -47,6 +47,9 @@ type ObjectStatus struct {
 	ObjectType string `json:"object_type,omitempty" tf:"computed"`
 	Path       string `json:"path"`
 	Language   string `json:"language,omitempty"`
+	CreatedAt  int64  `json:"created_at,omitempty"`
+	ModifiedAt int64  `json:"modified_at,omitempty"`
+	Size       int64  `json:"size,omitempty"`
 }
 
 // ExportPath contains the base64 content of the notebook
@@ -151,39 +154,9 @@ func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus, i
 		return err
 	}
 	for _, v := range notebookInfoList {
-		if v.ObjectType == Notebook || v.ObjectType == File {
-			*pathList = append(*pathList, v)
-		} else if v.ObjectType == Directory {
-			err := a.recursiveAddPaths(v.Path, pathList, ignoreErrors)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (a NotebooksAPI) ListDirectories(path string, recursive bool, ignoreErrors bool) ([]ObjectStatus, error) {
-	if recursive {
-		var paths []ObjectStatus
-		err := a.recursiveAddDirectoryPaths(path, &paths, ignoreErrors)
-		if err != nil {
-			return nil, err
-		}
-		return paths, err
-	}
-	return a.list(path)
-}
-
-func (a NotebooksAPI) recursiveAddDirectoryPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
-	directoryInfoList, err := a.list(path)
-	if err != nil && !ignoreErrors {
-		return err
-	}
-	for _, v := range directoryInfoList {
+		*pathList = append(*pathList, v)
 		if v.ObjectType == Directory {
-			*pathList = append(*pathList, v)
-			err := a.recursiveAddDirectoryPaths(v.Path, pathList, ignoreErrors)
+			err := a.recursiveAddPaths(v.Path, pathList, ignoreErrors)
 			if err != nil {
 				return err
 			}

@@ -94,7 +94,7 @@ The resource supports the following arguments:
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is documented below.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes and fails. The default behavior is to not send any notifications. This field is a block and is documented below.
-* `notification_settings` - (Optional) block described below controlling notification settings on the job level.
+* `notification_settings` - (Optional) An optional block controlling the notification settings on the job level (described below).
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
 * `health` - (Optional) block described below that specifies health conditions for a given job.
 

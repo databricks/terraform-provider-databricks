@@ -44,6 +44,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 		"allow_cluster_create": true,
 		"home":                 "/Users/bcd",
 		"repos":                "/Repos/bcd",
+		"acl_principal_id":     "servicePrincipals/bcd",
 	})
 }
 

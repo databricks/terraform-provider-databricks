@@ -247,8 +247,8 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 							Category:       "Storage Optimized",
 							NodeInfo: &compute.CloudProviderNodeInfo{
 								Status: []compute.CloudProviderNodeStatus{
-									compute.CloudProviderNodeStatusNotavailableinregion,
-									compute.CloudProviderNodeStatusNotenabledonsubscription},
+									compute.CloudProviderNodeStatusNotAvailableInRegion,
+									compute.CloudProviderNodeStatusNotEnabledOnSubscription},
 							},
 						},
 						{

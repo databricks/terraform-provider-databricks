@@ -27,6 +27,11 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
+			m["acl_principal_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
 			return m
 		})
 	addEntitlementsToSchema(&groupSchema)
@@ -52,6 +57,7 @@ func ResourceGroup() *schema.Resource {
 			}
 			d.Set("display_name", group.DisplayName)
 			d.Set("external_id", group.ExternalID)
+			d.Set("acl_principal_id", fmt.Sprintf("groups/%s", group.DisplayName))
 			d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
 			return group.Entitlements.readIntoData(d)
 		},

@@ -617,9 +617,10 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
 				continue
 			}
-			if object.ModifiedAt != 0 && object.ModifiedAt < lastActiveMs {
+			modifiedAt := object.GetModifiedAt()
+			if modifiedAt != 0 && modifiedAt < lastActiveMs {
 				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
-					object.ModifiedAt, ic.lastActiveMs)
+					modifiedAt, ic.lastActiveMs)
 				continue
 			}
 			ic.Emit(&resource{

@@ -103,7 +103,15 @@ The resource supports the following arguments:
 This block describes individual tasks:
 
 * `task_key` - (Required) string specifying an unique key for a given task.
-* `*_task` - (Required) one of the specific task blocks described below: `notebook_task`, `spark_python_task`, ...
+* `*_task` - (Required) one of the specific task blocks described below: 
+  * `dbt_task`
+  * `notebook_task`
+  * `pipeline_task`
+  * `python_wheel_task`
+  * `spark_jar_task`
+  * `spark_python_task`
+  * `spark_submit_task`
+  * `sql_task`
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `depends_on` - (Optional) block specifying dependency(-ies) for a given task.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.

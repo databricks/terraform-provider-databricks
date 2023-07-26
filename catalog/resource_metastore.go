@@ -143,7 +143,7 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				return acc.Metastores.DeleteByMetastoreId(ctx, d.Id())
+				return acc.Metastores.Delete(ctx, catalog.DeleteAccountMetastoreRequest{Force: force, MetastoreId: d.Id()})
 			} else {
 				w, err := c.WorkspaceClient()
 				if err != nil {

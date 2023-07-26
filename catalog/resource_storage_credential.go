@@ -138,6 +138,7 @@ func ResourceStorageCredential() *schema.Resource {
 			force := d.Get("force_destroy").(bool)
 			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
+					Force:       force,
 					Name:        d.Id(),
 					MetastoreId: d.Get("metastore_id").(string),
 				})

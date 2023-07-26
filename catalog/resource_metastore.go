@@ -12,15 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type MetastoresAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-func NewMetastoresAPI(ctx context.Context, m any) MetastoresAPI {
-	return MetastoresAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
-}
-
 type MetastoreInfo struct {
 	Name                                        string  `json:"name"`
 	StorageRoot                                 string  `json:"storage_root" tf:"force_new"`

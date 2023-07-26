@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_volume (Resource)
 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+
 Volumes are Unity Catalog objects representing a logical volume of storage in a cloud object storage location. Volumes provide capabilities for accessing, storing, governing, and organizing files. While tables provide governance over tabular datasets, volumes add governance over non-tabular datasets. You can use volumes to store and access files in any format, including structured, semi-structured, and unstructured data.
 
 A volume resides in the third layer of Unity Catalog’s three-level namespace. Volumes are siblings to tables, views, and other objects organized under a schema in Unity Catalog.
@@ -14,6 +16,7 @@ A **managed volume** is a Unity Catalog-governed storage volume created within t
 An **external volume** is a Unity Catalog-governed storage volume registered against a directory within an external location.
 
 A volume can be referenced using its identifier: ```<catalogName>.<schemaName>.<volumeName>```, where:
+
 * ```<catalogName>```: The name of the catalog containing the Volume.
 * ```<schemaName>```: The name of the schema containing the Volume.
 * ```<volumeName>```: The name of the Volume. It identifies the volume object.

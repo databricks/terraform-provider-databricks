@@ -30,7 +30,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			create.WorkspaceId = workspaceId
 
 			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
-				_, err := acc.MetastoreAssignments.Create(ctx,
+				err := acc.MetastoreAssignments.Create(ctx,
 					catalog.AccountsCreateMetastoreAssignment{
 						WorkspaceId:         workspaceId,
 						MetastoreId:         metastoreId,

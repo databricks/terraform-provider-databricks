@@ -12,6 +12,7 @@ resource "databricks_metastore" "this" {
   name          = "primary"
   storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
   owner         = "uc admins"
+  region        = "us-east-1"
   force_destroy = true
 }
 

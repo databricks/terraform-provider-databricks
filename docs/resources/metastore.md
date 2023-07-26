@@ -16,6 +16,7 @@ resource "databricks_metastore" "this" {
   name          = "primary"
   storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
   owner         = "uc admins"
+  region        = "us-east-1"
   force_destroy = true
 }
 
@@ -34,6 +35,7 @@ resource "databricks_metastore" "this" {
     azurerm_storage_container.unity_catalog.name,
   azurerm_storage_account.unity_catalog.name)
   owner         = "uc admins"
+  region        = "eastus"
   force_destroy = true
 }
 

@@ -14,6 +14,7 @@ func TestUcAccMetastore(t *testing.T) {
 				name = "{var.RANDOM}"
 				storage_root = "s3://{var.RANDOM}/metastore"
 				region = "us-east-1"
+				force_destroy = true
 			}`,
 		})
 	case "azure-ucacct":
@@ -22,6 +23,7 @@ func TestUcAccMetastore(t *testing.T) {
 				name = "{var.RANDOM}"
 				storage_root = "abfss://{var.RANDOM}@{var.RANDOM}.dfs.core.windows.net/"
 				region = "eastus"
+				force_destroy = true
 			}`,
 		})
 	case "gcp-accounts":
@@ -30,6 +32,7 @@ func TestUcAccMetastore(t *testing.T) {
 				name = "{var.RANDOM}"
 				storage_root = "gs://{var.RANDOM}/metastore"
 				region = "us-east1"
+				force_destroy = true
 			}`,
 		})
 	default:

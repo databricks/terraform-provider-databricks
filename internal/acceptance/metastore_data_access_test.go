@@ -5,7 +5,7 @@ import (
 )
 
 func TestUcAccMetastoreDataAccessOnAws(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityAccountLevel(t, step{
 		Template: `
 		resource "databricks_metastore" "this" {
 			name          = "primary-{var.RANDOM}"
@@ -19,7 +19,6 @@ func TestUcAccMetastoreDataAccessOnAws(t *testing.T) {
 			aws_iam_role {
 			role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
-			is_default = true
 		}`,
 	})
 }

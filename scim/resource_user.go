@@ -57,6 +57,11 @@ func ResourceUser() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			m["acl_principal_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
 			return m
 		})
 	scimUserFromData := func(d *schema.ResourceData) (user User, err error) {
@@ -96,6 +101,7 @@ func ResourceUser() *schema.Resource {
 			d.Set("external_id", user.ExternalID)
 			d.Set("home", fmt.Sprintf("/Users/%s", user.UserName))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", user.UserName))
+			d.Set("acl_principal_id", fmt.Sprintf("users/%s", user.UserName))
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -161,7 +167,8 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	if (err.Error() != userExistsErrorMessage(userName, false)) && (err.Error() != userExistsErrorMessage(userName, true)) {
+	if (!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, false))) &&
+		(!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, true))) {
 		return err
 	}
 	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName), true)

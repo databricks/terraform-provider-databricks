@@ -43,11 +43,6 @@ type CreateMetastore struct {
 	StorageRoot string `json:"storage_root"`
 }
 
-// func (a MetastoresAPI) listMetastores() (mis []MetastoreInfo, err error) {
-// 	err = a.client.Get(a.context, "/unity-catalog/metastores", nil, &mis)
-// 	return
-// }
-
 func (a MetastoresAPI) createMetastore(cm CreateMetastore) (mi MetastoreInfo, err error) {
 	err = a.client.Post(a.context, "/unity-catalog/metastores", cm, &mi)
 	return

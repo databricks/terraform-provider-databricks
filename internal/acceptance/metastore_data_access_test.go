@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestUcAccMetastoreDataAccessOnAws(t *testing.T) {
+func TestUcAccAccountMetastoreDataAccessOnAws(t *testing.T) {
 	unityAccountLevel(t, step{
 		Template: `
 		resource "databricks_metastore" "this" {

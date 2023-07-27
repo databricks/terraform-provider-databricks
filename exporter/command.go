@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
@@ -103,6 +104,9 @@ func Run(args ...string) error {
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
 		"Items with older than activity specified won't be imported.")
+	flags.BoolVar(&ic.incremental, "incremental", false, "Incremental export of the data. Requires -updated-since parameter")
+	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
+		"Include only resources updated since a given timestamp (in ISO8601 format, i.e. 2023-07-01T00:00:00Z)")
 	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information.")
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
@@ -126,6 +130,16 @@ func Run(args ...string) error {
 	err = flags.Parse(newArgs)
 	if err != nil {
 		return err
+	}
+	if ic.incremental {
+		if ic.updatedSinceStr == "" {
+			return fmt.Errorf("-updated-since is required with -interactive parameter")
+		}
+		_, err = time.Parse(time.RFC3339, ic.updatedSinceStr)
+		if err != nil {
+			log.Printf("[ERROR] can't parse value '%s' please specify it in ISO8601 format, i.e. 2023-07-01T00:00:00Z", ic.updatedSinceStr)
+			return err
+		}
 	}
 	if !skipInteractive {
 		ic.interactivePrompts()

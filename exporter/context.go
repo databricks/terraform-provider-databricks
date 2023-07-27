@@ -73,13 +73,15 @@ type importContext struct {
 	includeUserDomains  bool
 	importAllUsers      bool
 	debug               bool
+	incremental         bool
 	mounts              bool
 	services            string
 	listing             string
 	match               string
 	lastActiveDays      int64
 	lastActiveMs        int64
-	lastActiveStr       string
+	updatedSinceStr     string
+	updatedSinceMs      int64
 	generateDeclaration bool
 	meAdmin             bool
 	prefix              string

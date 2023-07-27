@@ -609,7 +609,7 @@ func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) strin
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
 		objectsList := ic.getAllWorkspaceObjects()
-		lastActiveMs := ic.getLastActiveMs()
+		updatedSinceMs := ic.getUpdatedSinceMs()
 		for offset, object := range objectsList {
 			if object.ObjectType != objType || strings.HasPrefix(object.Path, "/Repos") {
 				continue
@@ -618,14 +618,15 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 				continue
 			}
 			modifiedAt := object.GetModifiedAt()
-			if modifiedAt != 0 && modifiedAt < lastActiveMs {
+			if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
 				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
-					modifiedAt, ic.lastActiveMs)
+					modifiedAt, updatedSinceMs)
 				continue
 			}
 			ic.Emit(&resource{
-				Resource: resourceType,
-				ID:       object.Path,
+				Resource:    resourceType,
+				ID:          object.Path,
+				Incremental: ic.incremental,
 			})
 
 			if offset%50 == 0 {
@@ -643,9 +644,14 @@ func (ic *importContext) getLastActiveMs() int64 {
 	return ic.lastActiveMs
 }
 
-func (ic *importContext) getLastActiveStr() string {
-	if ic.lastActiveStr == "" {
-		ic.lastActiveStr = time.Now().UTC().AddDate(0, 0, -int(ic.lastActiveDays)).Format(time.RFC3339)
+func (ic *importContext) getUpdatedSinceStr() string {
+	return ic.updatedSinceStr
+}
+
+func (ic *importContext) getUpdatedSinceMs() int64 {
+	if ic.updatedSinceMs == 0 {
+		tm, _ := time.Parse(time.RFC3339, ic.updatedSinceStr)
+		ic.updatedSinceMs = tm.UnixMilli()
 	}
-	return ic.lastActiveStr
+	return ic.updatedSinceMs
 }

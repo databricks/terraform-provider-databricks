@@ -293,7 +293,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Skipping %s because it doesn't match %s", c.ClusterName, ic.match)
 					continue
 				}
-				if c.LastActivityTime < lastActiveMs {
+				if c.LastActivityTime > 0 && c.LastActivityTime < lastActiveMs {
 					log.Printf("[INFO] Older inactive cluster %s", c.ClusterName)
 					continue
 				}
@@ -1305,21 +1305,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
-			lastActiveStr := ic.getLastActiveStr()
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
 					continue
 				}
-				updateAt := q["updated_at"].(string)
-				if updateAt < lastActiveStr {
-					log.Printf("[DEBUG] skipping query '%s' that was modified at %s (last active=%s)", name,
-						updateAt, lastActiveStr)
+				updatedAt := q["updated_at"].(string)
+				if ic.incremental && updatedAt < updatedSinceStr {
+					log.Printf("[DEBUG] skipping query '%s' that was modified at %s (updatedSince=%s)", name,
+						updatedAt, updatedSinceStr)
 					continue
 				}
 				ic.Emit(&resource{
-					Resource: "databricks_sql_query",
-					ID:       q["id"].(string),
+					Resource:    "databricks_sql_query",
+					ID:          q["id"].(string),
+					Incremental: ic.incremental,
 				})
 				log.Printf("[INFO] Imported %d of %d SQL queries", i+1, len(qs))
 			}
@@ -1453,21 +1454,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
-			lastActiveStr := ic.getLastActiveStr()
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
 					continue
 				}
-				updateAt := q["updated_at"].(string)
-				if updateAt < lastActiveStr {
-					log.Printf("[DEBUG] skipping dashboard '%s' that was modified at %s (last active=%s)", name,
-						updateAt, lastActiveStr)
+				updatedAt := q["updated_at"].(string)
+				if ic.incremental && updatedAt < updatedSinceStr {
+					log.Printf("[DEBUG] skipping dashboard '%s' that was modified at %s (updatedSince=%s)", name,
+						updatedAt, updatedSinceStr)
 					continue
 				}
 				ic.Emit(&resource{
-					Resource: "databricks_sql_dashboard",
-					ID:       q["id"].(string),
+					Resource:    "databricks_sql_dashboard",
+					ID:          q["id"].(string),
+					Incremental: ic.incremental,
 				})
 				log.Printf("[INFO] Imported %d of %d SQL dashboards", i+1, len(qs))
 			}
@@ -1584,7 +1586,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			lastActiveStr := ic.getLastActiveStr()
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			alerts, err := wc.Alerts.List(ic.Context)
 			if err != nil {
 				return err
@@ -1594,13 +1596,17 @@ var resourcesMap map[string]importable = map[string]importable{
 				if !ic.MatchesName(name) {
 					continue
 				}
-				if alert.UpdatedAt < lastActiveStr {
+				if ic.incremental && alert.UpdatedAt < updatedSinceStr {
 					log.Printf("[DEBUG] skipping alert '%s' that was modified at %s (last active=%s)", name,
-						alert.UpdatedAt, lastActiveStr)
+						alert.UpdatedAt, updatedSinceStr)
 					continue
 				}
 
-				ic.Emit(&resource{Resource: "databricks_sql_alert", ID: alert.Id})
+				ic.Emit(&resource{
+					Resource:    "databricks_sql_alert",
+					ID:          alert.Id,
+					Incremental: ic.incremental,
+				})
 				log.Printf("[INFO] Imported %d of %d SQL alerts", i+1, len(alerts))
 			}
 			return nil

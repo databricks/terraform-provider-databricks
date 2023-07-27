@@ -71,7 +71,8 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				return common.StructToData(ma, s, d)
+				d.Set("metastore_id", ma.MetastoreId)
+				return nil
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

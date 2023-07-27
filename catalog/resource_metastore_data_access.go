@@ -75,7 +75,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
 			return m
 		})
-	p := common.NewPairID("metastore_id", "id")
+	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -128,7 +128,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			metastoreId, dacId, err := p.Unpack(d)
+			metastoreId, dacName, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
@@ -138,7 +138,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId: metastoreId,
-					Name:        dacId,
+					Name:        dacName,
 				})
 				if err != nil {
 					return err
@@ -148,11 +148,11 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				isDefault := metastore.StorageRootCredentialId == dacId
+				isDefault := metastore.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
 				return common.StructToData(storageCredential, s, d)
 			}, func(w *databricks.WorkspaceClient) error {
-				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacId)
+				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacName)
 				if err != nil {
 					return err
 				}
@@ -160,23 +160,23 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				isDefault := metastore.StorageRootCredentialId == dacId
+				isDefault := metastore.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
 				return common.StructToData(storageCredential, s, d)
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			metastoreId, dacId, err := p.Unpack(d)
+			metastoreId, dacName, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
 			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					MetastoreId: metastoreId,
-					Name:        dacId,
+					Name:        dacName,
 				})
 			}, func(w *databricks.WorkspaceClient) error {
-				return w.StorageCredentials.DeleteByName(ctx, dacId)
+				return w.StorageCredentials.DeleteByName(ctx, dacName)
 			})
 		},
 	}.ToResource()

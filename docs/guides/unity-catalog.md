@@ -8,8 +8,8 @@ Databricks Unity Catalog brings fine-grained governance and security to Lakehous
 
 This guide uses the following variables in configurations:
 
-- `databricks_account_username`: The username an account-level admin uses to log in to  [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
-- `databricks_account_password`: The password for `databricks_account_username`.
+- `databricks_client_id`: The `client_id` is the `application_id` of a [Service Principal](resources/service_principal.md) that has account-level admin permission on [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
+- `databricks_client_secret`: The secret of the above service principal.
 - `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net).
 - `databricks_workspace_url`: Value of `workspace_url` attribute from [databricks_mws_workspaces](../resources/mws_workspaces.md#attribute-reference) resource.
 
@@ -28,7 +28,7 @@ To get started with Unity Catalog, this guide takes you throw the following high
 
 ## Provider initialization
 
-Initialize [provider with `mws` alias](https://www.terraform.io/language/providers/configuration#alias-multiple-provider-configurations) to set up account-level resources. See [provider authentication](../index.md#authenticating-with-hostname,-username,-and-password) for more details.
+Initialize [provider with `mws` alias](https://www.terraform.io/language/providers/configuration#alias-multiple-provider-configurations) to set up account-level resources. See [provider authentication](../index.md#authenticating-with-service-principal) for more details.
 
 ```hcl
 terraform {
@@ -49,27 +49,27 @@ provider "aws" {
 
 // initialize provider in "MWS" mode for account-level resources
 provider "databricks" {
-  alias      = "mws"
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = var.databricks_account_id
-  username   = var.databricks_account_username
-  password   = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = var.databricks_account_id
+  client_id     = var.databricks_client_id
+  client_secret = var.databricks_client_secret
 }
 
 // initialize provider at workspace level, to create UC resources
 provider "databricks" {
-  alias    = "workspace"
-  host     = var.databricks_workspace_url
-  username = var.databricks_account_username
-  password = var.databricks_account_password
+  alias         = "workspace"
+  host          = var.databricks_workspace_url
+  client_id     = var.databricks_client_id
+  client_secret = var.databricks_client_secret
 }
 ```
 
 Define the required variables
 
 ```hcl
-variable "databricks_account_username" {}
-variable "databricks_account_password" {}
+variable "databricks_client_id" {}
+variable "databricks_client_secret" {}
 variable "databricks_account_id" {}
 variable "databricks_workspace_url" {}
 variable "aws_account_id" {}
@@ -132,7 +132,7 @@ The first step is to create the required AWS objects:
 
 - An S3 bucket, which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
 - An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket. Note that `<KMS_KEY>` is *optional*. If encryption is enabled, provide the name of the KMS key that encrypts the S3 bucket contents. *If encryption is disabled, remove the entire KMS section of the IAM policy.*
-- An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog. 
+- An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog.
 
 ```hcl
 resource "aws_s3_bucket" "metastore" {
@@ -303,15 +303,16 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 
 ```hcl
 resource "databricks_metastore" "this" {
-  provider      = databricks.workspace
+  provider      = databricks.mws
   name          = "primary"
   storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
   owner         = var.unity_admin_group
+  region        = var.region
   force_destroy = true
 }
 
 resource "databricks_metastore_data_access" "this" {
-  provider     = databricks.workspace
+  provider     = databricks.mws
   metastore_id = databricks_metastore.this.id
   name         = aws_iam_role.metastore_data_access.name
   aws_iam_role {
@@ -321,7 +322,7 @@ resource "databricks_metastore_data_access" "this" {
 }
 
 resource "databricks_metastore_assignment" "default_metastore" {
-  provider             = databricks.workspace
+  provider             = databricks.mws
   for_each             = toset(var.databricks_workspace_ids)
   workspace_id         = each.key
   metastore_id         = databricks_metastore.this.id

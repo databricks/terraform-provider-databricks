@@ -77,6 +77,11 @@ provider "azurerm" {
 provider "databricks" {
   host = local.databricks_workspace_host
 }
+
+provider "databricks" {
+  alias = "accounts"
+  host  = "https://accounts.azuredatabricks.net"
+}
 ```
 
 ## Configure Azure objects
@@ -125,14 +130,17 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 
 ```hcl
 resource "databricks_metastore" "this" {
+  provider  = databricks.accounts
   name = "primary"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
     azurerm_storage_container.unity_catalog.name,
   azurerm_storage_account.unity_catalog.name)
   force_destroy = true
+  region = data.azurerm_resource_group.this.location
 }
 
 resource "databricks_metastore_data_access" "first" {
+  provider  = databricks.accounts
   metastore_id = databricks_metastore.this.id
   name         = "the-keys"
   azure_managed_identity {
@@ -143,6 +151,7 @@ resource "databricks_metastore_data_access" "first" {
 }
 
 resource "databricks_metastore_assignment" "this" {
+  provider             = databricks.accounts
   workspace_id         = local.databricks_workspace_id
   metastore_id         = databricks_metastore.this.id
   default_catalog_name = "hive_metastore"

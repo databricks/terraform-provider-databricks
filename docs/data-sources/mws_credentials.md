@@ -1,5 +1,5 @@
 ---
-subcategory: "AWS"
+subcategory: "Deployment"
 ---
 # databricks_mws_credentials Data Source
 
@@ -11,7 +11,7 @@ Lists all [databricks_mws_credentials](../resources/mws_credentials.md) in Datab
 
 ## Example Usage
 
-Listing all credentials in 
+Listing all credentials in Databricks Account
 
 ```hcl
 provider "databricks" {

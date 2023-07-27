@@ -87,6 +87,8 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Sc
 		a.Options.Value = value
 	case float64:
 		a.Options.Value = strconv.FormatFloat(value, 'f', 0, 64)
+	case bool:
+		a.Options.Value = strconv.FormatBool(value)
 	default:
 		return fmt.Errorf("unexpected type for value: %T", value)
 	}

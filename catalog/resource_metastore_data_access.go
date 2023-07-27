@@ -105,7 +105,6 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 						return err
 					}
 				}
-				d.Set("id", dac.Id)
 				p.Pack(d)
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
@@ -122,7 +121,6 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				d.Set("id", dac.Id)
 				p.Pack(d)
 				return nil
 			})

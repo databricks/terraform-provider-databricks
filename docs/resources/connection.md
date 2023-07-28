@@ -33,8 +33,8 @@ resource "databricks_connection" "mysql" {
 
 The following arguments are supported:
 
-- `name` - Name of the Connection
-- `connection_type` - Connection type. `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER` or `DATABRICKS`.
+- `name` - Name of the Connection.
+- `connection_type` - Connection type. `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER` or `DATABRICKS` are supported. [Up-to-date list of connection type supported](https://docs.databricks.com/query-federation/index.html#supported-data-sources)
 - `options` - The key value of options required by the connection, e.g. `host`, `port`, `user` and `password`.
 - `owner` - (Optional) Name of the connection owner.
 - `properties` -  (Optional) Free-form connection properties.

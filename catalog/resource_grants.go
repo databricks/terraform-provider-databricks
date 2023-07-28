@@ -207,6 +207,8 @@ var mapping = securableMapping{
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
 		"CREATE_VOLUME":            true,
+		"READ_VOLUME":              true,
+		"WRITE_VOLUME":             true,
 		"EXECUTE":                  true,
 		"MODIFY":                   true,
 		"SELECT":                   true,

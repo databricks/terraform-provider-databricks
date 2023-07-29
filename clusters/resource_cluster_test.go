@@ -1567,7 +1567,7 @@ func TestModifyClusterRequestAzure(t *testing.T) {
 		DriverNodeTypeID:  "e",
 	}
 	c.ModifyRequestOnInstancePool()
-	assert.Nil(t, c.AzureAttributes)
+	assert.Equal(t, &AzureAttributes{}, c.AzureAttributes)
 	assert.Equal(t, "", c.NodeTypeID)
 	assert.Equal(t, "", c.DriverNodeTypeID)
 	assert.Equal(t, false, c.EnableElasticDisk)

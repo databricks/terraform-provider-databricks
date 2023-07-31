@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -33,7 +33,7 @@ func TestResourceDirectoryRead(t *testing.T) {
 		New:      true,
 		ID:       path,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 	assert.Equal(t, path, d.Get("path"))
 }
@@ -58,7 +58,7 @@ func TestResourceDirectoryDelete(t *testing.T) {
 			"delete_recursive": delete_recursive,
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 }
 
@@ -69,7 +69,7 @@ func TestResourceDirectoryRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -90,7 +90,7 @@ func TestResourceDirectoryRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -134,7 +134,7 @@ func TestResourceDirectoryCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 }
 
@@ -148,7 +148,7 @@ func TestResourceDirectoryCreate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"path": path,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -173,7 +173,7 @@ func TestResourceDirectoryDelete_Error(t *testing.T) {
 				Method:          "POST",
 				Resource:        "/api/2.0/workspace/delete",
 				ExpectedRequest: DeletePath{Path: path, Recursive: false},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -257,4 +257,9 @@ func TestResourceDirectoryReadNotDirectory(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "different object type")
 	assert.Equal(t, "", d.Id(), "Id should be empty for different object type read")
+}
+
+func TestDirectoryPathSuppressDiff(t *testing.T) {
+	assert.True(t, directoryPathSuppressDiff("", "/TF_DIR_WITH_SLASH", "/TF_DIR_WITH_SLASH/", nil))
+	assert.False(t, directoryPathSuppressDiff("", "/new_dir", "/TF_DIR_WITH_SLASH/", nil))
 }

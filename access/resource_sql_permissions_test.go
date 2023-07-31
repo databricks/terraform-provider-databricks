@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -83,6 +84,22 @@ func TestTableACLGrants(t *testing.T) {
 			{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
 		},
 	}}
+	err := ta.read()
+	assert.NoError(t, err)
+	assert.Len(t, ta.PrivilegeAssignments, 1)
+	assert.Len(t, ta.PrivilegeAssignments[0].Privileges, 2)
+}
+
+func TestDatabaseACLGrants(t *testing.T) {
+	ta := SqlPermissions{Database: "default",
+		exec: mockData{
+			"SHOW GRANT ON DATABASE `default`": {
+				// principal, actionType, objType, objectKey
+				// Test with and without backticks
+				{"users", "SELECT", "database", "default"},
+				{"users", "USAGE", "database", "`default`"},
+			},
+		}}
 	err := ta.read()
 	assert.NoError(t, err)
 	assert.Len(t, ta.PrivilegeAssignments, 1)
@@ -181,18 +198,17 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/list-node-types",
-		Response: clusters.NodeTypeList{
-			NodeTypes: []clusters.NodeType{
+		Response: compute.ListNodeTypesResponse{
+			NodeTypes: []compute.NodeType{
 				{
-					NodeTypeID:     "Standard_F4s",
-					InstanceTypeID: "Standard_F4s",
-					MemoryMB:       8192,
+					NodeTypeId:     "Standard_F4s",
+					InstanceTypeId: "Standard_F4s",
+					MemoryMb:       8192,
 					NumCores:       4,
-					NodeInstanceType: &clusters.NodeInstanceType{
+					NodeInstanceType: &compute.NodeInstanceType{
 						LocalDisks:      1,
-						InstanceTypeID:  "Standard_F4s",
-						LocalDiskSizeGB: 16,
-						LocalNVMeDisks:  0,
+						InstanceTypeId:  "Standard_F4s",
+						LocalDiskSizeGb: 16,
 					},
 				},
 			},
@@ -460,7 +476,7 @@ func TestResourceSqlPermissions_NoUpdateAnyFile(t *testing.T) {
 		},
 		ID: "any file/",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, d.Get("privilege_assignments.#"))
 	assert.Equal(t, 1, d.Get("privilege_assignments.0.privileges.#"))
 	assert.Equal(t, "users", d.Get("privilege_assignments.0.principal"))
@@ -494,7 +510,7 @@ func TestResourceSqlPermissions_NoUpdateAnonymousFunction(t *testing.T) {
 		},
 		ID: "anonymous function/",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, d.Get("privilege_assignments.#"))
 	assert.Equal(t, 1, d.Get("privilege_assignments.0.privileges.#"))
 	assert.Equal(t, "users", d.Get("privilege_assignments.0.principal"))

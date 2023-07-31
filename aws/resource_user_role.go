@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,10 +16,10 @@ func ResourceUserRole() *schema.Resource {
 			return scim.NewUsersAPI(ctx, c).Patch(userID, scim.PatchRequest("add", "roles", role))
 		},
 		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			user, err := scim.NewUsersAPI(ctx, c).Read(userID)
+			user, err := scim.NewUsersAPI(ctx, c).Read(userID, "roles")
 			hasRole := scim.ComplexValues(user.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return common.NotFound("User has no role")
+				return apierr.NotFound("User has no role")
 			}
 			return err
 		},

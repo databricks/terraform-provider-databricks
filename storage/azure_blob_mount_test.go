@@ -52,7 +52,7 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	require.NoError(t, err, err) // TODO: global search-replace for NoError
+	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
 	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
 }

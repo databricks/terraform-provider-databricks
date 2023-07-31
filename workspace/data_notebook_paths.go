@@ -13,17 +13,19 @@ func DataSourceNotebookPaths() *schema.Resource {
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			path := d.Get("path").(string)
 			recursive := d.Get("recursive").(bool)
-			notebookList, err := NewNotebooksAPI(ctx, m).List(path, recursive)
+			notebookList, err := NewNotebooksAPI(ctx, m).List(path, recursive, false)
 			if err != nil {
 				return diag.FromErr(err)
 			}
 			d.SetId(path)
 			var notebookPathList []map[string]string
 			for _, v := range notebookList {
-				notebookPathMap := map[string]string{}
-				notebookPathMap["path"] = v.Path
-				notebookPathMap["language"] = string(v.Language)
-				notebookPathList = append(notebookPathList, notebookPathMap)
+				if v.ObjectType == Notebook {
+					notebookPathMap := map[string]string{}
+					notebookPathMap["path"] = v.Path
+					notebookPathMap["language"] = string(v.Language)
+					notebookPathList = append(notebookPathList, notebookPathMap)
+				}
 			}
 			// nolint
 			d.Set("notebook_path_list", notebookPathList)

@@ -35,7 +35,7 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 		HCL: `
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "global", d.Id(), "Id should not be empty")
 	assert.Equal(t, "DATA_ACCESS_CONTROL", d.Get("security_policy"))
 }
@@ -67,7 +67,7 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 		HCL: `
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "global", d.Id(), "Id should not be empty")
 	assert.Equal(t, "DATA_ACCESS_CONTROL", d.Get("security_policy"))
 }
@@ -117,7 +117,7 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 			},
 		},
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "global", d.Id(), "Id should not be empty")
 	assert.Equal(t, "PASSTHROUGH", d.Get("security_policy"))
 }
@@ -136,4 +136,55 @@ func TestResourceSQLGlobalConfigCreateError(t *testing.T) {
 		},
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "can't use instance_profile_arn outside of AWS")
+}
+
+func TestResourceSQLGlobalConfigCreateWithDataGCP(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/sql/config/warehouses",
+				ExpectedRequest: GlobalConfigForRead{
+					DataAccessConfig:           []confPair{{Key: "spark.sql.session.timeZone", Value: "UTC"}},
+					SqlConfigurationParameters: &repeatedEndpointConfPairs{ConfigPairs: []confPair{{Key: "ANSI_MODE", Value: "true"}}},
+					EnableServerlessCompute:    false,
+					SecurityPolicy:             "DATA_ACCESS_CONTROL",
+					GoogleServiceAccount:       "poc@databricks.iam.gserviceaccount.com",
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/sql/config/warehouses",
+				ReuseRequest: true,
+				Response: GlobalConfigForRead{
+					SecurityPolicy: "DATA_ACCESS_CONTROL",
+					DataAccessConfig: []confPair{
+						{Key: "spark.sql.session.timeZone", Value: "UTC"},
+					},
+					GoogleServiceAccount: "poc@databricks.iam.gserviceaccount.com",
+					SqlConfigurationParameters: &repeatedEndpointConfPairs{
+						ConfigPairs: []confPair{
+							{Key: "ANSI_MODE", Value: "true"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceSqlGlobalConfig(),
+		Create:   true,
+		Gcp:      true,
+		State: map[string]any{
+			"security_policy":        "DATA_ACCESS_CONTROL",
+			"google_service_account": "poc@databricks.iam.gserviceaccount.com",
+			"data_access_config": map[string]any{
+				"spark.sql.session.timeZone": "UTC",
+			},
+			"sql_config_params": map[string]any{
+				"ANSI_MODE": "true",
+			},
+		},
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "global", d.Id(), "Id should not be empty")
+	assert.Equal(t, "DATA_ACCESS_CONTROL", d.Get("security_policy"))
 }

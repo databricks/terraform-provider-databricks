@@ -51,7 +51,7 @@ type testPtr struct {
 }
 
 type testStruct struct {
-	Integer        int               `json:"integer,omitempty" tf:"default:10,max_items:invalid"`
+	Integer        int               `json:"integer,omitempty" tf:"default:10,min_items:invalid,max_items:invalid"`
 	Float          float64           `json:"float,omitempty"`
 	Bool           bool              `json:"bool,omitempty"`
 	NonOptional    string            `json:"non_optional"`
@@ -201,7 +201,7 @@ type Dummy struct {
 	Enabled     bool              `json:"enabled" tf:"conflicts:workers"`
 	Workers     int               `json:"workers,omitempty" tf:"suppress_diff"`
 	Description string            `json:"description,omitempty"`
-	Addresses   []Address         `json:"addresses,omitempty" tf:"max_items:10"`
+	Addresses   []Address         `json:"addresses,omitempty" tf:"min_items:1,max_items:10"`
 	Unique      []Address         `json:"unique,omitempty" tf:"slice_set"`
 	Things      []string          `json:"things,omitempty" tf:"slice_set"`
 	Tags        map[string]string `json:"tags,omitempty" tf:"max_items:5"`
@@ -606,8 +606,31 @@ func TestDataResource(t *testing.T) {
 	diags = r.ReadContext(context.Background(), d, &DatabricksClient{})
 	assert.Len(t, diags, 0)
 	assert.Equal(t, "out: test", d.Get("out"))
+	assert.Equal(t, "_", d.Id())
 
 	d.Set("in", "fail")
 	diags = r.ReadContext(context.Background(), d, &DatabricksClient{})
 	assert.Len(t, diags, 1)
+}
+
+func TestDataResourceWithID(t *testing.T) {
+	r := func() *schema.Resource {
+		type entry struct {
+			In  string `json:"in"`
+			ID  string `json:"id,omitempty" tf:"computed"`
+			Out string `json:"out,omitempty" tf:"computed"`
+		}
+		return DataResource(entry{}, func(ctx context.Context, e any, c *DatabricksClient) error {
+			dto := e.(*entry)
+			dto.Out = "out: " + dto.In
+			dto.ID = "abc"
+			return nil
+		})
+	}()
+	d := r.TestResourceData()
+	d.Set("in", "id")
+	diags := r.ReadContext(context.Background(), d, &DatabricksClient{})
+	assert.Len(t, diags, 0)
+	assert.Equal(t, "out: id", d.Get("out"))
+	assert.Equal(t, "abc", d.Id())
 }

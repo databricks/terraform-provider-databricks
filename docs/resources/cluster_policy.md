@@ -20,7 +20,7 @@ Cluster policy permissions limit which policies a user can select in the Policy 
 
 ## Example Usage
 
-Let us take a look at an example of how you can manage two teams: Marketing and Data Engineering. In the following scenario we want the marketing team to have a really good query experience, so we enabled delta cache for them. On the other hand we want the data engineering team to be able to utilize bigger clusters so we increased the dbus per hour that they can spend. This strategy allows your marketing users and data engineering users to use Databricks in a self service manner but have a different experience in regards to security and performance. And down the line if you need to add more global settings you can propagate them through the “base [cluster](cluster.md) policy”.
+Let us take a look at an example of how you can manage two teams: Marketing and Data Engineering. In the following scenario we want the marketing team to have a really good query experience, so we enabled delta cache for them. On the other hand we want the data engineering team to be able to utilize bigger clusters so we increased the dbus per hour that they can spend. This strategy allows your marketing users and data engineering users to use Databricks in a self service manner but have a different experience in regards to security and performance. And down the line if you need to add more global settings you can propagate them through the "base [cluster](cluster.md) policy".
 
 `modules/base-cluster-policy/main.tf` could look like:
 
@@ -72,7 +72,7 @@ module "marketing_compute_policy" {
   source = "../modules/databricks-cluster-policy"
   team   = "marketing"
   policy_overrides = {
-    // only marketing guys will benefit from delta cache this way
+    // only the marketing team will benefit from delta cache this way
     "spark_conf.spark.databricks.io.cache.enabled" : {
       "type" : "fixed",
       "value" : "true"
@@ -86,7 +86,7 @@ module "engineering_compute_policy" {
   policy_overrides = {
     "dbus_per_hour" : {
       "type" : "range",
-      // only engineering guys can spin up big clusters
+      // only the engineering team are allowed to spin up big clusters
       "maxValue" : 50
     },
   }
@@ -98,7 +98,11 @@ module "engineering_compute_policy" {
 The following arguments are required:
 
 * `name` - (Required) Cluster policy name. This must be unique. Length must be between 1 and 100 characters.
-* `definition` - (Required) Policy definition JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition).
+* `description` - (Optional) Additional human-readable description of the cluster policy.
+* `definition` - Policy definition: JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-definition). Cannot be used with `policy_family_id`
+* `max_clusters_per_user` - (Optional, integer) Maximum number of clusters allowed per user. When omitted, there is no limit. If specified, value must be greater than zero.
+* `policy_family_definition_overrides`(Optional) Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition inherited from the policy family. Policy rules specified here are merged into the inherited policy definition.
+* `policy_family_id` (Optional) ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition. Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy definition.
 
 ## Attribute Reference
 
@@ -112,15 +116,15 @@ In addition to all arguments above, the following attributes are exported:
 The resource cluster policy can be imported using the policy id:
 
 ```bash
-$ terraform import databricks_cluster_policy.this <cluster-policy-id>
+terraform import databricks_cluster_policy.this <cluster-policy-id>
 ```
 
 ## Related Resources
 
 The following resources are often used in the same context:
 
-* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide
-* [End to end workspace management](../guides/workspace-management.md) guide
+* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide.
+* [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_clusters](../data-sources/clusters.md) data to retrieve a list of [databricks_cluster](cluster.md) ids.
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_current_user](../data-sources/current_user.md) data to retrieve information about [databricks_user](user.md) or [databricks_service_principal](service_principal.md), that is calling Databricks REST API.

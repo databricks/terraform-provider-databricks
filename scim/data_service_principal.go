@@ -14,6 +14,7 @@ func DataSourceServicePrincipal() *schema.Resource {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed"`
 		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
 		SpID          string `json:"sp_id,omitempty" tf:"computed"`
+		ID            string `json:"id,omitempty" tf:"computed"`
 		Home          string `json:"home,omitempty" tf:"computed"`
 		Repos         string `json:"repos,omitempty" tf:"computed"`
 		Active        bool   `json:"active,omitempty" tf:"computed"`
@@ -22,7 +23,7 @@ func DataSourceServicePrincipal() *schema.Resource {
 	return common.DataResource(spnData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		response := e.(*spnData)
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
-		spList, err := spnAPI.filter(fmt.Sprintf("applicationId eq '%s'", response.ApplicationID))
+		spList, err := spnAPI.Filter(fmt.Sprintf("applicationId eq '%s'", response.ApplicationID), true)
 		if err != nil {
 			return err
 		}
@@ -36,6 +37,7 @@ func DataSourceServicePrincipal() *schema.Resource {
 		response.ExternalID = sp.ExternalID
 		response.Active = sp.Active
 		response.SpID = sp.ID
+		response.ID = sp.ID
 		return nil
 	})
 }

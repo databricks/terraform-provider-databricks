@@ -3,48 +3,16 @@ package sql
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestAccSQLEndpoints(t *testing.T) {
-	if _, ok := os.LookupEnv("CLOUD_ENV"); !ok {
-		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
-	}
-	t.Parallel()
-	ctx := context.Background()
-	client := common.NewClientFromEnvironment()
-	endpoitsAPI := NewSQLEndpointsAPI(ctx, client)
-	se := SQLEndpoint{
-		Name:            qa.RandomName("tf-"),
-		ClusterSize:     "Small",
-		AutoStopMinutes: 10,
-		MaxNumClusters:  1,
-		Tags: &Tags{
-			CustomTags: []Tag{
-				{"Country", "Netherlands"},
-				{"City", "Amsterdam"},
-			},
-		},
-	}
-	err := endpoitsAPI.Create(&se, 20*time.Minute)
-	require.NoError(t, err)
-	defer func() {
-		err = endpoitsAPI.Delete(se.ID)
-		assert.NoError(t, err)
-	}()
-
-	se.Name = "renamed-" + se.Name
-	err = endpoitsAPI.Edit(se)
-	require.NoError(t, err)
-}
 
 // Define fixture for retrieving all data sources.
 // Shared between tests that end up performing a read operation.
@@ -77,8 +45,6 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 					ClusterSize:        "Small",
 					MaxNumClusters:     1,
 					AutoStopMinutes:    120,
-					MinNumClusters:     1,
-					NumClusters:        1,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
@@ -97,6 +63,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 					State:          "RUNNING",
 					Tags:           &Tags{},
 					MaxNumClusters: 1,
+					NumClusters:    1,
 				},
 			},
 			dataSourceListHTTPFixture,
@@ -108,7 +75,7 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
   		cluster_size = "Small"
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
@@ -124,8 +91,6 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 					ClusterSize:        "Small",
 					MaxNumClusters:     1,
 					AutoStopMinutes:    0,
-					MinNumClusters:     1,
-					NumClusters:        1,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
@@ -144,6 +109,7 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 					State:          "RUNNING",
 					Tags:           &Tags{},
 					MaxNumClusters: 1,
+					NumClusters:    1,
 				},
 			},
 			dataSourceListHTTPFixture,
@@ -156,7 +122,7 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 		auto_stop_mins = 0
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
@@ -168,7 +134,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/sql/warehouses",
 				Status:   404,
-				Response: common.APIError{
+				Response: apierr.APIError{
 					ErrorCode: "FEATURE_DISABLED",
 					Message:   "Databricks SQL is not supported",
 				},
@@ -207,7 +173,7 @@ func TestResourceSQLEndpointRead(t *testing.T) {
   		cluster_size = "Small"
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
@@ -224,8 +190,6 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 					ClusterSize:        "Small",
 					AutoStopMinutes:    120,
 					MaxNumClusters:     1,
-					MinNumClusters:     1,
-					NumClusters:        1,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
@@ -239,6 +203,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 					ClusterSize: "Small",
 					ID:          "abc",
 					State:       "RUNNING",
+					NumClusters: 1,
 				},
 			},
 			dataSourceListHTTPFixture,
@@ -251,7 +216,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
   		cluster_size = "Small"
 		`,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
@@ -261,14 +226,14 @@ func TestResourceSQLEndpointDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/sql/warehouses/abc",
+				Resource: "/api/2.0/sql/warehouses/abc?",
 			},
 		},
 		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
 		Delete:   true,
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 }
 
@@ -294,7 +259,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/sql/warehouses/failstart/start",
 			Status:   404,
-			Response: common.NotFound("nope"),
+			Response: apierr.NotFound("nope"),
 		},
 		{
 			Method:   "POST",
@@ -318,7 +283,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/sql/warehouses/cantwait",
 			Status:   500,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "does not compute",
 			},
 		},

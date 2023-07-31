@@ -4,19 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"path"
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
-	"github.com/databricks/terraform-provider-databricks/scim"
 
-	"github.com/databricks/terraform-provider-databricks/workspace"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -129,7 +124,7 @@ func urlPathForObjectID(objectID string) string {
 // permissions when POSTing permissions changes through the REST API, to avoid accidentally
 // revoking the calling user's ability to manage the current object.
 func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
-	for _, prefix := range [...]string{"/registered-models/"} {
+	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/instance-pools/", "/serving-endpoints/", "/queries/", "/sql/warehouses"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
 		}
@@ -141,7 +136,11 @@ func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, object
 	if !a.shouldExplicitlyGrantCallingUserManagePermissions(objectID) {
 		return objectACL, nil
 	}
-	me, err := scim.NewUsersAPI(a.context, a.client).Me()
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return objectACL, err
+	}
+	me, err := w.CurrentUser.Me(a.context)
 	if err != nil {
 		return objectACL, err
 	}
@@ -169,7 +168,7 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
-	if objectID == "/authorization/tokens" || objectID == "/registered-models/root" {
+	if objectID == "/authorization/tokens" || objectID == "/registered-models/root" || objectID == "/directories/0" {
 		// Prevent "Cannot change permissions for group 'admins' to None."
 		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 			GroupName:       "admins",
@@ -184,7 +183,11 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			}
 		}
 		if owners == 0 {
-			me, err := scim.NewUsersAPI(a.context, a.client).Me()
+			w, err := a.client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			me, err := w.CurrentUser.Me(a.context)
 			if err != nil {
 				return err
 			}
@@ -213,9 +216,20 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			}
 		}
 	}
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return err
+	}
 	if strings.HasPrefix(objectID, "/jobs") {
-		job, err := jobs.NewJobsAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/jobs/", ""))
+		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
 		if err != nil {
+			return err
+		}
+		job, err := w.Jobs.GetByJobId(a.context, jobId)
+		if err != nil {
+			if strings.HasSuffix(err.Error(), " does not exist.") {
+				return nil
+			}
 			return err
 		}
 		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
@@ -223,7 +237,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			PermissionLevel: "IS_OWNER",
 		})
 	} else if strings.HasPrefix(objectID, "/pipelines") {
-		job, err := pipelines.NewPipelinesAPI(a.context, a.client).Read(strings.ReplaceAll(objectID, "/pipelines/", ""))
+		job, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
 		if err != nil {
 			return err
 		}
@@ -238,12 +252,12 @@ func (a PermissionsAPI) Delete(objectID string) error {
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	err = a.client.Get(a.context, urlPathForObjectID(objectID), nil, &objectACL)
-	apiErr, ok := err.(common.APIError)
+	var apiErr *apierr.APIError
 	// https://github.com/databricks/terraform-provider-databricks/issues/1227
 	// platform propagates INVALID_STATE error for auto-purged clusters in
 	// the permissions api. this adds "a logical fix" also here, not to introduce
 	// cross-package dependency on "clusters".
-	if ok && strings.Contains(apiErr.Message, "Cannot access cluster") && apiErr.StatusCode == 400 {
+	if errors.As(err, &apiErr) && strings.Contains(apiErr.Message, "Cannot access cluster") && apiErr.StatusCode == 400 {
 		apiErr.StatusCode = 404
 		err = apiErr
 		return
@@ -257,20 +271,20 @@ type permissionsIDFieldMapping struct {
 
 	allowedPermissionLevels []string
 
-	idRetriever func(ctx context.Context, client *common.DatabricksClient, id string) (string, error)
+	idRetriever func(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error)
 }
 
 // PermissionsResourceIDFields shows mapping of id columns to resource types
 func permissionsResourceIDFields() []permissionsIDFieldMapping {
-	SIMPLE := func(ctx context.Context, client *common.DatabricksClient, id string) (string, error) {
+	SIMPLE := func(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
 		return id, nil
 	}
-	PATH := func(ctx context.Context, client *common.DatabricksClient, path string) (string, error) {
-		info, err := workspace.NewNotebooksAPI(ctx, client).Read(path)
+	PATH := func(ctx context.Context, w *databricks.WorkspaceClient, path string) (string, error) {
+		info, err := w.Workspace.GetStatusByPath(ctx, path)
 		if err != nil {
 			return "", fmt.Errorf("cannot load path %s: %s", path, err)
 		}
-		return strconv.FormatInt(info.ObjectID, 10), nil
+		return strconv.FormatInt(info.ObjectId, 10), nil
 	}
 	return []permissionsIDFieldMapping{
 		{"cluster_policy_id", "cluster-policy", "cluster-policies", []string{"CAN_USE"}, SIMPLE},
@@ -282,17 +296,20 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"directory_id", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"directory_path", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
+		{"workspace_file_id", "file", "files", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
+		{"workspace_file_path", "file", "files", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"repo_id", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
-		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
-		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
-		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE"}, SIMPLE},
+		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
+		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
+		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
 		{"experiment_id", "mlflowExperiment", "experiments", []string{"CAN_READ", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"registered_model_id", "registered-model", "registered-models", []string{
 			"CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE"}, SIMPLE},
+		{"serving_endpoint_id", "serving-endpoint", "serving-endpoints", []string{"CAN_VIEW", "CAN_QUERY", "CAN_MANAGE"}, SIMPLE},
 	}
 }
 
@@ -322,7 +339,12 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			continue
 		}
 		entity.ObjectType = mapping.objectType
-		pathVariant := d.Get(mapping.objectType + "_path")
+		var pathVariant any
+		if mapping.objectType == "file" {
+			pathVariant = d.Get("workspace_file_path")
+		} else {
+			pathVariant = d.Get(mapping.objectType + "_path")
+		}
 		if pathVariant != nil && pathVariant.(string) != "" {
 			// we're not importing and it's a path... it's set, so let's not re-set it
 			return entity, nil
@@ -359,37 +381,11 @@ func ResourcePermissions() *schema.Resource {
 			}
 		}
 		s["access_control"].MinItems = 1
-		if groupNameSchema, err := common.SchemaPath(s,
-			"access_control", "group_name"); err == nil {
-			groupNameSchema.ValidateDiagFunc = func(i any, p cty.Path) diag.Diagnostics {
-				if v, ok := i.(string); ok {
-					if strings.ToLower(v) == "admins" {
-						return diag.Diagnostics{
-							{
-								Summary:       "It is not possible to restrict any permissions from `admins`.",
-								Severity:      diag.Error,
-								AttributePath: p,
-							},
-						}
-					}
-				}
-				return nil
-			}
-		}
 		return s
 	})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, c any) error {
-			client := c.(*common.DatabricksClient)
-			if client.Host == "" {
-				log.Printf("[WARN] cannot validate permission levels, because host is not known yet")
-				return nil
-			}
-			me, err := scim.NewUsersAPI(ctx, client).Me()
-			if err != nil {
-				return err
-			}
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff) error {
 			// Plan time validation for object permission levels
 			for _, mapping := range permissionsResourceIDFields() {
 				if _, ok := diff.GetOk(mapping.field); !ok {
@@ -400,10 +396,8 @@ func ResourcePermissions() *schema.Resource {
 					m := access_control.(map[string]any)
 					permission_level := m["permission_level"].(string)
 					if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
-						return fmt.Errorf(`permission_level %s is not supported with %s objects`, permission_level, mapping.field)
-					}
-					if m["user_name"].(string) == me.UserName {
-						return fmt.Errorf("it is not possible to decrease administrative permissions for the current user: %s", me.UserName)
+						return fmt.Errorf(`permission_level %s is not supported with %s objects`,
+							permission_level, mapping.field)
 					}
 				}
 			}
@@ -411,11 +405,15 @@ func ResourcePermissions() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			id := d.Id()
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			objectACL, err := NewPermissionsAPI(ctx, c).Read(id)
 			if err != nil {
 				return err
 			}
-			me, err := scim.NewUsersAPI(ctx, c).Me()
+			me, err := w.CurrentUser.Me(ctx)
 			if err != nil {
 				return err
 			}
@@ -433,13 +431,35 @@ func ResourcePermissions() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			me, err := w.CurrentUser.Me(ctx)
+			if err != nil {
+				return err
+			}
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
-					id, err := mapping.idRetriever(ctx, c, v.(string))
+					id, err := mapping.idRetriever(ctx, w, v.(string))
 					if err != nil {
 						return err
 					}
 					objectID := fmt.Sprintf("/%s/%s", mapping.resourceType, id)
+					// this logic was moved from CustomizeDiff because of undeterministic auth behavior
+					// in the corner-case scenarios.
+					// see https://github.com/databricks/terraform-provider-databricks/issues/2052
+					for _, v := range entity.AccessControlList {
+						if v.UserName == me.UserName {
+							format := "it is not possible to decrease administrative permissions for the current user: %s"
+							return fmt.Errorf(format, me.UserName)
+						}
+
+						if v.GroupName == "admins" && mapping.resourceType != "authorization" {
+							// should allow setting admins permissions for passwords and tokens usage
+							return fmt.Errorf("it is not possible to restrict any permissions from `admins`")
+						}
+					}
 					err = NewPermissionsAPI(ctx, c).Update(objectID, AccessControlChangeList{
 						AccessControlList: entity.AccessControlList,
 					})

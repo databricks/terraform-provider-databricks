@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"golang.org/x/exp/slices"
 
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -37,11 +39,15 @@ func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (sp User, err erro
 	return
 }
 
-func (a ServicePrincipalsAPI) filter(filter string) (u []User, err error) {
+func (a ServicePrincipalsAPI) Filter(filter string, excludeRoles bool) (u []User, err error) {
 	var sps UserList
 	req := map[string]string{}
 	if filter != "" {
 		req["filter"] = filter
+	}
+	// We exclude roles to reduce load on the scim service
+	if excludeRoles {
+		req["excludedAttributes"] = "roles"
 	}
 	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/ServicePrincipals", req, &sps)
 	if err != nil {
@@ -71,6 +77,11 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest Us
 		updateRequest, nil)
 }
 
+func (a ServicePrincipalsAPI) UpdateEntitlements(servicePrincipalID string, entitlements patchRequest) error {
+	return a.client.Scim(a.context, http.MethodPatch,
+		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), entitlements, nil)
+}
+
 // Delete will delete the servicePrincipal given the servicePrincipal id
 func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
@@ -81,7 +92,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 func ResourceServicePrincipal() *schema.Resource {
 	type entity struct {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
-		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
+		DisplayName   string `json:"display_name,omitempty" tf:"computed,force_new"`
 		Active        bool   `json:"active,omitempty"`
 		ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
 	}
@@ -92,6 +103,33 @@ func ResourceServicePrincipal() *schema.Resource {
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+			}
+			m["home"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
+			m["repos"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
+			m["force_delete_repos"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["force_delete_home_dir"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["disable_as_user_deletion"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["acl_principal_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			}
 			return m
 		})
@@ -123,6 +161,9 @@ func ResourceServicePrincipal() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("home", fmt.Sprintf("/Users/%s", sp.ApplicationID))
+			d.Set("repos", fmt.Sprintf("/Repos/%s", sp.ApplicationID))
+			d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID))
 			err = common.StructToData(sp, servicePrincipalSchema, d)
 			if err != nil {
 				return err
@@ -143,7 +184,50 @@ func ResourceServicePrincipal() *schema.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewServicePrincipalsAPI(ctx, c).Delete(d.Id())
+			spAPI := NewServicePrincipalsAPI(ctx, c)
+			appId := d.Get("application_id").(string)
+			var err error = nil
+			isAccount := c.Config.IsAccountClient() && c.Config.AccountID != ""
+			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
+			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
+			// Determine if disable or delete
+			var isDisable bool
+			if isDisableP, exists := d.GetOkExists("disable_as_user_deletion"); exists {
+				isDisable = isDisableP.(bool)
+			} else {
+				// Default is true for Account SCIM, false otherwise
+				isDisable = isAccount
+			}
+			// Validate input
+			if !isAccount && isDisable && isForceDeleteRepos {
+				return fmt.Errorf("force_delete_repos: cannot force delete if disable_as_user_deletion is set")
+			}
+			if !isAccount && isDisable && isForceDeleteHomeDir {
+				return fmt.Errorf("force_delete_home_dir: cannot force delete if disable_as_user_deletion is set")
+			}
+			// Disable or delete
+			if isDisable {
+				r := PatchRequest("replace", "active", "false")
+				err = spAPI.Patch(d.Id(), r)
+			} else {
+				err = spAPI.Delete(d.Id())
+			}
+			// Handle force delete flags
+			if !isAccount && !isDisable && err == nil {
+				if isForceDeleteRepos {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_repos: %w", err)
+					}
+				}
+				if isForceDeleteHomeDir {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_home_dir: %w", err)
+					}
+				}
+			}
+			return err
 		},
 	}.ToResource()
 }
@@ -154,11 +238,14 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 		return err
 	}
 	// corner-case for overriding manually provisioned service principals
-	force := fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID)
-	if err.Error() != force {
+	knownErrs := []string{
+		fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID),
+		fmt.Sprintf("User with email %s already exists in this account", u.ApplicationID),
+	}
+	if !slices.Contains(knownErrs, err.Error()) {
 		return err
 	}
-	spList, err := spAPI.filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")))
+	spList, err := spAPI.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")), true)
 	if err != nil {
 		return err
 	}

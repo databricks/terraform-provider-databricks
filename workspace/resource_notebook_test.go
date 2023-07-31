@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -32,7 +31,7 @@ func TestResourceNotebookRead(t *testing.T) {
 		New:      true,
 		ID:       path,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 	assert.Equal(t, path, d.Get("path"))
 	assert.Equal(t, "PYTHON", d.Get("language"))
@@ -54,7 +53,7 @@ func TestResourceNotebookDelete(t *testing.T) {
 		Delete:   true,
 		ID:       path,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
 }
 
@@ -64,7 +63,7 @@ func TestResourceNotebookRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -84,7 +83,7 @@ func TestResourceNotebookRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -146,8 +145,62 @@ func TestResourceNotebookCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/foo/path.py", d.Id())
+}
+
+func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content: "eyJjZWxscyI6W3siY2VsbF90eXBlIjoiY29kZSIsInNvdXJjZSI6WyJwc" +
+						"mludChcImhlbGxvIHdvcmxkXCIpIl0sIm1ldGFkYXRhIjp7fSwib3V0cHV" +
+						"0cyI6W10sImV4ZWN1dGlvbl9jb3VudCI6MX0seyJjZWxsX3R5cGUiOiJjb" +
+						"2RlIiwic291cmNlIjpbInByaW50KFwiaG93IGFyZSB5b3VcIikiXSwibWV" +
+						"0YWRhdGEiOnt9LCJvdXRwdXRzIjpbeyJtZXRhZGF0YSI6e30sIm91dHB1d" +
+						"F90eXBlIjoiZGlzcGxheV9kYXRhIiwiZGF0YSI6eyJ0ZXh0L2h0bWwiOls" +
+						"iPHN0eWxlIHNjb3BlZD5cbiAgLmFuc2lvdXQge1xuICAgIGRpc3BsYXk6I" +
+						"GJsb2NrO1xuICAgIHVuaWNvZGUtYmlkaTogZW1iZWQ7XG4gICAgd2hpdGU" +
+						"tc3BhY2U6IHByZS13cmFwO1xuICAgIHdvcmQtd3JhcDogYnJlYWstd29yZ" +
+						"DtcbiAgICB3b3JkLWJyZWFrOiBicmVhay1hbGw7XG4gICAgZm9udC1mYW1" +
+						"pbHk6IFwiU291cmNlIENvZGUgUHJvXCIsIFwiTWVubG9cIiwgbW9ub3NwY" +
+						"WNlOztcbiAgICBmb250LXNpemU6IDEzcHg7XG4gICAgY29sb3I6ICM1NTU" +
+						"7XG4gICAgbWFyZ2luLWxlZnQ6IDRweDtcbiAgICBsaW5lLWhlaWdodDogM" +
+						"TlweDtcbiAgfVxuPC9zdHlsZT5cbjxkaXYgY2xhc3M9XCJhbnNpb3V0XCI" +
+						"+aG93IGFyZSB5b3VcbjwvZGl2PiJdfX1dLCJleGVjdXRpb25fY291bnQiO" +
+						"jJ9LHsiY2VsbF90eXBlIjoiY29kZSIsInNvdXJjZSI6WyIiXSwibWV0YWR" +
+						"hdGEiOnt9LCJvdXRwdXRzIjpbXSwiZXhlY3V0aW9uX2NvdW50IjozfV0sI" +
+						"m1ldGFkYXRhIjp7Im5hbWUiOiJ0ZXN0X2p1cHl0ZXIiLCJub3RlYm9va0l" +
+						"kIjoxMjc1OTg0MjQzMjkzMDI4fSwibmJmb3JtYXQiOjQsIm5iZm9ybWF0X" +
+						"21pbm9yIjowfQo=",
+					Path:      "/Mars",
+					Language:  "",
+					Overwrite: true,
+					Format:    "JUPYTER",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2FMars",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: "NOTEBOOK",
+					Path:       "/Mars",
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]any{
+			"source": "acceptance/testdata/tf-test-jupyter.ipynb",
+			"path":   "/Mars",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "/Mars", d.Id())
 }
 
 func TestResourceNotebookCreateSource(t *testing.T) {
@@ -184,7 +237,7 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/Dashboard", d.Id())
 }
 
@@ -194,7 +247,7 @@ func TestResourceNotebookCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -219,7 +272,7 @@ func TestResourceNotebookDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

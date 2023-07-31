@@ -2,10 +2,12 @@ package mws
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 
@@ -13,43 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMwsAccWorkspace(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	client := common.CommonEnvironmentClient()
-	workspaceList, err := NewWorkspacesAPI(context.Background(), client).List(acctID)
-	assert.NoError(t, err, err)
-	t.Log(workspaceList)
-}
-
-func TestGcpaAccWorkspace(t *testing.T) {
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	client := common.CommonEnvironmentClient()
-	workspacesAPI := NewWorkspacesAPI(context.Background(), client)
-
-	workspaceList, err := workspacesAPI.List(acctID)
-	require.NoError(t, err, err)
-	t.Log(workspaceList)
-
-	ws := Workspace{
-		AccountID:     acctID,
-		WorkspaceName: qa.RandomName(qa.GetEnvOrSkipTest(t, "TEST_PREFIX") + "-"),
-		Location:      qa.GetEnvOrSkipTest(t, "GOOGLE_REGION"),
-		CloudResourceBucket: &CloudResourceBucket{
-			GCP: &GCP{
-				ProjectID: qa.GetEnvOrSkipTest(t, "GOOGLE_PROJECT"),
-			},
-		},
-	}
-	err = workspacesAPI.Create(&ws, 5*time.Minute)
-	require.NoError(t, err)
-
-	err = workspacesAPI.Delete(acctID, fmt.Sprintf("%d", ws.WorkspaceID))
-	require.NoError(t, err)
-}
 
 func TestResourceWorkspaceCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -108,7 +73,7 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -122,23 +87,21 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 				ExpectedRequest: map[string]any{
 					"account_id": "abc",
 					"cloud":      "gcp",
-					"cloud_resource_bucket": map[string]any{
+					"cloud_resource_container": map[string]any{
 						"gcp": map[string]any{
 							"project_id": "def",
 						},
 					},
-					"location": "bcd",
-					"network": map[string]any{
-						"network_id": "net_id_a",
-						"gcp_common_network_config": map[string]any{
-							"gke_cluster_master_ip_range": "e",
-							"gke_connectivity_type":       "d",
-						},
-						"gcp_managed_network_config": map[string]any{
-							"gke_cluster_pod_ip_range":     "b",
-							"gke_cluster_service_ip_range": "c",
-							"subnet_cidr":                  "a",
-						},
+					"location":   "bcd",
+					"network_id": "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "d",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
 					},
 					"workspace_name": "labdata",
 				},
@@ -168,22 +131,97 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		workspace_name  = "labdata"
 		deployment_name = "900150983cd24fb0"
 		location        = "bcd"
-		cloud_resource_bucket {
+		cloud_resource_container {
 			gcp {
 				project_id = "def"
 			}
 		}
-		network {
-			network_id = "net_id_a"
-			gcp_managed_network_config {
-				subnet_cidr = "a"
-				gke_cluster_pod_ip_range = "b"
-				gke_cluster_service_ip_range = "c"
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "d"
+			master_ip_range = "e"
+		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
+func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":                   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id":                 "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
+					},
+					"workspace_name": "labdata",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
 			}
-			gcp_common_network_config {
-				gke_connectivity_type = "d"
-				gke_cluster_master_ip_range = "e"
-			}
+		}
+		private_access_settings_id = "pas_id_a"
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+			master_ip_range = "e"
 		}
 		`,
 		Gcp:    true,
@@ -249,7 +287,7 @@ func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -307,7 +345,7 @@ func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -318,7 +356,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -327,7 +365,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -380,7 +418,7 @@ func TestResourceWorkspaceRead(t *testing.T) {
 		New:      true,
 		ID:       "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty")
 	assert.Equal(t, "us-east-1", d.Get("aws_region"))
 	assert.Equal(t, "bcd", d.Get("credentials_id"))
@@ -445,7 +483,7 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 		New:      true,
 		ID:       "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty")
 	assert.Equal(t, "prefix-900150983cd24fb0", d.Get("deployment_name"))
 	assert.Equal(t, "https://prefix-900150983cd24fb0.cloud.databricks.com", d.Get("workspace_url"))
@@ -457,7 +495,7 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -477,7 +515,7 @@ func TestResourceWorkspaceRead_Error(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -553,7 +591,7 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
 }
 
@@ -649,7 +687,7 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 		Update: true,
 		ID:     "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
 }
 
@@ -659,7 +697,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -704,7 +742,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cannot find anything",
 				},
@@ -715,7 +753,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/1234",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
@@ -725,7 +763,7 @@ func TestResourceWorkspaceDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -937,7 +975,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 					AccountID:       "abc",
 					WorkspaceID:     1234,
 					WorkspaceStatus: "RUNNING",
-					WorkspaceURL:    wsClient.Host,
+					WorkspaceURL:    wsClient.Config.Host,
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -952,6 +990,48 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 }
 
 func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+	accountsAPI := []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/accounts/c/workspaces/0",
+		},
+	}
+	tokensAPI := []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/token/list",
+			Response: `{}`, // we just need a JSON for this
+		},
+	}
+	tokensAPI = append(tokensAPI, fixtures...)
+	// outer HTTP server is used for inner request for "just created" workspace
+	qa.HTTPFixturesApply(t, tokensAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+		// a bit hacky, but the whole thing is more readable
+		accountsAPI[0].Response = Workspace{
+			WorkspaceStatus: "RUNNING",
+			WorkspaceURL:    wsClient.Config.Host,
+		}
+		state["workspace_url"] = wsClient.Config.Host
+		state["workspace_name"] = "b"
+		state["account_id"] = "c"
+		state["network_id"] = "d"
+		state["is_no_public_ip_enabled"] = "false"
+		qa.ResourceFixture{
+			Fixtures:      accountsAPI,
+			Resource:      ResourceMwsWorkspaces(),
+			InstanceState: state,
+			Update:        true,
+			ID:            "a",
+			HCL: hcl + `
+			workspace_name = "b"
+			account_id = "c",
+			network_id = "d"`,
+		}.Apply(t)
+	})
+}
+
+func updateWorkspaceTokenFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
 	accountsAPI := []qa.HTTPFixture{
 		{
 			Method:   "PATCH",
@@ -976,11 +1056,12 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[1].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
-			WorkspaceURL:    wsClient.Host,
+			WorkspaceURL:    wsClient.Config.Host,
 		}
-		state["workspace_url"] = wsClient.Host
+		state["workspace_url"] = wsClient.Config.Host
 		state["workspace_name"] = "b"
 		state["account_id"] = "c"
+		state["storage_customer_managed_key_id"] = "1234"
 		state["is_no_public_ip_enabled"] = "false"
 		qa.ResourceFixture{
 			Fixtures:      accountsAPI,
@@ -990,7 +1071,8 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 			ID:            "a",
 			HCL: hcl + `
 			workspace_name = "b"
-			account_id = "c"`,
+			account_id = "c",
+			storage_customer_managed_key_id = "1234"`,
 		}.Apply(t)
 	})
 }
@@ -1016,6 +1098,53 @@ func TestUpdateWorkspace_AddToken(t *testing.T) {
 	}, `token {}`)
 }
 
+func TestUpdateWorkspace_AddTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "Terraform PAT",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "sensitive",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "abcdef",
+				},
+			},
+		},
+	}, map[string]string{
+		"network_id": "alpha",
+		// no token in state
+	}, `
+	network_id = "beta"
+	token {}
+	`)
+}
+
+func TestUpdateWorkspace_DeleteTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+		"network_id":               "alpha",
+	}, `
+	network_id = "beta"
+	`)
+
+}
+
 func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
 		{
@@ -1032,6 +1161,44 @@ func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 		"token.0.token_id":         "abcdef",
 		"token.0.token_value":      "sensitive",
 	}, ``)
+}
+
+func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "I am Batman!",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "new-value",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "new-id",
+				},
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+		"network_id":               "alpha",
+	},
+		`
+	network_id = "beta"
+	token { 
+		comment = "I am Batman!"
+	}`)
 }
 
 func TestUpdateWorkspace_ReplaceToken(t *testing.T) {
@@ -1092,7 +1259,7 @@ func TestEnsureTokenExists(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1122,7 +1289,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1137,11 +1304,13 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 }
 
 func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
-	defer common.CleanupEnvironment()()
-	client := &common.DatabricksClient{}
+	client, err := client.New(&config.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
 	r := ResourceMwsWorkspaces()
 	d := r.TestResourceData()
-	d.Set("workspace_url", client.Host)
+	d.Set("workspace_url", client.Config.Host)
 	d.Set("token", []any{
 		map[string]any{
 			"lifetime_seconds": 3600,
@@ -1150,15 +1319,14 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 		},
 	})
 
-	wsApi := NewWorkspacesAPI(context.Background(), client)
+	wsApi := NewWorkspacesAPI(context.Background(), &common.DatabricksClient{
+		DatabricksClient: client,
+	})
 
-	noAuth := "cannot authenticate parent client: authentication is not configured " +
-		"for provider. Please check https://registry.terraform.io/providers/" +
-		"databricks/databricks/latest/docs#authentication for details"
+	noAuth := "cannot authenticate parent client: default auth: cannot configure default credentials"
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
 	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")
-
 }
 
 func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
@@ -1167,7 +1335,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       418,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				ErrorCode:  "NONSENSE",
 				StatusCode: 418,
 				Message:    "I'm a teapot",
@@ -1177,7 +1345,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1198,13 +1366,21 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 func TestGenerateWorkspaceHostname_CornerCases(t *testing.T) {
 	assert.Equal(t, "fallback.cloud.databricks.com",
 		generateWorkspaceHostname(&common.DatabricksClient{
-			Host: "$%^&*",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "$%^&*",
+				},
+			},
 		}, Workspace{
 			DeploymentName: "fallback",
 		}))
 	assert.Equal(t, "stuff.is.exaple.com",
 		generateWorkspaceHostname(&common.DatabricksClient{
-			Host: "https://this.is.exaple.com",
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "https://this.is.exaple.com",
+				},
+			},
 		}, Workspace{
 			DeploymentName: "stuff",
 		}))
@@ -1216,7 +1392,7 @@ func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       418,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				ErrorCode:  "NONSENSE",
 				StatusCode: 418,
 				Message:    "🐜",
@@ -1233,4 +1409,172 @@ func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
 			NetworkID: "abc",
 		}), "failed to start workspace. Cannot read network: 🐜")
 	})
+}
+
+func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				ExpectedRequest: map[string]any{
+					"credentials_id":                  "bcd",
+					"network_id":                      "fgh",
+					"storage_customer_managed_key_id": "def",
+					"private_access_settings_id":      "pas",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					PrivateAccessSettingsID:             "pas",
+					AccountID:                           "abc",
+					WorkspaceID:                         1234,
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "__OLDER__",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "__OLDER__",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+		},
+		State: map[string]any{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"private_access_settings_id":               "pas",
+			"workspace_id":                             1234,
+		},
+		Update: true,
+		ID:     "abc/1234",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+}
+
+func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+			"private_access_settings_id":               "pas",
+		},
+		State: map[string]any{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             1234,
+			"private_access_settings_id":               "",
+		},
+		Update: true,
+		ID:     "abc/1234",
+	}.ExpectError(t, "cannot remove private access setting from workspace")
+}
+
+func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":       "bcd",
+					"workspace_name": "labdata",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
+						SubnetCIDR:               "a",
+						GKEClusterPodIPRange:     "b",
+						GKEClusterServiceIPRange: "c",
+					},
+					GkeConfig: &GkeConfig{
+						ConnectivityType: "d",
+						MasterIPRange:    "e",
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
+			}
+		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ApplyNoError(t)
 }

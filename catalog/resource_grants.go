@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -97,13 +98,20 @@ func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
+func getPermissionEndpoint(securable, name string) string {
+	if securable == "share" {
+		return fmt.Sprintf("/unity-catalog/shares/%s/permissions", name)
+	}
+	return fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name)
+}
+
 func (a PermissionsAPI) getPermissions(securable, name string) (list PermissionsList, err error) {
-	err = a.client.Get(a.context, fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name), nil, &list)
+	err = a.client.Get(a.context, getPermissionEndpoint(securable, name), nil, &list)
 	return
 }
 
 func (a PermissionsAPI) updatePermissions(securable, name string, diff permissionsDiff) error {
-	return a.client.Patch(a.context, fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name), diff)
+	return a.client.Patch(a.context, getPermissionEndpoint(securable, name), diff)
 }
 
 // replacePermissions merges removal diff of existing permissions on the platform
@@ -147,6 +155,10 @@ func (sm securableMapping) validate(d attributeGetter, pl PermissionsList) error
 	for _, v := range pl.Assignments {
 		for _, priv := range v.Privileges {
 			if !allowed[strings.ToUpper(priv)] {
+				// check if user uses spaces instead of underscores
+				if allowed[strings.ReplaceAll(priv, " ", "_")] {
+					return fmt.Errorf(`%s is not allowed on %s. Did you mean %s?`, priv, securable, strings.ReplaceAll(priv, " ", "_"))
+				}
 				return fmt.Errorf(`%s is not allowed on %s`, priv, securable)
 			}
 		}
@@ -171,9 +183,18 @@ var mapping = securableMapping{
 		"USAGE":  true,
 
 		// v1.0
-		"ALL_PRIVILEGES": true,
-		"USE_CATALOG":    true,
-		"CREATE_SCHEMA":  true,
+		"ALL_PRIVILEGES":           true,
+		"USE_CATALOG":              true,
+		"USE_SCHEMA":               true,
+		"CREATE_SCHEMA":            true,
+		"CREATE_TABLE":             true,
+		"CREATE_FUNCTION":          true,
+		"CREATE_MATERIALIZED_VIEW": true,
+		"CREATE_VOLUME":            true,
+		"EXECUTE":                  true,
+		"MODIFY":                   true,
+		"SELECT":                   true,
+		"REFRESH":                  true,
 	},
 	"schema": {
 		"CREATE": true,
@@ -183,9 +204,13 @@ var mapping = securableMapping{
 		"ALL_PRIVILEGES":           true,
 		"USE_SCHEMA":               true,
 		"CREATE_TABLE":             true,
-		"CREATE_VIEW":              true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"CREATE_VOLUME":            true,
+		"EXECUTE":                  true,
+		"MODIFY":                   true,
+		"SELECT":                   true,
+		"REFRESH":                  true,
 	},
 	"storage_credential": {
 		"CREATE_TABLE":             true,
@@ -203,20 +228,43 @@ var mapping = securableMapping{
 		"WRITE_FILES":  true,
 
 		// v1.0
-		"ALL_PRIVILEGES":        true,
-		"CREATE_EXTERNAL_TABLE": true,
+		"ALL_PRIVILEGES":         true,
+		"CREATE_EXTERNAL_TABLE":  true,
+		"CREATE_MANAGED_STORAGE": true,
+		"CREATE_EXTERNAL_VOLUME": true,
 	},
 	"metastore": {
 		// v1.0
 		"CREATE_CATALOG":            true,
+		"CREATE_CONNECTION":         true,
 		"CREATE_EXTERNAL_LOCATION":  true,
 		"CREATE_STORAGE_CREDENTIAL": true,
 		"CREATE_SHARE":              true,
 		"CREATE_RECIPIENT":          true,
 		"CREATE_PROVIDER":           true,
+		"USE_CONNECTION":            true,
+		"USE_PROVIDER":              true,
+		"USE_SHARE":                 true,
+		"USE_RECIPIENT":             true,
+		"USE_MARKETPLACE_ASSETS":    true,
+		"SET_SHARE_PERMISSION":      true,
 	},
 	"function": {
-		"EXECUTE": true,
+		"ALL_PRIVILEGES": true,
+		"EXECUTE":        true,
+	},
+	"materialized_view": {
+		"ALL_PRIVILEGES": true,
+		"SELECT":         true,
+		"REFRESH":        true,
+	},
+	"share": {
+		"SELECT": true,
+	},
+	"volume": {
+		"ALL_PRIVILEGES": true,
+		"READ_VOLUME":    true,
+		"WRITE_VOLUME":   true,
 	},
 }
 
@@ -246,7 +294,7 @@ func ResourceGrants() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c any) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			if d.Id() == "" {
 				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
 				return nil
@@ -276,7 +324,7 @@ func ResourceGrants() *schema.Resource {
 				return err
 			}
 			if len(grants.Assignments) == 0 {
-				return common.NotFound("got empty permissions list")
+				return apierr.NotFound("got empty permissions list")
 			}
 			return common.StructToData(grants, s, d)
 		},

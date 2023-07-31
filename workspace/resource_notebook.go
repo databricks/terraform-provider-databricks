@@ -16,11 +16,14 @@ import (
 // ...
 const (
 	Notebook  string = "NOTEBOOK"
+	File      string = "FILE"
 	Directory string = "DIRECTORY"
 	Scala     string = "SCALA"
 	Python    string = "PYTHON"
 	SQL       string = "SQL"
 	R         string = "R"
+	Jupyter   string = "JUPYTER"
+	Auto      string = "AUTO"
 )
 
 type notebookLanguageFormat struct {
@@ -34,6 +37,7 @@ var extMap = map[string]notebookLanguageFormat{
 	".py":    {"PYTHON", "SOURCE", true},
 	".sql":   {"SQL", "SOURCE", true},
 	".r":     {"R", "SOURCE", true},
+	".ipynb": {"", "JUPYTER", true},
 	".dbc":   {"", "DBC", false},
 }
 
@@ -43,6 +47,9 @@ type ObjectStatus struct {
 	ObjectType string `json:"object_type,omitempty" tf:"computed"`
 	Path       string `json:"path"`
 	Language   string `json:"language,omitempty"`
+	CreatedAt  int64  `json:"created_at,omitempty"`
+	ModifiedAt int64  `json:"modified_at,omitempty"`
+	Size       int64  `json:"size,omitempty"`
 }
 
 // ExportPath contains the base64 content of the notebook
@@ -129,10 +136,10 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 // List will list all objects in a path on the workspace
 // and with the recursive flag it will recursively list
 // all the objects
-func (a NotebooksAPI) List(path string, recursive bool) ([]ObjectStatus, error) {
+func (a NotebooksAPI) List(path string, recursive bool, ignoreErrors bool) ([]ObjectStatus, error) {
 	if recursive {
 		var paths []ObjectStatus
-		err := a.recursiveAddPaths(path, &paths)
+		err := a.recursiveAddPaths(path, &paths, ignoreErrors)
 		if err != nil {
 			return nil, err
 		}
@@ -141,22 +148,21 @@ func (a NotebooksAPI) List(path string, recursive bool) ([]ObjectStatus, error) 
 	return a.list(path)
 }
 
-func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus) error {
+func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
 	notebookInfoList, err := a.list(path)
-	if err != nil {
+	if err != nil && !ignoreErrors {
 		return err
 	}
 	for _, v := range notebookInfoList {
-		if v.ObjectType == Notebook {
-			*pathList = append(*pathList, v)
-		} else if v.ObjectType == Directory {
-			err := a.recursiveAddPaths(v.Path, pathList)
+		*pathList = append(*pathList, v)
+		if v.ObjectType == Directory {
+			err := a.recursiveAddPaths(v.Path, pathList, ignoreErrors)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 type ObjectList struct {
@@ -209,6 +215,7 @@ func ResourceNotebook() *schema.Resource {
 			ValidateFunc: validation.StringInSlice([]string{
 				"SOURCE",
 				"DBC",
+				"JUPYTER",
 			}, false),
 		},
 		"url": {
@@ -222,10 +229,9 @@ func ResourceNotebook() *schema.Resource {
 			Deprecated: "Always is a notebook",
 		},
 		"object_id": {
-			Type:       schema.TypeInt,
-			Optional:   true,
-			Computed:   true,
-			Deprecated: "Use id argument to retrieve object id",
+			Type:     schema.TypeInt,
+			Optional: true,
+			Computed: true,
 		},
 	})
 	s["content_base64"].RequiredWith = []string{"language"}

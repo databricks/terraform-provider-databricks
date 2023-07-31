@@ -3,8 +3,6 @@ subcategory: "Unity Catalog"
 ---
 # databricks_storage_credential Resource
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access.
-
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
 
 - `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal/managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
@@ -35,33 +33,29 @@ resource "databricks_grants" "external_creds" {
 For Azure
 
 ```hcl
-data "azurerm_resource_group" "this" {
-  name     = "example-rg"
-}
-
-resource "azapi_resource" "access_connector" {
-  type      = "Microsoft.Databricks/accessConnectors@2022-04-01-preview"
-  name      = "example-databricks-mi"
-  location  = data.azurerm_resource_group.this.location
-  parent_id = data.azurerm_resource_group.this.id
-  tags = {
-    tagName1 = "tagValue1"
-    tagName2 = "tagValue2"
-  }
-  identity {
-    type = "SystemAssigned"
-  }
-  body = jsonencode({
-    properties = {}
-  })
-}
-
 resource "databricks_storage_credential" "external_mi" {
   name = "mi_credential"
   azure_managed_identity {
-    access_connector_id = azapi_resource.access_connector.id
+    access_connector_id = azurerm_databricks_access_connector.example.id
   }
   comment = "Managed identity credential managed by TF"
+}
+
+resource "databricks_grants" "external_creds" {
+  storage_credential = databricks_storage_credential.external.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_TABLE"]
+  }
+}
+```
+
+For GCP
+
+```hcl
+resource "databricks_storage_credential" "external" {
+  name = "the-creds"
+  databricks_gcp_service_account {}
 }
 
 resource "databricks_grants" "external_creds" {
@@ -80,7 +74,6 @@ The following arguments are required:
 - `name` - Name of Storage Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
 - `owner` - (Optional) Username/groupname/sp application_id of the storage credential owner.
 
-
 `aws_iam_role` optional configuration block for credential details for AWS:
 
 - `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
@@ -94,6 +87,11 @@ The following arguments are required:
 - `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
 - `application_id` - The application ID of the application registration within the referenced AAD tenant
 - `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
+
+`databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
+
+- `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
+- `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
 
 ## Import
 

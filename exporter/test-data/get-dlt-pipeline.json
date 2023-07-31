@@ -22,8 +22,18 @@
             "dbfs": {
               "destination": "dbfs:/FileStore/jars/test.jar"
             }
-          }
-        ]
+          },
+          {
+            "workspace": {
+              "destination": "/init.sh"
+            }
+          }            
+        ],
+        "spark_conf": {
+          "fs.azure.account.auth.type": "OAuth",
+          "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
+          "fs.azure.account.oauth2.client.secret": "{{secrets/some-kv-scope/test-secret}}"
+        }
       }
     ],
     "continuous": true,
@@ -35,11 +45,16 @@
         "notebook": {
           "path": "/Users/user@domain.com/Test DLT"
         }
+      },
+      {
+        "file": {
+          "path": "/Repos/user@domain.com/repo/Test DLT"
+        }
       }
     ],
     "name": "Test DLT",
     "photon": false,
-    "storage": "/tmp/test",
+    "storage": "dbfs:/pipelines/9ab12322-ccef-4539-8bf1-a43a95667dac",
     "target": "test"
   },
   "state": "IDLE"

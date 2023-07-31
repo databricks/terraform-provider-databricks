@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,10 +17,10 @@ func ResourceGroupMember() *schema.Resource {
 			return NewGroupsAPI(ctx, c).Patch(groupID, PatchRequest("add", "members", memberID))
 		},
 		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
-			group, err := NewGroupsAPI(ctx, c).Read(groupID)
+			group, err := NewGroupsAPI(ctx, c).Read(groupID, "members")
 			hasMember := ComplexValues(group.Members).HasValue(memberID)
 			if err == nil && !hasMember {
-				return common.NotFound("Group has no member")
+				return apierr.NotFound("Group has no member")
 			}
 			return err
 		},

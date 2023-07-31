@@ -30,7 +30,7 @@ func TestWarehouseData(t *testing.T) {
 		NonWritable: true,
 		ID:          "abc",
 	}.Apply(t)
-	require.NoError(t, err, err)
+	require.NoError(t, err)
 	assert.Equal(t, "foo", d.Get("name"))
 	assert.Equal(t, "RUNNING", d.Get("state"))
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))

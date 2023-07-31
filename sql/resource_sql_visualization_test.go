@@ -71,7 +71,7 @@ func TestVisualizationCreate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
@@ -126,7 +126,7 @@ func TestVisualizationRead(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
@@ -135,6 +135,106 @@ func TestVisualizationRead(t *testing.T) {
 	assert.Equal(t, "My Chart", d.Get("name"))
 	assert.Equal(t, "Some Description", d.Get("description"))
 	assert.Less(t, 0, len(d.Get("options").(string)))
+}
+
+func TestVisualizationReadWithQueryPlan(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/queries/foo",
+				Response: api.Query{
+					ID: "foo",
+					Visualizations: []json.RawMessage{
+						json.RawMessage(`
+							{
+								"id": 12344
+							}
+						`),
+						json.RawMessage(`
+							{
+								"id": 12345,
+								"type": "CHART",
+								"name": "My Chart",
+								"description": "Some Description",
+								"options": {},
+								"query_plan": {"foo":"qux"}
+							}
+						`),
+						json.RawMessage(`
+							{
+								"id": 12345
+							}
+						`),
+					},
+				},
+			},
+		},
+		Resource: ResourceSqlVisualization(),
+		Read:     true,
+		ID:       "foo/12345",
+		State: map[string]any{
+			"query_id":    "foo",
+			"type":        "chart",
+			"name":        "My Chart",
+			"description": "Some Description",
+			"options":     "{}",
+			"query_plan":  `{"foo":"bar"}`,
+		},
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, `{"foo":"qux"}`, d.Get("query_plan").(string))
+}
+
+func TestVisualizationReadWithNullQueryPlan(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/queries/foo",
+				Response: api.Query{
+					ID: "foo",
+					Visualizations: []json.RawMessage{
+						json.RawMessage(`
+							{
+								"id": 12344
+							}
+						`),
+						json.RawMessage(`
+							{
+								"id": 12345,
+								"type": "CHART",
+								"name": "My Chart",
+								"description": "Some Description",
+								"options": {},
+								"query_plan": null
+							}
+						`),
+						json.RawMessage(`
+							{
+								"id": 12345
+							}
+						`),
+					},
+				},
+			},
+		},
+		Resource: ResourceSqlVisualization(),
+		Read:     true,
+		New:      true,
+		ID:       "foo/12345",
+		State: map[string]any{
+			"query_id":    "foo",
+			"type":        "chart",
+			"name":        "My Chart",
+			"description": "Some Description",
+			"options":     "{}",
+		},
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "", d.Get("query_plan").(string))
 }
 
 func TestVisualizationReadNotFound(t *testing.T) {
@@ -170,7 +270,7 @@ func TestVisualizationReadNotFound(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "", d.Id(), "Resource ID should be empty")
 }
 
@@ -245,7 +345,7 @@ func TestVisualizationUpdate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo/12345", d.Id())
 	assert.Equal(t, "foo", d.Get("query_id"))
@@ -269,7 +369,7 @@ func TestVisualizationDelete(t *testing.T) {
 		ID:       "foo/12345",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo/12345", d.Id(), "Resource ID should not be empty")
 }
 

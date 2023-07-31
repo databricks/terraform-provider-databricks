@@ -33,6 +33,7 @@
 | [databricks_instance_profile](docs/resources/instance_profile.md)
 | [databricks_ip_access_list](docs/resources/ip_access_list.md)
 | [databricks_job](docs/resources/job.md)
+| [databricks_job](docs/data-sources/job.md) data
 | [databricks_jobs](docs/data-sources/jobs.md)
 | [databricks_library](docs/resources/library.md)
 | [databricks_metastore](docs/resources/metastore.md)
@@ -41,6 +42,7 @@
 | [databricks_mlflow_model](docs/resources/mlflow_model.md)
 | [databricks_mlflow_experiment](docs/resources/mlflow_experiment.md)
 | [databricks_mlflow_webhook](docs/resources/mlflow_webhook.md)
+| [databricks_model_serving](docs/resources/model_serving.md)
 | [databricks_mount](docs/resources/mount.md)
 | [databricks_mws_credentials](docs/resources/mws_credentials.md)
 | [databricks_mws_customer_managed_keys](docs/resources/mws_customer_managed_keys.md)
@@ -59,6 +61,7 @@
 | [databricks_obo_token](docs/resources/obo_token.md)
 | [databricks_permissions](docs/resources/permissions.md)
 | [databricks_pipeline](docs/resources/pipeline.md)
+| [databricks_pipelines](docs/data-sources/pipelines.md) data
 | [databricks_repo](docs/resources/repo.md)
 | [databricks_schema](docs/resources/schema.md)
 | [databricks_schemas](docs/data-sources/schema.md) data
@@ -79,13 +82,13 @@
 | [databricks_sql_warehouses](docs/data-sources/sql_warehouses.md) data
 | [databricks_sql_widget](docs/resources/sql_widget.md)
 | [databricks_storage_credential](docs/resources/storage_credential.md)
-| [databricks_table](docs/resources/table.md)
-| [databricks_tables](docs/data-sources/table.md) data
+| [databricks_tables](docs/data-sources/tables.md) data
 | [databricks_token](docs/resources/token.md)
 | [databricks_user](docs/resources/user.md)
 | [databricks_user_role](docs/resources/user_role.md)
 | [databricks_user_instance_profile](docs/resources/user_instance_profile.md)
 | [databricks_views](docs/data-sources/views.md) data
+| [databricks_volume](docs/resources/volume.md)
 | [databricks_workspace_conf](docs/resources/workspace_conf.md)
 | [databricks_zones](docs/data-sources/zones.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
@@ -98,8 +101,7 @@ If you use Terraform 0.13 or newer, please refer to instructions specified at [r
 terraform {
   required_providers {
     databricks = {
-      source  = "databricks/databricks"
-      version = "1.2.1"
+      source = "databricks/databricks"
     }
   }
 }

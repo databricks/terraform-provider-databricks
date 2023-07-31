@@ -1,59 +1,13 @@
 package mws
 
 import (
-	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-func TestMwsAccLogDelivery(t *testing.T) {
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	roleARN := qa.GetEnvOrSkipTest(t, "TEST_LOGDELIVERY_ARN")
-	bucket := qa.GetEnvOrSkipTest(t, "TEST_LOGDELIVERY_BUCKET")
-	client := common.CommonEnvironmentClient()
-	randomName := qa.RandomName("tf-logdelivery-")
-
-	ctx := context.Background()
-	logDeliveryAPI := NewLogDeliveryAPI(ctx, client)
-	credentialsAPI := NewCredentialsAPI(ctx, client)
-	storageConfigurationsAPI := NewStorageConfigurationsAPI(ctx, client)
-
-	creds, err := credentialsAPI.Create(acctID, randomName, roleARN)
-	require.NoError(t, err)
-	defer func() {
-		assert.NoError(t, credentialsAPI.Delete(acctID, creds.CredentialsID))
-	}()
-
-	storageConfig, err := storageConfigurationsAPI.Create(acctID, randomName, bucket)
-	require.NoError(t, err)
-	defer func() {
-		assert.NoError(t, storageConfigurationsAPI.Delete(acctID, storageConfig.StorageConfigurationID))
-	}()
-
-	configID, err := logDeliveryAPI.Create(LogDeliveryConfiguration{
-		AccountID:              acctID,
-		CredentialsID:          creds.CredentialsID,
-		StorageConfigurationID: storageConfig.StorageConfigurationID,
-		ConfigName:             randomName,
-		DeliveryPathPrefix:     randomName,
-		LogType:                "AUDIT_LOGS",
-		OutputFormat:           "JSON",
-	})
-	require.NoError(t, err)
-	defer func() {
-		assert.NoError(t, logDeliveryAPI.Patch(acctID, configID, "DISABLED"))
-	}()
-
-	ldc, err := logDeliveryAPI.Read(acctID, configID)
-	require.NoError(t, err)
-	assert.Equal(t, "ENABLED", ldc.Status)
-}
 
 func TestResourceLogDeliveryCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -112,7 +66,7 @@ func TestResourceLogDeliveryCreate(t *testing.T) {
 		delivery_start_time = "2020-10"`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|nid", d.Id())
 	assert.Equal(t, "nid", d.Get("config_id"))
 }
@@ -177,7 +131,7 @@ func TestResourceLogDeliveryCreateDisabled(t *testing.T) {
 		status = "DISABLED"`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|nid", d.Id())
 	assert.Equal(t, "nid", d.Get("config_id"))
 }
@@ -188,7 +142,7 @@ func TestResourceLogDeliveryCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/log-delivery",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -240,7 +194,7 @@ func TestResourceLogDeliveryRead(t *testing.T) {
 		New:      true,
 		ID:       "abc|nid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc|nid", d.Id(), "Id should not be empty")
 	assert.Equal(t, "bcd", d.Get("credentials_id"))
 	assert.Equal(t, "def", d.Get("storage_configuration_id"))
@@ -272,7 +226,7 @@ func TestResourceLogDeliveryRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/log-delivery/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -353,7 +307,7 @@ func TestUpdateLogDeliveryError(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/log-delivery/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -415,7 +369,7 @@ func TestResourceLogDeliveryDelete_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/log-delivery/nid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

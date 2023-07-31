@@ -3,8 +3,6 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_data_access (Resource)
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access.
-
 Each [databricks_metastore](docs/resources/metastore.md) requires an IAM role that will be assumed by Unity Catalog to access data. `databricks_metastore_data_access` defines this
 
 ## Example Usage
@@ -35,8 +33,8 @@ For Azure using managed identity as credential (recommended)
 resource "databricks_metastore" "this" {
   name = "primary"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_account.unity_catalog.name,
-  azurerm_storage_container.unity_catalog.name)
+    azurerm_storage_container.unity_catalog.name,
+  azurerm_storage_account.unity_catalog.name)
   owner         = "uc admins"
   force_destroy = true
 }
@@ -57,8 +55,8 @@ For Azure using service principal as credential
 resource "databricks_metastore" "this" {
   name = "primary"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net/",
-    azurerm_storage_account.unity_catalog.name,
-  azurerm_storage_container.unity_catalog.name)
+    azurerm_storage_container.unity_catalog.name,
+  azurerm_storage_account.unity_catalog.name)
   owner         = "uc admins"
   force_destroy = true
 }
@@ -95,6 +93,10 @@ The following arguments are required:
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure:
 
 * `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
+
+`databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
+
+* `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
 
 ## Import
 

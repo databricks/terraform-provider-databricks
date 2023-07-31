@@ -2,49 +2,14 @@ package mws
 
 import (
 	"context"
-	"os"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMwsAccVPCEndpointIntegration(t *testing.T) {
-	t.SkipNow()
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv != "MWS" {
-		t.Skip("Cannot run test on non-MWS environment")
-	}
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	awsvreID := qa.GetEnvOrSkipTest(t, "TEST_REST_API_VPC_ENDPOINT")
-	awsRegion := qa.GetEnvOrSkipTest(t, "AWS_REGION")
-	client := common.CommonEnvironmentClient()
-	ctx := context.Background()
-	vpcEndpointAPI := NewVPCEndpointAPI(ctx, client)
-	endpointList, err := vpcEndpointAPI.List(acctID)
-	require.NoError(t, err, err)
-	t.Logf("VPC Endpoints: %v", endpointList)
-
-	vpcEndpoint := VPCEndpoint{
-		AccountID:        acctID,
-		VPCEndpointName:  qa.RandomName("tf-"),
-		AwsVPCEndpointID: awsvreID,
-		Region:           awsRegion,
-	}
-	err = vpcEndpointAPI.Create(&vpcEndpoint)
-	require.NoError(t, err, err)
-	defer func() {
-		err = vpcEndpointAPI.Delete(acctID, vpcEndpoint.VPCEndpointID)
-		assert.NoError(t, err, err)
-	}()
-	thisEndpoint, err := vpcEndpointAPI.Read(acctID, vpcEndpoint.VPCEndpointID)
-	assert.NoError(t, err, err)
-	assert.Equal(t, "available", thisEndpoint.State)
-}
 
 func TestResourceVPCEndpointCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -85,8 +50,80 @@ func TestResourceVPCEndpointCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/ve_id", d.Id())
+}
+
+func TestResourceVPCEndpointCreate_GCP(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/vpc-endpoints",
+				ExpectedRequest: VPCEndpoint{
+					AccountID:       "abc",
+					VPCEndpointName: "ve_name",
+					GcpVpcEndpointInfo: &GcpVpcEndpointInfo{
+						ProjectId:       "project_a",
+						PscEndpointName: "psc_endpoint_a",
+						EndpointRegion:  "region_a",
+					},
+				},
+				Response: VPCEndpoint{
+					VPCEndpointID: "ve_id",
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/abc/vpc-endpoints/ve_id",
+				ReuseRequest: true,
+				Response: VPCEndpoint{
+					AccountID:       "abc",
+					VPCEndpointName: "ve_name",
+					GcpVpcEndpointInfo: &GcpVpcEndpointInfo{
+						ProjectId:           "project_a",
+						PscEndpointName:     "psc_endpoint_a",
+						EndpointRegion:      "region_a",
+						PscConnectionId:     "120938102938209",
+						ServiceAttachmentId: "service_attachment_a",
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsVpcEndpoint(),
+		HCL: `
+		account_id = "abc"
+		vpc_endpoint_name = "ve_name"
+		gcp_vpc_endpoint_info {
+			project_id = "project_a"
+			psc_endpoint_name = "psc_endpoint_a"
+			endpoint_region = "region_a"
+        }
+		`,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
+func TestResourceVPCEndpointCreate_ConflictErrors(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{},
+		Resource: ResourceMwsVpcEndpoint(),
+		HCL: `
+		account_id = "abc"
+		vpc_endpoint_name = "ve_name"
+		region = "ar"
+		aws_vpc_endpoint_id = "ave_id"
+		gcp_vpc_endpoint_info {
+			project_id = "project_a"
+			psc_endpoint_name = "psc_endpoint_a"
+			endpoint_region = "region_a"
+        }
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.ErrorContains(t, err, "[gcp_vpc_endpoint_info] Conflicting configuration arguments")
+	assert.ErrorContains(t, err, "[region] Invalid combination of arguments")
+	assert.ErrorContains(t, err, "[aws_vpc_endpoint_id] Invalid combination of arguments")
 }
 
 func TestResourceVPCEndpointCreate_Error(t *testing.T) {
@@ -95,7 +132,7 @@ func TestResourceVPCEndpointCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/vpc-endpoints",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -134,7 +171,7 @@ func TestResourceVPCEndpointRead(t *testing.T) {
 		New:      true,
 		ID:       "abc/veid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/veid", d.Id(), "Id should not be empty")
 	assert.Equal(t, "veid", d.Get("account_id"))
 	assert.Equal(t, "ve_name", d.Get("vpc_endpoint_name"))
@@ -148,7 +185,7 @@ func TestResourceVPCEndpointRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/vpc-endpoints/veid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -168,7 +205,7 @@ func TestResourceVPCEndpoint_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/vpc-endpoints/veid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -203,7 +240,7 @@ func TestResourceVPCEndpointDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/vpc-endpoints/veid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Yes, it's not found",
 				},
@@ -214,7 +251,7 @@ func TestResourceVPCEndpointDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/veid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/veid", d.Id())
 }
 
@@ -224,7 +261,7 @@ func TestResourceVPCEndpointDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/vpc-endpoints/veid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

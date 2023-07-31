@@ -9,6 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var (
+	GlobalSqlConfigResourceID = "global"
+)
+
 type confPair struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -23,6 +27,7 @@ type GlobalConfig struct {
 	SecurityPolicy          string            `json:"security_policy,omitempty" tf:"default:DATA_ACCESS_CONTROL"`
 	DataAccessConfig        map[string]string `json:"data_access_config,omitempty"`
 	InstanceProfileARN      string            `json:"instance_profile_arn,omitempty"`
+	GoogleServiceAccount    string            `json:"google_service_account,omitempty"`
 	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"default:false"`
 	SqlConfigParams         map[string]string `json:"sql_config_params,omitempty"`
 }
@@ -32,6 +37,7 @@ type GlobalConfigForRead struct {
 	SecurityPolicy             string                     `json:"security_policy"`
 	DataAccessConfig           []confPair                 `json:"data_access_config"`
 	InstanceProfileARN         string                     `json:"instance_profile_arn,omitempty"`
+	GoogleServiceAccount       string                     `json:"google_service_account,omitempty"`
 	EnableServerlessCompute    bool                       `json:"enable_serverless_compute"`
 	SqlConfigurationParameters *repeatedEndpointConfPairs `json:"sql_configuration_parameters,omitempty"`
 }
@@ -50,8 +56,8 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 		"security_policy":           gc.SecurityPolicy,
 		"enable_serverless_compute": gc.EnableServerlessCompute,
 	}
-	if a.client.Host == "" {
-		err := a.client.Authenticate(a.context)
+	if a.client.Config.Host == "" {
+		err := a.client.Config.EnsureResolved()
 		if err != nil {
 			return err
 		}
@@ -61,6 +67,13 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 			data["instance_profile_arn"] = gc.InstanceProfileARN
 		} else {
 			return fmt.Errorf("can't use instance_profile_arn outside of AWS")
+		}
+	}
+	if gc.GoogleServiceAccount != "" {
+		if a.client.IsGcp() {
+			data["google_service_account"] = gc.GoogleServiceAccount
+		} else {
+			return fmt.Errorf("can't use google_service_account outside of GCP")
 		}
 	}
 	cfg := make([]confPair, 0, len(gc.DataAccessConfig))
@@ -87,6 +100,7 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 		return gc, err
 	}
 	gc.InstanceProfileARN = gcr.InstanceProfileARN
+	gc.GoogleServiceAccount = gcr.GoogleServiceAccount
 	gc.SecurityPolicy = gcr.SecurityPolicy
 	gc.EnableServerlessCompute = gcr.EnableServerlessCompute
 	gc.DataAccessConfig = make(map[string]string, len(gcr.DataAccessConfig))
@@ -100,6 +114,8 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 func ResourceSqlGlobalConfig() *schema.Resource {
 	s := common.StructToSchema(GlobalConfig{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["enable_serverless_compute"].Deprecated = "This field is intended as an internal API " +
+			"and may be removed from the Databricks Terraform provider in the future"
 		return m
 	})
 	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -108,7 +124,7 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 		if err := NewSqlGlobalConfigAPI(ctx, c).Set(gc); err != nil {
 			return err
 		}
-		d.SetId("global")
+		d.SetId(GlobalSqlConfigResourceID)
 		return nil
 	}
 	return common.Resource{

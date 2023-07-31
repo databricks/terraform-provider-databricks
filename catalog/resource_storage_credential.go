@@ -23,7 +23,10 @@ type StorageCredentialInfo struct {
 	Aws         *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure       *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
 	AzMI        *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
+	GcpSAKey    *GcpServiceAccountKey  `json:"gcp_service_account_key,omitempty" tf:"group:access"`
+	DBGcpSA     *DbGcpServiceAccount   `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
 	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
+	ReadOnly    bool                   `json:"read_only,omitempty"`
 }
 
 func (a StorageCredentialsAPI) create(sci *StorageCredentialInfo) error {
@@ -42,14 +45,19 @@ func (a StorageCredentialsAPI) delete(id string) error {
 func ResourceStorageCredential() *schema.Resource {
 	s := common.StructToSchema(StorageCredentialInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			alof := []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity"}
-			m["aws_iam_role"].AtLeastOneOf = alof
-			m["azure_service_principal"].AtLeastOneOf = alof
-			m["azure_managed_identity"].AtLeastOneOf = alof
+			m["aws_iam_role"].AtLeastOneOf = alofCred
+			m["azure_service_principal"].AtLeastOneOf = alofCred
+			m["azure_managed_identity"].AtLeastOneOf = alofCred
+			m["gcp_service_account_key"].AtLeastOneOf = alofCred
+			m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
+
+			// suppress changes for private_key
+			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
+
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/storage-credentials", []string{
-		"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity"})
+		"owner", "comment", "aws_iam_role", "azure_service_principal", "azure_managed_identity", "gcp_service_account_key"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -5,7 +5,7 @@ subcategory: "Security"
 
 This resource allows you to attach [users](user.md), [service_principal](service_principal.md), and [groups](group.md) as group members.
 
-To attach members to groups in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using AAD tokens on Azure deployments
+To attach members to groups in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments
 
 ## Example Usage
 
@@ -50,7 +50,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+You can import a `databricks_group_member` resource with name `my_group_member` like the following:
+
+```bash
+$ terraform import databricks_group_member.my_group_member "<group_id>|<member_id>"
+```
 
 ## Related Resources
 

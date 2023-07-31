@@ -41,11 +41,12 @@ locals {
 ```
 
 Before [managing workspace](workspace-management.md), you have to create:
-  - [VPC](#vpc)
-  - [Root bucket](#root-bucket)
-  - [Cross-account role](#cross-account-iam-role)
-  - [Databricks E2 workspace](#databricks-e2-workspace)
-  - [Host and Token outputs](#provider-configuration)
+
+- [VPC](#vpc)
+- [Root bucket](#root-bucket)
+- [Cross-account role](#cross-account-iam-role)
+- [Databricks E2 workspace](#databricks-e2-workspace)
+- [Host and Token outputs](#provider-configuration)
 
 > Initialize provider with `alias = "mws"` and use `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
 
@@ -203,9 +204,6 @@ Once [VPC](#vpc) is ready, create AWS S3 bucket for DBFS workspace storage, whic
 resource "aws_s3_bucket" "root_storage_bucket" {
   bucket = "${local.prefix}-rootbucket"
   acl    = "private"
-  versioning {
-    enabled = false
-  }
   force_destroy = true
   tags = merge(var.tags, {
     Name = "${local.prefix}-rootbucket"
@@ -239,6 +237,13 @@ resource "aws_s3_bucket_policy" "root_bucket_policy" {
   bucket     = aws_s3_bucket.root_storage_bucket.id
   policy     = data.databricks_aws_bucket_policy.this.json
   depends_on = [aws_s3_bucket_public_access_block.root_storage_bucket]
+}
+
+resource "aws_s3_bucket_versioning" "root_bucket_versioning" {
+  bucket = aws_s3_bucket.root_storage_bucket.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 resource "databricks_mws_storage_configurations" "this" {
@@ -285,7 +290,7 @@ output "databricks_token" {
 
 ### Data resources and Authentication is not configured errors
 
-*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `authentication is not configured for provider` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `default auth: cannot configure default credentials` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
 
 ```hcl
 data "databricks_current_user" "me" {
@@ -303,14 +308,14 @@ provider "databricks" {
   token = module.e2.token_value
 }
 ```
-We assume that you have a terraform module in your project that creats a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token during workspace creation to authenticate to the created workspace.
 
+We assume that you have a terraform module in your project that creats a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token during workspace creation to authenticate to the created workspace.
 
 ### Credentials validation checks errors
 
 Due to a bug in the Terraform AWS provider (spotted in v3.28) the Databricks AWS cross-account policy creation and attachment to the IAM role takes longer than the AWS request confirmation to Terraform. As Terraform continues creating the Workspace, validation checks for the credentials are failing, as the policy doesn't get applied quick enough. Showing the error:
 
-```
+```sh
 Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellation, Create Placement Group, Delete Tags, Describe Availability Zones, Describe instances, Describe Instance Status, Describe Placement Group, Describe Route Tables, Describe Security Groups, Describe Spot Instances, Describe Spot Price History, Describe Subnets, Describe Volumes, Describe Vpcs, Request Spot Instances
 (400 on /api/2.0/accounts/{UUID}/workspaces)
 ```
@@ -329,7 +334,7 @@ resource "time_sleep" "wait" {
 
 If you notice below error:
 
-```
+```sh
 Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellation, Create Placement Group, Delete Tags, Describe Availability Zones, Describe instances, Describe Instance Status, Describe Placement Group, Describe Route Tables, Describe Security Groups, Describe Spot Instances, Describe Spot Price History, Describe Subnets, Describe Volumes, Describe Vpcs, Request Spot Instances
 ```
 
@@ -337,8 +342,6 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 
 ![create_workspace_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png)
 
-
 - Verify if the role and policy exists (assume role should allow external id)
 
 ![iam_role_trust_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png)
-

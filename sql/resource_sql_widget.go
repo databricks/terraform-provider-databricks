@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"sort"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -237,11 +237,8 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 		}
 	}
 
-	return nil, common.APIError{
-		ErrorCode:  "NOT_FOUND",
-		StatusCode: http.StatusNotFound,
-		Message:    fmt.Sprintf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID),
-	}
+	return nil, apierr.NotFound(
+		fmt.Sprintf("Cannot find widget %s attached to dashboard %s", widgetID, dashboardID))
 }
 
 // Update ...

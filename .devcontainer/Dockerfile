@@ -1,4 +1,4 @@
-ARG VARIANT=1.18-bullseye
+ARG VARIANT=1.19-bullseye
 FROM mcr.microsoft.com/vscode/devcontainers/go:${VARIANT}
 
 ARG TERRAFORM_VERSION=1.0.0
@@ -39,4 +39,4 @@ RUN \
     # # --> Static checker
     && go install honnef.co/go/tools/cmd/staticcheck@v0.3.2 \
     # # --> TF formatter
-    && go get github.com/katbyte/terrafmt
+    && go install github.com/katbyte/terrafmt@latest

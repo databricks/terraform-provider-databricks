@@ -3,8 +3,8 @@ package secrets
 import (
 	"context"
 	"fmt"
-	"net/http"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -109,12 +109,8 @@ func (a SecretsAPI) Read(scope string, key string) (SecretMetadata, error) {
 			return secret, nil
 		}
 	}
-	return secretMeta, common.APIError{
-		ErrorCode:  "NOT_FOUND",
-		Message:    fmt.Sprintf("no secret Scope found with secret metadata scope name: %s and key: %s", scope, key),
-		Resource:   "/api/2.0/secrets/scopes/list",
-		StatusCode: http.StatusNotFound,
-	}
+	return secretMeta, apierr.NotFound(
+		fmt.Sprintf("no secret Scope found with secret metadata scope name: %s and key: %s", scope, key))
 }
 
 // ResourceSecret manages secrets
@@ -145,6 +141,10 @@ func ResourceSecret() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"config_reference": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if err := NewSecretsAPI(ctx, c).Create(d.Get("string_value").(string), d.Get("scope").(string),
@@ -163,6 +163,7 @@ func ResourceSecret() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("config_reference", fmt.Sprintf("{{secrets/%s/%s}}", scope, key))
 			return d.Set("last_updated_timestamp", m.LastUpdatedTimestamp)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

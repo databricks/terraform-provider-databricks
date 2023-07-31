@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,7 @@ func TestDataSourceUser(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27ds%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27ds%27",
 				Response: UserList{
 					Resources: []User{
 						{
@@ -45,22 +46,22 @@ func TestDataSourceUserGerUser(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/a",
+			Resource: "/api/2.0/preview/scim/v2/Users/a?attributes=userName,displayName,externalId,applicationId",
 			Response: User{
 				ID: "a",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27searching_error%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27searching_error%27",
 			Status:   404,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "searching_error",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27empty_search%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27empty_search%27",
 			Response: UserList{},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {

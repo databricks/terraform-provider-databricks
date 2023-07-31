@@ -6,9 +6,17 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func userExistsErrorMessage(userName string, isAccount bool) string {
+	if isAccount {
+		return fmt.Sprintf("User with email %s already exists in this account", userName)
+	} else {
+		return fmt.Sprintf("User with username %s already exists.", userName)
+	}
+}
 
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
@@ -25,6 +33,34 @@ func ResourceUser() *schema.Resource {
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+			}
+			m["home"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
+			m["repos"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
+			m["force_delete_repos"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["force_delete_home_dir"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
+			m["disable_as_user_deletion"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			}
+			m["acl_principal_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			}
 			return m
 		})
@@ -55,7 +91,7 @@ func ResourceUser() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(ctx, c).Read(d.Id())
+			user, err := NewUsersAPI(ctx, c).Read(d.Id(), "userName,displayName,active,externalId,entitlements")
 			if err != nil {
 				return err
 			}
@@ -63,6 +99,9 @@ func ResourceUser() *schema.Resource {
 			d.Set("display_name", user.DisplayName)
 			d.Set("active", user.Active)
 			d.Set("external_id", user.ExternalID)
+			d.Set("home", fmt.Sprintf("/Users/%s", user.UserName))
+			d.Set("repos", fmt.Sprintf("/Repos/%s", user.UserName))
+			d.Set("acl_principal_id", fmt.Sprintf("users/%s", user.UserName))
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -70,10 +109,53 @@ func ResourceUser() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return NewUsersAPI(ctx, c).Update(d.Id(), u)
+			return NewUsersAPI(ctx, c).Update(d.Id(), "userName,displayName,active,externalId,entitlements", u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewUsersAPI(ctx, c).Delete(d.Id())
+			user := NewUsersAPI(ctx, c)
+			userName := d.Get("user_name").(string)
+			var err error = nil
+			isAccount := c.Config.IsAccountClient() && c.Config.AccountID != ""
+			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
+			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
+			// Determine if disable or delete
+			var isDisable bool
+			if isDisableP, exists := d.GetOkExists("disable_as_user_deletion"); exists {
+				isDisable = isDisableP.(bool)
+			} else {
+				// Default is true for Account SCIM, false otherwise
+				isDisable = isAccount
+			}
+			// Validate input
+			if !isAccount && isDisable && isForceDeleteRepos {
+				return fmt.Errorf("force_delete_repos: cannot force delete if disable_as_user_deletion is set")
+			}
+			if !isAccount && isDisable && isForceDeleteHomeDir {
+				return fmt.Errorf("force_delete_home_dir: cannot force delete if disable_as_user_deletion is set")
+			}
+			// Disable or delete
+			if isDisable {
+				r := PatchRequest("replace", "active", "false")
+				err = user.Patch(d.Id(), r)
+			} else {
+				err = user.Delete(d.Id())
+			}
+			// Handle force delete flags
+			if !isAccount && !isDisable && err == nil {
+				if isForceDeleteRepos {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_repos: %w", err)
+					}
+				}
+				if isForceDeleteHomeDir {
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
+					if err != nil {
+						return fmt.Errorf("force_delete_home_dir: %w", err)
+					}
+				}
+			}
+			return err
 		},
 	}.ToResource()
 }
@@ -85,12 +167,11 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	force := fmt.Sprintf("User with username %s already exists.", userName)
-	force_account := "User already exists in another account"
-	if (err.Error() != force) && (err.Error() != force_account) {
+	if (!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, false))) &&
+		(!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, true))) {
 		return err
 	}
-	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName))
+	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName), true)
 	if err != nil {
 		return err
 	}
@@ -99,5 +180,5 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	user := userList[0]
 	d.SetId(user.ID)
-	return usersAPI.Update(d.Id(), u)
+	return usersAPI.Update(d.Id(), "userName,displayName,active,externalId,entitlements", u)
 }

@@ -55,6 +55,13 @@ var possibleEntitlements = []string{
 
 type entitlements []ComplexValue
 
+func (e entitlements) generateEmpty(d *schema.ResourceData) error {
+	for _, entitlement := range possibleEntitlements {
+		d.Set(entitlementMapping[entitlement], false)
+	}
+	return nil
+}
+
 func (e entitlements) readIntoData(d *schema.ResourceData) error {
 	for _, ent := range e {
 		field_name := entitlementMapping[ent.Value]
@@ -63,6 +70,16 @@ func (e entitlements) readIntoData(d *schema.ResourceData) error {
 		}
 	}
 	return nil
+}
+
+func generateFullEntitlements() entitlements {
+	var e entitlements
+	for _, entitlement := range possibleEntitlements {
+		e = append(e, ComplexValue{
+			Value: entitlement,
+		})
+	}
+	return e
 }
 
 func readEntitlementsFromData(d *schema.ResourceData) entitlements {
@@ -74,6 +91,12 @@ func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 				Value: entitlement,
 			})
 		}
+	}
+	// if there is no nil value
+	if e == nil {
+		e = append(e, ComplexValue{
+			Value: "",
+		})
 	}
 	return e
 }
@@ -154,14 +177,19 @@ type patchRequest struct {
 
 func PatchRequest(op, path, value string) patchRequest {
 	o := patchOperation{
-		Op:   op,
-		Path: path,
+		Op:    op,
+		Path:  path,
+		Value: value,
 	}
 	if value != "" {
 		o.Value = []ComplexValue{{Value: value}}
 	}
+	return PatchRequestComplexValue([]patchOperation{o})
+}
+
+func PatchRequestComplexValue(operations []patchOperation) patchRequest {
 	return patchRequest{
 		Schemas:    []URN{PatchOp},
-		Operations: []patchOperation{o},
+		Operations: operations,
 	}
 }

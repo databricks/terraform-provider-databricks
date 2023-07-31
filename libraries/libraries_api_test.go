@@ -2,9 +2,11 @@ package libraries
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -18,15 +20,24 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=missing",
 			ReuseRequest: true,
 			Status:       404,
-			Response:     common.NotFound("missing"),
+			Response:     apierr.NotFound("missing"),
 		},
 		{
 			Method:       "GET",
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=error",
 			ReuseRequest: true,
 			Status:       500,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "internal error",
+			},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=1005-abcd",
+			ReuseRequest: true,
+			Status:       400,
+			Response: apierr.APIError{
+				Message: "Cluster 1005-abcd does not exist",
 			},
 		},
 		{
@@ -114,6 +125,16 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 			"failed-wheel", 50 * time.Millisecond, true, true,
 		})
 		assert.NoError(t, err, "library should have been uninstalled and work proceeded")
+
+		// Cluster not available or doesn't exist
+		_, err = libs.WaitForLibrariesInstalled(Wait{
+			"1005-abcd", 50 * time.Millisecond, false, false,
+		})
+
+		var ae *apierr.APIError
+		assert.True(t, errors.As(err, &ae))
+		assert.Equal(t, 404, ae.StatusCode)
+		assert.Equal(t, "Cluster 1005-abcd does not exist", ae.Message)
 	})
 }
 
@@ -349,4 +370,9 @@ func TestNewLibraryFromInstanceState(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewLibraryGetID(t *testing.T) {
+	library := NewLibraryFromInstanceState(map[string]any{"jar": "a"})
+	assert.Equal(t, "cluster_id/jar:a", library.GetID("cluster_id"))
 }

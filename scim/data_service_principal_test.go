@@ -12,7 +12,7 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
 				Response: UserList{
 					Resources: []User{
 						{
@@ -39,9 +39,10 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 		HCL:         `application_id = "abc"`,
 		Read:        true,
 		NonWritable: true,
-		ID:          "_",
+		ID:          "abc",
 	}.ApplyAndExpectData(t, map[string]any{
 		"sp_id":          "abc",
+		"id":             "abc",
 		"application_id": "abc",
 		"display_name":   "Example Service Principal",
 		"active":         true,
@@ -55,7 +56,7 @@ func TestDataServicePrincipalReadNotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
 				Response: UserList{},
 			},
 		},
@@ -65,7 +66,7 @@ func TestDataServicePrincipalReadNotFound(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }
 
 func TestDataServicePrincipalReadError(t *testing.T) {
@@ -73,7 +74,7 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
 				Status:   500,
 			},
 		},
@@ -83,5 +84,5 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 }

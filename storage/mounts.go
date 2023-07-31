@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -141,7 +143,7 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 				LongTermSupport: true,
 			}),
 		NodeTypeID: clustersAPI.GetSmallestNodeType(
-			clusters.NodeTypeRequest{
+			compute.NodeTypeRequest{
 				LocalDisk: true,
 			}),
 		AutoterminationMinutes: 10,
@@ -170,7 +172,7 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	clusterInfo, err := clustersAPI.Get(clusterID)
-	if common.IsMissing(err) {
+	if apierr.IsMissing(err) {
 		return getOrCreateMountingCluster(clustersAPI)
 	}
 	if err != nil {

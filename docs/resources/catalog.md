@@ -3,8 +3,6 @@ subcategory: "Unity Catalog"
 ---
 # databricks_catalog Resource
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). Contact your Databricks representative to request access. 
-
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
 
 A `databricks_catalog` is contained within [databricks_metastore](metastore.md) and can contain [databricks_schema](schema.md). By default, Databricks creates `default` schema for every new catalog, but Terraform plugin is removing this auto-created schema, so that resource destruction could be done in a clean way.
@@ -26,17 +24,22 @@ resource "databricks_catalog" "sandbox" {
 
 The following arguments are required:
 
-* `name` - Name of Catalog relative to parent metastore. Change forces creation of a new resource.
+* `name` - Name of Catalog relative to parent metastore.
+* `storage_root` - (Optional) Managed location of the catalog. Location in cloud storage where data for managed tables will be stored. If not specified, the location will default to the metastore root location. Change forces creation of a new resource.
+* `provider_name` - (Optional) For Delta Sharing Catalogs: the name of the delta sharing provider. Change forces creation of a new resource.
+* `share_name` - (Optional) For Delta Sharing Catalogs: the name of the share under the share provider. Change forces creation of a new resource.
 * `owner` - (Optional) Username/groupname/sp application_id of the catalog owner.
+* `isolation_mode` - (Optional) Whether the catalog is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATED` or `OPEN`. Setting the catalog to `ISOLATED` will automatically allow access from the current workspace.
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Catalog properties.
+* `force_destroy` - (Optional) Delete catalog regardless of its contents.
 
 ## Import
 
 This resource can be imported by name:
 
 ```bash
-$ terraform import databricks_catalog.this <name>
+terraform import databricks_catalog.this <name>
 ```
 
 ## Related Resources

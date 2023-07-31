@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -46,7 +47,7 @@ func (a NetworksAPI) Delete(mwsAcctID, networksID string) error {
 	}
 	return resource.RetryContext(a.context, 60*time.Second, func() *resource.RetryError {
 		network, err := a.Read(mwsAcctID, networksID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			log.Printf("[INFO] Network %s/%s is removed.", mwsAcctID, networksID)
 			return nil
 		}
@@ -75,6 +76,12 @@ func ResourceMwsNetworks() *schema.Resource {
 		s["subnet_ids"].MinItems = 2
 		s["security_group_ids"].MinItems = 1
 		s["security_group_ids"].MaxItems = 5
+
+		s["vpc_id"].ExactlyOneOf = []string{"vpc_id", "gcp_network_info"}
+		s["subnet_ids"].ExactlyOneOf = []string{"subnet_ids", "gcp_network_info"}
+		s["security_group_ids"].ExactlyOneOf = []string{"security_group_ids", "gcp_network_info"}
+		s["gcp_network_info"].ConflictsWith = []string{"vpc_id", "subnet_ids", "security_group_ids"}
+
 		return s
 	})
 	p := common.NewPairSeparatedID("account_id", "network_id", "/")

@@ -6,8 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -39,7 +38,7 @@ func TestResourceGlobalInitScriptRead(t *testing.T) {
 		New:      true,
 		ID:       scriptID,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, scriptID, d.Id())
 	assert.Equal(t, "Test", d.Get("name"))
 	assert.Equal(t, true, d.Get("enabled"))
@@ -51,17 +50,16 @@ func TestResourceGlobalInitScriptDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:          http.MethodDelete,
-				Resource:        "/api/2.0/global-init-scripts/" + scriptID,
-				Status:          http.StatusOK,
-				ExpectedRequest: map[string]string{"script_id": scriptID},
+				Method:   http.MethodDelete,
+				Resource: "/api/2.0/global-init-scripts/" + scriptID + "?script_id=" + scriptID,
+				Status:   http.StatusOK,
 			},
 		},
 		Resource: ResourceGlobalInitScript(),
 		Delete:   true,
 		ID:       scriptID,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, scriptID, d.Id())
 }
 
@@ -71,7 +69,7 @@ func TestResourceGlobalInitScriptRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts/1234",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "The global unit script with ID 1234 does not exist.",
 				},
@@ -118,7 +116,7 @@ func TestResourceGlobalInitScriptCreate(t *testing.T) {
 			"content_base64": "ZWNobyBoZWxsbw==",
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "1234", d.Id())
 	assert.Equal(t, 0, d.Get("position"))
 }
@@ -133,7 +131,7 @@ func TestResourceGlobalInitScriptCreateBigPayload(t *testing.T) {
 			"content_base64": base64.StdEncoding.EncodeToString([]byte(strings.Repeat("12", maxScriptSize))),
 		},
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 	assert.Equal(t, "size of the global init script (131072 bytes) exceeds maximal allowed (65536 bytes)", err.Error())
 }
 
@@ -148,7 +146,7 @@ func TestResourceGlobalInitScriptUpdateBigPayload(t *testing.T) {
 			"content_base64": base64.StdEncoding.EncodeToString([]byte(strings.Repeat("12", maxScriptSize))),
 		},
 	}.Apply(t)
-	require.Error(t, err, err)
+	require.Error(t, err)
 	assert.Equal(t, "size of the global init script (131072 bytes) exceeds maximal allowed (65536 bytes)", err.Error())
 }
 
@@ -188,7 +186,7 @@ func TestResourceGlobalInitScriptUpdate(t *testing.T) {
 			"position":       0,
 		},
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "1234", d.Id())
 	assert.Equal(t, 0, d.Get("position"))
 }

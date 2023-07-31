@@ -4,8 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -106,7 +105,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 		continuous = false
 		`,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
 }
 
@@ -116,7 +115,7 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/pipelines",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -162,12 +161,12 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/pipelines/abcd",
+				Resource: "/api/2.0/pipelines/abcd?",
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INTERNAL_ERROR",
 					Message:   "Internal error",
 				},
@@ -213,12 +212,12 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/pipelines/abcd",
+				Resource: "/api/2.0/pipelines/abcd?",
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "No such resource",
 				},
@@ -260,7 +259,7 @@ func TestResourcePipelineRead(t *testing.T) {
 		New:      true,
 		ID:       "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id(), "Id should not be empty")
 	assert.Equal(t, "/test/storage", d.Get("storage"))
 	assert.Equal(t, "value1", d.Get("configuration.key1"))
@@ -274,7 +273,7 @@ func TestResourcePipelineRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -294,7 +293,7 @@ func TestResourcePipelineRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -326,7 +325,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 			Include: []string{"com.databricks.include"},
 		},
 		Channel: "CURRENT",
-		Edition: "advanced",
+		Edition: "ADVANCED",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -372,7 +371,7 @@ func TestResourcePipelineUpdate(t *testing.T) {
 		Update: true,
 		ID:     "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
 }
 
@@ -382,7 +381,7 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 			{ // read log output for better stub url...
 				Method:   "PUT",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -428,7 +427,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 			Include: []string{"com.databricks.include"},
 		},
 		Channel: "CURRENT",
-		Edition: "advanced",
+		Edition: "ADVANCED",
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -475,7 +474,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/pipelines/abcd",
+				Resource: "/api/2.0/pipelines/abcd?",
 			},
 			{
 				Method:   "GET",
@@ -489,7 +488,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "No such resource",
 				},
@@ -500,7 +499,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abcd",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
 }
 
@@ -509,8 +508,8 @@ func TestResourcePipelineDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Resource: "/api/2.0/pipelines/abcd?",
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -590,4 +589,112 @@ func TestListPipelinesWithFilter(t *testing.T) {
 	data, err := NewPipelinesAPI(ctx, client).List(1, "name LIKE 'Pipeline1'")
 	require.NoError(t, err)
 	require.Equal(t, 1, len(data))
+}
+
+func TestStorageSuppressDiff(t *testing.T) {
+	k := "storage"
+	generated := "dbfs:/pipelines/c609bbb0-2e42-4bc8-bb4e-a1c26d6e9403"
+	require.True(t, suppressStorageDiff(k, generated, "", nil))
+	require.False(t, suppressStorageDiff(k, generated, "/tmp/abc", nil))
+	require.False(t, suppressStorageDiff(k, "/tmp/abc", "", nil))
+}
+
+func TestResourcePipelineCreateServerless(t *testing.T) {
+	var serverlessPipelineSpec = PipelineSpec{
+		Name:    "test-pipeline-serverless",
+		Storage: "/test/storage",
+		Configuration: map[string]string{
+			"key1": "value1",
+			"key2": "value2",
+		},
+		Clusters: []pipelineCluster{
+			{
+				Label: "default",
+				CustomTags: map[string]string{
+					"cluster_tag1": "cluster_value1",
+				},
+			},
+		},
+		Libraries: []PipelineLibrary{
+			{
+				Notebook: &NotebookLibrary{
+					Path: "/TestServerless",
+				},
+			},
+		},
+		Filters: &filters{
+			Include: []string{"com.databricks.include"},
+			Exclude: []string{"com.databricks.exclude"},
+		},
+		Serverless: true,
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
+				Response: createPipelineResponse{
+					PipelineID: "serverless",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/serverless",
+				Response: map[string]any{
+					"id":    "serverless",
+					"name":  "test-pipeline-serverless",
+					"state": "DEPLOYING",
+					"spec":  serverlessPipelineSpec,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/serverless",
+				Response: map[string]any{
+					"id":    "serverless",
+					"name":  "test-pipeline-serverless",
+					"state": "RUNNING",
+					"spec":  serverlessPipelineSpec,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/serverless",
+				Response: map[string]any{
+					"id":    "serverless",
+					"name":  "test-pipeline-serverless",
+					"state": "RUNNING",
+					"spec":  serverlessPipelineSpec,
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline-serverless"
+		storage = "/test/storage"
+		configuration = {
+		  key1 = "value1"
+		  key2 = "value2"
+		}
+		cluster {
+		  label = "default"
+		  custom_tags = {
+			"cluster_tag1" = "cluster_value1"
+		  }
+		}
+		library {
+		  notebook {
+			path = "/TestServerless"
+		  }
+		}
+		filters {
+		  include = ["com.databricks.include"]
+		  exclude = ["com.databricks.exclude"]
+		}
+		continuous = false
+		serverless = true
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "serverless", d.Id())
 }

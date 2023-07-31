@@ -11,9 +11,9 @@ import (
 
 func getUser(usersAPI UsersAPI, id, name string) (user User, err error) {
 	if id != "" {
-		return usersAPI.Read(id)
+		return usersAPI.Read(id, "userName,displayName,externalId,applicationId")
 	}
-	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", name))
+	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", name), true)
 	if err != nil {
 		return
 	}

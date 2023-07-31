@@ -4,44 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
-
-// TODO: move to `acceptance`
-func TestMwsAccCustomerManagedKeys(t *testing.T) {
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	kmsKeyArn := qa.GetEnvOrSkipTest(t, "TEST_MANAGED_KMS_KEY_ARN")
-	kmsKeyAlias := qa.GetEnvOrSkipTest(t, "TEST_MANAGED_KMS_KEY_ALIAS")
-	client := common.CommonEnvironmentClient()
-	cmkAPI := NewCustomerManagedKeysAPI(context.Background(), client)
-	cmkList, err := cmkAPI.List(acctID)
-	assert.NoError(t, err, err)
-	t.Log(cmkList)
-
-	keyInfo, err := cmkAPI.Create(CustomerManagedKey{
-		AwsKeyInfo: &AwsKeyInfo{
-			KeyArn:   kmsKeyArn,
-			KeyAlias: kmsKeyAlias,
-		},
-		AccountID: acctID,
-		UseCases:  []string{"MANAGED_SERVICES"},
-	})
-	assert.NoError(t, err, err)
-
-	keyID := keyInfo.CustomerManagedKeyID
-
-	defer func() {
-		err := cmkAPI.Delete(acctID, keyID)
-		assert.NoError(t, err, err)
-	}()
-
-	getKeyInfo, err := cmkAPI.Read(acctID, keyID)
-	assert.NoError(t, err, err)
-	assert.NotNil(t, getKeyInfo, "key info should not be nil")
-}
 
 func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -89,7 +55,7 @@ func TestResourceCustomerManagedKeyCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cmkid", d.Id())
 	assert.Equal(t, "key-arn", d.Get("aws_key_info.0.key_arn"))
 	assert.Equal(t, "key-alias", d.Get("aws_key_info.0.key_alias"))
@@ -109,7 +75,7 @@ func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 					},
 					UseCases: []string{"MANAGED_SERVICE"},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -143,7 +109,7 @@ func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestResourceCustomerManagedKeyRead(t *testing.T) {
@@ -178,7 +144,7 @@ func TestResourceCustomerManagedKeyRead(t *testing.T) {
 		ID:   "abc/cmkid",
 		Read: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cmkid", d.Id())
 	assert.Equal(t, "key-arn", d.Get("aws_key_info.0.key_arn"))
 	assert.Equal(t, "key-alias", d.Get("aws_key_info.0.key_alias"))
@@ -194,7 +160,7 @@ func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/customer-managed-keys/cmkid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					Message: "Invalid endpoint",
 				},
 				Status: 404,
@@ -238,7 +204,7 @@ func TestResourceCustomerManagedKeyDelete(t *testing.T) {
 		ID:     "abc/cmkid",
 		Delete: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cmkid", d.Id())
 }
 

@@ -1,37 +1,12 @@
 package mws
 
 import (
-	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestMwsAccStorageConfigurations(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	storageAPI := NewStorageConfigurationsAPI(context.Background(), common.CommonEnvironmentClient())
-	storageConfigsList, err := storageAPI.List(acctID)
-	assert.NoError(t, err, err)
-	t.Log(storageConfigsList)
-
-	storageConfig, err := storageAPI.Create(acctID, "sri-mws-terraform-storage-root-bucket", "sri-root-s3-bucket")
-	assert.NoError(t, err, err)
-
-	myStorageConfig, err := storageAPI.Read(acctID, storageConfig.StorageConfigurationID)
-	assert.NoError(t, err, err)
-	t.Log(myStorageConfig.RootBucketInfo.BucketName)
-
-	defer func() {
-		err = storageAPI.Delete(acctID, storageConfig.StorageConfigurationID)
-		assert.NoError(t, err, err)
-	}()
-}
 
 func TestResourceStorageConfigurationCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -69,7 +44,7 @@ func TestResourceStorageConfigurationCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/scid", d.Id())
 }
 
@@ -79,7 +54,7 @@ func TestResourceStorageConfigurationCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/storage-configurations",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -117,7 +92,7 @@ func TestResourceStorageConfigurationRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc/scid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/scid", d.Id(), "Id should not be empty")
 	assert.Equal(t, "bucket", d.Get("bucket_name"))
 	assert.Equal(t, 0, d.Get("creation_time"))
@@ -131,7 +106,7 @@ func TestResourceStorageConfigurationRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -151,7 +126,7 @@ func TestResourceStorageConfigurationRead_Error(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -178,7 +153,7 @@ func TestResourceStorageConfigurationDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/scid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/scid", d.Id())
 }
 
@@ -188,7 +163,7 @@ func TestResourceStorageConfigurationDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

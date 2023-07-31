@@ -16,17 +16,20 @@ import (
 
 // QueryEntity defines the parameters that can be set in the resource.
 type QueryEntity struct {
-	DataSourceID string           `json:"data_source_id"`
-	Name         string           `json:"name"`
-	Description  string           `json:"description,omitempty"`
-	Query        string           `json:"query"`
-	Schedule     *QuerySchedule   `json:"schedule,omitempty"`
-	Tags         []string         `json:"tags,omitempty"`
-	Parameter    []QueryParameter `json:"parameter,omitempty"`
-	RunAsRole    string           `json:"run_as_role,omitempty"`
+	DataSourceID string `json:"data_source_id"`
+	Name         string `json:"name"`
+	Description  string `json:"description,omitempty"`
+	Query        string `json:"query"`
+	// Deprecated: Use databricks_job resource to schedule a Query
+	Schedule  *QuerySchedule   `json:"schedule,omitempty"`
+	Tags      []string         `json:"tags,omitempty"`
+	Parameter []QueryParameter `json:"parameter,omitempty"`
+	RunAsRole string           `json:"run_as_role,omitempty"`
+	Parent    string           `json:"parent,omitempty" tf:"suppress_diff,force_new"`
 }
 
 // QuerySchedule ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QuerySchedule struct {
 	Continuous *QueryScheduleContinuous `json:"continuous,omitempty"`
 	Daily      *QueryScheduleDaily      `json:"daily,omitempty"`
@@ -34,12 +37,14 @@ type QuerySchedule struct {
 }
 
 // QueryScheduleContinuous ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QueryScheduleContinuous struct {
 	IntervalSeconds int    `json:"interval_seconds"`
 	UntilDate       string `json:"until_date,omitempty"`
 }
 
 // QueryScheduleDaily ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QueryScheduleDaily struct {
 	IntervalDays int    `json:"interval_days"`
 	TimeOfDay    string `json:"time_of_day"`
@@ -47,6 +52,7 @@ type QueryScheduleDaily struct {
 }
 
 // QueryScheduleWeekly ...
+// Deprecated: Use databricks_job resource to schedule a Query
 type QueryScheduleWeekly struct {
 	IntervalWeeks int    `json:"interval_weeks"`
 	DayOfWeek     string `json:"day_of_week"`
@@ -112,7 +118,8 @@ type QueryParameterDateLike struct {
 
 // QueryParameterDateRangeLike ...
 type QueryParameterDateRangeLike struct {
-	Value string `json:"value"`
+	Value string             `json:"value,omitempty"`
+	Range *api.DateTimeRange `json:"range,omitempty"`
 }
 
 // QueryParameterAllowMultiple ...
@@ -156,6 +163,7 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 	aq.Description = q.Description
 	aq.Query = q.Query
 	aq.Tags = append([]string{}, q.Tags...)
+	aq.Parent = q.Parent
 
 	if s := q.Schedule; s != nil {
 		if sp := s.Continuous; sp != nil {
@@ -249,18 +257,27 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 				}
 			case p.DateRange != nil:
 				iface = api.QueryParameterDateRange{
-					QueryParameter: ap,
-					Value:          p.DateRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateRange.Value,
+						RangeValue:     p.DateRange.Range,
+					},
 				}
 			case p.DateTimeRange != nil:
 				iface = api.QueryParameterDateTimeRange{
-					QueryParameter: ap,
-					Value:          p.DateTimeRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateTimeRange.Value,
+						RangeValue:     p.DateTimeRange.Range,
+					},
 				}
 			case p.DateTimeSecRange != nil:
 				iface = api.QueryParameterDateTimeSecRange{
-					QueryParameter: ap,
-					Value:          p.DateTimeSecRange.Value,
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: ap,
+						StringValue:    p.DateTimeSecRange.Value,
+						RangeValue:     p.DateTimeSecRange.Range,
+					},
 				}
 			default:
 				log.Fatalf("Don't know what to do for QueryParameter...")
@@ -287,6 +304,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	q.Description = aq.Description
 	q.Query = aq.Query
 	q.Tags = append([]string{}, aq.Tags...)
+	q.Parent = aq.Parent
 
 	if s := aq.Schedule; s != nil {
 		// Set `schedule` to non-empty value to ensure it's picked up by `StructToSchema`.
@@ -391,7 +409,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTime = &QueryParameterDateLike{
-					Value: apv.Value,
+					Value: apv.StringValue,
 				}
 			case *api.QueryParameterDateTimeSec:
 				p.Name = apv.Name
@@ -403,19 +421,22 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateRange = &QueryParameterDateRangeLike{
-					Value: apv.Value,
+					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			case *api.QueryParameterDateTimeRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTimeRange = &QueryParameterDateRangeLike{
-					Value: apv.Value,
+					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			case *api.QueryParameterDateTimeSecRange:
 				p.Name = apv.Name
 				p.Title = apv.Title
 				p.DateTimeSecRange = &QueryParameterDateRangeLike{
-					Value: apv.Value,
+					Value: apv.StringValue,
+					Range: apv.RangeValue,
 				}
 			default:
 				log.Fatalf("Don't know what to do for type: %#v", reflect.TypeOf(apv).String())
@@ -492,6 +513,7 @@ func ResourceSqlQuery() *schema.Resource {
 	s := common.StructToSchema(
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["schedule"].Deprecated = "Operations on `databricks_sql_query` schedules are deprecated. Please use `databricks_job` resource to schedule a `sql_task`."
 			schedule := m["schedule"].Elem.(*schema.Resource)
 
 			// Make different query schedule types mutually exclusive.

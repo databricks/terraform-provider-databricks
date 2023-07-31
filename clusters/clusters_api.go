@@ -2,11 +2,15 @@ package clusters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -191,8 +195,18 @@ type GcsStorageInfo struct {
 	Destination string `json:"destination,omitempty"`
 }
 
+// AbfssStorageInfo contains the struct for when storing files in ADLS
+type AbfssStorageInfo struct {
+	Destination string `json:"destination,omitempty"`
+}
+
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
+	Destination string `json:"destination,omitempty"`
+}
+
+// WorkspaceFileInfo represents a file in the Databricks workspace.
+type WorkspaceFileInfo struct {
 	Destination string `json:"destination,omitempty"`
 }
 
@@ -204,10 +218,12 @@ type StorageInfo struct {
 
 // InitScriptStorageInfo captures the allowed sources of init scripts.
 type InitScriptStorageInfo struct {
-	Dbfs *DbfsStorageInfo `json:"dbfs,omitempty" tf:"group:storage"`
-	Gcs  *GcsStorageInfo  `json:"gcs,omitempty" tf:"group:storage"`
-	S3   *S3StorageInfo   `json:"s3,omitempty" tf:"group:storage"`
-	File *LocalFileInfo   `json:"file,omitempty"`
+	Dbfs      *DbfsStorageInfo   `json:"dbfs,omitempty" tf:"group:storage"`
+	Gcs       *GcsStorageInfo    `json:"gcs,omitempty" tf:"group:storage"`
+	S3        *S3StorageInfo     `json:"s3,omitempty" tf:"group:storage"`
+	Abfss     *AbfssStorageInfo  `json:"abfss,omitempty" tf:"group:storage"`
+	File      *LocalFileInfo     `json:"file,omitempty"`
+	Workspace *WorkspaceFileInfo `json:"workspace,omitempty"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -361,6 +377,19 @@ type WorkloadType struct {
 	Clients *WorkloadTypeClients `json:"clients"`
 }
 
+// NetworkFileSystemInfo contains information about network file system server
+type NetworkFileSystemInfo struct {
+	ServerAddress string `json:"server_address"`
+	MountOptions  string `json:"mount_options,omitempty"`
+}
+
+// MountInfo provides configuration to mount a network file system
+type MountInfo struct {
+	NetworkFileSystemInfo *NetworkFileSystemInfo `json:"network_filesystem_info"`
+	RemoteMountDirectory  string                 `json:"remote_mount_dir_path,omitempty"`
+	LocalMountDirectory   string                 `json:"local_mount_dir_path"`
+}
+
 // Cluster contains the information when trying to submit api calls or editing a cluster
 type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
@@ -393,10 +422,12 @@ type Cluster struct {
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`
 
-	DataSecurityMode string        `json:"data_security_mode,omitempty"`
+	DataSecurityMode string        `json:"data_security_mode,omitempty" tf:"suppress_diff"`
 	SingleUserName   string        `json:"single_user_name,omitempty"`
 	IdempotencyToken string        `json:"idempotency_token,omitempty" tf:"force_new"`
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
+	RuntimeEngine    string        `json:"runtime_engine,omitempty"`
+	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
 }
 
 func (cluster Cluster) Validate() error {
@@ -427,7 +458,7 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 		cluster.AwsAttributes = &awsAttributes
 	}
 	if cluster.AzureAttributes != nil {
-		cluster.AzureAttributes = nil
+		cluster.AzureAttributes = &AzureAttributes{}
 	}
 	if cluster.GcpAttributes != nil {
 		gcpAttributes := GcpAttributes{
@@ -447,48 +478,49 @@ type ClusterList struct {
 
 // ClusterInfo contains the information when getting cluster info from the get request.
 type ClusterInfo struct {
-	NumWorkers                int32              `json:"num_workers,omitempty"`
-	AutoScale                 *AutoScale         `json:"autoscale,omitempty"`
-	ClusterID                 string             `json:"cluster_id,omitempty"`
-	CreatorUserName           string             `json:"creator_user_name,omitempty"`
-	Driver                    *SparkNode         `json:"driver,omitempty"`
-	Executors                 []SparkNode        `json:"executors,omitempty"`
-	SparkContextID            int64              `json:"spark_context_id,omitempty"`
-	JdbcPort                  int32              `json:"jdbc_port,omitempty"`
-	ClusterName               string             `json:"cluster_name,omitempty"`
-	SparkVersion              string             `json:"spark_version"`
-	SparkConf                 map[string]string  `json:"spark_conf,omitempty"`
-	AwsAttributes             *AwsAttributes     `json:"aws_attributes,omitempty"`
-	AzureAttributes           *AzureAttributes   `json:"azure_attributes,omitempty"`
-	GcpAttributes             *GcpAttributes     `json:"gcp_attributes,omitempty"`
-	NodeTypeID                string             `json:"node_type_id,omitempty"`
-	DriverNodeTypeID          string             `json:"driver_node_type_id,omitempty"`
-	SSHPublicKeys             []string           `json:"ssh_public_keys,omitempty"`
-	CustomTags                map[string]string  `json:"custom_tags,omitempty"`
-	ClusterLogConf            *StorageInfo       `json:"cluster_log_conf,omitempty"`
-	InitScripts               []StorageInfo      `json:"init_scripts,omitempty"`
-	SparkEnvVars              map[string]string  `json:"spark_env_vars,omitempty"`
-	AutoterminationMinutes    int32              `json:"autotermination_minutes,omitempty"`
-	EnableElasticDisk         bool               `json:"enable_elastic_disk,omitempty"`
-	EnableLocalDiskEncryption bool               `json:"enable_local_disk_encryption,omitempty"`
-	InstancePoolID            string             `json:"instance_pool_id,omitempty"`
-	DriverInstancePoolID      string             `json:"driver_instance_pool_id,omitempty" tf:"computed"`
-	PolicyID                  string             `json:"policy_id,omitempty"`
-	SingleUserName            string             `json:"single_user_name,omitempty"`
-	ClusterSource             Availability       `json:"cluster_source,omitempty"`
-	DockerImage               *DockerImage       `json:"docker_image,omitempty"`
-	State                     ClusterState       `json:"state"`
-	StateMessage              string             `json:"state_message,omitempty"`
-	StartTime                 int64              `json:"start_time,omitempty"`
-	TerminateTime             int64              `json:"terminate_time,omitempty"`
-	LastStateLossTime         int64              `json:"last_state_loss_time,omitempty"`
-	LastActivityTime          int64              `json:"last_activity_time,omitempty"`
-	ClusterMemoryMb           int64              `json:"cluster_memory_mb,omitempty"`
-	ClusterCores              float64            `json:"cluster_cores,omitempty"`
-	DefaultTags               map[string]string  `json:"default_tags"`
-	ClusterLogStatus          *LogSyncStatus     `json:"cluster_log_status,omitempty"`
-	TerminationReason         *TerminationReason `json:"termination_reason,omitempty"`
-	DataSecurityMode          string             `json:"data_security_mode,omitempty"`
+	NumWorkers                int32                   `json:"num_workers,omitempty"`
+	AutoScale                 *AutoScale              `json:"autoscale,omitempty"`
+	ClusterID                 string                  `json:"cluster_id,omitempty"`
+	CreatorUserName           string                  `json:"creator_user_name,omitempty"`
+	Driver                    *SparkNode              `json:"driver,omitempty"`
+	Executors                 []SparkNode             `json:"executors,omitempty"`
+	SparkContextID            int64                   `json:"spark_context_id,omitempty"`
+	JdbcPort                  int32                   `json:"jdbc_port,omitempty"`
+	ClusterName               string                  `json:"cluster_name,omitempty"`
+	SparkVersion              string                  `json:"spark_version"`
+	SparkConf                 map[string]string       `json:"spark_conf,omitempty"`
+	AwsAttributes             *AwsAttributes          `json:"aws_attributes,omitempty"`
+	AzureAttributes           *AzureAttributes        `json:"azure_attributes,omitempty"`
+	GcpAttributes             *GcpAttributes          `json:"gcp_attributes,omitempty"`
+	NodeTypeID                string                  `json:"node_type_id,omitempty"`
+	DriverNodeTypeID          string                  `json:"driver_node_type_id,omitempty"`
+	SSHPublicKeys             []string                `json:"ssh_public_keys,omitempty"`
+	CustomTags                map[string]string       `json:"custom_tags,omitempty"`
+	ClusterLogConf            *StorageInfo            `json:"cluster_log_conf,omitempty"`
+	InitScripts               []InitScriptStorageInfo `json:"init_scripts,omitempty"`
+	SparkEnvVars              map[string]string       `json:"spark_env_vars,omitempty"`
+	AutoterminationMinutes    int32                   `json:"autotermination_minutes,omitempty"`
+	EnableElasticDisk         bool                    `json:"enable_elastic_disk,omitempty"`
+	EnableLocalDiskEncryption bool                    `json:"enable_local_disk_encryption,omitempty"`
+	InstancePoolID            string                  `json:"instance_pool_id,omitempty"`
+	DriverInstancePoolID      string                  `json:"driver_instance_pool_id,omitempty" tf:"computed"`
+	PolicyID                  string                  `json:"policy_id,omitempty"`
+	SingleUserName            string                  `json:"single_user_name,omitempty"`
+	ClusterSource             Availability            `json:"cluster_source,omitempty"`
+	DockerImage               *DockerImage            `json:"docker_image,omitempty"`
+	State                     ClusterState            `json:"state"`
+	StateMessage              string                  `json:"state_message,omitempty"`
+	StartTime                 int64                   `json:"start_time,omitempty"`
+	TerminateTime             int64                   `json:"terminate_time,omitempty"`
+	LastStateLossTime         int64                   `json:"last_state_loss_time,omitempty"`
+	LastActivityTime          int64                   `json:"last_activity_time,omitempty"`
+	ClusterMemoryMb           int64                   `json:"cluster_memory_mb,omitempty"`
+	ClusterCores              float64                 `json:"cluster_cores,omitempty"`
+	DefaultTags               map[string]string       `json:"default_tags"`
+	ClusterLogStatus          *LogSyncStatus          `json:"cluster_log_status,omitempty"`
+	TerminationReason         *TerminationReason      `json:"termination_reason,omitempty"`
+	DataSecurityMode          string                  `json:"data_security_mode,omitempty"`
+	RuntimeEngine             string                  `json:"runtime_engine,omitempty"`
 }
 
 // IsRunningOrResizing returns true if cluster is running or resizing
@@ -644,12 +676,13 @@ func (a ClustersAPI) StartAndGetInfo(clusterID string) (ClusterInfo, error) {
 }
 
 // make common/resource.go#ToResource read behavior consistent with "normal" resources
+// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 func wrapMissingClusterError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
-	apiErr, ok := err.(common.APIError)
-	if !ok {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
 		return err
 	}
 	if apiErr.IsMissing() {
@@ -677,7 +710,7 @@ func (a ClustersAPI) waitForClusterStatus(clusterID string, desired ClusterState
 	// nolint should be a bigger context-aware refactor
 	return result, resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
 		clusterInfo, err := a.Get(clusterID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			log.Printf("[INFO] Cluster %s not found. Retrying", clusterID)
 			return resource.RetryableError(err)
 		}
@@ -840,7 +873,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 			}
 		}
 	}
-	smallestNodeType := a.GetSmallestNodeType(NodeTypeRequest{
+	smallestNodeType := a.GetSmallestNodeType(compute.NodeTypeRequest{
 		LocalDisk: true,
 	})
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)

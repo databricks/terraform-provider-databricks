@@ -49,7 +49,7 @@ func TestModelCreate(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "xyz", d.Get("name"), "Name should be set")
 	assert.Equal(t, d.Get("name"), d.Id(), "Name and Id should match")
@@ -81,7 +81,7 @@ func TestModelCreatePostError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestModelRead(t *testing.T) {
@@ -100,7 +100,7 @@ func TestModelRead(t *testing.T) {
 		ID:       "xyz",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 
@@ -121,7 +121,7 @@ func TestModelReadGetError(t *testing.T) {
 		ID:       "xyz",
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestModelUpdate(t *testing.T) {
@@ -157,7 +157,7 @@ func TestModelUpdate(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "updateddescription", d.Get("description"), "Description should be updated")
 }
@@ -189,7 +189,7 @@ func TestModelUpdatePatchError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }
 
 func TestModelDelete(t *testing.T) {
@@ -197,10 +197,7 @@ func TestModelDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/mlflow/registered-models/delete",
-				ExpectedRequest: Model{
-					Name: "xyz",
-				},
+				Resource: "/api/2.0/mlflow/registered-models/delete?name=xyz",
 			},
 		},
 		Resource: ResourceMlflowModel(),
@@ -211,7 +208,7 @@ func TestModelDelete(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 }
 
@@ -220,11 +217,8 @@ func TestModelDeleteError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/mlflow/registered-models/delete",
-				ExpectedRequest: Model{
-					Name: "xyz",
-				},
-				Status: 400,
+				Resource: "/api/2.0/mlflow/registered-models/delete?name=xyz",
+				Status:   400,
 			},
 		},
 		Resource: ResourceMlflowModel(),
@@ -235,5 +229,5 @@ func TestModelDeleteError(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.Error(t, err, err)
+	assert.Error(t, err)
 }

@@ -6,6 +6,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -50,7 +52,7 @@ func (ta *SqlPermissions) typeAndKey() (string, string) {
 		return "VIEW", fmt.Sprintf("`%s`.`%s`", ta.actualDatabase(), ta.View)
 	}
 	if ta.Database != "" {
-		return "DATABASE", ta.Database
+		return "DATABASE", fmt.Sprintf("`%s`", ta.Database)
 	}
 	if ta.Catalog {
 		return "CATALOG", ""
@@ -120,7 +122,7 @@ func (ta *SqlPermissions) read() error {
 		failure := currentGrantsOnThis.Error()
 		if strings.Contains(failure, "does not exist") ||
 			strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
-			return common.NotFound(failure)
+			return apierr.NotFound(failure)
 		}
 		return fmt.Errorf("cannot read current grants: %s", failure)
 	}
@@ -148,9 +150,12 @@ func (ta *SqlPermissions) read() error {
 		if !strings.EqualFold(currentType, thisType) {
 			continue
 		}
-		if !strings.EqualFold(currentKey, thisKey) {
+
+		noBackticks := strings.ReplaceAll(thisKey, "`", "")
+		if !strings.EqualFold(currentKey, thisKey) && !strings.EqualFold(currentKey, noBackticks) {
 			continue
 		}
+
 		if strings.HasPrefix(currentAction, "DENIED_") {
 			// DENY statements are intentionally not supported.
 			continue
@@ -246,7 +251,7 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 	clusterInfo, err := clustersAPI.StartAndGetInfo(ta.ClusterID)
-	if common.IsMissing(err) {
+	if apierr.IsMissing(err) {
 		// cluster that was previously in a tfstate was deleted
 		ta.ClusterID, err = ta.getOrCreateCluster(clustersAPI)
 		if err != nil {
@@ -270,7 +275,7 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
 		Latest: true,
 	})
-	nodeType := clustersAPI.GetSmallestNodeType(clusters.NodeTypeRequest{LocalDisk: true})
+	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
 	aclCluster, err := clustersAPI.GetOrCreateRunningCluster(
 		"terraform-table-acl", clusters.Cluster{
 			ClusterName:            "terraform-table-acl",

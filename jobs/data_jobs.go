@@ -20,7 +20,7 @@ func DataSourceJobs() *schema.Resource {
 			return err
 		}
 		response.Ids = map[string]string{}
-		for _, v := range list.Jobs {
+		for _, v := range list {
 			name := v.Settings.Name
 			_, duplicateName := response.Ids[name]
 			if duplicateName {

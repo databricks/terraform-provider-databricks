@@ -17,7 +17,7 @@ func TestMatchesName(t *testing.T) {
 }
 
 func TestImportContextFindSkips(t *testing.T) {
-	assert.Nil(t, (&importContext{
+	_, traversal := (&importContext{
 		State: stateApproximation{
 			Resources: []resourceApproximation{
 				{
@@ -36,7 +36,8 @@ func TestImportContextFindSkips(t *testing.T) {
 		Resource:  "a",
 		Attribute: "b",
 		Name:      "c",
-	}, "x"))
+	}, "x", reference{})
+	assert.Nil(t, traversal)
 }
 
 func TestImportContextHas(t *testing.T) {

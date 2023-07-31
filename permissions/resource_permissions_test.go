@@ -2,11 +2,15 @@ package permissions
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -29,14 +33,14 @@ var (
 	}
 )
 
-func TestAccessControlChangeString(t *testing.T) {
+func TestEntityAccessControlChangeString(t *testing.T) {
 	assert.Equal(t, "me CAN_READ", AccessControlChange{
 		UserName:        "me",
 		PermissionLevel: "CAN_READ",
 	}.String())
 }
 
-func TestAccessControlString(t *testing.T) {
+func TestEntityAccessControlString(t *testing.T) {
 	assert.Equal(t, "me[CAN_READ (from [parent]) CAN_MANAGE]", AccessControl{
 		UserName: "me",
 		AllPermissions: []Permission{
@@ -89,7 +93,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 		New:      true,
 		ID:       "/clusters/abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/clusters/abc", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -107,7 +111,7 @@ func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
 				Status:   400,
-				Response: common.APIError{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
 				},
@@ -150,7 +154,7 @@ func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 		New:      true,
 		ID:       "/registered-models/fakeuuid123",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -210,7 +214,7 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -273,7 +277,7 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 		// Removed:  true,
 		ID: "/registered-models/fakeuuid123",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -321,7 +325,7 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 		Delete:   true,
 		ID:       "/registered-models/fakeuuid123",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
 }
 
@@ -353,7 +357,7 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 		New:      true,
 		ID:       "/sql/dashboards/abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/sql/dashboards/abc", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -369,7 +373,7 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cluster does not exist",
 				},
@@ -391,7 +395,7 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -405,51 +409,32 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestResourcePermissionsCustomizeDiff_ErrorOnScimMe(t *testing.T) {
+func TestResourcePermissionsCustomizeDiff_ErrorOnCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourcePermissions(),
+		Create:   true,
+		HCL: `
+		cluster_id = "abc"
+		access_control {
+			permission_level = "WHATEVER"
+		}`,
+	}.ExpectError(t, "permission_level WHATEVER is not supported with cluster_id objects")
+}
+
+func TestResourcePermissionsCustomizeDiff_ErrorOnPermissionsDecreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectID:   "/clusters/abc",
-					ObjectType: "clusters",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
-							},
-						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
-							},
-						},
-					},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/scim/v2/Me",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+			me,
 		},
 		Resource: ResourcePermissions(),
-		Read:     true,
-		ID:       "/clusters/abc",
-	}.ExpectError(t, "Internal error happened")
+		Create:   true,
+		HCL: `
+		cluster_id = "abc"
+		access_control {
+			permission_level = "CAN_ATTACH_TO"
+			user_name = "admin"
+		}`,
+	}.ExpectError(t, "it is not possible to decrease administrative permissions for the current user: admin")
 }
 
 func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
@@ -476,7 +461,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		{
 			Method:   http.MethodGet,
 			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: common.APIErrorBody{
+			Response: apierr.APIErrorBody{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
 			},
@@ -567,16 +552,23 @@ func TestResourcePermissionsDelete(t *testing.T) {
 				},
 			},
 			{
-				Method:          http.MethodPut,
-				Resource:        "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: ObjectACL{},
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/clusters/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
 			},
 		},
 		Resource: ResourcePermissions(),
 		Delete:   true,
 		ID:       "/clusters/abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/clusters/abc", d.Id())
 }
 
@@ -613,10 +605,17 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 				},
 			},
 			{
-				Method:          http.MethodPut,
-				Resource:        "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: ObjectACL{},
-				Response: common.APIErrorBody{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/clusters/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -669,7 +668,7 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 
 func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{},
+		Fixtures: []qa.HTTPFixture{me},
 		Resource: ResourcePermissions(),
 		Create:   true,
 		HCL: `
@@ -680,8 +679,7 @@ func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 		}
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "invalid config supplied. [access_control] "+
-		"It is not possible to restrict any permissions from `admins`.")
+	assert.EqualError(t, err, "it is not possible to restrict any permissions from `admins`")
 }
 
 func TestResourcePermissionsCreate(t *testing.T) {
@@ -696,6 +694,10 @@ func TestResourcePermissionsCreate(t *testing.T) {
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_ATTACH_TO",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
 						},
 					},
 				},
@@ -741,7 +743,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -800,7 +802,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -821,6 +823,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
 						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
 					},
 				},
 			},
@@ -834,6 +840,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
 						},
 					},
 				},
@@ -851,7 +861,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -866,7 +876,7 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -955,7 +965,81 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
+				Response: workspace.ObjectStatus{
+					ObjectID:   988765,
+					ObjectType: workspace.File,
+				},
+			},
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/files/988765",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/files/988765",
+				Response: ObjectACL{
+					ObjectID:   "/files/988765",
+					ObjectType: "file",
+					AccessControlList: []AccessControl{
+						{
+							UserName: TestingUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_READ",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_MANAGE",
+									Inherited:       false,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"workspace_file_path": "/Development/Init",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_READ",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
@@ -964,13 +1048,13 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 }
 
 func TestResourcePermissionsCreate_error(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -988,12 +1072,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			},
 		},
 		Create: true,
-	}.Apply(t)
-	if assert.Error(t, err) {
-		if e, ok := err.(common.APIError); ok {
-			assert.Equal(t, "INVALID_REQUEST", e.ErrorCode)
-		}
-	}
+	}.ExpectError(t, "permission_level CAN_USE is not supported with cluster_id objects")
 }
 
 func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
@@ -1094,7 +1173,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "/jobs/9",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "/jobs/9", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
@@ -1162,7 +1241,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/jobs/get?job_id=123",
+			Resource: "/api/2.1/jobs/get?job_id=123",
 			Response: jobs.Job{
 				CreatorUserName: "creator@example.com",
 			},
@@ -1181,6 +1260,48 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 						PermissionLevel: "IS_OWNER",
 					},
 				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		p := NewPermissionsAPI(ctx, client)
+		err := p.Delete("/jobs/123")
+		assert.NoError(t, err)
+	})
+}
+
+func TestShouldDeleteNonExistentJob(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/permissions/jobs/123",
+			Response: ObjectACL{
+				ObjectID:   "/jobs/123",
+				ObjectType: "job",
+				AccessControlList: []AccessControl{
+					{
+						GroupName: "admins",
+						AllPermissions: []Permission{
+							{
+								PermissionLevel: "CAN_DO_EVERYTHING",
+								Inherited:       true,
+							},
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/jobs/get?job_id=123",
+			Status:   400,
+			Response: apierr.APIError{
+				StatusCode: 400,
+				Message:    "Job 123 does not exist.",
+				ErrorCode:  "INVALID_PARAMETER_VALUE",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -1217,7 +1338,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/123",
+			Resource: "/api/2.0/pipelines/123?",
 			Response: jobs.Job{
 				CreatorUserName: "creator@example.com",
 			},
@@ -1245,10 +1366,6 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 	})
 }
 
-func TestCustomizeDiffNoHostYet(t *testing.T) {
-	assert.Nil(t, ResourcePermissions().CustomizeDiff(context.TODO(), nil, &common.DatabricksClient{}))
-}
-
 func TestPathPermissionsResourceIDFields(t *testing.T) {
 	var m permissionsIDFieldMapping
 	for _, x := range permissionsResourceIDFields() {
@@ -1256,11 +1373,11 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 			m = x
 		}
 	}
-	_, err := m.idRetriever(context.Background(), &common.DatabricksClient{
-		Host:  "localhost",
-		Token: "x",
-	}, "x")
-	assert.EqualError(t, err, "cannot load path x: DatabricksClient is not configured")
+	_, err := m.idRetriever(context.Background(), databricks.Must(databricks.NewWorkspaceClient(
+		(*databricks.Config)(config.NewMockConfig(func(r *http.Request) error {
+			return fmt.Errorf("nope")
+		})))), "x")
+	assert.EqualError(t, err, "cannot load path x: nope")
 }
 
 func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
@@ -1275,7 +1392,7 @@ func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
 	assert.EqualError(t, err, "unknown object type bananas")
 }
 
-func TestAccessControlToAccessControlChange(t *testing.T) {
+func TestEntityAccessControlToAccessControlChange(t *testing.T) {
 	_, res := AccessControl{}.toAccessControlChange()
 	assert.False(t, res)
 }
@@ -1289,7 +1406,7 @@ func TestDeleteMissing(t *testing.T) {
 		{
 			MatchAny: true,
 			Status:   404,
-			Response: common.NotFound("missing"),
+			Response: apierr.NotFound("missing"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := ResourcePermissions()
@@ -1375,7 +1492,319 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
+// when caller does not specify CAN_MANAGE permission during create, it should be explictly added
+func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
+				Response: ObjectACL{
+					ObjectID:   "/sql/queries/id111",
+					ObjectType: "query",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"sql_query_id": "id111",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_RUN",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
+}
+
+// when caller does not specify CAN_MANAGE permission during update, it should be explictly added
+func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
+				Response: ObjectACL{
+					ObjectID:   "/sql/queries/id111",
+					ObjectType: "query",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_RUN",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		InstanceState: map[string]string{
+			"sql_query_id": "id111",
+		},
+		HCL: `
+		sql_query_id = "id111",
+
+		access_control = {
+			user_name = "ben",
+			permission_level = "CAN_RUN",
+			}
+		`,
+		Resource: ResourcePermissions(),
+		Update:   true,
+		ID:       "/sql/queries/id111",
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2FFirst",
+				Response: workspace.ObjectStatus{
+					ObjectID:   123456,
+					ObjectType: "directory",
+				},
+			},
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/directories/123456",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/directories/123456",
+				Response: ObjectACL{
+					ObjectID:   "/directories/123456",
+					ObjectType: "directory",
+					AccessControlList: []AccessControl{
+						{
+							UserName: TestingUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_READ",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_RUN",
+									Inherited:       false,
+								},
+							},
+						},
+						{
+							UserName: TestingAdminUser,
+							AllPermissions: []Permission{
+								{
+									PermissionLevel: "CAN_MANAGE",
+									Inherited:       false,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"directory_path": "/First",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_READ",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+
 	assert.NoError(t, err, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsPasswordUsage(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/authorization/passwords",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							GroupName:       "admins",
+							PermissionLevel: "CAN_USE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/authorization/passwords",
+				Response: ObjectACL{
+					ObjectID:   "/authorization/passwords",
+					ObjectType: "passwords",
+					AccessControlList: []AccessControl{
+						{
+							GroupName:       "admins",
+							PermissionLevel: "CAN_USE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		HCL: `
+		authorization = "passwords"
+		access_control {
+			group_name       = "admins"
+			permission_level = "CAN_USE"
+		}		
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, "admins", firstElem["group_name"])
+	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsRootDirectory(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/permissions/directories/0",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+						{
+							GroupName:       "admins",
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/directories/0",
+				Response: ObjectACL{
+					ObjectID:   "/directories/0",
+					ObjectType: "directory",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+						{
+							GroupName:       "admins",
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		HCL: `
+		directory_id = "0"
+		access_control {
+			user_name        = "ben"
+			permission_level = "CAN_READ"
+		}	
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
 	ac := d.Get("access_control").(*schema.Set)
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)

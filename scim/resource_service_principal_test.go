@@ -3,53 +3,16 @@ package scim
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestAccServicePrincipalOnAzure(t *testing.T) {
-	if cloud, ok := os.LookupEnv("CLOUD_ENV"); !ok || cloud != "azure" {
-		t.Skip("Test will only run with CLOUD_ENV=azure")
-	}
-	t.Parallel()
-	client := common.NewClientFromEnvironment()
-	ctx := context.Background()
-
-	spAPI := NewServicePrincipalsAPI(ctx, client)
-
-	sp, err := spAPI.Create(User{
-		ApplicationID: "00000000-0000-0000-0000-000000000001",
-		Entitlements: entitlements{
-			{
-				Value: "allow-cluster-create",
-			},
-		},
-		DisplayName: "ABC SP",
-		Active:      true,
-	})
-	require.NoError(t, err)
-	defer func() {
-		err := spAPI.Delete(sp.ID)
-		require.NoError(t, err)
-	}()
-
-	err = spAPI.Update(sp.ID, User{
-		ApplicationID: sp.ApplicationID,
-		Entitlements: entitlements{
-			{
-				Value: "allow-instance-pool-create",
-			},
-		},
-		DisplayName: "BCD",
-	})
-	require.NoError(t, err)
-}
 
 func TestResourceServicePrincipalRead(t *testing.T) {
 	qa.ResourceFixture{
@@ -79,6 +42,9 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 		"display_name":         "Example Service Principal",
 		"application_id":       "bcd",
 		"allow_cluster_create": true,
+		"home":                 "/Users/bcd",
+		"repos":                "/Repos/bcd",
+		"acl_principal_id":     "servicePrincipals/bcd",
 	})
 }
 
@@ -107,7 +73,7 @@ func TestResourceServicePrincipalRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -224,7 +190,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 					// application ID is not allowed to be modified by client side on AWS
 
 					Schemas:     []URN{ServicePrincipalSchema},
-					DisplayName: "Changed Name",
+					DisplayName: "Example Service Principal",
 					Active:      true,
 					Entitlements: entitlements{
 						{
@@ -249,7 +215,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 				Response: User{
 					Schemas:       []URN{ServicePrincipalSchema},
 					ApplicationID: "existing-application-id",
-					DisplayName:   "Changed Name",
+					DisplayName:   "Example Service Principal",
 					Active:        true,
 					Entitlements: entitlements{
 						{
@@ -270,15 +236,18 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
-		Update:   true,
-		ID:       "abc",
+		InstanceState: map[string]string{
+			"display_name": "Example Service Principal",
+		},
+		Update: true,
+		ID:     "abc",
 		HCL: `
-		display_name = "Changed Name"
+		display_name = "Example Service Principal"
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"display_name":               "Changed Name",
+		"display_name":               "Example Service Principal",
 		"allow_cluster_create":       false,
 		"allow_instance_pool_create": true,
 	})
@@ -309,8 +278,13 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 					ApplicationID: "existing-application-id",
 
 					Schemas:     []URN{ServicePrincipalSchema},
-					DisplayName: "Changed Name",
-					Active:      true,
+					DisplayName: "Example Service Principal",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					Active: true,
 				},
 			},
 			{
@@ -319,8 +293,13 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 				Response: User{
 					Schemas:       []URN{ServicePrincipalSchema},
 					ApplicationID: "existing-application-id",
-					DisplayName:   "Changed Name",
-					Active:        true,
+					DisplayName:   "Example Service Principal",
+					Entitlements: entitlements{
+						{
+							Value: "allow-cluster-create",
+						},
+					},
+					Active: true,
 				},
 			},
 		},
@@ -333,7 +312,8 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 		},
 		HCL: `
 		application_id = "existing-application-id"
-		display_name = "Changed Name"
+		display_name = "Example Service Principal"
+		allow_cluster_create = true
 		`,
 	}.ApplyNoError(t)
 }
@@ -342,8 +322,11 @@ func TestResourceServicePrincipalUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: qa.HTTPFailures,
 		Resource: ResourceServicePrincipal(),
-		Update:   true,
-		ID:       "abc",
+		InstanceState: map[string]string{
+			"display_name": "Changed Name",
+		},
+		Update: true,
+		ID:     "abc",
 		HCL: `
 		display_name = "Changed Name"
 		allow_cluster_create = false
@@ -372,8 +355,11 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 			qa.HTTPFailures[0],
 		},
 		Resource: ResourceServicePrincipal(),
-		Update:   true,
-		ID:       "abc",
+		InstanceState: map[string]string{
+			"display_name": "Changed Name",
+		},
+		Update: true,
+		ID:     "abc",
 		HCL: `
 		display_name = "Changed Name"
 		allow_cluster_create = false
@@ -406,6 +392,156 @@ func TestResourceServicePrincipalDelete_Error(t *testing.T) {
 	}.ExpectError(t, "I'm a teapot")
 }
 
+func TestResourceServicePrincipalDelete_NoErrorEmtpyParams(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+	}.ApplyNoError(t)
+}
+
+func TestResourceServicePrinicpalforce_delete_reposError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			application_id = "abc"
+			force_delete_repos = true
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+}
+
+func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Repos/abc) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			application_id = "abc"
+			force_delete_repos = true	
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "force_delete_repos: Path (/Repos/abc) doesn't exist.")
+}
+
+func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			application_id = "abc"
+			force_delete_home_dir = true
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+}
+
+func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Users/abc) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceServicePrincipal(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+		 	application_id = "abc"
+			force_delete_home_dir = true	
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
+}
+
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {
 	d := ResourceUser().TestResourceData()
 	d.Set("force", true)
@@ -420,9 +556,9 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "cannot find service principal",
 			},
 		},
@@ -443,7 +579,7 @@ func TestCreateForceOverwriteCannotListAccServicePrincipals(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
 			Response: UserList{
 				TotalResults: 0,
 			},
@@ -465,7 +601,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
 			Response: UserList{
 				Resources: []User{
 					{

@@ -4,9 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
@@ -45,9 +48,10 @@ func (ic *importContext) allServicesAndListing() (string, string) {
 }
 
 func (ic *importContext) interactivePrompts() {
-	for ic.Client.Authenticate(ic.Context) != nil {
-		ic.Client.Host = askFor("🔑 Databricks Workspace URL:")
-		ic.Client.Token = askFor("🔑 Databricks Workspace PAT:")
+	req, _ := http.NewRequest("GET", "/", nil)
+	for ic.Client.DatabricksClient.Config.Authenticate(req) != nil {
+		ic.Client.DatabricksClient.Config.Host = askFor("🔑 Databricks Workspace URL:")
+		ic.Client.DatabricksClient.Config.Token = askFor("🔑 Databricks Workspace PAT:")
 	}
 	ic.match = askFor("🔍 Match entity names (optional):")
 	listing := ""
@@ -72,8 +76,13 @@ func (ic *importContext) interactivePrompts() {
 // Run import according to flags
 func Run(args ...string) error {
 	log.SetOutput(&logLevel)
-	c := common.NewClientFromEnvironment()
-	ic := newImportContext(c)
+	client, err := client.New(&config.Config{})
+	if err != nil {
+		return err
+	}
+	ic := newImportContext(&common.DatabricksClient{
+		DatabricksClient: client,
+	})
 
 	flags := flag.NewFlagSet("exporter", flag.ExitOnError)
 	flags.StringVar(&ic.Module, "module", "",
@@ -87,6 +96,9 @@ func Run(args ...string) error {
 	}
 	var skipInteractive bool
 	flags.BoolVar(&skipInteractive, "skip-interactive", false, "Skip interactive mode")
+	flags.BoolVar(&ic.includeUserDomains, "includeUserDomains", false, "Include domain portion in `databricks_user` resource name")
+	flags.BoolVar(&ic.importAllUsers, "importAllUsers", false,
+		"Import all users and service principals, even if they aren't referenced in any resource")
 	flags.StringVar(&ic.Directory, "directory", cwd,
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,

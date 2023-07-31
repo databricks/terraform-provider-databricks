@@ -61,7 +61,7 @@ func TestQueryCreate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo", d.Id())
 	assert.Equal(t, "xyz", d.Get("data_source_id"))
@@ -90,7 +90,7 @@ func TestQueryCreateWithMultipleSchedules(t *testing.T) {
 				}
 			}
 		`,
-	}.ExpectError(t, "invalid config supplied. [schedule.#.continuous] Conflicting configuration arguments. [schedule.#.daily] Conflicting configuration arguments")
+	}.ExpectError(t, "invalid config supplied. [schedule.#.continuous] Conflicting configuration arguments. [schedule.#.daily] Conflicting configuration arguments. [schedule] Argument is deprecated")
 }
 
 func TestQueryCreateWithContinuousSchedule(t *testing.T) {
@@ -150,7 +150,7 @@ func TestQueryCreateWithContinuousSchedule(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, intervalSeconds, d.Get("schedule.0.continuous.0.interval_seconds"))
 	assert.Equal(t, untilDate, d.Get("schedule.0.continuous.0.until_date"))
 }
@@ -215,7 +215,7 @@ func TestQueryCreateWithDailySchedule(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, intervalDays, d.Get("schedule.0.daily.0.interval_days"))
 	assert.Equal(t, timeOfDay, d.Get("schedule.0.daily.0.time_of_day"))
 	assert.Equal(t, untilDate, d.Get("schedule.0.daily.0.until_date"))
@@ -283,7 +283,7 @@ func TestQueryCreateWithWeeklySchedule(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, intervalWeeks, d.Get("schedule.0.weekly.0.interval_weeks"))
 	assert.Equal(t, dayOfWeek, d.Get("schedule.0.weekly.0.day_of_week"))
 	assert.Equal(t, timeOfDay, d.Get("schedule.0.weekly.0.time_of_day"))
@@ -341,7 +341,7 @@ func TestQueryCreateDeletesDefaultVisualization(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 }
 
 func TestQueryRead(t *testing.T) {
@@ -364,7 +364,7 @@ func TestQueryRead(t *testing.T) {
 		ID:       "foo",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo", d.Id())
 }
@@ -392,7 +392,7 @@ func TestQueryReadWithSchedule(t *testing.T) {
 		ID:       "foo",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 12345, d.Get("schedule.0.continuous.0.interval_seconds"))
 }
 
@@ -433,7 +433,7 @@ func TestQueryUpdate(t *testing.T) {
 		},
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo", d.Id())
 	assert.Equal(t, "xyz", d.Get("data_source_id"))
@@ -522,18 +522,25 @@ func TestQueryUpdateWithParams(t *testing.T) {
 					},
 				},
 				api.QueryParameterDateRange{
-					QueryParameter: api.QueryParameter{
-						Name: "8",
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: api.QueryParameter{
+							Name: "8",
+						},
+						Value: map[string]string{"start": "2022-11-20", "end": "2022-11-22"},
 					},
 				},
 				api.QueryParameterDateTimeRange{
-					QueryParameter: api.QueryParameter{
-						Name: "9",
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: api.QueryParameter{
+							Name: "9",
+						},
 					},
 				},
 				api.QueryParameterDateTimeSecRange{
-					QueryParameter: api.QueryParameter{
-						Name: "10",
+					QueryParameterRangeBase: api.QueryParameterRangeBase{
+						QueryParameter: api.QueryParameter{
+							Name: "10",
+						},
 					},
 				},
 			},
@@ -646,7 +653,10 @@ func TestQueryUpdateWithParams(t *testing.T) {
 			parameter {
 				name = "8"
 				date_range {
-					value = ""
+					range {
+						start = "2022-11-20"
+						end = "2022-11-22"
+					}
 				}
 			}
 
@@ -666,7 +676,7 @@ func TestQueryUpdateWithParams(t *testing.T) {
 		`,
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "foo", d.Id())
 	assert.Equal(t, "xyz", d.Get("data_source_id"))
@@ -688,7 +698,7 @@ func TestQueryDelete(t *testing.T) {
 		ID:       "foo",
 	}.Apply(t)
 
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "foo", d.Id(), "Resource ID should not be empty")
 }
 

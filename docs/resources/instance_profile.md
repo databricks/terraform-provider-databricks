@@ -1,5 +1,5 @@
 ---
-subcategory: "AWS"
+subcategory: "Deployment"
 ---
 # databricks_instance_profile Resource
 
@@ -109,13 +109,53 @@ resource "databricks_group_instance_profile" "all" {
 }
 ```
 
+## Usage with Databricks SQL serverless
+
+When the instance profile ARN and its associated IAM role ARN don't match and the instance profile is intended for use with Databricks SQL serverless, the `iam_role_arn` parameter can be specified.
+
+```hcl
+data "aws_iam_policy_document" "sql_serverless_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::790110701330:role/serverless-customer-resource-role"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalID"
+      values = [
+        "databricks-serverless-<YOUR_WORKSPACE_ID1>",
+        "databricks-serverless-<YOUR_WORKSPACE_ID2>"
+      ]
+    }
+  }
+}
+
+resource "aws_iam_role" "this" {
+  name               = "my-databricks-sql-serverless-role"
+  assume_role_policy = data.aws_iam_policy_document.sql_serverless_assume_role.json
+}
+
+resource "aws_iam_instance_profile" "this" {
+  name = "my-databricks-sql-serverless-instance-profile"
+  role = aws_iam_role.this.name
+}
+
+resource "databricks_instance_profile" "this" {
+  instance_profile_arn = aws_iam_instance_profile.this.arn
+  iam_role_arn         = aws_iam_role.this.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `instance_profile_arn` - (Required) `ARN` attribute of `aws_iam_instance_profile` output, the EC2 instance profile association to AWS IAM role. This ARN would be validated upon resource creation.
+* `iam_role_arn` - (Optional) The AWS IAM role ARN of the role associated with the instance profile. It must have the form `arn:aws:iam::<account-id>:role/<name>`. This field is required if your role name and instance profile name do not match and you want to use the instance profile with Databricks SQL Serverless.
 * `is_meta_instance_profile` - (Optional) Whether the instance profile is a meta instance profile. Used only in [IAM credential passthrough](https://docs.databricks.com/security/credential-passthrough/iam-passthrough.html).
-* `skip_validation` - (Optional) **For advanced usage only.** If validation fails with an error message that does not indicate an IAM related permission issue, (e.g. “Your requested instance type is not supported in your requested availability zone”), you can pass this flag to skip the validation and forcibly add the instance profile.
+* `skip_validation` - (Optional) **For advanced usage only.** If validation fails with an error message that does not indicate an IAM related permission issue, (e.g. "Your requested instance type is not supported in your requested availability zone"), you can pass this flag to skip the validation and forcibly add the instance profile.
 
 ## Attribute Reference
 
@@ -128,5 +168,5 @@ In addition to all arguments above, the following attributes are exported:
 The resource instance profile can be imported using the ARN of it
 
 ```bash
-$ terraform import databricks_instance_profile.this <instance-profile-arn>
+terraform import databricks_instance_profile.this <instance-profile-arn>
 ```

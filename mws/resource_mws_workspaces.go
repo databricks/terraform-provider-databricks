@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -11,9 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -50,25 +53,19 @@ type GCP struct {
 	ProjectID string `json:"project_id"`
 }
 
-type CloudResourceBucket struct {
+type CloudResourceContainer struct {
 	GCP *GCP `json:"gcp"`
 }
 
 type GCPManagedNetworkConfig struct {
-	SubnetCIDR               string `json:"subnet_cidr"`
-	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range"`
-	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range"`
+	SubnetCIDR               string `json:"subnet_cidr" tf:"force_new"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range" tf:"force_new"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range" tf:"force_new"`
 }
 
-type GCPCommonNetworkConfig struct {
-	GKEConnectivityType     string `json:"gke_connectivity_type"`
-	GKEClusterMasterIPRange string `json:"gke_cluster_master_ip_range"`
-}
-
-type GCPNetwork struct {
-	NetworkID               string                   `json:"network_id,omitempty"`
-	GCPManagedNetworkConfig *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty"`
-	GCPCommonNetworkConfig  *GCPCommonNetworkConfig  `json:"gcp_common_network_config"`
+type GkeConfig struct {
+	ConnectivityType string `json:"connectivity_type" tf:"force_new"`
+	MasterIPRange    string `json:"master_ip_range" tf:"force_new"`
 }
 
 type externalCustomerInfo struct {
@@ -79,29 +76,30 @@ type externalCustomerInfo struct {
 
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
-	AccountID                           string                `json:"account_id"`
-	WorkspaceName                       string                `json:"workspace_name"`
-	DeploymentName                      string                `json:"deployment_name,omitempty"`
-	AwsRegion                           string                `json:"aws_region,omitempty"`               // required for AWS, not allowed for GCP
-	CredentialsID                       string                `json:"credentials_id,omitempty"`           // required for AWS, not allowed for GCP
-	CustomerManagedKeyID                string                `json:"customer_managed_key_id,omitempty"`  // just for compatibility, will be removed
-	StorageConfigurationID              string                `json:"storage_configuration_id,omitempty"` // required for AWS, not allowed for GCP
-	ManagedServicesCustomerManagedKeyID string                `json:"managed_services_customer_managed_key_id,omitempty"`
-	StorageCustomerManagedKeyID         string                `json:"storage_customer_managed_key_id,omitempty"`
-	PricingTier                         string                `json:"pricing_tier,omitempty" tf:"computed"`
-	PrivateAccessSettingsID             string                `json:"private_access_settings_id,omitempty"`
-	NetworkID                           string                `json:"network_id,omitempty"`
-	IsNoPublicIPEnabled                 bool                  `json:"is_no_public_ip_enabled" tf:"optional,default:true"`
-	WorkspaceID                         int64                 `json:"workspace_id,omitempty" tf:"computed"`
-	WorkspaceURL                        string                `json:"workspace_url,omitempty" tf:"computed"`
-	WorkspaceStatus                     string                `json:"workspace_status,omitempty" tf:"computed"`
-	WorkspaceStatusMessage              string                `json:"workspace_status_message,omitempty" tf:"computed"`
-	CreationTime                        int64                 `json:"creation_time,omitempty" tf:"computed"`
-	ExternalCustomerInfo                *externalCustomerInfo `json:"external_customer_info,omitempty"`
-	CloudResourceBucket                 *CloudResourceBucket  `json:"cloud_resource_bucket,omitempty"`
-	Network                             *GCPNetwork           `json:"network,omitempty"`
-	Cloud                               string                `json:"cloud,omitempty" tf:"computed"`
-	Location                            string                `json:"location,omitempty"`
+	AccountID                           string                   `json:"account_id"`
+	WorkspaceName                       string                   `json:"workspace_name"`
+	DeploymentName                      string                   `json:"deployment_name,omitempty"`
+	AwsRegion                           string                   `json:"aws_region,omitempty"`               // required for AWS, not allowed for GCP
+	CredentialsID                       string                   `json:"credentials_id,omitempty"`           // required for AWS, not allowed for GCP
+	CustomerManagedKeyID                string                   `json:"customer_managed_key_id,omitempty"`  // just for compatibility, will be removed
+	StorageConfigurationID              string                   `json:"storage_configuration_id,omitempty"` // required for AWS, not allowed for GCP
+	ManagedServicesCustomerManagedKeyID string                   `json:"managed_services_customer_managed_key_id,omitempty"`
+	StorageCustomerManagedKeyID         string                   `json:"storage_customer_managed_key_id,omitempty"`
+	PricingTier                         string                   `json:"pricing_tier,omitempty" tf:"computed"`
+	PrivateAccessSettingsID             string                   `json:"private_access_settings_id,omitempty"`
+	NetworkID                           string                   `json:"network_id,omitempty" tf:"suppress_diff"`
+	IsNoPublicIPEnabled                 bool                     `json:"is_no_public_ip_enabled" tf:"optional,default:true"`
+	WorkspaceID                         int64                    `json:"workspace_id,omitempty" tf:"computed"`
+	WorkspaceURL                        string                   `json:"workspace_url,omitempty" tf:"computed"`
+	WorkspaceStatus                     string                   `json:"workspace_status,omitempty" tf:"computed"`
+	WorkspaceStatusMessage              string                   `json:"workspace_status_message,omitempty" tf:"computed"`
+	CreationTime                        int64                    `json:"creation_time,omitempty" tf:"computed"`
+	ExternalCustomerInfo                *externalCustomerInfo    `json:"external_customer_info,omitempty"`
+	CloudResourceBucket                 *CloudResourceContainer  `json:"cloud_resource_container,omitempty"`
+	GCPManagedNetworkConfig             *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty" tf:"suppress_diff"`
+	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
+	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
+	Location                            string                   `json:"location,omitempty"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -115,14 +113,23 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 		return json.Marshal(aWorkspace(*w))
 	}
 	workspaceCreationRequest := map[string]any{
-		"account_id":            w.AccountID,
-		"cloud":                 w.Cloud,
-		"cloud_resource_bucket": w.CloudResourceBucket,
-		"location":              w.Location,
-		"workspace_name":        w.WorkspaceName,
+		"account_id":               w.AccountID,
+		"cloud":                    w.Cloud,
+		"cloud_resource_container": w.CloudResourceBucket,
+		"location":                 w.Location,
+		"workspace_name":           w.WorkspaceName,
 	}
-	if w.Network != nil {
-		workspaceCreationRequest["network"] = w.Network
+	if w.NetworkID != "" {
+		workspaceCreationRequest["network_id"] = w.NetworkID
+	}
+	if w.PrivateAccessSettingsID != "" {
+		workspaceCreationRequest["private_access_settings_id"] = w.PrivateAccessSettingsID
+	}
+	if w.GkeConfig != nil {
+		workspaceCreationRequest["gke_config"] = w.GkeConfig
+	}
+	if w.GCPManagedNetworkConfig != nil {
+		workspaceCreationRequest["gcp_managed_network_config"] = w.GCPManagedNetworkConfig
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -156,7 +163,7 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 // generateWorkspaceHostname computes the hostname for the specified workspace,
 // given the account console hostname.
 func generateWorkspaceHostname(client *common.DatabricksClient, ws Workspace) string {
-	u, err := url.Parse(client.Host)
+	u, err := url.Parse(client.Config.Host)
 	if err != nil {
 		// Fallback.
 		log.Printf("[WARN] Unable to parse URL from client host: %v", err)
@@ -188,7 +195,8 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	// make a request to Tokens API, just to verify there are no errors
 	var response map[string]any
 	err = wsClient.Get(ctx, "/token/list", nil, &response)
-	if apiError, ok := err.(common.APIError); ok {
+	var apiError *apierr.APIError
+	if errors.As(err, &apiError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
 			ws.WorkspaceURL, apiError)
 		log.Printf("[INFO] %s", err)
@@ -243,24 +251,36 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
-	request := map[string]string{
-		"credentials_id": ws.CredentialsID,
-		// The ID of the workspace's network configuration object. Used only if you already use a customer-managed VPC.
-		// This change is supported only if you specified a network configuration ID when the workspace was created.
-		// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
-		// is available for updating both failed and running workspaces. Note: You cannot use a network configuration
-		// update in this API to add support for PrivateLink (in Public Preview). To add PrivateLink to an existing
-		// workspace, contact your Databricks representative.
-		"network_id": ws.NetworkID,
+	request := map[string]string{}
+
+	if ws.CredentialsID != "" {
+		request["credentials_id"] = ws.CredentialsID
+	}
+
+	// The ID of the workspace's network configuration object. Used only if you already use a customer-managed VPC.
+	// This change is supported only if you specified a network configuration ID when the workspace was created.
+	// In other words, you cannot switch from a Databricks-managed VPC to a customer-managed VPC. This parameter
+	// is available for updating both failed and running workspaces.
+	if ws.NetworkID != "" {
+		request["network_id"] = ws.NetworkID
+	}
+
+	if ws.PrivateAccessSettingsID != "" {
+		request["private_access_settings_id"] = ws.PrivateAccessSettingsID
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
 	}
+
+	if len(request) == 0 {
+		return nil
+	}
+
 	err := a.client.Patch(a.context, workspacesAPIPath, request)
 	if err != nil {
 		return err
@@ -291,7 +311,7 @@ func (a WorkspacesAPI) Delete(mwsAcctID, workspaceID string) error {
 	}
 	return resource.RetryContext(a.context, 15*time.Minute, func() *resource.RetryError {
 		workspace, err := a.Read(mwsAcctID, workspaceID)
-		if common.IsMissing(err) {
+		if apierr.IsMissing(err) {
 			log.Printf("[INFO] Workspace %s/%s is removed.", mwsAcctID, workspaceID)
 			return nil
 		}
@@ -361,7 +381,7 @@ func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 	}
 	tokensAPI := tokens.NewTokensAPI(a.context, client)
 	_, err = tokensAPI.Read(wsToken.Token.TokenID)
-	if common.IsMissing(err) {
+	if apierr.IsMissing(err) {
 		return CreateTokenIfNeeded(a, workspaceSchema, d)
 	}
 	if err != nil {
@@ -449,6 +469,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old != ""
 			}
+
 			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
 			s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
 			s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}
@@ -477,7 +498,14 @@ func ResourceMwsWorkspaces() *schema.Resource {
 	}
 	return common.Resource{
 		Schema:        workspaceSchema,
-		SchemaVersion: 2,
+		SchemaVersion: 3,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 2,
+				Type:    workspaceSchemaV2(),
+				Upgrade: workspaceMigrateV2,
+			},
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
@@ -532,9 +560,11 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				workspace.CustomerManagedKeyID = ""
 			}
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
-			err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
-			if err != nil {
-				return err
+			if d.HasChangeExcept("token") {
+				err := workspacesAPI.UpdateRunning(workspace, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return err
+				}
 			}
 			return UpdateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
@@ -545,10 +575,274 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			}
 			return NewWorkspacesAPI(ctx, c).Delete(accountID, workspaceID)
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			old, new := d.GetChange("private_access_settings_id")
+			if old != "" && new == "" {
+				return fmt.Errorf("cannot remove private access setting from workspace")
+			}
+			return nil
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
 			Read:   schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
 	}.ToResource()
+}
+
+func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	newState := map[string]any{}
+	for k, v := range rawState {
+		switch k {
+		case "cloud_resource_bucket":
+			newState["cloud_resource_container"] = v
+			log.Printf("[INFO] cloud_resource_bucket is renamed to cloud_resource_container")
+		case "network":
+			block, ok := rawState["network"].([]any)
+			if !ok {
+				log.Printf("[ERROR] how can network not be a single-element list?")
+				continue
+			}
+			if len(block) == 0 {
+				log.Printf("[ERROR] network block is empty")
+				continue
+			}
+			oldNetwork, ok := block[0].(map[string]any)
+			if !ok {
+				log.Printf("[ERROR] how can network not be a map?..")
+				continue
+			}
+			networkId, ok := oldNetwork["network_id"]
+			if ok {
+				newState["network_id"] = networkId
+			}
+			unsafeCommonNetworkConfig, ok := oldNetwork["gcp_common_network_config"]
+			if ok {
+				blocks, ok := unsafeCommonNetworkConfig.([]any)
+				if ok {
+					old, ok := blocks[0].(map[string]any)
+					if ok {
+						newState["gke_config"] = []any{
+							map[string]any{
+								"master_ip_range":   old["gke_cluster_master_ip_range"],
+								"connectivity_type": old["gke_connectivity_type"],
+							},
+						}
+						log.Printf("[INFO] moved network.gcp_common_network_config to gke_config")
+					}
+				}
+			}
+			managedNetworkConfig, ok := oldNetwork["gcp_managed_network_config"]
+			if ok {
+				newState["gcp_managed_network_config"] = managedNetworkConfig
+			}
+			log.Printf("[INFO] network fields are moved to the top level")
+		default:
+			newState[k] = v
+		}
+	}
+	return newState, nil
+}
+
+func workspaceSchemaV2() cty.Type {
+	return (&schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"account_id": {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+			},
+			"aws_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"cloud": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"creation_time": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"credentials_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"customer_managed_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"deployment_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"is_no_public_ip_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"location": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"managed_services_customer_managed_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"network_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"pricing_tier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"private_access_settings_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_configuration_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_customer_managed_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"workspace_id": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"workspace_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"workspace_status": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"workspace_status_message": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"workspace_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"cloud_resource_bucket": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"gcp": {
+							Type: schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"project_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"external_customer_info": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authoritative_user_email": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"authoritative_user_full_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"customer_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"network": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"network_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"gcp_common_network_config": {
+							Type: schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"gke_cluster_master_ip_range": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"gke_connectivity_type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"gcp_managed_network_config": {
+							Type: schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"gke_cluster_pod_ip_range": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"gke_cluster_service_ip_range": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"subnet_cidr": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"token": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"comment": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"lifetime_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"token_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"token_value": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Computed:  true,
+							Sensitive: true,
+						},
+					},
+				},
+			},
+		},
+	}).CoreConfigSchema().ImpliedType()
 }

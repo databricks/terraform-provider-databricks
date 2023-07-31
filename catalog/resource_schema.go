@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,6 +20,7 @@ func NewSchemasAPI(ctx context.Context, m any) SchemasAPI {
 type SchemaInfo struct {
 	Name        string            `json:"name" tf:"force_new"`
 	CatalogName string            `json:"catalog_name"`
+	StorageRoot string            `json:"storage_root,omitempty" tf:"force_new"`
 	Comment     string            `json:"comment,omitempty"`
 	Properties  map[string]string `json:"properties,omitempty"`
 	Owner       string            `json:"owner,omitempty" tf:"computed"`
@@ -28,13 +30,6 @@ type SchemaInfo struct {
 
 type Schemas struct {
 	Schemas []SchemaInfo `json:"schemas"`
-}
-
-func (a SchemasAPI) listByCatalog(catalogName string) (schemas Schemas, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/schemas", map[string]string{
-		"catalog_name": catalogName,
-	}, &schemas)
-	return
 }
 
 func (a SchemasAPI) createSchema(si *SchemaInfo) error {
@@ -50,10 +45,28 @@ func (a SchemasAPI) deleteSchema(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/schemas/"+name, nil)
 }
 
+func (a SchemasAPI) forceDeleteSchema(name string) error {
+	tablesAPI := NewTablesAPI(a.context, a.client)
+	tables, err := tablesAPI.listTables(strings.Split(name, ".")[0], strings.Split(name, ".")[1])
+	if err != nil {
+		return err
+	}
+	for _, v := range tables.Tables {
+		tablesAPI.deleteTable(v.FullName())
+	}
+	return a.client.Delete(a.context, "/unity-catalog/schemas/"+name, nil)
+}
+
 func ResourceSchema() *schema.Resource {
 	s := common.StructToSchema(SchemaInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			delete(m, "full_name")
+			m["force_destroy"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			}
+			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/schemas", []string{"owner", "comment", "properties"})
@@ -77,6 +90,10 @@ func ResourceSchema() *schema.Resource {
 		},
 		Update: update,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			force := d.Get("force_destroy").(bool)
+			if force {
+				return NewSchemasAPI(ctx, c).forceDeleteSchema(d.Id())
+			}
 			return NewSchemasAPI(ctx, c).deleteSchema(d.Id())
 		},
 	}.ToResource()

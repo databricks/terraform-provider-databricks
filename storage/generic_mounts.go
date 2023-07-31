@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -107,8 +106,8 @@ func getContainerDefaults(d *schema.ResourceData, allowed_schemas []string, suff
 }
 
 func getTenantID(client *common.DatabricksClient) (string, error) {
-	if client.AzureTenantID != "" {
-		return client.AzureTenantID, nil
+	if client.Config.AzureTenantID != "" {
+		return client.Config.AzureTenantID, nil
 	}
 	v, err := client.GetAzureJwtProperty("tid")
 	if err != nil {
@@ -170,7 +169,11 @@ func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 
 // Config returns mount configurations
 func (m *AzureADLSGen2MountGeneric) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
+	env, err := client.Config.GetAzureEnvironment()
+	if err != nil {
+		panic(err) // TODO: change interface
+	}
+	aadEndpoint := env.ActiveDirectoryEndpoint
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
@@ -207,14 +210,14 @@ func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 	rid := d.Get("resource_id").(string)
 	if m.StorageResource == "" {
 		if rid != "" {
-			res, err := azure.ParseResourceID(rid)
+			res, err := parseAzureResourceID(rid)
 			if err != nil {
 				return err
 			}
-			if res.ResourceType != "accounts" || res.Provider != "Microsoft.DataLakeStore" {
+			if res.resourceType != "accounts" || res.provider != "Microsoft.DataLakeStore" {
 				return fmt.Errorf("incorrect resource type or provider in resource_id: %s", rid)
 			}
-			m.StorageResource = res.ResourceName
+			m.StorageResource = res.resourceName
 		} else {
 			return fmt.Errorf("storage_resource_name is empty, and resource_id or uri aren't specified")
 		}
@@ -235,7 +238,11 @@ func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 
 // Config ...
 func (m *AzureADLSGen1MountGeneric) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.AzureEnvironment.ActiveDirectoryEndpoint
+	env, err := client.Config.GetAzureEnvironment()
+	if err != nil {
+		panic(err) // TODO: change interface
+	}
+	aadEndpoint := env.ActiveDirectoryEndpoint
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 
@@ -295,4 +302,27 @@ func (m *AzureBlobMountGeneric) Config(client *common.DatabricksClient) map[stri
 	return map[string]string{
 		confKey: fmt.Sprintf("{{secrets/%s/%s}}", m.SecretScope, m.SecretKey),
 	}
+}
+
+type resourceDetails struct {
+	provider     string
+	resourceType string
+	resourceName string
+}
+
+var azResRE = regexp.MustCompile(`(?i)subscriptions/[^/]+/resourceGroups/[^/]+/providers/([^/]+?)/([^/]+?)/(.+)`)
+
+// simplified parsing of azure resource IDs
+// See https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions-resource?tabs=json#resourceid
+func parseAzureResourceID(resourceID string) (*resourceDetails, error) {
+	m := azResRE.FindStringSubmatch(resourceID)
+	if len(m) == 0 {
+		return nil, fmt.Errorf("invalid azure resource id: %s", resourceID)
+	}
+	v := strings.Split(m[3], "/")
+	return &resourceDetails{
+		provider:     m[1],
+		resourceType: m[2],
+		resourceName: v[len(v)-1],
+	}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -38,7 +39,7 @@ func TestResourceGroupCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -66,12 +67,13 @@ func TestResourceGroupCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, "Data Scientists", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
+	assert.Equal(t, "groups/Data Scientists", d.Get("acl_principal_id"))
 }
 
 func TestResourceGroupCreate_Error(t *testing.T) {
@@ -80,7 +82,7 @@ func TestResourceGroupCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/preview/scim/v2/Groups",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -100,7 +102,7 @@ func TestResourceGroupRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -123,7 +125,7 @@ func TestResourceGroupRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -136,7 +138,7 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
 					DisplayName: "Data Scientists",
@@ -148,7 +150,7 @@ func TestResourceGroupRead_NoEntitlements(t *testing.T) {
 		Read:     true,
 		ID:       "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
@@ -161,8 +163,8 @@ func TestResourceGroupRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -181,8 +183,8 @@ func TestResourceGroupRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -200,7 +202,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,entitlements,groups,members,externalId",
 				Response: Group{
 					Members: []ComplexValue{
 						{
@@ -255,7 +257,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					DisplayName: "Data Ninjas",
 					Entitlements: entitlements{
@@ -284,7 +286,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		Update:      true,
 		ID:          "abc",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 	assert.Equal(t, "Data Ninjas", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
@@ -297,8 +299,8 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,entitlements,groups,members,externalId",
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -336,7 +338,7 @@ func TestResourceGroupDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -355,7 +357,7 @@ func TestCreateForceOverwriteCannotListGroups(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIError{
 				Message: "cannot find group",
 			},
 		},
@@ -386,7 +388,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups/123",
+			Resource: "/api/2.0/preview/scim/v2/Groups/123?attributes=displayName,entitlements,groups,members,externalId",
 			Response: Group{
 				ID: "123",
 			},

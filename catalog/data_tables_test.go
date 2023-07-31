@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
@@ -14,14 +15,16 @@ func TestTablesData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
-				Response: Tables{
-					Tables: []TableInfo{
+				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
+				Response: catalog.ListTablesResponse{
+					Tables: []catalog.TableInfo{
 						{
-							Name: "a.b.c",
+							FullName: "a.b.c",
+							Name:     "c",
 						},
 						{
-							Name: "a.b.d",
+							FullName: "a.b.d",
+							Name:     "d",
 						},
 					},
 				},
@@ -44,14 +47,16 @@ func TestTablesDataIssue1264(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
-				Response: Tables{
-					Tables: []TableInfo{
+				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
+				Response: catalog.ListTablesResponse{
+					Tables: []catalog.TableInfo{
 						{
-							Name: "a",
+							Name:     "a",
+							FullName: "a.b.a",
 						},
 						{
-							Name: "b",
+							Name:     "b",
+							FullName: "a.b.b",
 						},
 					},
 				},
@@ -68,20 +73,22 @@ func TestTablesDataIssue1264(t *testing.T) {
 	require.NoError(t, err)
 	s := d.Get("ids").(*schema.Set)
 	assert.Equal(t, 2, s.Len())
-	assert.True(t, s.Contains("..a"))
+	assert.True(t, s.Contains("a.b.a"))
 
 	d, err = qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=a&schema_name=b",
-				Response: Tables{
-					Tables: []TableInfo{
+				Resource: "/api/2.1/unity-catalog/tables?catalog_name=a&schema_name=b",
+				Response: catalog.ListTablesResponse{
+					Tables: []catalog.TableInfo{
 						{
-							Name: "c",
+							Name:     "c",
+							FullName: "a.b.c",
 						},
 						{
-							Name: "d",
+							Name:     "d",
+							FullName: "a.b.d",
 						},
 					},
 				},
@@ -98,7 +105,7 @@ func TestTablesDataIssue1264(t *testing.T) {
 	require.NoError(t, err)
 	s = d.Get("ids").(*schema.Set)
 	assert.Equal(t, 2, s.Len())
-	assert.True(t, s.Contains("..c"))
+	assert.True(t, s.Contains("a.b.c"))
 }
 
 func TestTablesData_Error(t *testing.T) {

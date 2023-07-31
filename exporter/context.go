@@ -16,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/scim"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -47,26 +48,30 @@ import (
 */
 
 type importContext struct {
-	Module            string
-	Context           context.Context
-	Client            *common.DatabricksClient
-	State             stateApproximation
-	Importables       map[string]importable
-	Resources         map[string]*schema.Resource
-	Scope             importedResources
-	Files             map[string]*hclwrite.File
-	Directory         string
-	importing         map[string]bool
-	nameFixes         []regexFix
-	hclFixes          []regexFix
-	allUsers          []scim.User
-	allGroups         []scim.Group
-	mountMap          map[string]mount
-	variables         map[string]string
-	testEmits         map[string]bool
-	sqlDatasources    map[string]string
-	sqlVisualizations map[string]string
+	Module              string
+	Context             context.Context
+	Client              *common.DatabricksClient
+	State               stateApproximation
+	Importables         map[string]importable
+	Resources           map[string]*schema.Resource
+	Scope               importedResources
+	Files               map[string]*hclwrite.File
+	Directory           string
+	importing           map[string]bool
+	nameFixes           []regexFix
+	hclFixes            []regexFix
+	allUsers            []scim.User
+	allGroups           []scim.Group
+	mountMap            map[string]mount
+	variables           map[string]string
+	testEmits           map[string]bool
+	sqlDatasources      map[string]string
+	workspaceConfKeys   map[string]any
+	allDirectories      []workspace.ObjectStatus
+	allWorkspaceObjects []workspace.ObjectStatus
 
+	includeUserDomains  bool
+	importAllUsers      bool
 	debug               bool
 	mounts              bool
 	services            string
@@ -76,6 +81,7 @@ type importContext struct {
 	generateDeclaration bool
 	meAdmin             bool
 	prefix              string
+	accountLevel        bool
 }
 
 type mount struct {
@@ -87,18 +93,32 @@ type mount struct {
 var nameFixes = []regexFix{
 	{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
 		`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
-	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
+	//	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
 	{regexp.MustCompile(`@.*$`), ""},
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
-	{regexp.MustCompile(`\W+`), ""},
+	{regexp.MustCompile(`\W+`), "_"},
 	{regexp.MustCompile(`[_]{2,}`), "_"},
+}
+
+// less aggressive name normalization
+var simpleNameFixes = []regexFix{
+	{nameNormalizationRegex, "_"},
+}
+
+var workspaceConfKeys = map[string]any{
+	"enableIpAccessLists":                              false,
+	"enableTokensConfig":                               false,
+	"maxTokenLifetimeDays":                             0,
+	"maxUserInactiveDays":                              0,
+	"storeInteractiveNotebookResultsInCustomerAccount": false,
+	"enableDeprecatedClusterNamedInitScripts":          false,
+	"enableDeprecatedGlobalInitScripts":                false,
 }
 
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
 	p.SetMeta(c)
-	c.Provider = p
 	ctx := context.WithValue(context.Background(), common.Provider, p)
 	ctx = context.WithValue(ctx, common.ResourceName, "exporter")
 	c.WithCommandExecutor(func(
@@ -118,8 +138,11 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
-		allUsers:  []scim.User{},
-		variables: map[string]string{},
+		allUsers:            []scim.User{},
+		variables:           map[string]string{},
+		allDirectories:      []workspace.ObjectStatus{},
+		allWorkspaceObjects: []workspace.ObjectStatus{},
+		workspaceConfKeys:   workspaceConfKeys,
 	}
 }
 
@@ -139,17 +162,27 @@ func (ic *importContext) Run() error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
-	usersAPI := scim.NewUsersAPI(ic.Context, ic.Client)
-	me, err := usersAPI.Me()
+	w, err := ic.Client.WorkspaceClient()
 	if err != nil {
 		return err
 	}
-	for _, g := range me.Groups {
-		if g.Display == "admins" {
-			ic.meAdmin = true
-			break
+
+	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	if ic.accountLevel {
+		ic.meAdmin = true
+	} else {
+		me, err := w.CurrentUser.Me(ic.Context)
+		if err != nil {
+			return err
+		}
+		for _, g := range me.Groups {
+			if g.Display == "admins" {
+				ic.meAdmin = true
+				break
+			}
 		}
 	}
+
 	for resourceName, ir := range ic.Importables {
 		if ir.List == nil {
 			continue
@@ -157,6 +190,10 @@ func (ic *importContext) Run() error {
 		if !strings.Contains(ic.listing, ir.Service) {
 			log.Printf("[DEBUG] %s (%s service) is not part of listing",
 				resourceName, ir.Service)
+			continue
+		}
+		if ic.accountLevel && !ir.AccountLevel {
+			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
 			continue
 		}
 		if err := ir.List(ic); err != nil {
@@ -174,7 +211,7 @@ func (ic *importContext) Run() error {
 	}
 	defer sh.Close()
 	// nolint
-	sh.WriteString("#!/bin/sh\n\n")
+	sh.WriteString("#!/bin/sh\n\nset -e\n\n")
 
 	if ic.generateDeclaration {
 		dcfile, err := os.Create(fmt.Sprintf("%s/databricks.tf", ic.Directory))
@@ -186,15 +223,20 @@ func (ic *importContext) Run() error {
 			`terraform {
 				required_providers {
 			  		databricks = {
-						source = "databricks/databricks"
+						source  = "databricks/databricks"
 						version = "` + common.Version() + `"
 				  	}
 				}
 		  	}
 
 		  	provider "databricks" {
-		  	}
 		  	`)
+		if ic.accountLevel {
+			dcfile.WriteString(fmt.Sprintf(`	host       = "%s"
+				account_id = "%s"
+			`, ic.Client.Config.Host, ic.Client.Config.AccountID))
+		}
+		dcfile.WriteString(`}`)
 		dcfile.Close()
 	}
 	ic.generateHclForResources(sh)
@@ -284,10 +326,23 @@ func (ic *importContext) MatchesName(n string) bool {
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
-func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
+func (ic *importContext) Find(r *resource, pick string, ref reference) (string, hcl.Traversal) {
 	for _, sr := range ic.State.Resources {
 		if sr.Type != r.Resource {
 			continue
+		}
+		// optimize performance by avoiding doing regexp matching multiple times
+		matchValue := ""
+		if ref.MatchType == MatchRegexp {
+			if ref.Regexp == nil {
+				log.Printf("[WARN] you must provide regular expression for 'regexp' match type")
+				continue
+			}
+			res := ref.Regexp.FindStringSubmatch(r.Value)
+			if len(res) < 2 {
+				log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, r.Value)
+			}
+			matchValue = res[1]
 		}
 		for _, i := range sr.Instances {
 			v := i.Attributes[r.Attribute]
@@ -296,28 +351,48 @@ func (ic *importContext) Find(r *resource, pick string) hcl.Traversal {
 					r.Attribute, r.Resource, r.Name, r.ID)
 				continue
 			}
-			if v.(string) == r.Value {
-				if sr.Mode == "data" {
-					return hcl.Traversal{
-						hcl.TraverseRoot{Name: "data"},
-						hcl.TraverseAttr{Name: sr.Type},
-						hcl.TraverseAttr{Name: sr.Name},
-						hcl.TraverseAttr{Name: pick},
-					}
-				}
-				return hcl.Traversal{
-					hcl.TraverseRoot{Name: sr.Type},
+			strValue := v.(string)
+			matched := false
+			switch ref.MatchType {
+			case MatchExact, MatchDefault:
+				matched = (strValue == r.Value)
+			case MatchPrefix:
+				matched = strings.HasPrefix(r.Value, strValue)
+			case MatchRegexp:
+				matched = (matchValue == strValue)
+			default:
+				log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
+			}
+			if !matched {
+				continue
+			}
+			if sr.Mode == "data" {
+				return strValue, hcl.Traversal{
+					hcl.TraverseRoot{Name: "data"},
+					hcl.TraverseAttr{Name: sr.Type},
 					hcl.TraverseAttr{Name: sr.Name},
 					hcl.TraverseAttr{Name: pick},
 				}
 			}
+			return strValue, hcl.Traversal{
+				hcl.TraverseRoot{Name: sr.Type},
+				hcl.TraverseAttr{Name: sr.Name},
+				hcl.TraverseAttr{Name: pick},
+			}
+
 		}
 	}
-	return nil
+	return "", nil
 }
 
+// This function checks if resource exist in any state (already added or in process of addition)
 func (ic *importContext) Has(r *resource) bool {
-	if _, visiting := ic.importing[r.String()]; visiting {
+	return ic.HasInState(r, false)
+}
+
+// This function checks if resource exist. onlyAdded flag enforces that true is returned only if it was added with Add()
+func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
+	if v, visiting := ic.importing[r.String()]; visiting && (v || !onlyAdded) {
 		return true
 	}
 	k, v := r.MatchPair()
@@ -326,7 +401,8 @@ func (ic *importContext) Has(r *resource) bool {
 			continue
 		}
 		for _, i := range sr.Instances {
-			if i.Attributes[k].(string) == v {
+			tv, ok := i.Attributes[k].(string)
+			if ok && tv == v {
 				return true
 			}
 		}
@@ -335,9 +411,10 @@ func (ic *importContext) Has(r *resource) bool {
 }
 
 func (ic *importContext) Add(r *resource) {
-	if ic.Has(r) {
+	if ic.HasInState(r, true) { // resource must exist and already marked as added
 		return
 	}
+	ic.importing[r.String()] = true // mark resource as added
 	state := r.Data.State()
 	if state == nil {
 		log.Printf("[ERROR] state is nil for %s", r)
@@ -374,7 +451,7 @@ func (ic *importContext) regexFix(s string, fixes []regexFix) string {
 func (ic *importContext) ResourceName(r *resource) string {
 	name := r.Name
 	if name == "" && ic.Importables[r.Resource].Name != nil {
-		name = ic.Importables[r.Resource].Name(r.Data)
+		name = ic.Importables[r.Resource].Name(ic, r.Data)
 	}
 	if name == "" {
 		name = r.ID
@@ -408,7 +485,7 @@ func (ic *importContext) Emit(r *resource) {
 		ic.testEmits[r.String()] = true
 		return
 	}
-	ic.importing[r.String()] = true
+	ic.importing[r.String()] = false // we're starting to add a new resource
 	pr, ok := ic.Resources[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available in provider", r)
@@ -418,6 +495,12 @@ func (ic *importContext) Emit(r *resource) {
 	if !ok {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
+	}
+	if ic.accountLevel && !ir.AccountLevel {
+		log.Printf("[DEBUG] %s (%s service) is not part of the account level export",
+			r.Resource, ir.Service)
+		return
+
 	}
 	if !strings.Contains(ic.services, ir.Service) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the import",
@@ -469,6 +552,48 @@ func (ic *importContext) Emit(r *resource) {
 	ic.Add(r)
 }
 
+func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrite.Tokens {
+	matchType := ref.MatchTypeValue()
+	attr := ref.MatchAttribute()
+	attrValue, traversal := ic.Find(&resource{
+		Resource:  ref.Resource,
+		Attribute: attr,
+		Value:     value,
+	}, attr, ref)
+	// at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
+	if traversal == nil {
+		return nil
+	}
+	switch matchType {
+	case MatchExact, MatchDefault:
+		return hclwrite.TokensForTraversal(traversal)
+	case MatchPrefix:
+		rest := value[len(attrValue):]
+		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"', '$', '{'}}}
+		tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(rest)})
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
+		return tokens
+	case MatchRegexp:
+		indices := ref.Regexp.FindStringSubmatchIndex(value)
+		if len(indices) == 4 {
+			tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}}}
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(value[0:indices[2]])})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'$', '{'}})
+			tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(value[indices[3]:])})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
+			return tokens
+		}
+		log.Printf("[WARN] Can't match found data in '%s'. Indices: %v", value, indices)
+	default:
+		log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
+	}
+	return nil
+}
+
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
@@ -489,20 +614,10 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 		if d.Variable {
 			return ic.variable(fmt.Sprintf("%s_%s", path[0], value), "")
 		}
-		attr := "id"
-		if d.Match != "" {
-			attr = d.Match
-		}
-		traversal := ic.Find(&resource{
-			Resource:  d.Resource,
-			Attribute: attr,
-			Value:     value,
-		}, attr)
 
-		if traversal == nil {
-			break
+		if tokens := ic.getTraversalTokens(d, value); tokens != nil {
+			return tokens
 		}
-		return hclwrite.TokensForTraversal(traversal)
 	}
 	return hclwrite.TokensForValue(cty.StringVal(value))
 }
@@ -533,15 +648,20 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 	})
 	for _, tuple := range ss {
 		a, as := tuple.Field, tuple.Schema
-		if as.Computed {
-			continue
-		}
 		pathString := strings.Join(append(path, a), ".")
 		raw, ok := d.GetOk(pathString)
+		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
+			// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
+			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
+				continue
+			}
+		} else if i.ShouldOmitField(ic, pathString, as, d) {
+			continue
+		}
 		for _, r := range i.Depends {
 			if r.Path == pathString && r.Variable {
-				// sensitive fields are moved to variable depends
-				raw = i.Name(d)
+				// sensitive fields are moved to variable depends, variable name is normalized
+				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
 				ok = true
 			}
 		}

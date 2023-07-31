@@ -2,12 +2,14 @@ package libraries
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -78,12 +80,16 @@ func (a LibrariesAPI) UpdateLibraries(clusterID string, add, remove ClusterLibra
 func (a LibrariesAPI) WaitForLibrariesInstalled(wait Wait) (result *ClusterLibraryStatuses, err error) {
 	err = resource.RetryContext(a.context, wait.Timeout, func() *resource.RetryError {
 		libsClusterStatus, err := a.ClusterStatus(wait.ClusterID)
-		if common.IsMissing(err) {
-			// eventual consistency error
-			return resource.RetryableError(err)
-		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			var apiErr *apierr.APIError
+			if !errors.As(err, &apiErr) {
+				return resource.NonRetryableError(err)
+			}
+			if apiErr.StatusCode != 404 && strings.Contains(apiErr.Message,
+				fmt.Sprintf("Cluster %s does not exist", wait.ClusterID)) {
+				apiErr.StatusCode = 404
+			}
+			return resource.NonRetryableError(apiErr)
 		}
 		if !wait.IsRunning {
 			log.Printf("[INFO] Cluster %s is currently not running, so just returning list of %d libraries",
@@ -225,6 +231,10 @@ func (library Library) String() string {
 		return fmt.Sprintf("cran:%s%s", library.Cran.Repo, library.Cran.Package)
 	}
 	return "unknown"
+}
+
+func (library Library) GetID(clusterId string) string {
+	return fmt.Sprintf("%s/%s", clusterId, library.String())
 }
 
 // ClusterLibraryList is request body for install and uninstall

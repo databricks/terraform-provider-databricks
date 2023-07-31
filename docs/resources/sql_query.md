@@ -12,17 +12,22 @@ A query may have one or more [visualizations](sql_visualization.md).
 ## Example Usage
 
 ```hcl
+resource "databricks_directory" "shared_dir" {
+  path = "/Shared/Queries"
+}
+
 resource "databricks_sql_query" "q1" {
   data_source_id = databricks_sql_endpoint.example.data_source_id
   name           = "My Query Name"
-  query          = "SELECT {{ p1 }} AS p1, 2 as p2"
-  run_as_role    = "viewer"
+  query          = <<EOT
+                        SELECT {{ p1 }} AS p1
+                        WHERE 1=1
+                        AND p2 in ({{ p2 }})
+                        AND event_date > date '{{ p3 }}'
+                    EOT
 
-  schedule {
-    continuous {
-      interval_seconds = 5 * 60
-    }
-  }
+  parent      = "folders/${databricks_directory.shared_dir.object_id}"
+  run_as_role = "viewer"
 
   parameter {
     name  = "p1"
@@ -31,6 +36,31 @@ resource "databricks_sql_query" "q1" {
       value = "default"
     }
   }
+
+  parameter {
+    name  = "p2"
+    title = "Title for p2"
+    enum {
+      options = ["default", "foo", "bar"]
+      value   = "default"
+      // passes to sql query as string `"foo", "bar"` if foo and bar are both selected in the front end
+      multiple {
+        prefix    = "\""
+        suffix    = "\""
+        separator = ","
+      }
+
+    }
+  }
+
+  parameter {
+    name  = "p3"
+    title = "Title for p3"
+    date {
+      value = "2022-01-01"
+    }
+  }
+
 
   tags = [
     "t1",
@@ -66,6 +96,12 @@ You can import a `databricks_sql_query` resource with ID like the following:
 $ terraform import databricks_sql_query.this <query-id>
 ```
 
+## Troubleshooting
+
+In case you see `Error: cannot create sql query: Internal Server Error` during `terraform apply`; double check that you are using the correct [`data_source_id`](sql_endpoint.md)
+
+Operations on `databricks_sql_query` schedules are ⛔️ deprecated. You can create, update or delete a schedule for SQLA and other Databricks resources using the [databricks_job](job.md#sql_task-configuration-block) resource.
+
 ## Related Resources
 
 The following resources are often used in the same context:
@@ -75,3 +111,4 @@ The following resources are often used in the same context:
 * [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
 * [databricks_sql_global_config](sql_global_config.md) to configure the security policy, [databricks_instance_profile](instance_profile.md), and [data access properties](https://docs.databricks.com/sql/admin/data-access-configuration.html) for all [databricks_sql_endpoint](sql_endpoint.md) of workspace.
 * [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html).
+* [databricks_job](job.md#sql_task-configuration-block) to schedule Databricks SQL queries (as well as dashboards and alerts) using Databricks Jobs.

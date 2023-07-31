@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
@@ -12,16 +13,16 @@ import (
 
 // ResourceGroupInstanceProfile defines group role resource
 func ResourceGroupInstanceProfile() *schema.Resource {
-	return common.NewPairID("group_id", "instance_profile_id").Schema(func(
+	r := common.NewPairID("group_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["instance_profile_id"].ValidateDiagFunc = ValidInstanceProfile
+		m["instance_profile_id"].ValidateDiagFunc = ValidArn
 		return m
 	}).BindResource(common.BindResource{
 		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
-			group, err := scim.NewGroupsAPI(ctx, c).Read(groupID)
+			group, err := scim.NewGroupsAPI(ctx, c).Read(groupID, "roles")
 			hasRole := scim.ComplexValues(group.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return common.NotFound("Group has no instance profile")
+				return apierr.NotFound("Group has no instance profile")
 			}
 			return err
 		},
@@ -33,4 +34,6 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},
 	})
+	r.DeprecationMessage = "Please migrate to `databricks_group_role`"
+	return r
 }

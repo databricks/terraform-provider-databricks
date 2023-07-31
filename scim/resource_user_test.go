@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +19,7 @@ func TestResourceUserRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					ID:          "abc",
 					DisplayName: "Example user",
@@ -45,6 +47,9 @@ func TestResourceUserRead(t *testing.T) {
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
+	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
+	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
+	assert.Equal(t, "users/me@example.com", d.Get("acl_principal_id"))
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
@@ -52,7 +57,7 @@ func TestResourceUserRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   404,
 			},
 		},
@@ -69,9 +74,9 @@ func TestResourceUserRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   400,
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -109,7 +114,7 @@ func TestResourceUserCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -146,6 +151,8 @@ func TestResourceUserCreate(t *testing.T) {
 	assert.Equal(t, "me@example.com", d.Get("user_name"))
 	assert.Equal(t, "Example user", d.Get("display_name"))
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
+	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
 }
 
 func TestResourceUserCreateInactive(t *testing.T) {
@@ -171,7 +178,7 @@ func TestResourceUserCreateInactive(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      false,
@@ -265,7 +272,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -303,7 +310,7 @@ func TestResourceUserUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: newUser,
 			},
 		},
@@ -334,7 +341,7 @@ func TestResourceUserUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   400,
 			},
 		},
@@ -356,7 +363,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -406,7 +413,7 @@ func TestResourceUserUpdate_ErrorPut(t *testing.T) {
 	require.Error(t, err, err)
 }
 
-func TestResourceUserDelete(t *testing.T) {
+func TestResourceUserDelete_NoError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -417,23 +424,172 @@ func TestResourceUserDelete(t *testing.T) {
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
+		HCL: `
+			user_name = "abc",
+			force_delete_repos = false,
+			force_delete_home_dir = false 
+		`,
 	}.ApplyNoError(t)
 }
 
 func TestResourceUserDelete_Error(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
+		Fixtures: qa.HTTPFailures,
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+	}.ExpectError(t, "I'm a teapot")
+}
+
+func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc",
-				Status:   400,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
 			},
 		},
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceUserforce_delete_reposError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+			force_delete_repos = true
+		`,
 	}.Apply(t)
 	require.Error(t, err, err)
+}
+func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Repos/abc",
+					Recursive: true,
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Repos/abc) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+			force_delete_repos = true
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "force_delete_repos: Path (/Repos/abc) doesn't exist.")
+}
+
+func TestResourceUserDelete_DirError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+			force_delete_home_dir = true
+		`,
+	}.Apply(t)
+	require.Error(t, err, err)
+}
+func TestResourceUserDelete_NonExistingDir(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/Users/abc) doesn't exist.",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+			force_delete_home_dir = true
+		`,
+	}.Apply(t)
+	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {
@@ -449,9 +605,9 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
 			Status:   417,
-			Response: common.APIError{
+			Response: apierr.APIErrorBody{
 				Message: "cannot find user",
 			},
 		},
@@ -459,7 +615,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf("User with username me@example.com already exists."),
+			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -471,7 +627,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
 			Response: UserList{
 				TotalResults: 0,
 			},
@@ -480,7 +636,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf("User already exists in another account"),
+			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -492,7 +648,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
 			Response: UserList{
 				Resources: []User{
 					{
@@ -503,7 +659,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 			Response: User{
 				ID: "abc",
 			},
@@ -521,7 +677,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf("User with username me@example.com already exists."),
+			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -534,7 +690,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
 			Response: UserList{
 				Resources: []User{
 					{
@@ -545,7 +701,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 			Response: User{
 				ID: "abc",
 			},
@@ -563,7 +719,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf("User already exists in another account"),
+			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})

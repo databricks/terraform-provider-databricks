@@ -1,41 +1,14 @@
 package mws
 
 import (
-	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestMwsAccCreds(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode.")
-	}
-	acctID := qa.GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	client := common.CommonEnvironmentClient()
-	credsAPI := NewCredentialsAPI(context.Background(), client)
-	credsList, err := credsAPI.List(acctID)
-	assert.NoError(t, err, err)
-	t.Log(credsList)
-
-	myCreds, err := credsAPI.Create(acctID, 
-		qa.RandomName("tf-test"), 
-		qa.GetEnvOrSkipTest(t, "TEST_CROSSACCOUNT_ARN"))
-	assert.NoError(t, err, err)
-
-	myCredsFull, err := credsAPI.Read(acctID, myCreds.CredentialsID)
-	assert.NoError(t, err, err)
-	t.Log(myCredsFull.AwsCredentials.StsRole.ExternalID)
-
-	defer func() {
-		err = credsAPI.Delete(acctID, myCreds.CredentialsID)
-		assert.NoError(t, err, err)
-	}()
-}
 
 func TestResourceCredentialsCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -77,7 +50,7 @@ func TestResourceCredentialsCreate(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cid", d.Id())
 }
 
@@ -87,7 +60,7 @@ func TestResourceCredentialsCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/credentials",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -127,7 +100,7 @@ func TestResourceCredentialsRead(t *testing.T) {
 		Read:     true,
 		ID:       "abc/cid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cid", d.Id(), "Id should not be empty")
 	assert.Equal(t, 0, d.Get("creation_time"))
 	assert.Equal(t, "cid", d.Get("credentials_id"))
@@ -142,7 +115,7 @@ func TestResourceCredentialsRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -162,7 +135,7 @@ func TestResourceCredentialsRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -189,7 +162,7 @@ func TestResourceCredentialsDelete(t *testing.T) {
 		Delete:   true,
 		ID:       "abc/cid",
 	}.Apply(t)
-	assert.NoError(t, err, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "abc/cid", d.Id())
 }
 
@@ -199,7 +172,7 @@ func TestResourceCredentialsDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/credentials/cid",
-				Response: common.APIErrorBody{
+				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

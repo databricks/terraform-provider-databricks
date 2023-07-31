@@ -3,8 +3,8 @@ name: build
 on:
   pull_request:
     types: [opened, synchronize]
-  push:
-    branches: [master]
+  merge_group:
+    types: [checks_requested]
 
 jobs:
   tests:

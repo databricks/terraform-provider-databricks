@@ -92,8 +92,8 @@ Currently, changing the column definitions for a table will require dropping and
 
 ## Import
 
-This resource can be imported by name:
+This resource can be imported by its full name:
 
 ```bash
-$ terraform import databricks_sql_table.this <name>
+$ terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>
 ```

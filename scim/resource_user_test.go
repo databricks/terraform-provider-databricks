@@ -49,6 +49,7 @@ func TestResourceUserRead(t *testing.T) {
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
 	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
+	assert.Equal(t, "users/me@example.com", d.Get("acl_principal_id"))
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {

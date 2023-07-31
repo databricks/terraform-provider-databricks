@@ -458,7 +458,7 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 		cluster.AwsAttributes = &awsAttributes
 	}
 	if cluster.AzureAttributes != nil {
-		cluster.AzureAttributes = nil
+		cluster.AzureAttributes = &AzureAttributes{}
 	}
 	if cluster.GcpAttributes != nil {
 		gcpAttributes := GcpAttributes{

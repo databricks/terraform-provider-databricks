@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -332,6 +333,208 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 	assert.Equal(t, "17", d.Id())
 }
 
+func TestResourceJobCreate_JobCompute(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "JobComputed",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey:    "b",
+							ComputeKey: "j",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/Stuff",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+					Compute: []JobCompute{
+						{
+							ComputeKey: "j",
+							ComputeSpec: &compute.ComputeSpec{
+								Kind: "t",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 18,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=18",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobComputed"
+
+		compute {
+			compute_key = "j"
+			spec {
+			  kind   	= "t"
+			}
+		}
+
+		task {
+			task_key = "b"
+
+			compute_key = "j"
+
+			notebook_task {
+				notebook_path = "/Stuff"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "18", d.Id())
+}
+
+func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name:              "TF SQL task subscriptions",
+					MaxConcurrentRuns: 1,
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "a",
+							SqlTask: &SqlTask{
+								WarehouseID: "dca3a0ba199040eb",
+								Alert: &SqlAlertTask{
+									AlertID: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+									Subscriptions: []SqlSubscription{
+										{UserName: "user@domain.com"},
+										{DestinationID: "Test"},
+									},
+									PauseSubscriptions: true,
+								},
+							},
+						},
+						{
+							TaskKey: "d",
+							SqlTask: &SqlTask{
+								WarehouseID: "dca3a0ba199040eb",
+								Dashboard: &SqlDashboardTask{
+									DashboardID: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
+									Subscriptions: []SqlSubscription{
+										{UserName: "user@domain.com"},
+										{DestinationID: "Test"},
+									},
+									CustomSubject: "test",
+								},
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						Name: "TF SQL task subscriptions",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "a",
+								SqlTask: &SqlTask{
+									WarehouseID: "dca3a0ba199040eb",
+									Alert: &SqlAlertTask{
+										AlertID: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+										Subscriptions: []SqlSubscription{
+											{UserName: "user@domain.com"},
+											{DestinationID: "Test"},
+										},
+										PauseSubscriptions: true,
+									},
+								},
+							},
+							{
+								TaskKey: "d",
+								SqlTask: &SqlTask{
+									WarehouseID: "dca3a0ba199040eb",
+									Dashboard: &SqlDashboardTask{
+										DashboardID: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
+										Subscriptions: []SqlSubscription{
+											{UserName: "user@domain.com"},
+											{DestinationID: "Test"},
+										},
+										CustomSubject: "test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "TF SQL task subscriptions"
+
+		task {
+		  task_key = "a"
+	  
+		  sql_task {
+			warehouse_id = "dca3a0ba199040eb"
+			alert {
+			  subscriptions {
+				user_name = "user@domain.com"
+			  }
+			  subscriptions {
+				destination_id = "Test"
+			  }
+			  pause_subscriptions = true
+			  alert_id = "3cf91a42-6217-4f3c-a6f0-345d489051b9"
+			}
+		  }
+		}
+	  
+		task {
+		  task_key = "d"
+	  
+		  sql_task {
+			warehouse_id = "dca3a0ba199040eb"
+			dashboard {
+			  subscriptions {
+				user_name = "user@domain.com"
+			  }
+			  subscriptions {
+				destination_id = "Test"
+			  }
+			  pause_subscriptions = false
+			  dashboard_id = "d81a7760-7fd2-443e-bf41-95a60c2f4c7c"
+			  custom_subject = "test"
+			}
+		  }
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
+
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -410,6 +613,208 @@ func TestResourceJobCreate_AlwaysRunning_Conflict(t *testing.T) {
 		max_concurrent_runs = 2
 		`,
 	}.ExpectError(t, "`always_running` must be specified only with `max_concurrent_runs = 1`")
+}
+
+func TestResourceJobCreate_ControlRunState_AlwaysRunningConflict(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `control_run_state = true
+		always_running = true
+		continuous {
+			pause_status = "UNPAUSED"
+		}`,
+	}.ExpectError(t, "invalid config supplied. [always_running] Conflicting configuration arguments. [control_run_state] Conflicting configuration arguments")
+}
+
+func TestResourceJobCreate_ControlRunState_NoContinuous(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL:      `control_run_state = true`,
+	}.ExpectError(t, "`control_run_state` must be specified only with `continuous`")
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					MaxConcurrentRuns: 1,
+					Name:              "Test",
+					Continuous: &ContinuousConf{
+						PauseStatus: "UNPAUSED",
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters{
+					JobID: 789,
+				},
+				Response: JobRun{},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousUpdateCancel(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters{
+					JobID: 789,
+				},
+				Response: apierr.APIError{StatusCode: 404},
+				Status:   404,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=789",
+				Response: JobRunsList{
+					Runs: []JobRun{
+						{
+							RunID: 567,
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/runs/cancel",
+				ExpectedRequest: map[string]any{
+					"run_id": 567,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/get?run_id=567",
+				Response: JobRun{
+					RunID: 567,
+					State: RunState{
+						LifeCycleState: "TERMINATED",
+					},
+				},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
 }
 
 func TestResourceJobCreateSingleNode(t *testing.T) {
@@ -1014,6 +1419,113 @@ func TestResourceJobUpdate(t *testing.T) {
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
 
+func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						NewCluster: &clusters.Cluster{
+							InstancePoolID:       "instance-pool-worker",
+							DriverInstancePoolID: "instance-pool-driver",
+							SparkVersion:         "spark-1",
+							NumWorkers:           1,
+						},
+						Tasks: []JobTaskSettings{
+							{
+								NewCluster: &clusters.Cluster{
+									InstancePoolID:       "instance-pool-worker-task",
+									DriverInstancePoolID: "instance-pool-driver-task",
+									SparkVersion:         "spark-2",
+									NumWorkers:           2,
+								},
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								NewCluster: &clusters.Cluster{
+									InstancePoolID:       "instance-pool-worker-job",
+									DriverInstancePoolID: "instance-pool-driver-job",
+									SparkVersion:         "spark-3",
+									NumWorkers:           3,
+								},
+							},
+						},
+						Name:                   "Featurizer New",
+						MaxRetries:             3,
+						MinRetryIntervalMillis: 5000,
+						RetryOnTimeout:         true,
+						MaxConcurrentRuns:      1,
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						NewCluster: &clusters.Cluster{
+							NodeTypeID:       "node-type-id",
+							DriverNodeTypeID: "driver-node-type-id",
+						},
+						Name:                   "Featurizer New",
+						MaxRetries:             3,
+						MinRetryIntervalMillis: 5000,
+						RetryOnTimeout:         true,
+						MaxConcurrentRuns:      1,
+					},
+				},
+			},
+		},
+		ID:       "789",
+		Update:   true,
+		Resource: ResourceJob(),
+		InstanceState: map[string]string{
+			"new_cluster.0.node_type_id":                      "node-type-id-worker",
+			"new_cluster.0.driver_node_type_id":               "node-type-id-driver",
+			"task.0.new_cluster.0.node_type_id":               "node-type-id-worker-task",
+			"task.0.new_cluster.0.driver_node_type_id":        "node-type-id-driver-task",
+			"job_cluster.0.new_cluster.0.node_type_id":        "node-type-id-worker-job",
+			"job_cluster.0.new_cluster.0.driver_node_type_id": "node-type-id-driver-job",
+		},
+		HCL: `
+		new_cluster = {
+			instance_pool_id = "instance-pool-worker"
+			driver_instance_pool_id = "instance-pool-driver"
+			spark_version = "spark-1"
+			num_workers = 1
+		}
+		task = {
+			new_cluster = {
+				instance_pool_id = "instance-pool-worker-task"
+				driver_instance_pool_id = "instance-pool-driver-task"
+				spark_version = "spark-2"
+				num_workers = 2
+			}
+		}
+		job_cluster = {
+			new_cluster = {
+				instance_pool_id = "instance-pool-worker-job"
+				driver_instance_pool_id = "instance-pool-driver-job"
+				spark_version = "spark-3"
+				num_workers = 3
+			}
+		}
+		max_concurrent_runs = 1
+		max_retries = 3
+		min_retry_interval_millis = 5000
+		name = "Featurizer New"
+		retry_on_timeout = true`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
+	assert.Equal(t, "Featurizer New", d.Get("name"))
+}
+
 func TestResourceJobUpdate_Tasks(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1276,26 +1788,35 @@ func TestJobRestarts(t *testing.T) {
 		err = ja.waitForRunState(890, "RUNNING", timeout)
 		assert.EqualError(t, err, "run is SOMETHING: Checking...")
 
+		testRestart := func(jobID int64, stopErr, startErr string) {
+			err := ja.StopActiveRun(jobID, timeout)
+			if stopErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, stopErr)
+			}
+			if stopErr == "" {
+				err = ja.Start(jobID, timeout)
+				if startErr == "" {
+					assert.NoError(t, err)
+				} else {
+					assert.EqualError(t, err, startErr)
+				}
+			}
+		}
+
 		// no active runs for the first time
-		err = ja.Restart("123", timeout)
-		assert.NoError(t, err)
+		testRestart(123, "", "")
 
 		// one active run for the second time
-		err = ja.Restart("123", timeout)
-		assert.NoError(t, err)
+		testRestart(123, "", "")
 
-		err = ja.Restart("111", timeout)
-		assert.EqualError(t, err, "cannot cancel run 567: nope")
+		testRestart(111, "cannot cancel run 567: nope", "")
 
-		err = ja.Restart("a", timeout)
-		assert.EqualError(t, err, "strconv.ParseInt: parsing \"a\": invalid syntax")
+		testRestart(222, "nope", "")
 
-		err = ja.Restart("222", timeout)
-		assert.EqualError(t, err, "nope")
-
-		err = ja.Restart("678", timeout)
-		assert.EqualError(t, err, "`always_running` must be specified only "+
-			"with `max_concurrent_runs = 1`. There are 2 active runs")
+		testRestart(678, "`always_running` must be specified only "+
+			"with `max_concurrent_runs = 1`. There are 2 active runs", "")
 	})
 }
 

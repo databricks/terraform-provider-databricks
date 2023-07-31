@@ -2,7 +2,7 @@ default: build
 
 fmt:
 	@echo "✓ Formatting source code with goimports ..."
-	@goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+	@go run golang.org/x/tools/cmd/goimports@latest -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 	@echo "✓ Formatting source code with gofmt ..."
 	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
@@ -12,11 +12,11 @@ fmt-docs:
 
 lint: vendor
 	@echo "✓ Linting source code with https://staticcheck.io/ ..."
-	@staticcheck ./...
+	@go run honnef.co/go/tools/cmd/staticcheck@v0.4.0 ./...
 
 test: lint
 	@echo "✓ Running tests ..."
-	@gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
+	@go run gotest.tools/gotestsum@latest --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
 
 coverage: test
 	@echo "✓ Opening coverage for unit tests ..."

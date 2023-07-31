@@ -48,26 +48,27 @@ import (
 */
 
 type importContext struct {
-	Module            string
-	Context           context.Context
-	Client            *common.DatabricksClient
-	State             stateApproximation
-	Importables       map[string]importable
-	Resources         map[string]*schema.Resource
-	Scope             importedResources
-	Files             map[string]*hclwrite.File
-	Directory         string
-	importing         map[string]bool
-	nameFixes         []regexFix
-	hclFixes          []regexFix
-	allUsers          []scim.User
-	allGroups         []scim.Group
-	mountMap          map[string]mount
-	variables         map[string]string
-	testEmits         map[string]bool
-	sqlDatasources    map[string]string
-	workspaceConfKeys map[string]any
-	allDirectories    []workspace.ObjectStatus
+	Module              string
+	Context             context.Context
+	Client              *common.DatabricksClient
+	State               stateApproximation
+	Importables         map[string]importable
+	Resources           map[string]*schema.Resource
+	Scope               importedResources
+	Files               map[string]*hclwrite.File
+	Directory           string
+	importing           map[string]bool
+	nameFixes           []regexFix
+	hclFixes            []regexFix
+	allUsers            []scim.User
+	allGroups           []scim.Group
+	mountMap            map[string]mount
+	variables           map[string]string
+	testEmits           map[string]bool
+	sqlDatasources      map[string]string
+	workspaceConfKeys   map[string]any
+	allDirectories      []workspace.ObjectStatus
+	allWorkspaceObjects []workspace.ObjectStatus
 
 	includeUserDomains  bool
 	importAllUsers      bool
@@ -92,10 +93,10 @@ type mount struct {
 var nameFixes = []regexFix{
 	{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
 		`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
-	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
+	//	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
 	{regexp.MustCompile(`@.*$`), ""},
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
-	{regexp.MustCompile(`\W+`), ""},
+	{regexp.MustCompile(`\W+`), "_"},
 	{regexp.MustCompile(`[_]{2,}`), "_"},
 }
 
@@ -137,10 +138,11 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
-		allUsers:          []scim.User{},
-		variables:         map[string]string{},
-		allDirectories:    []workspace.ObjectStatus{},
-		workspaceConfKeys: workspaceConfKeys,
+		allUsers:            []scim.User{},
+		variables:           map[string]string{},
+		allDirectories:      []workspace.ObjectStatus{},
+		allWorkspaceObjects: []workspace.ObjectStatus{},
+		workspaceConfKeys:   workspaceConfKeys,
 	}
 }
 

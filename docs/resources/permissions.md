@@ -12,6 +12,8 @@ This resource allows you to generically manage [access control](https://docs.dat
 
 -> **Note** If multiple permission levels are specified for an identity (e.g. `CAN_RESTART` and `CAN_MANAGE` for a cluster), only the highest level permission is returned and will cause permanent drift.
 
+-> **Warning** To manage access control on service principals, use [databricks_access_control_rule_set](access_control_rule_set.md).
+
 ## Cluster usage
 
 It's possible to separate [cluster access control](https://docs.databricks.com/security/access-control/cluster-acl.html) to three different permission levels: `CAN_ATTACH_TO`, `CAN_RESTART` and `CAN_MANAGE`:

@@ -12,7 +12,7 @@ func TestUcAccMetastore(t *testing.T) {
 		unityAccountLevel(t, step{
 			Template: `resource "databricks_metastore" "this" {
 				name = "{var.RANDOM}"
-				storage_root = "s3://{var.RANDOM}/metastore"
+				storage_root = "s3://{env.TEST_BUCKET}/test{var.RANDOM}"
 				region = "us-east-1"
 				force_destroy = true
 			}`,

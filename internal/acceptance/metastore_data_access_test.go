@@ -18,7 +18,7 @@ func TestUcAccAccountMetastoreDataAccessOnAws(t *testing.T) {
 			metastore_id = databricks_metastore.this.id
 			name         = "{var.RANDOM}"
 			aws_iam_role {
-			role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
+				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
 		}`,
 	})

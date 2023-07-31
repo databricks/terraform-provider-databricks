@@ -113,20 +113,20 @@ type DbtTask struct {
 
 // EmailNotifications contains the information for email notifications after job or task run start or completion
 type EmailNotifications struct {
-	OnStart                    []string `json:"on_start,omitempty"`
-	OnSuccess                  []string `json:"on_success,omitempty"`
-	OnFailure                  []string `json:"on_failure,omitempty"`
-	OnDurationWarningThreshold []string `json:"on_duration_warning_threshold_exceeded,omitempty"`
-	NoAlertForSkippedRuns      bool     `json:"no_alert_for_skipped_runs,omitempty"`
-	AlertOnLastAttempt         bool     `json:"alert_on_last_attempt,omitempty"`
+	OnStart                            []string `json:"on_start,omitempty"`
+	OnSuccess                          []string `json:"on_success,omitempty"`
+	OnFailure                          []string `json:"on_failure,omitempty"`
+	OnDurationWarningThresholdExceeded []string `json:"on_duration_warning_threshold_exceeded,omitempty"`
+	NoAlertForSkippedRuns              bool     `json:"no_alert_for_skipped_runs,omitempty"`
+	AlertOnLastAttempt                 bool     `json:"alert_on_last_attempt,omitempty"`
 }
 
 // WebhookNotifications contains the information for webhook notifications sent after job start or completion.
 type WebhookNotifications struct {
-	OnStart                    []Webhook `json:"on_start,omitempty"`
-	OnSuccess                  []Webhook `json:"on_success,omitempty"`
-	OnFailure                  []Webhook `json:"on_failure,omitempty"`
-	OnDurationWarningThreshold []Webhook `json:"on_duration_warning_threshold_exceeded,omitempty"`
+	OnStart                            []Webhook `json:"on_start,omitempty"`
+	OnSuccess                          []Webhook `json:"on_success,omitempty"`
+	OnFailure                          []Webhook `json:"on_failure,omitempty"`
+	OnDurationWarningThresholdExceeded []Webhook `json:"on_duration_warning_threshold_exceeded,omitempty"`
 }
 
 func (wn *WebhookNotifications) Sort() {
@@ -202,13 +202,13 @@ type JobTaskSettings struct {
 	// ConditionTask is in private preview
 	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
 
-	EmailNotifications       *EmailNotifications            `json:"email_notifications,omitempty" tf:"suppress_diff"`
-	TaskNotificationSettings *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
-	TimeoutSeconds           int32                          `json:"timeout_seconds,omitempty"`
-	MaxRetries               int32                          `json:"max_retries,omitempty"`
-	MinRetryIntervalMillis   int32                          `json:"min_retry_interval_millis,omitempty"`
-	RetryOnTimeout           bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
-	Health                   *JobHealth                     `json:"health,omitempty"`
+	EmailNotifications     *EmailNotifications            `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings   *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
+	TimeoutSeconds         int32                          `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32                          `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
+	Health                 *JobHealth                     `json:"health,omitempty"`
 }
 
 type JobCluster struct {

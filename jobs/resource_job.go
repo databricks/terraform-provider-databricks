@@ -268,17 +268,17 @@ type JobSettings struct {
 	GitSource *GitSource `json:"git_source,omitempty"`
 	// END Jobs + Repo integration preview
 
-	Schedule             *CronSchedule           `json:"schedule,omitempty"`
-	Continuous           *ContinuousConf         `json:"continuous,omitempty"`
-	Trigger              *Trigger                `json:"trigger,omitempty"`
-	MaxConcurrentRuns    int32                   `json:"max_concurrent_runs,omitempty"`
-	EmailNotifications   *EmailNotifications     `json:"email_notifications,omitempty" tf:"suppress_diff"`
-	WebhookNotifications *WebhookNotifications   `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
-	NotificationSettings *NotificationSettings   `json:"notification_settings,omitempty"`
-	Tags                 map[string]string       `json:"tags,omitempty"`
-	Queue                *Queue                  `json:"queue,omitempty"`
-	RunAs                *JobRunAs               `json:"run_as,omitempty"`
-	Parameter            *JobParameterDefinition `json:"parameters,omitempty"`
+	Schedule             *CronSchedule            `json:"schedule,omitempty"`
+	Continuous           *ContinuousConf          `json:"continuous,omitempty"`
+	Trigger              *Trigger                 `json:"trigger,omitempty"`
+	MaxConcurrentRuns    int32                    `json:"max_concurrent_runs,omitempty"`
+	EmailNotifications   *EmailNotifications      `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications *WebhookNotifications    `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings *NotificationSettings    `json:"notification_settings,omitempty"`
+	Tags                 map[string]string        `json:"tags,omitempty"`
+	Queue                *Queue                   `json:"queue,omitempty"`
+	RunAs                *JobRunAs                `json:"run_as,omitempty"`
+	Parameters           []JobParameterDefinition `json:"parameters,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -357,7 +357,7 @@ type JobRun struct {
 	RuntType    string   `json:"run_type,omitempty"`
 
 	OverridingParameters RunParameters  `json:"overriding_parameters,omitempty"`
-	JobParameter         []JobParameter `json:"job_parameters,omitempty"`
+	JobParameters        []JobParameter `json:"job_parameters,omitempty"`
 }
 
 // JobRunsListRequest used to do what it sounds like

@@ -207,6 +207,13 @@ This block controls notification settings for both email & webhook notifications
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
 * `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
 
+###  job_parameters Configuration Block
+
+This block controls job-level parameters for a given job:
+
+* `name` - (Required) The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`.
+* `default` - (Required) Default value of the parameter.
+
 ### spark_jar_task Configuration Block
 
 * `parameters` - (Optional) (List) Parameters passed to the main method.

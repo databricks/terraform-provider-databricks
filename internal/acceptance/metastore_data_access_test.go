@@ -10,6 +10,7 @@ func TestUcAccAccountMetastoreDataAccessOnAws(t *testing.T) {
 		resource "databricks_metastore" "this" {
 			name          = "primary-{var.RANDOM}"
 			storage_root  = "s3://{env.TEST_BUCKET}/test{var.RANDOM}"
+			region        = "us-east-1"
 			force_destroy = true
 		}
 		

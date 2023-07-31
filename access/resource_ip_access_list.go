@@ -53,7 +53,7 @@ func ResourceIPAccessList() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			common.StructToData(status, s, d)
+			common.StructToData(status.IpAccessList, s, d)
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

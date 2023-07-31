@@ -60,7 +60,8 @@ type PythonWheelTask struct {
 
 // PipelineTask contains the information for pipeline jobs
 type PipelineTask struct {
-	PipelineID string `json:"pipeline_id"`
+	PipelineID  string `json:"pipeline_id"`
+	FullRefresh bool   `json:"full_refresh,omitempty"`
 }
 
 type SqlQueryTask struct {
@@ -756,6 +757,22 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 	return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
 }
 
+func prepareJobSettingsForUpdate(js JobSettings) {
+	if js.NewCluster != nil {
+		js.NewCluster.ModifyRequestOnInstancePool()
+	}
+	for _, task := range js.Tasks {
+		if task.NewCluster != nil {
+			task.NewCluster.ModifyRequestOnInstancePool()
+		}
+	}
+	for _, jc := range js.JobClusters {
+		if jc.NewCluster != nil {
+			jc.NewCluster.ModifyRequestOnInstancePool()
+		}
+	}
+}
+
 func ResourceJob() *schema.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
 		var js JobSettings
@@ -832,6 +849,9 @@ func ResourceJob() *schema.Resource {
 			if js.isMultiTask() {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
+
+			prepareJobSettingsForUpdate(js)
+
 			jobsAPI := NewJobsAPI(ctx, c)
 			err := jobsAPI.Update(d.Id(), js)
 			if err != nil {

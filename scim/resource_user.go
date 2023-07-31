@@ -167,7 +167,8 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	if (err.Error() != userExistsErrorMessage(userName, false)) && (err.Error() != userExistsErrorMessage(userName, true)) {
+	if (!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, false))) &&
+		(!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, true))) {
 		return err
 	}
 	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName), true)

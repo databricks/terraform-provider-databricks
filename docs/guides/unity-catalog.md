@@ -138,9 +138,6 @@ The first step is to create the required AWS objects:
 resource "aws_s3_bucket" "metastore" {
   bucket = "${local.prefix}-metastore"
   acl    = "private"
-  versioning {
-    enabled = false
-  }
   force_destroy = true
   tags = merge(local.tags, {
     Name = "${local.prefix}-metastore"
@@ -154,6 +151,13 @@ resource "aws_s3_bucket_public_access_block" "metastore" {
   ignore_public_acls      = true
   restrict_public_buckets = true
   depends_on              = [aws_s3_bucket.metastore]
+}
+
+resource "aws_s3_bucket_versioning" "metastore_versioning" {
+  bucket = aws_s3_bucket.metastore.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 data "aws_iam_policy_document" "passrole_for_uc" {
@@ -392,14 +396,18 @@ First, create the required objects in AWS.
 resource "aws_s3_bucket" "external" {
   bucket = "${local.prefix}-external"
   acl    = "private"
-  versioning {
-    enabled = false
-  }
   // destroy all objects with bucket destroy
   force_destroy = true
   tags = merge(local.tags, {
     Name = "${local.prefix}-external"
   })
+}
+
+resource "aws_s3_bucket_versioning" "external_versioning" {
+  bucket = aws_s3_bucket.external.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "external" {

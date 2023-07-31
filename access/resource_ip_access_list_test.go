@@ -205,7 +205,7 @@ func TestIPACLRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: settings.CreateIpAccessListResponse{
+				Response: settings.FetchIpAccessListResponse{
 					IpAccessList: &settings.IpAccessListInfo{
 						ListId:       TestingId,
 						Label:        TestingLabel,
@@ -220,11 +220,6 @@ func TestIPACLRead(t *testing.T) {
 					},
 				},
 			},
-		},
-		State: map[string]any{
-			"label":        TestingLabel,
-			"list_type":    TestingListTypeString,
-			"ip_addresses": TestingIpAddressesState,
 		},
 		Resource: ResourceIPAccessList(),
 		Read:     true,

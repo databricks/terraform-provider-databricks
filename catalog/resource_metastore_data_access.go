@@ -24,6 +24,7 @@ type AzureServicePrincipal struct {
 
 type AzureManagedIdentity struct {
 	AccessConnectorID string `json:"access_connector_id"`
+	ManagedIdentityID string `json:"managed_identity_id,omitempty"`
 }
 
 type GcpServiceAccountKey struct {

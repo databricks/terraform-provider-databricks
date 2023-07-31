@@ -17,14 +17,27 @@ func NewExternalLocationsAPI(ctx context.Context, m any) ExternalLocationsAPI {
 	return ExternalLocationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
+type SseEncryptionDetails struct {
+	// algorithm enum values: "AWS_SSE_S3", "AWS_SSE_KMS"
+	Algorithm    string `json:"algorithm,omitempty"`
+	AwsKmsKeyArn string `json:"aws_kms_key_arn,omitempty"`
+}
+
+type EncryptionDetails struct {
+	// This is a oneOf type, but only one type defined currently:
+	SseEncDetails *SseEncryptionDetails `json:"sse_encryption_details,omitempty"`
+}
+
 type ExternalLocationInfo struct {
-	Name           string `json:"name" tf:"force_new"`
-	URL            string `json:"url"`
-	CredentialName string `json:"credential_name"`
-	Comment        string `json:"comment,omitempty"`
-	SkipValidation bool   `json:"skip_validation,omitempty"`
-	Owner          string `json:"owner,omitempty" tf:"computed"`
-	MetastoreID    string `json:"metastore_id,omitempty" tf:"computed"`
+	Name           string             `json:"name" tf:"force_new"`
+	URL            string             `json:"url"`
+	CredentialName string             `json:"credential_name"`
+	Comment        string             `json:"comment,omitempty"`
+	SkipValidation bool               `json:"skip_validation,omitempty"`
+	Owner          string             `json:"owner,omitempty" tf:"computed"`
+	MetastoreID    string             `json:"metastore_id,omitempty" tf:"computed"`
+	AccessPoint    string             `json:"access_point,omitempty"`
+	EncDetails     *EncryptionDetails `json:"encryption_details,omitempty"`
 }
 
 func (a ExternalLocationsAPI) create(el *ExternalLocationInfo) error {

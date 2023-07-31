@@ -45,6 +45,53 @@ func TestCreateExternalLocation(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/external-locations",
+				ExpectedRequest: ExternalLocationInfo{
+					Name:           "abc",
+					URL:            "s3://foo/bar",
+					CredentialName: "bcd",
+					AccessPoint:    "some_access_point",
+					EncDetails: &EncryptionDetails{
+						&SseEncryptionDetails{
+							Algorithm:    "AWS_SSE_KMS",
+							AwsKmsKeyArn: "some_key_arn",
+						},
+					},
+					Comment: "def",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				Response: ExternalLocationInfo{
+					Owner:       "efg",
+					MetastoreID: "fgh",
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		access_point = "some_access_point"
+	    encryption_details {
+          sse_encryption_details {
+            algorithm     = "AWS_SSE_KMS"
+            aws_kms_key_arn = "some_key_arn"
+		  }
+        }
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateExternalLocationWithOwner(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

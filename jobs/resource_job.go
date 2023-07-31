@@ -278,7 +278,7 @@ type JobSettings struct {
 	Tags                 map[string]string       `json:"tags,omitempty"`
 	Queue                *Queue                  `json:"queue,omitempty"`
 	RunAs                *JobRunAs               `json:"run_as,omitempty"`
-	Parameters           *JobParameterDefinition `json:"parameters,omitempty"`
+	Parameter            *JobParameterDefinition `json:"parameters,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -326,13 +326,14 @@ type RunParameters struct {
 	SparkSubmitParams []string          `json:"spark_submit_params,omitempty"`
 }
 
-// JobParameters used
-type JobParameters struct {
+// Job-level parameter
+type JobParameter struct {
 	Name    string `json:"name,omitempty"`
 	Default string `json:"default,omitempty"`
 	Value   string `json:"value,omitempty"`
 }
 
+// Job-level parameter definitions
 type JobParameterDefinition struct {
 	Name    string `json:"name,omitempty"`
 	Default string `json:"default,omitempty"`
@@ -347,16 +348,16 @@ type RunState struct {
 
 // JobRun is a simplified representation of corresponding entity
 type JobRun struct {
-	JobID         int64           `json:"job_id"`
-	RunID         int64           `json:"run_id"`
-	NumberInJob   int64           `json:"number_in_job"`
-	StartTime     int64           `json:"start_time,omitempty"`
-	State         RunState        `json:"state"`
-	Trigger       string          `json:"trigger,omitempty"`
-	RuntType      string          `json:"run_type,omitempty"`
-	JobParameters []JobParameters `json:"job_parameters,omitempty"`
+	JobID       int64    `json:"job_id"`
+	RunID       int64    `json:"run_id"`
+	NumberInJob int64    `json:"number_in_job"`
+	StartTime   int64    `json:"start_time,omitempty"`
+	State       RunState `json:"state"`
+	Trigger     string   `json:"trigger,omitempty"`
+	RuntType    string   `json:"run_type,omitempty"`
 
-	OverridingParameters RunParameters `json:"overriding_parameters,omitempty"`
+	OverridingParameters RunParameters  `json:"overriding_parameters,omitempty"`
+	JobParameter         []JobParameter `json:"job_parameters,omitempty"`
 }
 
 // JobRunsListRequest used to do what it sounds like

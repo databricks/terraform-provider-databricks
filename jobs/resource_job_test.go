@@ -1082,9 +1082,9 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 						Tag:      "0.4.8",
 						Provider: "gitHub",
 						JobSource: &JobSource{
-							JobConfigPath: "a/b/c/databricks.yml",
+							JobConfigPath:       "a/b/c/databricks.yml",
 							ImportFromGitBranch: "main",
-							DirtyState: "NOT_SYNCED",
+							DirtyState:          "NOT_SYNCED",
 						},
 					},
 				},

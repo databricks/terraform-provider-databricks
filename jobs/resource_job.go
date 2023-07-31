@@ -60,7 +60,8 @@ type PythonWheelTask struct {
 
 // PipelineTask contains the information for pipeline jobs
 type PipelineTask struct {
-	PipelineID string `json:"pipeline_id"`
+	PipelineID  string `json:"pipeline_id"`
+	FullRefresh bool   `json:"full_refresh,omitempty"`
 }
 
 type SqlQueryTask struct {

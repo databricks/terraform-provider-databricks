@@ -348,11 +348,11 @@ type RunState struct {
 
 // JobRun is a simplified representation of corresponding entity
 type JobRun struct {
-	JobID       int64    `json:"job_id"`
-	RunID       int64    `json:"run_id"`
-	NumberInJob int64    `json:"number_in_job"`
+	JobID       int64    `json:"job_id,omitempty"`
+	RunID       int64    `json:"run_id,omitempty"`
+	NumberInJob int64    `json:"number_in_job,omitempty"`
 	StartTime   int64    `json:"start_time,omitempty"`
-	State       RunState `json:"state"`
+	State       RunState `json:"state,omitempty"`
 	Trigger     string   `json:"trigger,omitempty"`
 	RuntType    string   `json:"run_type,omitempty"`
 

@@ -1081,6 +1081,11 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 						Url:      "https://github.com/databricks/terraform-provider-databricks",
 						Tag:      "0.4.8",
 						Provider: "gitHub",
+						JobSource: &JobSource{
+							JobConfigPath: "a/b/c/databricks.yml",
+							ImportFromGitBranch: "main",
+							DirtyState: "NOT_SYNCED",
+						},
 					},
 				},
 				Response: Job{
@@ -1115,6 +1120,11 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 		git_source {
 			url = "https://github.com/databricks/terraform-provider-databricks"
 			tag = "0.4.8"
+			job_source = {
+				job_config_path = "a/b/c/databricks.yml"
+				import_from_git_branch = "main"
+				dirty_state = "NOT_SYNCED"
+			}
 		}
 
 		task {

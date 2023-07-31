@@ -3,7 +3,6 @@ package sql
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,7 +42,6 @@ func DataSourceWarehouse() *schema.Resource {
 			return err
 		}
 		for _, source := range dataSources {
-			log.Printf("[DEBUG] source=%v", source)
 			if data.Name != "" && source.Name == data.Name {
 				selected = append(selected, source)
 			} else if data.ID != "" && source.EndpointID == data.ID {
@@ -52,10 +50,18 @@ func DataSourceWarehouse() *schema.Resource {
 			}
 		}
 		if len(selected) == 0 {
-			return fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
+			if data.Name != "" {
+				return fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
+			} else {
+				return fmt.Errorf("can't find SQL warehouse with the ID '%s'", data.ID)
+			}
 		}
 		if len(selected) > 1 {
-			return fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
+			if data.Name != "" {
+				return fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
+			} else {
+				return fmt.Errorf("there are multiple SQL warehouses with the ID '%s'", data.ID)
+			}
 		}
 		id = selected[0].EndpointID
 		err = c.Get(ctx, fmt.Sprintf("/sql/warehouses/%s", id), nil, data)

@@ -123,6 +123,6 @@ This similar to previous item.  Make sure that `account_id` is specified in the 
 
 This error may appear when creating workspace-level objects but the provider is configured to account-level.
 
-### Error: Provider registry.terraform.io/databricks/databricks v1.21.0 does not have a package available for your current platform, windows_386
+### Error: Provider registry.terraform.io/databricks/databricks v... does not have a package available for your current platform, windows_386
 
 This kind of errors happens when the 32-bit version of Databricks Terraform provider is used, usually on Microsoft Windows.  To fix the issue you need to switch to use of the 64-bit versions of Terraform and Databricks Terraform provider.

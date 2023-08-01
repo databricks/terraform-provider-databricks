@@ -10,7 +10,7 @@ import (
 
 func DataSourceWarehouse() *schema.Resource {
 	type SQLWarehouseInfo struct {
-		ID                      string          `json:"id"`
+		ID                      string          `json:"id,omitempty" tf:"computed"`
 		Name                    string          `json:"name,omitempty" tf:"computed"`
 		ClusterSize             string          `json:"cluster_size,omitempty" tf:"computed"`
 		AutoStopMinutes         int             `json:"auto_stop_mins,omitempty" tf:"computed"`
@@ -31,15 +31,44 @@ func DataSourceWarehouse() *schema.Resource {
 
 	return common.DataResource(SQLWarehouseInfo{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
 		data := e.(*SQLWarehouseInfo)
-		err := c.Get(ctx, fmt.Sprintf("/sql/warehouses/%s", data.ID), nil, data)
-		if err != nil {
-			return err
+		var id string
+		if data.ID == "" && data.Name == "" {
+			return fmt.Errorf("either 'id' or 'name' should be provided")
 		}
 		endpointsAPI := NewSQLEndpointsAPI(ctx, c)
-		data.DataSourceID, err = endpointsAPI.ResolveDataSourceID(data.ID)
+		selected := []DataSource{}
+		dataSources, err := endpointsAPI.listDataSources()
 		if err != nil {
 			return err
 		}
+		for _, source := range dataSources {
+			if data.Name != "" && source.Name == data.Name {
+				selected = append(selected, source)
+			} else if data.ID != "" && source.EndpointID == data.ID {
+				selected = append(selected, source)
+				break
+			}
+		}
+		if len(selected) == 0 {
+			if data.Name != "" {
+				return fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
+			} else {
+				return fmt.Errorf("can't find SQL warehouse with the ID '%s'", data.ID)
+			}
+		}
+		if len(selected) > 1 {
+			if data.Name != "" {
+				return fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
+			} else {
+				return fmt.Errorf("there are multiple SQL warehouses with the ID '%s'", data.ID)
+			}
+		}
+		id = selected[0].EndpointID
+		err = c.Get(ctx, fmt.Sprintf("/sql/warehouses/%s", id), nil, data)
+		if err != nil {
+			return err
+		}
+		data.DataSourceID = selected[0].ID
 		return nil
 	})
 }

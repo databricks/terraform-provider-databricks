@@ -9,6 +9,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -1081,7 +1082,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 						Url:      "https://github.com/databricks/terraform-provider-databricks",
 						Tag:      "0.4.8",
 						Provider: "gitHub",
-						JobSource: &JobSource{
+						JobSource: &jobs.JobSource{
 							JobConfigPath:       "a/b/c/databricks.yml",
 							ImportFromGitBranch: "main",
 							DirtyState:          "NOT_SYNCED",
@@ -1120,7 +1121,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 		git_source {
 			url = "https://github.com/databricks/terraform-provider-databricks"
 			tag = "0.4.8"
-			job_source = {
+			job_source {
 				job_config_path = "a/b/c/databricks.yml"
 				import_from_git_branch = "main"
 				dirty_state = "NOT_SYNCED"

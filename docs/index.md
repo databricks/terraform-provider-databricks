@@ -365,6 +365,7 @@ The following configuration attributes can be passed via environment variables:
 
 |                      Argument | Environment variable              |
 | ----------------------------: | --------------------------------- |
+|                   `auth_type` | `DATABRICKS_AUTH_TYPE`            |
 |                        `host` | `DATABRICKS_HOST`                 |
 |                       `token` | `DATABRICKS_TOKEN`                |
 |                    `username` | `DATABRICKS_USERNAME`             |
@@ -372,11 +373,16 @@ The following configuration attributes can be passed via environment variables:
 |                  `account_id` | `DATABRICKS_ACCOUNT_ID`           |
 |                 `config_file` | `DATABRICKS_CONFIG_FILE`          |
 |                     `profile` | `DATABRICKS_CONFIG_PROFILE`       |
+|                   `client_id` | `DATABRICKS_CLIENT_ID`            |
+|               `client_secret` | `DATABRICKS_CLIENT_SECRET`        |
 |         `azure_client_secret` | `ARM_CLIENT_SECRET`               |
 |             `azure_client_id` | `ARM_CLIENT_ID`                   |
 |             `azure_tenant_id` | `ARM_TENANT_ID`                   |
+| `azure_workspace_resource_id` | `DATABRICKS_AZURE_RESOURCE_ID`    |
 |               `azure_use_msi` | `ARM_USE_MSI`                     |
 |           `azure_environment` | `ARM_ENVIRONMENT`                 |
+|          `google_credentials` | `GOOGLE_CREDENTIALS`              |
+|      `google_service_account` | `GOOGLE_SERVICE_ACCOUNT`          |
 |        `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES` |
 |               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`        |
 |               `rate_limit`    | `DATABRICKS_RATE_LIMIT`           |

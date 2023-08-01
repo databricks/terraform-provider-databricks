@@ -240,6 +240,7 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 ### pipeline_task Configuration Block
 
 * `pipeline_id` - (Required) The pipeline's unique ID.
+* `full_refresh` - (Optional) (Bool) Specifies if there should be full refresh of the pipeline.
 
 -> **Note** The following configuration blocks are only supported inside a `task` block
 

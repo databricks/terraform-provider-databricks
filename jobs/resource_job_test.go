@@ -220,6 +220,72 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_JobParameters_RunNow(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/run-now",
+				ExpectedRequest: JobRun{
+					JobID: 143,
+					JobParameters: []JobParameter{
+						{
+							Name: "hello",
+							Default: "world",
+							Value: "world2",
+						},
+						{
+							Name: "hello_3",
+							Default: "world_3",
+							Value: "world_4",
+						},
+					},
+				},
+				Response: JobRun{
+					RunID: 964,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/runs/get?run_id=964",
+				Response: JobRun{
+					State: RunState{
+						LifeCycleState: "RUNNING",
+					},
+					JobParameters: []JobParameter{
+						{
+							Name: "hello",
+							Default: "world",
+							Value: "world2",
+						},
+						{
+							Name: "hello_3",
+							Default: "world_3",
+							Value: "world_4",
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		job_id = 143
+		job_parameters {
+				name = "hello"
+				default = "world"
+				value = "world2"
+		}
+		job_parameters {
+			name = "hello_3"
+			default = "world_3"
+			value = "world_4"
+	}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "964", d.Id())
+}
+
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/qa"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -141,6 +142,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 							SparkJarTask: &SparkJarTask{
 								MainClassName: "com.labs.BarMain",
 							},
+							Health: &JobHealth{
+								Rules: []JobHealthRule{
+									{
+										Metric:    "RUN_DURATION_SECONDS",
+										Operation: "GREATER_THAN",
+										Value:     3600,
+									},
+								},
+							},
 						},
 						{
 							TaskKey: "b",
@@ -164,6 +174,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 						},
 					},
 					MaxConcurrentRuns: 1,
+					Health: &JobHealth{
+						Rules: []JobHealthRule{
+							{
+								Metric:    "RUN_DURATION_SECONDS",
+								Operation: "GREATER_THAN",
+								Value:     3600,
+							},
+						},
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -191,7 +210,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 		Resource: ResourceJob(),
 		HCL: `
 		name = "Featurizer"
-		
+
+		health {
+			rules {
+				metric = "RUN_DURATION_SECONDS"
+				op     = "GREATER_THAN"
+				value  = 3600						  
+			}
+		}
+
 		task {
 			task_key = "a"
 
@@ -204,6 +231,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 			library {
 				jar = "dbfs://aa/bb/cc.jar"
 			}
+
+			health {
+				rules {
+					metric = "RUN_DURATION_SECONDS"
+					op     = "GREATER_THAN"
+					value  = 3600						  
+				}
+			}
+	
 		}
 
 		task {
@@ -995,7 +1031,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						OnSuccess: []Webhook{{ID: "id2"}},
 						OnFailure: []Webhook{{ID: "id3"}},
 					},
-					NotificationSettings: &NotificationSettings{
+					NotificationSettings: &jobs.JobNotificationSettings{
 						NoAlertForSkippedRuns:  true,
 						NoAlertForCanceledRuns: true,
 					},
@@ -1026,7 +1062,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 							OnSuccess: []Webhook{{ID: "id2"}},
 							OnFailure: []Webhook{{ID: "id3"}},
 						},
-						NotificationSettings: &NotificationSettings{
+						NotificationSettings: &jobs.JobNotificationSettings{
 							NoAlertForSkippedRuns:  true,
 							NoAlertForCanceledRuns: true,
 						},
@@ -1094,6 +1130,11 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 						Url:      "https://github.com/databricks/terraform-provider-databricks",
 						Tag:      "0.4.8",
 						Provider: "gitHub",
+						JobSource: &jobs.JobSource{
+							JobConfigPath:       "a/b/c/databricks.yml",
+							ImportFromGitBranch: "main",
+							DirtyState:          "NOT_SYNCED",
+						},
 					},
 				},
 				Response: Job{
@@ -1128,6 +1169,11 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 		git_source {
 			url = "https://github.com/databricks/terraform-provider-databricks"
 			tag = "0.4.8"
+			job_source {
+				job_config_path = "a/b/c/databricks.yml"
+				import_from_git_branch = "main"
+				dirty_state = "NOT_SYNCED"
+			}
 		}
 
 		task {
@@ -1217,7 +1263,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 			}
 		}
 	`,
-	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databricks/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}")
+	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databricks/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit: JobSource:<nil>}")
 }
 
 func TestResourceJobCreateSingleNode_Fail(t *testing.T) {

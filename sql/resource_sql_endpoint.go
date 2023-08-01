@@ -80,6 +80,7 @@ type Tag struct {
 type DataSource struct {
 	ID         string `json:"id"`
 	EndpointID string `json:"endpoint_id"`
+	Name       string `json:"name"`
 }
 
 // endpointList ...
@@ -136,6 +137,12 @@ func (a SQLEndpointsAPI) Create(se *SQLEndpoint, timeout time.Duration) error {
 		return err
 	}
 	return a.waitForRunning(se.ID, timeout)
+}
+
+func (a SQLEndpointsAPI) listDataSources() ([]DataSource, error) {
+	var dss []DataSource
+	err := a.client.Get(a.context, "/preview/sql/data_sources", nil, &dss)
+	return dss, err
 }
 
 // ResolveDataSourceID ...

@@ -250,6 +250,7 @@ var mapping = securableMapping{
 		"USE_PROVIDER":              true,
 		"USE_SHARE":                 true,
 		"USE_RECIPIENT":             true,
+		"USE_MARKETPLACE_ASSETS":    true,
 		"SET_SHARE_PERMISSION":      true,
 	},
 	"function": {

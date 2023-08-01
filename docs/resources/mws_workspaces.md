@@ -137,11 +137,15 @@ resource "databricks_mws_credentials" "this" {
 resource "aws_s3_bucket" "root_storage_bucket" {
   bucket = "${local.prefix}-rootbucket"
   acl    = "private"
-  versioning {
-    enabled = false
-  }
   force_destroy = true
   tags          = var.tags
+}
+
+resource "aws_s3_bucket_versioning" "root_versioning" {
+  bucket = aws_s3_bucket.root_storage_bucket.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "root_storage_bucket" {

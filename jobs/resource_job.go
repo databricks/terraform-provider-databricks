@@ -157,11 +157,12 @@ type CronSchedule struct {
 
 // BEGIN Jobs + Repo integration preview
 type GitSource struct {
-	Url      string `json:"git_url" tf:"alias:url"`
-	Provider string `json:"git_provider,omitempty" tf:"alias:provider"`
-	Branch   string `json:"git_branch,omitempty" tf:"alias:branch"`
-	Tag      string `json:"git_tag,omitempty" tf:"alias:tag"`
-	Commit   string `json:"git_commit,omitempty" tf:"alias:commit"`
+	Url       string          `json:"git_url" tf:"alias:url"`
+	Provider  string          `json:"git_provider,omitempty" tf:"alias:provider"`
+	Branch    string          `json:"git_branch,omitempty" tf:"alias:branch"`
+	Tag       string          `json:"git_tag,omitempty" tf:"alias:tag"`
+	Commit    string          `json:"git_commit,omitempty" tf:"alias:commit"`
+	JobSource *jobs.JobSource `json:"job_source,omitempty"`
 }
 
 // End Jobs + Repo integration preview

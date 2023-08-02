@@ -304,6 +304,10 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 
 You also need to include a `git_source` block to configure the repository that contains the dbt project.
 
+### run_job_task Configuration Block
+
+* `job_id` - (Required)(String) ID of the job
+
 ### sql_task Configuration Block
 
 One of the `query`, `dashboard` or `alert` needs to be provided.

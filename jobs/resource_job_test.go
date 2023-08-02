@@ -584,6 +584,63 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_RunJobTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name:              "TF RunJobTask Main Job",
+					MaxConcurrentRuns: 1,
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "runJobTask",
+							RunJobTask: &RunJobTask{
+								JobID: "123",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 123,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=123",
+				Response: Job{
+					JobID: 123,
+					Settings: &JobSettings{
+						Name: "TF SQL task subscriptions",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "childJobTaskKey",
+								NotebookTask: &NotebookTask{
+									NotebookPath: "/Stuff",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "TF RunJobTask Main Job"
+
+		task {
+		  task_key = "runJobTask"
+	  
+		  run_job_task {
+				job_id = "123"
+		  }
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "123", d.Id())
+}
+
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

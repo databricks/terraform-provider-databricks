@@ -112,6 +112,12 @@ type DbtTask struct {
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
 }
 
+// RunJobTask contains information about RunJobTask
+type RunJobTask struct {
+	JobID         string            `json:"job_id"`
+	JobParameters map[string]string `json:"job_parameters,omitempty"`
+}
+
 // EmailNotifications contains the information for email notifications after job or task run start or completion
 type EmailNotifications struct {
 	OnStart                            []string `json:"on_start,omitempty"`
@@ -181,10 +187,7 @@ type JobTaskSettings struct {
 	TaskKey     string                `json:"task_key,omitempty"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
-
-	// BEGIN Jobs + RunIf preview
-	RunIf string `json:"run_if,omitempty" tf:"suppress_diff"`
-	// END Jobs + RunIf preview
+	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
 
 	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
@@ -200,6 +203,7 @@ type JobTaskSettings struct {
 	PythonWheelTask *PythonWheelTask `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask         `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask         `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask      `json:"run_job_task,omitempty" tf:"group:task_type"`
 
 	// ConditionTask is in private preview
 	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
@@ -260,6 +264,7 @@ type JobSettings struct {
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`

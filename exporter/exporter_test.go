@@ -1061,6 +1061,9 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 									WarehouseId: "123",
 									Commands:    []string{"dbt init"},
 								},
+								RunJobTask: &jobs.RunJobTask{
+									JobID: "14",
+								},
 							},
 							{
 								TaskKey: "dummy2",

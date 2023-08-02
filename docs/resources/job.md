@@ -10,7 +10,7 @@ The `databricks_job` resource allows you to manage [Databricks Jobs](https://doc
 
 -> **Note** In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
-It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. Single task is defined with the `task` block containing one of the `*_task` block, `task_key`, and additional arguments described below.
+It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. A single task is defined with the `task` block containing one of the `*_task` blocks, `task_key`, and additional arguments described below.
 
 ```hcl
 resource "databricks_job" "this" {
@@ -114,6 +114,7 @@ This block describes individual tasks:
   * `sql_task`
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `depends_on` - (Optional) block specifying dependency(-ies) for a given task.
+* `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. When omitted, defaults to `ALL_SUCCESS`.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
 * `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
@@ -231,7 +232,7 @@ webhook_notifications {
 
 -> **Note** The following configuration blocks can be standalone or nested inside a `task` block
 
-###  notification_settings Configuration Block (Job Level)
+### notification_settings Configuration Block (Job Level)
 
 This block controls notification settings for both email & webhook notifications on a job level:
 

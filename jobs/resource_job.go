@@ -758,18 +758,21 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 	return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
 }
 
-func prepareJobSettingsForUpdate(js JobSettings) {
+func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 	if js.NewCluster != nil {
 		js.NewCluster.ModifyRequestOnInstancePool()
+		js.NewCluster.FixInstancePoolChangeIfAny(d)
 	}
 	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
 			task.NewCluster.ModifyRequestOnInstancePool()
+			task.NewCluster.FixInstancePoolChangeIfAny(d)
 		}
 	}
 	for _, jc := range js.JobClusters {
 		if jc.NewCluster != nil {
 			jc.NewCluster.ModifyRequestOnInstancePool()
+			jc.NewCluster.FixInstancePoolChangeIfAny(d)
 		}
 	}
 }
@@ -851,7 +854,7 @@ func ResourceJob() *schema.Resource {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
 
-			prepareJobSettingsForUpdate(js)
+			prepareJobSettingsForUpdate(d, js)
 
 			jobsAPI := NewJobsAPI(ctx, c)
 			err := jobsAPI.Update(d.Id(), js)

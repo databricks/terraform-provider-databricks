@@ -85,6 +85,8 @@ func TestAccJobTasks(t *testing.T) {
 					task_key = "b"
 				}
 
+				run_if = "ALL_DONE"
+
 				notebook_task {
 					notebook_path = databricks_notebook.this.path
 				}

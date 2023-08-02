@@ -1749,4 +1749,52 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: MatchPrefix},
 		},
 	},
+	"databricks_model_serving": {
+		Service: "model-serving",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			nameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(d.Id())))
+			return strings.ToLower(d.Id()) + "_" + nameMd5[:8]
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			endpointsList, err := w.ServingEndpoints.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+
+			for offset, endpoint := range endpointsList {
+				// TODO: add incremental export as well
+				ic.Emit(&resource{
+					Resource: "databricks_model_serving",
+					ID:       endpoint.Name,
+				})
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d Serving Endpoints", offset+1, len(endpointsList))
+				}
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				log.Printf("[DEBUG] Emitting permissions of endpoint '%s' id='%s'", r.ID, r.Data.Get("serving_endpoint_id").(string))
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/serving-endpoints/%s", r.Data.Get("serving_endpoint_id").(string)),
+					Name:     "serving_endpoint_" + ic.Importables["databricks_model_serving"].Name(ic, r.Data),
+				})
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "config.0.traffic_config" ||
+				(strings.HasPrefix(pathString, "config.0.served_models.") &&
+					strings.HasSuffix(pathString, ".scale_to_zero_enabled")) {
+				return false
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+	},
 }

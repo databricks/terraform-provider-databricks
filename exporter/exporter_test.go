@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/aws"
@@ -246,6 +247,14 @@ var emptyGitCredentials = qa.HTTPFixture{
 	},
 }
 
+var emptyModelServing = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/serving-endpoints",
+	Response: serving.ListEndpointsResponse{
+		Endpoints: []serving.ServingEndpoint{},
+	},
+}
+
 var emptyIpAccessLIst = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/ip-access-lists",
@@ -322,6 +331,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyGitCredentials,
 			emptyWorkspace,
 			emptyIpAccessLIst,
+			emptyModelServing,
 			emptySqlDashboards,
 			emptySqlEndpoints,
 			emptySqlQueries,
@@ -524,6 +534,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 				},
 			},
 			emptyRepos,
+			emptyModelServing,
 			emptyWorkspaceConf,
 			dummyWorkspaceConf,
 			{
@@ -1922,6 +1933,56 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.listing = "notebooks"
 			ic.services = "notebooks"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+func TestImportingModelServing(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/serving-endpoints",
+				Response: serving.ListEndpointsResponse{
+					Endpoints: []serving.ServingEndpoint{
+						{
+							Name: "abc",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/serving-endpoints/abc?",
+				Response: serving.ServingEndpointDetailed{
+					Name: "abc",
+					Id:   "1234",
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedModels: []serving.ServedModelOutput{
+							{
+								ModelName:    "def",
+								ModelVersion: "1",
+								Name:         "def",
+							},
+						},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "model-serving"
+			ic.services = "model-serving"
 
 			err := ic.Run()
 			assert.NoError(t, err)

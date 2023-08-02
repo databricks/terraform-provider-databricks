@@ -23,8 +23,12 @@ variable "databricks_account_id" {
 resource "aws_s3_bucket" "root_storage_bucket" {
   bucket = "${var.prefix}-rootbucket"
   acl    = "private"
-  versioning {
-    enabled = false
+}
+
+resource "aws_s3_bucket_versioning" "root_versioning" {
+  bucket = aws_s3_bucket.root_storage_bucket.id
+  versioning_configuration {
+    status = "Disabled"
   }
 }
 

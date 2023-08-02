@@ -289,7 +289,7 @@ type JobSettings struct {
 	Queue                *Queue                        `json:"queue,omitempty"`
 	RunAs                *JobRunAs                     `json:"run_as,omitempty"`
 	Health               *JobHealth                    `json:"health,omitempty"`
-  Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
+	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 }
 
 func (js *JobSettings) isMultiTask() bool {

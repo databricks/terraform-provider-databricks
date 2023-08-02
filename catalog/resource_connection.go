@@ -46,8 +46,8 @@ func ResourceConnection() *schema.Resource {
 			var createConnectionRequest catalog.CreateConnection
 			var alias ConnectionInfo
 			common.DataToStructPointer(d, s, &createConnectionRequest)
-			common.DataToStructPointer(d, s, &alias)
 			//workaround as cannot set tf:"alias" for the Go SDK struct
+			common.DataToStructPointer(d, s, &alias)
 			createConnectionRequest.OptionsKvpairs = alias.OptionsKvpairs
 			createConnectionRequest.PropertiesKvpairs = alias.PropertiesKvpairs
 			conn, err := w.Connections.Create(ctx, createConnectionRequest)
@@ -76,8 +76,8 @@ func ResourceConnection() *schema.Resource {
 			var updateConnectionRequest catalog.UpdateConnection
 			var alias ConnectionInfo
 			common.DataToStructPointer(d, s, &updateConnectionRequest)
-			common.DataToStructPointer(d, s, &alias)
 			//workaround as cannot set tf:"alias" for the Go SDK struct
+			common.DataToStructPointer(d, s, &alias)
 			updateConnectionRequest.OptionsKvpairs = alias.OptionsKvpairs
 			updateConnectionRequest.NameArg = d.Id()
 			conn, err := w.Connections.Update(ctx, updateConnectionRequest)

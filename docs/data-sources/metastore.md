@@ -22,7 +22,7 @@ resource "databricks_metastore" "this" {
 }
 
 data "databricks_metastore" "this" {
-  id = databricks_metastore.this.id
+  metastore_id = databricks_metastore.this.id
 }
 
 output "some_metastore" {

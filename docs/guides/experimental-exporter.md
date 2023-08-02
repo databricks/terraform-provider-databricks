@@ -90,6 +90,7 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_library](../resources/library.md) | No |
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No |
 | [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No |
+| [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes |
 | [databricks_model_serving](../resources/model_serving) | Yes |
 | [databricks_notebook](../resources/notebook.md) | Yes |
 | [databricks_obo_token](../resources/obo_token.md) | Not Applicable |

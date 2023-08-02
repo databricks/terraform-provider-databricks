@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -1795,6 +1796,46 @@ var resourcesMap map[string]importable = map[string]importable{
 				return false
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+	},
+	"databricks_mlflow_webhook": {
+		Service: "mlflow-webhooks",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return "webhook_" + d.Id()
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			webhooks, err := w.ModelRegistry.ListWebhooksAll(ic.Context, ml.ListWebhooksRequest{})
+			if err != nil {
+				return err
+			}
+
+			for offset, webhook := range webhooks {
+				// TODO: add support for incremental export
+				ic.Emit(&resource{
+					Resource: "databricks_mlflow_webhook",
+					ID:       webhook.Id,
+				})
+				if webhook.JobSpec != nil && webhook.JobSpec.JobId != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_job",
+						ID:       webhook.JobSpec.JobId,
+					})
+				}
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d MLflow webhooks", offset+1, len(webhooks))
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "job_spec.job_id", Resource: "databricks_job"},
+			{Path: "job_spec.access_token", Variable: true},
+			// We can enable it, but we don't know if authorization is set or not because API doesn't return it
+			// {Path: "http_url_spec.authorization", Variable: true},
 		},
 	},
 }

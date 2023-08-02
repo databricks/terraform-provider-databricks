@@ -22,7 +22,7 @@ type EncryptionDetails struct {
 }
 
 type ExternalLocationInfo struct {
-	Name           string             `json:"name"`
+	Name           string             `json:"name" tf:"force_new"`
 	URL            string             `json:"url"`
 	CredentialName string             `json:"credential_name"`
 	Comment        string             `json:"comment,omitempty"`

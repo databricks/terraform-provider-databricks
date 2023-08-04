@@ -30,6 +30,7 @@ func getServicePrincipalResource(cloudEnv string) string {
 }
 
 func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
 	spResource := getServicePrincipalResource(cloudEnv)
 	accountLevel(t, step{
 		Template: spResource + `

@@ -29,12 +29,6 @@ func getServicePrincipalResource(cloudEnv string) string {
 }
 
 func TestMwsAccAccountRuleSetsFullLifeCycle(t *testing.T) {
-	// This endpoint is restricted to basic auth today, used only by AWS account-level tests.
-	// Remove this skip when this restriction is lifted in Azure & GCP.
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	if cloudEnv != "aws" {
-		t.Skip("Skipping test in Azure")
-	}
 	spResource := getServicePrincipalResource(cloudEnv)
 	accountLevel(t, step{
 		Template: spResource + `

@@ -6,13 +6,13 @@ subcategory: "Security"
 
 This resource allows you to manage access rules on Databricks account level resources. For convenience we allow accessing this resource through the Databricks account and workspace.
 
--> **Note** Currently, we only support managing access rules on service principal resources through `databricks_access_control_rule_set`.
+-> **Note** Currently, we only support managing access rules on service principal and group resources through `databricks_access_control_rule_set`.
 
 -> **Warning** `databricks_access_control_rule_set` cannot be used to manage access rules for resources supported by [databricks_permissions](permissions.md). Refer to its documentation for more information.
 
-## Example usage
+## Service principal rule set usage
 
-Rule set management through a Databricks workspace:
+Through a Databricks workspace:
 
 ```hcl
 locals {
@@ -38,7 +38,7 @@ resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
 }
 ```
 
-Rule set management through AWS Databricks account:
+Through AWS Databricks account:
 
 ```hcl
 locals {
@@ -72,7 +72,7 @@ resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
 }
 ```
 
-Rule set management through Azure Databricks account:
+Through Azure Databricks account:
 
 ```hcl
 locals {
@@ -106,7 +106,7 @@ resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
 }
 ```
 
-Rule set management through GCP Databricks account:
+Through GCP Databricks account:
 
 ```hcl
 locals {
@@ -138,10 +138,138 @@ resource "databricks_access_control_rule_set" "automation_sp_rule_set" {
 }
 ```
 
+## Group rule set usage
+
+Through a Databricks workspace:
+
+```hcl
+locals {
+  account_id = "00000000-0000-0000-0000-000000000000"
+}
+
+// account level group
+data "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+data "databricks_user" "john" {
+  user_name = "john.doe@example.com"
+}
+
+resource "databricks_access_control_rule_set" "ds_group_rule_set" {
+  name = "accounts/${local.account_id}/groups/${databricks_group.ds.id}/ruleSets/default"
+
+  grant_rules {
+    principals = [data.databricks_user.john.acl_principal_id]
+    role       = "roles/group.manager"
+  }
+}
+```
+
+Through AWS Databricks account:
+
+```hcl
+locals {
+  account_id = "00000000-0000-0000-0000-000000000000"
+}
+
+// initialize provider at account-level
+provider "databricks" {
+  host       = "https://accounts.cloud.databricks.com"
+  account_id = local.account_id
+  username   = var.databricks_account_username
+  password   = var.databricks_account_password
+}
+
+// account level group creation
+resource "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+data "databricks_user" "john" {
+  user_name = "john.doe@example.com"
+}
+
+resource "databricks_access_control_rule_set" "ds_group_rule_set" {
+  name = "accounts/${local.account_id}/groups/${databricks_group.ds.id}/ruleSets/default"
+
+  grant_rules {
+    principals = [data.databricks_user.john.acl_principal_id]
+    role       = "roles/group.manager"
+  }
+}
+```
+
+Through Azure Databricks account:
+
+```hcl
+locals {
+  account_id = "00000000-0000-0000-0000-000000000000"
+}
+
+// initialize provider at Azure account-level
+provider "databricks" {
+  host       = "https://accounts.azuredatabricks.net"
+  account_id = local.account_id
+  auth_type  = "azure-cli"
+}
+
+// account level group creation
+resource "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+data "databricks_user" "john" {
+  user_name = "john.doe@example.com"
+}
+
+resource "databricks_access_control_rule_set" "ds_group_rule_set" {
+  name = "accounts/${local.account_id}/groups/${databricks_group.ds.id}/ruleSets/default"
+
+  grant_rules {
+    principals = [data.databricks_user.john.acl_principal_id]
+    role       = "roles/group.manager"
+  }
+}
+```
+
+Through GCP Databricks account:
+
+```hcl
+locals {
+  account_id = "00000000-0000-0000-0000-000000000000"
+}
+
+// initialize provider at account-level
+provider "databricks" {
+  host       = "https://accounts.gcp.databricks.com"
+  account_id = local.account_id
+}
+
+// account level group creation
+resource "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+data "databricks_user" "john" {
+  user_name = "john.doe@example.com"
+}
+
+resource "databricks_access_control_rule_set" "ds_group_rule_set" {
+  name = "accounts/${local.account_id}/groups/${databricks_group.ds.id}/ruleSets/default"
+
+  grant_rules {
+    principals = [data.databricks_user.john.acl_principal_id]
+    role       = "roles/group.manager"
+  }
+}
+```
+
 ## Argument Reference
 
 * `name` - (Required) Unique identifier of a rule set. The name determines the resource to which the rule set applies. Currently, only default rule sets are supported. The following rule set formats are supported:
   * `accounts/{account_id}/servicePrincipals/{service_principal_application_id}/ruleSets/default`
+  * `accounts/{account_id}/groups/{group_id}/ruleSets/default`
 
 * `grant_rules` - (Required) The access control rules to be granted by this rule set, consisting of a set of principals and roles to be granted to them.
 
@@ -162,9 +290,10 @@ grant_rules {
 
 Arguments of the `grant_rules` block are:
 
-- `role` - (Required) Role to be granted. The supported roles are listed below. For more information about these roles, refer to [service principal roles](https://docs.databricks.com/security/auth-authz/access-control/service-principal-acl.html#service-principal-roles).
+- `role` - (Required) Role to be granted. The supported roles are listed below. For more information about these roles, refer to [service principal roles](https://docs.databricks.com/security/auth-authz/access-control/service-principal-acl.html#service-principal-roles) or [group roles](https://docs.databricks.com/en/administration-guide/users-groups/groups.html#manage-roles-on-an-account-group-using-the-workspace-admin-settings-page).
   * `roles/servicePrincipal.manager` - Manager of a service principal.
   * `roles/servicePrincipal.user` - User of a service principal.
+  * `roles/group.manager` - Manager of a group.
 - `principals` - (Required) a list of principals who are granted a role. The following format is supported:
   * `users/{username}` (also exposed as `acl_principal_id` attribute of `databricks_user` resource).
   * `groups/{groupname}` (also exposed as `acl_principal_id` attribute of `databricks_group` resource).

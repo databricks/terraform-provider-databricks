@@ -22,7 +22,6 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 821, "Strange length for policy: %s", j)
 	assert.Equal(t, j, `{
   "Version": "2012-10-17",
   "Statement": [
@@ -81,7 +80,6 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 614, "Strange length for policy: %s", j)
 	assert.Equal(t, j, `{
   "Version": "2012-10-17",
   "Statement": [

@@ -1,5 +1,26 @@
 # Version changelog
 
+## 1.23.0
+
+ * Added Terraform support for Job Parameters (Private Preview) ([#2509](https://github.com/databricks/terraform-provider-databricks/pull/2509)).
+ * Added `gcp_attributes.local_ssd_count` to [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource ([#2422](https://github.com/databricks/terraform-provider-databricks/pull/2422)).
+ * Added `gcp_attributes.local_ssd_count` to [databricks_instance_pool](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/instance_pool) resource ([#2558](https://github.com/databricks/terraform-provider-databricks/pull/2558)).
+ * Extend RunJobTask with additional supported fields and document them in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2314](https://github.com/databricks/terraform-provider-databricks/pull/2314), [#2562](https://github.com/databricks/terraform-provider-databricks/pull/2562)).
+ * Fixed update from instance pool to node type in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2549](https://github.com/databricks/terraform-provider-databricks/pull/2549)).
+
+Exporter:
+ * Exporter: add support for [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) ([#2512](https://github.com/databricks/terraform-provider-databricks/pull/2512)).
+
+Documentation:
+ * Documented missing environment variables for authentication ([#2541](https://github.com/databricks/terraform-provider-databricks/pull/2541)).
+ * Documented run_if field and suppress diff when field is not present ([#2435](https://github.com/databricks/terraform-provider-databricks/pull/2435)).
+ * Updated diagram with Databricks resources ([#2526](https://github.com/databricks/terraform-provider-databricks/pull/2526)).
+ * Updated metastore.md ([#2547](https://github.com/databricks/terraform-provider-databricks/pull/2547)).
+
+Other Changes:
+ * Marked `gcp_attributes.use_preemptible_executors` as deprecated in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#2551](https://github.com/databricks/terraform-provider-databricks/pull/2551)).
+ * Provided `application_id` when creating SP in [databricks_access_control_rule_set](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set) resource integration test (and temporarily disabled this test outside of AWS) ([#2542](https://github.com/databricks/terraform-provider-databricks/pull/2542)).
+
 ## 1.22.0
 
  * Added [databricks_access_control_rule_set](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set) resource for managing account-level access ([#2371](https://github.com/databricks/terraform-provider-databricks/pull/2371)).

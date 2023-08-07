@@ -269,6 +269,91 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_JobParameters(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "JobParameterTesting",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "a",
+						},
+						{
+							TaskKey: "b",
+						},
+					},
+					MaxConcurrentRuns: 1,
+					Parameters: []JobParameterDefinition{
+						{
+							Name:    "hello",
+							Default: "world",
+						},
+						{
+							Name:    "key",
+							Default: "value_default",
+						},
+					},
+				},
+				Response: Job{
+					JobID: 231,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=231",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "a",
+							},
+							{
+								TaskKey: "b",
+							},
+						},
+						Parameters: []JobParameterDefinition{
+							{
+								Name:    "hello",
+								Default: "world",
+							},
+							{
+								Name:    "key",
+								Default: "value_default",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobParameterTesting"
+
+		parameter {
+				name = "hello"
+				default = "world"
+		}
+		parameter {
+				name = "key"
+				default = "value_default"
+		}
+	
+		task {
+			task_key = "a"
+		}
+
+		task {
+			task_key = "b"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "231", d.Id())
+}
 func TestResourceJobCreate_JobClusters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -239,6 +239,13 @@ This block controls notification settings for both email & webhook notifications
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
 * `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
 
+###  parameter Configuration Block
+
+This block defines a job-level parameter for the job. You can define several job-level parameters for the job. Supported options are:
+
+* `name` - (Required) The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`.
+* `default` - (Required) Default value of the parameter.
+
 ###  notification_settings Configuration Block (Task Level)
 
 This block controls notification settings for both email & webhook notifications on a task level:

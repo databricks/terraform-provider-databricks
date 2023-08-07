@@ -294,6 +294,7 @@ type JobSettings struct {
 	Queue                *Queue                        `json:"queue,omitempty"`
 	RunAs                *JobRunAs                     `json:"run_as,omitempty"`
 	Health               *JobHealth                    `json:"health,omitempty"`
+	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -341,6 +342,19 @@ type RunParameters struct {
 	SparkSubmitParams []string          `json:"spark_submit_params,omitempty"`
 }
 
+// Job-level parameter
+type JobParameter struct {
+	Name    string `json:"name,omitempty"`
+	Default string `json:"default,omitempty"`
+	Value   string `json:"value,omitempty"`
+}
+
+// Job-level parameter definitions
+type JobParameterDefinition struct {
+	Name    string `json:"name,omitempty"`
+	Default string `json:"default,omitempty"`
+}
+
 // RunState of the job
 type RunState struct {
 	ResultState    string `json:"result_state,omitempty"`
@@ -358,7 +372,8 @@ type JobRun struct {
 	Trigger     string   `json:"trigger,omitempty"`
 	RuntType    string   `json:"run_type,omitempty"`
 
-	OverridingParameters RunParameters `json:"overriding_parameters,omitempty"`
+	OverridingParameters RunParameters  `json:"overriding_parameters,omitempty"`
+	JobParameters        []JobParameter `json:"job_parameters,omitempty"`
 }
 
 // JobRunsListRequest used to do what it sounds like

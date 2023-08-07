@@ -132,6 +132,7 @@ func Run(args ...string) error {
 		return err
 	}
 	if ic.incremental {
+		// TODO: think if we can use some configuration file in the output directory to save last export time?
 		if ic.updatedSinceStr == "" {
 			return fmt.Errorf("-updated-since is required with -interactive parameter")
 		}

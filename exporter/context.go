@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -266,12 +267,16 @@ func (ic *importContext) Run() error {
 	}
 	ic.generateHclForResources(sh)
 	for service, f := range ic.Files {
+		generatedFile := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
+		err = ic.updateExportedWithIncrementals(generatedFile, f)
+		if err != nil {
+			return err
+		}
 		formatted := hclwrite.Format(f.Bytes())
 		// fix some formatting in a hacky way instead of writing 100 lines
 		// of HCL AST writer code
 		formatted = []byte(ic.regexFix(string(formatted), ic.hclFixes))
 		log.Printf("[DEBUG] %s", formatted)
-		generatedFile := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
 		if tf, err := os.Create(generatedFile); err == nil {
 			defer tf.Close()
 			if _, err = tf.Write(formatted); err != nil {
@@ -293,6 +298,50 @@ func (ic *importContext) Run() error {
 		return err
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
+	return nil
+}
+
+func generateBlockFullName(block *hclwrite.Block) string {
+	return block.Type() + "_" + strings.Join(block.Labels(), "_")
+}
+
+func (ic *importContext) updateExportedWithIncrementals(generatedFile string, f *hclwrite.File) error {
+	if !ic.incremental {
+		return nil
+	}
+	log.Printf("[DEBUG] Going to read existing file %s", generatedFile)
+	content, err := os.ReadFile(generatedFile)
+	if errors.Is(err, os.ErrNotExist) {
+		log.Printf("[WARN] File %s doesn't exist when using incremental export", generatedFile)
+		return nil
+	}
+	if err != nil {
+		log.Printf("[ERROR] error opening %s", generatedFile)
+	}
+	log.Printf("[DEBUG] Going to parse existing file %s", generatedFile)
+	existingFile, diags := hclwrite.ParseConfig(content, generatedFile, hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() {
+		log.Printf("[ERROR] parsing of existing file %s failed: %s", generatedFile, diags.Error())
+		return fmt.Errorf("parsing error: %s", diags.Error())
+	}
+	newBlocks := f.Body().Blocks()
+	newResources := make(map[string]bool, len(newBlocks))
+	for _, block := range newBlocks {
+		newResources[generateBlockFullName(block)] = true
+	}
+	log.Printf("[DEBUG] %d new resources: %v", len(newResources), newResources)
+
+	for _, block := range existingFile.Body().Blocks() {
+		blockName := generateBlockFullName(block)
+		_, exists := newResources[blockName]
+		if exists {
+			log.Printf("[DEBUG] resource %s already generated, skipping...", blockName)
+		} else {
+			log.Printf("[DEBUG] resource %s doesn't exist, adding...", blockName)
+			f.Body().AppendBlock(block)
+		}
+	}
+
 	return nil
 }
 

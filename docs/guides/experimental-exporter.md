@@ -45,6 +45,8 @@ All arguments are optional and they tune what code is being generated.
 * `-skip-interactive` - optionally run in a non-interactive mode.
 * `-includeUserDomains` - optionally include domain name into generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally include all users and service principals even if they only part of the `users` group.
+* `-incremental` - experimental option for incremental export of modified resources and merging with existing resources. *Please note that only limited set of resources (notebooks, SQL queries/dashboards/alerts, ...) provides information about last modified date - all other resources will be re-exported again.  Requires `-updated-since` option.
+* `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a giving timestamp. I.e. `2023-07-24T00:00:00Z`.
 
 ## Services
 

@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"bufio"
 	"context"
 	"crypto/md5"
 	"fmt"
@@ -86,6 +87,7 @@ type importContext struct {
 	meAdmin             bool
 	prefix              string
 	accountLevel        bool
+	shImports           map[string]bool
 }
 
 type mount struct {
@@ -147,6 +149,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		allDirectories:      []workspace.ObjectStatus{},
 		allWorkspaceObjects: []workspace.ObjectStatus{},
 		workspaceConfKeys:   workspaceConfKeys,
+		shImports:           make(map[string]bool),
 	}
 }
 
@@ -209,7 +212,25 @@ func (ic *importContext) Run() error {
 	if len(ic.Scope) == 0 {
 		return fmt.Errorf("no resources to import")
 	}
-	sh, err := os.OpenFile(fmt.Sprintf("%s/import.sh", ic.Directory), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
+	shFileName := fmt.Sprintf("%s/import.sh", ic.Directory)
+	if ic.incremental {
+		shFile, err := os.Open(shFileName)
+		if err == nil {
+			fileScanner := bufio.NewScanner(shFile)
+			fileScanner.Split(bufio.ScanLines)
+			for fileScanner.Scan() {
+				line := fileScanner.Text()
+				if strings.HasPrefix(line, "terraform import ") {
+					log.Printf("[DEBUG] adding %s to shImports", line)
+					ic.shImports[strings.TrimRight(line, "\n")] = true
+				}
+			}
+			shFile.Close()
+		} else {
+			log.Printf("[ERROR] opening %s: %v", shFileName, err)
+		}
+	}
+	sh, err := os.OpenFile(shFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
@@ -259,22 +280,12 @@ func (ic *importContext) Run() error {
 		}
 		log.Printf("[INFO] Created %s", generatedFile)
 	}
-	if len(ic.variables) > 0 {
-		vf, err := os.Create(fmt.Sprintf("%s/vars.tf", ic.Directory))
-		if err != nil {
-			return err
-		}
-		defer vf.Close()
-		f := hclwrite.NewEmptyFile()
-		body := f.Body()
-		for k, v := range ic.variables {
-			b := body.AppendNewBlock("variable", []string{k}).Body()
-			b.SetAttributeValue("description", cty.StringVal(v))
-		}
-		// nolint
-		vf.Write(f.Bytes())
-		log.Printf("[INFO] Written %d variables", len(ic.variables))
+
+	err = ic.generateVariables()
+	if err != nil {
+		return err
 	}
+
 	cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
 	cmd.Dir = ic.Directory
 	err = cmd.Run()
@@ -282,6 +293,55 @@ func (ic *importContext) Run() error {
 		return err
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
+	return nil
+}
+
+func (ic *importContext) generateVariables() error {
+	// TODO: test it when MLflow webhooks will be merged
+	if len(ic.variables) == 0 {
+		return nil
+	}
+	f := hclwrite.NewEmptyFile()
+	body := f.Body()
+	fileName := fmt.Sprintf("%s/vars.tf", ic.Directory)
+	if ic.incremental {
+		content, err := os.ReadFile(fileName)
+		if err == nil {
+			ftmp, diags := hclwrite.ParseConfig(content, fileName, hcl.Pos{Line: 1, Column: 1})
+			if diags.HasErrors() {
+				log.Printf("[ERROR] parsing of existing file failed: %s", diags)
+			} else {
+				tbody := ftmp.Body()
+				for _, block := range tbody.Blocks() {
+					typ := block.Type()
+					labels := block.Labels()
+					log.Printf("[DEBUG] blockBody: %v %v\n", typ, labels)
+					_, present := ic.variables[labels[0]]
+					if typ == "variable" && present {
+						log.Printf("[DEBUG] Ignoring variable '%s' that will be re-exported", labels[0])
+					} else {
+						log.Printf("[DEBUG] Adding not exported object. type='%s', labels=%v", typ, labels)
+						body.AppendBlock(block)
+					}
+				}
+			}
+		} else {
+			log.Printf("[ERROR] opening file %s", fileName)
+		}
+	}
+	vf, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer vf.Close()
+
+	for k, v := range ic.variables {
+		b := body.AppendNewBlock("variable", []string{k}).Body()
+		b.SetAttributeValue("description", cty.StringVal(v))
+	}
+	// nolint
+	vf.Write(f.Bytes())
+	log.Printf("[INFO] Written %d variables", len(ic.variables))
 	return nil
 }
 
@@ -318,8 +378,14 @@ func (ic *importContext) generateHclForResources(sh *os.File) {
 		}
 		if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil && sh != nil {
 			// nolint
-			sh.WriteString(r.ImportCommand(ic) + "\n")
+			importCommand := r.ImportCommand(ic)
+			sh.WriteString(importCommand + "\n")
+			delete(ic.shImports, importCommand)
 		}
+	}
+	log.Printf("[DEBUG] Writing the rest of import commands. len=%d, %v", len(ic.shImports), ic.shImports)
+	for k := range ic.shImports {
+		sh.WriteString(k + "\n")
 	}
 }
 

@@ -59,6 +59,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 	return common.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc
 		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = ZoneDiffSuppress
+		common.MustSchemaPath(s, "gcp_attributes", "use_preemptible_executors").Deprecated = "Please use 'availability' instead."
+
 		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {

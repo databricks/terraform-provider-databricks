@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"sort"
@@ -37,7 +36,7 @@ import (
 
 // nolint
 func getJSONObject(filename string) any {
-	data, _ := ioutil.ReadFile(filename)
+	data, _ := os.ReadFile(filename)
 	var obj map[string]any
 	err := json.Unmarshal(data, &obj)
 	if err != nil {
@@ -48,7 +47,7 @@ func getJSONObject(filename string) any {
 }
 
 func getJSONArray(filename string) any {
-	data, _ := ioutil.ReadFile(filename)
+	data, _ := os.ReadFile(filename)
 	var obj []any
 	err := json.Unmarshal(data, &obj)
 	if err != nil {
@@ -2071,5 +2070,31 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 
 			err := ic.Run()
 			assert.NoError(t, err)
+		})
+}
+
+func TestIncrementalErrors(t *testing.T) {
+	// Testing missing `-updated-since`
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			ic := newImportContext(client)
+			ic.services = "model-serving"
+			ic.incremental = true
+
+			err := ic.Run()
+			assert.ErrorContains(t, err, "-updated-since is required with -interactive parameter")
+		})
+	// Testing broken `-updated-since`
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			ic := newImportContext(client)
+			ic.services = "model-serving"
+			ic.incremental = true
+			ic.updatedSinceStr = "aaa"
+
+			err := ic.Run()
+			assert.ErrorContains(t, err, "can't parse value 'aaa' please specify it")
 		})
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -970,5 +971,53 @@ func TestSqlListObjects(t *testing.T) {
 		answer, err := dbsqlListObjects(ic, "/preview/sql/queries")
 		assert.NoError(t, err)
 		assert.Len(t, answer, 2)
+	})
+}
+
+func TestIncrementalListDLT(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines?max_results=50",
+			Response: pipelines.PipelineListResponse{
+				Statuses: []pipelines.PipelineStateInfo{
+					{
+						PipelineID: "abc",
+						Name:       "abc",
+					},
+					{
+						PipelineID: "def",
+						Name:       "def",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines/abc",
+			Response: pipelines.PipelineInfo{
+				PipelineID:   "abc",
+				Name:         "abc",
+				LastModified: 1681466931226,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines/def",
+			Response: pipelines.PipelineInfo{
+				PipelineID:   "def",
+				Name:         "def",
+				LastModified: 1690156900000,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.incremental = true
+		ic.updatedSinceStr = "2023-07-24T00:00:00Z"
+		err := resourcesMap["databricks_pipeline"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(ic.testEmits))
 	})
 }

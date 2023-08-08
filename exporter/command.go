@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
@@ -130,17 +129,6 @@ func Run(args ...string) error {
 	err = flags.Parse(newArgs)
 	if err != nil {
 		return err
-	}
-	if ic.incremental {
-		// TODO: think if we can use some configuration file in the output directory to save last export time?
-		if ic.updatedSinceStr == "" {
-			return fmt.Errorf("-updated-since is required with -interactive parameter")
-		}
-		_, err = time.Parse(time.RFC3339, ic.updatedSinceStr)
-		if err != nil {
-			log.Printf("[ERROR] can't parse value '%s' please specify it in ISO8601 format, i.e. 2023-07-01T00:00:00Z", ic.updatedSinceStr)
-			return err
-		}
 	}
 	if !skipInteractive {
 		ic.interactivePrompts()

@@ -1012,7 +1012,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, gis := range globalInitScripts {
+				modifiedAt := gis.UpdatedAt
+				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping global init script '%s' that was modified at %d (last active=%d)",
+						gis.Name, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_global_init_script",
 					ID:       gis.ScriptID,
@@ -1173,7 +1180,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			ipLists := ipListsResp.IpAccessLists
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, ipList := range ipLists {
+				modifiedAt := ipList.UpdatedAt
+				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping IP access list '%s' that was modified at %d (last active=%d)",
+						ipList.Label, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_ip_access_list",
 					ID:       ipList.ListId,
@@ -1652,13 +1666,27 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			pipelinesList, err := pipelines.NewPipelinesAPI(ic.Context, ic.Client).List(50, "")
+			api := pipelines.NewPipelinesAPI(ic.Context, ic.Client)
+			pipelinesList, err := api.List(50, "")
 			if err != nil {
 				return err
 			}
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for i, q := range pipelinesList {
 				if !ic.MatchesName(q.Name) {
 					continue
+				}
+				if ic.incremental {
+					pipeline, err := api.Read(q.PipelineID)
+					if err != nil {
+						return err
+					}
+					modifiedAt := pipeline.LastModified
+					if modifiedAt != 0 && modifiedAt < updatedSinceMs {
+						log.Printf("[DEBUG] skipping DLT Pipeline '%s' that was modified at %d (last active=%d)",
+							pipeline.Name, modifiedAt, updatedSinceMs)
+						continue
+					}
 				}
 				ic.Emit(&resource{
 					Resource: "databricks_pipeline",
@@ -1819,8 +1847,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, endpoint := range endpointsList {
-				// TODO: add incremental export as well
+				modifiedAt := endpoint.LastUpdatedTimestamp
+				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping serving endpoint '%s' that was modified at %d (last active=%d)",
+						endpoint.Name, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_model_serving",
 					ID:       endpoint.Name,

@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -158,6 +159,18 @@ func (ic *importContext) Run() error {
 	if len(ic.services) == 0 {
 		return fmt.Errorf("no services to import")
 	}
+
+	if ic.incremental {
+		// TODO: think if we can use some configuration file in the output directory to save last export time?
+		if ic.updatedSinceStr == "" {
+			return fmt.Errorf("-updated-since is required with -interactive parameter")
+		}
+		if _, err := time.Parse(time.RFC3339, ic.updatedSinceStr); err != nil {
+			return fmt.Errorf("can't parse value '%s' please specify it in ISO8601 format, i.e. 2023-07-01T00:00:00Z",
+				ic.updatedSinceStr)
+		}
+	}
+
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
 		ic.Module, ic.Directory, ic.services)
 

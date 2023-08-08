@@ -102,6 +102,9 @@ func getPermissionEndpoint(securable, name string) string {
 	if securable == "share" {
 		return fmt.Sprintf("/unity-catalog/shares/%s/permissions", name)
 	}
+	if securable == "the_connection" {
+		return fmt.Sprintf("/unity-catalog/permissions/foreign_connection/%s", name)
+	}
 	return fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name)
 }
 
@@ -277,9 +280,12 @@ var mapping = securableMapping{
 		"READ_VOLUME":    true,
 		"WRITE_VOLUME":   true,
 	},
-	"connection": {
+	// avoid reserved field
+	"foreign_connection": {
 		"ALL_PRIVILEGES":         true,
 		"CREATE_FOREIGN_CATALOG": true,
+		"CREATE_FOREIGN_SCHEMA":  true,
+		"CREATE_FOREIGN_TABLE":   true,
 		"USE_CONNECTION":         true,
 	},
 }

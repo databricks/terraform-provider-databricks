@@ -102,8 +102,8 @@ func getPermissionEndpoint(securable, name string) string {
 	if securable == "share" {
 		return fmt.Sprintf("/unity-catalog/shares/%s/permissions", name)
 	}
-	if securable == "the_connection" {
-		return fmt.Sprintf("/unity-catalog/permissions/foreign_connection/%s", name)
+	if securable == "foreign_connection" {
+		return fmt.Sprintf("/unity-catalog/permissions/connection/%s", name)
 	}
 	return fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name)
 }

@@ -174,9 +174,11 @@ var mapping = securableMapping{
 
 		// v1.0
 		"ALL_PRIVILEGES": true,
+		"BROWSE":         true,
 	},
 	"view": {
 		"SELECT": true,
+		"BROWSE": true,
 	},
 	"catalog": {
 		"CREATE": true,
@@ -190,6 +192,7 @@ var mapping = securableMapping{
 		"CREATE_TABLE":             true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"CREATE_MODEL":             true,
 		"CREATE_VOLUME":            true,
 		"READ_VOLUME":              true,
 		"WRITE_VOLUME":             true,
@@ -197,6 +200,7 @@ var mapping = securableMapping{
 		"MODIFY":                   true,
 		"SELECT":                   true,
 		"REFRESH":                  true,
+		"BROWSE":                   true,
 	},
 	"schema": {
 		"CREATE": true,
@@ -208,6 +212,7 @@ var mapping = securableMapping{
 		"CREATE_TABLE":             true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"CREATE_MODEL":             true,
 		"CREATE_VOLUME":            true,
 		"READ_VOLUME":              true,
 		"WRITE_VOLUME":             true,
@@ -215,6 +220,7 @@ var mapping = securableMapping{
 		"MODIFY":                   true,
 		"SELECT":                   true,
 		"REFRESH":                  true,
+		"BROWSE":                   true,
 	},
 	"storage_credential": {
 		"CREATE_TABLE":             true,
@@ -236,6 +242,7 @@ var mapping = securableMapping{
 		"CREATE_EXTERNAL_TABLE":  true,
 		"CREATE_MANAGED_STORAGE": true,
 		"CREATE_EXTERNAL_VOLUME": true,
+		"BROWSE":                 true,
 	},
 	"metastore": {
 		// v1.0
@@ -269,6 +276,11 @@ var mapping = securableMapping{
 		"ALL_PRIVILEGES": true,
 		"READ_VOLUME":    true,
 		"WRITE_VOLUME":   true,
+	},
+	"connection": {
+		"ALL_PRIVILEGES":         true,
+		"CREATE_FOREIGN_CATALOG": true,
+		"USE_CONNECTION":         true,
 	},
 }
 

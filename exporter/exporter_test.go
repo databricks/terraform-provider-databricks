@@ -2098,3 +2098,85 @@ func TestIncrementalErrors(t *testing.T) {
 			assert.ErrorContains(t, err, "can't parse value 'aaa' please specify it")
 		})
 }
+
+func TestIncrementalDLT(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines?max_results=50",
+				Response: pipelines.PipelineListResponse{
+					Statuses: []pipelines.PipelineStateInfo{
+						{
+							PipelineID: "abc",
+							Name:       "abc",
+						},
+						{
+							PipelineID: "def",
+							Name:       "def",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abc",
+				Response: pipelines.PipelineInfo{
+					PipelineID:   "abc",
+					Name:         "abc",
+					LastModified: 1681466931226,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/def",
+				Response: pipelines.PipelineInfo{
+					PipelineID:   "def",
+					Name:         "def",
+					LastModified: 1690156900000,
+					Spec:         &pipelines.PipelineSpec{},
+				},
+				ReuseRequest: true,
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+			os.Mkdir(tmpDir, 0700)
+			os.WriteFile(tmpDir+"/import.sh", []byte(
+				`terraform import databricks_pipeline.abc "abc"
+terraform import databricks_pipeline.def "def"
+`), 0700)
+			os.WriteFile(tmpDir+"/dlt.tf", []byte(`resource "databricks_pipeline" "abc" {
+}
+			
+resource "databricks_pipeline" "def" {
+}`), 0700)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "dlt"
+			ic.services = "dlt"
+			ic.incremental = true
+			ic.updatedSinceStr = "2023-07-24T00:00:00Z"
+			ic.meAdmin = false
+
+			err := ic.Run()
+			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/import.sh")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+			content, err = os.ReadFile(tmpDir + "/dlt.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_pipeline" "def"`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_pipeline" "abc"`))
+		})
+}

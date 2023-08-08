@@ -2,10 +2,13 @@ package catalog
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -51,37 +54,46 @@ func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
 	return !d.HasChanges("gcp_service_account_key.0.email", "gcp_service_account_key.0.private_key_id")
 }
 
-func ResourceMetastoreDataAccess() *schema.Resource {
-	s := common.StructToSchema(DataAccessConfiguration{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["metastore_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			}
-			m["is_default"] = &schema.Schema{
-				// having more than one default DAC per metastore will lead
-				// to Terraform re-assigning default_data_access_config_id
-				// on every apply.
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["aws_iam_role"].AtLeastOneOf = alofCred
-			m["azure_service_principal"].AtLeastOneOf = alofCred
-			m["azure_managed_identity"].AtLeastOneOf = alofCred
-			m["gcp_service_account_key"].AtLeastOneOf = alofCred
-			m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
+var dacSchema = common.StructToSchema(DataAccessConfiguration{},
+	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["metastore_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		}
+		m["is_default"] = &schema.Schema{
+			// having more than one default DAC per metastore will lead
+			// to Terraform re-assigning default_data_access_config_id
+			// on every apply.
+			Type:     schema.TypeBool,
+			Optional: true,
+		}
+		m["aws_iam_role"].AtLeastOneOf = alofCred
+		m["azure_service_principal"].AtLeastOneOf = alofCred
+		m["azure_managed_identity"].AtLeastOneOf = alofCred
+		m["gcp_service_account_key"].AtLeastOneOf = alofCred
+		m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
 
-			// suppress changes for private_key
-			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
-			return m
-		})
+		// suppress changes for private_key
+		m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
+		return m
+	})
+
+func ResourceMetastoreDataAccess() *schema.Resource {
 	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
-		Schema: s,
+		Schema:        dacSchema,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    dacSchemaV0(),
+				Upgrade: dacMigrateV0,
+			},
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId := d.Get("metastore_id").(string)
 
-			tmpSchema := removeGcpSaField(s)
+			tmpSchema := removeGcpSaField(dacSchema)
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
 
@@ -148,7 +160,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				}
 				isDefault := metastore.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
-				return common.StructToData(storageCredential, s, d)
+				return common.StructToData(storageCredential, dacSchema, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacName)
 				if err != nil {
@@ -160,7 +172,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				}
 				isDefault := metastore.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
-				return common.StructToData(storageCredential, s, d)
+				return common.StructToData(storageCredential, dacSchema, d)
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -178,4 +190,27 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			})
 		},
 	}.ToResource()
+}
+
+// migrate to v1 state, as the id is now changed
+func dacMigrateV0(ctx context.Context,
+	rawState map[string]any,
+	meta any) (map[string]any, error) {
+	newState := map[string]any{}
+	for k, v := range rawState {
+		switch k {
+		case "id":
+			log.Printf("[INFO] Upgrade id")
+			newState[k] = fmt.Sprintf("%v%s%v", rawState["metastore_id"], "|", rawState["name"])
+			continue
+		default:
+			newState[k] = v
+		}
+	}
+	return newState, nil
+}
+
+func dacSchemaV0() cty.Type {
+	return (&schema.Resource{
+		Schema: dacSchema}).CoreConfigSchema().ImpliedType()
 }

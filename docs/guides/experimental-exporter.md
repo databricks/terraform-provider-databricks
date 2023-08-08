@@ -45,7 +45,7 @@ All arguments are optional and they tune what code is being generated.
 * `-skip-interactive` - optionally run in a non-interactive mode.
 * `-includeUserDomains` - optionally include domain name into generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally include all users and service principals even if they only part of the `users` group.
-* `-incremental` - experimental option for incremental export of modified resources and merging with existing resources. *Please note that only limited set of resources (notebooks, SQL queries/dashboards/alerts, ...) provides information about last modified date - all other resources will be re-exported again.  Requires `-updated-since` option.
+* `-incremental` - experimental option for incremental export of modified resources and merging with existing resources. *Please note that only limited set of resources (notebooks, SQL queries/dashboards/alerts, ...) provides information about last modified date - all other resources will be re-exported again! Also, it's not possible to detect deletion of the resources, so you will need to do periodic full export if resources are deleted!*   **Requires** `-updated-since` option.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a giving timestamp. I.e. `2023-07-24T00:00:00Z`.
 
 ## Services
@@ -86,7 +86,7 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_cluster](../resources/cluster.md) | Yes | No |
 | [databricks_cluster_policy](../resources/cluster_policy.md) | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No |
-| [databricks_global_init_script](../resources/global_init_script.md) | Yes |
+| [databricks_global_init_script](../resources/global_init_script.md) | Yes | Yes |
 | [databricks_group](../resources/group.md) | Yes | No |
 | [databricks_group_instance_profile](../resources/group_instance_profile.md) | Yes | No |
 | [databricks_group_member](../resources/group_member.md) | Yes | No |

@@ -275,6 +275,13 @@ var emptySqlEndpoints = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyInstancePools = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/instance-pools/list",
+	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
 var emptySqlDashboards = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/preview/sql/dashboards?page_size=100",
@@ -331,6 +338,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyGitCredentials,
 			emptyWorkspace,
 			emptyIpAccessLIst,
+			emptyInstancePools,
 			emptyModelServing,
 			emptySqlDashboards,
 			emptySqlEndpoints,
@@ -536,6 +544,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyRepos,
 			emptyModelServing,
 			emptyWorkspaceConf,
+			emptyInstancePools,
 			dummyWorkspaceConf,
 			{
 				Method:   "GET",
@@ -919,7 +928,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = "jobs,access,storage,clusters"
+			ic.services = "jobs,access,storage,clusters,pools"
 			ic.listing = "jobs"
 			ic.mounts = true
 			ic.meAdmin = true
@@ -1168,7 +1177,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = "jobs,access,storage,clusters"
+			ic.services = "jobs,access,storage,clusters,pools"
 			ic.listing = "jobs"
 			ic.mounts = true
 			ic.meAdmin = true

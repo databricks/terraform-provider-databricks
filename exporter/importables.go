@@ -1905,8 +1905,16 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, webhook := range webhooks {
-				// TODO: add support for incremental export
+				modifiedAt := webhook.LastUpdatedTimestamp
+				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping MLflow webhook '%s' that was modified at %d (last active=%d)",
+						webhook.Id, modifiedAt, updatedSinceMs)
+					continue
+				}
+				log.Printf("[DEBUG] emitting MLflow webhook '%s' that was modified at %d (last active=%d)",
+					webhook.Id, modifiedAt, updatedSinceMs)
 				ic.Emit(&resource{
 					Resource: "databricks_mlflow_webhook",
 					ID:       webhook.Id,

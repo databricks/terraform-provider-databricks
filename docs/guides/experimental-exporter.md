@@ -58,6 +58,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md)
 * `groups` - [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually there are more automated jobs than interactive clusters, so they get their own file in this tool's output.
+* `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
 * `notebooks` - **listing** [databricks_notebook](../resources/notebook.md) and [databricks_workspace_file](../resources/workspace_file.md)
@@ -95,7 +96,7 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_instance_profile](../resources/instance_profile.md) | Yes | No |
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes |
 | [databricks_job](../resources/job.md) | Yes | No |
-| [databricks_library](../resources/library.md) | No | No |
+| [databricks_library](../resources/library.md) | Yes | No |
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No |
 | [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes |

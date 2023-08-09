@@ -2099,13 +2099,43 @@ func TestIncrementalErrors(t *testing.T) {
 		})
 }
 
-func TestIncrementalDLT(t *testing.T) {
+func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
+	webhooks := []ml.RegistryWebhook{
+		{
+			LastUpdatedTimestamp: 1681466931226,
+			Id:                   "abc",
+			HttpUrlSpec: &ml.HttpUrlSpecWithoutSecret{
+				Url: "https://....",
+			},
+		},
+		{
+			LastUpdatedTimestamp: 1690156900000,
+			Id:                   "def",
+			JobSpec: &ml.JobSpecWithoutSecret{
+				JobId: "123",
+			},
+		},
+	}
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registry-webhooks/list?",
+				Response: ml.ListRegistryWebhooks{
+					Webhooks: webhooks,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registry-webhooks/list",
+				Response: ml.ListRegistryWebhooks{
+					Webhooks: webhooks,
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=50",
@@ -2155,12 +2185,17 @@ terraform import databricks_pipeline.def "def"
 }
 			
 resource "databricks_pipeline" "def" {
-}`), 0700)
+}
+`), 0700)
+			os.WriteFile(tmpDir+"/vars.tf", []byte(`variable "var1" {
+	description = ""
+}
+`), 0700)
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.listing = "dlt"
-			ic.services = "dlt"
+			ic.listing = "dlt,mlflow-webhooks"
+			ic.services = "dlt,mlflow-webhooks"
 			ic.incremental = true
 			ic.updatedSinceStr = "2023-07-24T00:00:00Z"
 			ic.meAdmin = false
@@ -2173,10 +2208,17 @@ resource "databricks_pipeline" "def" {
 			contentStr := string(content)
 			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
 			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+
 			content, err = os.ReadFile(tmpDir + "/dlt.tf")
 			assert.NoError(t, err)
 			contentStr = string(content)
 			assert.True(t, strings.Contains(contentStr, `resource "databricks_pipeline" "def"`))
 			assert.True(t, strings.Contains(contentStr, `resource "databricks_pipeline" "abc"`))
+
+			content, err = os.ReadFile(tmpDir + "/vars.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `variable "var1"`))
+			assert.True(t, strings.Contains(contentStr, `variable "job_spec_webhook_def"`))
 		})
 }

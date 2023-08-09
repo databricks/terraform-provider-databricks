@@ -1331,6 +1331,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						updatedAt, updatedSinceStr)
 					continue
 				}
+				log.Printf("[DEBUG] emitting query '%s' that was modified at %s (updatedSince=%s)", name,
+					updatedAt, updatedSinceStr)
 				ic.Emit(&resource{
 					Resource:    "databricks_sql_query",
 					ID:          q["id"].(string),
@@ -1480,6 +1482,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						updatedAt, updatedSinceStr)
 					continue
 				}
+				log.Printf("[DEBUG] emitting dashboard '%s' that was modified at %s (updatedSince=%s)", name,
+					updatedAt, updatedSinceStr)
 				ic.Emit(&resource{
 					Resource:    "databricks_sql_dashboard",
 					ID:          q["id"].(string),
@@ -1615,7 +1619,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						alert.UpdatedAt, updatedSinceStr)
 					continue
 				}
-
+				log.Printf("[DEBUG] emitting alert '%s' that was modified at %s (last active=%s)", name,
+					alert.UpdatedAt, updatedSinceStr)
 				ic.Emit(&resource{
 					Resource:    "databricks_sql_alert",
 					ID:          alert.Id,

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/md5"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -155,20 +156,46 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 	}
 }
 
+func getLastRunString(fileName string) string {
+	var updatedSinceStr string
+	statsData, err := os.ReadFile(fileName)
+	if err == nil {
+		var m map[string]any
+		err = json.Unmarshal(statsData, &m)
+		s, exists := m["startTime"]
+		if err == nil && exists {
+			updatedSinceStr = s.(string)
+		} else {
+			log.Printf("[WARN] Can't decode data: err=%v or startTime field doesn't exist. data: '%s'",
+				err, string(statsData))
+		}
+	} else {
+		log.Printf("[WARN] Can't load data from file %s: %v", fileName, err)
+	}
+	return updatedSinceStr
+}
+
 func (ic *importContext) Run() error {
+	startTime := time.Now()
+	statsFileName := ic.Directory + "/exporter-run-stats.json"
 	if len(ic.services) == 0 {
 		return fmt.Errorf("no services to import")
 	}
 
 	if ic.incremental {
-		// TODO: think if we can use some configuration file in the output directory to save last export time?
 		if ic.updatedSinceStr == "" {
-			return fmt.Errorf("-updated-since is required with -interactive parameter")
+			ic.updatedSinceStr = getLastRunString(statsFileName)
 		}
-		if _, err := time.Parse(time.RFC3339, ic.updatedSinceStr); err != nil {
+		if ic.updatedSinceStr == "" {
+			return fmt.Errorf("-updated-since is required with -interactive parameter if %s file doesn't exist",
+				statsFileName)
+		}
+		tm, err := time.Parse(time.RFC3339, ic.updatedSinceStr)
+		if err != nil {
 			return fmt.Errorf("can't parse value '%s' please specify it in ISO8601 format, i.e. 2023-07-01T00:00:00Z",
 				ic.updatedSinceStr)
 		}
+		ic.updatedSinceStr = tm.UTC().Format(time.RFC3339)
 	}
 
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
@@ -235,7 +262,6 @@ func (ic *importContext) Run() error {
 			for fileScanner.Scan() {
 				line := fileScanner.Text()
 				if strings.HasPrefix(line, "terraform import ") {
-					log.Printf("[DEBUG] adding %s to shImports", line)
 					ic.shImports[strings.TrimRight(line, "\n")] = true
 				}
 			}
@@ -309,6 +335,19 @@ func (ic *importContext) Run() error {
 	err = cmd.Run()
 	if err != nil {
 		return err
+	}
+	//
+	if stats, err := os.Create(statsFileName); err == nil {
+		defer stats.Close()
+		statsData := map[string]any{
+			"startTime":       startTime.UTC().Format(time.RFC3339),
+			"duration":        fmt.Sprintf("%f sec", time.Since(startTime).Seconds()),
+			"exportedObjects": len(ic.Scope),
+		}
+		statsBytes, _ := json.Marshal(statsData)
+		if _, err = stats.Write(statsBytes); err != nil {
+			return err
+		}
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil
@@ -445,7 +484,7 @@ func (ic *importContext) generateHclForResources(sh *os.File) {
 			delete(ic.shImports, importCommand)
 		}
 	}
-	log.Printf("[DEBUG] Writing the rest of import commands. len=%d, %v", len(ic.shImports), ic.shImports)
+	log.Printf("[DEBUG] Writing the rest of import commands. len=%d", len(ic.shImports))
 	for k := range ic.shImports {
 		sh.WriteString(k + "\n")
 	}

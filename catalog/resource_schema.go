@@ -4,18 +4,10 @@ import (
 	"context"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-type SchemasAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-func NewSchemasAPI(ctx context.Context, m any) SchemasAPI {
-	return SchemasAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
-}
 
 type SchemaInfo struct {
 	Name        string            `json:"name" tf:"force_new"`
@@ -32,31 +24,6 @@ type Schemas struct {
 	Schemas []SchemaInfo `json:"schemas"`
 }
 
-func (a SchemasAPI) createSchema(si *SchemaInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/schemas", si, si)
-}
-
-func (a SchemasAPI) getSchema(name string) (si SchemaInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/schemas/"+name, nil, &si)
-	return
-}
-
-func (a SchemasAPI) deleteSchema(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/schemas/"+name, nil)
-}
-
-func (a SchemasAPI) forceDeleteSchema(name string) error {
-	tablesAPI := NewTablesAPI(a.context, a.client)
-	tables, err := tablesAPI.listTables(strings.Split(name, ".")[0], strings.Split(name, ".")[1])
-	if err != nil {
-		return err
-	}
-	for _, v := range tables.Tables {
-		tablesAPI.deleteTable(v.FullName())
-	}
-	return a.client.Delete(a.context, "/unity-catalog/schemas/"+name, nil)
-}
-
 func ResourceSchema() *schema.Resource {
 	s := common.StructToSchema(SchemaInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -69,32 +36,83 @@ func ResourceSchema() *schema.Resource {
 			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
 			return m
 		})
-	update := updateFunctionFactory("/unity-catalog/schemas", []string{"owner", "comment", "properties"})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var si SchemaInfo
-			common.DataToStructPointer(d, s, &si)
-			if err := NewSchemasAPI(ctx, c).createSchema(&si); err != nil {
-				return err
-			}
-			d.SetId(si.FullName)
-			return update(ctx, d, c)
-		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			si, err := NewSchemasAPI(ctx, c).getSchema(d.Id())
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			return common.StructToData(si, s, d)
+			var createSchemaRequest catalog.CreateSchema
+			common.DataToStructPointer(d, s, &createSchemaRequest)
+			schema, err := w.Schemas.Create(ctx, createSchemaRequest)
+			if err != nil {
+				return err
+			}
+			d.SetId(schema.FullName)
+
+			// Don't update owner if it is not provided
+			if d.Get("owner") == "" {
+				return nil
+			}
+
+			var updateSchemaRequest catalog.UpdateSchema
+			common.DataToStructPointer(d, s, &updateSchemaRequest)
+			updateSchemaRequest.FullName = d.Id()
+			_, err = w.Schemas.Update(ctx, updateSchemaRequest)
+			if err != nil {
+				return err
+			}
+			return nil
 		},
-		Update: update,
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			schema, err := w.Schemas.Get(ctx, catalog.GetSchemaRequest{FullName: d.Id()})
+			if err != nil {
+				return err
+			}
+			return common.StructToData(schema, s, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			var updateSchemaRequest catalog.UpdateSchema
+			common.DataToStructPointer(d, s, &updateSchemaRequest)
+			updateSchemaRequest.FullName = d.Id()
+			schema, err := w.Schemas.Update(ctx, updateSchemaRequest)
+			if err != nil {
+				return err
+			}
+			// We need to update the resource Id because Name is updatable and FullName consists of Name,
+			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
+			d.SetId(schema.FullName)
+			return nil
+		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			if force {
-				return NewSchemasAPI(ctx, c).forceDeleteSchema(d.Id())
+			name := d.Id()
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
 			}
-			return NewSchemasAPI(ctx, c).deleteSchema(d.Id())
+			if force {
+				tables, err := w.Tables.ListAll(ctx, catalog.ListTablesRequest{
+					CatalogName: strings.Split(name, ".")[0],
+					SchemaName:  strings.Split(name, ".")[1],
+				})
+				if err != nil {
+					return err
+				}
+				for _, t := range tables {
+					w.Tables.DeleteByFullName(ctx, t.FullName)
+				}
+			}
+			return w.Schemas.DeleteByFullName(ctx, name)
 		},
 	}.ToResource()
 }

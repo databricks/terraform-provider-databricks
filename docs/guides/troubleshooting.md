@@ -126,3 +126,29 @@ This error may appear when creating workspace-level objects but the provider is 
 ### Error: Provider registry.terraform.io/databricks/databricks v... does not have a package available for your current platform, windows_386
 
 This kind of errors happens when the 32-bit version of Databricks Terraform provider is used, usually on Microsoft Windows.  To fix the issue you need to switch to use of the 64-bit versions of Terraform and Databricks Terraform provider.
+
+### Permanent configuration drifts with `databricks_grants` or `databricks_permissions`
+
+For both resources, each single instance should manages all the grants/permissions for a single object, etc. If there are multiple instances set up against an object, they will keep overwriting one another and lead to permanent configuration drifts.
+
+To prevent that, you need to have only one resource, and inside that resource, use [Dynamic Blocks](https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks) to specify the variable number of nested grant blocks.
+
+For example
+
+```hcl
+locals {
+  groups = ["group1", "group2"]
+}
+
+resource "databricks_grants" "catalog_grants" {
+  catalog = databricks_catalog.catalog_raw.name
+
+  dynamic "grant" {
+    for_each = local.groups    
+    content {
+      principal  = grant.value
+      privileges = ["ALL_PRIVILEGES"]
+    }
+  }
+}
+```

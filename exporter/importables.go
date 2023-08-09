@@ -168,13 +168,34 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_instance_pool": {
-		Service: "compute",
+		Service: "pools",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			raw, ok := d.GetOk("instance_pool_name")
 			if !ok || raw.(string) == "" {
 				return strings.Split(d.Id(), "-")[2]
 			}
 			return raw.(string)
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			pools, err := w.InstancePools.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+			for i, pool := range pools {
+				if !ic.MatchesName(pool.InstancePoolName) {
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_instance_pool",
+					ID:       pool.InstancePoolId,
+				})
+				log.Printf("[INFO] Imported %d of %d instance pools", i+1, len(pools))
+			}
+			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			if ic.meAdmin {

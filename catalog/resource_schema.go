@@ -20,10 +20,6 @@ type SchemaInfo struct {
 	FullName    string            `json:"full_name,omitempty" tf:"computed"`
 }
 
-type Schemas struct {
-	Schemas []SchemaInfo `json:"schemas"`
-}
-
 func ResourceSchema() *schema.Resource {
 	s := common.StructToSchema(SchemaInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

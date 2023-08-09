@@ -257,6 +257,7 @@ func (ic *importContext) Run() error {
 	if ic.incremental {
 		shFile, err := os.Open(shFileName)
 		if err == nil {
+			defer shFile.Close()
 			fileScanner := bufio.NewScanner(shFile)
 			fileScanner.Split(bufio.ScanLines)
 			for fileScanner.Scan() {
@@ -265,7 +266,6 @@ func (ic *importContext) Run() error {
 					ic.shImports[strings.TrimRight(line, "\n")] = true
 				}
 			}
-			shFile.Close()
 		} else {
 			log.Printf("[ERROR] opening %s: %v", shFileName, err)
 		}

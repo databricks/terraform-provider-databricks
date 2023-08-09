@@ -606,6 +606,13 @@ func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) strin
 	return name
 }
 
+func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
+	if obs.ModifiedAtInteractive != nil && obs.ModifiedAtInteractive.TimeMillis != 0 {
+		return obs.ModifiedAtInteractive.TimeMillis
+	}
+	return obs.ModifiedAt
+}
+
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
 		objectsList := ic.getAllWorkspaceObjects()
@@ -617,7 +624,7 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
 				continue
 			}
-			modifiedAt := object.GetModifiedAt()
+			modifiedAt := wsObjectGetModifiedAt(object)
 			if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
 				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
 					modifiedAt, updatedSinceMs)

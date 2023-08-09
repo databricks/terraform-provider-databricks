@@ -58,13 +58,6 @@ type ObjectStatus struct {
 	Size                  int64                  `json:"size,omitempty"`
 }
 
-func (obs *ObjectStatus) GetModifiedAt() int64 {
-	if obs.ModifiedAtInteractive != nil && obs.ModifiedAtInteractive.TimeMillis != 0 {
-		return obs.ModifiedAtInteractive.TimeMillis
-	}
-	return obs.ModifiedAt
-}
-
 // ExportPath contains the base64 content of the notebook
 type ExportPath struct {
 	Content string `json:"content,omitempty"`

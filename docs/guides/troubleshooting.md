@@ -129,9 +129,9 @@ This kind of errors happens when the 32-bit version of Databricks Terraform prov
 
 ### Permanent configuration drifts with `databricks_grants` or `databricks_permissions`
 
-For both resources, each single instance should manages all the grants/permissions for a single object, etc. If there are multiple instances set up against an object, they will keep overwriting one another and lead to permanent configuration drifts.
+For both resources, each single resource instance should manage all the grants/permissions for a given object. If there are multiple instances set up against an object, they will keep overwriting one another and lead to permanent configuration drifts.
 
-To prevent that, you need to have only one resource, and inside that resource, use [Dynamic Blocks](https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks) to specify the variable number of nested grant blocks.
+To prevent that, you need to have only one resource instance per object, and inside that resource instance use [Dynamic Blocks](https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks) to specify the variable number of nested grant blocks.
 
 For example
 

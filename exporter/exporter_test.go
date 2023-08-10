@@ -2030,8 +2030,9 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registry-webhooks/list?",
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/mlflow/registry-webhooks/list?",
 				Response: ml.ListRegistryWebhooks{
 					Webhooks: []ml.RegistryWebhook{
 						{

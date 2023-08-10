@@ -13,11 +13,8 @@ func ResourceMlflowModel() *schema.Resource {
 		ml.Model{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			delete(s, "latest_versions")
-			s["name"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			}
+			s["name"].Required = true
+			s["name"].ForceNew = true
 			return s
 		})
 

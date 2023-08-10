@@ -3,8 +3,8 @@ name: build
 on:
   pull_request:
     types: [opened, synchronize]
-  push:
-    branches: [master]
+  merge_group:
+    types: [checks_requested]
 
 jobs:
   tests:
@@ -37,8 +37,6 @@ jobs:
         run: |
           echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-          go install gotest.tools/gotestsum@latest
-          go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 
       - name: Pull external libraries
         run: make vendor

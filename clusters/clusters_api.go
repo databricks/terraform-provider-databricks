@@ -14,6 +14,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // AutoScale is a struct the describes auto scaling for clusters
@@ -171,6 +172,7 @@ type GcpAttributes struct {
 	Availability            Availability `json:"availability,omitempty"`
 	BootDiskSize            int32        `json:"boot_disk_size,omitempty"`
 	ZoneId                  string       `json:"zone_id,omitempty"`
+	LocalSsdCount           int32        `json:"local_ssd_count,omitempty"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS
@@ -448,6 +450,9 @@ func (cluster Cluster) Validate() error {
 func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	// Instance profile id does not exist or not set
 	if cluster.InstancePoolID == "" {
+		// Worker must use an instance pool if driver uses an instance pool,
+		// therefore empty the computed value for driver instance pool.
+		cluster.DriverInstancePoolID = ""
 		return
 	}
 	if cluster.AwsAttributes != nil {
@@ -458,7 +463,7 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 		cluster.AwsAttributes = &awsAttributes
 	}
 	if cluster.AzureAttributes != nil {
-		cluster.AzureAttributes = nil
+		cluster.AzureAttributes = &AzureAttributes{}
 	}
 	if cluster.GcpAttributes != nil {
 		gcpAttributes := GcpAttributes{
@@ -469,6 +474,17 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	cluster.EnableElasticDisk = false
 	cluster.NodeTypeID = ""
 	cluster.DriverNodeTypeID = ""
+}
+
+// https://github.com/databricks/terraform-provider-databricks/issues/824
+func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
+	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
+	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
+	if oldInstancePool != newInstancePool &&
+		oldDriverPool == oldInstancePool &&
+		oldDriverPool == newDriverPool {
+		cluster.DriverInstancePoolID = cluster.InstancePoolID
+	}
 }
 
 // ClusterList shows existing clusters

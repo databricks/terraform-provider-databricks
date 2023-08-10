@@ -1,5 +1,70 @@
 # Version changelog
 
+## 1.23.0
+
+ * Added Terraform support for Job Parameters (Private Preview) ([#2509](https://github.com/databricks/terraform-provider-databricks/pull/2509)).
+ * Added `gcp_attributes.local_ssd_count` to [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource ([#2422](https://github.com/databricks/terraform-provider-databricks/pull/2422)).
+ * Added `gcp_attributes.local_ssd_count` to [databricks_instance_pool](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/instance_pool) resource ([#2558](https://github.com/databricks/terraform-provider-databricks/pull/2558)).
+ * Extend RunJobTask with additional supported fields and document them in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2314](https://github.com/databricks/terraform-provider-databricks/pull/2314), [#2562](https://github.com/databricks/terraform-provider-databricks/pull/2562)).
+ * Fixed update from instance pool to node type in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2549](https://github.com/databricks/terraform-provider-databricks/pull/2549)).
+
+Exporter:
+ * Exporter: add support for [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) ([#2512](https://github.com/databricks/terraform-provider-databricks/pull/2512)).
+
+Documentation:
+ * Documented missing environment variables for authentication ([#2541](https://github.com/databricks/terraform-provider-databricks/pull/2541)).
+ * Documented run_if field and suppress diff when field is not present ([#2435](https://github.com/databricks/terraform-provider-databricks/pull/2435)).
+ * Updated diagram with Databricks resources ([#2526](https://github.com/databricks/terraform-provider-databricks/pull/2526)).
+ * Updated metastore.md ([#2547](https://github.com/databricks/terraform-provider-databricks/pull/2547)).
+
+Other Changes:
+ * Marked `gcp_attributes.use_preemptible_executors` as deprecated in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#2551](https://github.com/databricks/terraform-provider-databricks/pull/2551)).
+ * Provided `application_id` when creating SP in [databricks_access_control_rule_set](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set) resource integration test (and temporarily disabled this test outside of AWS) ([#2542](https://github.com/databricks/terraform-provider-databricks/pull/2542)).
+
+## 1.22.0
+
+ * Added [databricks_access_control_rule_set](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set) resource for managing account-level access ([#2371](https://github.com/databricks/terraform-provider-databricks/pull/2371)).
+ * Added READ_VOLUME and WRITE_VOLUME to [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) resources at the schema/catalog-level ([#2529](https://github.com/databricks/terraform-provider-databricks/pull/2529)).
+ * Added `acl_principal_id` attribute to [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user), [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group) & [databricks_service_principal](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal) for easier use with [databricks_access_control_rule_set](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set) ([#2485](https://github.com/databricks/terraform-provider-databricks/pull/2485)).
+ * Added `control_run_state` flag to the [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource for continuous jobs ([#2466](https://github.com/databricks/terraform-provider-databricks/pull/2466)).
+ * Added `full_refresh` attribute to the `pipeline_task` in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2444](https://github.com/databricks/terraform-provider-databricks/pull/2444)).
+ * Added support for Unity Catalog [databricks_metastore](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/metastore) data source ([#2492](https://github.com/databricks/terraform-provider-databricks/pull/2492)).
+ * Added support for Unity Catalog [databricks_metastores](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/metastores) data source  ([#2017](https://github.com/databricks/terraform-provider-databricks/pull/2017)).
+ * Added support for `USE_MARKETPLACE_ASSETS` privilege to [databricks_metastore](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/metastore) ([#2505](https://github.com/databricks/terraform-provider-databricks/pull/2505)).
+ * Added support for boolean values in [databricks_sql_alert](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_alert) alerts ([#2506](https://github.com/databricks/terraform-provider-databricks/pull/2506)).
+ * Added late jobs support (aka health conditions) in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([2496](https://github.com/databricks/terraform-provider-databricks/pull/2496)).
+ * Allow support for searching SQL Warehouses by name in [databricks_sql_warehouse](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_warehouse) data source ([#2458](https://github.com/databricks/terraform-provider-databricks/pull/2458)).
+ * Added suppress diff for `aws_attributes.zone_id` with value `auto` in [databricks_instance_pool](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/instance_pool) ([#2518](https://github.com/databricks/terraform-provider-databricks/pull/2518)).
+ * Changed test to use random catalog name in SQL table integration tests ([#2473](https://github.com/databricks/terraform-provider-databricks/pull/2473)).
+ * Fixed [databricks_ip_access_list](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/ip_access_list) read ([#2515](https://github.com/databricks/terraform-provider-databricks/pull/2515)).
+ * Fixed [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource to clear instance-specific attributes when `instance_pool_id` is specified ([#2507](https://github.com/databricks/terraform-provider-databricks/pull/2507)).
+ * Fixed handling of comments in [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) resource ([#2472](https://github.com/databricks/terraform-provider-databricks/pull/2472)).
+ * Fixed model serving integration test using pip if the cluster is already running ([#2470](https://github.com/databricks/terraform-provider-databricks/pull/2470)).
+ * Fixed provider after updating SDK to 0.13 ([#2494](https://github.com/databricks/terraform-provider-databricks/pull/2494)).
+ * Updated [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) with `force = true` to check for error message prefix ([#2510](https://github.com/databricks/terraform-provider-databricks/pull/2510)).
+
+Exporter:
+ * Added exporter for [databricks_workspace_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file) resource ([#2493](https://github.com/databricks/terraform-provider-databricks/pull/2493)).
+ * Made resource names more unique to avoid duplicate resources errors ([#2452](https://github.com/databricks/terraform-provider-databricks/pull/2452)).
+
+Documentation updates:
+ * Added documentation notes about legacy cluster type & data access ([#2437](https://github.com/databricks/terraform-provider-databricks/pull/2437)).
+ * Added one more item to the troubleshooting guide ([#2477](https://github.com/databricks/terraform-provider-databricks/pull/2477)).
+ * Added clarification that [databricks_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/schema) and [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) should be imported by their full name, not just by name ([#2491](https://github.com/databricks/terraform-provider-databricks/pull/2491)).
+ * Added more common issues for troubleshooting ([#2486](https://github.com/databricks/terraform-provider-databricks/pull/2486)).
+ * Added additional documentation ([#2516](https://github.com/databricks/terraform-provider-databricks/pull/2516)).
+ * Linked model serving docs to top level README ([#2474](https://github.com/databricks/terraform-provider-databricks/pull/2474)).
+
+Other notes:
+ * Added code owners for terraform-provider-databricks ([#2498](https://github.com/databricks/terraform-provider-databricks/pull/2498)).
+ * Added support for new Delve binary name format ([#2497](https://github.com/databricks/terraform-provider-databricks/pull/2497)).
+ * Configured merge queue for the provider ([#2533](https://github.com/databricks/terraform-provider-databricks/pull/2533)).
+ * Removed unused dlvLoadConfig configuration from settings.json ([#2499](https://github.com/databricks/terraform-provider-databricks/pull/2499)).
+
+Updated dependency versions:
+ * Bump github.com/databricks/databricks-sdk-go from 0.13.0 to 0.14.1 ([#2523](https://github.com/databricks/terraform-provider-databricks/pull/2523)).
+ * Bump golang.org/x/mod from 0.11.0 to 0.12.0 ([#2462](https://github.com/databricks/terraform-provider-databricks/pull/2462)).
+
 ## 1.21.0
 
  * Added condition_task to the [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource (private preview) ([#2459](https://github.com/databricks/terraform-provider-databricks/pull/2459)).

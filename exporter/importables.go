@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -47,6 +48,7 @@ var (
 	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp           = regexp.MustCompile(`^folders/(\d+)$`)
 	dltDefaultStorageRegex    = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	ignoreIdeFolderRegex      = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -167,13 +169,34 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_instance_pool": {
-		Service: "compute",
+		Service: "pools",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			raw, ok := d.GetOk("instance_pool_name")
 			if !ok || raw.(string) == "" {
 				return strings.Split(d.Id(), "-")[2]
 			}
 			return raw.(string)
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			pools, err := w.InstancePools.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+			for i, pool := range pools {
+				if !ic.MatchesName(pool.InstancePoolName) {
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_instance_pool",
+					ID:       pool.InstancePoolId,
+				})
+				log.Printf("[INFO] Imported %d of %d instance pools", i+1, len(pools))
+			}
+			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			if ic.meAdmin {
@@ -244,6 +267,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -310,6 +334,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name"},
 			{Path: "new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "new_cluster.init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
 			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "new_cluster.policy_id", Resource: "databricks_cluster_policy"},
@@ -339,12 +364,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
 			{Path: "task.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "task.existing_cluster_id", Resource: "databricks_cluster"},
 			{Path: "job_cluster.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "job_cluster.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
 			{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
@@ -455,6 +482,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						})
 					}
 				}
+				if task.RunJobTask != nil && task.RunJobTask.JobID != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_job",
+						ID:       task.RunJobTask.JobID,
+					})
+				}
 				ic.importCluster(task.NewCluster)
 				ic.Emit(&resource{
 					Resource: "databricks_cluster",
@@ -527,10 +560,16 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       eitherString(value, defaultValue),
 					})
 				}
-				if typ == "fixed" &&
-					strings.HasPrefix(k, "init_scripts.") &&
+				if typ == "fixed" && strings.HasPrefix(k, "init_scripts.") &&
 					strings.HasSuffix(k, ".dbfs.destination") {
 					ic.emitIfDbfsFile(eitherString(value, defaultValue))
+				}
+				if typ == "fixed" && strings.HasPrefix(k, "init_scripts.") &&
+					strings.HasSuffix(k, ".workspace.destination") {
+					ic.Emit(&resource{
+						Resource: "databricks_workspace_file",
+						ID:       eitherString(value, defaultValue),
+					})
 				}
 			}
 			policyName := r.Data.Get("name").(string)
@@ -752,7 +791,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				displayName := d.Get("display_name").(string)
 				return applicationID == displayName
 			}
-			return pathString == "home" || pathString == "repos" || (pathString == "application_id" && !ic.Client.IsAzure())
+			return (pathString == "application_id" && !ic.Client.IsAzure()) || defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			applicationID := r.Data.Get("application_id").(string)
@@ -1158,39 +1197,8 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_notebook": {
 		Service: "notebooks",
-		Name: func(ic *importContext, d *schema.ResourceData) string {
-			name := d.Get("path").(string)
-			if name == "" {
-				return d.Id()
-			} else {
-				name = nameNormalizationRegex.ReplaceAllString(name[1:], "_") + "_" +
-					strconv.FormatInt(int64(d.Get("object_id").(int)), 10)
-			}
-			return name
-		},
-		List: func(ic *importContext) error {
-			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			notebookList, err := notebooksAPI.List("/", true, true)
-			if err != nil {
-				return err
-			}
-			for offset, notebook := range notebookList {
-				if strings.HasPrefix(notebook.Path, "/Repos") {
-					continue
-				}
-				if notebook.ObjectType == workspace.Notebook {
-					ic.Emit(&resource{
-						Resource: "databricks_notebook",
-						ID:       notebook.Path,
-					})
-				}
-				if offset%50 == 0 {
-					log.Printf("[INFO] Scanned %d of %d notebooks",
-						offset+1, len(notebookList))
-				}
-			}
-			return nil
-		},
+		Name:    workspaceObjectResouceName,
+		List:    createListWorkspaceObjectsFunc(workspace.Notebook, "databricks_notebook", "notebook"),
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -1208,34 +1216,79 @@ var resourcesMap map[string]importable = map[string]importable{
 			name := r.ID[1:] + ext[language] // todo: replace non-alphanum+/ with _
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
-			splits := strings.Split(r.Name, "_")
-			notebookId := splits[len(splits)-1]
-			directorySplits := strings.Split(r.ID, "/")
-			directorySplits = directorySplits[:len(directorySplits)-1]
-			directoryPath := strings.Join(directorySplits, "/")
-
+			if err != nil {
+				return err
+			}
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/notebooks/%s", notebookId),
+					ID:       fmt.Sprintf("/notebooks/%d", r.Data.Get("object_id").(int)),
 					Name:     "notebook_" + ic.Importables["databricks_notebook"].Name(ic, r.Data),
 				})
 			}
 
 			// TODO: it's not completely correct condition - we need to make emit smarter - emit only if permissions are different from their parent's permission.
 			if ic.meAdmin {
+				directorySplits := strings.Split(r.ID, "/")
+				directorySplits = directorySplits[:len(directorySplits)-1]
+				directoryPath := strings.Join(directorySplits, "/")
+
 				ic.Emit(&resource{
 					Resource: "databricks_directory",
 					ID:       directoryPath,
 				})
 			}
 
-			if err != nil {
-				return err
-			}
 			log.Printf("Creating %s for %s", fileName, r)
 			r.Data.Set("source", fileName)
 			return r.Data.Set("language", "")
+		},
+		Depends: []reference{
+			{Path: "source", File: true},
+			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},
+			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: MatchPrefix},
+		},
+	},
+	"databricks_workspace_file": {
+		Service: "notebooks",
+		Name:    workspaceObjectResouceName,
+		List:    createListWorkspaceObjectsFunc(workspace.File, "databricks_workspace_file", "workspace_file"),
+		Import: func(ic *importContext, r *resource) error {
+			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
+			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+			contentB64, err := notebooksAPI.Export(r.ID, "AUTO")
+			if err != nil {
+				return err
+			}
+			name := r.ID[1:]
+			content, _ := base64.StdEncoding.DecodeString(contentB64)
+			fileName, err := ic.createFileIn("workspace_files", name, []byte(content))
+			if err != nil {
+				return err
+			}
+
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/files/%d", r.Data.Get("object_id").(int)),
+					Name:     "ws_file_" + ic.Importables["databricks_workspace_file"].Name(ic, r.Data),
+				})
+			}
+
+			// TODO: it's not completely correct condition - we need to make emit smarter -
+			// emit only if permissions are different from their parent's permission.
+			if ic.meAdmin {
+				directorySplits := strings.Split(r.ID, "/")
+				directorySplits = directorySplits[:len(directorySplits)-1]
+				directoryPath := strings.Join(directorySplits, "/")
+
+				ic.Emit(&resource{
+					Resource: "databricks_directory",
+					ID:       directoryPath,
+				})
+			}
+			log.Printf("Creating %s for %s", fileName, r)
+			return r.Data.Set("source", fileName)
 		},
 		Depends: []reference{
 			{Path: "source", File: true},
@@ -1623,14 +1676,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       cluster.DriverInstancePoolID,
 					})
 				}
-				for _, is := range cluster.InitScripts {
-					if is.Dbfs != nil {
-						ic.Emit(&resource{
-							Resource: "databricks_dbfs_file",
-							ID:       is.Dbfs.Destination,
-						})
-					}
-				}
+				ic.emitInitScripts(cluster.InitScripts)
 				ic.emitSecretsFromSecretsPath(cluster.SparkConf)
 				ic.emitSecretsFromSecretsPath(cluster.SparkEnvVars)
 			}
@@ -1656,11 +1702,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "new_cluster.init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
 			{Path: "cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "library.notebook.path", Resource: "databricks_notebook"},
 			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
-			{Path: "library.file.path", Resource: "databricks_notebook"},
+			{Path: "library.file.path", Resource: "databricks_workspace_file"},
 			{Path: "library.file.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -1668,16 +1715,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_directory": {
 		Service: "notebooks",
-		Name: func(ic *importContext, d *schema.ResourceData) string {
-			name := d.Get("path").(string)
-			if name == "" {
-				return d.Id()
-			} else {
-				name = nameNormalizationRegex.ReplaceAllString(name[1:], "_") + "_" +
-					strconv.FormatInt(int64(d.Get("object_id").(int)), 10)
-			}
-			return name
-		},
+		Name:    workspaceObjectResouceName,
 		Search: func(ic *importContext, r *resource) error {
 			directoryList := ic.getAllDirectories()
 			objId, err := strconv.ParseInt(r.Value, 10, 64)
@@ -1692,10 +1730,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return fmt.Errorf("can't find directory with object_id: %s", r.Value)
 		},
+		// TODO: think if we really need this, we need directories only for permissions,
+		// and only when they are different from parents & notebooks
 		List: func(ic *importContext) error {
 			directoryList := ic.getAllDirectories()
 			for offset, directory := range directoryList {
 				if strings.HasPrefix(directory.Path, "/Repos") {
+					continue
+				}
+				if res := ignoreIdeFolderRegex.FindStringSubmatch(directory.Path); res != nil {
 					continue
 				}
 				// TODO: don't emit directories for deleted users/SPs (how to identify them?)
@@ -1712,14 +1755,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
-			splits := strings.Split(r.Name, "_")
-			directoryId := splits[len(splits)-1]
-
 			// Existing permissions API doesn't allow to set permissions for
 			if ic.meAdmin && r.ID != "/Shared" {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/directories/%s", directoryId),
+					ID:       fmt.Sprintf("/directories/%d", r.Data.Get("object_id").(int)),
 					Name:     "directory_" + ic.Importables["databricks_directory"].Name(ic, r.Data),
 				})
 			}
@@ -1735,6 +1775,94 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},
 			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: MatchPrefix},
+		},
+	},
+	"databricks_model_serving": {
+		Service: "model-serving",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			nameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(d.Id())))
+			return strings.ToLower(d.Id()) + "_" + nameMd5[:8]
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			endpointsList, err := w.ServingEndpoints.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+
+			for offset, endpoint := range endpointsList {
+				// TODO: add incremental export as well
+				ic.Emit(&resource{
+					Resource: "databricks_model_serving",
+					ID:       endpoint.Name,
+				})
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d Serving Endpoints", offset+1, len(endpointsList))
+				}
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				log.Printf("[DEBUG] Emitting permissions of endpoint '%s' id='%s'", r.ID, r.Data.Get("serving_endpoint_id").(string))
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/serving-endpoints/%s", r.Data.Get("serving_endpoint_id").(string)),
+					Name:     "serving_endpoint_" + ic.Importables["databricks_model_serving"].Name(ic, r.Data),
+				})
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "config.0.traffic_config" ||
+				(strings.HasPrefix(pathString, "config.0.served_models.") &&
+					strings.HasSuffix(pathString, ".scale_to_zero_enabled")) {
+				return false
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+	},
+	"databricks_mlflow_webhook": {
+		Service: "mlflow-webhooks",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return "webhook_" + d.Id()
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			webhooks, err := w.ModelRegistry.ListWebhooksAll(ic.Context, ml.ListWebhooksRequest{})
+			if err != nil {
+				return err
+			}
+
+			for offset, webhook := range webhooks {
+				// TODO: add support for incremental export
+				ic.Emit(&resource{
+					Resource: "databricks_mlflow_webhook",
+					ID:       webhook.Id,
+				})
+				if webhook.JobSpec != nil && webhook.JobSpec.JobId != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_job",
+						ID:       webhook.JobSpec.JobId,
+					})
+				}
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d MLflow webhooks", offset+1, len(webhooks))
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "job_spec.job_id", Resource: "databricks_job"},
+			{Path: "job_spec.access_token", Variable: true},
+			// We can enable it, but we don't know if authorization is set or not because API doesn't return it
+			// {Path: "http_url_spec.authorization", Variable: true},
 		},
 	},
 }

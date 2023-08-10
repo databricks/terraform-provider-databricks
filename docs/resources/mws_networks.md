@@ -104,8 +104,6 @@ resource "databricks_mws_networks" "this" {
 
 ### Creating a Databricks on GCP workspace
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html) on GCP.
-
 ```hcl
 variable "databricks_account_id" {
   description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
@@ -231,5 +229,5 @@ The following resources are used in the same context:
 * [Provisioning Databricks on GCP](../guides/gcp-workspace.md) guide.
 * [Provisioning Databricks workspaces on GCP with Private Service Connect](../guides/gcp-private-service-connect-workspace.md) guide.
 * [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) to register [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) resources with Databricks such that they can be used as part of a [databricks_mws_networks](mws_networks.md) configuration.
-* [databricks_mws_private_access_settings](mws_private_access_settings.md) to create a Private Access Setting that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or [GCP Private Service Connect] (https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html).
+* [databricks_mws_private_access_settings](mws_private_access_settings.md) to create a Private Access Setting that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or [GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html).
 * [databricks_mws_workspaces](mws_workspaces.md) to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1).

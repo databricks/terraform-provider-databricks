@@ -2,6 +2,7 @@ package pools
 
 import (
 	"context"
+	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -27,7 +28,8 @@ type InstancePoolAzureAttributes struct {
 // InstancePoolGcpAttributes contains aws attributes for GCP Databricks deployments for instance pools
 // https://docs.gcp.databricks.com/dev-tools/api/latest/instance-pools.html#instancepoolgcpattributes
 type InstancePoolGcpAttributes struct {
-	Availability clusters.Availability `json:"gcp_availability,omitempty" tf:"force_new"`
+	Availability  clusters.Availability `json:"gcp_availability,omitempty" tf:"force_new"`
+	LocalSsdCount int32                 `json:"local_ssd_count,omitempty"`
 }
 
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers
@@ -183,6 +185,10 @@ func ResourceInstancePool() *schema.Resource {
 		if v, err := common.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err == nil {
 			v.Default = 100
 		}
+		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return oldValue != "" && strings.ToLower(newValue) == "auto"
+		}
+
 		if v, err := common.SchemaPath(s, "azure_attributes", "availability"); err == nil {
 			v.Default = clusters.AzureAvailabilityOnDemand
 			v.ValidateFunc = validation.StringInSlice([]string{

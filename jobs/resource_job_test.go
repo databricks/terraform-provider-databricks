@@ -9,10 +9,12 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/qa"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -140,9 +142,24 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 							SparkJarTask: &SparkJarTask{
 								MainClassName: "com.labs.BarMain",
 							},
+							Health: &JobHealth{
+								Rules: []JobHealthRule{
+									{
+										Metric:    "RUN_DURATION_SECONDS",
+										Operation: "GREATER_THAN",
+										Value:     3600,
+									},
+								},
+							},
 						},
 						{
 							TaskKey: "b",
+							DependsOn: []jobs.TaskDependency{
+								{
+									TaskKey: "a",
+								},
+							},
+							RunIf: "ALL_DONE",
 							NewCluster: &clusters.Cluster{
 								SparkVersion: "a",
 								NodeTypeID:   "b",
@@ -157,6 +174,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 						},
 					},
 					MaxConcurrentRuns: 1,
+					Health: &JobHealth{
+						Rules: []JobHealthRule{
+							{
+								Metric:    "RUN_DURATION_SECONDS",
+								Operation: "GREATER_THAN",
+								Value:     3600,
+							},
+						},
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -184,7 +210,15 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 		Resource: ResourceJob(),
 		HCL: `
 		name = "Featurizer"
-		
+
+		health {
+			rules {
+				metric = "RUN_DURATION_SECONDS"
+				op     = "GREATER_THAN"
+				value  = 3600						  
+			}
+		}
+
 		task {
 			task_key = "a"
 
@@ -197,10 +231,25 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 			library {
 				jar = "dbfs://aa/bb/cc.jar"
 			}
+
+			health {
+				rules {
+					metric = "RUN_DURATION_SECONDS"
+					op     = "GREATER_THAN"
+					value  = 3600						  
+				}
+			}
+	
 		}
 
 		task {
 			task_key = "b"
+
+			depends_on {
+				task_key = "a"
+			}
+
+			run_if = "ALL_DONE"
 
 			new_cluster {
 				spark_version = "a"
@@ -220,6 +269,91 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_JobParameters(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "JobParameterTesting",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "a",
+						},
+						{
+							TaskKey: "b",
+						},
+					},
+					MaxConcurrentRuns: 1,
+					Parameters: []JobParameterDefinition{
+						{
+							Name:    "hello",
+							Default: "world",
+						},
+						{
+							Name:    "key",
+							Default: "value_default",
+						},
+					},
+				},
+				Response: Job{
+					JobID: 231,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=231",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "a",
+							},
+							{
+								TaskKey: "b",
+							},
+						},
+						Parameters: []JobParameterDefinition{
+							{
+								Name:    "hello",
+								Default: "world",
+							},
+							{
+								Name:    "key",
+								Default: "value_default",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobParameterTesting"
+
+		parameter {
+				name = "hello"
+				default = "world"
+		}
+		parameter {
+				name = "key"
+				default = "value_default"
+		}
+	
+		task {
+			task_key = "a"
+		}
+
+		task {
+			task_key = "b"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "231", d.Id())
+}
 func TestResourceJobCreate_JobClusters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -535,6 +669,63 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_RunJobTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name:              "TF RunJobTask Main Job",
+					MaxConcurrentRuns: 1,
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "runJobTask",
+							RunJobTask: &RunJobTask{
+								JobID: "123",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 123,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=123",
+				Response: Job{
+					JobID: 123,
+					Settings: &JobSettings{
+						Name: "TF SQL task subscriptions",
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "childJobTaskKey",
+								NotebookTask: &NotebookTask{
+									NotebookPath: "/Stuff",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "TF RunJobTask Main Job"
+
+		task {
+		  task_key = "runJobTask"
+	  
+		  run_job_task {
+				job_id = "123"
+		  }
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "123", d.Id())
+}
+
 func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -613,6 +804,208 @@ func TestResourceJobCreate_AlwaysRunning_Conflict(t *testing.T) {
 		max_concurrent_runs = 2
 		`,
 	}.ExpectError(t, "`always_running` must be specified only with `max_concurrent_runs = 1`")
+}
+
+func TestResourceJobCreate_ControlRunState_AlwaysRunningConflict(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `control_run_state = true
+		always_running = true
+		continuous {
+			pause_status = "UNPAUSED"
+		}`,
+	}.ExpectError(t, "invalid config supplied. [always_running] Conflicting configuration arguments. [control_run_state] Conflicting configuration arguments")
+}
+
+func TestResourceJobCreate_ControlRunState_NoContinuous(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL:      `control_run_state = true`,
+	}.ExpectError(t, "`control_run_state` must be specified only with `continuous`")
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					MaxConcurrentRuns: 1,
+					Name:              "Test",
+					Continuous: &ContinuousConf{
+						PauseStatus: "UNPAUSED",
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters{
+					JobID: 789,
+				},
+				Response: JobRun{},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
+func TestResourceJobCreate_ControlRunState_ContinuousUpdateCancel(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters{
+					JobID: 789,
+				},
+				Response: apierr.APIError{StatusCode: 404},
+				Status:   404,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/list?active_only=true&job_id=789",
+				Response: JobRunsList{
+					Runs: []JobRun{
+						{
+							RunID: 567,
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/runs/cancel",
+				ExpectedRequest: map[string]any{
+					"run_id": 567,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/runs/get?run_id=567",
+				Response: JobRun{
+					RunID: 567,
+					State: RunState{
+						LifeCycleState: "TERMINATED",
+					},
+				},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
 }
 
 func TestResourceJobCreateSingleNode(t *testing.T) {
@@ -780,7 +1173,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						OnSuccess: []Webhook{{ID: "id2"}},
 						OnFailure: []Webhook{{ID: "id3"}},
 					},
-					NotificationSettings: &NotificationSettings{
+					NotificationSettings: &jobs.JobNotificationSettings{
 						NoAlertForSkippedRuns:  true,
 						NoAlertForCanceledRuns: true,
 					},
@@ -811,7 +1204,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 							OnSuccess: []Webhook{{ID: "id2"}},
 							OnFailure: []Webhook{{ID: "id3"}},
 						},
-						NotificationSettings: &NotificationSettings{
+						NotificationSettings: &jobs.JobNotificationSettings{
 							NoAlertForSkippedRuns:  true,
 							NoAlertForCanceledRuns: true,
 						},
@@ -879,6 +1272,11 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 						Url:      "https://github.com/databricks/terraform-provider-databricks",
 						Tag:      "0.4.8",
 						Provider: "gitHub",
+						JobSource: &jobs.JobSource{
+							JobConfigPath:       "a/b/c/databricks.yml",
+							ImportFromGitBranch: "main",
+							DirtyState:          "NOT_SYNCED",
+						},
 					},
 				},
 				Response: Job{
@@ -913,6 +1311,11 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 		git_source {
 			url = "https://github.com/databricks/terraform-provider-databricks"
 			tag = "0.4.8"
+			job_source {
+				job_config_path = "a/b/c/databricks.yml"
+				import_from_git_branch = "main"
+				dirty_state = "NOT_SYNCED"
+			}
 		}
 
 		task {
@@ -1002,7 +1405,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 			}
 		}
 	`,
-	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databricks/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit:}")
+	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databricks/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit: JobSource:<nil>}")
 }
 
 func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
@@ -1211,6 +1614,219 @@ func TestResourceJobUpdate(t *testing.T) {
 		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
+	assert.Equal(t, "Featurizer New", d.Get("name"))
+}
+
+func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						NewCluster: &clusters.Cluster{
+							InstancePoolID:       "instance-pool-worker",
+							DriverInstancePoolID: "instance-pool-driver",
+							SparkVersion:         "spark-1",
+							NumWorkers:           1,
+						},
+						Tasks: []JobTaskSettings{
+							{
+								NewCluster: &clusters.Cluster{
+									InstancePoolID:       "instance-pool-worker-task",
+									DriverInstancePoolID: "instance-pool-driver-task",
+									SparkVersion:         "spark-2",
+									NumWorkers:           2,
+								},
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								NewCluster: &clusters.Cluster{
+									InstancePoolID:       "instance-pool-worker-job",
+									DriverInstancePoolID: "instance-pool-driver-job",
+									SparkVersion:         "spark-3",
+									NumWorkers:           3,
+								},
+							},
+						},
+						Name:                   "Featurizer New",
+						MaxRetries:             3,
+						MinRetryIntervalMillis: 5000,
+						RetryOnTimeout:         true,
+						MaxConcurrentRuns:      1,
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						NewCluster: &clusters.Cluster{
+							NodeTypeID:       "node-type-id",
+							DriverNodeTypeID: "driver-node-type-id",
+						},
+						Name:                   "Featurizer New",
+						MaxRetries:             3,
+						MinRetryIntervalMillis: 5000,
+						RetryOnTimeout:         true,
+						MaxConcurrentRuns:      1,
+					},
+				},
+			},
+		},
+		ID:       "789",
+		Update:   true,
+		Resource: ResourceJob(),
+		InstanceState: map[string]string{
+			"new_cluster.0.node_type_id":                      "node-type-id-worker",
+			"new_cluster.0.driver_node_type_id":               "node-type-id-driver",
+			"task.0.new_cluster.0.node_type_id":               "node-type-id-worker-task",
+			"task.0.new_cluster.0.driver_node_type_id":        "node-type-id-driver-task",
+			"job_cluster.0.new_cluster.0.node_type_id":        "node-type-id-worker-job",
+			"job_cluster.0.new_cluster.0.driver_node_type_id": "node-type-id-driver-job",
+		},
+		HCL: `
+		new_cluster = {
+			instance_pool_id = "instance-pool-worker"
+			driver_instance_pool_id = "instance-pool-driver"
+			spark_version = "spark-1"
+			num_workers = 1
+		}
+		task = {
+			new_cluster = {
+				instance_pool_id = "instance-pool-worker-task"
+				driver_instance_pool_id = "instance-pool-driver-task"
+				spark_version = "spark-2"
+				num_workers = 2
+			}
+		}
+		job_cluster = {
+			new_cluster = {
+				instance_pool_id = "instance-pool-worker-job"
+				driver_instance_pool_id = "instance-pool-driver-job"
+				spark_version = "spark-3"
+				num_workers = 3
+			}
+		}
+		max_concurrent_runs = 1
+		max_retries = 3
+		min_retry_interval_millis = 5000
+		name = "Featurizer New"
+		retry_on_timeout = true`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
+	assert.Equal(t, "Featurizer New", d.Get("name"))
+}
+
+func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						NewCluster: &clusters.Cluster{
+							NodeTypeID:   "node-type-id-1",
+							SparkVersion: "spark-1",
+							NumWorkers:   1,
+						},
+						Tasks: []JobTaskSettings{
+							{
+								NewCluster: &clusters.Cluster{
+									NodeTypeID:   "node-type-id-2",
+									SparkVersion: "spark-2",
+									NumWorkers:   2,
+								},
+							},
+						},
+						JobClusters: []JobCluster{
+							{
+								NewCluster: &clusters.Cluster{
+									NodeTypeID:   "node-type-id-3",
+									SparkVersion: "spark-3",
+									NumWorkers:   3,
+								},
+							},
+						},
+						Name:                   "Featurizer New",
+						MaxRetries:             3,
+						MinRetryIntervalMillis: 5000,
+						RetryOnTimeout:         true,
+						MaxConcurrentRuns:      1,
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						NewCluster: &clusters.Cluster{
+							NodeTypeID:           "node-type-id",
+							DriverNodeTypeID:     "driver-node-type-id",
+							InstancePoolID:       "instance-pool-id-worker",
+							DriverInstancePoolID: "instance-pool-id-driver",
+						},
+						Name:                   "Featurizer New",
+						MaxRetries:             3,
+						MinRetryIntervalMillis: 5000,
+						RetryOnTimeout:         true,
+						MaxConcurrentRuns:      1,
+					},
+				},
+			},
+		},
+		ID:       "789",
+		Update:   true,
+		Resource: ResourceJob(),
+		InstanceState: map[string]string{
+			"new_cluster.0.instance_pool_id":           "instance-pool-id-worker",
+			"new_cluster.0.driver_instance_pool_id":    "instance-pool-id-driver",
+			"new_cluster.0.node_type_id":               "node-type-id-worker",
+			"task.0.new_cluster.0.node_type_id":        "node-type-id-worker-task",
+			"task.0.instance_pool_id":                  "instance-pool-id-worker",
+			"task.0.driver_instance_pool_id":           "instance-pool-id-driver",
+			"job_cluster.0.new_cluster.0.node_type_id": "node-type-id-worker-job",
+			"job_cluster.0.instance_pool_id":           "instance-pool-id-worker",
+			"job_cluster.0.driver_instance_pool_id":    "instance-pool-id-driver",
+		},
+		HCL: `
+		new_cluster = {
+			node_type_id = "node-type-id-1"
+			spark_version = "spark-1"
+			num_workers = 1
+		}
+		task = {
+			new_cluster = {
+				node_type_id = "node-type-id-2"
+				spark_version = "spark-2"
+				num_workers = 2
+			}
+		}
+		job_cluster = {
+			new_cluster = {
+				node_type_id = "node-type-id-3"
+				spark_version = "spark-3"
+				num_workers = 3
+			}
+		}
+		max_concurrent_runs = 1
+		max_retries = 3
+		min_retry_interval_millis = 5000
+		name = "Featurizer New"
+		retry_on_timeout = true`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
@@ -1479,26 +2095,35 @@ func TestJobRestarts(t *testing.T) {
 		err = ja.waitForRunState(890, "RUNNING", timeout)
 		assert.EqualError(t, err, "run is SOMETHING: Checking...")
 
+		testRestart := func(jobID int64, stopErr, startErr string) {
+			err := ja.StopActiveRun(jobID, timeout)
+			if stopErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, stopErr)
+			}
+			if stopErr == "" {
+				err = ja.Start(jobID, timeout)
+				if startErr == "" {
+					assert.NoError(t, err)
+				} else {
+					assert.EqualError(t, err, startErr)
+				}
+			}
+		}
+
 		// no active runs for the first time
-		err = ja.Restart("123", timeout)
-		assert.NoError(t, err)
+		testRestart(123, "", "")
 
 		// one active run for the second time
-		err = ja.Restart("123", timeout)
-		assert.NoError(t, err)
+		testRestart(123, "", "")
 
-		err = ja.Restart("111", timeout)
-		assert.EqualError(t, err, "cannot cancel run 567: nope")
+		testRestart(111, "cannot cancel run 567: nope", "")
 
-		err = ja.Restart("a", timeout)
-		assert.EqualError(t, err, "strconv.ParseInt: parsing \"a\": invalid syntax")
+		testRestart(222, "nope", "")
 
-		err = ja.Restart("222", timeout)
-		assert.EqualError(t, err, "nope")
-
-		err = ja.Restart("678", timeout)
-		assert.EqualError(t, err, "`always_running` must be specified only "+
-			"with `max_concurrent_runs = 1`. There are 2 active runs")
+		testRestart(678, "`always_running` must be specified only "+
+			"with `max_concurrent_runs = 1`. There are 2 active runs", "")
 	})
 }
 

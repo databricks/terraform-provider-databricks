@@ -62,6 +62,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_instance_pool":           pools.DataSourceInstancePool(),
 			"databricks_jobs":                    jobs.DataSourceJobs(),
 			"databricks_job":                     jobs.DataSourceJob(),
+			"databricks_metastore":               catalog.DataSourceMetastore(),
 			"databricks_metastores":              catalog.DataSourceMetastores(),
 			"databricks_mws_credentials":         mws.DataSourceMwsCredentials(),
 			"databricks_mws_workspaces":          mws.DataSourceMwsWorkspaces(),

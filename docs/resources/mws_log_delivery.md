@@ -23,9 +23,6 @@ variable "databricks_account_id" {
 resource "aws_s3_bucket" "logdelivery" {
   bucket = "${var.prefix}-logdelivery"
   acl    = "private"
-  versioning {
-    enabled = false
-  }
   force_destroy = true
   tags = merge(var.tags, {
     Name = "${var.prefix}-logdelivery"
@@ -40,6 +37,13 @@ resource "aws_s3_bucket_public_access_block" "logdelivery" {
 data "databricks_aws_assume_role_policy" "logdelivery" {
   external_id      = var.databricks_account_id
   for_log_delivery = true
+}
+
+resource "aws_s3_bucket_versioning" "logdelivery_versioning" {
+  bucket = aws_s3_bucket.logdelivery.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 resource "aws_iam_role" "logdelivery" {

@@ -48,26 +48,27 @@ import (
 */
 
 type importContext struct {
-	Module            string
-	Context           context.Context
-	Client            *common.DatabricksClient
-	State             stateApproximation
-	Importables       map[string]importable
-	Resources         map[string]*schema.Resource
-	Scope             importedResources
-	Files             map[string]*hclwrite.File
-	Directory         string
-	importing         map[string]bool
-	nameFixes         []regexFix
-	hclFixes          []regexFix
-	allUsers          []scim.User
-	allGroups         []scim.Group
-	mountMap          map[string]mount
-	variables         map[string]string
-	testEmits         map[string]bool
-	sqlDatasources    map[string]string
-	workspaceConfKeys map[string]any
-	allDirectories    []workspace.ObjectStatus
+	Module              string
+	Context             context.Context
+	Client              *common.DatabricksClient
+	State               stateApproximation
+	Importables         map[string]importable
+	Resources           map[string]*schema.Resource
+	Scope               importedResources
+	Files               map[string]*hclwrite.File
+	Directory           string
+	importing           map[string]bool
+	nameFixes           []regexFix
+	hclFixes            []regexFix
+	allUsers            []scim.User
+	allGroups           []scim.Group
+	mountMap            map[string]mount
+	variables           map[string]string
+	testEmits           map[string]bool
+	sqlDatasources      map[string]string
+	workspaceConfKeys   map[string]any
+	allDirectories      []workspace.ObjectStatus
+	allWorkspaceObjects []workspace.ObjectStatus
 
 	includeUserDomains  bool
 	importAllUsers      bool
@@ -137,10 +138,11 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
-		allUsers:          []scim.User{},
-		variables:         map[string]string{},
-		allDirectories:    []workspace.ObjectStatus{},
-		workspaceConfKeys: workspaceConfKeys,
+		allUsers:            []scim.User{},
+		variables:           map[string]string{},
+		allDirectories:      []workspace.ObjectStatus{},
+		allWorkspaceObjects: []workspace.ObjectStatus{},
+		workspaceConfKeys:   workspaceConfKeys,
 	}
 }
 
@@ -648,17 +650,19 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		a, as := tuple.Field, tuple.Schema
 		pathString := strings.Join(append(path, a), ".")
 		raw, ok := d.GetOk(pathString)
+		// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
 		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
-			// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
 			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
 				continue
 			}
 		} else if i.ShouldOmitField(ic, pathString, as, d) {
 			continue
 		}
+		mpath := dependsRe.ReplaceAllString(pathString, "")
 		for _, r := range i.Depends {
-			if r.Path == pathString && r.Variable {
+			if r.Path == mpath && r.Variable {
 				// sensitive fields are moved to variable depends, variable name is normalized
+				// TODO: handle a case when we have multiple blocks, so names won't be unique
 				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
 				ok = true
 			}

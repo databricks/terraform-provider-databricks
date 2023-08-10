@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -168,13 +169,34 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_instance_pool": {
-		Service: "compute",
+		Service: "pools",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			raw, ok := d.GetOk("instance_pool_name")
 			if !ok || raw.(string) == "" {
 				return strings.Split(d.Id(), "-")[2]
 			}
 			return raw.(string)
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			pools, err := w.InstancePools.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+			for i, pool := range pools {
+				if !ic.MatchesName(pool.InstancePoolName) {
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_instance_pool",
+					ID:       pool.InstancePoolId,
+				})
+				log.Printf("[INFO] Imported %d of %d instance pools", i+1, len(pools))
+			}
+			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			if ic.meAdmin {
@@ -459,6 +481,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       task.DbtTask.WarehouseId,
 						})
 					}
+				}
+				if task.RunJobTask != nil && task.RunJobTask.JobID != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_job",
+						ID:       task.RunJobTask.JobID,
+					})
 				}
 				ic.importCluster(task.NewCluster)
 				ic.Emit(&resource{
@@ -1747,6 +1775,94 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},
 			{Path: "path", Resource: "databricks_service_principal", Match: "home", MatchType: MatchPrefix},
+		},
+	},
+	"databricks_model_serving": {
+		Service: "model-serving",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			nameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(d.Id())))
+			return strings.ToLower(d.Id()) + "_" + nameMd5[:8]
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			endpointsList, err := w.ServingEndpoints.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+
+			for offset, endpoint := range endpointsList {
+				// TODO: add incremental export as well
+				ic.Emit(&resource{
+					Resource: "databricks_model_serving",
+					ID:       endpoint.Name,
+				})
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d Serving Endpoints", offset+1, len(endpointsList))
+				}
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				log.Printf("[DEBUG] Emitting permissions of endpoint '%s' id='%s'", r.ID, r.Data.Get("serving_endpoint_id").(string))
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       fmt.Sprintf("/serving-endpoints/%s", r.Data.Get("serving_endpoint_id").(string)),
+					Name:     "serving_endpoint_" + ic.Importables["databricks_model_serving"].Name(ic, r.Data),
+				})
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "config.0.traffic_config" ||
+				(strings.HasPrefix(pathString, "config.0.served_models.") &&
+					strings.HasSuffix(pathString, ".scale_to_zero_enabled")) {
+				return false
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+	},
+	"databricks_mlflow_webhook": {
+		Service: "mlflow-webhooks",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return "webhook_" + d.Id()
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			webhooks, err := w.ModelRegistry.ListWebhooksAll(ic.Context, ml.ListWebhooksRequest{})
+			if err != nil {
+				return err
+			}
+
+			for offset, webhook := range webhooks {
+				// TODO: add support for incremental export
+				ic.Emit(&resource{
+					Resource: "databricks_mlflow_webhook",
+					ID:       webhook.Id,
+				})
+				if webhook.JobSpec != nil && webhook.JobSpec.JobId != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_job",
+						ID:       webhook.JobSpec.JobId,
+					})
+				}
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d MLflow webhooks", offset+1, len(webhooks))
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "job_spec.job_id", Resource: "databricks_job"},
+			{Path: "job_spec.access_token", Variable: true},
+			// We can enable it, but we don't know if authorization is set or not because API doesn't return it
+			// {Path: "http_url_spec.authorization", Variable: true},
 		},
 	},
 }

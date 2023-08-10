@@ -60,7 +60,8 @@ type PythonWheelTask struct {
 
 // PipelineTask contains the information for pipeline jobs
 type PipelineTask struct {
-	PipelineID string `json:"pipeline_id"`
+	PipelineID  string `json:"pipeline_id"`
+	FullRefresh bool   `json:"full_refresh,omitempty"`
 }
 
 type SqlQueryTask struct {
@@ -111,26 +112,28 @@ type DbtTask struct {
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
 }
 
+// RunJobTask contains information about RunJobTask
+type RunJobTask struct {
+	JobID         string            `json:"job_id"`
+	JobParameters map[string]string `json:"job_parameters,omitempty"`
+}
+
 // EmailNotifications contains the information for email notifications after job or task run start or completion
 type EmailNotifications struct {
-	OnStart               []string `json:"on_start,omitempty"`
-	OnSuccess             []string `json:"on_success,omitempty"`
-	OnFailure             []string `json:"on_failure,omitempty"`
-	NoAlertForSkippedRuns bool     `json:"no_alert_for_skipped_runs,omitempty"`
-	AlertOnLastAttempt    bool     `json:"alert_on_last_attempt,omitempty"`
+	OnStart                            []string `json:"on_start,omitempty"`
+	OnSuccess                          []string `json:"on_success,omitempty"`
+	OnFailure                          []string `json:"on_failure,omitempty"`
+	OnDurationWarningThresholdExceeded []string `json:"on_duration_warning_threshold_exceeded,omitempty"`
+	NoAlertForSkippedRuns              bool     `json:"no_alert_for_skipped_runs,omitempty"`
+	AlertOnLastAttempt                 bool     `json:"alert_on_last_attempt,omitempty"`
 }
 
 // WebhookNotifications contains the information for webhook notifications sent after job start or completion.
 type WebhookNotifications struct {
-	OnStart   []Webhook `json:"on_start,omitempty"`
-	OnSuccess []Webhook `json:"on_success,omitempty"`
-	OnFailure []Webhook `json:"on_failure,omitempty"`
-}
-
-// NotificationSettings control the notification settings for a job
-type NotificationSettings struct {
-	NoAlertForSkippedRuns  bool `json:"no_alert_for_skipped_runs,omitempty"`
-	NoAlertForCanceledRuns bool `json:"no_alert_for_canceled_runs,omitempty"`
+	OnStart                            []Webhook `json:"on_start,omitempty"`
+	OnSuccess                          []Webhook `json:"on_success,omitempty"`
+	OnFailure                          []Webhook `json:"on_failure,omitempty"`
+	OnDurationWarningThresholdExceeded []Webhook `json:"on_duration_warning_threshold_exceeded,omitempty"`
 }
 
 func (wn *WebhookNotifications) Sort() {
@@ -160,23 +163,31 @@ type CronSchedule struct {
 
 // BEGIN Jobs + Repo integration preview
 type GitSource struct {
-	Url      string `json:"git_url" tf:"alias:url"`
-	Provider string `json:"git_provider,omitempty" tf:"alias:provider"`
-	Branch   string `json:"git_branch,omitempty" tf:"alias:branch"`
-	Tag      string `json:"git_tag,omitempty" tf:"alias:tag"`
-	Commit   string `json:"git_commit,omitempty" tf:"alias:commit"`
+	Url       string          `json:"git_url" tf:"alias:url"`
+	Provider  string          `json:"git_provider,omitempty" tf:"alias:provider"`
+	Branch    string          `json:"git_branch,omitempty" tf:"alias:branch"`
+	Tag       string          `json:"git_tag,omitempty" tf:"alias:tag"`
+	Commit    string          `json:"git_commit,omitempty" tf:"alias:commit"`
+	JobSource *jobs.JobSource `json:"job_source,omitempty"`
 }
 
 // End Jobs + Repo integration preview
+
+type JobHealthRule struct {
+	Metric    string `json:"metric,omitempty"`
+	Operation string `json:"op,omitempty"`
+	Value     int32  `json:"value,omitempty"`
+}
+
+type JobHealth struct {
+	Rules []JobHealthRule `json:"rules"`
+}
 
 type JobTaskSettings struct {
 	TaskKey     string                `json:"task_key,omitempty"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
-
-	// BEGIN Jobs + RunIf preview
-	RunIf string `json:"run_if,omitempty" tf:"suppress_diff"`
-	// END Jobs + RunIf preview
+	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
 
 	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
@@ -192,15 +203,18 @@ type JobTaskSettings struct {
 	PythonWheelTask *PythonWheelTask `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask         `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask         `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask      `json:"run_job_task,omitempty" tf:"group:task_type"`
 
 	// ConditionTask is in private preview
 	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
 
-	EmailNotifications     *EmailNotifications `json:"email_notifications,omitempty" tf:"suppress_diff"`
-	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
-	MaxRetries             int32               `json:"max_retries,omitempty"`
-	MinRetryIntervalMillis int32               `json:"min_retry_interval_millis,omitempty"`
-	RetryOnTimeout         bool                `json:"retry_on_timeout,omitempty" tf:"computed"`
+	EmailNotifications     *EmailNotifications            `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings   *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
+	TimeoutSeconds         int32                          `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32                          `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
+	Health                 *JobHealth                     `json:"health,omitempty"`
 }
 
 type JobCluster struct {
@@ -250,6 +264,7 @@ type JobSettings struct {
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`
@@ -268,16 +283,18 @@ type JobSettings struct {
 	GitSource *GitSource `json:"git_source,omitempty"`
 	// END Jobs + Repo integration preview
 
-	Schedule             *CronSchedule         `json:"schedule,omitempty"`
-	Continuous           *ContinuousConf       `json:"continuous,omitempty"`
-	Trigger              *Trigger              `json:"trigger,omitempty"`
-	MaxConcurrentRuns    int32                 `json:"max_concurrent_runs,omitempty"`
-	EmailNotifications   *EmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
-	WebhookNotifications *WebhookNotifications `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
-	NotificationSettings *NotificationSettings `json:"notification_settings,omitempty"`
-	Tags                 map[string]string     `json:"tags,omitempty"`
-	Queue                *Queue                `json:"queue,omitempty"`
-	RunAs                *JobRunAs             `json:"run_as,omitempty"`
+	Schedule             *CronSchedule                 `json:"schedule,omitempty"`
+	Continuous           *ContinuousConf               `json:"continuous,omitempty"`
+	Trigger              *Trigger                      `json:"trigger,omitempty"`
+	MaxConcurrentRuns    int32                         `json:"max_concurrent_runs,omitempty"`
+	EmailNotifications   *EmailNotifications           `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications *WebhookNotifications         `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
+	Tags                 map[string]string             `json:"tags,omitempty"`
+	Queue                *Queue                        `json:"queue,omitempty"`
+	RunAs                *JobRunAs                     `json:"run_as,omitempty"`
+	Health               *JobHealth                    `json:"health,omitempty"`
+	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -325,6 +342,19 @@ type RunParameters struct {
 	SparkSubmitParams []string          `json:"spark_submit_params,omitempty"`
 }
 
+// Job-level parameter
+type JobParameter struct {
+	Name    string `json:"name,omitempty"`
+	Default string `json:"default,omitempty"`
+	Value   string `json:"value,omitempty"`
+}
+
+// Job-level parameter definitions
+type JobParameterDefinition struct {
+	Name    string `json:"name,omitempty"`
+	Default string `json:"default,omitempty"`
+}
+
 // RunState of the job
 type RunState struct {
 	ResultState    string `json:"result_state,omitempty"`
@@ -342,7 +372,8 @@ type JobRun struct {
 	Trigger     string   `json:"trigger,omitempty"`
 	RuntType    string   `json:"run_type,omitempty"`
 
-	OverridingParameters RunParameters `json:"overriding_parameters,omitempty"`
+	OverridingParameters RunParameters  `json:"overriding_parameters,omitempty"`
+	JobParameters        []JobParameter `json:"job_parameters,omitempty"`
 }
 
 // JobRunsListRequest used to do what it sounds like
@@ -747,18 +778,21 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 	return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
 }
 
-func prepareJobSettingsForUpdate(js JobSettings) {
+func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 	if js.NewCluster != nil {
 		js.NewCluster.ModifyRequestOnInstancePool()
+		js.NewCluster.FixInstancePoolChangeIfAny(d)
 	}
 	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
 			task.NewCluster.ModifyRequestOnInstancePool()
+			task.NewCluster.FixInstancePoolChangeIfAny(d)
 		}
 	}
 	for _, jc := range js.JobClusters {
 		if jc.NewCluster != nil {
 			jc.NewCluster.ModifyRequestOnInstancePool()
+			jc.NewCluster.FixInstancePoolChangeIfAny(d)
 		}
 	}
 }
@@ -840,7 +874,7 @@ func ResourceJob() *schema.Resource {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
 
-			prepareJobSettingsForUpdate(js)
+			prepareJobSettingsForUpdate(d, js)
 
 			jobsAPI := NewJobsAPI(ctx, c)
 			err := jobsAPI.Update(d.Id(), js)

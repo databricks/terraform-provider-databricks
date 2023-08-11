@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -56,8 +57,8 @@ func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
 					URL:            "s3://foo/bar",
 					CredentialName: "bcd",
 					AccessPoint:    "some_access_point",
-					EncDetails: &EncryptionDetails{
-						&SseEncryptionDetails{
+					EncDetails: &catalog.EncryptionDetails{
+						&catalog.SseEncryptionDetails{
 							Algorithm:    "AWS_SSE_KMS",
 							AwsKmsKeyArn: "some_key_arn",
 						},

@@ -59,6 +59,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 	return common.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc
 		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = ZoneDiffSuppress
+		common.MustSchemaPath(s, "gcp_attributes", "use_preemptible_executors").Deprecated = "Please use 'availability' instead."
+
 		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
@@ -225,17 +227,6 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
-// https://github.com/databricks/terraform-provider-databricks/issues/824
-func fixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *Cluster) {
-	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
-	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
-	if oldInstancePool != newInstancePool &&
-		oldDriverPool == oldInstancePool &&
-		oldDriverPool == newDriverPool {
-		cluster.DriverInstancePoolID = cluster.InstancePoolID
-	}
-}
-
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	clusters := NewClustersAPI(ctx, c)
 	clusterID := d.Id()
@@ -250,7 +241,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			return err
 		}
 		cluster.ModifyRequestOnInstancePool()
-		fixInstancePoolChangeIfAny(d, &cluster)
+		cluster.FixInstancePoolChangeIfAny(d)
 
 		// We can only call the resize api if the cluster is in the running state
 		// and only the cluster size (ie num_workers OR autoscale) is being changed

@@ -23,17 +23,24 @@ type ConnectionInfo struct {
 	// A map of key-value properties attached to the securable.
 	Options map[string]string `json:"options" tf:"sensitive"`
 	// Username of current owner of the connection.
-	Owner string `json:"owner,omitempty" tf:"force_new"`
+	Owner string `json:"owner,omitempty" tf:"force_new,suppress_diff"`
 	// An object containing map of key-value properties attached to the
 	// connection.
 	Properties map[string]string `json:"properties,omitempty" tf:"force_new"`
 	// If the connection is read only.
-	ReadOnly bool `json:"read_only,omitempty" tf:"force_new"`
+	ReadOnly bool `json:"read_only,omitempty" tf:"force_new,default:true"`
+}
+
+func suppressSensitiveOptions(k, old, new string, d *schema.ResourceData) bool {
+	//ignore changes in user & password
+	// this list will need to be extended
+	return !d.HasChanges("options.0.user", "options.0.password")
 }
 
 func ResourceConnection() *schema.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["options"].DiffSuppressFunc = suppressSensitiveOptions
 			return m
 		})
 	return common.Resource{

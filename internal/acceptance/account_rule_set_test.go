@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -10,12 +11,33 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-func TestMwsAccAccountRuleSetsFullLifeCycle(t *testing.T) {
-	accountLevel(t, step{
-		Template: `
+// Application ID is mandatory in Azure today.
+func getServicePrincipalResource(cloudEnv string) string {
+	if cloudEnv == "azure" {
+		return `
 		resource "databricks_service_principal" "this" {
+			application_id = "{var.RANDOM_UUID}"
 			display_name = "SPN {var.RANDOM}"
 		}
+		`
+	}
+	return `
+	resource "databricks_service_principal" "this" {
+		display_name = "SPN {var.RANDOM}"
+	}
+	`
+}
+
+func TestMwsAccAccountRuleSetsFullLifeCycle(t *testing.T) {
+	// This endpoint is restricted to basic auth today, used only by AWS account-level tests.
+	// Remove this skip when this restriction is lifted in Azure & GCP.
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv != "aws" {
+		t.Skip("Skipping test in Azure")
+	}
+	spResource := getServicePrincipalResource(cloudEnv)
+	accountLevel(t, step{
+		Template: spResource + `
 		resource "databricks_group" "this" {
 			display_name = "Group {var.RANDOM}"
 		}

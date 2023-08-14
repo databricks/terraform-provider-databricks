@@ -112,6 +112,12 @@ type DbtTask struct {
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
 }
 
+// RunJobTask contains information about RunJobTask
+type RunJobTask struct {
+	JobID         string            `json:"job_id"`
+	JobParameters map[string]string `json:"job_parameters,omitempty"`
+}
+
 // EmailNotifications contains the information for email notifications after job or task run start or completion
 type EmailNotifications struct {
 	OnStart                            []string `json:"on_start,omitempty"`
@@ -181,10 +187,7 @@ type JobTaskSettings struct {
 	TaskKey     string                `json:"task_key,omitempty"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
-
-	// BEGIN Jobs + RunIf preview
-	RunIf string `json:"run_if,omitempty" tf:"suppress_diff"`
-	// END Jobs + RunIf preview
+	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
 
 	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
@@ -200,6 +203,7 @@ type JobTaskSettings struct {
 	PythonWheelTask *PythonWheelTask `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask         `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask         `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask      `json:"run_job_task,omitempty" tf:"group:task_type"`
 
 	// ConditionTask is in private preview
 	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
@@ -260,6 +264,7 @@ type JobSettings struct {
 	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32               `json:"max_retries,omitempty"`
@@ -289,6 +294,7 @@ type JobSettings struct {
 	Queue                *Queue                        `json:"queue,omitempty"`
 	RunAs                *JobRunAs                     `json:"run_as,omitempty"`
 	Health               *JobHealth                    `json:"health,omitempty"`
+	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -336,6 +342,19 @@ type RunParameters struct {
 	SparkSubmitParams []string          `json:"spark_submit_params,omitempty"`
 }
 
+// Job-level parameter
+type JobParameter struct {
+	Name    string `json:"name,omitempty"`
+	Default string `json:"default,omitempty"`
+	Value   string `json:"value,omitempty"`
+}
+
+// Job-level parameter definitions
+type JobParameterDefinition struct {
+	Name    string `json:"name,omitempty"`
+	Default string `json:"default,omitempty"`
+}
+
 // RunState of the job
 type RunState struct {
 	ResultState    string `json:"result_state,omitempty"`
@@ -353,7 +372,8 @@ type JobRun struct {
 	Trigger     string   `json:"trigger,omitempty"`
 	RuntType    string   `json:"run_type,omitempty"`
 
-	OverridingParameters RunParameters `json:"overriding_parameters,omitempty"`
+	OverridingParameters RunParameters  `json:"overriding_parameters,omitempty"`
+	JobParameters        []JobParameter `json:"job_parameters,omitempty"`
 }
 
 // JobRunsListRequest used to do what it sounds like
@@ -758,18 +778,21 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 	return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
 }
 
-func prepareJobSettingsForUpdate(js JobSettings) {
+func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 	if js.NewCluster != nil {
 		js.NewCluster.ModifyRequestOnInstancePool()
+		js.NewCluster.FixInstancePoolChangeIfAny(d)
 	}
 	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
 			task.NewCluster.ModifyRequestOnInstancePool()
+			task.NewCluster.FixInstancePoolChangeIfAny(d)
 		}
 	}
 	for _, jc := range js.JobClusters {
 		if jc.NewCluster != nil {
 			jc.NewCluster.ModifyRequestOnInstancePool()
+			jc.NewCluster.FixInstancePoolChangeIfAny(d)
 		}
 	}
 }
@@ -851,7 +874,7 @@ func ResourceJob() *schema.Resource {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
 
-			prepareJobSettingsForUpdate(js)
+			prepareJobSettingsForUpdate(d, js)
 
 			jobsAPI := NewJobsAPI(ctx, c)
 			err := jobsAPI.Update(d.Id(), js)

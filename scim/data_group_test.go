@@ -91,6 +91,7 @@ func TestDataSourceGroup(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "eerste", d.Id())
+	assert.Equal(t, d.Get("acl_principal_id"), "groups/ds")
 	assertContains(t, d.Get("instance_profiles"), "a")
 	assertContains(t, d.Get("instance_profiles"), "b")
 	assertContains(t, d.Get("members"), "1112")

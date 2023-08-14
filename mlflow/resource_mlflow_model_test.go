@@ -3,34 +3,105 @@ package mlflow
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
-func m() Model {
-	return Model{
+func m() ml.Model {
+	return ml.Model{
 		Name: "xyz",
-		Tags: []Tag{
+		Tags: []ml.ModelTag{
 			{Key: "key1", Value: "value1"},
 			{Key: "key2", Value: "value2"},
 		},
 	}
 }
 
-func TestModelCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+func TestModelCreateMVP(t *testing.T) {
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:          "POST",
-				Resource:        "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: m(),
-				Response:        m(),
+				Method:   "POST",
+				Resource: "/api/2.0/mlflow/registered-models/create",
+				ExpectedRequest: ml.CreateModelRequest{
+					Name: "xyz",
+				},
+				Response: ml.CreateModelResponse{
+					RegisteredModel: &ml.Model{
+						Name: "xyz",
+					},
+				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: registeredModel{
-					RegisteredModelDatabricks: m(),
+				Response: ml.GetModelResponse{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
+						Name: "xyz",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
+				Response: ml.GetModelResponse{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
+						Name: "xyz",
+					},
+				},
+			},
+		},
+		Resource: ResourceMlflowModel(),
+		Create:   true,
+		HCL: `
+		name = "xyz"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestModelCreateWithTags(t *testing.T) {
+	model := m()
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/mlflow/registered-models/create",
+				ExpectedRequest: ml.CreateModelRequest{
+					Name: "xyz",
+					Tags: []ml.ModelTag{
+						{Key: "key1", Value: "value1"},
+						{Key: "key2", Value: "value2"},
+					},
+				},
+				Response: ml.CreateModelResponse{
+					RegisteredModel: &model,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
+				Response: ml.GetModelResponse{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
+						Name: "xyz",
+						Tags: []ml.ModelTag{
+							{Key: "key1", Value: "value1"},
+							{Key: "key2", Value: "value2"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
+				Response: ml.GetModelResponse{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
+						Name: "xyz",
+						Tags: []ml.ModelTag{
+							{Key: "key1", Value: "value1"},
+							{Key: "key2", Value: "value2"},
+						},
+					},
 				},
 			},
 		},
@@ -53,17 +124,27 @@ func TestModelCreate(t *testing.T) {
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "xyz", d.Get("name"), "Name should be set")
 	assert.Equal(t, d.Get("name"), d.Id(), "Name and Id should match")
+
 }
 
 func TestModelCreatePostError(t *testing.T) {
+	model := m()
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:          "POST",
-				Resource:        "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: m(),
-				Response:        m(),
-				Status:          400,
+				Method:   "POST",
+				Resource: "/api/2.0/mlflow/registered-models/create",
+				ExpectedRequest: ml.CreateModelRequest{
+					Name: "xyz",
+					Tags: []ml.ModelTag{
+						{Key: "key1", Value: "value1"},
+						{Key: "key2", Value: "value2"},
+					},
+				},
+				Response: ml.CreateModelResponse{
+					RegisteredModel: &model,
+				},
+				Status: 400,
 			},
 		},
 		Resource: ResourceMlflowModel(),
@@ -90,8 +171,10 @@ func TestModelRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: registeredModel{
-					RegisteredModelDatabricks: m(),
+				Response: ml.GetModelResponse{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
+						Name: "xyz",
+					},
 				},
 			},
 		},
@@ -110,8 +193,10 @@ func TestModelReadGetError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: registeredModel{
-					RegisteredModelDatabricks: m(),
+				Response: ml.GetModelResponse{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
+						Name: "xyz",
+					},
 				},
 				Status: 400,
 			},
@@ -127,8 +212,6 @@ func TestModelReadGetError(t *testing.T) {
 func TestModelUpdate(t *testing.T) {
 	pm := m()
 	pm.Description = "thedescription"
-	gm := m()
-	gm.Description = "updateddescription"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -139,8 +222,11 @@ func TestModelUpdate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: registeredModel{
-					RegisteredModelDatabricks: gm,
+				Response: ml.GetModelResponse{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
+						Name:        "xyz",
+						Description: "updatedddescription",
+					},
 				},
 			},
 		},
@@ -172,7 +258,11 @@ func TestModelUpdatePatchError(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/mlflow/registered-models/update",
-				Response: pm,
+				ExpectedRequest: ml.UpdateModelRequest{
+					Description: "updateddescription",
+					Name:        "xyz",
+				},
+				Response: gm,
 				Status:   400,
 			},
 		},
@@ -191,13 +281,14 @@ func TestModelUpdatePatchError(t *testing.T) {
 
 	assert.Error(t, err)
 }
-
 func TestModelDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/mlflow/registered-models/delete?name=xyz",
+				Response: nil,
+				Status:   200,
 			},
 		},
 		Resource: ResourceMlflowModel(),

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
@@ -232,6 +233,13 @@ var emptyPipelines = qa.HTTPFixture{
 	Response:     pipelines.PipelineListResponse{},
 }
 
+var emptyMlflowWebhooks = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/mlflow/registry-webhooks/list?",
+	Response:     ml.ListRegistryWebhooks{},
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -271,6 +279,13 @@ var emptyWorkspace = qa.HTTPFixture{
 var emptySqlEndpoints = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/sql/warehouses",
+	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
+var emptyInstancePools = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/instance-pools/list",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
@@ -331,7 +346,9 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyGitCredentials,
 			emptyWorkspace,
 			emptyIpAccessLIst,
+			emptyInstancePools,
 			emptyModelServing,
+			emptyMlflowWebhooks,
 			emptySqlDashboards,
 			emptySqlEndpoints,
 			emptySqlQueries,
@@ -535,7 +552,9 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			emptyRepos,
 			emptyModelServing,
+			emptyMlflowWebhooks,
 			emptyWorkspaceConf,
+			emptyInstancePools,
 			dummyWorkspaceConf,
 			{
 				Method:   "GET",
@@ -919,7 +938,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = "jobs,access,storage,clusters"
+			ic.services = "jobs,access,storage,clusters,pools"
 			ic.listing = "jobs"
 			ic.mounts = true
 			ic.meAdmin = true
@@ -1168,7 +1187,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = "jobs,access,storage,clusters"
+			ic.services = "jobs,access,storage,clusters,pools"
 			ic.listing = "jobs"
 			ic.mounts = true
 			ic.meAdmin = true
@@ -1983,6 +2002,56 @@ func TestImportingModelServing(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.listing = "model-serving"
 			ic.services = "model-serving"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
+func TestImportingMlfloweWebhooks(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registry-webhooks/list",
+				Response: ml.ListRegistryWebhooks{
+					Webhooks: []ml.RegistryWebhook{
+						{
+							Id: "abc",
+							JobSpec: &ml.JobSpecWithoutSecret{
+								JobId: "123",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registry-webhooks/list?",
+				Response: ml.ListRegistryWebhooks{
+					Webhooks: []ml.RegistryWebhook{
+						{
+							Id: "abc",
+							JobSpec: &ml.JobSpecWithoutSecret{
+								JobId: "123",
+							},
+						},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "mlflow-webhooks"
+			ic.services = "mlflow-webhooks"
 
 			err := ic.Run()
 			assert.NoError(t, err)

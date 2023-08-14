@@ -7,9 +7,8 @@ import (
 func TestUcAccConnectionsResourceFullLifecycle(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
-		resource "databricks_volume" "this" {
+		resource "databricks_connection" "this" {
 			name = "name-{var.STICKY_RANDOM}"
-			comment = "comment-{var.STICKY_RANDOM}"
 			connection_type = "MYSQL"
 			comment         = "this is a connection to mysql db"
 			options         = {

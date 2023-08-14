@@ -110,7 +110,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 					_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 						MetastoreId: metastoreId,
 						MetastoreInfo: &catalog.UpdateMetastore{
-							StorageRootCredentialId: dac.Id,
+							StorageRootCredentialId: dac.CredentialInfo.Id,
 						},
 					})
 					if err != nil {
@@ -142,10 +142,10 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			var storageCredential *catalog.StorageCredentialInfo
 			var metastore *catalog.MetastoreInfo
 
 			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+				var storageCredential *catalog.AccountsStorageCredentialInfo
 				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId: metastoreId,
 					Name:        dacName,
@@ -162,6 +162,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				d.Set("is_default", isDefault)
 				return common.StructToData(storageCredential, dacSchema, d)
 			}, func(w *databricks.WorkspaceClient) error {
+				var storageCredential *catalog.StorageCredentialInfo
 				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacName)
 				if err != nil {
 					return err

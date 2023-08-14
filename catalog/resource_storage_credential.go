@@ -70,11 +70,11 @@ func ResourceStorageCredential() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				d.SetId(storageCredential.Name)
+				d.SetId(storageCredential.CredentialInfo.Name)
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo: &update,
 					MetastoreId:    metastoreId,
-					Name:           storageCredential.Id,
+					Name:           storageCredential.CredentialInfo.Id,
 				})
 				if err != nil {
 					return err

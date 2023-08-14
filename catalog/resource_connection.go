@@ -6,6 +6,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"golang.org/x/exp/slices"
 )
 
 // This structure contains the fields of catalog.UpdateConnection and catalog.CreateConnection
@@ -28,13 +29,26 @@ type ConnectionInfo struct {
 	// connection.
 	Properties map[string]string `json:"properties,omitempty" tf:"force_new"`
 	// If the connection is read only.
-	ReadOnly bool `json:"read_only,omitempty" tf:"force_new,default:true"`
+	ReadOnly bool `json:"read_only,omitempty" tf:"force_new,computed"`
 }
 
+// suppress diff for sensitive options, which are not returned by the server
 func suppressSensitiveOptions(k, old, new string, d *schema.ResourceData) bool {
-	//ignore changes in user & password
-	// this list will need to be extended
-	return !d.HasChanges("options.0.user", "options.0.password")
+	//this list will expand as other auth may have different sensitive options
+	sensitiveOptions := []string{"user", "password"}
+	o, n := d.GetChange("options")
+	oldOpt := o.(map[string]any)
+	newOpt := n.(map[string]any)
+	//loop through the map and ignore diff for sensitive options
+	for key, element := range newOpt {
+		if slices.Contains(sensitiveOptions, key) {
+			continue
+		}
+		if oldOpt[key] != element {
+			return false
+		}
+	}
+	return true
 }
 
 func ResourceConnection() *schema.Resource {

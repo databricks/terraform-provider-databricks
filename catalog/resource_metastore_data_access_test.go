@@ -187,8 +187,10 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 						},
 					},
 				},
-				Response: catalog.StorageCredentialInfo{
-					Id: "bcd",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Id: "bcd",
+					},
 				},
 			},
 			{
@@ -250,8 +252,10 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 						},
 					},
 				},
-				Response: catalog.StorageCredentialInfo{
-					Id: "bcd",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Id: "bcd",
+					},
 				},
 			},
 			{
@@ -310,10 +314,12 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 						Name: "bcd",
 					},
 				},
-				Response: catalog.StorageCredentialInfo{
-					Id: "bcd",
-					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
-						Email: "a@example.com",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Id: "bcd",
+						DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
+							Email: "a@example.com",
+						},
 					},
 				},
 			},

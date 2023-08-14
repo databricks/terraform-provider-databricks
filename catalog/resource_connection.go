@@ -21,12 +21,12 @@ type ConnectionInfo struct {
 	// Name of the connection.
 	NameArg string `json:"-" url:"-"`
 	// A map of key-value properties attached to the securable.
-	OptionsKvpairs map[string]string `json:"options_kvpairs" tf:"alias:options,sensitive"`
+	Options map[string]string `json:"options" tf:"sensitive"`
 	// Username of current owner of the connection.
 	Owner string `json:"owner,omitempty" tf:"force_new"`
 	// An object containing map of key-value properties attached to the
 	// connection.
-	PropertiesKvpairs map[string]string `json:"properties_kvpairs,omitempty" tf:"alias:properties,force_new"`
+	Properties map[string]string `json:"properties,omitempty" tf:"force_new"`
 	// If the connection is read only.
 	ReadOnly bool `json:"read_only,omitempty" tf:"force_new"`
 }
@@ -44,12 +44,7 @@ func ResourceConnection() *schema.Resource {
 				return err
 			}
 			var createConnectionRequest catalog.CreateConnection
-			var alias ConnectionInfo
 			common.DataToStructPointer(d, s, &createConnectionRequest)
-			//workaround as cannot set tf:"alias" for the Go SDK struct
-			common.DataToStructPointer(d, s, &alias)
-			createConnectionRequest.OptionsKvpairs = alias.OptionsKvpairs
-			createConnectionRequest.PropertiesKvpairs = alias.PropertiesKvpairs
 			conn, err := w.Connections.Create(ctx, createConnectionRequest)
 			if err != nil {
 				return err
@@ -74,11 +69,7 @@ func ResourceConnection() *schema.Resource {
 				return err
 			}
 			var updateConnectionRequest catalog.UpdateConnection
-			var alias ConnectionInfo
 			common.DataToStructPointer(d, s, &updateConnectionRequest)
-			//workaround as cannot set tf:"alias" for the Go SDK struct
-			common.DataToStructPointer(d, s, &alias)
-			updateConnectionRequest.OptionsKvpairs = alias.OptionsKvpairs
 			updateConnectionRequest.NameArg = d.Id()
 			conn, err := w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {

@@ -24,10 +24,10 @@ func TestConnectionsCreate(t *testing.T) {
 					Name:           "testConnectionName",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "This is a test comment.",
-					OptionsKvpairs: map[string]string{
+					Options: map[string]string{
 						"host": "test.com",
 					},
-					PropertiesKvpairs: map[string]string{
+					Properties: map[string]string{
 						"purpose": "testing",
 					},
 					Owner: "InitialOwner",
@@ -38,10 +38,10 @@ func TestConnectionsCreate(t *testing.T) {
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
 					Owner:          "InitialOwner",
-					OptionsKvpairs: map[string]string{
+					Options: map[string]string{
 						"host": "test.com",
 					},
-					PropertiesKvpairs: map[string]string{
+					Properties: map[string]string{
 						"purpose": "testing",
 					},
 				},
@@ -55,10 +55,10 @@ func TestConnectionsCreate(t *testing.T) {
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
 					Owner:          "InitialOwner",
-					OptionsKvpairs: map[string]string{
+					Options: map[string]string{
 						"host": "test.com",
 					},
-					PropertiesKvpairs: map[string]string{
+					Properties: map[string]string{
 						"purpose": "testing",
 					},
 				},
@@ -97,7 +97,7 @@ func TestConnectionsCreate_Error(t *testing.T) {
 					Name:           "testConnectionName",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "This is a test comment.",
-					OptionsKvpairs: map[string]string{
+					Options: map[string]string{
 						"host": "test.com",
 					},
 					Owner: "testOwner",
@@ -135,7 +135,7 @@ func TestConnectionsRead(t *testing.T) {
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
-					OptionsKvpairs: map[string]string{
+					Options: map[string]string{
 						"host": "test.com",
 					},
 				},
@@ -198,7 +198,7 @@ func TestConnectionsUpdate(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
 					Name: "testConnectionNameNew",
-					OptionsKvpairs: map[string]string{
+					Options: map[string]string{
 						"host": "test.com",
 					},
 				},
@@ -248,7 +248,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
 					Name: "testConnectionNameNew",
-					OptionsKvpairs: map[string]string{
+					Options: map[string]string{
 						"host": "test.com",
 					},
 				},

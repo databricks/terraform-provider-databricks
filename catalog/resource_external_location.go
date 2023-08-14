@@ -9,29 +9,17 @@ import (
 )
 
 // This structure contains the fields of both catalog.UpdateExternalLocation and catalog.CreateExternalLocation
-
-type SseEncryptionDetails struct {
-	// algorithm enum values: "AWS_SSE_S3", "AWS_SSE_KMS"
-	Algorithm    string `json:"algorithm,omitempty"`
-	AwsKmsKeyArn string `json:"aws_kms_key_arn,omitempty"`
-}
-
-type EncryptionDetails struct {
-	// This is a oneOf type, but only one type defined currently:
-	SseEncDetails *SseEncryptionDetails `json:"sse_encryption_details,omitempty"`
-}
-
 type ExternalLocationInfo struct {
-	Name           string             `json:"name" tf:"force_new"`
-	URL            string             `json:"url"`
-	CredentialName string             `json:"credential_name"`
-	Comment        string             `json:"comment,omitempty"`
-	SkipValidation bool               `json:"skip_validation,omitempty"`
-	Owner          string             `json:"owner,omitempty" tf:"computed"`
-	MetastoreID    string             `json:"metastore_id,omitempty" tf:"computed"`
-	ReadOnly       bool               `json:"read_only,omitempty"`
-	AccessPoint    string             `json:"access_point,omitempty"`
-	EncDetails     *EncryptionDetails `json:"encryption_details,omitempty"`
+	Name           string                     `json:"name" tf:"force_new"`
+	URL            string                     `json:"url"`
+	CredentialName string                     `json:"credential_name"`
+	Comment        string                     `json:"comment,omitempty"`
+	SkipValidation bool                       `json:"skip_validation,omitempty"`
+	Owner          string                     `json:"owner,omitempty" tf:"computed"`
+	MetastoreID    string                     `json:"metastore_id,omitempty" tf:"computed"`
+	ReadOnly       bool                       `json:"read_only,omitempty"`
+	AccessPoint    string                     `json:"access_point,omitempty"`
+	EncDetails     *catalog.EncryptionDetails `json:"encryption_details,omitempty"`
 }
 
 func ResourceExternalLocation() *schema.Resource {

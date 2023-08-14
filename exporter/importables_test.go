@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -315,6 +316,35 @@ func TestClusterList_NoNameMatch(t *testing.T) {
 		err := resourcesMap["databricks_cluster"].List(ic)
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
+func TestInstnacePoolsListWithMatch(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/instance-pools/list",
+			Response: compute.ListInstancePools{
+				InstancePools: []compute.InstancePoolAndStats{
+					{
+						InstancePoolName: "test",
+						InstancePoolId:   "test",
+					},
+					{
+						InstancePoolName: "bcd",
+						InstancePoolId:   "bcd",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.match = "bcd"
+		err := resourcesMap["databricks_instance_pool"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(ic.testEmits))
 	})
 }
 

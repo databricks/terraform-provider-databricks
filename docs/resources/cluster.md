@@ -426,6 +426,7 @@ The following options are available:
 * `google_service_account` - (Optional, string) Google Service Account email address that the cluster uses to authenticate with Google Identity. This field is used for authentication with the GCS and BigQuery data sources.
 * `availability` - (Optional) Availability type used for all nodes. Valid values are `PREEMPTIBLE_GCP`, `PREEMPTIBLE_WITH_FALLBACK_GCP` and `ON_DEMAND_GCP`, default: `ON_DEMAND_GCP`.
 * `boot_disk_size` (optional, int) Boot disk size in GB
+* `local_ssd_count` (optional, int) Number of local SSD disks (each is 375GB in size) that will be attached to each node of the cluster. 
 * `zone_id` (optional)  Identifier for the availability zone in which the cluster resides. This can be one of the following:
   * `HA` (default): High availability, spread nodes across availability zones for a Databricks deployment region.
   * `AUTO`: Databricks picks an availability zone to schedule the cluster on.

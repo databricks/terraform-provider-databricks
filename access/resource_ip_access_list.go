@@ -3,6 +3,7 @@ package access
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -31,47 +32,57 @@ func ResourceIPAccessList() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			var iacl settings.CreateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
-			status, err := w.IpAccessLists.Create(ctx, iacl)
-			if err != nil {
-				return err
-			}
-			d.SetId(status.IpAccessList.ListId)
-			return nil
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+				status, err := acc.IpAccessLists.Create(ctx, iacl)
+				if err != nil {
+					return err
+				}
+				d.SetId(status.IpAccessList.ListId)
+				return nil
+			}, func(w *databricks.WorkspaceClient) error {
+				status, err := w.IpAccessLists.Create(ctx, iacl)
+				if err != nil {
+					return err
+				}
+				d.SetId(status.IpAccessList.ListId)
+				return nil
+			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			status, err := w.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
-			if err != nil {
-				return err
-			}
-			common.StructToData(status.IpAccessList, s, d)
-			return nil
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+				status, err := acc.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
+				if err != nil {
+					return err
+				}
+				common.StructToData(status.IpAccessLists, s, d)
+				return nil
+			}, func(w *databricks.WorkspaceClient) error {
+				status, err := w.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
+				if err != nil {
+					return err
+				}
+				common.StructToData(status.IpAccessList, s, d)
+				return nil
+			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			var iacl settings.UpdateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
 			iacl.IpAccessListId = d.Id()
-			return w.IpAccessLists.Update(ctx, iacl)
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+				return acc.IpAccessLists.Update(ctx, iacl)
+			}, func(w *databricks.WorkspaceClient) error {
+				return w.IpAccessLists.Update(ctx, iacl)
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			return w.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+				return acc.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
+			}, func(w *databricks.WorkspaceClient) error {
+				return w.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
+			})
 		},
 	}.ToResource()
 }

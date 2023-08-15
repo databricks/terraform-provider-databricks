@@ -371,3 +371,50 @@ func TestPrivilegeWithSpace(t *testing.T) {
 	})
 	assert.EqualError(t, err, "CREATE TABLE is not allowed on external_location. Did you mean CREATE_TABLE?")
 }
+
+func TestConnectionGrantCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn",
+				ExpectedRequest: permissionsDiff{
+					Changes: []permissionsChange{
+						{
+							Principal: "me",
+							Add:       []string{"USE_CONNECTION"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"USE_CONNECTION"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		foreign_connection = "myconn"
+
+		grant {
+			principal = "me"
+			privileges = ["USE_CONNECTION"]
+		}`,
+	}.ApplyNoError(t)
+}

@@ -4,9 +4,12 @@ subcategory: "Unity Catalog"
 # databricks_grants Resource
 
 -> **Note**
+  It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
+
+-> **Note**
   This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
 
--> **Notes**
+-> **Note**
   Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future. Account-level principal grants can be assigned with any valid workspace as the Unity Catalog is decoupled from specific workspaces. More information in [the official documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html).
 
 In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive `ALL_PRIVILEGES` on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
@@ -18,21 +21,9 @@ Every `databricks_grants` resource must have exactly one securable identifier an
 - `principal` - User name, group name or service principal application ID.
 - `privileges` - One or more privileges that are specific to a securable type.
 
-The securable objects are:
-
-- `METASTORE`: The top-level container for metadata. Each metastore exposes a three-level namespace (`catalog`.`schema`.`table`) that organizes your data.
-- `CATALOG`: The first layer of the object hierarchy, used to organize your data assets.
-- `SCHEMA`: Also known as databases, schemas are the second layer of the object hierarchy and contain tables, volumes and views.
-- `TABLE`: The lowest level in the object hierarchy, tables can be  _external_ (stored in external locations in your cloud storage of choice) or _managed_ tables (stored in a storage container in your cloud storage that you create expressly for UC).
-- `VIEW`: A read-only object created from one or more tables that is contained within a schema.
-- `VOLUME`: An object contained within a schema that allows accessing, storing, governing, and organizing files. Volumes unlock new processing capabilities for data governed by the Unity Catalog, including support for most machine learning and data science workloads.
-- `EXTERNAL LOCATION`: An object that contains a reference to a storage credential and a cloud storage path that is contained within a metatore.
-- `STORAGE CREDENTIAL`: An object that encapsulates a long-term cloud credential that provides access to cloud storage that is contained within a metatore.
-- `SHARE`: A logical grouping for the tables you intend to share using Delta Sharing. A share is contained within a Unity Catalog metastore.
+For the latest list of privilege types that apply to each securable object in Unity Catalog, please refer to the [official documentation](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/privileges.html#privilege-types-by-securable-object-in-unity-catalog)
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
-
-It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
 Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/sql-ref-privileges.html#privilege-types), all privileges to be written with underscore instead of space, e.g. `CREATE_TABLE` and not `CREATE TABLE`. Below summarizes which privilege types apply to each securable object in the catalog:
 

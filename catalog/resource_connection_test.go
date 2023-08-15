@@ -37,6 +37,7 @@ func TestConnectionsCreate(t *testing.T) {
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
+					MetastoreId:    "abc",
 					Owner:          "InitialOwner",
 					Options: map[string]string{
 						"host": "test.com",
@@ -55,6 +56,7 @@ func TestConnectionsCreate(t *testing.T) {
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
 					Owner:          "InitialOwner",
+					MetastoreId:    "abc",
 					Options: map[string]string{
 						"host": "test.com",
 					},
@@ -135,6 +137,7 @@ func TestConnectionsRead(t *testing.T) {
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
+					MetastoreId:    "abc",
 					Options: map[string]string{
 						"host": "test.com",
 					},
@@ -143,7 +146,7 @@ func TestConnectionsRead(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Read:     true,
-		ID:       "testConnectionName",
+		ID:       "testConnectionName|abc",
 		HCL: `
 		name = "testConnectionName"
 		connection_type = "testConnectionType"
@@ -160,7 +163,7 @@ func TestConnectionsRead(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
 }
 
-func TestResourceConnectionRead_Error(t *testing.T) {
+func TestConnectionRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -175,10 +178,10 @@ func TestResourceConnectionRead_Error(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Read:     true,
-		ID:       "testConnectionName",
+		ID:       "testConnectionName|abc",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "testConnectionName", d.Id(), "Id should not be empty for error reads")
+	assert.Equal(t, "testConnectionName|abc", d.Id(), "Id should not be empty for error reads")
 }
 
 func TestConnectionsUpdate(t *testing.T) {
@@ -190,6 +193,7 @@ func TestConnectionsUpdate(t *testing.T) {
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					MetastoreId:    "abc",
 					Comment:        "testComment",
 				},
 			},
@@ -206,6 +210,7 @@ func TestConnectionsUpdate(t *testing.T) {
 					Name:           "testConnectionNameNew",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "testComment",
+					MetastoreId:    "abc",
 					Options: map[string]string{
 						"host": "test.com",
 					},
@@ -218,6 +223,7 @@ func TestConnectionsUpdate(t *testing.T) {
 					Name:           "testConnectionNameNew",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "testComment",
+					MetastoreId:    "abc",
 					Options: map[string]string{
 						"host": "test.com",
 					},
@@ -226,7 +232,7 @@ func TestConnectionsUpdate(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Update:   true,
-		ID:       "testConnectionName",
+		ID:       "testConnectionName|abc",
 		InstanceState: map[string]string{
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
@@ -267,7 +273,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Update:   true,
-		ID:       "testConnectionName",
+		ID:       "testConnectionName|abc",
 		InstanceState: map[string]string{
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
@@ -294,10 +300,10 @@ func TestConnectionDelete(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Delete:   true,
-		ID:       "testConnectionName",
+		ID:       "testConnectionName|abc",
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "testConnectionName", d.Id())
+	assert.Equal(t, "testConnectionName|abc", d.Id())
 }
 
 func TestConnectionDelete_Error(t *testing.T) {
@@ -316,6 +322,6 @@ func TestConnectionDelete_Error(t *testing.T) {
 		Resource: ResourceConnection(),
 		Delete:   true,
 		Removed:  true,
-		ID:       "testConnectionName",
+		ID:       "testConnectionName|abc",
 	}.ExpectError(t, "Something went wrong")
 }

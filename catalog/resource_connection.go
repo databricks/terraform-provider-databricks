@@ -17,6 +17,8 @@ type ConnectionInfo struct {
 	Comment string `json:"comment,omitempty" tf:"force_new"`
 	// The type of connection.
 	ConnectionType string `json:"connection_type" tf:"force_new"`
+	// Unique identifier of parent metastore.
+	MetastoreId string `json:"metastore_id,omitempty" tf:"computed"`
 	// Name of the connection.
 	Name string `json:"name"`
 	// Name of the connection.
@@ -57,6 +59,10 @@ func ResourceConnection() *schema.Resource {
 			m["options"].DiffSuppressFunc = suppressSensitiveOptions
 			return m
 		})
+	pi := common.NewPairID("name", "metastore_id").Schema(
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -70,7 +76,8 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.SetId(conn.Name)
+			d.Set("metastore_id", conn.MetastoreId)
+			pi.Pack(d)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -78,7 +85,11 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			conn, err := w.Connections.GetByNameArg(ctx, d.Id())
+			connName, _, err := pi.Unpack(d)
+			if err != nil {
+				return err
+			}
+			conn, err := w.Connections.GetByNameArg(ctx, connName)
 			if err != nil {
 				return err
 			}
@@ -91,14 +102,18 @@ func ResourceConnection() *schema.Resource {
 			}
 			var updateConnectionRequest catalog.UpdateConnection
 			common.DataToStructPointer(d, s, &updateConnectionRequest)
-			updateConnectionRequest.NameArg = d.Id()
+			connName, _, err := pi.Unpack(d)
+			updateConnectionRequest.NameArg = connName
+			if err != nil {
+				return err
+			}
 			conn, err := w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {
 				return err
 			}
-			// We need to update the resource Id because Name is updatable and FullName consists of Name,
-			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
-			d.SetId(conn.Name)
+			// We need to repack the Id as the name may have changed
+			d.Set("name", conn.Name)
+			pi.Pack(d)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -106,7 +121,11 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Connections.DeleteByNameArg(ctx, d.Id())
+			connName, _, err := pi.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return w.Connections.DeleteByNameArg(ctx, connName)
 		},
 	}.ToResource()
 }

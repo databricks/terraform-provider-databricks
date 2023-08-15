@@ -206,6 +206,9 @@ func TestConnectionsUpdate(t *testing.T) {
 					Name:           "testConnectionNameNew",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "testComment",
+					Options: map[string]string{
+						"host": "test.com",
+					},
 				},
 			},
 			{
@@ -215,6 +218,9 @@ func TestConnectionsUpdate(t *testing.T) {
 					Name:           "testConnectionNameNew",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "testComment",
+					Options: map[string]string{
+						"host": "test.com",
+					},
 				},
 			},
 		},

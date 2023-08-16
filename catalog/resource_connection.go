@@ -34,29 +34,11 @@ type ConnectionInfo struct {
 	ReadOnly bool `json:"read_only,omitempty" tf:"force_new,computed"`
 }
 
-// suppress diff for sensitive options, which are not returned by the server
-func suppressSensitiveOptions(k, old, new string, d *schema.ResourceData) bool {
-	//this list will expand as other auth may have different sensitive options
-	sensitiveOptions := []string{"user", "password"}
-	o, n := d.GetChange("options")
-	oldOpt := o.(map[string]any)
-	newOpt := n.(map[string]any)
-	//loop through the map and ignore diff for sensitive options
-	for key, element := range newOpt {
-		if slices.Contains(sensitiveOptions, key) {
-			continue
-		}
-		if oldOpt[key] != element {
-			return false
-		}
-	}
-	return true
-}
+var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "OAuthPvtKey"}
 
 func ResourceConnection() *schema.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["options"].DiffSuppressFunc = suppressSensitiveOptions
 			return m
 		})
 	pi := common.NewPairID("name", "metastore_id").Schema(
@@ -92,6 +74,14 @@ func ResourceConnection() *schema.Resource {
 			conn, err := w.Connections.GetByNameArg(ctx, connName)
 			if err != nil {
 				return err
+			}
+			// We need to preserve original sensitive options as API doesn't return them
+			var cOrig catalog.CreateConnection
+			common.DataToStructPointer(d, s, &cOrig)
+			for key, element := range cOrig.Options {
+				if slices.Contains(sensitiveOptions, key) {
+					conn.Options[key] = element
+				}
 			}
 			return common.StructToData(conn, s, d)
 		},

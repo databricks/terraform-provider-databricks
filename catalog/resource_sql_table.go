@@ -17,7 +17,7 @@ import (
 
 type SqlColumnInfo struct {
 	Name     string `json:"name"`
-	Type     string `json:"type_text" tf:"alias:type"`
+	Type     string `json:"type_text,omitempty" tf:"alias:type"`
 	Comment  string `json:"comment,omitempty"`
 	Nullable bool   `json:"nullable,omitempty" tf:"default:true"`
 }

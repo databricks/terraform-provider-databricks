@@ -51,6 +51,39 @@ func TestResourceSqlTableCreateStatement_View(t *testing.T) {
 	assert.Contains(t, stmt, "'one'='two'")
 }
 
+func TestResourceSqlTableCreateStatement_ViewWithComments(t *testing.T) {
+	ti := &SqlTableInfo{
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "VIEW",
+		DataSourceFormat:      "DELTA",
+		StorageLocation:       "s3://ext-main/foo/bar1",
+		StorageCredentialName: "somecred",
+		Comment:               "terraform managed",
+		Properties: map[string]string{
+			"one":   "two",
+			"three": "four",
+		},
+		ColumnInfos: []SqlColumnInfo{
+			{
+				Name: "id",
+			},
+			{
+				Name:    "name",
+				Comment: "a comment",
+			},
+		},
+	}
+	stmt := ti.buildTableCreateStatement()
+	assert.Contains(t, stmt, "CREATE VIEW main.foo.bar")
+	assert.Contains(t, stmt, "(id  NOT NULL, name  NOT NULL COMMENT 'a comment')")
+	assert.NotContains(t, stmt, "USING DELTA")
+	assert.NotContains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH CREDENTIAL somecred")
+	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
+	assert.Contains(t, stmt, "'one'='two'")
+}
+
 func TestResourceSqlTableSerializeProperties(t *testing.T) {
 	ti := &SqlTableInfo{
 		Properties: map[string]string{

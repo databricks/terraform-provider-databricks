@@ -202,6 +202,17 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 			table_type         = "VIEW"
 			comment 		   = "this view is managed by terraform..."
 			view_definition    = format("SELECT id, name FROM %s", databricks_sql_table.this.id)
+
+			column {
+				name      = "id"
+				type      = "string"
+			}
+
+			column {
+				name      = "name"
+				type      = "string"
+				comment   = "view column comment"
+			}			
 		}`,
 	})
 }

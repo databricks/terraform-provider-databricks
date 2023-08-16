@@ -57,6 +57,10 @@ func (ti *SqlTableInfo) FullName() string {
 	return fmt.Sprintf("%s.%s.%s", ti.CatalogName, ti.SchemaName, ti.Name)
 }
 
+func (ti *SqlTableInfo) SQLFullName() string {
+	return fmt.Sprintf("`%s`.`%s`.`%s`", ti.CatalogName, ti.SchemaName, ti.Name)
+}
+
 func parseComment(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(s, `\'`, `'`), `'`, `\'`)
 }
@@ -202,7 +206,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	createType := ti.getTableTypeString()
 
-	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.FullName()))
+	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.SQLFullName()))
 
 	if len(ti.ColumnInfos) > 0 {
 		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeColumnInfos()))
@@ -242,18 +246,18 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 	if ti.TableType == "VIEW" {
 		// View only attributes
 		if ti.ViewDefinition != oldti.ViewDefinition {
-			statements = append(statements, fmt.Sprintf("ALTER VIEW %s AS %s", ti.FullName(), ti.ViewDefinition))
+			statements = append(statements, fmt.Sprintf("ALTER VIEW %s AS %s", ti.SQLFullName(), ti.ViewDefinition))
 		}
 	} else {
 		// Table only attributes
 		if ti.StorageLocation != oldti.StorageLocation {
-			statements = append(statements, fmt.Sprintf("ALTER TABLE %s SET %s", ti.FullName(), ti.buildLocationStatement()))
+			statements = append(statements, fmt.Sprintf("ALTER TABLE %s SET %s", ti.SQLFullName(), ti.buildLocationStatement()))
 		}
 	}
 
 	// Attributes common to both views and tables
 	if ti.Comment != oldti.Comment {
-		statements = append(statements, fmt.Sprintf("COMMENT ON %s %s IS '%s'", typestring, ti.FullName(), parseComment(ti.Comment)))
+		statements = append(statements, fmt.Sprintf("COMMENT ON %s %s IS '%s'", typestring, ti.SQLFullName(), parseComment(ti.Comment)))
 	}
 
 	if !reflect.DeepEqual(ti.Properties, oldti.Properties) {
@@ -265,10 +269,10 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 			}
 		}
 		if len(removeProps) > 0 {
-			statements = append(statements, fmt.Sprintf("ALTER %s %s UNSET TBLPROPERTIES IF EXISTS (%s)", typestring, ti.FullName(), strings.Join(removeProps, ",")))
+			statements = append(statements, fmt.Sprintf("ALTER %s %s UNSET TBLPROPERTIES IF EXISTS (%s)", typestring, ti.SQLFullName(), strings.Join(removeProps, ",")))
 		}
 		// Next handle property changes and additions
-		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.FullName(), ti.serializeProperties()))
+		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.SQLFullName(), ti.serializeProperties()))
 	}
 
 	return statements, nil
@@ -293,7 +297,7 @@ func (ti *SqlTableInfo) createTable() error {
 }
 
 func (ti *SqlTableInfo) deleteTable() error {
-	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.FullName()))
+	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.SQLFullName()))
 }
 
 func (ti *SqlTableInfo) applySql(sqlQuery string) error {

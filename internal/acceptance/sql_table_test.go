@@ -205,12 +205,10 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 
 			column {
 				name      = "id"
-				type      = "string"
 			}
 
 			column {
 				name      = "name"
-				type      = "string"
 				comment   = "view column comment"
 			}			
 		}`,

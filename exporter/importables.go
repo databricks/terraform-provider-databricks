@@ -482,10 +482,10 @@ var resourcesMap map[string]importable = map[string]importable{
 						})
 					}
 				}
-				if task.RunJobTask != nil && task.RunJobTask.JobID != "" {
+				if task.RunJobTask != nil && task.RunJobTask.JobID != 0 {
 					ic.Emit(&resource{
 						Resource: "databricks_job",
-						ID:       task.RunJobTask.JobID,
+						ID:       strconv.FormatInt(task.RunJobTask.JobID, 10),
 					})
 				}
 				ic.importCluster(task.NewCluster)

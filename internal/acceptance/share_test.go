@@ -57,7 +57,8 @@ func TestUcAccCreateShare(t *testing.T) {
 		}			
 		
 		resource "databricks_share" "myshare" {
-			name = "{var.RANDOM}-terraform-delta-share"
+			name  = "{var.RANDOM}-terraform-delta-share"
+			owner = "account users"
 			object {
 				name = databricks_table.mytable.id
 				comment = "c"

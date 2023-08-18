@@ -15,7 +15,7 @@ func TestRecipientCornerCases(t *testing.T) {
 }
 
 func TestCreateRecipient(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
@@ -62,12 +62,12 @@ func TestCreateRecipient(t *testing.T) {
 		   allowed_ip_addresses = ["0.0.0.0/0"]
 		}
 		`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "a", d.Get("name"))
-	assert.Equal(t, "InitialOwner", d.Get("owner"))
-	assert.Equal(t, "TOKEN", d.Get("authentication_type"))
-	assert.Equal(t, "b", d.Get("comment"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":                "a",
+		"owner":               "InitialOwner",
+		"authentication_type": "TOKEN",
+		"comment":             "b",
+	})
 }
 
 func TestCreateRecipient_InvalidAuthType(t *testing.T) {
@@ -91,7 +91,7 @@ func TestCreateRecipient_InvalidAuthType(t *testing.T) {
 }
 
 func TestReadRecipient(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -120,10 +120,10 @@ func TestReadRecipient(t *testing.T) {
 		   allowed_ip_addresses = ["0.0.0.0/0"]
 		}
 		`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "a", d.Get("name"))
-	assert.Equal(t, "b", d.Get("comment"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":    "a",
+		"comment": "b",
+	})
 }
 
 func TestDeleteRecipient(t *testing.T) {

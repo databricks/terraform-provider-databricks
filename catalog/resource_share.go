@@ -27,7 +27,7 @@ const (
 
 type ShareInfo struct {
 	Name      string             `json:"name" tf:"force_new"`
-	Owner     string             `json:"owner,omitempty"`
+	Owner     string             `json:"owner,omitempty" tf:"suppress_diff"`
 	Objects   []SharedDataObject `json:"objects,omitempty" tf:"alias:object"`
 	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 	CreatedBy string             `json:"created_by,omitempty" tf:"computed"`

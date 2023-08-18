@@ -29,7 +29,7 @@ type RecipientInfo struct {
 	SharingCode                    string        `json:"sharing_code,omitempty" tf:"sensitive,force_new,suppress_diff"`
 	AuthenticationType             string        `json:"authentication_type" tf:"force_new"`
 	Tokens                         []Token       `json:"tokens,omitempty" tf:"computed"`
-	Owner                          string        `json:"owner,omitempty"`
+	Owner                          string        `json:"owner,omitempty" tf:"suppress_diff"`
 	DataRecipientGlobalMetastoreId string        `json:"data_recipient_global_metastore_id,omitempty" tf:"force_new,conflicts:ip_access_list"`
 	IpAccessList                   *IpAccessList `json:"ip_access_list,omitempty"`
 }

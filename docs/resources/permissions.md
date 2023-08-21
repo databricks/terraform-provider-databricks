@@ -360,7 +360,6 @@ resource "databricks_permissions" "workspace_file_usage" {
 }
 ```
 
-
 ## Folder usage
 
 Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_directory](directory.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
@@ -618,7 +617,7 @@ resource "databricks_permissions" "token_usage" {
 
 ## SQL warehouse usage
 
-[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have two possible permissions: `CAN_USE` and `CAN_MANAGE`:
+[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have three possible permissions: `IS_OWNER`, `CAN_USE` and `CAN_MANAGE`:
 
 ```hcl
 data "databricks_current_user" "me" {}

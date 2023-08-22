@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_system_schema Resource
 
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+
 -> **Notes**
   Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
 

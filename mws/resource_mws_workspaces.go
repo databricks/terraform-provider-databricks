@@ -131,6 +131,12 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	if w.GCPManagedNetworkConfig != nil {
 		workspaceCreationRequest["gcp_managed_network_config"] = w.GCPManagedNetworkConfig
 	}
+	if w.ManagedServicesCustomerManagedKeyID != "" {
+		workspaceCreationRequest["managed_services_customer_managed_key_id"] = w.ManagedServicesCustomerManagedKeyID
+	}
+	if w.StorageCustomerManagedKeyID != "" {
+		workspaceCreationRequest["storage_customer_managed_key_id"] = w.StorageCustomerManagedKeyID
+	}
 	return json.Marshal(workspaceCreationRequest)
 }
 

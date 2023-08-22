@@ -22,7 +22,7 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 You must configure this during workspace creation
 
-For AWS
+#### For AWS
 
 ```hcl
 variable "databricks_account_id" {
@@ -78,7 +78,7 @@ resource "databricks_mws_customer_managed_keys" "managed_services" {
 # supply databricks_mws_customer_managed_keys.managed_services.customer_managed_key_id as managed_services_customer_managed_key_id for databricks_mws_workspaces
 ```
 
-For GCP
+#### For GCP
 
 ```hcl
 variable "databricks_account_id" {
@@ -100,6 +100,8 @@ resource "databricks_mws_customer_managed_keys" "managed_services" {
 ```
 
 ### Customer-managed key for workspace storage
+
+#### For AWS
 
 ```hcl
 variable "databricks_account_id" {
@@ -199,7 +201,7 @@ resource "databricks_mws_customer_managed_keys" "storage" {
 # supply databricks_mws_customer_managed_keys.storage.customer_managed_key_id as storage_customer_managed_key_id for databricks_mws_workspaces
 ```
 
-For GCP
+#### For GCP
 
 ```hcl
 variable "databricks_account_id" {

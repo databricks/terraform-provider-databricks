@@ -2128,6 +2128,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 				Response: ml.ListRegistryWebhooks{
 					Webhooks: webhooks,
 				},
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -2135,6 +2136,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 				Response: ml.ListRegistryWebhooks{
 					Webhooks: webhooks,
 				},
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",

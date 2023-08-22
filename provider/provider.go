@@ -91,6 +91,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_blob_mount":            storage.ResourceAzureBlobMount(),
 			"databricks_catalog":                     catalog.ResourceCatalog(),
 			"databricks_catalog_workspace_binding":   catalog.ResourceCatalogWorkspaceBinding(),
+			"databricks_connection":                  catalog.ResourceConnection(),
 			"databricks_cluster":                     clusters.ResourceCluster(),
 			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
 			"databricks_dbfs_file":                   storage.ResourceDbfsFile(),

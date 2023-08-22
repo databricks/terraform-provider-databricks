@@ -1,8 +1,11 @@
 package exporter
 
 import (
+	"bufio"
 	"context"
 	"crypto/md5"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -73,15 +77,20 @@ type importContext struct {
 	includeUserDomains  bool
 	importAllUsers      bool
 	debug               bool
+	incremental         bool
 	mounts              bool
 	services            string
 	listing             string
 	match               string
 	lastActiveDays      int64
+	lastActiveMs        int64
+	updatedSinceStr     string
+	updatedSinceMs      int64
 	generateDeclaration bool
 	meAdmin             bool
 	prefix              string
 	accountLevel        bool
+	shImports           map[string]bool
 }
 
 type mount struct {
@@ -143,13 +152,52 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		allDirectories:      []workspace.ObjectStatus{},
 		allWorkspaceObjects: []workspace.ObjectStatus{},
 		workspaceConfKeys:   workspaceConfKeys,
+		shImports:           make(map[string]bool),
 	}
 }
 
+func getLastRunString(fileName string) string {
+	var updatedSinceStr string
+	statsData, err := os.ReadFile(fileName)
+	if err == nil {
+		var m map[string]any
+		err = json.Unmarshal(statsData, &m)
+		s, exists := m["startTime"]
+		if err == nil && exists {
+			updatedSinceStr = s.(string)
+		} else {
+			log.Printf("[WARN] Can't decode data: err=%v or startTime field doesn't exist. data: '%s'",
+				err, string(statsData))
+		}
+	} else {
+		log.Printf("[WARN] Can't load data from file %s: %v", fileName, err)
+	}
+	return updatedSinceStr
+}
+
 func (ic *importContext) Run() error {
+	startTime := time.Now()
+	statsFileName := ic.Directory + "/exporter-run-stats.json"
 	if len(ic.services) == 0 {
 		return fmt.Errorf("no services to import")
 	}
+
+	if ic.incremental {
+		if ic.updatedSinceStr == "" {
+			ic.updatedSinceStr = getLastRunString(statsFileName)
+		}
+		if ic.updatedSinceStr == "" {
+			return fmt.Errorf("-updated-since is required with -interactive parameter if %s file doesn't exist",
+				statsFileName)
+		}
+		tm, err := time.Parse(time.RFC3339, ic.updatedSinceStr)
+		if err != nil {
+			return fmt.Errorf("can't parse value '%s' please specify it in ISO8601 format, i.e. 2023-07-01T00:00:00Z",
+				ic.updatedSinceStr)
+		}
+		ic.updatedSinceStr = tm.UTC().Format(time.RFC3339)
+	}
+
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
 		ic.Module, ic.Directory, ic.services)
 
@@ -205,7 +253,24 @@ func (ic *importContext) Run() error {
 	if len(ic.Scope) == 0 {
 		return fmt.Errorf("no resources to import")
 	}
-	sh, err := os.OpenFile(fmt.Sprintf("%s/import.sh", ic.Directory), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
+	shFileName := fmt.Sprintf("%s/import.sh", ic.Directory)
+	if ic.incremental {
+		shFile, err := os.Open(shFileName)
+		if err == nil {
+			defer shFile.Close()
+			fileScanner := bufio.NewScanner(shFile)
+			fileScanner.Split(bufio.ScanLines)
+			for fileScanner.Scan() {
+				line := fileScanner.Text()
+				if strings.HasPrefix(line, "terraform import ") {
+					ic.shImports[strings.TrimRight(line, "\n")] = true
+				}
+			}
+		} else {
+			log.Printf("[ERROR] opening %s: %v", shFileName, err)
+		}
+	}
+	sh, err := os.OpenFile(shFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
@@ -241,12 +306,16 @@ func (ic *importContext) Run() error {
 	}
 	ic.generateHclForResources(sh)
 	for service, f := range ic.Files {
+		generatedFile := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
+		err = ic.updateExportedWithIncrementals(generatedFile, f)
+		if err != nil {
+			return err
+		}
 		formatted := hclwrite.Format(f.Bytes())
 		// fix some formatting in a hacky way instead of writing 100 lines
 		// of HCL AST writer code
 		formatted = []byte(ic.regexFix(string(formatted), ic.hclFixes))
 		log.Printf("[DEBUG] %s", formatted)
-		generatedFile := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
 		if tf, err := os.Create(generatedFile); err == nil {
 			defer tf.Close()
 			if _, err = tf.Write(formatted); err != nil {
@@ -255,29 +324,125 @@ func (ic *importContext) Run() error {
 		}
 		log.Printf("[INFO] Created %s", generatedFile)
 	}
-	if len(ic.variables) > 0 {
-		vf, err := os.Create(fmt.Sprintf("%s/vars.tf", ic.Directory))
-		if err != nil {
-			return err
-		}
-		defer vf.Close()
-		f := hclwrite.NewEmptyFile()
-		body := f.Body()
-		for k, v := range ic.variables {
-			b := body.AppendNewBlock("variable", []string{k}).Body()
-			b.SetAttributeValue("description", cty.StringVal(v))
-		}
-		// nolint
-		vf.Write(f.Bytes())
-		log.Printf("[INFO] Written %d variables", len(ic.variables))
+
+	err = ic.generateVariables()
+	if err != nil {
+		return err
 	}
+
 	cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
 	cmd.Dir = ic.Directory
 	err = cmd.Run()
 	if err != nil {
 		return err
 	}
+	//
+	if stats, err := os.Create(statsFileName); err == nil {
+		defer stats.Close()
+		statsData := map[string]any{
+			"startTime":       startTime.UTC().Format(time.RFC3339),
+			"duration":        fmt.Sprintf("%f sec", time.Since(startTime).Seconds()),
+			"exportedObjects": len(ic.Scope),
+		}
+		statsBytes, _ := json.Marshal(statsData)
+		if _, err = stats.Write(statsBytes); err != nil {
+			return err
+		}
+	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
+	return nil
+}
+
+func generateBlockFullName(block *hclwrite.Block) string {
+	return block.Type() + "_" + strings.Join(block.Labels(), "_")
+}
+
+func (ic *importContext) updateExportedWithIncrementals(generatedFile string, f *hclwrite.File) error {
+	if !ic.incremental {
+		return nil
+	}
+	log.Printf("[DEBUG] Going to read existing file %s", generatedFile)
+	content, err := os.ReadFile(generatedFile)
+	if errors.Is(err, os.ErrNotExist) {
+		log.Printf("[WARN] File %s doesn't exist when using incremental export", generatedFile)
+		return nil
+	}
+	if err != nil {
+		log.Printf("[ERROR] error opening %s", generatedFile)
+	}
+	log.Printf("[DEBUG] Going to parse existing file %s", generatedFile)
+	existingFile, diags := hclwrite.ParseConfig(content, generatedFile, hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() {
+		log.Printf("[ERROR] parsing of existing file %s failed: %s", generatedFile, diags.Error())
+		return fmt.Errorf("parsing error: %s", diags.Error())
+	}
+	newBlocks := f.Body().Blocks()
+	newResources := make(map[string]bool, len(newBlocks))
+	for _, block := range newBlocks {
+		newResources[generateBlockFullName(block)] = true
+	}
+	log.Printf("[DEBUG] %d new resources: %v", len(newResources), newResources)
+
+	for _, block := range existingFile.Body().Blocks() {
+		blockName := generateBlockFullName(block)
+		_, exists := newResources[blockName]
+		if exists {
+			log.Printf("[DEBUG] resource %s already generated, skipping...", blockName)
+		} else {
+			log.Printf("[DEBUG] resource %s doesn't exist, adding...", blockName)
+			f.Body().AppendBlock(block)
+		}
+	}
+
+	return nil
+}
+
+func (ic *importContext) generateVariables() error {
+	// TODO: test it when MLflow webhooks will be merged
+	if len(ic.variables) == 0 {
+		return nil
+	}
+	f := hclwrite.NewEmptyFile()
+	body := f.Body()
+	fileName := fmt.Sprintf("%s/vars.tf", ic.Directory)
+	if ic.incremental {
+		content, err := os.ReadFile(fileName)
+		if err == nil {
+			ftmp, diags := hclwrite.ParseConfig(content, fileName, hcl.Pos{Line: 1, Column: 1})
+			if diags.HasErrors() {
+				log.Printf("[ERROR] parsing of existing file failed: %s", diags)
+			} else {
+				tbody := ftmp.Body()
+				for _, block := range tbody.Blocks() {
+					typ := block.Type()
+					labels := block.Labels()
+					log.Printf("[DEBUG] blockBody: %v %v\n", typ, labels)
+					_, present := ic.variables[labels[0]]
+					if typ == "variable" && present {
+						log.Printf("[DEBUG] Ignoring variable '%s' that will be re-exported", labels[0])
+					} else {
+						log.Printf("[DEBUG] Adding not exported object. type='%s', labels=%v", typ, labels)
+						body.AppendBlock(block)
+					}
+				}
+			}
+		} else {
+			log.Printf("[ERROR] opening file %s", fileName)
+		}
+	}
+	vf, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer vf.Close()
+
+	for k, v := range ic.variables {
+		b := body.AppendNewBlock("variable", []string{k}).Body()
+		b.SetAttributeValue("description", cty.StringVal(v))
+	}
+	// nolint
+	vf.Write(f.Bytes())
+	log.Printf("[INFO] Written %d variables", len(ic.variables))
 	return nil
 }
 
@@ -314,8 +479,14 @@ func (ic *importContext) generateHclForResources(sh *os.File) {
 		}
 		if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil && sh != nil {
 			// nolint
-			sh.WriteString(r.ImportCommand(ic) + "\n")
+			importCommand := r.ImportCommand(ic)
+			sh.WriteString(importCommand + "\n")
+			delete(ic.shImports, importCommand)
 		}
+	}
+	log.Printf("[DEBUG] Writing the rest of import commands. len=%d", len(ic.shImports))
+	for k := range ic.shImports {
+		sh.WriteString(k + "\n")
 	}
 }
 

@@ -96,13 +96,14 @@ func (r reference) MatchTypeValue() MatchType {
 }
 
 type resource struct {
-	Resource  string
-	ID        string
-	Attribute string
-	Value     string
-	Name      string
-	Mode      string
-	Data      *schema.ResourceData
+	Resource    string
+	ID          string
+	Attribute   string
+	Value       string
+	Name        string
+	Mode        string
+	Incremental bool
+	Data        *schema.ResourceData
 }
 
 func (r *resource) MatchPair() (string, string) {

@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"golang.org/x/exp/slices"
 
@@ -280,7 +279,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			lastActiveMs := ic.lastActiveDays * 24 * 60 * 60 * 1000
+			lastActiveMs := ic.getLastActiveMs()
 			for offset, c := range clusters {
 				if c.ClusterSource == "JOB" {
 					log.Printf("[INFO] Skipping job cluster %s", c.ClusterID)
@@ -294,7 +293,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Skipping %s because it doesn't match %s", c.ClusterName, ic.match)
 					continue
 				}
-				if c.LastActivityTime < time.Now().Unix()-lastActiveMs {
+				if c.LastActivityTime > 0 && c.LastActivityTime < lastActiveMs {
 					log.Printf("[INFO] Older inactive cluster %s", c.ClusterName)
 					continue
 				}
@@ -1013,7 +1012,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, gis := range globalInitScripts {
+				modifiedAt := gis.UpdatedAt
+				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping global init script '%s' that was modified at %d (last active=%d)",
+						gis.Name, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_global_init_script",
 					ID:       gis.ScriptID,
@@ -1174,7 +1180,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			ipLists := ipListsResp.IpAccessLists
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, ipList := range ipLists {
+				modifiedAt := ipList.UpdatedAt
+				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping IP access list '%s' that was modified at %d (last active=%d)",
+						ipList.Label, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_ip_access_list",
 					ID:       ipList.ListId,
@@ -1306,14 +1319,24 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
 					continue
 				}
+				updatedAt := q["updated_at"].(string)
+				if ic.incremental && updatedAt < updatedSinceStr {
+					log.Printf("[DEBUG] skipping query '%s' that was modified at %s (updatedSince=%s)", name,
+						updatedAt, updatedSinceStr)
+					continue
+				}
+				log.Printf("[DEBUG] emitting query '%s' that was modified at %s (updatedSince=%s)", name,
+					updatedAt, updatedSinceStr)
 				ic.Emit(&resource{
-					Resource: "databricks_sql_query",
-					ID:       q["id"].(string),
+					Resource:    "databricks_sql_query",
+					ID:          q["id"].(string),
+					Incremental: ic.incremental,
 				})
 				log.Printf("[INFO] Imported %d of %d SQL queries", i+1, len(qs))
 			}
@@ -1447,14 +1470,24 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
 					continue
 				}
+				updatedAt := q["updated_at"].(string)
+				if ic.incremental && updatedAt < updatedSinceStr {
+					log.Printf("[DEBUG] skipping dashboard '%s' that was modified at %s (updatedSince=%s)", name,
+						updatedAt, updatedSinceStr)
+					continue
+				}
+				log.Printf("[DEBUG] emitting dashboard '%s' that was modified at %s (updatedSince=%s)", name,
+					updatedAt, updatedSinceStr)
 				ic.Emit(&resource{
-					Resource: "databricks_sql_dashboard",
-					ID:       q["id"].(string),
+					Resource:    "databricks_sql_dashboard",
+					ID:          q["id"].(string),
+					Incremental: ic.incremental,
 				})
 				log.Printf("[INFO] Imported %d of %d SQL dashboards", i+1, len(qs))
 			}
@@ -1571,6 +1604,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			alerts, err := wc.Alerts.List(ic.Context)
 			if err != nil {
 				return err
@@ -1580,7 +1614,18 @@ var resourcesMap map[string]importable = map[string]importable{
 				if !ic.MatchesName(name) {
 					continue
 				}
-				ic.Emit(&resource{Resource: "databricks_sql_alert", ID: alert.Id})
+				if ic.incremental && alert.UpdatedAt < updatedSinceStr {
+					log.Printf("[DEBUG] skipping alert '%s' that was modified at %s (last active=%s)", name,
+						alert.UpdatedAt, updatedSinceStr)
+					continue
+				}
+				log.Printf("[DEBUG] emitting alert '%s' that was modified at %s (last active=%s)", name,
+					alert.UpdatedAt, updatedSinceStr)
+				ic.Emit(&resource{
+					Resource:    "databricks_sql_alert",
+					ID:          alert.Id,
+					Incremental: ic.incremental,
+				})
 				log.Printf("[INFO] Imported %d of %d SQL alerts", i+1, len(alerts))
 			}
 			return nil
@@ -1626,13 +1671,27 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			pipelinesList, err := pipelines.NewPipelinesAPI(ic.Context, ic.Client).List(50, "")
+			api := pipelines.NewPipelinesAPI(ic.Context, ic.Client)
+			pipelinesList, err := api.List(50, "")
 			if err != nil {
 				return err
 			}
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for i, q := range pipelinesList {
 				if !ic.MatchesName(q.Name) {
 					continue
+				}
+				if ic.incremental {
+					pipeline, err := api.Read(q.PipelineID)
+					if err != nil {
+						return err
+					}
+					modifiedAt := pipeline.LastModified
+					if modifiedAt != 0 && modifiedAt < updatedSinceMs {
+						log.Printf("[DEBUG] skipping DLT Pipeline '%s' that was modified at %d (last active=%d)",
+							pipeline.Name, modifiedAt, updatedSinceMs)
+						continue
+					}
 				}
 				ic.Emit(&resource{
 					Resource: "databricks_pipeline",
@@ -1714,7 +1773,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_directory": {
-		Service: "notebooks",
+		Service: "directories",
 		Name:    workspaceObjectResouceName,
 		Search: func(ic *importContext, r *resource) error {
 			directoryList := ic.getAllDirectories()
@@ -1793,8 +1852,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, endpoint := range endpointsList {
-				// TODO: add incremental export as well
+				modifiedAt := endpoint.LastUpdatedTimestamp
+				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping serving endpoint '%s' that was modified at %d (last active=%d)",
+						endpoint.Name, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_model_serving",
 					ID:       endpoint.Name,
@@ -1840,8 +1905,16 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, webhook := range webhooks {
-				// TODO: add support for incremental export
+				modifiedAt := webhook.LastUpdatedTimestamp
+				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping MLflow webhook '%s' that was modified at %d (last active=%d)",
+						webhook.Id, modifiedAt, updatedSinceMs)
+					continue
+				}
+				log.Printf("[DEBUG] emitting MLflow webhook '%s' that was modified at %d (last active=%d)",
+					webhook.Id, modifiedAt, updatedSinceMs)
 				ic.Emit(&resource{
 					Resource: "databricks_mlflow_webhook",
 					ID:       webhook.Id,

@@ -21,11 +21,13 @@ type AlertOptions struct {
 }
 
 type AlertEntity struct {
-	Name    string        `json:"name"`
-	QueryId string        `json:"query_id"`
-	Rearm   int           `json:"rearm,omitempty"`
-	Options *AlertOptions `json:"options"`
-	Parent  string        `json:"parent,omitempty" tf:"suppress_diff,force_new"`
+	Name      string        `json:"name"`
+	QueryId   string        `json:"query_id"`
+	Rearm     int           `json:"rearm,omitempty"`
+	Options   *AlertOptions `json:"options"`
+	Parent    string        `json:"parent,omitempty" tf:"suppress_diff,force_new"`
+	CreatedAt string        `json:"created_at,omitempty" tf:"computed"`
+	UpdatedAt string        `json:"updated_at,omitempty" tf:"computed"`
 }
 
 func (a *AlertEntity) toCreateAlertApiObject(s map[string]*schema.Schema, data *schema.ResourceData) (sql.CreateAlert, error) {
@@ -72,6 +74,8 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Sc
 	a.Parent = apiAlert.Parent
 	a.QueryId = apiAlert.Query.Id
 	a.Rearm = apiAlert.Rearm
+	a.CreatedAt = apiAlert.CreatedAt
+	a.UpdatedAt = apiAlert.UpdatedAt
 
 	a.Options = &AlertOptions{
 		Column:        apiAlert.Options.Column,

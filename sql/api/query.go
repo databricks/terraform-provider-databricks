@@ -18,6 +18,8 @@ type Query struct {
 	Tags           []string          `json:"tags,omitempty"`
 	Visualizations []json.RawMessage `json:"visualizations,omitempty"`
 	Parent         string            `json:"parent,omitempty"`
+	CreatedAt      string            `json:"created_at,omitempty"`
+	UpdatedAt      string            `json:"updated_at,omitempty"`
 }
 
 // QuerySchedule ...

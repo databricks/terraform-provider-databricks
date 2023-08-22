@@ -41,15 +41,21 @@ var extMap = map[string]notebookLanguageFormat{
 	".dbc":   {"", "DBC", false},
 }
 
+type ModifiedAtInteractive struct {
+	UserID     string `json:"user_id,omitempty"`
+	TimeMillis int64  `json:"time_millis,omitempty"`
+}
+
 // ObjectStatus contains information when doing a get request or list request on the workspace api
 type ObjectStatus struct {
-	ObjectID   int64  `json:"object_id,omitempty" tf:"computed"`
-	ObjectType string `json:"object_type,omitempty" tf:"computed"`
-	Path       string `json:"path"`
-	Language   string `json:"language,omitempty"`
-	CreatedAt  int64  `json:"created_at,omitempty"`
-	ModifiedAt int64  `json:"modified_at,omitempty"`
-	Size       int64  `json:"size,omitempty"`
+	ObjectID              int64                  `json:"object_id,omitempty" tf:"computed"`
+	ObjectType            string                 `json:"object_type,omitempty" tf:"computed"`
+	Path                  string                 `json:"path"`
+	Language              string                 `json:"language,omitempty"`
+	CreatedAt             int64                  `json:"created_at,omitempty"`
+	ModifiedAt            int64                  `json:"modified_at,omitempty"`
+	ModifiedAtInteractive *ModifiedAtInteractive `json:"modified_at_interactive,omitempty"`
+	Size                  int64                  `json:"size,omitempty"`
 }
 
 // ExportPath contains the base64 content of the notebook

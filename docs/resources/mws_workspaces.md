@@ -320,7 +320,8 @@ The following arguments are available:
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).
 * `aws_region` - (AWS only) region of VPC.
 * `storage_configuration_id` - (AWS only)`storage_configuration_id` from [storage configuration](mws_storage_configurations.md).
-* `managed_services_customer_managed_key_id` - (Optional, AWS only) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
+* `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
+* `storage_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster Volumes.
 * `location` - (GCP only) region of the subnet.
 * `cloud_resource_container` - (GCP only) A block that specifies GCP workspace configurations, consisting of following blocks:
   * `gcp` - A block that consists of the following field:
@@ -330,7 +331,7 @@ The following arguments are available:
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
 
-## token block
+### token block
 
 You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
 
@@ -339,12 +340,14 @@ You can specify a `token` block in the body of the workspace resource, so that T
 * `comment` - (Optional) Comment, that will appear in "User Settings / Access Tokens" page on Workspace UI. By default it's "Terraform PAT".
 * `lifetime_seconds` - (Optional) Token expiry lifetime. By default its 2592000 (30 days).
 
+### Updating workspaces
+
 On AWS, the following arguments could be modified after the workspace is running:
 
-* `network_id` - (Optional, AWS only) `network_id` from [networks](mws_networks.md). Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
-* `credentials_id` - (AWS only) `credentials_id` from [credentials](mws_credentials.md)
-* `storage_customer_managed_key_id` - (Optional, AWS only) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster EBS Volumes.
-* `private_access_settings_id` - (Optional, AWS only) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account
+* `network_id` - Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
+* `credentials_id`
+* `storage_customer_managed_key_id`
+* `private_access_settings_id`
 
 ## Attribute Reference
 

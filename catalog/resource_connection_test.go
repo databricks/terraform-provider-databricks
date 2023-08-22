@@ -146,7 +146,7 @@ func TestConnectionsRead(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Read:     true,
-		ID:       "testConnectionName|abc",
+		ID:       "abc|testConnectionName",
 		HCL: `
 		name = "testConnectionName"
 		connection_type = "testConnectionType"
@@ -178,10 +178,10 @@ func TestConnectionRead_Error(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Read:     true,
-		ID:       "testConnectionName|abc",
+		ID:       "abc|testConnectionName",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "testConnectionName|abc", d.Id(), "Id should not be empty for error reads")
+	assert.Equal(t, "abc|testConnectionName", d.Id(), "Id should not be empty for error reads")
 }
 
 func TestConnectionsUpdate(t *testing.T) {
@@ -232,7 +232,7 @@ func TestConnectionsUpdate(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Update:   true,
-		ID:       "testConnectionName|abc",
+		ID:       "abc|testConnectionName",
 		InstanceState: map[string]string{
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
@@ -273,7 +273,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Update:   true,
-		ID:       "testConnectionName|abc",
+		ID:       "abc|testConnectionName",
 		InstanceState: map[string]string{
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
@@ -300,10 +300,10 @@ func TestConnectionDelete(t *testing.T) {
 		},
 		Resource: ResourceConnection(),
 		Delete:   true,
-		ID:       "testConnectionName|abc",
+		ID:       "abc|testConnectionName",
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "testConnectionName|abc", d.Id())
+	assert.Equal(t, "abc|testConnectionName", d.Id())
 }
 
 func TestConnectionDelete_Error(t *testing.T) {
@@ -322,6 +322,6 @@ func TestConnectionDelete_Error(t *testing.T) {
 		Resource: ResourceConnection(),
 		Delete:   true,
 		Removed:  true,
-		ID:       "testConnectionName|abc",
+		ID:       "abc|testConnectionName",
 	}.ExpectError(t, "Something went wrong")
 }

@@ -41,7 +41,7 @@ func ResourceConnection() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return m
 		})
-	pi := common.NewPairID("name", "metastore_id").Schema(
+	pi := common.NewPairID("metastore_id", "name").Schema(
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return s
 		})
@@ -67,7 +67,7 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			connName, _, err := pi.Unpack(d)
+			_, connName, err := pi.Unpack(d)
 			if err != nil {
 				return err
 			}
@@ -92,7 +92,7 @@ func ResourceConnection() *schema.Resource {
 			}
 			var updateConnectionRequest catalog.UpdateConnection
 			common.DataToStructPointer(d, s, &updateConnectionRequest)
-			connName, _, err := pi.Unpack(d)
+			_, connName, err := pi.Unpack(d)
 			updateConnectionRequest.NameArg = connName
 			if err != nil {
 				return err
@@ -111,7 +111,7 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			connName, _, err := pi.Unpack(d)
+			_, connName, err := pi.Unpack(d)
 			if err != nil {
 				return err
 			}

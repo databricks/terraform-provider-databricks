@@ -22,7 +22,7 @@ func TestResourceSqlTableCreateStatement_External(t *testing.T) {
 		Comment:               "terraform managed",
 	}
 	stmt := ti.buildTableCreateStatement()
-	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE main.foo.bar")
+	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
 	assert.Contains(t, stmt, "USING DELTA")
 	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
@@ -44,7 +44,7 @@ func TestResourceSqlTableCreateStatement_View(t *testing.T) {
 		},
 	}
 	stmt := ti.buildTableCreateStatement()
-	assert.Contains(t, stmt, "CREATE VIEW main.foo.bar")
+	assert.Contains(t, stmt, "CREATE VIEW `main`.`foo`.`bar`")
 	assert.NotContains(t, stmt, "USING DELTA")
 	assert.NotContains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH CREDENTIAL somecred")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
@@ -76,7 +76,7 @@ func TestResourceSqlTableCreateStatement_ViewWithComments(t *testing.T) {
 		},
 	}
 	stmt := ti.buildTableCreateStatement()
-	assert.Contains(t, stmt, "CREATE VIEW main.foo.bar")
+	assert.Contains(t, stmt, "CREATE VIEW `main`.`foo`.`bar`")
 	assert.Contains(t, stmt, "(id  NOT NULL, name  NOT NULL COMMENT 'a comment')")
 	assert.NotContains(t, stmt, "USING DELTA")
 	assert.NotContains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH CREDENTIAL somecred")
@@ -339,7 +339,7 @@ func TestResourceSqlTableUpdateView(t *testing.T) {
 func TestResourceSqlTableDeleteTable(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
-			assert.Equal(t, "DROP TABLE main.foo.bar", commandStr)
+			assert.Equal(t, "DROP TABLE `main`.`foo`.`bar`", commandStr)
 			return common.CommandResults{
 				ResultType: "",
 				Data:       nil,

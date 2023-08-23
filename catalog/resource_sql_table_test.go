@@ -246,6 +246,96 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 	assert.Equal(t, "bar", d.Get("name"))
 }
 
+func TestResourceSqlTableUpdateView(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "VIEW"
+		comment 		       = "this view is managed by terraform"
+		cluster_id         = "gone"
+		properties	       = {
+			"one" = "two"
+		}
+		column {
+			name      = "one"
+			comment   = "managed comment"
+			nullable  = false
+		}
+		column {
+			name      = "two"
+		}
+		`,
+		InstanceState: map[string]string{
+			"name":              "bar",
+			"catalog_name":      "main",
+			"schema_name":       "foo",
+			"table_type":        "VIEW",
+			"comment":           "this view is managed by terraform",
+			"column.#":          "2",
+			"column.0.name":     "one",
+			"column.0.type":     "string",
+			"column.0.comment":  "managed comment",
+			"column.0.nullable": "false",
+			"column.1.name":     "two",
+			"column.1.type":     "string",
+		},
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ReuseRequest: true,
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "VIEW",
+					StorageCredentialName: "somecred",
+					Comment:               "this view is managed by terraform",
+					Properties: map[string]string{
+						"delta.lastCommitTimestamp": "87698768",
+						"delta.minWriterVersion":    "1",
+					},
+					ColumnInfos: []SqlColumnInfo{
+						{
+							Name:     "one",
+							Type:     "string",
+							Comment:  "managed comment",
+							Nullable: false,
+						},
+						{
+							Name: "two",
+							Type: "string",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "gone",
+				},
+				Status: 404,
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", d.Get("name"))
+}
+
 func TestResourceSqlTableDeleteTable(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {

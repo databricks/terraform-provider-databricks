@@ -128,19 +128,11 @@ func ResourceMetastore() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			if c.Config.IsAccountClient() {
-				acc, err := c.AccountClient()
-				if err != nil {
-					return err
-				}
+			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
 				return acc.Metastores.Delete(ctx, catalog.DeleteAccountMetastoreRequest{Force: force, MetastoreId: d.Id()})
-			} else {
-				w, err := c.WorkspaceClient()
-				if err != nil {
-					return err
-				}
+			}, func(w *databricks.WorkspaceClient) error {
 				return w.Metastores.Delete(ctx, catalog.DeleteMetastoreRequest{Force: force, Id: d.Id()})
-			}
+			})
 		},
 	}.ToResource()
 }

@@ -10,7 +10,7 @@ import (
 func TestMetastoreAssignmentCornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceMetastoreAssignment(),
 		qa.CornerCaseID("1000200030004|aaaaaa-bb-cc"),
-		qa.CornerCaseSkipCRUD("create"))
+	)
 }
 
 func TestMetastoreAssignment_Create(t *testing.T) {
@@ -19,9 +19,9 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.1/unity-catalog/workspaces/123/metastore",
-				ExpectedRequest: map[string]interface{}{
-					"default_catalog_name": "hive_metastore",
-					"metastore_id":         "a",
+				ExpectedRequest: catalog.CreateMetastoreAssignment{
+					DefaultCatalogName: "hive_metastore",
+					MetastoreId:        "a",
 				},
 			},
 			{

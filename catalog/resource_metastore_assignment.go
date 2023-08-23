@@ -67,6 +67,8 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				}
 				return common.StructToData(ma, s, d)
 			}, func(w *databricks.WorkspaceClient) error {
+				//this only works when managing the metastore assigned to the current workspace.
+				//plus we don't know the workspace we're logged into.
 				ma, err := w.Metastores.Current(ctx)
 				if err != nil {
 					return err
@@ -83,16 +85,12 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			update.WorkspaceId = workspaceId
 
 			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
-				err := acc.MetastoreAssignments.Update(ctx,
+				return acc.MetastoreAssignments.Update(ctx,
 					catalog.AccountsUpdateMetastoreAssignment{
 						WorkspaceId:         workspaceId,
 						MetastoreId:         metastoreId,
 						MetastoreAssignment: &update,
 					})
-				if err != nil {
-					return err
-				}
-				return nil
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.Metastores.UpdateAssignment(ctx, update)
 			})

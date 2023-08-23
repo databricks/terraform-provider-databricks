@@ -71,6 +71,11 @@ func ResourceStorageCredential() *schema.Resource {
 					return err
 				}
 				d.SetId(storageCredential.CredentialInfo.Name)
+
+				// Don't update owner if it is not provided
+				if d.Get("owner") == "" {
+					return nil
+				}
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo: &update,
 					MetastoreId:    metastoreId,
@@ -86,6 +91,12 @@ func ResourceStorageCredential() *schema.Resource {
 					return err
 				}
 				d.SetId(storageCredential.Name)
+
+				// Don't update owner if it is not provided
+				if d.Get("owner") == "" {
+					return nil
+				}
+
 				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {
 					return err

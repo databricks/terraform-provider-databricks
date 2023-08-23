@@ -29,20 +29,6 @@ func TestCreateStorageCredentials(t *testing.T) {
 				},
 			},
 			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: StorageCredentialInfo{
-					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
-					},
-					Comment: "c",
-				},
-				Response: catalog.StorageCredentialInfo{
-					Name: "a",
-				},
-			},
-			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
 				Response: catalog.StorageCredentialInfo{

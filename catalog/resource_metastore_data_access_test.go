@@ -47,7 +47,7 @@ func TestCreateDac(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
 				Response: catalog.MetastoreInfo{
 					StorageRootCredentialId: "bcd",
 				},
@@ -101,7 +101,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
 				Response: catalog.MetastoreInfo{
 					StorageRootCredentialId: "bcd",
 				},
@@ -155,7 +155,7 @@ func TestCreateDacWithDbGcpSA(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
 				Response: catalog.MetastoreInfo{
 					StorageRootCredentialId: "bcd",
 				},

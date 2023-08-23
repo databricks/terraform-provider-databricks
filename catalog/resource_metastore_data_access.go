@@ -167,11 +167,11 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				metastore, err = w.Metastores.GetById(ctx, metastoreId)
+				m, err := w.Metastores.Summary(ctx)
 				if err != nil {
 					return err
 				}
-				isDefault := metastore.StorageRootCredentialName == dacName
+				isDefault := m.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
 				return common.StructToData(storageCredential, dacSchema, d)
 			})

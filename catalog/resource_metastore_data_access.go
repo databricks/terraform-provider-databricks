@@ -97,7 +97,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
 
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				dac, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{
 						MetastoreId:    metastoreId,
@@ -144,7 +144,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			}
 			var metastore *catalog.MetastoreInfo
 
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				var storageCredential *catalog.AccountsStorageCredentialInfo
 				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId: metastoreId,
@@ -181,7 +181,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					MetastoreId: metastoreId,
 					Name:        dacName,

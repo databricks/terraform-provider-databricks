@@ -61,7 +61,7 @@ func ResourceStorageCredential() *schema.Resource {
 			common.DataToStructPointer(d, tmpSchema, &create)
 			common.DataToStructPointer(d, tmpSchema, &update)
 
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{
 						MetastoreId:    metastoreId,
@@ -106,7 +106,7 @@ func ResourceStorageCredential() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId: d.Get("metastore_id").(string),
 					Name:        d.Id(),
@@ -127,7 +127,7 @@ func ResourceStorageCredential() *schema.Resource {
 			var update catalog.UpdateStorageCredential
 			common.DataToStructPointer(d, s, &update)
 
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo: &update,
 					MetastoreId:    d.Get("metastore_id").(string),
@@ -147,7 +147,7 @@ func ResourceStorageCredential() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
 					Force:       force,
 					Name:        d.Id(),

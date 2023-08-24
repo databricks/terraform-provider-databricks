@@ -29,7 +29,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			common.DataToStructPointer(d, s, &create)
 			create.WorkspaceId = workspaceId
 
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				err := acc.MetastoreAssignments.Create(ctx,
 					catalog.AccountsCreateMetastoreAssignment{
 						WorkspaceId:         workspaceId,
@@ -60,7 +60,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				return err
 			}
 
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				ma, err := acc.MetastoreAssignments.GetByWorkspaceId(ctx, workspaceId)
 				if err != nil {
 					return err
@@ -84,7 +84,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			common.DataToStructPointer(d, s, &update)
 			update.WorkspaceId = workspaceId
 
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.MetastoreAssignments.Update(ctx,
 					catalog.AccountsUpdateMetastoreAssignment{
 						WorkspaceId:         workspaceId,
@@ -104,7 +104,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.MetastoreAssignments.DeleteByWorkspaceIdAndMetastoreId(ctx, workspaceId, metastoreId)
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.Metastores.Unassign(ctx, catalog.UnassignRequest{

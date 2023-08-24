@@ -7,7 +7,7 @@ subcategory: "Deployment"
 
 -> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
 
-This resource to configure KMS keys for new workspaces within AWS. This is to support the following features:
+This resource to configure KMS keys for new workspaces within AWS or GCP. This is to support the following features:
 
 * [Customer-managed keys for managed services](https://docs.databricks.com/security/keys/customer-managed-keys-managed-services-aws.html): Encrypt the workspace’s managed services data in the control plane, including notebooks, secrets, Databricks SQL queries, and Databricks SQL query history  with a CMK.
 * [Customer-managed keys for workspace storage](https://docs.databricks.com/security/keys/customer-managed-keys-storage-aws.html): Encrypt the workspace's root S3 bucket and clusters' EBS volumes with a CMK.
@@ -21,6 +21,8 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 ### Customer-managed key for managed services
 
 You must configure this during workspace creation
+
+#### For AWS
 
 ```hcl
 variable "databricks_account_id" {
@@ -76,7 +78,30 @@ resource "databricks_mws_customer_managed_keys" "managed_services" {
 # supply databricks_mws_customer_managed_keys.managed_services.customer_managed_key_id as managed_services_customer_managed_key_id for databricks_mws_workspaces
 ```
 
+#### For GCP
+
+```hcl
+variable "databricks_account_id" {
+  description = "Account Id that could be found in the bottom left corner of https://accounts.gcp.databricks.com/"
+}
+
+variable "cmek_resource_id" {
+  description = "Id of a google_kms_crypto_key"
+}
+
+resource "databricks_mws_customer_managed_keys" "managed_services" {
+  account_id = var.databricks_account_id
+  gcp_key_info {
+    kms_key_id   = var.cmek_resource_id
+  }
+  use_cases = ["MANAGED_SERVICES"]
+}
+# supply databricks_mws_customer_managed_keys.managed_services.customer_managed_key_id as managed_services_customer_managed_key_id for databricks_mws_workspaces
+```
+
 ### Customer-managed key for workspace storage
+
+#### For AWS
 
 ```hcl
 variable "databricks_account_id" {
@@ -176,11 +201,33 @@ resource "databricks_mws_customer_managed_keys" "storage" {
 # supply databricks_mws_customer_managed_keys.storage.customer_managed_key_id as storage_customer_managed_key_id for databricks_mws_workspaces
 ```
 
+#### For GCP
+
+```hcl
+variable "databricks_account_id" {
+  description = "Account Id that could be found in the bottom left corner of https://accounts.gcp.databricks.com/"
+}
+
+variable "cmek_resource_id" {
+  description = "Id of a google_kms_crypto_key"
+}
+
+resource "databricks_mws_customer_managed_keys" "storage" {
+  account_id = var.databricks_account_id
+  gcp_key_info {
+    kms_key_id   = var.cmek_resource_id
+  }
+  use_cases = ["STORAGE"]
+}
+# supply databricks_mws_customer_managed_keys.storage.customer_managed_key_id as storage_customer_managed_key_id for databricks_mws_workspaces
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `aws_key_info` - This field is a block and is documented below.
+* `aws_key_info` - This field is a block and is documented below. This conflicts with `gcp_key_info`
+* `gcp_key_info` - This field is a block and is documented below. This conflicts with `aws_key_info`
 * `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `use_cases` - *(since v0.3.4)* List of use cases for which this key will be used. *If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the previous behaviour.* Possible values are:
   * `MANAGED_SERVICES` - for encryption of the workspace objects (notebooks, secrets) that are stored in the control plane
@@ -191,6 +238,10 @@ The following arguments are required:
 * `key_arn` - The AWS KMS key's Amazon Resource Name (ARN).
 * `key_alias` - The AWS KMS key alias.
 * `key_region` - (Optional) (Computed) The AWS region in which KMS key is deployed to. This is not required.
+
+### gcp_key_info Configuration Block
+
+* `kms_key_id` - The GCP KMS key's resource name.
 
 ## Attribute Reference
 

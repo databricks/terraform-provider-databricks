@@ -193,6 +193,7 @@ func TestCreateShare(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/a",
 				ExpectedRequest: ShareUpdates{
+					Owner: "admin",
 					Updates: []ShareDataChange{
 						{
 							Action: "ADD",
@@ -220,7 +221,8 @@ func TestCreateShare(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/a?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "a",
+					Name:  "a",
+					Owner: "admin",
 					Objects: []SharedDataObject{
 						{
 							Name:           "main.a",
@@ -239,7 +241,8 @@ func TestCreateShare(t *testing.T) {
 		Resource: ResourceShare(),
 		Create:   true,
 		HCL: `
-			name = "a"
+			name  = "a"
+			owner = "admin"
 			object {
 				name = "main.a"
 				comment = "c"
@@ -278,6 +281,7 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
 				ExpectedRequest: ShareUpdates{
+					Owner: "admin",
 					Updates: []ShareDataChange{
 						{
 							Action: "REMOVE",
@@ -310,7 +314,8 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "abc",
+					Name:  "abc",
+					Owner: "admin",
 					Objects: []SharedDataObject{
 						{
 							Name:           "a",
@@ -339,7 +344,8 @@ func TestUpdateShare(t *testing.T) {
 			"name": "abc",
 		},
 		HCL: `
-			name = "abc"
+			name  = "abc"
+			owner = "admin"
 			object {
 				name = "a"
 				comment = "c"

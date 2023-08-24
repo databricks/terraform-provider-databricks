@@ -13,22 +13,23 @@ import (
 )
 
 type MetastoreInfo struct {
-	Name                                        string `json:"name"`
-	StorageRoot                                 string `json:"storage_root" tf:"force_new"`
-	DefaultDacID                                string `json:"default_data_access_config_id,omitempty" tf:"suppress_diff"`
-	StorageRootCredentialId                     string `json:"storage_root_credential_id,omitempty" tf:"suppress_diff"`
-	Owner                                       string `json:"owner,omitempty" tf:"computed"`
-	MetastoreID                                 string `json:"metastore_id,omitempty" tf:"computed"`
-	Region                                      string `json:"region,omitempty" tf:"computed"`
-	Cloud                                       string `json:"cloud,omitempty" tf:"computed"`
-	GlobalMetastoreId                           string `json:"global_metastore_id,omitempty" tf:"computed"`
-	CreatedAt                                   int64  `json:"created_at,omitempty" tf:"computed"`
-	CreatedBy                                   string `json:"created_by,omitempty" tf:"computed"`
-	UpdatedAt                                   int64  `json:"updated_at,omitempty" tf:"computed"`
-	UpdatedBy                                   string `json:"updated_by,omitempty" tf:"computed"`
-	DeltaSharingScope                           string `json:"delta_sharing_scope,omitempty" tf:"suppress_diff"`
-	DeltaSharingRecipientTokenLifetimeInSeconds int64  `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
-	DeltaSharingOrganizationName                string `json:"delta_sharing_organization_name,omitempty"`
+	Name                                        string  `json:"name"`
+	StorageRoot                                 string  `json:"storage_root" tf:"force_new"`
+	DefaultDacID                                string  `json:"default_data_access_config_id,omitempty" tf:"suppress_diff"`
+	StorageRootCredentialId                     string  `json:"storage_root_credential_id,omitempty" tf:"suppress_diff"`
+	Owner                                       string  `json:"owner,omitempty" tf:"computed"`
+	MetastoreID                                 string  `json:"metastore_id,omitempty" tf:"computed"`
+	WorkspaceIDs                                []int64 `json:"workspace_ids,omitempty" tf:"computed"`
+	Region                                      string  `json:"region,omitempty" tf:"computed"`
+	Cloud                                       string  `json:"cloud,omitempty" tf:"computed"`
+	GlobalMetastoreId                           string  `json:"global_metastore_id,omitempty" tf:"computed"`
+	CreatedAt                                   int64   `json:"created_at,omitempty" tf:"computed"`
+	CreatedBy                                   string  `json:"created_by,omitempty" tf:"computed"`
+	UpdatedAt                                   int64   `json:"updated_at,omitempty" tf:"computed"`
+	UpdatedBy                                   string  `json:"updated_by,omitempty" tf:"computed"`
+	DeltaSharingScope                           string  `json:"delta_sharing_scope,omitempty" tf:"suppress_diff"`
+	DeltaSharingRecipientTokenLifetimeInSeconds int64   `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
+	DeltaSharingOrganizationName                string  `json:"delta_sharing_organization_name,omitempty"`
 }
 
 func ResourceMetastore() *schema.Resource {

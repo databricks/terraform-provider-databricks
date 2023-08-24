@@ -74,6 +74,11 @@ provider "google" {
 provider "databricks" {
   host = var.databricks_workspace_url
 }
+
+provider "databricks" {
+  alias = "accounts"
+  host  = "https://accounts.gcp.databricks.com"
+}
 ```
 
 ## Configure Google Cloud objects
@@ -96,12 +101,14 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 
 ```hcl
 resource "databricks_metastore" "this" {
+  provider      = databricks.accounts
   name          = "primary"
   storage_root  = "gs://${google_storage_bucket.unity_metastore.name}"
   force_destroy = true
 }
 
 resource "databricks_metastore_data_access" "first" {
+  provider     = databricks.accounts
   metastore_id = databricks_metastore.this.id
   databricks_gcp_service_account {}
   name       = "the-keys"
@@ -121,6 +128,7 @@ resource "google_storage_bucket_iam_member" "unity_sa_reader" {
 }
 
 resource "databricks_metastore_assignment" "this" {
+   provider            = databricks.accounts
   workspace_id         = var.databricks_workspace_id
   metastore_id         = databricks_metastore.this.id
   default_catalog_name = "hive_metastore"

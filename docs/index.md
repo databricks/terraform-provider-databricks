@@ -345,7 +345,7 @@ The provider works with [Google Cloud CLI authentication](https://cloud.google.c
 
 ## Special configuration for Unity Catalog
 
-Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
 
 If you are configuring a new Databricks account for the first time, please create at least one workspace and with an identity (user or service principal) that you intend to use for Unity Catalog rollout. You can then configure the provider using that identity and workspace to provision the required Unity Catalog resources.
 

@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -16,21 +17,21 @@ func TestCreateSchema(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/schemas",
-				ExpectedRequest: SchemaInfo{
+				ExpectedRequest: catalog.CreateSchema{
 					Name:        "a",
 					CatalogName: "b",
 					Comment:     "c",
 				},
-				Response: SchemaInfo{
+				Response: catalog.SchemaInfo{
 					FullName: "b.a",
 					Comment:  "c",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/schemas/b.a",
-				Response: SchemaInfo{
-					MetastoreID: "d",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
+				Response: catalog.SchemaInfo{
+					MetastoreId: "d",
 					Comment:     "c",
 					Owner:       "e",
 				},
@@ -52,13 +53,12 @@ func TestCreateSchemaWithOwner(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/schemas",
-				ExpectedRequest: SchemaInfo{
+				ExpectedRequest: catalog.CreateSchema{
 					Name:        "a",
 					CatalogName: "b",
 					Comment:     "c",
-					Owner:       "administrators",
 				},
-				Response: SchemaInfo{
+				Response: catalog.SchemaInfo{
 					FullName: "b.a",
 					Comment:  "c",
 					Owner:    "testers",
@@ -67,15 +67,22 @@ func TestCreateSchemaWithOwner(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
-				ExpectedRequest: map[string]any{
-					"owner": "administrators",
+				ExpectedRequest: catalog.UpdateSchema{
+					Owner:   "administrators",
+					Name:    "a",
+					Comment: "c",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/schemas/b.a",
-				Response: SchemaInfo{
-					MetastoreID: "d",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
+				Response: catalog.SchemaInfo{
+					MetastoreId: "d",
 					Comment:     "c",
 					Owner:       "administrators",
 				},
@@ -98,16 +105,23 @@ func TestUpdateSchema(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
-				ExpectedRequest: map[string]any{
-					"owner": "administrators",
+				ExpectedRequest: catalog.UpdateSchema{
+					Owner:   "administrators",
+					Name:    "a",
+					Comment: "c",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "administrators",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/schemas/b.a",
-				Response: SchemaInfo{
+				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
+				Response: catalog.SchemaInfo{
 					Name:        "a",
-					MetastoreID: "d",
+					MetastoreId: "d",
 					Comment:     "c",
 					Owner:       "administrators",
 				},
@@ -131,24 +145,46 @@ func TestUpdateSchema(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestDeleteSchema(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
+			},
+		},
+		Resource: ResourceSchema(),
+		Delete:   true,
+		ID:       "b.a",
+		HCL: `
+		name = "a"
+		catalog_name = "b"
+		comment = "c"
+		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestForceDeleteSchema(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=b&schema_name=a",
-				Response: Tables{
-					Tables: []TableInfo{
+				Resource: "/api/2.1/unity-catalog/tables?catalog_name=b&schema_name=a",
+				Response: catalog.ListTablesResponse{
+					Tables: []catalog.TableInfo{
 						{
 							CatalogName: "b",
 							SchemaName:  "a",
 							Name:        "c",
+							FullName:    "b.a.c",
 							TableType:   "MANAGED",
 						},
 						{
 							CatalogName: "b",
 							SchemaName:  "a",
 							Name:        "d",
+							FullName:    "b.a.d",
 							TableType:   "VIEW",
 						},
 					},
@@ -156,15 +192,15 @@ func TestForceDeleteSchema(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/tables/b.a.c",
+				Resource: "/api/2.1/unity-catalog/tables/b.a.c?",
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/tables/b.a.d",
+				Resource: "/api/2.1/unity-catalog/tables/b.a.d?",
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
 			},
 		},
 		Resource: ResourceSchema(),

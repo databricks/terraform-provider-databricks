@@ -91,18 +91,42 @@ resource "databricks_external_location" "some" {
 }
 ```
 
+Example `encryption_details` specifying SSE_S3 encryption:
+
+```hcl
+encryption_details {
+  sse_encryption_details {
+    algorithm     = "AWS_SSE_S3"
+  }
+}
+```
+
+Example `encryption_details` specifying SSE_KMS encryption with KMS key that has ID "some_key_arn":
+
+```hcl
+encryption_details {
+  sse_encryption_details {
+    algorithm     = "AWS_SSE_KMS"
+    aws_kms_key_arn = "some_key_arn"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 - `name` - Name of External Location, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
 - `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure), `gs://[bucket-host]/[bucket-dir]` (GCP).
-- `credential_name` - Name of the [databricks_storage_credential](storage_credential.md) to use with this External Location.
-- `owner` - (Optional) Username/groupname/sp application_id of the external Location owner.
+- `credential_name` - Name of the [databricks_storage_credential](storage_credential.md) to use with this external location.
+- `owner` - (Optional) Username/groupname/sp application_id of the external location owner.
 - `comment` - (Optional) User-supplied free-form text.
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the external location
 - `read_only` - (Optional) Indicates whether the external location is read-only.
 - `force_destroy` - (Optional) Destroy external location regardless of its dependents.
+- `force_update` - (Optional) Update external location regardless of its dependents.
+- `access_point` - (Optional) The ARN of the s3 access point to use with the external location (AWS).
+- `encryption_details` - (Optional) The options for Server-Side Encryption to be used by each Databricks s3 client when connecting to S3 cloud storage (AWS).
 
 ## Import
 

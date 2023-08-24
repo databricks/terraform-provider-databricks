@@ -606,9 +606,17 @@ func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) strin
 	return name
 }
 
+func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
+	if obs.ModifiedAtInteractive != nil && obs.ModifiedAtInteractive.TimeMillis != 0 {
+		return obs.ModifiedAtInteractive.TimeMillis
+	}
+	return obs.ModifiedAt
+}
+
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
 		objectsList := ic.getAllWorkspaceObjects()
+		updatedSinceMs := ic.getUpdatedSinceMs()
 		for offset, object := range objectsList {
 			if object.ObjectType != objType || strings.HasPrefix(object.Path, "/Repos") {
 				continue
@@ -616,9 +624,19 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
 				continue
 			}
+			modifiedAt := wsObjectGetModifiedAt(object)
+			if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
+					modifiedAt, updatedSinceMs)
+				continue
+			}
+			if !ic.MatchesName(object.Path) {
+				continue
+			}
 			ic.Emit(&resource{
-				Resource: resourceType,
-				ID:       object.Path,
+				Resource:    resourceType,
+				ID:          object.Path,
+				Incremental: ic.incremental,
 			})
 
 			if offset%50 == 0 {
@@ -627,4 +645,23 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 		}
 		return nil
 	}
+}
+
+func (ic *importContext) getLastActiveMs() int64 {
+	if ic.lastActiveMs == 0 {
+		ic.lastActiveMs = (time.Now().Unix() - ic.lastActiveDays*24*60*60) * 1000
+	}
+	return ic.lastActiveMs
+}
+
+func (ic *importContext) getUpdatedSinceStr() string {
+	return ic.updatedSinceStr
+}
+
+func (ic *importContext) getUpdatedSinceMs() int64 {
+	if ic.updatedSinceMs == 0 {
+		tm, _ := time.Parse(time.RFC3339, ic.updatedSinceStr)
+		ic.updatedSinceMs = tm.UnixMilli()
+	}
+	return ic.updatedSinceMs
 }

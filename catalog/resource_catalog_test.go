@@ -230,20 +230,18 @@ func TestForceDeleteCatalog(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/schemas?catalog_name=b",
-				Response: Schemas{
-					Schemas: []SchemaInfo{
-						{
-							Name:     "a",
-							FullName: "b.a",
-						},
+				Response: []catalog.SchemaInfo{
+					{
+						Name:     "a",
+						FullName: "b.a",
 					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=b&schema_name=a",
-				Response: Tables{
-					Tables: []TableInfo{
+				Response: catalog.ListTablesResponse{
+					Tables: []catalog.TableInfo{
 						{
 							CatalogName: "b",
 							SchemaName:  "a",

@@ -46,6 +46,7 @@ Data source exposes the following attributes:
 * `instance_profiles` - Set of [instance profile](../resources/instance_profile.md) ARNs, that can be modified by [databricks_group_instance_profile](../resources/group_instance_profile.md) resource.
 * `allow_cluster_create` - True if group members can create [clusters](../resources/cluster.md)
 * `allow_instance_pool_create` - True if group members can create [instance pools](../resources/instance_pool.md)
+* `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `groups/Some Group`.
 
 
 ## Related Resources

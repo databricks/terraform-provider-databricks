@@ -26,6 +26,8 @@ type QueryEntity struct {
 	Parameter []QueryParameter `json:"parameter,omitempty"`
 	RunAsRole string           `json:"run_as_role,omitempty"`
 	Parent    string           `json:"parent,omitempty" tf:"suppress_diff,force_new"`
+	CreatedAt string           `json:"created_at,omitempty" tf:"computed"`
+	UpdatedAt string           `json:"updated_at,omitempty" tf:"computed"`
 }
 
 // QuerySchedule ...
@@ -305,6 +307,8 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	q.Query = aq.Query
 	q.Tags = append([]string{}, aq.Tags...)
 	q.Parent = aq.Parent
+	q.UpdatedAt = aq.UpdatedAt
+	q.CreatedAt = aq.CreatedAt
 
 	if s := aq.Schedule; s != nil {
 		// Set `schedule` to non-empty value to ensure it's picked up by `StructToSchema`.

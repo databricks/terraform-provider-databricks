@@ -41,6 +41,10 @@ func DataSourceCurrentUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"acl_principal_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			c := m.(*common.DatabricksClient)
@@ -55,6 +59,11 @@ func DataSourceCurrentUser() *schema.Resource {
 			d.Set("user_name", me.UserName)
 			d.Set("home", fmt.Sprintf("/Users/%s", me.UserName))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", me.UserName))
+			if strings.Contains(me.UserName, "@") {
+				d.Set("acl_principal_id", fmt.Sprintf("users/%s", me.UserName))
+			} else {
+				d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", me.UserName))
+			}
 			d.Set("external_id", me.ExternalId)
 			splits := strings.Split(me.UserName, "@")
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")

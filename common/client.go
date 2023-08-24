@@ -81,7 +81,7 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	return acc, nil
 }
 
-func (c *DatabricksClient) WorkspaceOrAccountRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
+func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
 	if c.Config.IsAccountClient() {
 		a, err := c.AccountClient()
 		if err != nil {

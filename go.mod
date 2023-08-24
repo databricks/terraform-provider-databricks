@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0
 	github.com/stretchr/testify v1.8.4
-	github.com/zclconf/go-cty v1.13.2
+	github.com/zclconf/go-cty v1.13.3
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	golang.org/x/mod v0.12.0
 )

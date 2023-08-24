@@ -43,7 +43,7 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestAccountMetastoreAssignment_Create(t *testing.T) {
+func TestMetastoreAssignmentAccount_Create(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -78,7 +78,7 @@ func TestAccountMetastoreAssignment_Create(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestAccountMetastoreAssignment_Update(t *testing.T) {
+func TestMetastoreAssignmentAccount_Update(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

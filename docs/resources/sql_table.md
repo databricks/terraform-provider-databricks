@@ -82,11 +82,12 @@ The following arguments are supported:
 * `properties` - (Optional) Extensible Table properties.
 
 ### `column` configuration block
+
 For table columns
 Currently, changing the column definitions for a table will require dropping and re-creating the table
 
 * `name` - User-visible name of column
-* `type` - Column type spec (with metadata) as SQL text
+* `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 
@@ -95,5 +96,5 @@ Currently, changing the column definitions for a table will require dropping and
 This resource can be imported by its full name:
 
 ```bash
-$ terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>
+terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>
 ```

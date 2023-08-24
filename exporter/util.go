@@ -630,6 +630,9 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 					modifiedAt, updatedSinceMs)
 				continue
 			}
+			if !ic.MatchesName(object.Path) {
+				continue
+			}
 			ic.Emit(&resource{
 				Resource:    resourceType,
 				ID:          object.Path,

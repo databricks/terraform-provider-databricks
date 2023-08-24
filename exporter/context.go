@@ -91,6 +91,7 @@ type importContext struct {
 	prefix              string
 	accountLevel        bool
 	shImports           map[string]bool
+	notebooksFormat     string
 }
 
 type mount struct {
@@ -153,6 +154,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		allWorkspaceObjects: []workspace.ObjectStatus{},
 		workspaceConfKeys:   workspaceConfKeys,
 		shImports:           make(map[string]bool),
+		notebooksFormat:     "SOURCE",
 	}
 }
 
@@ -200,6 +202,12 @@ func (ic *importContext) Run() error {
 
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
 		ic.Module, ic.Directory, ic.services)
+
+	ic.notebooksFormat = strings.ToUpper(ic.notebooksFormat)
+	_, supportedFormat := fileExtensionFormatMapping[ic.notebooksFormat]
+	if !supportedFormat && ic.notebooksFormat != "SOURCE" {
+		return fmt.Errorf("unsupported notebook format: '%s'", ic.notebooksFormat)
+	}
 
 	info, err := os.Stat(ic.Directory)
 	if os.IsNotExist(err) {

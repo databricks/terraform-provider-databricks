@@ -33,21 +33,33 @@ import (
 )
 
 var (
-	adlsGen2Regex             = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	adlsGen1Regex             = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
-	wasbsRegex                = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	s3Regex                   = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
-	gsRegex                   = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
-	globalWorkspaceConfName   = "global_workspace_conf"
-	nameNormalizationRegex    = regexp.MustCompile(`\W+`)
-	jobClustersRegex          = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
-	dltClusterRegex           = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
-	uuidRegex                 = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
-	predefinedClusterPolicies = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
-	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
-	sqlParentRegexp           = regexp.MustCompile(`^folders/(\d+)$`)
-	dltDefaultStorageRegex    = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
-	ignoreIdeFolderRegex      = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
+	adlsGen2Regex                = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen1Regex                = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
+	wasbsRegex                   = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	s3Regex                      = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
+	gsRegex                      = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
+	globalWorkspaceConfName      = "global_workspace_conf"
+	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
+	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
+	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
+	uuidRegex                    = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	predefinedClusterPolicies    = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
+	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
+	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
+	dltDefaultStorageRegex       = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	ignoreIdeFolderRegex         = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
+	fileExtensionLanguageMapping = map[string]string{
+		"SCALA":  ".scala",
+		"PYTHON": ".py",
+		"SQL":    ".sql",
+		"R":      ".r",
+	}
+	fileExtensionFormatMapping = map[string]string{
+		"HTML":       ".html",
+		"JUPYTER":    ".ipynb",
+		"DBC":        ".dbc",
+		"R_MARKDOWN": ".Rmd",
+	}
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -1215,18 +1227,20 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			contentB64, err := notebooksAPI.Export(r.ID, "SOURCE")
+			contentB64, err := notebooksAPI.Export(r.ID, ic.notebooksFormat)
 			if err != nil {
 				return err
 			}
-			language := r.Data.Get("language").(string)
-			ext := map[string]string{
-				"SCALA":  ".scala",
-				"PYTHON": ".py",
-				"SQL":    ".sql",
-				"R":      ".r",
+			var fileExtension string
+			if ic.notebooksFormat == "SOURCE" {
+				language := r.Data.Get("language").(string)
+				fileExtension = fileExtensionLanguageMapping[language]
+				r.Data.Set("language", "")
+			} else {
+				fileExtension = fileExtensionFormatMapping[ic.notebooksFormat]
 			}
-			name := r.ID[1:] + ext[language] // todo: replace non-alphanum+/ with _
+			r.Data.Set("format", ic.notebooksFormat)
+			name := r.ID[1:] + fileExtension // todo: replace non-alphanum+/ with _
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
 			if err != nil {
@@ -1240,7 +1254,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
-			// TODO: it's not completely correct condition - we need to make emit smarter - emit only if permissions are different from their parent's permission.
+			// TODO: it's not completely correct condition - we need to make emit smarter -
+			// emit only if permissions are different from their parent's permission.
 			if ic.meAdmin {
 				directorySplits := strings.Split(r.ID, "/")
 				directorySplits = directorySplits[:len(directorySplits)-1]
@@ -1252,9 +1267,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
-			log.Printf("Creating %s for %s", fileName, r)
-			r.Data.Set("source", fileName)
-			return r.Data.Set("language", "")
+			return r.Data.Set("source", fileName)
 		},
 		Depends: []reference{
 			{Path: "source", File: true},

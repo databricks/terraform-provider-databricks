@@ -22,7 +22,7 @@ func TestResourceSqlTableCreateStatement_External(t *testing.T) {
 		Comment:               "terraform managed",
 	}
 	stmt := ti.buildTableCreateStatement()
-	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE main.foo.bar")
+	assert.Contains(t, stmt, "CREATE OR REPLACE TABLE main.foo.bar")
 	assert.Contains(t, stmt, "USING DELTA")
 	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")

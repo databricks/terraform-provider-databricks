@@ -803,14 +803,64 @@ func TestNotebookGeneration(t *testing.T) {
 			},
 		},
 	}, "notebooks", func(ic *importContext) {
+		ic.notebooksFormat = "SOURCE"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
-
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
 		  source = "${path.module}/notebooks/First/Second.py"
 		  path   = "/First/Second"
+		}`), string(ic.Files["notebooks"].Bytes()))
+	})
+}
+
+func TestNotebookGenerationJupyter(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						Path:       "/Repos/Foo/Bar",
+						ObjectType: "NOTEBOOK",
+					},
+					{
+						Path:       "/First/Second",
+						ObjectType: "NOTEBOOK",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
+			Response: workspace.ObjectStatus{
+				ObjectID:   123,
+				ObjectType: "NOTEBOOK",
+				Path:       "/First/Second",
+				Language:   "PYTHON",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=JUPYTER&path=%2FFirst%2FSecond",
+			Response: workspace.ExportPath{
+				Content: "YWJj",
+			},
+		},
+	}, "notebooks", func(ic *importContext) {
+		ic.notebooksFormat = "JUPYTER"
+		err := resourcesMap["databricks_notebook"].List(ic)
+		assert.NoError(t, err)
+		ic.generateHclForResources(nil)
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
+		resource "databricks_notebook" "first_second_123" {
+		  source   = "${path.module}/notebooks/First/Second.ipynb"
+		  path     = "/First/Second"
+		  language = "PYTHON"
+		  format   = "JUPYTER"
 		}`), string(ic.Files["notebooks"].Bytes()))
 	})
 }

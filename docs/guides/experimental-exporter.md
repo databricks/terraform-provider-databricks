@@ -47,6 +47,7 @@ All arguments are optional and they tune what code is being generated.
 * `-importAllUsers` - optionally include all users and service principals even if they only part of the `users` group.
 * `-incremental` - experimental option for incremental export of modified resources and merging with existing resources. *Please note that only limited set of resources (notebooks, SQL queries/dashboards/alerts, ...) provides information about last modified date - all other resources will be re-exported again! Also, it's not possible to detect deletion of the resources, so you will need to do periodic full export if resources are deleted!*   **Requires** `-updated-since` option if no `exporter-run-stats.json` file exists in the output directory.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a giving timestamp. I.e. `2023-07-24T00:00:00Z`. If not specified, exporter will try to load last run timestamp from the `exporter-run-stats.json` file generated during the export, and use it.
+* `-notebooksFormat` - optional format for exporting of notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This could be used to export of notebooks with embedded dashboards.
 
 ## Services
 

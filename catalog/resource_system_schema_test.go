@@ -26,11 +26,6 @@ func TestSystemSchemaCreate(t *testing.T) {
 				Status:   200,
 			},
 			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/billing",
-				Status:   200,
-			},
-			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/metastore_summary",
 				Response: catalog.GetMetastoreSummaryResponse{
@@ -55,11 +50,11 @@ func TestSystemSchemaCreate(t *testing.T) {
 			},
 		},
 		Resource: ResourceSystemSchema(),
-		HCL:      `system_schema = ["access", "billing"]`,
+		HCL:      `schema = "access"`,
 		Create:   true,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "abc|access", d.Id())
 }
 
 func TestSystemSchemaCreate_Error(t *testing.T) {
@@ -83,7 +78,7 @@ func TestSystemSchemaCreate_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceSystemSchema(),
-		HCL:      `system_schema = ["access", "billing"]`,
+		HCL:      `schema = "access"`,
 		Create:   true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
@@ -103,11 +98,6 @@ func TestSystemSchemaUpdate(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access",
-				Status:   200,
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/billing",
 				Status:   200,
 			},
 			{
@@ -141,16 +131,15 @@ func TestSystemSchemaUpdate(t *testing.T) {
 		},
 		Resource: ResourceSystemSchema(),
 		InstanceState: map[string]string{
-			"system_schema.#": "1",
-			"system_schema.0": "information_schema",
+			"schema": "information_schema",
 		},
-		HCL:    `system_schema = ["access", "billing"]`,
+		HCL:    `schema = "access"`,
 		Update: true,
 		ID:     "abc",
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id())
-	assert.Equal(t, 2, d.Get("system_schema.#"))
+	assert.Equal(t, "abc|access", d.Id())
+	assert.Equal(t, "access", d.Get("schema"))
 }
 
 func TestSystemSchemaUpdate_Error(t *testing.T) {
@@ -175,12 +164,11 @@ func TestSystemSchemaUpdate_Error(t *testing.T) {
 		},
 		Resource: ResourceSystemSchema(),
 		InstanceState: map[string]string{
-			"system_schema.#": "1",
-			"system_schema.0": "information_schema",
+			"schema": "information_schema",
 		},
-		HCL:    `system_schema = ["access", "billing"]`,
+		HCL:    `schema = "access"`,
 		Update: true,
-		ID:     "abc",
+		ID:     "abc|information_schema",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 }
@@ -214,9 +202,10 @@ func TestSystemSchemaRead(t *testing.T) {
 		},
 		Resource: ResourceSystemSchema(),
 		Read:     true,
-		ID:       "abc",
+		ID:       "abc|access",
 	}.ApplyAndExpectData(t, map[string]any{
-		"system_schema": []any{"access", "billing"},
+		"schema": "access",
+		"state":  string(catalog.SystemSchemaInfoStateEnableCompleted),
 	})
 }
 
@@ -242,10 +231,10 @@ func TestSystemSchemaRead_Error(t *testing.T) {
 		},
 		Resource: ResourceSystemSchema(),
 		Read:     true,
-		ID:       "abc",
+		ID:       "abc|access",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty for error reads")
+	assert.Equal(t, "abc|access", d.Id(), "Id should not be empty for error reads")
 }
 
 func TestSystemSchemaDelete(t *testing.T) {
@@ -269,13 +258,13 @@ func TestSystemSchemaDelete(t *testing.T) {
 				Status:   200,
 			},
 		},
-		HCL:      `system_schema = ["access", "billing"]`,
+		HCL:      `schema = "access"`,
 		Resource: ResourceSystemSchema(),
 		Delete:   true,
-		ID:       "abc",
+		ID:       "abc|access",
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "abc|access", d.Id())
 }
 
 func TestSystemSchemaDelete_Error(t *testing.T) {
@@ -299,10 +288,10 @@ func TestSystemSchemaDelete_Error(t *testing.T) {
 			},
 		},
 		Resource: ResourceSystemSchema(),
-		HCL:      `system_schema = ["access", "billing"]`,
+		HCL:      `schema = "access"`,
 		Delete:   true,
-		ID:       "abc",
+		ID:       "abc|access",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
-	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "abc|access", d.Id())
 }

@@ -14,7 +14,7 @@ func TestUcAccAccountMetastoreDataAccessOnAws(t *testing.T) {
 			force_destroy = true
 		}
 		resource "databricks_metastore_data_access" "this" {
-			metastore_id = {env.TEST_METASTORE_ID}
+			metastore_id = databricks_metastore.this.id
 			name         = "{var.RANDOM}"
 			aws_iam_role {
 				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"

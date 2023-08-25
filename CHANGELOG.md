@@ -10,10 +10,11 @@
  * Added `acl_principal_id` to data sources: [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user), [databricks_service_principal](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal), [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group), [databricks_current_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/current_user) ([#2555](https://github.com/databricks/terraform-provider-databricks/pull/2555)).
  * Added exporting of [databricks_mlflow_webhook](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_webhook) resources ([#2552](https://github.com/databricks/terraform-provider-databricks/pull/2552)).
  * Auto-assign engineering reviewers for TF ([#2564](https://github.com/databricks/terraform-provider-databricks/pull/2564)).
- * Bump Go SDK -> 0.16.0 ([#2580](https://github.com/databricks/terraform-provider-databricks/pull/2580)).
+ * Updated Go SDK to v0.17.0 ([#2599](https://github.com/databricks/terraform-provider-databricks/pull/2599)).
 
  Documentation:
  * Added troubleshooting guide for grants/permissions config drifts ([#2576](https://github.com/databricks/terraform-provider-databricks/pull/2576)).
+ * Updated doc for [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) to include new fields ([#2579](https://github.com/databricks/terraform-provider-databricks/pull/2579)).
 
  Exporter:
  * Exporter: Incremental export of notebooks, SQL objects and some other resources ([#2563](https://github.com/databricks/terraform-provider-databricks/pull/2563)).
@@ -21,18 +22,18 @@
  * Exporter: command-line option to control output format for notebooks ([#2569](https://github.com/databricks/terraform-provider-databricks/pull/2569)).
 
  Other Changes:
- * Fix UC acceptance test ([#2613](https://github.com/databricks/terraform-provider-databricks/pull/2613)).
- * Fix creation of views with comments using [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) ([#2589](https://github.com/databricks/terraform-provider-databricks/pull/2589)).
- * Fix reflection method marshallJSON for CMK in mws workspace ([#2605](https://github.com/databricks/terraform-provider-databricks/pull/2605)).
+ * Fixed UC acceptance test ([#2613](https://github.com/databricks/terraform-provider-databricks/pull/2613)).
+ * Fixed creation of views with comments using [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) ([#2589](https://github.com/databricks/terraform-provider-databricks/pull/2589)).
+ * Fixed reflection method marshallJSON for CMK in mws workspace ([#2605](https://github.com/databricks/terraform-provider-databricks/pull/2605)).
  * Fixed databricks_access_control_rule_set integration test in Azure ([#2591](https://github.com/databricks/terraform-provider-databricks/pull/2591)).
- * Migrate [databricks_mlflow_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_model) to go sdk ([#2257](https://github.com/databricks/terraform-provider-databricks/pull/2257)).
- * Port [databricks_mlflow_webhook](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_webhook) to Go SDK ([#2560](https://github.com/databricks/terraform-provider-databricks/pull/2560)).
- * Refactor [databricks_external_location](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/external_location) to Go SDK ([#2546](https://github.com/databricks/terraform-provider-databricks/pull/2546)).
- * Refactor [databricks_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/schema) to Go SDK ([#2572](https://github.com/databricks/terraform-provider-databricks/pull/2572)).
- * Refresh [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) with latest permissible grants ([#2567](https://github.com/databricks/terraform-provider-databricks/pull/2567)).
- * RunJobTask job_id type fix ([#2588](https://github.com/databricks/terraform-provider-databricks/pull/2588)).
- * Update Go SDK to v0.17.0 ([#2599](https://github.com/databricks/terraform-provider-databricks/pull/2599)).
- * Update doc for [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) to include new fields ([#2579](https://github.com/databricks/terraform-provider-databricks/pull/2579)).
+ * Migrated [databricks_mlflow_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_model) to go sdk ([#2257](https://github.com/databricks/terraform-provider-databricks/pull/2257)).
+ * Ported [databricks_mlflow_webhook](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_webhook) to Go SDK ([#2560](https://github.com/databricks/terraform-provider-databricks/pull/2560)).
+ * Refactored [databricks_external_location](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/external_location) to Go SDK ([#2546](https://github.com/databricks/terraform-provider-databricks/pull/2546)).
+ * Refactored [databricks_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/schema) to Go SDK ([#2572](https://github.com/databricks/terraform-provider-databricks/pull/2572)).
+ * Refreshed [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) with latest permissible grants ([#2567](https://github.com/databricks/terraform-provider-databricks/pull/2567)).
+ * Fixed RunJobTask job_id type ([#2588](https://github.com/databricks/terraform-provider-databricks/pull/2588)).
+
+
 
 ## 1.23.0
 

@@ -198,9 +198,9 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	if err != nil {
 		return resource.NonRetryableError(err)
 	}
-	// make a request to Tokens API, just to verify there are no errors
+	// make a request to scim/Me API, just to verify there are no errors
 	var response map[string]any
-	err = wsClient.Get(ctx, "/token/list", nil, &response)
+	err = wsClient.Get(ctx, "/scim/Me", nil, &response)
 	var apiError *apierr.APIError
 	if errors.As(err, &apiError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
@@ -244,12 +244,7 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 				// so we'll use it as unit testing shim
 				return nil
 			}
-			if ctx.VerifyWorkspaceReachable == true {
-				log.Printf("[INFO] Verifying workspace reachability")
-				return a.verifyWorkspaceReachable(workspace)
-			} else {
-				return nil
-			}
+			return a.verifyWorkspaceReachable(workspace)
 		case WorkspaceStatusCanceled, WorkspaceStatusFailed:
 			log.Printf("[ERROR] Cannot start workspace: %s", workspace.WorkspaceStatusMessage)
 			err = a.explainWorkspaceFailure(workspace)

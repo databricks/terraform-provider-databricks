@@ -397,24 +397,24 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 }
 
 func TestCatalogCreateForeign(t *testing.T) {
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/catalogs",
 				ExpectedRequest: catalog.CatalogInfo{
-					Name:    "a",
+					Name:    "foreign_catalog",
 					Comment: "b",
 					Options: map[string]string{
-						"a": "b",
+						"database": "abcd",
 					},
 					ConnectionName: "foo",
 				},
 				Response: catalog.CatalogInfo{
-					Name:    "a",
+					Name:    "foreign_catalog",
 					Comment: "b",
 					Options: map[string]string{
-						"a": "b",
+						"database": "abcd",
 					},
 					ConnectionName: "foo",
 					MetastoreId:    "e",
@@ -423,16 +423,16 @@ func TestCatalogCreateForeign(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
+				Resource: "/api/2.1/unity-catalog/schemas/foreign_catalog.default?",
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Resource: "/api/2.1/unity-catalog/catalogs/foreign_catalog?",
 				Response: catalog.CatalogInfo{
-					Name:    "a",
+					Name:    "foreign_catalog",
 					Comment: "b",
 					Options: map[string]string{
-						"a": "b",
+						"database": "abcd",
 					},
 					ConnectionName: "foo",
 					MetastoreId:    "e",
@@ -443,11 +443,19 @@ func TestCatalogCreateForeign(t *testing.T) {
 		Resource: ResourceCatalog(),
 		Create:   true,
 		HCL: `
-		name = "a"
+		name = "foreign_catalog"
 		comment = "b"
+		options = {
+			database = "abcd"
+		}
 		connection_name = "foo"
 		`,
-	}.ApplyNoError(t)
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "foreign_catalog", d.Get("name"))
+	assert.Equal(t, "foo", d.Get("connection_name"))
+	assert.Equal(t, "b", d.Get("comment"))
+	assert.Equal(t, map[string]interface{}{"database": "abcd"}, d.Get("options"))
 }
 
 func TestCatalogCreateIsolated(t *testing.T) {

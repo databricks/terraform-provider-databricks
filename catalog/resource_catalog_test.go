@@ -397,7 +397,6 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 }
 
 func TestCatalogCreateForeign(t *testing.T) {
-	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -408,7 +407,7 @@ func TestCatalogCreateForeign(t *testing.T) {
 					Options: map[string]string{
 						"a": "b",
 					},
-					ConnectionName: "foo"
+					ConnectionName: "foo",
 				},
 				Response: catalog.CatalogInfo{
 					Name:    "a",
@@ -422,13 +421,17 @@ func TestCatalogCreateForeign(t *testing.T) {
 				},
 			},
 			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/catalogs/a?",
 				Response: catalog.CatalogInfo{
 					Name:    "a",
 					Comment: "b",
 					Options: map[string]string{
-						"c": "d",
+						"a": "b",
 					},
 					ConnectionName: "foo",
 					MetastoreId:  "e",

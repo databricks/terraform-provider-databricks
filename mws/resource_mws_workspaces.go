@@ -198,7 +198,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	if err != nil {
 		return resource.NonRetryableError(err)
 	}
-	// make a request to scim/Me API, just to verify there are no errors
+	// make a request to SCIM API, just to verify there are no errors
 	var response map[string]any
 	err = wsClient.Get(ctx, "/scim/Me", nil, &response)
 	var apiError *apierr.APIError

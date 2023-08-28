@@ -244,7 +244,12 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 				// so we'll use it as unit testing shim
 				return nil
 			}
-			return a.verifyWorkspaceReachable(workspace)
+			if ctx.VerifyWorkspaceReachable == true {
+				log.Printf("[INFO] Verifying workspace reachability")
+				return a.verifyWorkspaceReachable(workspace)
+			} else {
+				return nil
+			}
 		case WorkspaceStatusCanceled, WorkspaceStatusFailed:
 			log.Printf("[ERROR] Cannot start workspace: %s", workspace.WorkspaceStatusMessage)
 			err = a.explainWorkspaceFailure(workspace)

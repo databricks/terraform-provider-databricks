@@ -445,9 +445,6 @@ func TestCatalogCreateForeign(t *testing.T) {
 		HCL: `
 		name = "a"
 		comment = "b"
-		options = {
-			a = "b"
-		}
 		connection_name = "foo"
 		`,
 	}.ApplyNoError(t)

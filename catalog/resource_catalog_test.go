@@ -397,6 +397,7 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 }
 
 func TestCatalogCreateForeign(t *testing.T) {
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",

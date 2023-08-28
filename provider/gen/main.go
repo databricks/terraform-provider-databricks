@@ -21,7 +21,7 @@ func main() {
 	flag.StringVar(&ctx.DocCategory, "category", "Other", "documentation category")
 	flag.BoolVar(&ctx.DataSource, "is-data", false, "is this a data resource")
 	flag.BoolVar(&ctx.DryRun, "dry-run", true, "print to stdout instead of real files")
-	flag.BoolVar(&ctx.VerifyWorkspaceReachable, "verify-reachability", true, "verify if workspace is reachable")
+	flag.BoolVar(&ctx.VerifyWorkspaceReachable, "verify-workspace-reachability", true, "verify if workspace is reachable")
 
 	flag.Parse()
 

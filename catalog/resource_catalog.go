@@ -34,6 +34,7 @@ type CatalogInfo struct {
 	ShareName      string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
 	ConnectionName string            `json:"connection_name,omitempty" tf:"force_new,conflicts:storage_root"`
 	Properties     map[string]string `json:"properties,omitempty"`
+	Options        map[string]string `json:"options,omitempty"`
 	Owner          string            `json:"owner,omitempty" tf:"computed"`
 	IsolationMode  string            `json:"isolation_mode,omitempty" tf:"computed"`
 	MetastoreID    string            `json:"metastore_id,omitempty" tf:"computed"`

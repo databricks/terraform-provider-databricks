@@ -396,6 +396,59 @@ func TestCatalogCreateDeltaSharing(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCatalogCreateForeign(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/catalogs",
+				ExpectedRequest: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Options: map[string]string{
+						"a": "b",
+					},
+					ConnectionName: "foo"
+				},
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Options: map[string]string{
+						"a": "b",
+					},
+					ConnectionName: "foo",
+					MetastoreId:  "e",
+					Owner:        "f",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Options: map[string]string{
+						"c": "d",
+					},
+					ConnectionName: "foo",
+					MetastoreId:  "e",
+					Owner:        "f",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		comment = "b"
+		options = {
+			a = "b"
+		}
+		connection_name = "foo"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCatalogCreateIsolated(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

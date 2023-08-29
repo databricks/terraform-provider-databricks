@@ -100,6 +100,7 @@ type Workspace struct {
 	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
+	SkipWorkspaceReachability           bool                     `json:"workspace_reachability,omitempty"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -200,7 +201,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	}
 	// make a request to SCIM API, just to verify there are no errors
 	var response map[string]any
-	err = wsClient.Get(ctx, "/scim/Me", nil, &response)
+	err = wsClient.Get(ctx, "/preview/scim/v2/Me", nil, &response)
 	var apiError *apierr.APIError
 	if errors.As(err, &apiError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",

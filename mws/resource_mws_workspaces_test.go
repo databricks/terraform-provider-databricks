@@ -1069,7 +1069,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 	})
 }
 
-func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+func updateWorkspaceScimFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
 	accountsAPI := []qa.HTTPFixture{
 		{
 			Method:       "GET",
@@ -1077,16 +1077,16 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 			Resource:     "/api/2.0/accounts/c/workspaces/0",
 		},
 	}
-	tokensAPI := []qa.HTTPFixture{
+	scimAPI := []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}
-	tokensAPI = append(tokensAPI, fixtures...)
+	scimAPI = append(scimAPI, fixtures...)
 	// outer HTTP server is used for inner request for "just created" workspace
-	qa.HTTPFixturesApply(t, tokensAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[0].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
@@ -1111,7 +1111,7 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 	})
 }
 
-func updateWorkspaceTokenFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
 	accountsAPI := []qa.HTTPFixture{
 		{
 			Method:   "PATCH",
@@ -1158,7 +1158,7 @@ func updateWorkspaceTokenFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixtur
 }
 
 func TestUpdateWorkspace_AddToken(t *testing.T) {
-	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/create",
@@ -1179,7 +1179,7 @@ func TestUpdateWorkspace_AddToken(t *testing.T) {
 }
 
 func TestUpdateWorkspace_AddTokenAndChangeNetworkId(t *testing.T) {
-	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/create",
@@ -1204,7 +1204,7 @@ func TestUpdateWorkspace_AddTokenAndChangeNetworkId(t *testing.T) {
 }
 
 func TestUpdateWorkspace_DeleteTokenAndChangeNetworkId(t *testing.T) {
-	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
@@ -1226,7 +1226,7 @@ func TestUpdateWorkspace_DeleteTokenAndChangeNetworkId(t *testing.T) {
 }
 
 func TestUpdateWorkspace_DeleteToken(t *testing.T) {
-	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
@@ -1244,7 +1244,7 @@ func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 }
 
 func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
-	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
@@ -1282,7 +1282,7 @@ func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
 }
 
 func TestUpdateWorkspace_ReplaceToken(t *testing.T) {
-	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",

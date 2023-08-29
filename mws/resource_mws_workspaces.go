@@ -100,7 +100,6 @@ type Workspace struct {
 	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
-	SkipWorkspaceReachability           bool                     `json:"workspace_reachability,omitempty"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop

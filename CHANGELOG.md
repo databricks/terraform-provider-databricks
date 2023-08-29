@@ -1,6 +1,7 @@
 # Version changelog
 
 ## 1.24.1
+
  * Fixed verification of workspace reachability by using scim/me which is always available  ([#2618](https://github.com/databricks/terraform-provider-databricks/pull/2618)).
 
 ## 1.24.0

@@ -574,6 +574,21 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 		job.Settings.sortTasksByKey()
 		job.Settings.sortWebhooksByID()
 	}
+
+	if job.RunAsUserName != "" && job.Settings != nil {
+		userNameIsEmail := strings.Contains(job.RunAsUserName, "@")
+
+		if userNameIsEmail {
+			job.Settings.RunAs = &JobRunAs{
+				UserName: job.RunAsUserName,
+			}
+		} else {
+			job.Settings.RunAs = &JobRunAs{
+				UserName: job.RunAsUserName,
+			}
+		}
+	}
+
 	return
 }
 

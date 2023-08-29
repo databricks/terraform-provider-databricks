@@ -1041,7 +1041,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}, func(ctx context.Context, wsClient *common.DatabricksClient) {

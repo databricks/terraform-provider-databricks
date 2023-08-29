@@ -584,7 +584,7 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 			}
 		} else {
 			job.Settings.RunAs = &JobRunAs{
-				UserName: job.RunAsUserName,
+				ServicePrincipalName: job.RunAsUserName,
 			}
 		}
 	}

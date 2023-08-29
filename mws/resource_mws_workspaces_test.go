@@ -1123,16 +1123,16 @@ func updateWorkspaceTokenFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixtur
 			Resource:     "/api/2.0/accounts/c/workspaces/0",
 		},
 	}
-	tokensAPI := []qa.HTTPFixture{
+	scimAPI := []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}
-	tokensAPI = append(tokensAPI, fixtures...)
+	scimAPI = append(scimAPI, fixtures...)
 	// outer HTTP server is used for inner request for "just created" workspace
-	qa.HTTPFixturesApply(t, tokensAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[1].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
@@ -1172,11 +1172,6 @@ func TestUpdateWorkspace_AddToken(t *testing.T) {
 					TokenID: "abcdef",
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: `{}`, // we just need a JSON for this
 		},
 	}, map[string]string{
 		// no token in state

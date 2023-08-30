@@ -86,7 +86,7 @@ type ResourceFixture struct {
 	InstanceState map[string]string
 
 	// Configuration for the resource, equivalent to the configuration a user
-	// defines in a .tf file
+	// defines in a .tf file. Only use one of HCL or State.
 	State map[string]any
 
 	// Alternative to State. Allows defining the resource configuration in HCL

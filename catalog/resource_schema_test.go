@@ -145,6 +145,53 @@ func TestUpdateSchema(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateSchemaForceNew(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Owner:   "administrators",
+					Name:    "a",
+					Comment: "c",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
+				Response: catalog.SchemaInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+		},
+		RequiresNew: true,
+		Resource:    ResourceSchema(),
+		Update:      true,
+		ID:          "b.a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"catalog_name": "b",
+			"comment":      "c",
+		},
+		HCL: `
+		name = "a"
+		catalog_name = "x"
+		comment = "c"
+		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestDeleteSchema(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

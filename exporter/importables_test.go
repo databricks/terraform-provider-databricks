@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -802,14 +803,64 @@ func TestNotebookGeneration(t *testing.T) {
 			},
 		},
 	}, "notebooks", func(ic *importContext) {
+		ic.notebooksFormat = "SOURCE"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
-
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
 		  source = "${path.module}/notebooks/First/Second.py"
 		  path   = "/First/Second"
+		}`), string(ic.Files["notebooks"].Bytes()))
+	})
+}
+
+func TestNotebookGenerationJupyter(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						Path:       "/Repos/Foo/Bar",
+						ObjectType: "NOTEBOOK",
+					},
+					{
+						Path:       "/First/Second",
+						ObjectType: "NOTEBOOK",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
+			Response: workspace.ObjectStatus{
+				ObjectID:   123,
+				ObjectType: "NOTEBOOK",
+				Path:       "/First/Second",
+				Language:   "PYTHON",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=JUPYTER&path=%2FFirst%2FSecond",
+			Response: workspace.ExportPath{
+				Content: "YWJj",
+			},
+		},
+	}, "notebooks", func(ic *importContext) {
+		ic.notebooksFormat = "JUPYTER"
+		err := resourcesMap["databricks_notebook"].List(ic)
+		assert.NoError(t, err)
+		ic.generateHclForResources(nil)
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
+		resource "databricks_notebook" "first_second_123" {
+		  source   = "${path.module}/notebooks/First/Second.ipynb"
+		  path     = "/First/Second"
+		  language = "PYTHON"
+		  format   = "JUPYTER"
 		}`), string(ic.Files["notebooks"].Bytes()))
 	})
 }
@@ -847,7 +898,7 @@ func TestDirectoryGeneration(t *testing.T) {
 				Path:       "/first",
 			},
 		},
-	}, "notebooks", func(ic *importContext) {
+	}, "directories", func(ic *importContext) {
 		err := resourcesMap["databricks_directory"].List(ic)
 		assert.NoError(t, err)
 
@@ -855,7 +906,7 @@ func TestDirectoryGeneration(t *testing.T) {
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_directory" "first_1234" {
 		  path = "/first"
-		}`), string(ic.Files["notebooks"].Bytes()))
+		}`), string(ic.Files["directories"].Bytes()))
 	})
 }
 
@@ -970,5 +1021,53 @@ func TestSqlListObjects(t *testing.T) {
 		answer, err := dbsqlListObjects(ic, "/preview/sql/queries")
 		assert.NoError(t, err)
 		assert.Len(t, answer, 2)
+	})
+}
+
+func TestIncrementalListDLT(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines?max_results=50",
+			Response: pipelines.PipelineListResponse{
+				Statuses: []pipelines.PipelineStateInfo{
+					{
+						PipelineID: "abc",
+						Name:       "abc",
+					},
+					{
+						PipelineID: "def",
+						Name:       "def",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines/abc",
+			Response: pipelines.PipelineInfo{
+				PipelineID:   "abc",
+				Name:         "abc",
+				LastModified: 1681466931226,
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines/def",
+			Response: pipelines.PipelineInfo{
+				PipelineID:   "def",
+				Name:         "def",
+				LastModified: 1690156900000,
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.incremental = true
+		ic.updatedSinceStr = "2023-07-24T00:00:00Z"
+		err := resourcesMap["databricks_pipeline"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(ic.testEmits))
 	})
 }

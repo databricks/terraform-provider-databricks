@@ -2,8 +2,10 @@ package exporter
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -181,4 +183,27 @@ func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 		Value:     "d",
 		Name:      "c",
 	})
+}
+
+func TestLoadingLastRun(t *testing.T) {
+	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+	defer os.RemoveAll(tmpDir)
+
+	fname := tmpDir + "1.json"
+	// no file yet
+	s := getLastRunString(fname)
+	assert.Equal(t, "", s)
+
+	_ = os.WriteFile(fname, []byte("{"), 0755)
+	s = getLastRunString(fname)
+	assert.Equal(t, "", s)
+
+	// no required field
+	_ = os.WriteFile(fname, []byte("{}"), 0755)
+	s = getLastRunString(fname)
+	assert.Equal(t, "", s)
+
+	_ = os.WriteFile(fname, []byte(`{"startTime": "2023-07-24T00:00:00Z"}`), 0755)
+	s = getLastRunString(fname)
+	assert.Equal(t, "2023-07-24T00:00:00Z", s)
 }

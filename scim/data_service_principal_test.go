@@ -41,13 +41,14 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 		NonWritable: true,
 		ID:          "abc",
 	}.ApplyAndExpectData(t, map[string]any{
-		"sp_id":          "abc",
-		"id":             "abc",
-		"application_id": "abc",
-		"display_name":   "Example Service Principal",
-		"active":         true,
-		"home":           "/Users/abc",
-		"repos":          "/Repos/abc",
+		"sp_id":            "abc",
+		"id":               "abc",
+		"application_id":   "abc",
+		"display_name":     "Example Service Principal",
+		"active":           true,
+		"home":             "/Users/abc",
+		"repos":            "/Repos/abc",
+		"acl_principal_id": "servicePrincipals/abc",
 	})
 }
 

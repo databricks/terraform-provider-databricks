@@ -143,6 +143,7 @@ type PipelineInfo struct {
 	Name            string                `json:"name"`
 	Health          *PipelineHealthStatus `json:"health"`
 	CreatorUserName string                `json:"creator_user_name"`
+	LastModified    int64                 `json:"last_modified"`
 }
 
 type PipelineUpdateStateInfo struct {

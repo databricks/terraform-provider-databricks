@@ -3,19 +3,14 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"log"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-type DataAccessConfigurationsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-func NewDataAccessConfigurationsAPI(ctx context.Context, m any) DataAccessConfigurationsAPI {
-	return DataAccessConfigurationsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
-}
 
 type AwsIamRole struct {
 	RoleARN string `json:"role_arn"`
@@ -54,93 +49,169 @@ type DataAccessConfiguration struct {
 
 var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity", "gcp_service_account_key", "databricks_gcp_service_account"}
 
-func (a DataAccessConfigurationsAPI) Create(metastoreID string, dac *DataAccessConfiguration) error {
-	path := fmt.Sprintf("/unity-catalog/metastores/%s/data-access-configurations", metastoreID)
-	return a.client.Post(a.context, path, dac, dac)
-}
-
-func (a DataAccessConfigurationsAPI) Get(metastoreID, dacID string) (dac DataAccessConfiguration, err error) {
-	path := fmt.Sprintf("/unity-catalog/metastores/%s/data-access-configurations/%s", metastoreID, dacID)
-	err = a.client.Get(a.context, path, nil, &dac)
-	return
-}
-
-func (a DataAccessConfigurationsAPI) Delete(metastoreID, dacID string) error {
-	path := fmt.Sprintf("/unity-catalog/metastores/%s/data-access-configurations/%s", metastoreID, dacID)
-	return a.client.Delete(a.context, path, nil)
-}
-
 func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
 	//ignore changes in private_key
 	return !d.HasChanges("gcp_service_account_key.0.email", "gcp_service_account_key.0.private_key_id")
 }
 
-func ResourceMetastoreDataAccess() *schema.Resource {
-	s := common.StructToSchema(DataAccessConfiguration{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["metastore_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			}
-			m["is_default"] = &schema.Schema{
-				// having more than one default DAC per metastore will lead
-				// to Terraform re-assigning default_data_access_config_id
-				// on every apply.
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["aws_iam_role"].AtLeastOneOf = alofCred
-			m["azure_service_principal"].AtLeastOneOf = alofCred
-			m["azure_managed_identity"].AtLeastOneOf = alofCred
-			m["gcp_service_account_key"].AtLeastOneOf = alofCred
-			m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
+var dacSchema = common.StructToSchema(DataAccessConfiguration{},
+	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["metastore_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		}
+		m["is_default"] = &schema.Schema{
+			// having more than one default DAC per metastore will lead
+			// to Terraform re-assigning default_data_access_config_id
+			// on every apply.
+			Type:     schema.TypeBool,
+			Optional: true,
+		}
+		m["aws_iam_role"].AtLeastOneOf = alofCred
+		m["azure_service_principal"].AtLeastOneOf = alofCred
+		m["azure_managed_identity"].AtLeastOneOf = alofCred
+		m["gcp_service_account_key"].AtLeastOneOf = alofCred
+		m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
 
-			// suppress changes for private_key
-			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
-			return m
-		})
-	p := common.NewPairID("metastore_id", "id")
+		// suppress changes for private_key
+		m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
+		return m
+	})
+
+func ResourceMetastoreDataAccess() *schema.Resource {
+	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
-		Schema: s,
+		Schema:        dacSchema,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    dacSchemaV0(),
+				Upgrade: dacMigrateV0,
+			},
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var dac DataAccessConfiguration
-			common.DataToStructPointer(d, s, &dac)
-			metastoreID := d.Get("metastore_id").(string)
-			if err := NewDataAccessConfigurationsAPI(ctx, c).Create(metastoreID, &dac); err != nil {
-				return err
-			}
-			d.Set("id", dac.ID)
-			p.Pack(d)
-			if d.Get("is_default").(bool) {
-				return NewMetastoresAPI(ctx, c).updateMetastore(metastoreID, map[string]any{
-					"default_data_access_config_id": dac.ID,
-				})
-			}
-			return nil
+			metastoreId := d.Get("metastore_id").(string)
+
+			tmpSchema := removeGcpSaField(dacSchema)
+			var create catalog.CreateStorageCredential
+			common.DataToStructPointer(d, tmpSchema, &create)
+
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				dac, err := acc.StorageCredentials.Create(ctx,
+					catalog.AccountsCreateStorageCredential{
+						MetastoreId:    metastoreId,
+						CredentialInfo: &create,
+					})
+				if err != nil {
+					return err
+				}
+				if d.Get("is_default").(bool) {
+					_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+						MetastoreId: metastoreId,
+						MetastoreInfo: &catalog.UpdateMetastore{
+							StorageRootCredentialId: dac.CredentialInfo.Id,
+						},
+					})
+					if err != nil {
+						return err
+					}
+				}
+				p.Pack(d)
+				return nil
+			}, func(w *databricks.WorkspaceClient) error {
+				dac, err := w.StorageCredentials.Create(ctx, create)
+				if err != nil {
+					return err
+				}
+				if d.Get("is_default").(bool) {
+					_, err = w.Metastores.Update(ctx, catalog.UpdateMetastore{
+						Id:                      metastoreId,
+						StorageRootCredentialId: dac.Id,
+					})
+				}
+				if err != nil {
+					return err
+				}
+				p.Pack(d)
+				return nil
+			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			metastoreID, dacID, err := p.Unpack(d)
+			metastoreId, dacName, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
-			dac, err := NewDataAccessConfigurationsAPI(ctx, c).Get(metastoreID, dacID)
-			if err != nil {
-				return err
-			}
-			metastore, err := NewMetastoresAPI(ctx, c).getMetastore(metastoreID)
-			if err != nil {
-				return err
-			}
-			isDefault := metastore.DefaultDacID == dacID
-			d.Set("is_default", isDefault)
-			return common.StructToData(dac, s, d)
+			var metastore *catalog.MetastoreInfo
+
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				var storageCredential *catalog.AccountsStorageCredentialInfo
+				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
+					MetastoreId: metastoreId,
+					Name:        dacName,
+				})
+				if err != nil {
+					return err
+				}
+				m, err := acc.Metastores.GetByMetastoreId(ctx, metastoreId)
+				metastore = m.MetastoreInfo
+				if err != nil {
+					return err
+				}
+				isDefault := metastore.StorageRootCredentialName == dacName
+				d.Set("is_default", isDefault)
+				return common.StructToData(storageCredential, dacSchema, d)
+			}, func(w *databricks.WorkspaceClient) error {
+				var storageCredential *catalog.StorageCredentialInfo
+				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacName)
+				if err != nil {
+					return err
+				}
+				m, err := w.Metastores.Summary(ctx)
+				if err != nil {
+					return err
+				}
+				isDefault := m.StorageRootCredentialName == dacName
+				d.Set("is_default", isDefault)
+				return common.StructToData(storageCredential, dacSchema, d)
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			metastoreID, dacID, err := p.Unpack(d)
+			metastoreId, dacName, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
-			return NewDataAccessConfigurationsAPI(ctx, c).Delete(metastoreID, dacID)
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
+					MetastoreId: metastoreId,
+					Name:        dacName,
+				})
+			}, func(w *databricks.WorkspaceClient) error {
+				return w.StorageCredentials.DeleteByName(ctx, dacName)
+			})
 		},
 	}.ToResource()
+}
+
+// migrate to v1 state, as the id is now changed
+func dacMigrateV0(ctx context.Context,
+	rawState map[string]any,
+	meta any) (map[string]any, error) {
+	newState := map[string]any{}
+	for k, v := range rawState {
+		switch k {
+		case "id":
+			log.Printf("[INFO] Upgrade id")
+			newState[k] = fmt.Sprintf("%v%s%v", rawState["metastore_id"], "|", rawState["name"])
+			continue
+		default:
+			newState[k] = v
+		}
+	}
+	return newState, nil
+}
+
+func dacSchemaV0() cty.Type {
+	return (&schema.Resource{
+		Schema: dacSchema}).CoreConfigSchema().ImpliedType()
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"sort"
@@ -37,7 +36,7 @@ import (
 
 // nolint
 func getJSONObject(filename string) any {
-	data, _ := ioutil.ReadFile(filename)
+	data, _ := os.ReadFile(filename)
 	var obj map[string]any
 	err := json.Unmarshal(data, &obj)
 	if err != nil {
@@ -48,7 +47,7 @@ func getJSONObject(filename string) any {
 }
 
 func getJSONArray(filename string) any {
-	data, _ := ioutil.ReadFile(filename)
+	data, _ := os.ReadFile(filename)
 	var obj []any
 	err := json.Unmarshal(data, &obj)
 	if err != nil {
@@ -627,14 +626,16 @@ func TestImportingClusters(t *testing.T) {
 				Response: jobs.JobListResponse{},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
-				Response: getJSONObject("test-data/clusters-list-response.json"),
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/list",
+				Response:     getJSONObject("test-data/clusters-list-response.json"),
+				ReuseRequest: true,
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=test1",
-				Response: getJSONObject("test-data/get-cluster-test1-response.json"),
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=test1",
+				Response:     getJSONObject("test-data/get-cluster-test1-response.json"),
+				ReuseRequest: true,
 			},
 			{
 				Method:   "POST",
@@ -642,9 +643,10 @@ func TestImportingClusters(t *testing.T) {
 				Response: clusters.EventDetails{},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test1",
-				Response: getJSONObject("test-data/libraries-cluster-status-test1.json"),
+				Method:       "GET",
+				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=test1",
+				Response:     getJSONObject("test-data/libraries-cluster-status-test1.json"),
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -736,6 +738,18 @@ func TestImportingClusters(t *testing.T) {
 				ReuseRequest: true,
 				Response:     scim.User{ID: "a", DisplayName: "test@test.com"},
 			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/instance-pools/get?instance_pool_id=pool1",
+				Response:     getJSONObject("test-data/get-instance-pool1.json"),
+				ReuseRequest: true,
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -811,8 +825,8 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/instance-pools/get?instance_pool_id=pool1",
-				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-instance-pool1.json"),
+				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
@@ -1071,7 +1085,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 									Commands:    []string{"dbt init"},
 								},
 								RunJobTask: &jobs.RunJobTask{
-									JobID: "14",
+									JobID: 14,
 								},
 							},
 							{
@@ -2030,8 +2044,9 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registry-webhooks/list?",
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/mlflow/registry-webhooks/list?",
 				Response: ml.ListRegistryWebhooks{
 					Webhooks: []ml.RegistryWebhook{
 						{
@@ -2055,5 +2070,157 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 
 			err := ic.Run()
 			assert.NoError(t, err)
+		})
+}
+
+func TestIncrementalErrors(t *testing.T) {
+	// Testing missing `-updated-since`
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			ic := newImportContext(client)
+			ic.services = "model-serving"
+			ic.incremental = true
+
+			err := ic.Run()
+			assert.ErrorContains(t, err, "-updated-since is required with -interactive parameter")
+		})
+	// Testing broken `-updated-since`
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			ic := newImportContext(client)
+			ic.services = "model-serving"
+			ic.incremental = true
+			ic.updatedSinceStr = "aaa"
+
+			err := ic.Run()
+			assert.ErrorContains(t, err, "can't parse value 'aaa' please specify it")
+		})
+}
+
+func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
+	webhooks := []ml.RegistryWebhook{
+		{
+			LastUpdatedTimestamp: 1681466931226,
+			Id:                   "abc",
+			HttpUrlSpec: &ml.HttpUrlSpecWithoutSecret{
+				Url: "https://....",
+			},
+		},
+		{
+			LastUpdatedTimestamp: 1690156900000,
+			Id:                   "def",
+			JobSpec: &ml.JobSpecWithoutSecret{
+				JobId: "123",
+			},
+		},
+	}
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registry-webhooks/list?",
+				Response: ml.ListRegistryWebhooks{
+					Webhooks: webhooks,
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registry-webhooks/list",
+				Response: ml.ListRegistryWebhooks{
+					Webhooks: webhooks,
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines?max_results=50",
+				Response: pipelines.PipelineListResponse{
+					Statuses: []pipelines.PipelineStateInfo{
+						{
+							PipelineID: "abc",
+							Name:       "abc",
+						},
+						{
+							PipelineID: "def",
+							Name:       "def",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abc",
+				Response: pipelines.PipelineInfo{
+					PipelineID:   "abc",
+					Name:         "abc",
+					LastModified: 1681466931226,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/def",
+				Response: pipelines.PipelineInfo{
+					PipelineID:   "def",
+					Name:         "def",
+					LastModified: 1690156900000,
+					Spec:         &pipelines.PipelineSpec{},
+				},
+				ReuseRequest: true,
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+			os.Mkdir(tmpDir, 0700)
+			os.WriteFile(tmpDir+"/import.sh", []byte(
+				`terraform import databricks_pipeline.abc "abc"
+terraform import databricks_pipeline.def "def"
+`), 0700)
+			os.WriteFile(tmpDir+"/dlt.tf", []byte(`resource "databricks_pipeline" "abc" {
+}
+			
+resource "databricks_pipeline" "def" {
+}
+`), 0700)
+			os.WriteFile(tmpDir+"/vars.tf", []byte(`variable "var1" {
+	description = ""
+}
+`), 0700)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "dlt,mlflow-webhooks"
+			ic.services = "dlt,mlflow-webhooks"
+			ic.incremental = true
+			ic.updatedSinceStr = "2023-07-24T00:00:00Z"
+			ic.meAdmin = false
+
+			err := ic.Run()
+			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/import.sh")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+
+			content, err = os.ReadFile(tmpDir + "/dlt.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_pipeline" "def"`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_pipeline" "abc"`))
+
+			content, err = os.ReadFile(tmpDir + "/vars.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `variable "var1"`))
+			assert.True(t, strings.Contains(contentStr, `variable "job_spec_webhook_def"`))
 		})
 }

@@ -72,6 +72,7 @@ The following arguments are required:
 ### object Configuration Block
 
 * `name` (Required) - Full name of the object, e.g. `catalog.schema.name` for a table.
+* `owner` - (Optional) User name/group name/sp application_id of the share owner.
 * `data_object_type` (Required) - Type of the object, currently only `TABLE` is allowed.
 * `comment` (Optional) -  Description about the object.
 * `shared_as` (Optional) - A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share. Change forces creation of a new resource.

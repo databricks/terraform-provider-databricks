@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -12,8 +13,8 @@ func TestSchemasData(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/schemas?catalog_name=a",
-				Response: Schemas{
-					Schemas: []SchemaInfo{
+				Response: catalog.ListSchemasResponse{
+					Schemas: []catalog.SchemaInfo{
 						{
 							Name: "a.c",
 						},

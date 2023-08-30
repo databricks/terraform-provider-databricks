@@ -2,6 +2,7 @@ package scim
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -23,6 +24,7 @@ func DataSourceGroup() *schema.Resource {
 		Groups            []string `json:"groups,omitempty" tf:"slice_set,computed"`
 		InstanceProfiles  []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
 		ExternalID        string   `json:"external_id,omitempty" tf:"computed"`
+		AclPrincipalID    string   `json:"acl_principal_id,omitempty" tf:"computed"`
 	}
 
 	s := common.StructToSchema(entity{}, func(
@@ -79,6 +81,7 @@ func DataSourceGroup() *schema.Resource {
 				}
 			}
 			this.ExternalID = group.ExternalID
+			this.AclPrincipalID = fmt.Sprintf("groups/%s", group.DisplayName)
 			sort.Strings(this.Groups)
 			sort.Strings(this.Members)
 			sort.Strings(this.Users)

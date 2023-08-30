@@ -81,6 +81,22 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	return acc, nil
 }
 
+func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
+	if c.Config.IsAccountClient() {
+		a, err := c.AccountClient()
+		if err != nil {
+			return err
+		}
+		return accCallback(a)
+	} else {
+		ws, err := c.WorkspaceClient()
+		if err != nil {
+			return err
+		}
+		return wsCallback(ws)
+	}
+}
+
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
 	return c.Do(ctx, http.MethodGet, path, request, response, c.addApiPrefix)

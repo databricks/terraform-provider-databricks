@@ -329,7 +329,11 @@ func TestVolumesUpdate(t *testing.T) {
 		},
 		Resource: ResourceVolume(),
 		Update:   true,
-		ID:       "testCatalogName.testSchemaName.testName",
+		InstanceState: map[string]string{
+			"catalog_name": "testCatalogName",
+			"schema_name":  "testSchemaName",
+		},
+		ID: "testCatalogName.testSchemaName.testName",
 		HCL: `
 		name = "testNameNew"
 		volume_type = "testVolumeType"

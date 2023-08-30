@@ -121,6 +121,7 @@ func TestUpdateSchema(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
 				Response: catalog.SchemaInfo{
 					Name:        "a",
+					CatalogName: "b",
 					MetastoreId: "d",
 					Comment:     "c",
 					Owner:       "administrators",

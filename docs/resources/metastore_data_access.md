@@ -78,4 +78,8 @@ The following arguments are required:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+This resource can be imported by combination of workspace id and metastore id:
+
+```bash
+terraform import databricks_metastore_data_access.this '<metastore_id>|<name>'
+```

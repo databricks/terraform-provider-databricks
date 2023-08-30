@@ -148,9 +148,9 @@ func TestResourceAwsS3MountGenericReadWithInvalidClusterId(t *testing.T) {
 			"name":       "this_mount",
 			"source":     testS3BucketPath,
 		},
-		ID:   "this_id_should_be_unset",
+		ID:      "this_id_should_be_unset",
 		Removed: true,
-		Read: true,
+		Read:    true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "", d.Id())
@@ -172,9 +172,9 @@ func TestResourceAwsS3MountGenericDeleteWithInvalidClusterId(t *testing.T) {
 			"name":       "this_mount",
 			"source":     testS3BucketPath,
 		},
-		ID:   "this_id_should_be_unset",
+		ID:      "this_id_should_be_unset",
 		Removed: true,
-		Delete: true,
+		Delete:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "", d.Id())

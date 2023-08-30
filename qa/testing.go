@@ -70,7 +70,7 @@ type HTTPFixture struct {
 // ResourceFixture is a helper to unit test terraform resources. It does this by
 // creating a mock Databricks server and client.
 type ResourceFixture struct {
-	// A list of HTTP fixtures representing requests are their corresponding
+	// A list of HTTP fixtures representing requests and their corresponding
 	// responses. These are loaded into the mock Databricks server.
 	Fixtures []HTTPFixture
 

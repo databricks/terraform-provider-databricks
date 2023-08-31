@@ -68,6 +68,59 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCatalogCreateWithForiegnCatalogDoesNotDeleteDefaultSchema(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/catalogs",
+				ExpectedRequest: catalog.CreateCatalog{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					ConnectionName: "g", // this indicates a foriegn catalog
+				},
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					MetastoreId: "e",
+					Owner:       "f",
+					ConnectionName: "g",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:    "a",
+					Comment: "b",
+					Properties: map[string]string{
+						"c": "d",
+					},
+					MetastoreId: "e",
+					Owner:       "f",
+					ConnectionName: "g",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		comment = "b"
+		properties = {
+			c = "d"
+		}
+		connection_name = "g"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

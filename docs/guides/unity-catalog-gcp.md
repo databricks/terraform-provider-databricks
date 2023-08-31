@@ -128,7 +128,7 @@ resource "google_storage_bucket_iam_member" "unity_sa_reader" {
 }
 
 resource "databricks_metastore_assignment" "this" {
-   provider            = databricks.accounts
+  provider             = databricks.accounts
   workspace_id         = var.databricks_workspace_id
   metastore_id         = databricks_metastore.this.id
   default_catalog_name = "hive_metastore"

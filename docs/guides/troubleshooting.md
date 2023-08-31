@@ -144,7 +144,7 @@ resource "databricks_grants" "catalog_grants" {
   catalog = databricks_catalog.catalog_raw.name
 
   dynamic "grant" {
-    for_each = local.groups    
+    for_each = local.groups
     content {
       principal  = grant.value
       privileges = ["ALL_PRIVILEGES"]

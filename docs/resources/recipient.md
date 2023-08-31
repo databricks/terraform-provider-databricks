@@ -91,7 +91,14 @@ Exactly one of the below arguments is required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `tokens` - List of Recipient Tokens.
+* `tokens` - List of Recipient Tokens. This field is only present when the authentication_type is TOKEN. Each list element is an object with following attributes:
+  * `id` - Unique ID of the recipient token.
+  * `created_at` - Time at which this recipient Token was created, in epoch milliseconds.
+  * `created_by` - Username of recipient token creator.
+  * `activation_url` - Full activation URL to retrieve the access token. It will be empty if the token is already retrieved.
+  * `expiration_time` - Expiration timestamp of the token in epoch milliseconds.
+  * `updated_at` - Time at which this recipient Token was updated, in epoch milliseconds.
+  * `updated_by` - Username of recipient Token updater.
 
 ## Related Resources
 

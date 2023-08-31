@@ -88,8 +88,8 @@ func TestCatalogCreateWithForiegnCatalogDoesNotDeleteDefaultSchema(t *testing.T)
 					Properties: map[string]string{
 						"c": "d",
 					},
-					MetastoreId: "e",
-					Owner:       "f",
+					MetastoreId:    "e",
+					Owner:          "f",
 					ConnectionName: "g",
 				},
 			},
@@ -102,8 +102,8 @@ func TestCatalogCreateWithForiegnCatalogDoesNotDeleteDefaultSchema(t *testing.T)
 					Properties: map[string]string{
 						"c": "d",
 					},
-					MetastoreId: "e",
-					Owner:       "f",
+					MetastoreId:    "e",
+					Owner:          "f",
 					ConnectionName: "g",
 				},
 			},

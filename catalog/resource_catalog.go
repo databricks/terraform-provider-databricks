@@ -64,7 +64,7 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// only remove catalog default schema for non-Delta Sharing catalog and non foriegn catalog
+			// only remove catalog default schema for standard catalog (e.g. non-Delta Sharing, non-foreign)
 			if ci.ShareName == "" && ci.ConnectionName == "" {
 				if err := w.Schemas.DeleteByFullName(ctx, ci.Name+".default"); err != nil {
 					return fmt.Errorf("cannot remove new catalog default schema: %w", err)

@@ -96,7 +96,7 @@ Example `encryption_details` specifying SSE_S3 encryption:
 ```hcl
 encryption_details {
   sse_encryption_details {
-    algorithm     = "AWS_SSE_S3"
+    algorithm = "AWS_SSE_S3"
   }
 }
 ```
@@ -106,7 +106,7 @@ Example `encryption_details` specifying SSE_KMS encryption with KMS key that has
 ```hcl
 encryption_details {
   sse_encryption_details {
-    algorithm     = "AWS_SSE_KMS"
+    algorithm       = "AWS_SSE_KMS"
     aws_kms_key_arn = "some_key_arn"
   }
 }

@@ -92,7 +92,7 @@ variable "cmek_resource_id" {
 resource "databricks_mws_customer_managed_keys" "managed_services" {
   account_id = var.databricks_account_id
   gcp_key_info {
-    kms_key_id   = var.cmek_resource_id
+    kms_key_id = var.cmek_resource_id
   }
   use_cases = ["MANAGED_SERVICES"]
 }
@@ -215,7 +215,7 @@ variable "cmek_resource_id" {
 resource "databricks_mws_customer_managed_keys" "storage" {
   account_id = var.databricks_account_id
   gcp_key_info {
-    kms_key_id   = var.cmek_resource_id
+    kms_key_id = var.cmek_resource_id
   }
   use_cases = ["STORAGE"]
 }

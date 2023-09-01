@@ -93,7 +93,7 @@ Most likely, `terraform init -upgrade -verify-plugins=false -lock=false` would b
 Make sure you have [`terrafmt`](https://github.com/katbyte/terrafmt) intalled to be able to run `make fmt-docs`
 
 ```bash
-go get github.com/katbyte/terrafmt
+go install github.com/katbyte/terrafmt@latest
 ```
 
 All documentation contributions should be as detailed as possible and follow the [required format](https://www.terraform.io/registry/providers/docs). The following additional checks must also be valid:

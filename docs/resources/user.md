@@ -47,14 +47,15 @@ resource "databricks_user" "me" {
 ```
 
 Creating user in AWS Databricks account:
+
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias      = "mws"
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = "00000000-0000-0000-0000-000000000000"
-  username   = var.databricks_account_username
-  password   = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = "00000000-0000-0000-0000-000000000000"
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 resource "databricks_user" "account_user" {
@@ -65,6 +66,7 @@ resource "databricks_user" "account_user" {
 ```
 
 Creating user in Azure Databricks account:
+
 ```hcl
 // initialize provider at Azure account-level
 provider "databricks" {
@@ -102,8 +104,8 @@ The following arguments are available:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the user.
-- `home` - Home folder of the user, e.g. `/Users/mr.foo@example.com`.
-- `repos` - Personal Repos location of the user, e.g. `/Repos/mr.foo@example.com`.
+* `home` - Home folder of the user, e.g. `/Users/mr.foo@example.com`.
+* `repos` - Personal Repos location of the user, e.g. `/Repos/mr.foo@example.com`.
 * `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `users/mr.foo@example.com`.
 
 ## Import
@@ -111,7 +113,7 @@ In addition to all arguments above, the following attributes are exported:
 The resource scim user can be imported using id:
 
 ```bash
-$ terraform import databricks_user.me <user-id>
+terraform import databricks_user.me <user-id>
 ```
 
 ## Related Resources

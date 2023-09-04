@@ -45,12 +45,19 @@ func (cb mountCallback) preProcess(r *schema.Resource) func(
 //
 // In cases of update requests this would lead to an attempted recreation of the
 // mount
-// In cases of delete, this could orphan the mount
+// In cases of delete, this could orphan the mount, ie that the mount still exists
+// but is not tracked by the terraform state.
 //
 // This is needed to resolve issue: https://github.com/databricks/terraform-provider-databricks/issues/1864
 // because without a running cluster we do not have a way to do CRUD on mounts.
 // The argument being that possibly orphaning mounts is a better experience than
 // requiring manual edits to tfstate.
+//
+// Why do we need a valid cluster_id to be set here? 
+// Answer: Downstream read and delete code relies on a valid cluster_id being set
+// in the terraform state. If the cluster_id is invalid then there is no way to update
+// it using native terraform apply workflows. The only workaround is to manually edit the
+// tfstate file replacing the existing invalid cluster_id with a new valid one.
 func validateCluster(cb func(context.Context, *schema.ResourceData, any) diag.Diagnostics) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		clusterId := d.Get("cluster_id").(string)

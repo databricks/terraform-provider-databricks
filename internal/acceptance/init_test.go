@@ -85,13 +85,13 @@ func unityAccountLevel(t *testing.T, steps ...step) {
 
 // A step in a terraform acceptance test
 type step struct {
-	// Terraform HCL for resources to materialize in this test step. 
+	// Terraform HCL for resources to materialize in this test step.
 	Template string
 	Callback func(ctx context.Context, client *common.DatabricksClient, id string) error
 
 	// This function is called after the template is applied. Useful for making assertions
-	// or doing cleanup. 
-	Check    func(*terraform.State) error
+	// or doing cleanup.
+	Check func(*terraform.State) error
 
 	// Setup function called before the template is materialized.
 	PreConfig func()
@@ -157,7 +157,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 	return commands.TrimLeadingWhitespace(template)
 }
 
-// Test wrapper over terraform testing framework. Multiple steps share the same 
+// Test wrapper over terraform testing framework. Multiple steps share the same
 // terraform state context.
 func run(t *testing.T, steps []step) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
@@ -216,7 +216,7 @@ func run(t *testing.T, steps []step) {
 				// get configured client from provider
 				client := provider.Meta().(*common.DatabricksClient)
 
-				// Default check for all runs. Asserts that read call succeeds.
+				// Default check for all runs. Asserts that the read operation succeeds.
 				for n, is := range state.RootModule().Resources {
 					p := strings.Split(n, ".")
 

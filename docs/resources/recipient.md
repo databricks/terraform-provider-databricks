@@ -67,13 +67,14 @@ The following arguments are required:
 * `name` - Name of recipient. Change forces creation of a new resource.
 * `comment` - (Optional) Description about the recipient.
 * `sharing_code` - (Optional) The one-time sharing code provided by the data recipient.
+* `owner` - (Optional) Username/groupname/sp application_id of the recipient owner.
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN` and `DATABRICKS`.
 * `data_recipient_global_metastore_id` - Required when authentication_type is DATABRICKS.
 * `ip_access_list` - (Optional) The one-time sharing code provided by the data recipient.
 
 ### Ip Access List Argument
 
-Only one `ip_access_list` blocks is allowed in a recipient. It conflicts with authentication type DATABRICKS.
+Only one `ip_access_list` blocks is allowed in a recipient. It conflicts with authentication type `DATABRICKS`.
 
 ```hcl
 ip_access_list {

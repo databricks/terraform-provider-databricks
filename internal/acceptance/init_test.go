@@ -85,6 +85,7 @@ func unityAccountLevel(t *testing.T, steps ...step) {
 
 type step struct {
 	Template string
+	// TODO: remove this function. Unnecessary code.
 	Callback func(ctx context.Context, client *common.DatabricksClient, id string) error
 	Check    func(*terraform.State) error
 
@@ -171,14 +172,8 @@ func run(t *testing.T, steps []step) {
 	}
 	ts := []resource.TestStep{}
 	ctx := context.Background()
-	type testResource struct {
-		ID       string
-		Name     string
-		Resource *schema.Resource
-	}
 
 	resourceAndName := regexp.MustCompile(`resource\s+"([^"]*)"\s+"([^"]*)"`)
-	resourcesEverCreated := map[testResource]bool{}
 	stepConfig := ""
 	for i, s := range steps {
 		if s.Template != "" {
@@ -208,20 +203,17 @@ func run(t *testing.T, steps []step) {
 			Check: func(state *terraform.State) error {
 				// get configured client from provider
 				client := provider.Meta().(*common.DatabricksClient)
+
+				// Default check for all runs. Asserts that read call succeeds.
 				for n, is := range state.RootModule().Resources {
 					p := strings.Split(n, ".")
+					
+					// Skip data resources.
 					if p[0] == "data" {
 						continue
 					}
 					r := provider.ResourcesMap[p[0]]
-					resourcesEverCreated[testResource{
-						ID:       is.Primary.ID,
-						Name:     p[1],
-						Resource: r,
-					}] = true
-					dia := r.ReadContext(ctx, r.Data(&terraform.InstanceState{
-						ID: is.Primary.ID,
-					}), client)
+					dia := r.ReadContext(ctx, r.Data(is.Primary), client)
 					if dia != nil {
 						return fmt.Errorf("%v", dia)
 					}
@@ -233,6 +225,8 @@ func run(t *testing.T, steps []step) {
 					id := res.Primary.ID
 					return stepCallback(ctx, client, id)
 				}
+
+				// Run additional user defined checks on the state.
 				if stepCheck != nil {
 					return stepCheck(state)
 				}

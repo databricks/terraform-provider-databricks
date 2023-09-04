@@ -83,11 +83,18 @@ func unityAccountLevel(t *testing.T, steps ...step) {
 	run(t, steps)
 }
 
+// A step in a terraform acceptance test
 type step struct {
+	// Terraform HCL for resources to materialize in this test step. 
 	Template string
-	// TODO: remove this function. Unnecessary code.
 	Callback func(ctx context.Context, client *common.DatabricksClient, id string) error
+
+	// This function is called after the template is applied. Useful for making assertions
+	// or doing cleanup. 
 	Check    func(*terraform.State) error
+
+	// Setup function called before the template is materialized.
+	PreConfig func()
 
 	Destroy                   bool
 	ExpectNonEmptyPlan        bool
@@ -150,7 +157,8 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 	return commands.TrimLeadingWhitespace(template)
 }
 
-// Test wrapper over terraform testing framework
+// Test wrapper over terraform testing framework. Multiple steps share the same 
+// terraform state context.
 func run(t *testing.T, steps []step) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
@@ -191,6 +199,10 @@ func run(t *testing.T, steps []step) {
 				logger.Infof(ctx, "Test %s (%s) step %d config is:\n%s",
 					t.Name(), cloudEnv, stepNum,
 					commands.TrimLeadingWhitespace(stepConfig))
+
+				if s.PreConfig != nil {
+					s.PreConfig()
+				}
 			},
 			Config:                    stepConfig,
 			Destroy:                   s.Destroy,
@@ -207,7 +219,7 @@ func run(t *testing.T, steps []step) {
 				// Default check for all runs. Asserts that read call succeeds.
 				for n, is := range state.RootModule().Resources {
 					p := strings.Split(n, ".")
-					
+
 					// Skip data resources.
 					if p[0] == "data" {
 						continue

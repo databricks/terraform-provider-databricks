@@ -53,7 +53,7 @@ func (cb mountCallback) preProcess(r *schema.Resource) func(
 // The argument being that possibly orphaning mounts is a better experience than
 // requiring manual edits to tfstate.
 //
-// Why do we need a valid cluster_id to be set here? 
+// Why do we need a valid cluster_id to be set here?
 // Answer: Downstream read and delete code relies on a valid cluster_id being set
 // in the terraform state. If the cluster_id is invalid then there is no way to update
 // it using native terraform apply workflows. The only workaround is to manually edit the

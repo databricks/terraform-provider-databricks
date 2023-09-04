@@ -31,27 +31,29 @@ resource "databricks_group_member" "rs" {
 func TestMwsAccGroupMemberResource(t *testing.T) {
 	accountLevel(t, step{
 		Template: groupMemberTest,
-		Callback: func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			g, err := scim.NewGroupsAPI(ctx, client).Read(id, "members")
-			if err != nil {
-				return err
-			}
-			assert.Len(t, g.Members, 2)
-			return nil
-		},
+		Check: resourceCheck("databricks_group.root",
+			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+				g, err := scim.NewGroupsAPI(ctx, client).Read(id, "members")
+				if err != nil {
+					return err
+				}
+				assert.Len(t, g.Members, 2)
+				return nil
+			}),
 	})
 }
 
 func TestAccGroupMemberResource(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: groupMemberTest,
-		Callback: func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			g, err := scim.NewGroupsAPI(ctx, client).Read(id, "members")
-			if err != nil {
-				return err
-			}
-			assert.Len(t, g.Members, 2)
-			return nil
-		},
+		Check: resourceCheck("databricks_group.root",
+			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+				g, err := scim.NewGroupsAPI(ctx, client).Read(id, "members")
+				if err != nil {
+					return err
+				}
+				assert.Len(t, g.Members, 2)
+				return nil
+			}),
 	})
 }

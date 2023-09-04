@@ -191,6 +191,7 @@ func run(t *testing.T, steps []step) {
 		thisStep := s
 		stepCallback := thisStep.Callback
 		stepCheck := thisStep.Check
+		stepPreConfig := s.PreConfig
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
 				if stepConfig == "" {
@@ -201,7 +202,7 @@ func run(t *testing.T, steps []step) {
 					commands.TrimLeadingWhitespace(stepConfig))
 
 				if s.PreConfig != nil {
-					s.PreConfig()
+					stepPreConfig()
 				}
 			},
 			Config:                    stepConfig,

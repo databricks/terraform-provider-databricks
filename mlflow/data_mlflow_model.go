@@ -10,31 +10,25 @@ import (
 
 func DataSourceModel() *schema.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
-		Name         string            `json:"name"`
-		Version      string            `json:"version,omitempty"`
-		ModelVersion []ml.ModelVersion `json:"model_versions,omitempty" tf:"computed"`
+		Name            string             `json:"name"`
+		UserId          string             `json:"user_id,omitempty" tf:"computed"`
+		Description     string             `json:"description,omitempty" tf:"computed"`
+		LatestVersions  []ml.ModelVersion  `json:"latest_versions,omitempty" tf:"computed"`
+		Id              string             `json:"id" tf:"computed"`
+		PermissionLevel ml.PermissionLevel `json:"permission_level,omitempty" tf:"computed"`
+		Tags            []ml.ModelTag      `json:"tags,omitempty" tf:"computed"`
 	}, w *databricks.WorkspaceClient) error {
-		var model []ml.ModelVersion
-
-		// Get latest version models for each requests stage if no version is specified.
-		if data.Version == "" {
-			latestVersion, err := w.ModelRegistry.GetLatestVersionsAll(ctx, ml.GetLatestVersionsRequest{Name: data.Name})
-			if err != nil {
-				return err
-			}
-			model = latestVersion
-		} else {
-			modelResponse, err := w.ModelRegistry.GetModelVersion(ctx, ml.GetModelVersionRequest{
-				Name:    data.Name,
-				Version: data.Version,
-			})
-			if err != nil {
-				return err
-			}
-			model = append(model, *modelResponse.ModelVersion)
+		getModel, err := w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: data.Name})
+		if err != nil {
+			return err
 		}
-
-		data.ModelVersion = model
+		model := getModel.RegisteredModelDatabricks
+		data.UserId = model.UserId
+		data.Description = model.Description
+		data.LatestVersions = model.LatestVersions
+		data.Id = model.Id
+		data.PermissionLevel = model.PermissionLevel
+		data.Tags = model.Tags
 		return nil
 	})
 }

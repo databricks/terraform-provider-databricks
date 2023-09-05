@@ -10,17 +10,6 @@ Retrieves the settings of [databricks_mlflow_model](../resources/mlflow_model.md
 ## Example Usage
 
 ```hcl
-data "databricks_mlflow_model" "this" {
-  name = "My MLflow Model"
-}
-
-data "databricks_mlflow_model" "this" {
-  name = "My MLflow Model"
-  version = "1"
-}
-```
-
-```hcl
 resource "databricks_mlflow_model" "this" {
   name = "My MLflow Model"
 
@@ -49,12 +38,16 @@ output "model" {
 ## Argument Reference
 
 * `name` - (Required) Name of the registered model.
-* `version` - (Optional) Model version number.
 
 ## Attribute Reference
 
 This data source exports the following attributes:
 
-* `name` - Name of the registered model.
-* `version` - Model version number.
-* `model_versions` - Array of all model versions.
+* `model` - Model object
+    * `description` - User-specified description for the object.
+    * `id` - Unique identifier for the object.
+    * `latest_versions` - Array of model versions, each the latest version for its stage.
+    * `name` - Name of the model.
+    * `permission_level` - Permission level of the requesting user on the object. For what is allowed at each level, see MLflow Model permissions.
+    * `tags` - Array of tags associated with the model.
+    * `user_id` - The username of the user that created the object.

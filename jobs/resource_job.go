@@ -292,7 +292,7 @@ type JobSettings struct {
 	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string             `json:"tags,omitempty"`
 	Queue                *Queue                        `json:"queue,omitempty"`
-	RunAs                *JobRunAs                     `json:"run_as,omitempty"`
+	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"suppress_diff"`
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 }

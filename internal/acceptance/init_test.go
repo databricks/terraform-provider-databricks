@@ -201,7 +201,7 @@ func run(t *testing.T, steps []step) {
 					t.Name(), cloudEnv, stepNum,
 					commands.TrimLeadingWhitespace(stepConfig))
 
-				if s.PreConfig != nil {
+				if stepPreConfig != nil {
 					stepPreConfig()
 				}
 			},

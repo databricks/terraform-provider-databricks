@@ -4,8 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"io"
-	"strings"
+	"os"
 
 	"github.com/databricks/databricks-sdk-go/service/files"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -13,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// look at resource_workspace_file.go for ref, we aren't yet going to use modification time to be consistent with other file resources
+// Reference: resource_workspace_file.go
 func ResourceFiles() *schema.Resource {
 	s := workspace.FileContentSchema(map[string]*schema.Schema{
 		"modification_time": {
@@ -26,6 +25,7 @@ func ResourceFiles() *schema.Resource {
 		},
 	})
 	return common.Resource{
+		Schema: s,
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -33,9 +33,12 @@ func ResourceFiles() *schema.Resource {
 			}
 			path := data.Get("path").(string)
 			source := data.Get("source").(string)
-			reader := io.Reader(strings.NewReader(source))
+			reader, err := os.Open(source)
+			if err != nil {
+				return err
+			}
 
-			err = w.Files.Upload(ctx, files.UploadRequest{Contents: io.NopCloser(reader), FilePath: path})
+			err = w.Files.Upload(ctx, files.UploadRequest{Contents: reader, FilePath: path})
 			if err != nil {
 				return err
 			}
@@ -50,27 +53,22 @@ func ResourceFiles() *schema.Resource {
 			}
 
 			path := data.Get("path").(string)
-			reader, err := w.Files.Download(ctx, files.DownloadRequest{FilePath: path})
-			if err != nil {
-				return err
-			}
-
 			fileInfo, err := w.Files.GetStatus(ctx, files.GetStatusRequest{Path: path})
 			if err != nil {
 				return err
 			}
-
 			data.Set("modification_time", fileInfo.ModificationTime)
+			data.Set("file_size", fileInfo.FileSize)
 
-			source := data.Get("source").(string)
-			content, err := w.Files.Download(ctx, files.DownloadRequest{FilePath: path})
+			downloadResponse, err := w.Files.Download(ctx, files.DownloadRequest{FilePath: path})
 			if err != nil {
 				return err
 			}
-			data.Set("md5", fmt.Sprintf("%x", md5.Sum(content)))
 
-			reader.Read([]byte(source))
-			return nil
+			// TODO
+			dataBytes := []byte
+			data.Set("md5", fmt.Sprintf("%x", md5.Sum(dataBytes)))
+			return common.StructToData(fileInfo, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -78,7 +76,13 @@ func ResourceFiles() *schema.Resource {
 				return err
 			}
 			path := data.Get("path").(string)
-			err = w.Files.Upload(ctx, files.UploadRequest{Contents: io.ReadCloser, FilePath: path})
+			source := data.Get("source").(string)
+			reader, err := os.Open(source)
+			if err != nil {
+				return err
+			}
+			err = w.Files.Upload(ctx, files.UploadRequest{Contents: reader, FilePath: path})
+			return err
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -86,9 +90,8 @@ func ResourceFiles() *schema.Resource {
 				return err
 			}
 			path := data.Get("path").(string)
-			err = w.Files.Delete(ctx, path)
+			err = w.Files.Delete(ctx, files.DeleteFileRequest{FilePath: path})
 			return err
 		},
-		Schema: s,
 	}.ToResource()
 }

@@ -3,11 +3,19 @@ package catalog
 import (
 	"context"
 
-	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+type RecipientsAPI struct {
+	client  *common.DatabricksClient
+	context context.Context
+}
+
+func NewRecipientsAPI(ctx context.Context, m any) RecipientsAPI {
+	return RecipientsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
+}
 
 type Token struct {
 	Id             string `json:"id,omitempty" tf:"computed"`
@@ -29,9 +37,31 @@ type RecipientInfo struct {
 	SharingCode                    string        `json:"sharing_code,omitempty" tf:"sensitive,force_new,suppress_diff"`
 	AuthenticationType             string        `json:"authentication_type" tf:"force_new"`
 	Tokens                         []Token       `json:"tokens,omitempty" tf:"computed"`
-	Owner                          string        `json:"owner,omitempty" tf:"suppress_diff"`
 	DataRecipientGlobalMetastoreId string        `json:"data_recipient_global_metastore_id,omitempty" tf:"force_new,conflicts:ip_access_list"`
 	IpAccessList                   *IpAccessList `json:"ip_access_list,omitempty"`
+}
+
+type Recipients struct {
+	Recipients []RecipientInfo `json:"recipients"`
+}
+
+func (a RecipientsAPI) createRecipient(ci *RecipientInfo) error {
+	return a.client.Post(a.context, "/unity-catalog/recipients", ci, ci)
+}
+
+func (a RecipientsAPI) getRecipient(name string) (ci RecipientInfo, err error) {
+	err = a.client.Get(a.context, "/unity-catalog/recipients/"+name, nil, &ci)
+	return
+}
+
+func (a RecipientsAPI) deleteRecipient(name string) error {
+	return a.client.Delete(a.context, "/unity-catalog/recipients/"+name, nil)
+}
+
+func (a RecipientsAPI) updateRecipient(ci *RecipientInfo) error {
+	patch := map[string]any{"comment": ci.Comment, "ip_access_list": ci.IpAccessList}
+
+	return a.client.Patch(a.context, "/unity-catalog/recipients/"+ci.Name, patch)
 }
 
 func ResourceRecipient() *schema.Resource {
@@ -42,45 +72,28 @@ func ResourceRecipient() *schema.Resource {
 	return common.Resource{
 		Schema: recipientSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			var createRecipientRequest sharing.CreateRecipient
-			common.DataToStructPointer(d, recipientSchema, &createRecipientRequest)
-			ri, err := w.Recipients.Create(ctx, createRecipientRequest)
-			if err != nil {
+			var ri RecipientInfo
+			common.DataToStructPointer(d, recipientSchema, &ri)
+			if err := NewRecipientsAPI(ctx, c).createRecipient(&ri); err != nil {
 				return err
 			}
 			d.SetId(ri.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ri, err := w.Recipients.GetByName(ctx, d.Id())
+			ri, err := NewRecipientsAPI(ctx, c).getRecipient(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ri, recipientSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			var updateRecipientRequest sharing.UpdateRecipient
-			common.DataToStructPointer(d, recipientSchema, &updateRecipientRequest)
-			return w.Recipients.Update(ctx, updateRecipientRequest)
+			var ri RecipientInfo
+			common.DataToStructPointer(d, recipientSchema, &ri)
+			return NewRecipientsAPI(ctx, c).updateRecipient(&ri)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			return w.Recipients.DeleteByName(ctx, d.Id())
+			return NewRecipientsAPI(ctx, c).deleteRecipient(d.Id())
 		},
 	}.ToResource()
 }

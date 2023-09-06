@@ -825,6 +825,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						},
 						{
 							UserName:        TestingAdminUser,
+							PermissionLevel: "IS_OWNER",
+						},
+						{
+							UserName:        TestingAdminUser,
 							PermissionLevel: "CAN_MANAGE",
 						},
 					},
@@ -844,6 +848,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						{
 							UserName:        TestingAdminUser,
 							PermissionLevel: "CAN_MANAGE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "IS_OWNER",
 						},
 					},
 				},

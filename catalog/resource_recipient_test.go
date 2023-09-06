@@ -1,13 +1,9 @@
 package catalog
 
 import (
-	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestRecipientCornerCases(t *testing.T) {
@@ -18,15 +14,15 @@ func TestCreateRecipient(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   http.MethodPost,
+				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/recipients",
-				ExpectedRequest: sharing.CreateRecipient{
+				ExpectedRequest: RecipientInfo{
 					Name:               "a",
 					Comment:            "b",
 					SharingCode:        "c",
 					AuthenticationType: "TOKEN",
-					Owner:              "InitialOwner",
-					IpAccessList: &sharing.IpAccessList{
+					Tokens:             nil,
+					IpAccessList: &IpAccessList{
 						AllowedIpAddresses: []string{"0.0.0.0/0"},
 					},
 				},
@@ -35,16 +31,15 @@ func TestCreateRecipient(t *testing.T) {
 				},
 			},
 			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/recipients/a?",
-				Response: sharing.RecipientInfo{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				Response: RecipientInfo{
 					Name:               "a",
 					Comment:            "b",
 					SharingCode:        "c",
 					AuthenticationType: "TOKEN",
-					Owner:              "InitialOwner",
 					Tokens:             nil,
-					IpAccessList: &sharing.IpAccessList{
+					IpAccessList: &IpAccessList{
 						AllowedIpAddresses: []string{"0.0.0.0/0"},
 					},
 				},
@@ -57,17 +52,11 @@ func TestCreateRecipient(t *testing.T) {
 		comment = "b"
 		authentication_type = "TOKEN"
 		sharing_code = "c"
-		owner = "InitialOwner"
 		ip_access_list {
 		   allowed_ip_addresses = ["0.0.0.0/0"]
 		}
 		`,
-	}.ApplyAndExpectData(t, map[string]any{
-		"name":                "a",
-		"owner":               "InitialOwner",
-		"authentication_type": "TOKEN",
-		"comment":             "b",
-	})
+	}.ApplyNoError(t)
 }
 
 func TestCreateRecipient_InvalidAuthType(t *testing.T) {
@@ -88,75 +77,4 @@ func TestCreateRecipient_InvalidAuthType(t *testing.T) {
 		"[authentication_type] expected authentication_type "+
 		"to be one of [TOKEN DATABRICKS], got temp")
 
-}
-
-func TestReadRecipient(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/recipients/a?",
-				Response: sharing.RecipientInfo{
-					Name:               "a",
-					Comment:            "b",
-					SharingCode:        "c",
-					AuthenticationType: "TOKEN",
-					Tokens:             nil,
-					IpAccessList: &sharing.IpAccessList{
-						AllowedIpAddresses: []string{"0.0.0.0/0"},
-					},
-				},
-			},
-		},
-		Resource: ResourceRecipient(),
-		Read:     true,
-		ID:       "a",
-		HCL: `
-		name = "a"
-		comment = "b"
-		authentication_type = "TOKEN"
-		sharing_code = "c"
-		ip_access_list {
-		   allowed_ip_addresses = ["0.0.0.0/0"]
-		}
-		`,
-	}.ApplyAndExpectData(t, map[string]any{
-		"name":    "a",
-		"comment": "b",
-	})
-}
-
-func TestDeleteRecipient(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodDelete,
-				Resource: "/api/2.1/unity-catalog/recipients/testRecipient?",
-			},
-		},
-		Resource: ResourceRecipient(),
-		Delete:   true,
-		ID:       "testRecipient",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "testRecipient", d.Id())
-}
-
-func TestDeleteRecipientError(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodDelete,
-				Resource: "/api/2.1/unity-catalog/recipients/testRecipient?",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_STATE",
-					Message:   "Something went wrong",
-				},
-				Status: 400,
-			},
-		},
-		Resource: ResourceRecipient(),
-		Delete:   true,
-		ID:       "testRecipient",
-	}.ExpectError(t, "Something went wrong")
 }

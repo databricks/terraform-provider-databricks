@@ -87,6 +87,9 @@ func TestResourceJobCreate(t *testing.T) {
 							PauseStatus:          "PAUSED",
 						},
 						Queue: &Queue{},
+						RunAs: &JobRunAs{
+							UserName: "user@mail.com",
+						},
 					},
 				},
 			},

@@ -28,8 +28,8 @@ Bucket policy with full access:
 
 ```hcl
 resource "aws_s3_bucket" "ds" {
-  bucket = "${var.prefix}-ds"
-  acl    = "private"
+  bucket        = "${var.prefix}-ds"
+  acl           = "private"
   force_destroy = true
   tags = merge(var.tags, {
     Name = "${var.prefix}-ds"

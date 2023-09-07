@@ -136,8 +136,8 @@ The first step is to create the required AWS objects:
 
 ```hcl
 resource "aws_s3_bucket" "metastore" {
-  bucket = "${local.prefix}-metastore"
-  acl    = "private"
+  bucket        = "${local.prefix}-metastore"
+  acl           = "private"
   force_destroy = true
   tags = merge(local.tags, {
     Name = "${local.prefix}-metastore"

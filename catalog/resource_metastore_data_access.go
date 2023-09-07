@@ -16,16 +16,6 @@ type AwsIamRole struct {
 	RoleARN string `json:"role_arn"`
 }
 
-type AzureServicePrincipal struct {
-	DirectoryID   string `json:"directory_id"`
-	ApplicationID string `json:"application_id"`
-	ClientSecret  string `json:"client_secret" tf:"sensitive"`
-}
-
-type AzureManagedIdentity struct {
-	AccessConnectorID string `json:"access_connector_id"`
-}
-
 type GcpServiceAccountKey struct {
 	Email        string `json:"email"`
 	PrivateKeyId string `json:"private_key_id"`
@@ -37,21 +27,38 @@ type DbGcpServiceAccount struct {
 }
 
 type DataAccessConfiguration struct {
-	ID                string                 `json:"id,omitempty" tf:"computed"`
-	Name              string                 `json:"name"`
-	ConfigurationType string                 `json:"configuration_type,omitempty" tf:"computed"`
-	Aws               *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
-	Azure             *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI              *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
-	GcpSAKey          *GcpServiceAccountKey  `json:"gcp_service_account_key,omitempty" tf:"group:access"`
-	DBGcpSA           *DbGcpServiceAccount   `json:"databricks_gcp_service_account,omitempty" tf:"group:access"`
+	ID                string                         `json:"id,omitempty" tf:"computed"`
+	Name              string                         `json:"name"`
+	ConfigurationType string                         `json:"configuration_type,omitempty" tf:"computed"`
+	Aws               *AwsIamRole                    `json:"aws_iam_role,omitempty" tf:"group:access"`
+	Azure             *catalog.AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
+	AzMI              *catalog.AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
+	GcpSAKey          *GcpServiceAccountKey          `json:"gcp_service_account_key,omitempty" tf:"group:access"`
+	DBGcpSA           *DbGcpServiceAccount           `json:"databricks_gcp_service_account,omitempty" tf:"group:access"`
 }
 
-var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity", "gcp_service_account_key", "databricks_gcp_service_account"}
+var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity",
+	"gcp_service_account_key", "databricks_gcp_service_account"}
 
 func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
 	//ignore changes in private_key
 	return !d.HasChanges("gcp_service_account_key.0.email", "gcp_service_account_key.0.private_key_id")
+}
+
+// it's used by both ResourceMetastoreDataAccess & ResourceStorageCredential
+func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
+	m["aws_iam_role"].AtLeastOneOf = alofCred
+	m["azure_service_principal"].AtLeastOneOf = alofCred
+	m["azure_managed_identity"].AtLeastOneOf = alofCred
+	m["gcp_service_account_key"].AtLeastOneOf = alofCred
+	m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
+
+	// suppress changes for private_key
+	m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
+
+	common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
+
+	return m
 }
 
 var dacSchema = common.StructToSchema(DataAccessConfiguration{},
@@ -67,15 +74,8 @@ var dacSchema = common.StructToSchema(DataAccessConfiguration{},
 			Type:     schema.TypeBool,
 			Optional: true,
 		}
-		m["aws_iam_role"].AtLeastOneOf = alofCred
-		m["azure_service_principal"].AtLeastOneOf = alofCred
-		m["azure_managed_identity"].AtLeastOneOf = alofCred
-		m["gcp_service_account_key"].AtLeastOneOf = alofCred
-		m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
 
-		// suppress changes for private_key
-		m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
-		return m
+		return adjustDataAccessSchema(m)
 	})
 
 func ResourceMetastoreDataAccess() *schema.Resource {

@@ -10,16 +10,16 @@ import (
 )
 
 type StorageCredentialInfo struct {
-	Name        string                 `json:"name" tf:"force_new"`
-	Owner       string                 `json:"owner,omitempty" tf:"computed"`
-	Comment     string                 `json:"comment,omitempty"`
-	Aws         *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
-	Azure       *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI        *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
-	GcpSAKey    *GcpServiceAccountKey  `json:"gcp_service_account_key,omitempty" tf:"group:access"`
-	DBGcpSA     *DbGcpServiceAccount   `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
-	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
-	ReadOnly    bool                   `json:"read_only,omitempty"`
+	Name        string                         `json:"name" tf:"force_new"`
+	Owner       string                         `json:"owner,omitempty" tf:"computed"`
+	Comment     string                         `json:"comment,omitempty"`
+	Aws         *AwsIamRole                    `json:"aws_iam_role,omitempty" tf:"group:access"`
+	Azure       *catalog.AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
+	AzMI        *catalog.AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
+	GcpSAKey    *GcpServiceAccountKey          `json:"gcp_service_account_key,omitempty" tf:"group:access"`
+	DBGcpSA     *DbGcpServiceAccount           `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
+	MetastoreID string                         `json:"metastore_id,omitempty" tf:"computed"`
+	ReadOnly    bool                           `json:"read_only,omitempty"`
 }
 
 func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {
@@ -39,16 +39,7 @@ func ResourceStorageCredential() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
-			m["aws_iam_role"].AtLeastOneOf = alofCred
-			m["azure_service_principal"].AtLeastOneOf = alofCred
-			m["azure_managed_identity"].AtLeastOneOf = alofCred
-			m["gcp_service_account_key"].AtLeastOneOf = alofCred
-			m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
-
-			// suppress changes for private_key
-			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
-
-			return m
+			return adjustDataAccessSchema(m)
 		})
 	return common.Resource{
 		Schema: s,

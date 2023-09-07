@@ -324,7 +324,7 @@ func TestForceDeleteCatalog(t *testing.T) {
 			},
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/catalogs/b",
+				Resource: "/api/2.1/unity-catalog/catalogs/b?force=true",
 			},
 		},
 		Resource: ResourceCatalog(),

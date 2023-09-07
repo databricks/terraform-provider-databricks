@@ -1,5 +1,35 @@
 # Version changelog
 
+## 1.25.0
+
+ * Add `IS_OWNER` permission for SQL Warehouse 
+([#2600](https://github.com/databricks/terraform-provider-databricks/pull/2600)).
+ * Add doc strings for ResourceFixtures 
+([#2633](https://github.com/databricks/terraform-provider-databricks/pull/2633)).
+ * Bump github.com/hashicorp/hcl/v2 from 2.17.0 to 2.18.0 
+([#2636](https://github.com/databricks/terraform-provider-databricks/pull/2636)).
+ * Detect run_as drift in job resource 
+([#2626](https://github.com/databricks/terraform-provider-databricks/pull/2626)).
+ * Refactor 
+[databricks_recipient](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/recipient) 
+to Go SDK 
+([#2592](https://github.com/databricks/terraform-provider-databricks/pull/2592)).
+ * Remove callback field from acceptance test framework 
+([#2649](https://github.com/databricks/terraform-provider-databricks/pull/2649)).
+ * Revert "Refactor 
+[databricks_recipient](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/recipient) 
+to Go SDK 
+([#2592](https://github.com/databricks/terraform-provider-databricks/pull/2592))" 
+([#2655](https://github.com/databricks/terraform-provider-databricks/pull/2655)).
+ * Update docs for marketplace admin role 
+([#2638](https://github.com/databricks/terraform-provider-databricks/pull/2638)).
+ * fix: do not attempt to delete default schema for foriegn catalogs 
+([#2622](https://github.com/databricks/terraform-provider-databricks/pull/2622)).
+ * terrafmt; updated share and share recipient docs 
+([#2641](https://github.com/databricks/terraform-provider-databricks/pull/2641)).
+ * update documentation 
+([#2644](https://github.com/databricks/terraform-provider-databricks/pull/2644)).
+
 ## 1.24.1
 
  * Fixed verification of workspace reachability by using scim/me which is always available  ([#2618](https://github.com/databricks/terraform-provider-databricks/pull/2618)).

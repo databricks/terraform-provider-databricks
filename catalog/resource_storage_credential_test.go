@@ -221,8 +221,8 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: StorageCredentialInfo{
 					Name: "a",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "def",
+					AzMI: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "def",
 					},
 					Comment: "c",
 				},
@@ -235,8 +235,8 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: StorageCredentialInfo{
 					Name: "a",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "def",
+					AzMI: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "def",
 					},
 					Comment: "c",
 				},
@@ -277,9 +277,9 @@ func TestUpdateAzStorageCredentials(t *testing.T) {
 				ExpectedRequest: StorageCredentialInfo{
 					Name:    "a",
 					Comment: "c",
-					Azure: &AzureServicePrincipal{
-						DirectoryID:   "CHANGED",
-						ApplicationID: "CHANGED",
+					Azure: &catalog.AzureServicePrincipal{
+						DirectoryId:   "CHANGED",
+						ApplicationId: "CHANGED",
 						ClientSecret:  "CHANGED",
 					},
 				},
@@ -379,8 +379,8 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 				ExpectedRequest: StorageCredentialInfo{
 					Name:    "a",
 					Comment: "c",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "CHANGED",
+					AzMI: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "CHANGED",
 					},
 				},
 			},

@@ -74,8 +74,9 @@ func TestCreateDacWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: DataAccessConfiguration{
 					Name: "bcd",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "def",
+					AzMI: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "def",
+						ManagedIdentityId: "/..../subscription",
 					},
 				},
 				Response: catalog.StorageCredentialInfo{
@@ -96,6 +97,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 					Name: "bcd",
 					AzureManagedIdentity: &catalog.AzureManagedIdentity{
 						AccessConnectorId: "def",
+						ManagedIdentityId: "/..../subscription",
 					},
 				},
 			},
@@ -115,6 +117,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 		is_default = true
 		azure_managed_identity {
 			access_connector_id = "def"
+			managed_identity_id = "/..../subscription"
 		}
 		`,
 	}.ApplyNoError(t)

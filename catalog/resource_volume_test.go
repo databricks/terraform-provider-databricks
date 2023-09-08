@@ -329,7 +329,11 @@ func TestVolumesUpdate(t *testing.T) {
 		},
 		Resource: ResourceVolume(),
 		Update:   true,
-		ID:       "testCatalogName.testSchemaName.testName",
+		InstanceState: map[string]string{
+			"catalog_name": "testCatalogName",
+			"schema_name":  "testSchemaName",
+		},
+		ID: "testCatalogName.testSchemaName.testName",
 		HCL: `
 		name = "testNameNew"
 		volume_type = "testVolumeType"
@@ -343,6 +347,62 @@ func TestVolumesUpdate(t *testing.T) {
 	assert.Equal(t, "testNameNew", d.Get("name"))
 	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
+	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
+	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+}
+
+func TestVolumesUpdateForceNew(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogNameNew.testSchemaName.testName?",
+				Response: catalog.VolumeInfo{
+					Name:        "testNameNew",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogNameNew",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a new test comment.",
+					FullName:    "testCatalogName.testSchemaName.testNameNew",
+					Owner:       "testOwnerNew",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Name:    "testNameNew",
+					Comment: "This is a new test comment.",
+					Owner:   "testOwnerNew",
+				},
+				Response: catalog.VolumeInfo{
+					Name:        "testNameNew",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogNameNew",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a new test comment.",
+					FullName:    "testCatalogNameNew.testSchemaName.testName",
+					Owner:       "testOwnerNew",
+				},
+			},
+		},
+		Resource:    ResourceVolume(),
+		RequiresNew: true,
+		Update:      true,
+		ID:          "testCatalogName.testSchemaName.testName",
+		HCL: `
+		name = "testNameNew"
+		volume_type = "testVolumeType"
+		catalog_name = "testCatalogNameNew"
+		schema_name = "testSchemaName"
+		comment = "This is a new test comment."
+		owner = "testOwnerNew"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "testNameNew", d.Get("name"))
+	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
+	assert.Equal(t, "testCatalogNameNew", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
 }
@@ -367,7 +427,11 @@ func TestVolumeUpdate_Error(t *testing.T) {
 		},
 		Resource: ResourceVolume(),
 		Update:   true,
-		ID:       "testCatalogName.testSchemaName.testName",
+		InstanceState: map[string]string{
+			"catalog_name": "testCatalogName",
+			"schema_name":  "testSchemaName",
+		},
+		ID: "testCatalogName.testSchemaName.testName",
 		HCL: `
 		name = "testNameNew"
 		volume_type = "testVolumeType"

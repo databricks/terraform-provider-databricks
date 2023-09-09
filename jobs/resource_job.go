@@ -631,6 +631,9 @@ func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
 		p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 		p.Required = false
 	}
+	if p, err := common.SchemaPath(*s, "new_cluster", "init_scripts", "dbfs"); err == nil {
+		p.Deprecated = clusters.DbfsDeprecationWarning
+	}
 	if v, err := common.SchemaPath(*s, "new_cluster", "spark_conf"); err == nil {
 		reSize := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.%")
 		reConf := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.spark.databricks.delta.preview.enabled")

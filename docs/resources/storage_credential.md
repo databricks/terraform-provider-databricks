@@ -94,6 +94,12 @@ The following arguments are required:
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
 - `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this storage credential - same as the `name`.
+
 ## Import
 
 This resource can be imported by name:

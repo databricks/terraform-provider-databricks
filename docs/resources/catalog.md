@@ -36,6 +36,12 @@ The following arguments are required:
 * `options` - (Optional) For Foreign Catalogs: the name of the entity from an external data source that maps to a catalog. For example, the database name in a PostgreSQL server.
 * `force_destroy` - (Optional) Delete catalog regardless of its contents.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this catalog - same as the `name`.
+
 ## Import
 
 This resource can be imported by name:

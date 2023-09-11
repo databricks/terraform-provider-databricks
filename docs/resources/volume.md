@@ -87,9 +87,15 @@ The following arguments are supported:
 * `storage_location` - (Optional) Path inside an External Location. Only used for `EXTERNAL` Volumes.
 * `comment` - (Optional) Free-form text.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this Unity Catalog Volume in form of `<catalog>.<schema>.<name>`.
+
 ## Import
 
-This resource can be imported by `full_name` which is the 3-level Volume identifier: `<catalog>.<schema>.<volume>`
+This resource can be imported by `full_name` which is the 3-level Volume identifier: `<catalog>.<schema>.<name>`
 
 ```bash
 terraform import databricks_volume.this <catalog_name>.<schema_name>.<name>

@@ -58,6 +58,11 @@ The following arguments are required:
 * `delta_sharing_organization_name` - (Optional) The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing. Once this is set it cannot be removed and can only be modified to another valid value. To delete this value please taint and recreate the resource.
 * `force_destroy` - (Optional) Destroy metastore regardless of its contents.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - system-generated ID of this Unity Catalog Metastore.
 ## Import
 
 This resource can be imported by ID:

@@ -91,6 +91,12 @@ Currently, changing the column definitions for a table will require dropping and
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this table in form of `<catalog_name>.<schema_name>.<name>`.
+
 ## Import
 
 This resource can be imported by its full name:

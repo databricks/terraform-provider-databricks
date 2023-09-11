@@ -77,6 +77,12 @@ The following arguments are required:
 * `application_id` - The application ID of the application registration within the referenced AAD tenant
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this data access configuration in form of `<metastore_id>|<name>`.
+
 ## Import
 
 -> **Note** Importing this resource is not currently supported.

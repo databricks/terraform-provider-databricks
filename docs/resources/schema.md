@@ -41,6 +41,12 @@ The following arguments are required:
 * `properties` - (Optional) Extensible Schema properties.
 * `force_destroy` - (Optional) Delete schema regardless of its contents.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this schema in form of `<catalog_name>.<name>`.
+
 ## Import
 
 This resource can be imported by its full name:

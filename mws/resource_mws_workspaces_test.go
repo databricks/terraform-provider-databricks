@@ -1595,6 +1595,56 @@ func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
 	}.ExpectError(t, "cannot remove private access setting from workspace")
 }
 
+func TestResourceWorkspaceUpdateNetworkConnectivityConfigId(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				ExpectedRequest: map[string]any{
+					"network_connectivity_config_id": "ncc",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceStatus:             WorkspaceStatusRunning,
+					WorkspaceName:               "labdata",
+					DeploymentName:              "900150983cd24fb0",
+					Location:                    "westus",
+					NetworkConnectivityConfigID: "ncc",
+					AccountID:                   "abc",
+					WorkspaceID:                 1234,
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":              "abc",
+			"location":                "westus",
+			"deployment_name":         "900150983cd24fb0",
+			"workspace_name":          "labdata",
+			"is_no_public_ip_enabled": "true",
+			"workspace_id":            "1234",
+		},
+		State: map[string]any{
+			"account_id":                     "abc",
+			"location":                       "westus",
+			"deployment_name":                "900150983cd24fb0",
+			"workspace_name":                 "labdata",
+			"is_no_public_ip_enabled":        true,
+			"network_connectivity_config_id": "ncc",
+			"workspace_id":                   1234,
+		},
+		Update: true,
+		ID:     "abc/1234",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+}
+
 func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

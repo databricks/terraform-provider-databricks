@@ -100,6 +100,7 @@ type Workspace struct {
 	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
+	NetworkConnectivityConfigID         string                   `json:"network_connectivity_config_id,omitempty"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -257,7 +258,14 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{
+	"credentials_id",
+	"network_id",
+	"storage_customer_managed_key_id",
+	"private_access_settings_id",
+	"managed_services_customer_managed_key_id",
+	"network_connectivity_config_id",
+}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
@@ -281,6 +289,9 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
+	}
+	if ws.NetworkConnectivityConfigID != "" {
+		request["network_connectivity_config_id"] = ws.NetworkConnectivityConfigID
 	}
 
 	if len(request) == 0 {
@@ -706,6 +717,10 @@ func workspaceSchemaV2() cty.Type {
 				Computed: true,
 			},
 			"private_access_settings_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"network_connectivity_config_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

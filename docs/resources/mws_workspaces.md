@@ -16,7 +16,7 @@ provider "databricks" {
 
 This resource allows you to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1) or [workspaces on GCP](https://docs.gcp.databricks.com/administration-guide/account-settings-gcp/workspaces.html). Please follow this complete runnable example on [AWS](../guides/aws-workspace.md) or [GCP](../guides/gcp-workspace.md) with new VPC and new workspace setup.
 
--> **Note** On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
+-> **Note** On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces. Though `databricks_mws_workspaces` cannot be created with terraform, you can import the state of a created workspace to make changes to a created workspace. See [Updating workspaces](#azure) section for more.
 
 ## Example Usage
 
@@ -310,7 +310,7 @@ output "databricks_token" {
 
 ## Argument Reference
 
--> **Note** All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id`, `private_access_settings_id` on a running workspace.
+-> **Note** All workspaces would be verified to get into runnable state or deleted upon failure. See the updatable fields in the [Updating Workspaces](#updating-workspaces) section.
 
 The following arguments are available:
 
@@ -330,6 +330,7 @@ The following arguments are available:
   * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`.
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
+* `network_connectivity_config_id` - (Optional) Canonical unique identifier of [databricks_mws_network_connectivity_config](mws_network_connectivity_config.md) in Databricks Account.
 
 ### token block
 
@@ -342,12 +343,41 @@ You can specify a `token` block in the body of the workspace resource, so that T
 
 ### Updating workspaces
 
+#### AWS
 On AWS, the following arguments could be modified after the workspace is running:
 
 * `network_id` - Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
 * `credentials_id`
 * `storage_customer_managed_key_id`
 * `private_access_settings_id`
+
+#### Azure
+On Azure, `network_connectivity_config_id` could be modified after the workspace is running. To perform update, use the following template as an example:
+
+```hcl
+variable "region" {}
+variable "databricks_account_id" {}
+variable "databricks_workspace_deployment_name" {}
+variable "databricks_workspace_name" {}
+variable "databricks_network_connectivity_config_id" {}
+
+resource "databricks_mws_workspaces" "this" {
+  provider                       = databricks.mws
+  account_id                     = var.databricks_account_id
+  location                       = var.region
+  deployment_name                = var.databricks_workspace_deployment_name
+  workspace_name                 = var.databricks_workspace_name
+  network_connectivity_config_id = var.databricks_network_connectivity_config_id
+}
+```
+
+Once the template is prepared, import your workspace and apply the update. Replace the account ID (e.g.: affb52c1-490d-4d36-b4ff-713842abd695) to your Databricks Account ID, 
+and replace the workspace ID to the workspace (e.g.: 6971544276982888) that you wish to perform the update.
+
+```hcl
+terraform import databricks_mws_workspaces.this <accountID>/<workspaceID>
+terraform apply
+```
 
 ## Attribute Reference
 
@@ -362,7 +392,16 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+This resource can be imported by Databricks account ID and worspace ID.
+
+```hcl
+terraform import databricks_mws_workspaces.this <accountID>/<workspaceID>
+```
+
+For example:
+```hcl
+terraform import databricks_mws_workspaces.this aeffa645-d886-4a8a-88ce-ccbc0d3d29bb/123456789
+```
 
 ## Timeouts
 

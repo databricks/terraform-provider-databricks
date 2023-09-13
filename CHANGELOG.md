@@ -3,7 +3,7 @@
 ## 1.25.1
 
  * Fixed the issue with `cannot reset nil reader` by bumping Go SDK to 0.19.2 ([#2684](https://github.com/databricks/terraform-provider-databricks/pull/2684)).
- * Changed validation for `max_concurrent_runs` in `databricjs_job` to allow 0 value ([#2682](https://github.com/databricks/terraform-provider-databricks/pull/2682)).
+ * Changed validation for `max_concurrent_runs` in `databricks_job` to allow 0 value ([#2682](https://github.com/databricks/terraform-provider-databricks/pull/2682)).
 
 
 ## 1.25.0

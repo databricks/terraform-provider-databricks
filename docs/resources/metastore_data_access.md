@@ -85,4 +85,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+This resource can be imported by combination of metastore id and the data access name.
+
+```bash
+terraform import databricks_metastore_data_access.this '<metastore_id>|<name>'
+```

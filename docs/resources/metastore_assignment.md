@@ -22,6 +22,14 @@ resource "databricks_metastore_assignment" "this" {
 }
 ```
 
+## Import
+
+This resource can be imported by combination of workspace id and metastore id:
+
+```bash
+terraform import databricks_metastore_assignment.this '<workspace_id>|<metastore_id>'
+```
+
 ## Argument Reference
 
 The following arguments are required:

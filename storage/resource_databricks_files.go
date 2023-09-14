@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"bufio"
 	"context"
 	"crypto/md5"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/databricks/databricks-sdk-go/service/files"
@@ -65,9 +67,14 @@ func ResourceFiles() *schema.Resource {
 				return err
 			}
 
-			// todo
-			dataBytes := downloadResponse.Contents
-			data.Set("md5", fmt.Sprintf("%x", md5.Sum(dataBytes)))
+			dataReadCloser := downloadResponse.Contents
+			defer dataReadCloser.Close()
+			reader := bufio.NewReader(dataReadCloser)
+			dataByte, err := ioutil.ReadAll(reader)
+			if err != nil {
+				return err
+			}
+			data.Set("md5", fmt.Sprintf("%x", md5.Sum(dataByte)))
 			return common.StructToData(fileInfo, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {

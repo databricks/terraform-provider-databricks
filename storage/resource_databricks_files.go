@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Reference: resource_workspace_file.go
 func ResourceFiles() *schema.Resource {
 	s := workspace.FileContentSchema(map[string]*schema.Schema{
 		"modification_time": {
@@ -54,7 +53,7 @@ func ResourceFiles() *schema.Resource {
 				return err
 			}
 
-			path := data.Get("path").(string)
+			path := data.Id()
 			fileInfo, err := w.Files.GetStatus(ctx, files.GetStatusRequest{Path: path})
 			if err != nil {
 				return err
@@ -82,7 +81,7 @@ func ResourceFiles() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			path := data.Get("path").(string)
+			path := data.Id()
 			source := data.Get("source").(string)
 			reader, err := os.Open(source)
 			if err != nil {
@@ -96,7 +95,7 @@ func ResourceFiles() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			path := data.Get("path").(string)
+			path := data.Id()
 			err = w.Files.Delete(ctx, files.DeleteFileRequest{FilePath: path})
 			return err
 		},

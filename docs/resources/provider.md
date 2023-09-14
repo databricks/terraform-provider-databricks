@@ -36,6 +36,12 @@ The following arguments are required:
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN`.
 * `recipient_profile_str` - (Optional) This is the json file that is created from a recipient url.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this provider - same as the `name`.
+
 ## Related Resources
 
 The following resources are used in the same context:

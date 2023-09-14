@@ -1,5 +1,32 @@
 # Version changelog
 
+## 1.25.1
+
+ * Fixed the issue with `cannot reset nil reader` by bumping Go SDK to 0.19.2 ([#2684](https://github.com/databricks/terraform-provider-databricks/pull/2684)).
+ * Changed validation for `max_concurrent_runs` in `databricks_job` to allow 0 value ([#2682](https://github.com/databricks/terraform-provider-databricks/pull/2682)).
+
+
+## 1.25.0
+
+ * Added `IS_OWNER` permission for SQL Warehouse ([#2600](https://github.com/databricks/terraform-provider-databricks/pull/2600)).
+ * Added `managed_identity_id` to [databricks_storage_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/storage_credential) to support user-assigned managed identities ([#2536](https://github.com/databricks/terraform-provider-databricks/pull/2536)).
+ * Added `options` field to UC catalog resource to support foreign catalog creation ([#2616](https://github.com/databricks/terraform-provider-databricks/pull/2616)).
+ * Detected run_as drift in job resource ([#2626](https://github.com/databricks/terraform-provider-databricks/pull/2626)).
+ * Removed callback field from acceptance test framework ([#2649](https://github.com/databricks/terraform-provider-databricks/pull/2649)).
+ * Fixed `force_new` attributes for [databricks_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/schema) and [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) ([#2635](https://github.com/databricks/terraform-provider-databricks/pull/2635)).
+ * Fixed do not attempt to delete default schema for foriegn catalogs ([#2622](https://github.com/databricks/terraform-provider-databricks/pull/2622)).
+
+ Documentation:
+ * Updated documentation for marketplace admin role ([#2638](https://github.com/databricks/terraform-provider-databricks/pull/2638)).
+ * Updated documentation for share and share recipient ([#2641](https://github.com/databricks/terraform-provider-databricks/pull/2641)).
+ * Updated documentation for group, service principal and user([#2644](https://github.com/databricks/terraform-provider-databricks/pull/2644)).
+
+ Other Changes:
+ * Bumped github.com/databricks/databricks-sdk-go from 0.17.0 to 0.19.1 ([#2660](https://github.com/databricks/terraform-provider-databricks/pull/2660)).
+ * Bumped github.com/hashicorp/hcl/v2 from 2.17.0 to 2.18.0 ([#2636](https://github.com/databricks/terraform-provider-databricks/pull/2636)).
+ * Added doc strings for ResourceFixtures ([#2633](https://github.com/databricks/terraform-provider-databricks/pull/2633)).
+
+
 ## 1.24.1
 
  * Fixed verification of workspace reachability by using scim/me which is always available  ([#2618](https://github.com/databricks/terraform-provider-databricks/pull/2618)).

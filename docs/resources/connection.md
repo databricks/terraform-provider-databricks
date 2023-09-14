@@ -40,10 +40,16 @@ The following arguments are supported:
 - `properties` -  (Optional) Free-form connection properties.
 - `comment` - (Optional) Free-form text.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this connection in form of `<metastore_id>|<name>`.
+
 ## Import
 
-This resource can be imported by `name`
+This resource can be imported by `id`:
 
 ```bash
-terraform import databricks_connection.this <connection_name>
+terraform import databricks_connection.this '<metastore_id>|<name>'
 ```

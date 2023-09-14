@@ -135,8 +135,8 @@ resource "databricks_mws_credentials" "this" {
 }
 
 resource "aws_s3_bucket" "root_storage_bucket" {
-  bucket = "${local.prefix}-rootbucket"
-  acl    = "private"
+  bucket        = "${local.prefix}-rootbucket"
+  acl           = "private"
   force_destroy = true
   tags          = var.tags
 }

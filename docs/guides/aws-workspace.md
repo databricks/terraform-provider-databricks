@@ -10,11 +10,11 @@ You can provision multiple Databricks workspaces with Terraform.
 
 ## Provider initialization for E2 workspaces
 
-This guide assumes you have `databricks_account_username` and `databricks_account_password` for [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com) and can find `databricks_account_id` in the bottom left corner of the page, once you're logged in. This guide is provided as is and assumes you'll use it as the basis for your setup.
+This guide assumes you have the `client_id`, which is the `application_id` of the [Service Principal](resources/service_principal.md), `client_secret`, which is its secret and `databricks_account_id` which can be found in the bottom left corner of the [Account Console](https://accounts.cloud.databricks.com). (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)). This guide is provided as is and assumes you will use it as the basis for your setup.
 
 ```hcl
-variable "databricks_account_username" {}
-variable "databricks_account_password" {}
+variable "client_id" {}
+variable "client_secret" {}
 variable "databricks_account_id" {}
 
 variable "tags" {
@@ -69,10 +69,10 @@ provider "aws" {
 
 // initialize provider in "MWS" mode to provision new workspace
 provider "databricks" {
-  alias    = "mws"
-  host     = "https://accounts.cloud.databricks.com"
-  username = var.databricks_account_username
-  password = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 ```
 
@@ -202,8 +202,8 @@ Once [VPC](#vpc) is ready, create AWS S3 bucket for DBFS workspace storage, whic
 
 ```hcl
 resource "aws_s3_bucket" "root_storage_bucket" {
-  bucket = "${local.prefix}-rootbucket"
-  acl    = "private"
+  bucket        = "${local.prefix}-rootbucket"
+  acl           = "private"
   force_destroy = true
   tags = merge(var.tags, {
     Name = "${local.prefix}-rootbucket"

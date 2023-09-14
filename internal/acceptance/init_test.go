@@ -85,7 +85,6 @@ func unityAccountLevel(t *testing.T, steps ...step) {
 
 type step struct {
 	Template string
-	Callback func(ctx context.Context, client *common.DatabricksClient, id string) error
 	Check    func(*terraform.State) error
 
 	Destroy                   bool
@@ -177,7 +176,6 @@ func run(t *testing.T, steps []step) {
 		Resource *schema.Resource
 	}
 
-	resourceAndName := regexp.MustCompile(`resource\s+"([^"]*)"\s+"([^"]*)"`)
 	resourcesEverCreated := map[testResource]bool{}
 	stepConfig := ""
 	for i, s := range steps {
@@ -186,7 +184,6 @@ func run(t *testing.T, steps []step) {
 		}
 		stepNum := i
 		thisStep := s
-		stepCallback := thisStep.Callback
 		stepCheck := thisStep.Check
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
@@ -225,13 +222,6 @@ func run(t *testing.T, steps []step) {
 					if dia != nil {
 						return fmt.Errorf("%v", dia)
 					}
-				}
-				if stepCallback != nil {
-					match := resourceAndName.FindStringSubmatch(stepConfig)
-					rootModule := state.RootModule()
-					res := rootModule.Resources[match[1]+"."+match[2]]
-					id := res.Primary.ID
-					return stepCallback(ctx, client, id)
 				}
 				if stepCheck != nil {
 					return stepCheck(state)

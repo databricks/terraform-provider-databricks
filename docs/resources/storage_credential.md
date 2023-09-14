@@ -80,7 +80,8 @@ The following arguments are required:
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
 
-- `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
+- `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`.
+* `managed_identity_id` - (Optional) The Resource ID of the Azure User Assigned Managed Identity associated with Azure Databricks Access Connector, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.ManagedIdentity/userAssignedIdentities/user-managed-identity-name`.
 
 `azure_service_principal` optional configuration block to use service principal as credential details for Azure:
 
@@ -92,6 +93,12 @@ The following arguments are required:
 
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
 - `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this storage credential - same as the `name`.
 
 ## Import
 

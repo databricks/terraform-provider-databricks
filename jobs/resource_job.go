@@ -292,7 +292,7 @@ type JobSettings struct {
 	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string             `json:"tags,omitempty"`
 	Queue                *Queue                        `json:"queue,omitempty"`
-	RunAs                *JobRunAs                     `json:"run_as,omitempty"`
+	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"suppress_diff"`
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 }
@@ -574,6 +574,21 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 		job.Settings.sortTasksByKey()
 		job.Settings.sortWebhooksByID()
 	}
+
+	if job.RunAsUserName != "" && job.Settings != nil {
+		userNameIsEmail := strings.Contains(job.RunAsUserName, "@")
+
+		if userNameIsEmail {
+			job.Settings.RunAs = &JobRunAs{
+				UserName: job.RunAsUserName,
+			}
+		} else {
+			job.Settings.RunAs = &JobRunAs{
+				ServicePrincipalName: job.RunAsUserName,
+			}
+		}
+	}
+
 	return
 }
 
@@ -647,7 +662,7 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
-		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(1))
+		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 		s["max_concurrent_runs"].Default = 1
 		s["url"] = &schema.Schema{
 			Type:     schema.TypeString,

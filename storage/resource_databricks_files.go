@@ -65,8 +65,8 @@ func ResourceFiles() *schema.Resource {
 				return err
 			}
 
-			// TODO
-			dataBytes := []byte
+			// todo
+			dataBytes := downloadResponse.Contents
 			data.Set("md5", fmt.Sprintf("%x", md5.Sum(dataBytes)))
 			return common.StructToData(fileInfo, s, data)
 		},

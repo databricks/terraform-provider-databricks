@@ -270,7 +270,7 @@ init_scripts {
 }
 ```
 
-Example of taking init script from DBFS:
+Example of taking init script from DBFS (deprecated):
 
 ```hcl
 init_scripts {

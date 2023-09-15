@@ -386,6 +386,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
+			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "run_as.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var job jobs.JobSettings
@@ -512,6 +514,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for _, jc := range job.JobClusters {
 				ic.importCluster(jc.NewCluster)
+			}
+			if job.RunAs != nil {
+				if job.RunAs.UserName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_user",
+						Attribute: "user_name",
+						Value:     job.RunAs.UserName,
+					})
+				}
+				if job.RunAs.ServicePrincipalName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_service_principal",
+						Attribute: "application_id",
+						Value:     job.RunAs.ServicePrincipalName,
+					})
+				}
 			}
 
 			return ic.importLibraries(r.Data, s)

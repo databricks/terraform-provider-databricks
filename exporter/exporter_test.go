@@ -841,6 +841,10 @@ func TestImportingJobs_JobList(t *testing.T) {
 					JobID: 14,
 					Settings: &jobs.JobSettings{
 						RetryOnTimeout: true,
+						RunAs: &jobs.JobRunAs{
+							UserName:             "user@domain.com",
+							ServicePrincipalName: "0000-1111-2222-3333-4444-5555",
+						},
 						Libraries: []libraries.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
 						},

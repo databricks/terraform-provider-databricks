@@ -9,7 +9,7 @@ func TestAccDataSourceMlflowModel(t *testing.T) {
 		step{
 			Template: `
 			resource "databricks_mlflow_model" "this" {
-			  name = "My MLflow Model"
+			  name = "model-{var.RANDOM}"
 			
 			  description = "My MLflow model description"
 			
@@ -27,7 +27,7 @@ func TestAccDataSourceMlflowModel(t *testing.T) {
 			Template: `
 			data "databricks_mlflow_model" "this" {
 			  depends_on = [databricks_mlflow_model.this]
-			  name       = "My MLflow Model"
+			  name       = "model-{var.RANDOM}"
 			}
 			
 			output "model" {

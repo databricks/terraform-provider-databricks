@@ -3,9 +3,13 @@ package workspace
 import (
 	"context"
 	"encoding/base64"
+	"log"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -137,6 +141,74 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 	return a.client.Post(a.context, "/workspace/mkdirs", map[string]string{
 		"path": path,
 	}, nil)
+}
+
+type syncAnswer struct {
+	MU   sync.Mutex
+	data []ObjectStatus
+}
+
+func (a *syncAnswer) append(objs []ObjectStatus) {
+	a.MU.Lock()
+	a.data = append(a.data, objs...)
+	a.MU.Unlock()
+}
+
+func (a NotebooksAPI) recursiveAddPathsParallel(path string, dirChannel chan string, answer *syncAnswer, wg *sync.WaitGroup) {
+	defer wg.Done()
+	notebookInfoList, err := a.list(path)
+	if err != nil {
+		log.Printf("[WARN] error listing '%s': %v", path, err)
+	}
+	answer.append(notebookInfoList)
+	for _, v := range notebookInfoList {
+		if v.ObjectType == Directory {
+			wg.Add(1)
+			log.Printf("[DEBUG] %s: putting directory '%s' into channel. Channel size: %d",
+				time.Now().Local().Format(time.RFC3339Nano), v.Path, len(dirChannel))
+			dirChannel <- v.Path
+			time.Sleep(15 * time.Millisecond)
+		}
+	}
+}
+
+func (a NotebooksAPI) ListParallel(path string, recursive bool, ignoreErrors bool) ([]ObjectStatus, error) {
+	var answer syncAnswer
+	wg := &sync.WaitGroup{}
+
+	numWorkers := 5
+	if os.Getenv("EXPORTER_PARALLLELISM") != "" {
+		t, _ := strconv.ParseInt(os.Getenv("EXPORTER_PARALLLELISM"), 10, 32)
+		numWorkers = int(t)
+	}
+	channelSize := 100000
+	if os.Getenv("EXPORTER_CHANNEL_SIZE") != "" {
+		t, _ := strconv.ParseInt(os.Getenv("EXPORTER_CHANNEL_SIZE"), 10, 32)
+		channelSize = int(t)
+	}
+	dirChannel := make(chan string, channelSize)
+	for i := 0; i < numWorkers; i++ {
+		t := i
+		go func() {
+			log.Printf("[DEBUG] %s: starting go routine %d", time.Now().Local().Format(time.RFC3339Nano), t)
+			for dirName := range dirChannel {
+				log.Printf("[DEBUG] %s: processing directory %s", time.Now().Local().Format(time.RFC3339Nano), dirName)
+				a.recursiveAddPathsParallel(dirName, dirChannel, &answer, wg)
+			}
+		}()
+
+	}
+	log.Printf("[DEBUG] %s: pushing initial path to channel", time.Now().Local().Format(time.RFC3339Nano))
+	wg.Add(1)
+	a.recursiveAddPathsParallel(path, dirChannel, &answer, wg)
+	log.Printf("[DEBUG] %s: starting to wait", time.Now().Local().Format(time.RFC3339Nano))
+	wg.Wait()
+	log.Printf("[DEBUG] %s: closing the directory channel", time.Now().Local().Format(time.RFC3339Nano))
+	close(dirChannel)
+
+	answer.MU.Lock()
+	defer answer.MU.Unlock()
+	return answer.data, nil
 }
 
 // List will list all objects in a path on the workspace

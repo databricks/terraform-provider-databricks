@@ -21,8 +21,8 @@ variable "databricks_account_id" {
 }
 
 resource "aws_s3_bucket" "logdelivery" {
-  bucket = "${var.prefix}-logdelivery"
-  acl    = "private"
+  bucket        = "${var.prefix}-logdelivery"
+  acl           = "private"
   force_destroy = true
   tags = merge(var.tags, {
     Name = "${var.prefix}-logdelivery"

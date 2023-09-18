@@ -10,8 +10,8 @@ Databricks PrivateLink support enables private connectivity between users and th
 
 This guide uses the following variables in configurations:
 
-- `databricks_account_username`: The username an account-level admin uses to log in to  [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
-- `databricks_account_password`: The password for `databricks_account_username`.
+- `client_id`: `application_id` of the service principal, see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)
+- `client_secret`: the secret of the service principal.
 - `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the page.
 - `vpc_id` - The ID for the AWS VPC.
 - `region` - AWS region.
@@ -57,10 +57,10 @@ provider "aws" {
 }
 
 provider "databricks" {
-  alias    = "mws"
-  host     = "https://accounts.cloud.databricks.com"
-  username = var.databricks_account_username
-  password = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 ```
 
@@ -68,8 +68,8 @@ Define the required variables
 
 ```hcl
 variable "databricks_account_id" {}
-variable "databricks_account_username" {}
-variable "databricks_account_password" {}
+variable "client_id" {}
+variable "client_secret" {}
 variable "root_bucket_name" {}
 variable "cross_account_arn" {}
 variable "vpc_id" {}
@@ -96,7 +96,7 @@ resource "databricks_mws_storage_configurations" "this" {
   provider                   = databricks.mws
   account_id                 = var.databricks_account_id
   bucket_name                = var.root_bucket_name
-  storage_configuration_name = "${local.prefix}-storage}"
+  storage_configuration_name = "${local.prefix}-storage"
 }
 ```
 

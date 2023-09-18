@@ -28,10 +28,10 @@ Adding user as administrator to Databricks Account
 
 ```hcl
 provider "databricks" {
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = var.databricks_account_id
-  username   = var.databricks_user
-  password   = var.databricks_password
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = var.databricks_account_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 resource "databricks_user" "my_user" {

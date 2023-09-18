@@ -67,20 +67,43 @@ type HTTPFixture struct {
 	MatchAny        bool
 }
 
-// ResourceFixture helps testing resources and commands
+// ResourceFixture is a helper to unit test terraform resources. It does this by
+// creating a mock Databricks server and client.
 type ResourceFixture struct {
-	Fixtures      []HTTPFixture
-	Resource      *schema.Resource
-	RequiresNew   bool
+	// A list of HTTP fixtures representing requests and their corresponding
+	// responses. These are loaded into the mock Databricks server.
+	Fixtures []HTTPFixture
+
+	// The resource the unit test is testing.
+	Resource *schema.Resource
+
+	// Set to true if the diff generated in the test will force a recreation
+	// of the resource.
+	RequiresNew bool
+
+	// Existing state of the resource, equivalent to the state stored in a terraform
+	// state file.
 	InstanceState map[string]string
-	State         map[string]any
-	// HCL might be useful to test nested blocks
-	HCL         string
+
+	// Configuration for the resource, equivalent to the configuration a user
+	// defines in a .tf file. Only use one of HCL or State.
+	State map[string]any
+
+	// Alternative to State. Allows defining the resource configuration in HCL
+	// which is decoded into a map. Only use one of HCL or State.
+	HCL string
+
+	// Mocks the Databricks Command Execution API. This mock is loaded at the client
+	// level so any command execution API requests are not sent to the server.
 	CommandMock common.CommandMock
-	Create      bool
-	Read        bool
-	Update      bool
-	Delete      bool
+
+	// Set one of them to true to test the corresponding CRUD function for the
+	// terraform resource.
+	Create bool
+	Read   bool
+	Update bool
+	Delete bool
+
 	Removed     bool
 	ID          string
 	NonWritable bool

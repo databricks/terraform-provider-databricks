@@ -14,12 +14,12 @@ func DataSourceMetastores() *schema.Resource {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
 	return common.AccountData(func(ctx context.Context, data *metastoresData, acc *databricks.AccountClient) error {
-		metastores, err := acc.Metastores.List(ctx)
+		metastores, err := acc.Metastores.ListAll(ctx)
 		if err != nil {
 			return err
 		}
 		data.Ids = map[string]string{}
-		for _, v := range metastores.Metastores {
+		for _, v := range metastores {
 			name := v.Name
 			_, duplicateName := data.Ids[name]
 			if duplicateName {

@@ -198,9 +198,9 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	if err != nil {
 		return resource.NonRetryableError(err)
 	}
-	// make a request to Tokens API, just to verify there are no errors
+	// make a request to SCIM API, just to verify there are no errors
 	var response map[string]any
-	err = wsClient.Get(ctx, "/token/list", nil, &response)
+	err = wsClient.Get(ctx, "/preview/scim/v2/Me", nil, &response)
 	var apiError *apierr.APIError
 	if errors.As(err, &apiError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",

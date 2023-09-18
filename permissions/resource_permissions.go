@@ -175,7 +175,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") {
+	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/sql/warehouses") {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -245,6 +245,15 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			UserName:        job.CreatorUserName,
 			PermissionLevel: "IS_OWNER",
 		})
+	} else if strings.HasPrefix(objectID, "/sql/warehouses") {
+		warehouse, err := w.Warehouses.GetById(a.context, strings.ReplaceAll(objectID, "/sql/warehouses", ""))
+		if err != nil {
+			return err
+		}
+		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
+			UserName:        warehouse.CreatorName,
+			PermissionLevel: "IS_OWNER",
+		})
 	}
 	return a.put(objectID, accl)
 }
@@ -302,7 +311,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
-		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE"}, SIMPLE},
+		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE", "IS_OWNER"}, SIMPLE},
 		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
 		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
 		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},

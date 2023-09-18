@@ -96,7 +96,7 @@ Example `encryption_details` specifying SSE_S3 encryption:
 ```hcl
 encryption_details {
   sse_encryption_details {
-    algorithm     = "AWS_SSE_S3"
+    algorithm = "AWS_SSE_S3"
   }
 }
 ```
@@ -106,7 +106,7 @@ Example `encryption_details` specifying SSE_KMS encryption with KMS key that has
 ```hcl
 encryption_details {
   sse_encryption_details {
-    algorithm     = "AWS_SSE_KMS"
+    algorithm       = "AWS_SSE_KMS"
     aws_kms_key_arn = "some_key_arn"
   }
 }
@@ -128,9 +128,15 @@ The following arguments are required:
 - `access_point` - (Optional) The ARN of the s3 access point to use with the external location (AWS).
 - `encryption_details` - (Optional) The options for Server-Side Encryption to be used by each Databricks s3 client when connecting to S3 cloud storage (AWS).
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this external location - same as `name`.
+
 ## Import
 
-This resource can be imported by name:
+This resource can be imported by `name`:
 
 ```bash
 terraform import databricks_external_location.this <name>

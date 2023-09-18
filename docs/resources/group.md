@@ -47,14 +47,15 @@ resource "databricks_group_member" "vip_member" {
 ```
 
 Creating group in AWS Databricks account:
+
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias      = "mws"
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = "00000000-0000-0000-0000-000000000000"
-  username   = var.databricks_account_username
-  password   = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = "00000000-0000-0000-0000-000000000000"
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 resource "databricks_group" "this" {
@@ -64,6 +65,7 @@ resource "databricks_group" "this" {
 ```
 
 Creating group in Azure Databricks account:
+
 ```hcl
 // initialize provider at Azure account-level
 provider "databricks" {
@@ -103,5 +105,5 @@ In addition to all arguments above, the following attributes are exported:
 You can import a `databricks_group` resource with the name `my_group` like the following:
 
 ```bash
-$ terraform import databricks_group.my_group <group_id>
+terraform import databricks_group.my_group <group_id>
 ```

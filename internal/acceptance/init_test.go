@@ -87,7 +87,6 @@ func unityAccountLevel(t *testing.T, steps ...step) {
 type step struct {
 	// Terraform HCL for resources to materialize in this test step.
 	Template string
-	Callback func(ctx context.Context, client *common.DatabricksClient, id string) error
 
 	// This function is called after the template is applied. Useful for making assertions
 	// or doing cleanup.
@@ -181,7 +180,6 @@ func run(t *testing.T, steps []step) {
 	ts := []resource.TestStep{}
 	ctx := context.Background()
 
-	resourceAndName := regexp.MustCompile(`resource\s+"([^"]*)"\s+"([^"]*)"`)
 	stepConfig := ""
 	for i, s := range steps {
 		if s.Template != "" {
@@ -189,7 +187,6 @@ func run(t *testing.T, steps []step) {
 		}
 		stepNum := i
 		thisStep := s
-		stepCallback := thisStep.Callback
 		stepCheck := thisStep.Check
 		stepPreConfig := s.PreConfig
 		ts = append(ts, resource.TestStep{
@@ -231,15 +228,6 @@ func run(t *testing.T, steps []step) {
 						return fmt.Errorf("%v", dia)
 					}
 				}
-				if stepCallback != nil {
-					match := resourceAndName.FindStringSubmatch(stepConfig)
-					rootModule := state.RootModule()
-					res := rootModule.Resources[match[1]+"."+match[2]]
-					id := res.Primary.ID
-					return stepCallback(ctx, client, id)
-				}
-
-				// Run additional user defined checks on the state.
 				if stepCheck != nil {
 					return stepCheck(state)
 				}

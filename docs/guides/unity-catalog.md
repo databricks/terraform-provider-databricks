@@ -8,7 +8,7 @@ Databricks Unity Catalog brings fine-grained governance and security to Lakehous
 
 This guide uses the following variables in configurations:
 
-- `databricks_client_id`: The `client_id` is the `application_id` of a [Service Principal](resources/service_principal.md) that has account-level admin permission on [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
+- `databricks_client_id`: The `client_id` is the `application_id` of a [Service Principal](../resources/service_principal.md) that has account-level admin permission on [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
 - `databricks_client_secret`: The secret of the above service principal.
 - `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net).
 - `databricks_workspace_url`: Value of `workspace_url` attribute from [databricks_mws_workspaces](../resources/mws_workspaces.md#attribute-reference) resource.

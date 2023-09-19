@@ -7,6 +7,8 @@ This resource will [mount your cloud storage](https://docs.databricks.com/data/d
 
 **Note** When `cluster_id` is not specified, it will create the smallest possible cluster in the default availability zone with name equal to or starting with `terraform-mount` for the shortest possible amount of time. To avoid mount failure due to potentially quota or capacity issues with the default cluster, we recommend specifying a cluster to use for mounting.
 
+**Note** CRUD operations on a databricks mount require a running cluster. Due to limitations with terraform and the databricks mounts APIs, if the cluster the mount was most recently created / updated using no longer exists AND the mount is destroyed as a part of a terraform apply, we mark it as deleted without cleaning it up from the workspace.
+
 This resource provides two ways of mounting a storage account:
 
 1. Use a storage-specific configuration block - this could be used for the most cases, as it will fill most of the necessary details. Currently we support following configuration blocks:

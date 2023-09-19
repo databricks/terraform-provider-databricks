@@ -35,6 +35,25 @@ output "model" {
 }
 ```
 
+```hcl
+data "databricks_mlflow_model" "this" {
+  name = "My MLflow Model with multiple versions"
+}
+
+resource "databricks_model_serving" "this" {
+  name = "model-serving-endpoint"
+  config {
+    served_models {
+      name                  = "model_serving_prod"
+      model_name            = data.databricks_mlflow_model.this.name
+      model_version         = data.databricks_mlflow_model.this.latest_versions[0].version
+      workload_size         = "Small"
+      scale_to_zero_enabled = true
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 * `name` - (Required) Name of the registered model.

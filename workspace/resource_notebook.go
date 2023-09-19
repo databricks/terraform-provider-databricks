@@ -172,13 +172,13 @@ func (a NotebooksAPI) recursiveAddPathsParallel(path string, dirChannel chan str
 	}
 }
 
-func (a NotebooksAPI) ListParallel(path string, recursive bool, ignoreErrors bool) ([]ObjectStatus, error) {
+func (a NotebooksAPI) ListParallel(path string, recursive bool) ([]ObjectStatus, error) {
 	var answer syncAnswer
 	wg := &sync.WaitGroup{}
 
 	numWorkers := 5
-	if os.Getenv("EXPORTER_PARALLLELISM") != "" {
-		t, _ := strconv.ParseInt(os.Getenv("EXPORTER_PARALLLELISM"), 10, 32)
+	if os.Getenv("EXPORTER_WS_LIST_PARALLELISM") != "" {
+		t, _ := strconv.ParseInt(os.Getenv("EXPORTER_WS_LIST_PARALLELISM"), 10, 32)
 		numWorkers = int(t)
 	}
 	channelSize := 100000

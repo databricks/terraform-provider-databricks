@@ -163,7 +163,7 @@ func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 		t1 := time.Now()
 		log.Printf("[DEBUG] %v. Starting to list all workspace objects", t1.Local().Format(time.RFC3339))
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", true, true)
+		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", true)
 		t2 := time.Now()
 		log.Printf("[DEBUG] %v. Finished listing of all workspace objects. %d objects in total. %v seconds",
 			t2.Local().Format(time.RFC3339), len(ic.allWorkspaceObjects), t2.Sub(t1).Seconds())

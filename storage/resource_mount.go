@@ -43,8 +43,8 @@ func (cb mountCallback) preProcess(r *schema.Resource) func(
 // cluster actually exists. If the cluster does not exist, we assume (incorrectly)
 // that the mount also does not exist.
 //
-// In cases of update requests this would lead to an attempted recreation of the
-// mount
+// In cases of update requests this would lead to an attempted recreation of the mount.
+//
 // In cases of delete, this could orphan the mount, ie that the mount still exists
 // but is not tracked by the terraform state.
 //

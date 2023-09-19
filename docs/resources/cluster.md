@@ -270,6 +270,16 @@ init_scripts {
 }
 ```
 
+Example of using a file from Unity Catalog Volume as init script:
+
+```hcl
+init_scripts {
+  volumes {
+    destination = "/Volumes/Catalog/default/init-scripts/init-script.sh"
+  }
+}
+```
+
 Example of taking init script from DBFS (deprecated):
 
 ```hcl

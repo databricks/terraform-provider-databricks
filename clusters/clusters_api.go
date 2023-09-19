@@ -220,12 +220,13 @@ type StorageInfo struct {
 
 // InitScriptStorageInfo captures the allowed sources of init scripts.
 type InitScriptStorageInfo struct {
-	Dbfs      *DbfsStorageInfo   `json:"dbfs,omitempty" tf:"group:storage"`
-	Gcs       *GcsStorageInfo    `json:"gcs,omitempty" tf:"group:storage"`
-	S3        *S3StorageInfo     `json:"s3,omitempty" tf:"group:storage"`
-	Abfss     *AbfssStorageInfo  `json:"abfss,omitempty" tf:"group:storage"`
-	File      *LocalFileInfo     `json:"file,omitempty"`
-	Workspace *WorkspaceFileInfo `json:"workspace,omitempty"`
+	Dbfs      *DbfsStorageInfo            `json:"dbfs,omitempty" tf:"group:storage"`
+	Gcs       *GcsStorageInfo             `json:"gcs,omitempty" tf:"group:storage"`
+	S3        *S3StorageInfo              `json:"s3,omitempty" tf:"group:storage"`
+	Abfss     *AbfssStorageInfo           `json:"abfss,omitempty" tf:"group:storage"`
+	File      *LocalFileInfo              `json:"file,omitempty"`
+	Workspace *WorkspaceFileInfo          `json:"workspace,omitempty"`
+	Volumes   *compute.VolumesStorageInfo `json:"volumes,omitempty"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not

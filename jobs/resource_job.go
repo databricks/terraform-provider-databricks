@@ -158,7 +158,7 @@ type Webhook struct {
 type CronSchedule struct {
 	QuartzCronExpression string `json:"quartz_cron_expression"`
 	TimezoneID           string `json:"timezone_id"`
-	PauseStatus          string `json:"pause_status,omitempty" tf:"computed"`
+	PauseStatus          string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
 // BEGIN Jobs + Repo integration preview
@@ -228,7 +228,7 @@ type JobCompute struct {
 }
 
 type ContinuousConf struct {
-	PauseStatus string `json:"pause_status,omitempty" tf:"computed"`
+	PauseStatus string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
 type Queue struct {
@@ -247,7 +247,7 @@ type FileArrival struct {
 
 type Trigger struct {
 	FileArrival *FileArrival `json:"file_arrival"`
-	PauseStatus string       `json:"pause_status,omitempty" tf:"computed"`
+	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
 // JobSettings contains the information for configuring a job on databricks
@@ -663,6 +663,12 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		jobSettingsSchema(&s["job_cluster"].Elem.(*schema.Resource).Schema, "job_cluster.0.")
 		gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
+			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		}
+		if p, err := common.SchemaPath(s, "trigger", "pause_status"); err == nil {
+			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		}
+		if p, err := common.SchemaPath(s, "continuous", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
 		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))

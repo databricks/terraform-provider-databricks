@@ -473,7 +473,7 @@ resource "databricks_cluster" "this" {
 }
 ```
 
-## cluster_mount_info blocks
+## cluster_mount_info blocks (deprecated)
 
 It's possible to mount NFS (Network File System) resources into the Spark containers inside the cluster.  You can specify one or more `cluster_mount_info` blocks describing the mount. This block has following attributes:
 

@@ -1,5 +1,19 @@
 # Version changelog
 
+## 1.26.0
+ * Removed `computed` for `pause_status` in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2696](https://github.com/databricks/terraform-provider-databricks/pull/2696)).
+ * Added support for init scripts from Unity Catalog Volumes in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#2666](https://github.com/databricks/terraform-provider-databricks/pull/2666)).
+ * Added deprecation warning for init scripts from DBFS in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#2667](https://github.com/databricks/terraform-provider-databricks/pull/2667)).
+ * Deprecated `photon` and `graviton` selectors in [databricks_spark_version](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/spark_version) data source ([#2687](https://github.com/databricks/terraform-provider-databricks/pull/2687)).
+
+Documentation:
+ * Documentation updates for UC resources ([#2632](https://github.com/databricks/terraform-provider-databricks/pull/2632)).
+ * Fixed incorrect reference in the [databricks_git_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/git_credential) documentation ([#2674](https://github.com/databricks/terraform-provider-databricks/pull/2674)).
+ * Fixed Service Principal reference ([#2694](https://github.com/databricks/terraform-provider-databricks/pull/2694)).
+
+Exporter:
+ * Exporter: export references in `run_as` block of [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2690](https://github.com/databricks/terraform-provider-databricks/pull/2690)).
+
 ## 1.25.1
 
  * Fixed the issue with `cannot reset nil reader` by bumping Go SDK to 0.19.2 ([#2684](https://github.com/databricks/terraform-provider-databricks/pull/2684)).

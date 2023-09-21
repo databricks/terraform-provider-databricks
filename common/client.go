@@ -117,6 +117,11 @@ func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) 
 	return c.Do(ctx, http.MethodPatch, path, nil, request, nil, c.addApiPrefix)
 }
 
+// Patch on path
+func (c *DatabricksClient) PatchWithResponse(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodPatch, path, nil, request, response, c.addApiPrefix)
+}
+
 // Put on path
 func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
 	return c.Do(ctx, http.MethodPut, path, nil, request, nil, c.addApiPrefix)

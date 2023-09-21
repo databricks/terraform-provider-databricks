@@ -21,6 +21,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/logging"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
@@ -41,6 +42,7 @@ func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
 	useragent.WithProduct("databricks-tf-provider", common.Version())
+	logging.SetLogger()
 }
 
 // DatabricksProvider returns the entire terraform provider object

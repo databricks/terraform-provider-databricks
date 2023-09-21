@@ -323,9 +323,10 @@ func TestCreateStorageCredentialWithDbGcpSA(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: StorageCredentialInfo{
-					Name:    "a",
-					Comment: "c",
+				ExpectedRequest: catalog.CreateStorageCredential{
+					Name:                        "a",
+					DatabricksGcpServiceAccount: struct{}{},
+					Comment:                     "c",
 				},
 				Response: catalog.StorageCredentialInfo{
 					Name: "a",

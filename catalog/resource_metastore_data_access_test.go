@@ -129,8 +129,9 @@ func TestCreateDacWithDbGcpSA(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: DataAccessConfiguration{
-					Name: "bcd",
+				ExpectedRequest: catalog.CreateStorageCredential{
+					Name:                        "bcd",
+					DatabricksGcpServiceAccount: struct{}{},
 				},
 				Response: catalog.StorageCredentialInfo{
 					Id: "bcd",
@@ -149,9 +150,9 @@ func TestCreateDacWithDbGcpSA(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/bcd?",
-				Response: DataAccessConfiguration{
+				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
-					DBGcpSA: &DbGcpServiceAccount{
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
 						Email: "a@example.com",
 					},
 				},

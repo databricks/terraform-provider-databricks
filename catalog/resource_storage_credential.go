@@ -35,10 +35,6 @@ func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*sche
 func ResourceStorageCredential() *schema.Resource {
 	s := common.StructToSchema(StorageCredentialInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["force_destroy"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
 			return adjustDataAccessSchema(m)
 		})
 	return common.Resource{
@@ -51,6 +47,11 @@ func ResourceStorageCredential() *schema.Resource {
 			var update catalog.UpdateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
 			common.DataToStructPointer(d, tmpSchema, &update)
+
+			//manually add empty struct back for databricks_gcp_service_account
+			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
+				create.DatabricksGcpServiceAccount = struct{}{}
+			}
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,

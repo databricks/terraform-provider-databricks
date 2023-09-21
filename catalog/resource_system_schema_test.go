@@ -102,7 +102,7 @@ func TestSystemSchemaUpdate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/information_schema",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/information_schema?",
 				Status:   200,
 			},
 			{
@@ -135,7 +135,7 @@ func TestSystemSchemaUpdate(t *testing.T) {
 		},
 		HCL:    `schema = "access"`,
 		Update: true,
-		ID:     "abc",
+		ID:     "abc|information_schema",
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc|access", d.Id())
@@ -249,12 +249,12 @@ func TestSystemSchemaDelete(t *testing.T) {
 			},
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access?",
 				Status:   200,
 			},
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/billing",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/billing?",
 				Status:   200,
 			},
 		},
@@ -279,7 +279,7 @@ func TestSystemSchemaDelete_Error(t *testing.T) {
 			},
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access",
+				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

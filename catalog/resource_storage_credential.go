@@ -52,6 +52,11 @@ func ResourceStorageCredential() *schema.Resource {
 			common.DataToStructPointer(d, tmpSchema, &create)
 			common.DataToStructPointer(d, tmpSchema, &update)
 
+			//manually add empty struct back for databricks_gcp_service_account
+			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
+				create.DatabricksGcpServiceAccount = struct{}{}
+			}
+
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,
 					catalog.AccountsCreateStorageCredential{

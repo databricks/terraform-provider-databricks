@@ -18,10 +18,10 @@ func TestCreateDac(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: DataAccessConfiguration{
+				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "bcd",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
 					},
 				},
 				Response: catalog.StorageCredentialInfo{
@@ -72,9 +72,9 @@ func TestCreateDacWithAzMI(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: DataAccessConfiguration{
+				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "bcd",
-					AzMI: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentity{
 						AccessConnectorId: "def",
 						ManagedIdentityId: "/..../subscription",
 					},

@@ -35,6 +35,10 @@ func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*sche
 func ResourceStorageCredential() *schema.Resource {
 	s := common.StructToSchema(StorageCredentialInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["force_destroy"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
 			return adjustDataAccessSchema(m)
 		})
 	return common.Resource{

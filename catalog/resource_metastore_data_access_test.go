@@ -315,7 +315,8 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 				ExpectedRequest: catalog.AccountsCreateStorageCredential{
 					MetastoreId: "abc",
 					CredentialInfo: &catalog.CreateStorageCredential{
-						Name: "bcd",
+						Name:                        "bcd",
+						DatabricksGcpServiceAccount: struct{}{},
 					},
 				},
 				Response: catalog.AccountsStorageCredentialInfo{

@@ -58,11 +58,6 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 
 	common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
 
-	m["force_destroy"] = &schema.Schema{
-		Type:     schema.TypeBool,
-		Optional: true,
-	}
-
 	return m
 }
 
@@ -187,22 +182,17 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			force := d.Get("force_destroy").(bool)
 			metastoreId, dacName, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
-					Force:       force,
 					MetastoreId: metastoreId,
 					Name:        dacName,
 				})
 			}, func(w *databricks.WorkspaceClient) error {
-				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
-					Force: force,
-					Name:  dacName,
-				})
+				return w.StorageCredentials.DeleteByName(ctx, dacName)
 			})
 		},
 	}.ToResource()

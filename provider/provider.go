@@ -31,6 +31,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	"github.com/databricks/terraform-provider-databricks/serving"
+	"github.com/databricks/terraform-provider-databricks/settings"
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/tokens"
@@ -127,6 +128,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_storage_configurations":  mws.ResourceMwsStorageConfigurations(),
 			"databricks_mws_vpc_endpoint":            mws.ResourceMwsVpcEndpoint(),
 			"databricks_mws_workspaces":              mws.ResourceMwsWorkspaces(),
+			"databricks_namespace_settings":          settings.ResourceNamespaceSettings(),
 			"databricks_notebook":                    workspace.ResourceNotebook(),
 			"databricks_obo_token":                   tokens.ResourceOboToken(),
 			"databricks_permission_assignment":       access.ResourcePermissionAssignment(),

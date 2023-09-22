@@ -63,7 +63,7 @@ func TestQueryCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceSettings(),
+		Resource: ResourceNamespaceSettings(),
 		Create:   true,
 		HCL: `
 			setting_name = "default"
@@ -96,7 +96,7 @@ func TestQueryRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceSettings(),
+		Resource: ResourceNamespaceSettings(),
 		Read:     true,
 		HCL: `
 			setting_name = "default"
@@ -166,7 +166,7 @@ func TestQueryUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceSettings(),
+		Resource: ResourceNamespaceSettings(),
 		Update:   true,
 		HCL: `
 			setting_name = "default"
@@ -206,7 +206,7 @@ func TestQueryDelete(t *testing.T) {
 				Status:   200,
 			},
 		},
-		Resource: ResourceSettings(),
+		Resource: ResourceNamespaceSettings(),
 		Delete:   true,
 		ID:       "etag1",
 	}.Apply(t)

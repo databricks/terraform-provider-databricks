@@ -90,7 +90,7 @@ var resourceSchema = common.StructToSchema(settings.DefaultNamespaceSetting{},
 		return s
 	})
 
-func ResourceSettings() *schema.Resource {
+func ResourceNamespaceSettings() *schema.Resource {
 	return common.Resource{
 		Schema: resourceSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

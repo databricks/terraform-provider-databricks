@@ -41,7 +41,8 @@ func (cb mountCallback) preProcess(r *schema.Resource) func(
 
 // If a cluster_id is specified for the mount, this function validates that the
 // cluster actually exists. If the cluster does not exist, we assume (incorrectly)
-// that the mount also does not exist.
+// that the mount also does not exist and remove it from the in memory representation
+// of the terraform state.
 //
 // In cases of update requests this would lead to an attempted recreation of the mount.
 //
@@ -58,7 +59,7 @@ func (cb mountCallback) preProcess(r *schema.Resource) func(
 // in the terraform state. If the cluster_id is invalid then there is no way to update
 // it using native terraform apply workflows. The only workaround is to manually edit the
 // tfstate file replacing the existing invalid cluster_id with a new valid one.
-func validateCluster(cb func(context.Context, *schema.ResourceData, any) diag.Diagnostics) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
+func removeFromStateIfClusterDoesNotExist(cb func(context.Context, *schema.ResourceData, any) diag.Diagnostics) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		clusterId := d.Get("cluster_id").(string)
 		if clusterId != "" {
@@ -99,8 +100,8 @@ func ResourceMount() *schema.Resource {
 	tpl := GenericMount{}
 	r := commonMountResource(tpl, ResourceDatabricksMountSchema())
 	r.CreateContext = mountCallback(mountCreate).preProcess(r)
-	r.ReadContext = validateCluster(mountCallback(mountRead).preProcess(r))
-	r.DeleteContext = validateCluster(mountCallback(mountDelete).preProcess(r))
+	r.ReadContext = removeFromStateIfClusterDoesNotExist(mountCallback(mountRead).preProcess(r))
+	r.DeleteContext = removeFromStateIfClusterDoesNotExist(mountCallback(mountDelete).preProcess(r))
 	r.Importer = nil
 	r.Timeouts = &schema.ResourceTimeout{
 		Default: schema.DefaultTimeout(20 * time.Minute),

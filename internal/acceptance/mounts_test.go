@@ -13,32 +13,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var mountHcl = `
+data "databricks_spark_version" "latest" {}
+
+# Test cluster to create the mount using.
+resource "databricks_cluster" "this" {
+	cluster_name = "acc-test-mounts-{var.STICKY_RANDOM}"
+	spark_version = data.databricks_spark_version.latest.id
+	instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+	num_workers = 1
+
+	aws_attributes {
+		instance_profile_arn = "{env.TEST_INSTANCE_PROFILE_ARN}"
+	}
+}
+
+resource "databricks_mount" "my_mount" {
+	name = "test-mount-{var.STICKY_RANDOM}"
+	cluster_id = databricks_cluster.this.id
+	
+	s3 {
+		bucket_name      = "{env.TEST_S3_BUCKET_NAME}"
+	}
+}`
+
 func TestAccCreateDatabricksMount(t *testing.T) {
 	workspaceLevel(t,
 		step{
-			Template: `
-				data "databricks_spark_version" "latest" {}
-			  
-				# Test cluster to create the mount using.
-				resource "databricks_cluster" "this" {
-					cluster_name = "acc-test-mounts-{var.RANDOM}"
-					spark_version = data.databricks_spark_version.latest.id
-					instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-					num_workers = 1
-
-					aws_attributes {
-					instance_profile_arn = "{env.TEST_INSTANCE_PROFILE_ARN}"
-					}
-				}
-
-				resource "databricks_mount" "my_mount" {
-					name = "test-mount-{var.RANDOM}"
-					cluster_id = databricks_cluster.this.id
-					
-					s3 {
-						bucket_name      = "{env.TEST_S3_BUCKET_NAME}"
-					}
-				}`,
+			Template: mountHcl,
 		})
 }
 
@@ -49,29 +51,7 @@ func TestAccCreateDatabricksMountIsFineOnClusterRecreate(t *testing.T) {
 	workspaceLevel(t,
 		// Step 1 creates the cluster and mount.
 		step{
-			Template: `
-				data "databricks_spark_version" "latest" {}
-			  
-				# Test cluster to create the mount using.
-				resource "databricks_cluster" "this" {
-					cluster_name = "acc-test-mounts-{var.STICKY_RANDOM}"
-					spark_version = data.databricks_spark_version.latest.id
-					instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-					num_workers = 1
-
-					aws_attributes {
-					instance_profile_arn = "{env.TEST_INSTANCE_PROFILE_ARN}"
-					}
-				}
-
-				resource "databricks_mount" "my_mount" {
-					name = "test-mount-{var.STICKY_RANDOM}"
-					cluster_id = databricks_cluster.this.id
-					
-					s3 {
-						bucket_name      = "{env.TEST_S3_BUCKET_NAME}"
-					}
-				}`,
+			Template: mountHcl,
 			Check: func(s *terraform.State) error {
 				resources := s.RootModule().Resources
 				cluster := resources["databricks_cluster.this"]
@@ -99,29 +79,7 @@ func TestAccCreateDatabricksMountIsFineOnClusterRecreate(t *testing.T) {
 				err = w.Clusters.PermanentDeleteByClusterId(context.Background(), clusterId1)
 				assert.NoError(t, err, "failed to delete the cluster, id: "+clusterId1)
 			},
-			Template: `
-			data "databricks_spark_version" "latest" {}
-		  
-			# Test cluster to create the mount using.
-			resource "databricks_cluster" "this" {
-				cluster_name = "acc-test-mounts-{var.STICKY_RANDOM}"
-				spark_version = data.databricks_spark_version.latest.id
-				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-				num_workers = 1
-
-				aws_attributes {
-				instance_profile_arn = "{env.TEST_INSTANCE_PROFILE_ARN}"
-				}
-			}
-
-			resource "databricks_mount" "my_mount" {
-				name = "test-mount-{var.STICKY_RANDOM}"
-				cluster_id = databricks_cluster.this.id
-				
-				s3 {
-					bucket_name      = "{env.TEST_S3_BUCKET_NAME}"
-				}
-			}`,
+			Template: mountHcl,
 			Check: func(s *terraform.State) error {
 				resources := s.RootModule().Resources
 				cluster := resources["databricks_cluster.this"]

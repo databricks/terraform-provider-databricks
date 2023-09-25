@@ -175,7 +175,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/sql/warehouses") {
+	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/permissions/sql/warehouses") {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {

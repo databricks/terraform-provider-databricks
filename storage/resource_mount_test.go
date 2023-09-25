@@ -108,6 +108,78 @@ func TestResourceAwsS3MountGenericCreate(t *testing.T) {
 	assert.Equal(t, testS3BucketPath, d.Get("source"))
 }
 
+func TestResourceAwsS3MountGenericCreateWithInvalidClusterId(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Status:       404,
+			},
+		},
+		Resource: ResourceMount(),
+		State: map[string]any{
+			"cluster_id": "this_cluster",
+			"name":       "this_mount",
+			"s3": []any{map[string]any{
+				"bucket_name": testS3BucketName,
+			}},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.EqualError(t, err, "instance profile is required to re-create mounting cluster")
+
+}
+
+func TestResourceAwsS3MountGenericReadWithInvalidClusterId(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Status:       404,
+			},
+		},
+		Resource: ResourceMount(),
+		InstanceState: map[string]string{
+			"cluster_id": "this_cluster",
+			"name":       "this_mount",
+			"source":     testS3BucketPath,
+		},
+		ID:      "this_id_should_be_unset",
+		Removed: true,
+		Read:    true,
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "", d.Id())
+}
+
+func TestResourceAwsS3MountGenericDeleteWithInvalidClusterId(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=this_cluster",
+				Status:       404,
+			},
+		},
+		Resource: ResourceMount(),
+		InstanceState: map[string]string{
+			"cluster_id": "this_cluster",
+			"name":       "this_mount",
+			"source":     testS3BucketPath,
+		},
+		ID:      "this_id_should_be_unset",
+		Removed: true,
+		Delete:  true,
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "", d.Id())
+}
+
 func TestResourceAwsS3MountGenericCreate_NoName(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1072,6 +1144,13 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 					State: clusters.ClusterStateRunning,
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+				},
+			},
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
@@ -1107,6 +1186,13 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",
@@ -1152,6 +1238,13 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 					State: clusters.ClusterStateRunning,
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+				},
+			},
 		},
 		Resource: ResourceMount(),
 		CommandMock: func(commandStr string) common.CommandResults {
@@ -1185,6 +1278,13 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/clusters/get?cluster_id=b",
+				Response: clusters.ClusterInfo{
+					State: clusters.ClusterStateRunning,
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=b",

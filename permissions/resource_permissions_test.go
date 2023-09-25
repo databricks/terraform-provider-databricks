@@ -23,6 +23,7 @@ import (
 var (
 	TestingUser      = "ben"
 	TestingAdminUser = "admin"
+	TestingOwner     = "testOwner"
 	me               = qa.HTTPFixture{
 		ReuseRequest: true,
 		Method:       "GET",
@@ -845,10 +846,6 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 							UserName:        TestingAdminUser,
 							PermissionLevel: "CAN_MANAGE",
 						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "IS_OWNER",
-						},
 					},
 				},
 			},
@@ -871,6 +868,96 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingOwner,
+							PermissionLevel: "IS_OWNER",
+						},
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
+				Response: ObjectACL{
+					ObjectID:   "/sql/dashboards/abc",
+					ObjectType: "dashboard",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+						{
+							UserName:        TestingOwner,
+							PermissionLevel: "IS_OWNER",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"sql_endpoint_id": "abc",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_USE",
+				},
+				map[string]any{
+					"user_name":        TestingOwner,
+					"permission_level": "IS_OWNER",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	accessControlList := ac.List()
+	require.Equal(t, 2, len(accessControlList))
+	foundTestingUser := false
+	foundTestingOwner := false
+
+	for _, entry := range accessControlList {
+		entryMap, ok := entry.(map[string]any)
+		if !ok {
+			t.Fatalf("Expected the entry to be of type map[string]any, got %T", entry)
+		}
+		if userName, exists := entryMap["user_name"].(string); exists {
+			switch userName {
+			case TestingUser:
+				foundTestingUser = true
+				assert.Equal(t, "CAN_USE", entryMap["permission_level"], "Permission level for TestingUser is not CAN_USE")
+			case TestingOwner:
+				foundTestingOwner = true
+				assert.Equal(t, "IS_OWNER", entryMap["permission_level"], "Permission level for TestingOwner is not IS_OWNER")
+			}
+		}
+	}
+	assert.True(t, foundTestingUser)
+	assert.True(t, foundTestingOwner)
 }
 
 func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {

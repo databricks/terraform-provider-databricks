@@ -154,8 +154,8 @@ func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, object
 // Helper function for applying permissions changes. Ensures that
 // we select the correct HTTP method based on the object type and preserve the calling
 // user's ability to manage the specified object when applying permissions changes.
-func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
-	objectACL, err := a.ensureCurrentUserCanManageObject(objectID, objectACL)
+func (a PermissionsAPI) put(objectID string, objectACLOld AccessControlChangeList) error {
+	objectACL, err := a.ensureCurrentUserCanManageObject(objectID, objectACLOld)
 	if err != nil {
 		return err
 	}
@@ -163,6 +163,7 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 		// SQLA entities use POST for permission updates.
 		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
 	}
+	// good till here tanmaytest
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
 }
 

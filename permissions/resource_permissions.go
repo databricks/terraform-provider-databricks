@@ -175,7 +175,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/permissions/sql/warehouses") {
+	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -243,15 +243,6 @@ func (a PermissionsAPI) Delete(objectID string) error {
 		}
 		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
 			UserName:        job.CreatorUserName,
-			PermissionLevel: "IS_OWNER",
-		})
-	} else if strings.HasPrefix(objectID, "/sql/warehouses") {
-		warehouse, err := w.Warehouses.GetById(a.context, strings.ReplaceAll(objectID, "/sql/warehouses", ""))
-		if err != nil {
-			return err
-		}
-		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
-			UserName:        warehouse.CreatorName,
 			PermissionLevel: "IS_OWNER",
 		})
 	}

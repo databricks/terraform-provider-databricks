@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// NewSettingsAPI creates SettingsAPI instance from provider meta
-func NewSettingsAPI(ctx context.Context, m any) SettingsAPI {
+// NewDefaultNamespaceSettingsAPI creates a DefaultNamespaceSettingsAPI instance
+func NewDefaultNamespaceSettingsAPI(ctx context.Context, m any) DefaultNamespaceSettingsAPI {
 	client := m.(*common.DatabricksClient)
-	return SettingsAPI{client, ctx}
+	return DefaultNamespaceSettingsAPI{client, ctx}
 }
 
-// SettingsAPI exposes the Settings API
-type SettingsAPI struct {
+// DefaultNamespaceSettingsAPI exposes the Default Namespace Settings API
+type DefaultNamespaceSettingsAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
 }
 
-func (a SettingsAPI) getCurrentEtag(etag string) (string, error) {
+func (a DefaultNamespaceSettingsAPI) getCurrentEtag(etag string) (string, error) {
 	res, err := a.Read(etag)
 	if err != nil {
 		// If settings is not set-up, we will get an error with the etag in it.
@@ -32,7 +32,7 @@ func (a SettingsAPI) getCurrentEtag(etag string) (string, error) {
 	return res.Etag, nil
 }
 
-func (a SettingsAPI) getEtagFromError(err error) (string, error) {
+func (a DefaultNamespaceSettingsAPI) getEtagFromError(err error) (string, error) {
 	errorInfos := apierr.GetErrorInfo(err)
 	if len(errorInfos) > 0 {
 		metadata := errorInfos[0].Metadata
@@ -43,11 +43,11 @@ func (a SettingsAPI) getEtagFromError(err error) (string, error) {
 	return "", fmt.Errorf("error fetching the default workspace namespace settings: %w", err)
 }
 
-func (a SettingsAPI) Create(request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
+func (a DefaultNamespaceSettingsAPI) Create(request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
 	return a.Update("", request)
 }
 
-func (a SettingsAPI) Read(etag string) (settings.DefaultNamespaceSetting, error) {
+func (a DefaultNamespaceSettingsAPI) Read(etag string) (settings.DefaultNamespaceSetting, error) {
 	var setting settings.DefaultNamespaceSetting
 	err := a.client.Get(a.context, "/settings/types/default_namespace_ws/names/default", map[string]string{
 		"etag": etag,
@@ -55,7 +55,7 @@ func (a SettingsAPI) Read(etag string) (settings.DefaultNamespaceSetting, error)
 	return setting, err
 }
 
-func (a SettingsAPI) Delete(etag string) (string, error) {
+func (a DefaultNamespaceSettingsAPI) Delete(etag string) (string, error) {
 	etag, err := a.getCurrentEtag(etag)
 	if err != nil {
 		return "", err
@@ -70,7 +70,7 @@ func (a SettingsAPI) Delete(etag string) (string, error) {
 	return response.Etag, nil
 }
 
-func (a SettingsAPI) Update(etag string, request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
+func (a DefaultNamespaceSettingsAPI) Update(etag string, request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
 	etag, err := a.getCurrentEtag(etag)
 	if err != nil {
 		return "", err
@@ -104,7 +104,7 @@ func ResourceDefaultNamespaceSettings() *schema.Resource {
 				Setting:      &setting,
 				FieldMask:    "namespace.value",
 			}
-			settingAPI := NewSettingsAPI(ctx, c)
+			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
 			etag, err := settingAPI.Create(request)
 			if err != nil {
 				return err
@@ -113,7 +113,7 @@ func ResourceDefaultNamespaceSettings() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			settingAPI := NewSettingsAPI(ctx, c)
+			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
 			res, err := settingAPI.Read(d.Id())
 			if err != nil {
 				return err
@@ -138,7 +138,7 @@ func ResourceDefaultNamespaceSettings() *schema.Resource {
 				Setting:      &setting,
 				FieldMask:    "namespace.value",
 			}
-			settingAPI := NewSettingsAPI(ctx, c)
+			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
 			etag, err := settingAPI.Update(d.Id(), request)
 			if err != nil {
 				return err
@@ -151,7 +151,7 @@ func ResourceDefaultNamespaceSettings() *schema.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			etag, err := NewSettingsAPI(ctx, c).Delete(d.Id())
+			etag, err := NewDefaultNamespaceSettingsAPI(ctx, c).Delete(d.Id())
 			if err != nil {
 				return err
 			}

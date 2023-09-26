@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestQueryCreate(t *testing.T) {
+func TestQueryCreateDefaultNameSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -78,7 +78,7 @@ func TestQueryCreate(t *testing.T) {
 	assert.Equal(t, "namespace_value", d.Get("namespace.0.value"))
 }
 
-func TestQueryRead(t *testing.T) {
+func TestQueryReadDefaultNameSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -112,7 +112,7 @@ func TestQueryRead(t *testing.T) {
 	assert.Equal(t, "namespace_value", res["value"])
 }
 
-func TestQueryUpdate(t *testing.T) {
+func TestQueryUpdateDefaultNameSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -181,7 +181,7 @@ func TestQueryUpdate(t *testing.T) {
 	assert.Equal(t, "new_namespace_value", res["value"])
 }
 
-func TestQueryDelete(t *testing.T) {
+func TestQueryDeleteDefaultNameSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

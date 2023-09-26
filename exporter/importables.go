@@ -1102,6 +1102,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		List: func(ic *importContext) error {
+			// TODO: Should we use parallel listing instead?
 			repoList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
 			if err != nil {
 				return err

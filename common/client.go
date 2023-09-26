@@ -112,6 +112,11 @@ func (c *DatabricksClient) Delete(ctx context.Context, path string, request any)
 	return c.Do(ctx, http.MethodDelete, path, nil, request, nil, c.addApiPrefix)
 }
 
+// Delete on path
+func (c *DatabricksClient) DeleteWithResponse(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodDelete, path, nil, request, response, c.addApiPrefix)
+}
+
 // Patch on path
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
 	return c.Do(ctx, http.MethodPatch, path, nil, request, nil, c.addApiPrefix)

@@ -3,13 +3,11 @@ package settings
 import (
 	"context"
 	"fmt"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // NewSettingsAPI creates SettingsAPI instance from provider meta
@@ -89,18 +87,18 @@ func (a SettingsAPI) Update(etag string, request settings.UpdateDefaultWorkspace
 var resourceSchema = common.StructToSchema(settings.DefaultNamespaceSetting{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		delete(s, "etag")
-		regex, _ := regexp.Compile("default")
-		s["setting_name"].ValidateFunc = validation.StringMatch(regex, `only "default" setting name is currently supported`)
+		delete(s, "setting_name")
 
 		return s
 	})
 
-func ResourceNamespaceSettings() *schema.Resource {
+func ResourceDefaultNamespaceSettings() *schema.Resource {
 	return common.Resource{
 		Schema: resourceSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var setting settings.DefaultNamespaceSetting
 			common.DataToStructPointer(d, resourceSchema, &setting)
+			setting.SettingName = "default"
 			request := settings.UpdateDefaultWorkspaceNamespaceRequest{
 				AllowMissing: true,
 				Setting:      &setting,
@@ -134,6 +132,7 @@ func ResourceNamespaceSettings() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var setting settings.DefaultNamespaceSetting
 			common.DataToStructPointer(d, resourceSchema, &setting)
+			setting.SettingName = "default"
 			request := settings.UpdateDefaultWorkspaceNamespaceRequest{
 				AllowMissing: true,
 				Setting:      &setting,

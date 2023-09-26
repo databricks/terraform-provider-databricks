@@ -63,10 +63,9 @@ func TestQueryCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceNamespaceSettings(),
+		Resource: ResourceDefaultNamespaceSettings(),
 		Create:   true,
 		HCL: `
-			setting_name = "default"
 			namespace {
 				value = "namespace_value"
 			}
@@ -76,7 +75,6 @@ func TestQueryCreate(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "etag2", d.Id())
-	assert.Equal(t, "default", d.Get("setting_name"))
 	assert.Equal(t, "namespace_value", d.Get("namespace.0.value"))
 }
 
@@ -97,10 +95,9 @@ func TestQueryRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceNamespaceSettings(),
+		Resource: ResourceDefaultNamespaceSettings(),
 		Read:     true,
 		HCL: `
-			setting_name = "default"
 			namespace {
 				value = "namespace_value"
 			}
@@ -111,7 +108,6 @@ func TestQueryRead(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "etag2", d.Id())
-	assert.Equal(t, "default", d.Get("setting_name"))
 	res := d.Get("namespace").([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, "namespace_value", res["value"])
 }
@@ -168,10 +164,9 @@ func TestQueryUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceNamespaceSettings(),
+		Resource: ResourceDefaultNamespaceSettings(),
 		Update:   true,
 		HCL: `
-			setting_name = "default"
 			namespace {
 				value = "new_namespace_value"
 			}
@@ -182,7 +177,6 @@ func TestQueryUpdate(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "etag3", d.Id())
-	assert.Equal(t, "default", d.Get("setting_name"))
 	res := d.Get("namespace").([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, "new_namespace_value", res["value"])
 }
@@ -211,7 +205,7 @@ func TestQueryDelete(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceNamespaceSettings(),
+		Resource: ResourceDefaultNamespaceSettings(),
 		Delete:   true,
 		ID:       "etag1",
 	}.Apply(t)

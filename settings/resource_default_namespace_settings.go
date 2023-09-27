@@ -2,7 +2,9 @@ package settings
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
@@ -22,17 +24,18 @@ type DefaultNamespaceSettingsAPI struct {
 	context context.Context
 }
 
-func (a DefaultNamespaceSettingsAPI) getLatestEtag(etag string) (string, error) {
-	res, err := a.Read(etag)
-	if err != nil {
-		// If settings is not set-up, we will get an error with the etag in it.
-		// This will happen, for instance, during the first ever call to GET.
-		return a.getEtagFromError(err)
+func (a DefaultNamespaceSettingsAPI) etagVersionError(err error) bool {
+	var aerr *apierr.APIError
+	if !errors.As(err, &aerr) {
+		return false
 	}
-	return res.Etag, nil
+	return aerr.StatusCode == http.StatusNotFound || (aerr.StatusCode == http.StatusConflict || aerr.ErrorCode == "RESOURCE_CONFLICT")
 }
 
 func (a DefaultNamespaceSettingsAPI) getEtagFromError(err error) (string, error) {
+	if !a.etagVersionError(err) {
+		return "", err
+	}
 	errorInfos := apierr.GetErrorInfo(err)
 	if len(errorInfos) > 0 {
 		metadata := errorInfos[0].Metadata
@@ -43,25 +46,21 @@ func (a DefaultNamespaceSettingsAPI) getEtagFromError(err error) (string, error)
 	return "", fmt.Errorf("error fetching the default workspace namespace settings: %w", err)
 }
 
-func (a DefaultNamespaceSettingsAPI) Create(request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
-	return a.Update("", request)
-}
-
-func (a DefaultNamespaceSettingsAPI) Read(etag string) (settings.DefaultNamespaceSetting, error) {
-	var setting settings.DefaultNamespaceSetting
-	err := a.client.Get(a.context, "/settings/types/default_namespace_ws/names/default", map[string]string{
-		"etag": etag,
-	}, &setting)
-	return setting, err
-}
-
-func (a DefaultNamespaceSettingsAPI) Delete(etag string) (string, error) {
-	etag, err := a.getLatestEtag(etag)
+func (a DefaultNamespaceSettingsAPI) DeleteWithRetry(etag string) (string, error) {
+	etag, err := a.executeDelete(etag)
+	if err == nil {
+		return etag, nil
+	}
+	etag, err = a.getEtagFromError(err)
 	if err != nil {
 		return "", err
 	}
-	var response settings.DeleteDefaultWorkspaceNamespaceResponse
-	err = a.client.DeleteWithResponse(a.context, "/settings/types/default_namespace_ws/names/default", map[string]string{
+	return a.executeDelete(etag)
+}
+
+func (a DefaultNamespaceSettingsAPI) executeDelete(etag string) (string, error) {
+	var response settings.DefaultNamespaceSetting
+	err := a.client.DeleteWithResponse(a.context, "/settings/types/default_namespace_ws/names/default", map[string]string{
 		"etag": etag,
 	}, &response)
 	if err != nil {
@@ -70,18 +69,34 @@ func (a DefaultNamespaceSettingsAPI) Delete(etag string) (string, error) {
 	return response.Etag, nil
 }
 
-func (a DefaultNamespaceSettingsAPI) Update(etag string, request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
-	etag, err := a.getLatestEtag(etag)
+func (a DefaultNamespaceSettingsAPI) UpdateWithRetry(request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
+	etag, err := a.executeUpdate(request)
+	if err == nil {
+		return etag, nil
+	}
+	etag, err = a.getEtagFromError(err)
 	if err != nil {
 		return "", err
 	}
 	request.Setting.Etag = etag
+	return a.executeUpdate(request)
+}
+
+func (a DefaultNamespaceSettingsAPI) executeUpdate(request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
 	var response settings.DefaultNamespaceSetting
-	err = a.client.PatchWithResponse(a.context, "/settings/types/default_namespace_ws/names/default", request, &response)
+	err := a.client.PatchWithResponse(a.context, "/settings/types/default_namespace_ws/names/default", request, &response)
 	if err != nil {
 		return "", err
 	}
 	return response.Etag, nil
+}
+
+func (a DefaultNamespaceSettingsAPI) Read(etag string) (settings.DefaultNamespaceSetting, error) {
+	var setting settings.DefaultNamespaceSetting
+	err := a.client.Get(a.context, "/settings/types/default_namespace_ws/names/default", map[string]string{
+		"etag": etag,
+	}, &setting)
+	return setting, err
 }
 
 var resourceSchema = common.StructToSchema(settings.DefaultNamespaceSetting{},
@@ -105,7 +120,7 @@ func ResourceDefaultNamespaceSettings() *schema.Resource {
 				FieldMask:    "namespace.value",
 			}
 			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
-			etag, err := settingAPI.Create(request)
+			etag, err := settingAPI.UpdateWithRetry(request)
 			if err != nil {
 				return err
 			}
@@ -133,13 +148,14 @@ func ResourceDefaultNamespaceSettings() *schema.Resource {
 			var setting settings.DefaultNamespaceSetting
 			common.DataToStructPointer(d, resourceSchema, &setting)
 			setting.SettingName = "default"
+			setting.Etag = d.Id()
 			request := settings.UpdateDefaultWorkspaceNamespaceRequest{
 				AllowMissing: true,
 				Setting:      &setting,
 				FieldMask:    "namespace.value",
 			}
 			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
-			etag, err := settingAPI.Update(d.Id(), request)
+			etag, err := settingAPI.UpdateWithRetry(request)
 			if err != nil {
 				return err
 			}
@@ -151,7 +167,7 @@ func ResourceDefaultNamespaceSettings() *schema.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			etag, err := NewDefaultNamespaceSettingsAPI(ctx, c).Delete(d.Id())
+			etag, err := NewDefaultNamespaceSettingsAPI(ctx, c).DeleteWithRetry(d.Id())
 			if err != nil {
 				return err
 			}

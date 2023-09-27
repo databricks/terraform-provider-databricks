@@ -1,5 +1,18 @@
 # Version changelog
 
+## 1.27.0
+ * Fixed [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) resource for correct permissions update. ([#2719](https://github.com/databricks/terraform-provider-databricks/pull/2719)).
+ * Added `owner`` & `force_destroy`` to `databricks_metastore_data_access`` ([#2713](https://github.com/databricks/terraform-provider-databricks/pull/2713)).
+ * Deprecated `cluster_mount_info` block in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource ([#2703](https://github.com/databricks/terraform-provider-databricks/pull/2703)).
+ * Fixed [databricks_metastore_data_access](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/metastore_data_access) and [databricks_storage_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/storage_credential) creation on GCP ([#2712](https://github.com/databricks/terraform-provider-databricks/pull/2712)).
+ * Fixed missing `registered_model_id` attribute in [databricks_mlflow_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_model) resource ([#2732](https://github.com/databricks/terraform-provider-databricks/pull/2732)).
+ * Fixed mount read failing if cluster no longer exists ([#2634](https://github.com/databricks/terraform-provider-databricks/pull/2634)).
+ * Bump github.com/databricks/databricks-sdk-go from 0.19.2 to 0.20.0 ([#2714](https://github.com/databricks/terraform-provider-databricks/pull/2714)).
+
+ Exporter:
+ * Exporter: parallel listing of workspace objects ([#2691](https://github.com/databricks/terraform-provider-databricks/pull/2691)).
+
+
 ## 1.26.0
  * Removed `computed` for `pause_status` in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2696](https://github.com/databricks/terraform-provider-databricks/pull/2696)).
  * Added support for init scripts from Unity Catalog Volumes in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) ([#2666](https://github.com/databricks/terraform-provider-databricks/pull/2666)).

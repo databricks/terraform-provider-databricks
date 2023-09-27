@@ -24,7 +24,7 @@ type DefaultNamespaceSettingsAPI struct {
 	context context.Context
 }
 
-func (a DefaultNamespaceSettingsAPI) etagVersionError(err error) bool {
+func (a DefaultNamespaceSettingsAPI) isEtagVersionError(err error) bool {
 	var aerr *apierr.APIError
 	if !errors.As(err, &aerr) {
 		return false
@@ -33,7 +33,7 @@ func (a DefaultNamespaceSettingsAPI) etagVersionError(err error) bool {
 }
 
 func (a DefaultNamespaceSettingsAPI) getEtagFromError(err error) (string, error) {
-	if !a.etagVersionError(err) {
+	if !a.isEtagVersionError(err) {
 		return "", err
 	}
 	errorInfos := apierr.GetErrorInfo(err)

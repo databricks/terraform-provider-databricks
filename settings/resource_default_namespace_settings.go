@@ -22,7 +22,7 @@ type DefaultNamespaceSettingsAPI struct {
 	context context.Context
 }
 
-func (a DefaultNamespaceSettingsAPI) getCurrentEtag(etag string) (string, error) {
+func (a DefaultNamespaceSettingsAPI) getLatestEtag(etag string) (string, error) {
 	res, err := a.Read(etag)
 	if err != nil {
 		// If settings is not set-up, we will get an error with the etag in it.
@@ -56,7 +56,7 @@ func (a DefaultNamespaceSettingsAPI) Read(etag string) (settings.DefaultNamespac
 }
 
 func (a DefaultNamespaceSettingsAPI) Delete(etag string) (string, error) {
-	etag, err := a.getCurrentEtag(etag)
+	etag, err := a.getLatestEtag(etag)
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func (a DefaultNamespaceSettingsAPI) Delete(etag string) (string, error) {
 }
 
 func (a DefaultNamespaceSettingsAPI) Update(etag string, request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
-	etag, err := a.getCurrentEtag(etag)
+	etag, err := a.getLatestEtag(etag)
 	if err != nil {
 		return "", err
 	}

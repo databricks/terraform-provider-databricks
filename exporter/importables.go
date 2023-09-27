@@ -1045,7 +1045,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, gis := range globalInitScripts {
 				modifiedAt := gis.UpdatedAt
-				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				if ic.incremental && modifiedAt < updatedSinceMs {
 					log.Printf("[DEBUG] skipping global init script '%s' that was modified at %d (last active=%d)",
 						gis.Name, modifiedAt, updatedSinceMs)
 					continue
@@ -1214,7 +1214,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, ipList := range ipLists {
 				modifiedAt := ipList.UpdatedAt
-				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				if ic.incremental && modifiedAt < updatedSinceMs {
 					log.Printf("[DEBUG] skipping IP access list '%s' that was modified at %d (last active=%d)",
 						ipList.Label, modifiedAt, updatedSinceMs)
 					continue
@@ -1719,7 +1719,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						return err
 					}
 					modifiedAt := pipeline.LastModified
-					if modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					if modifiedAt < updatedSinceMs {
 						log.Printf("[DEBUG] skipping DLT Pipeline '%s' that was modified at %d (last active=%d)",
 							pipeline.Name, modifiedAt, updatedSinceMs)
 						continue
@@ -1887,7 +1887,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, endpoint := range endpointsList {
 				modifiedAt := endpoint.LastUpdatedTimestamp
-				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				if ic.incremental && modifiedAt < updatedSinceMs {
 					log.Printf("[DEBUG] skipping serving endpoint '%s' that was modified at %d (last active=%d)",
 						endpoint.Name, modifiedAt, updatedSinceMs)
 					continue
@@ -1940,7 +1940,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, webhook := range webhooks {
 				modifiedAt := webhook.LastUpdatedTimestamp
-				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				if ic.incremental && modifiedAt < updatedSinceMs {
 					log.Printf("[DEBUG] skipping MLflow webhook '%s' that was modified at %d (last active=%d)",
 						webhook.Id, modifiedAt, updatedSinceMs)
 					continue

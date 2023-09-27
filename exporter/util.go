@@ -630,7 +630,7 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 				continue
 			}
 			modifiedAt := wsObjectGetModifiedAt(object)
-			if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+			if ic.incremental && modifiedAt < updatedSinceMs {
 				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
 					modifiedAt, updatedSinceMs)
 				continue

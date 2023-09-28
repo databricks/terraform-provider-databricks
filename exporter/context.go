@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -52,6 +51,8 @@ import (
     +--------------------+        +-----------------+       +-----------------+
 */
 
+type resourceChannel chan *resource
+
 type importContext struct {
 	// not modified/used only in single thread
 	Module            string
@@ -66,11 +67,13 @@ type importContext struct {
 	variables         map[string]string
 	workspaceConfKeys map[string]any
 
+	channels map[string]resourceChannel
+
 	// mutable resources
 	State stateApproximation
 	Scope importedResources
 
-	// command-line resources (immutable)
+	// command-line resources (immutable, or set by the single thread)
 	includeUserDomains  bool
 	importAllUsers      bool
 	debug               bool
@@ -87,11 +90,13 @@ type importContext struct {
 	accountLevel        bool
 	shImports           map[string]bool
 	notebooksFormat     string
+	updatedSinceStr     string
+	updatedSinceMs      int64
+
+	waitGroup *sync.WaitGroup
 
 	// TODO: protect by mutex?
-	updatedSinceStr string
-	updatedSinceMs  int64
-	mountMap        map[string]mount
+	mountMap map[string]mount
 
 	//
 	testEmits      map[string]bool
@@ -146,6 +151,23 @@ var workspaceConfKeys = map[string]any{
 	"enableDeprecatedGlobalInitScripts":                false,
 }
 
+const (
+	defaultChannelSize = 100000
+	defaultNumRoutines = 2
+)
+
+var goroutinesNumber = map[string]int{
+	"databricks_notebook":          7,
+	"databricks_directory":         5,
+	"databricks_workspace_file":    3,
+	"databricks_user":              2,
+	"databricks_service_principal": 2,
+	"databricks_dashboard":         3,
+	"databricks_query":             5,
+	"databricks_alert":             2,
+	"databricks_permissions":       10,
+}
+
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
@@ -157,6 +179,10 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		c *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, c)
 	})
+	channels := make(map[string]resourceChannel, len(p.ResourcesMap))
+	for r := range p.ResourcesMap {
+		channels[r] = make(resourceChannel, defaultChannelSize)
+	}
 	return &importContext{
 		Client:      c,
 		Context:     ctx,
@@ -166,6 +192,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		Files:       map[string]*hclwrite.File{},
 		Scope:       importedResources{},
 		importing:   map[string]bool{},
+		channels:    channels,
+		waitGroup:   &sync.WaitGroup{},
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
@@ -260,26 +288,62 @@ func (ic *importContext) Run() error {
 			}
 		}
 	}
+	// Concurrent execution part
+	// Start goroutines for each resource type
+	for rt, c := range ic.channels {
+		ch := c
+		resourceType := rt
+		numRoutines, exists := goroutinesNumber[resourceType]
+		if !exists {
+			numRoutines = defaultNumRoutines
+		}
+		for i := 0; i < numRoutines; i++ {
+			num := i
+			go func() {
+				log.Printf("[DEBUG] Starting goroutine %d for resource %s", num, resourceType)
+				for r := range ch {
+					log.Printf("[DEBUG] channel for %s, channel size=%d got %v", resourceType, len(ch), r)
+					if r != nil {
+						r.ImportResource(ic)
+					}
+				}
+			}()
+		}
+	}
 
-	for resourceName, ir := range ic.Importables {
+	// Start listing of objects
+	for rnLoop, irLoop := range ic.Importables {
+		resourceName := rnLoop
+		ir := irLoop
 		if ir.List == nil {
 			continue
 		}
 		if !strings.Contains(ic.listing, ir.Service) {
-			log.Printf("[DEBUG] %s (%s service) is not part of listing",
-				resourceName, ir.Service)
+			log.Printf("[DEBUG] %s (%s service) is not part of listing", resourceName, ir.Service)
 			continue
 		}
 		if ic.accountLevel && !ir.AccountLevel {
 			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
 			continue
 		}
-		if err := ir.List(ic); err != nil {
-			log.Printf("[ERROR] %s (%s service) listing failed: %s",
-				resourceName, ir.Service, err)
-			continue
-		}
+		ic.waitGroup.Add(1)
+		go func() {
+			if err := ir.List(ic); err != nil {
+				log.Printf("[ERROR] %s (%s service) listing failed: %s", resourceName, ir.Service, err)
+			}
+			log.Printf("[DEBUG] Finished listing for service %s", resourceName)
+			ic.waitGroup.Done()
+		}()
 	}
+
+	ic.waitGroup.Wait()
+	// close channels
+	for rt, ch := range ic.channels {
+		log.Printf("[DEBUG] Closing channel for resource %s", rt)
+		close(ch)
+	}
+
+	// This should be single threaded...
 	if ic.Scope.Len() == 0 {
 		return fmt.Errorf("no resources to import")
 	}
@@ -692,72 +756,32 @@ func (ic *importContext) Emit(r *resource) {
 		return
 	}
 	ic.setImportingState(r.String(), false) // we're starting to add a new resource
-	pr, ok := ic.Resources[r.Resource]
-	if !ok {
-		log.Printf("[ERROR] %s is not available in provider", r)
-		return
-	}
 	ir, ok := ic.Importables[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
 	}
+	_, ok = ic.Resources[r.Resource]
+	if !ok {
+		log.Printf("[ERROR] %s is not available in provider", r)
+		return
+	}
+
 	if ic.accountLevel && !ir.AccountLevel {
-		log.Printf("[DEBUG] %s (%s service) is not part of the account level export",
-			r.Resource, ir.Service)
+		log.Printf("[DEBUG] %s (%s service) is not part of the account level export", r.Resource, ir.Service)
 		return
 	}
 	// TODO: add similar condition for checking workspace-level objects only. After new ACLs import is merged
 
 	// TODO: split services into slice?
 	if !strings.Contains(ic.services, ir.Service) {
-		log.Printf("[DEBUG] %s (%s service) is not part of the import",
-			r.Resource, ir.Service)
+		log.Printf("[DEBUG] %s (%s service) is not part of the import", r.Resource, ir.Service)
 		return
 	}
-	if r.ID == "" {
-		if ir.Search == nil {
-			log.Printf("[ERROR] Searching %s is not available", r)
-			return
-		}
-		if err := ir.Search(ic, r); err != nil {
-			log.Printf("[ERROR] Cannot search for a resource %s: %v", err, r)
-			return
-		}
-		if r.ID == "" {
-			log.Printf("[INFO] Cannot find %s", r)
-			return
-		}
-	}
-	if r.Data == nil {
-		// empty data with resource schema
-		r.Data = pr.Data(&terraform.InstanceState{
-			Attributes: map[string]string{},
-			ID:         r.ID,
-		})
-		r.Data.MarkNewResource()
-		resource := strings.ReplaceAll(r.Resource, "databricks_", "")
-		ctx := context.WithValue(ic.Context, common.ResourceName, resource)
-		apiVersion := ic.Importables[r.Resource].ApiVersion
-		if apiVersion != "" {
-			ctx = context.WithValue(ctx, common.Api, apiVersion)
-		}
-		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
-			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
-			return
-		}
-		if r.Data.Id() == "" {
-			r.Data.SetId(r.ID)
-		}
-	}
-	r.Name = ic.ResourceName(r)
-	if ir.Import != nil {
-		if err := ir.Import(ic, r); err != nil {
-			log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
-			return
-		}
-	}
-	ic.Add(r)
+	// from here, it should be done by the goroutine...
+	// send resource into the channel
+	ic.waitGroup.Add(1)
+	ic.channels[r.Resource] <- r
 }
 
 func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrite.Tokens {

@@ -41,7 +41,6 @@ func ResourceConnection() *schema.Resource {
 				Type:       schema.TypeString,
 				Optional:   true,
 				Deprecated: `owner field is deprecated due the Catalog API changes. Owner cannot be specified when creating a connection.`,
-				Default:    "",
 			}
 			return m
 		})

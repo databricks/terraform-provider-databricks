@@ -1,4 +1,4 @@
-name: schema
+name: Provider schema
 
 on:
   pull_request:

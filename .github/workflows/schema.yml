@@ -1,0 +1,96 @@
+name: schema
+
+on:
+  workflow_dispatch:
+
+jobs:
+  compute_current:
+    name: "Generate current"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+
+      - run: make install
+
+      - name: Generate provider schema
+        run: |
+          cd /tmp
+          cat > main.tf <<EOF
+          terraform {
+            required_providers {
+              databricks = {
+                source = "databricks/databricks"
+              }
+            }
+          }
+          EOF
+          terraform init
+          terraform providers schema -json > provider.json
+
+      - name: 'Upload provider schema'
+        uses: actions/upload-artifact@v3
+        with:
+          name: schema-current
+          path: /tmp/provider.json
+          retention-days: 1
+
+  compute_new:
+    name: "Generate new"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: 'Setup Go'
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+
+      - run: make install
+
+      - name: 'Generate provider schema'
+        run: |
+          cd /tmp
+          cat > main.tf <<EOF
+          terraform {
+            required_providers {
+              databricks = {
+                source = "databricks/databricks"
+              }
+            }
+          }
+          EOF
+          terraform init
+          terraform providers schema -json > provider.json
+
+      - name: 'Upload provider schema'
+        uses: actions/upload-artifact@v3
+        with:
+          name: schema-new
+          path: /tmp/provider.json
+          retention-days: 1
+
+  diff:
+    needs: [compute_current, compute_new]
+
+    name: "Compute diff"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: my-artifact
+
+      - run: ls -l

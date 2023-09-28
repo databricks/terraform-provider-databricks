@@ -39,6 +39,7 @@ var sensitiveOptions = []string{"user", "password", "personalAccessToken", "acce
 func ResourceConnection() *schema.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["owner"].Deprecated = "owner field is deprecated due the Catalog API changes."
 			return m
 		})
 	pi := common.NewPairID("metastore_id", "name").Schema(

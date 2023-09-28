@@ -30,7 +30,6 @@ func TestConnectionsCreate(t *testing.T) {
 					Properties: map[string]string{
 						"purpose": "testing",
 					},
-					Owner: "InitialOwner",
 				},
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
@@ -102,7 +101,6 @@ func TestConnectionsCreate_Error(t *testing.T) {
 					Options: map[string]string{
 						"host": "test.com",
 					},
-					Owner: "testOwner",
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",

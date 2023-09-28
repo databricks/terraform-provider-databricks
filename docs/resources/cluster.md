@@ -270,7 +270,17 @@ init_scripts {
 }
 ```
 
-Example of taking init script from DBFS:
+Example of using a file from Unity Catalog Volume as init script:
+
+```hcl
+init_scripts {
+  volumes {
+    destination = "/Volumes/Catalog/default/init-scripts/init-script.sh"
+  }
+}
+```
+
+Example of taking init script from DBFS (deprecated):
 
 ```hcl
 init_scripts {
@@ -463,7 +473,7 @@ resource "databricks_cluster" "this" {
 }
 ```
 
-## cluster_mount_info blocks
+## cluster_mount_info blocks (deprecated)
 
 It's possible to mount NFS (Network File System) resources into the Spark containers inside the cluster.  You can specify one or more `cluster_mount_info` blocks describing the mount. This block has following attributes:
 

@@ -27,6 +27,7 @@ const (
 
 type ShareInfo struct {
 	Name      string             `json:"name" tf:"force_new"`
+	Owner     string             `json:"owner,omitempty" tf:"suppress_diff"`
 	Objects   []SharedDataObject `json:"objects,omitempty" tf:"alias:object"`
 	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 	CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
@@ -52,6 +53,7 @@ type ShareDataChange struct {
 }
 
 type ShareUpdates struct {
+	Owner   string            `json:"owner,omitempty"`
 	Updates []ShareDataChange `json:"updates"`
 }
 
@@ -188,10 +190,11 @@ func ResourceShare() *schema.Resource {
 				return err
 			}
 
-			//can only create empty share, objects have to be added using update API
+			//can only create empty share, objects & owners have to be added using update API
 			var si ShareInfo
 			common.DataToStructPointer(d, shareSchema, &si)
 			shareChanges := si.shareChanges(ShareAdd)
+			shareChanges.Owner = si.Owner
 			if err := NewSharesAPI(ctx, c).update(si.Name, shareChanges); err != nil {
 				//delete orphaned share if update fails
 				if d_err := w.Shares.DeleteByName(ctx, si.Name); d_err != nil {
@@ -218,6 +221,7 @@ func ResourceShare() *schema.Resource {
 			common.DataToStructPointer(d, shareSchema, &afterSi)
 			changes := beforeSi.Diff(afterSi)
 			return NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
+				Owner:   afterSi.Owner,
 				Updates: changes,
 			})
 		},

@@ -3,9 +3,6 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore Resource
 
--> **Notes**
-  Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
-
 A metastore is the top-level container of objects in Unity Catalog. It stores data assets (tables and views) and the permissions that govern access to them. Databricks account admins can create metastores and assign them to Databricks workspaces in order to control which workloads use each metastore.
 
 Unity Catalog offers a new metastore with built in security and auditing. This is distinct to the metastore used in previous versions of Databricks (based on the Hive Metastore).
@@ -19,6 +16,7 @@ resource "databricks_metastore" "this" {
   name          = "primary"
   storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
   owner         = "uc admins"
+  region        = "us-east-1"
   force_destroy = true
 }
 
@@ -37,6 +35,7 @@ resource "databricks_metastore" "this" {
     azurerm_storage_container.unity_catalog.name,
   azurerm_storage_account.unity_catalog.name)
   owner         = "uc admins"
+  region        = "eastus"
   force_destroy = true
 }
 
@@ -52,12 +51,18 @@ The following arguments are required:
 
 * `name` - Name of metastore.
 * `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource.
+* `region` - (Mandatory for account-level) The region of the metastore
 * `owner` - (Optional) Username/groupname/sp application_id of the metastore owner.
 * `delta_sharing_scope` - (Optional) Required along with `delta_sharing_recipient_token_lifetime_in_seconds`. Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
 * `delta_sharing_recipient_token_lifetime_in_seconds` - (Optional) Required along with `delta_sharing_scope`. Used to set expiration duration in seconds on recipient data access tokens. Set to 0 for unlimited duration.
 * `delta_sharing_organization_name` - (Optional) The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing. Once this is set it cannot be removed and can only be modified to another valid value. To delete this value please taint and recreate the resource.
 * `force_destroy` - (Optional) Destroy metastore regardless of its contents.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - system-generated ID of this Unity Catalog Metastore.
 ## Import
 
 This resource can be imported by ID:

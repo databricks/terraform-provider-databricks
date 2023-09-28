@@ -51,11 +51,11 @@ Creating service principal in AWS Databricks account:
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias      = "mws"
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = "00000000-0000-0000-0000-000000000000"
-  username   = var.databricks_account_username
-  password   = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = "00000000-0000-0000-0000-000000000000"
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 resource "databricks_service_principal" "sp" {
@@ -105,8 +105,8 @@ The following arguments are available:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the service principal.
-- `home` - Home folder of the service principal, e.g. `/Users/00000000-0000-0000-0000-000000000000`.
-- `repos` - Personal Repos location of the service principal, e.g. `/Repos/00000000-0000-0000-0000-000000000000`.
+* `home` - Home folder of the service principal, e.g. `/Users/00000000-0000-0000-0000-000000000000`.
+* `repos` - Personal Repos location of the service principal, e.g. `/Repos/00000000-0000-0000-0000-000000000000`.
 * `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `servicePrincipals/00000000-0000-0000-0000-000000000000`.
 
 ## Import

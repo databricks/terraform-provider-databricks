@@ -80,16 +80,22 @@ resource "databricks_volume" "this" {
 The following arguments are supported:
 
 * `name` - Name of the Volume
-* `catalog_name` - Name of parent Catalog
-* `schema_name` - Name of parent Schema relative to parent Catalog
+* `catalog_name` - Name of parent Catalog. Change forces creation of a new resource.
+* `schema_name` - Name of parent Schema relative to parent Catalog. Change forces creation of a new resource.
 * `volume_type` - Volume type. `EXTERNAL` or `MANAGED`.
 * `owner` - (Optional) Name of the volume owner.
 * `storage_location` - (Optional) Path inside an External Location. Only used for `EXTERNAL` Volumes.
 * `comment` - (Optional) Free-form text.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this Unity Catalog Volume in form of `<catalog>.<schema>.<name>`.
+
 ## Import
 
-This resource can be imported by `full_name` which is the 3-level Volume identifier: `<catalog>.<schema>.<volume>`
+This resource can be imported by `full_name` which is the 3-level Volume identifier: `<catalog>.<schema>.<name>`
 
 ```bash
 terraform import databricks_volume.this <catalog_name>.<schema_name>.<name>

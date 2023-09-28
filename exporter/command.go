@@ -103,10 +103,15 @@ func Run(args ...string) error {
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
 		"Items with older than activity specified won't be imported.")
+	flags.BoolVar(&ic.incremental, "incremental", false, "Incremental export of the data. Requires -updated-since parameter")
+	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
+		"Include only resources updated since a given timestamp (in ISO8601 format, i.e. 2023-07-01T00:00:00Z)")
 	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information.")
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
 		"Generate Databricks provider declaration.")
+	flags.StringVar(&ic.notebooksFormat, "notebooksFormat", "SOURCE",
+		"Format to export notebooks: SOURCE, DBC, JUPYTER. Default: SOURCE")
 	services, listing := ic.allServicesAndListing()
 	flags.StringVar(&ic.services, "services", services,
 		"Comma-separated list of services to import. By default all services are imported.")

@@ -11,7 +11,7 @@ import (
 
 type SchemaInfo struct {
 	Name        string            `json:"name" tf:"force_new"`
-	CatalogName string            `json:"catalog_name"`
+	CatalogName string            `json:"catalog_name" tf:"force_new"`
 	StorageRoot string            `json:"storage_root,omitempty" tf:"force_new"`
 	Comment     string            `json:"comment,omitempty"`
 	Properties  map[string]string `json:"properties,omitempty"`

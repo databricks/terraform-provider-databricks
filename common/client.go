@@ -42,7 +42,7 @@ func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 type DatabricksClient struct {
 	*client.DatabricksClient
 
-	// callback used to create API1.2 call wrapper, which simplifies unit tessting
+	// callback used to create API1.2 call wrapper, which simplifies unit testing
 	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
 	cachedWorkspaceClient *databricks.WorkspaceClient
 	cachedAccountClient   *databricks.AccountClient
@@ -81,29 +81,45 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	return acc, nil
 }
 
+func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
+	if c.Config.IsAccountClient() {
+		a, err := c.AccountClient()
+		if err != nil {
+			return err
+		}
+		return accCallback(a)
+	} else {
+		ws, err := c.WorkspaceClient()
+		if err != nil {
+			return err
+		}
+		return wsCallback(ws)
+	}
+}
+
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodGet, path, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodGet, path, nil, request, response, c.addApiPrefix)
 }
 
 // Post on path
 func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPost, path, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPost, path, nil, request, response, c.addApiPrefix)
 }
 
 // Delete on path
 func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodDelete, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodDelete, path, nil, request, nil, c.addApiPrefix)
 }
 
 // Patch on path
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPatch, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPatch, path, nil, request, nil, c.addApiPrefix)
 }
 
 // Put on path
 func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPut, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPut, path, nil, request, nil, c.addApiPrefix)
 }
 
 type ApiVersion string
@@ -129,7 +145,6 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 
 // scimVisitor is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
 	if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 		// until `/preview` is there for workspace scim,
 		// `/api/2.0` is added by completeUrl visitor
@@ -141,7 +156,9 @@ func (c *DatabricksClient) scimVisitor(r *http.Request) error {
 
 // Scim sets SCIM headers
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
-	return c.Do(ctx, method, path, request, response, c.addApiPrefix, c.scimVisitor)
+	return c.Do(ctx, method, path, map[string]string{
+		"Content-Type": "application/scim+json; charset=utf-8",
+	}, request, response, c.addApiPrefix, c.scimVisitor)
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

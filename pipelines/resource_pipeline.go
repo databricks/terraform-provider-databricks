@@ -143,6 +143,7 @@ type PipelineInfo struct {
 	Name            string                `json:"name"`
 	Health          *PipelineHealthStatus `json:"health"`
 	CreatorUserName string                `json:"creator_user_name"`
+	LastModified    int64                 `json:"last_modified"`
 }
 
 type PipelineUpdateStateInfo struct {
@@ -297,6 +298,8 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	common.MustSchemaPath(clustersSchema,
 		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
 	common.MustSchemaPath(clustersSchema, "autoscale", "mode").DiffSuppressFunc = common.EqualFoldDiffSuppress
+
+	common.MustSchemaPath(clustersSchema, "init_scripts", "dbfs").Deprecated = clusters.DbfsDeprecationWarning
 
 	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
 	gcpAttributesSchema := gcpAttributes.Schema

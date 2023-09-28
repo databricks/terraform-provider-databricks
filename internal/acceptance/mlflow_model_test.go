@@ -16,6 +16,14 @@ func TestAccMLflowModel(t *testing.T) {
 				value = "{var.RANDOM}"
 			}
 		}
+
+		resource "databricks_permissions" "mlflow_model_permissions" {
+			registered_model_id = databricks_mlflow_model.m1.registered_model_id
+			access_control {
+			  group_name       = "users"
+			  permission_level = "CAN_READ"
+			}
+		  }
 		`,
 	})
 }

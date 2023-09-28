@@ -90,6 +90,9 @@ func TestResourceJobCreate(t *testing.T) {
 						},
 						Queue: &Queue{
 							Enabled: true,
+            }
+						RunAs: &JobRunAs{
+							UserName: "user@mail.com",
 						},
 					},
 				},
@@ -688,7 +691,7 @@ func TestResourceJobCreate_RunJobTask(t *testing.T) {
 						{
 							TaskKey: "runJobTask",
 							RunJobTask: &RunJobTask{
-								JobID: "123",
+								JobID: 123,
 							},
 						},
 					},

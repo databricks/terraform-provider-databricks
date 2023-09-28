@@ -27,15 +27,17 @@ func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.Reso
 }
 
 type CatalogInfo struct {
-	Name          string            `json:"name"`
-	Comment       string            `json:"comment,omitempty"`
-	StorageRoot   string            `json:"storage_root,omitempty" tf:"force_new"`
-	ProviderName  string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	ShareName     string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	Properties    map[string]string `json:"properties,omitempty"`
-	Owner         string            `json:"owner,omitempty" tf:"computed"`
-	IsolationMode string            `json:"isolation_mode,omitempty" tf:"computed"`
-	MetastoreID   string            `json:"metastore_id,omitempty" tf:"computed"`
+	Name           string            `json:"name"`
+	Comment        string            `json:"comment,omitempty"`
+	StorageRoot    string            `json:"storage_root,omitempty" tf:"force_new"`
+	ProviderName   string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	ShareName      string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	ConnectionName string            `json:"connection_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	Options        map[string]string `json:"options,omitempty" tf:"force_new"`
+	Properties     map[string]string `json:"properties,omitempty"`
+	Owner          string            `json:"owner,omitempty" tf:"computed"`
+	IsolationMode  string            `json:"isolation_mode,omitempty" tf:"computed"`
+	MetastoreID    string            `json:"metastore_id,omitempty" tf:"computed"`
 }
 
 func ResourceCatalog() *schema.Resource {
@@ -63,8 +65,8 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// only remove catalog default schema for non-Delta Sharing catalog
-			if ci.ShareName == "" {
+			// only remove catalog default schema for standard catalog (e.g. non-Delta Sharing, non-foreign)
+			if ci.ShareName == "" && ci.ConnectionName == "" {
 				if err := w.Schemas.DeleteByFullName(ctx, ci.Name+".default"); err != nil {
 					return fmt.Errorf("cannot remove new catalog default schema: %w", err)
 				}

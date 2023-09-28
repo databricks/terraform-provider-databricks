@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"golang.org/x/exp/slices"
 
@@ -34,21 +33,33 @@ import (
 )
 
 var (
-	adlsGen2Regex             = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	adlsGen1Regex             = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
-	wasbsRegex                = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	s3Regex                   = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
-	gsRegex                   = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
-	globalWorkspaceConfName   = "global_workspace_conf"
-	nameNormalizationRegex    = regexp.MustCompile(`\W+`)
-	jobClustersRegex          = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
-	dltClusterRegex           = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
-	uuidRegex                 = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
-	predefinedClusterPolicies = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
-	secretPathRegex           = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
-	sqlParentRegexp           = regexp.MustCompile(`^folders/(\d+)$`)
-	dltDefaultStorageRegex    = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
-	ignoreIdeFolderRegex      = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
+	adlsGen2Regex                = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen1Regex                = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
+	wasbsRegex                   = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	s3Regex                      = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
+	gsRegex                      = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
+	globalWorkspaceConfName      = "global_workspace_conf"
+	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
+	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
+	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
+	uuidRegex                    = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	predefinedClusterPolicies    = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
+	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
+	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
+	dltDefaultStorageRegex       = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	ignoreIdeFolderRegex         = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
+	fileExtensionLanguageMapping = map[string]string{
+		"SCALA":  ".scala",
+		"PYTHON": ".py",
+		"SQL":    ".sql",
+		"R":      ".r",
+	}
+	fileExtensionFormatMapping = map[string]string{
+		"HTML":       ".html",
+		"JUPYTER":    ".ipynb",
+		"DBC":        ".dbc",
+		"R_MARKDOWN": ".Rmd",
+	}
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -280,7 +291,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			lastActiveMs := ic.lastActiveDays * 24 * 60 * 60 * 1000
+			lastActiveMs := ic.getLastActiveMs()
 			for offset, c := range clusters {
 				if c.ClusterSource == "JOB" {
 					log.Printf("[INFO] Skipping job cluster %s", c.ClusterID)
@@ -294,7 +305,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Skipping %s because it doesn't match %s", c.ClusterName, ic.match)
 					continue
 				}
-				if c.LastActivityTime < time.Now().Unix()-lastActiveMs {
+				if c.LastActivityTime > 0 && c.LastActivityTime < lastActiveMs {
 					log.Printf("[INFO] Older inactive cluster %s", c.ClusterName)
 					continue
 				}
@@ -375,6 +386,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
+			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "run_as.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var job jobs.JobSettings
@@ -482,10 +495,10 @@ var resourcesMap map[string]importable = map[string]importable{
 						})
 					}
 				}
-				if task.RunJobTask != nil && task.RunJobTask.JobID != "" {
+				if task.RunJobTask != nil && task.RunJobTask.JobID != 0 {
 					ic.Emit(&resource{
 						Resource: "databricks_job",
-						ID:       task.RunJobTask.JobID,
+						ID:       strconv.FormatInt(task.RunJobTask.JobID, 10),
 					})
 				}
 				ic.importCluster(task.NewCluster)
@@ -501,6 +514,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for _, jc := range job.JobClusters {
 				ic.importCluster(jc.NewCluster)
+			}
+			if job.RunAs != nil {
+				if job.RunAs.UserName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_user",
+						Attribute: "user_name",
+						Value:     job.RunAs.UserName,
+					})
+				}
+				if job.RunAs.ServicePrincipalName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_service_principal",
+						Attribute: "application_id",
+						Value:     job.RunAs.ServicePrincipalName,
+					})
+				}
 			}
 
 			return ic.importLibraries(r.Data, s)
@@ -1013,7 +1042,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, gis := range globalInitScripts {
+				modifiedAt := gis.UpdatedAt
+				if ic.incremental && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping global init script '%s' that was modified at %d (last active=%d)",
+						gis.Name, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_global_init_script",
 					ID:       gis.ScriptID,
@@ -1066,6 +1102,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		List: func(ic *importContext) error {
+			// TODO: Should we use parallel listing instead?
 			repoList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
 			if err != nil {
 				return err
@@ -1174,7 +1211,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			ipLists := ipListsResp.IpAccessLists
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, ipList := range ipLists {
+				modifiedAt := ipList.UpdatedAt
+				if ic.incremental && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping IP access list '%s' that was modified at %d (last active=%d)",
+						ipList.Label, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_ip_access_list",
 					ID:       ipList.ListId,
@@ -1202,18 +1246,20 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			contentB64, err := notebooksAPI.Export(r.ID, "SOURCE")
+			contentB64, err := notebooksAPI.Export(r.ID, ic.notebooksFormat)
 			if err != nil {
 				return err
 			}
-			language := r.Data.Get("language").(string)
-			ext := map[string]string{
-				"SCALA":  ".scala",
-				"PYTHON": ".py",
-				"SQL":    ".sql",
-				"R":      ".r",
+			var fileExtension string
+			if ic.notebooksFormat == "SOURCE" {
+				language := r.Data.Get("language").(string)
+				fileExtension = fileExtensionLanguageMapping[language]
+				r.Data.Set("language", "")
+			} else {
+				fileExtension = fileExtensionFormatMapping[ic.notebooksFormat]
 			}
-			name := r.ID[1:] + ext[language] // todo: replace non-alphanum+/ with _
+			r.Data.Set("format", ic.notebooksFormat)
+			name := r.ID[1:] + fileExtension // todo: replace non-alphanum+/ with _
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
 			if err != nil {
@@ -1227,7 +1273,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
-			// TODO: it's not completely correct condition - we need to make emit smarter - emit only if permissions are different from their parent's permission.
+			// TODO: it's not completely correct condition - we need to make emit smarter -
+			// emit only if permissions are different from their parent's permission.
 			if ic.meAdmin {
 				directorySplits := strings.Split(r.ID, "/")
 				directorySplits = directorySplits[:len(directorySplits)-1]
@@ -1239,9 +1286,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
-			log.Printf("Creating %s for %s", fileName, r)
-			r.Data.Set("source", fileName)
-			return r.Data.Set("language", "")
+			return r.Data.Set("source", fileName)
 		},
 		Depends: []reference{
 			{Path: "source", File: true},
@@ -1306,14 +1351,24 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
 					continue
 				}
+				updatedAt := q["updated_at"].(string)
+				if ic.incremental && updatedAt < updatedSinceStr {
+					log.Printf("[DEBUG] skipping query '%s' that was modified at %s (updatedSince=%s)", name,
+						updatedAt, updatedSinceStr)
+					continue
+				}
+				log.Printf("[DEBUG] emitting query '%s' that was modified at %s (updatedSince=%s)", name,
+					updatedAt, updatedSinceStr)
 				ic.Emit(&resource{
-					Resource: "databricks_sql_query",
-					ID:       q["id"].(string),
+					Resource:    "databricks_sql_query",
+					ID:          q["id"].(string),
+					Incremental: ic.incremental,
 				})
 				log.Printf("[INFO] Imported %d of %d SQL queries", i+1, len(qs))
 			}
@@ -1447,14 +1502,24 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
 					continue
 				}
+				updatedAt := q["updated_at"].(string)
+				if ic.incremental && updatedAt < updatedSinceStr {
+					log.Printf("[DEBUG] skipping dashboard '%s' that was modified at %s (updatedSince=%s)", name,
+						updatedAt, updatedSinceStr)
+					continue
+				}
+				log.Printf("[DEBUG] emitting dashboard '%s' that was modified at %s (updatedSince=%s)", name,
+					updatedAt, updatedSinceStr)
 				ic.Emit(&resource{
-					Resource: "databricks_sql_dashboard",
-					ID:       q["id"].(string),
+					Resource:    "databricks_sql_dashboard",
+					ID:          q["id"].(string),
+					Incremental: ic.incremental,
 				})
 				log.Printf("[INFO] Imported %d of %d SQL dashboards", i+1, len(qs))
 			}
@@ -1571,6 +1636,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
+			updatedSinceStr := ic.getUpdatedSinceStr()
 			alerts, err := wc.Alerts.List(ic.Context)
 			if err != nil {
 				return err
@@ -1580,7 +1646,18 @@ var resourcesMap map[string]importable = map[string]importable{
 				if !ic.MatchesName(name) {
 					continue
 				}
-				ic.Emit(&resource{Resource: "databricks_sql_alert", ID: alert.Id})
+				if ic.incremental && alert.UpdatedAt < updatedSinceStr {
+					log.Printf("[DEBUG] skipping alert '%s' that was modified at %s (last active=%s)", name,
+						alert.UpdatedAt, updatedSinceStr)
+					continue
+				}
+				log.Printf("[DEBUG] emitting alert '%s' that was modified at %s (last active=%s)", name,
+					alert.UpdatedAt, updatedSinceStr)
+				ic.Emit(&resource{
+					Resource:    "databricks_sql_alert",
+					ID:          alert.Id,
+					Incremental: ic.incremental,
+				})
 				log.Printf("[INFO] Imported %d of %d SQL alerts", i+1, len(alerts))
 			}
 			return nil
@@ -1626,13 +1703,27 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			pipelinesList, err := pipelines.NewPipelinesAPI(ic.Context, ic.Client).List(50, "")
+			api := pipelines.NewPipelinesAPI(ic.Context, ic.Client)
+			pipelinesList, err := api.List(50, "")
 			if err != nil {
 				return err
 			}
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for i, q := range pipelinesList {
 				if !ic.MatchesName(q.Name) {
 					continue
+				}
+				if ic.incremental {
+					pipeline, err := api.Read(q.PipelineID)
+					if err != nil {
+						return err
+					}
+					modifiedAt := pipeline.LastModified
+					if modifiedAt < updatedSinceMs {
+						log.Printf("[DEBUG] skipping DLT Pipeline '%s' that was modified at %d (last active=%d)",
+							pipeline.Name, modifiedAt, updatedSinceMs)
+						continue
+					}
 				}
 				ic.Emit(&resource{
 					Resource: "databricks_pipeline",
@@ -1714,7 +1805,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_directory": {
-		Service: "notebooks",
+		Service: "directories",
 		Name:    workspaceObjectResouceName,
 		Search: func(ic *importContext, r *resource) error {
 			directoryList := ic.getAllDirectories()
@@ -1793,8 +1884,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, endpoint := range endpointsList {
-				// TODO: add incremental export as well
+				modifiedAt := endpoint.LastUpdatedTimestamp
+				if ic.incremental && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping serving endpoint '%s' that was modified at %d (last active=%d)",
+						endpoint.Name, modifiedAt, updatedSinceMs)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_model_serving",
 					ID:       endpoint.Name,
@@ -1840,8 +1937,16 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 
+			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, webhook := range webhooks {
-				// TODO: add support for incremental export
+				modifiedAt := webhook.LastUpdatedTimestamp
+				if ic.incremental && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping MLflow webhook '%s' that was modified at %d (last active=%d)",
+						webhook.Id, modifiedAt, updatedSinceMs)
+					continue
+				}
+				log.Printf("[DEBUG] emitting MLflow webhook '%s' that was modified at %d (last active=%d)",
+					webhook.Id, modifiedAt, updatedSinceMs)
 				ic.Emit(&resource{
 					Resource: "databricks_mlflow_webhook",
 					ID:       webhook.Id,

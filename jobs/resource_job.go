@@ -114,7 +114,7 @@ type DbtTask struct {
 
 // RunJobTask contains information about RunJobTask
 type RunJobTask struct {
-	JobID         string            `json:"job_id"`
+	JobID         int64             `json:"job_id"`
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
 }
 
@@ -158,7 +158,7 @@ type Webhook struct {
 type CronSchedule struct {
 	QuartzCronExpression string `json:"quartz_cron_expression"`
 	TimezoneID           string `json:"timezone_id"`
-	PauseStatus          string `json:"pause_status,omitempty" tf:"computed"`
+	PauseStatus          string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
 // BEGIN Jobs + Repo integration preview
@@ -228,7 +228,7 @@ type JobCompute struct {
 }
 
 type ContinuousConf struct {
-	PauseStatus string `json:"pause_status,omitempty" tf:"computed"`
+	PauseStatus string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
 type Queue struct {
@@ -248,7 +248,7 @@ type FileArrival struct {
 
 type Trigger struct {
 	FileArrival *FileArrival `json:"file_arrival"`
-	PauseStatus string       `json:"pause_status,omitempty" tf:"computed"`
+	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
 // JobSettings contains the information for configuring a job on databricks
@@ -293,7 +293,7 @@ type JobSettings struct {
 	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string             `json:"tags,omitempty"`
 	Queue                *Queue                        `json:"queue,omitempty"`
-	RunAs                *JobRunAs                     `json:"run_as,omitempty"`
+	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"suppress_diff"`
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 }
@@ -575,6 +575,21 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 		job.Settings.sortTasksByKey()
 		job.Settings.sortWebhooksByID()
 	}
+
+	if job.RunAsUserName != "" && job.Settings != nil {
+		userNameIsEmail := strings.Contains(job.RunAsUserName, "@")
+
+		if userNameIsEmail {
+			job.Settings.RunAs = &JobRunAs{
+				UserName: job.RunAsUserName,
+			}
+		} else {
+			job.Settings.RunAs = &JobRunAs{
+				ServicePrincipalName: job.RunAsUserName,
+			}
+		}
+	}
+
 	return
 }
 
@@ -617,6 +632,9 @@ func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
 		p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 		p.Required = false
 	}
+	if p, err := common.SchemaPath(*s, "new_cluster", "init_scripts", "dbfs"); err == nil {
+		p.Deprecated = clusters.DbfsDeprecationWarning
+	}
 	if v, err := common.SchemaPath(*s, "new_cluster", "spark_conf"); err == nil {
 		reSize := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.%")
 		reConf := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.spark.databricks.delta.preview.enabled")
@@ -648,7 +666,13 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
-		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(1))
+		if p, err := common.SchemaPath(s, "trigger", "pause_status"); err == nil {
+			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		}
+		if p, err := common.SchemaPath(s, "continuous", "pause_status"); err == nil {
+			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		}
+		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 		s["max_concurrent_runs"].Default = 1
 		s["url"] = &schema.Schema{
 			Type:     schema.TypeString,

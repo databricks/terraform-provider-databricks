@@ -149,16 +149,22 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
 		objects := ic.getAllWorkspaceObjects()
-		for _, v := range objects {
-			if v.ObjectType == workspace.Directory {
-				ic.allDirectories = append(ic.allDirectories, v)
+		ic.wsObjectsMutex.Lock()
+		if len(ic.allDirectories) == 0 {
+			for _, v := range objects {
+				if v.ObjectType == workspace.Directory {
+					ic.allDirectories = append(ic.allDirectories, v)
+				}
 			}
 		}
+		ic.wsObjectsMutex.Unlock()
 	}
 	return ic.allDirectories
 }
 
 func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
+	ic.wsObjectsMutex.Lock()
+	defer ic.wsObjectsMutex.Unlock()
 	if len(ic.allWorkspaceObjects) == 0 {
 		t1 := time.Now()
 		log.Printf("[DEBUG] %v. Starting to list all workspace objects", t1.Local().Format(time.RFC3339))
@@ -239,6 +245,8 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 }
 
 func (ic *importContext) cacheGroups() error {
+	ic.groupsMutex.Lock()
+	defer ic.groupsMutex.Unlock()
 	if len(ic.allGroups) == 0 {
 		log.Printf("[INFO] Caching groups in memory ...")
 		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
@@ -327,6 +335,8 @@ func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, 
 }
 
 func (ic *importContext) getSqlDataSources() (map[string]string, error) {
+	ic.sqlDatasourcesMutex.Lock()
+	defer ic.sqlDatasourcesMutex.Unlock()
 	if ic.sqlDatasources == nil {
 		var dss []sql.DataSource
 		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
@@ -483,6 +493,7 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
 		}
+		// TODO: skip inactive jobs check, and import everything...
 		if ic.lastActiveDays != 3650 {
 			rl, err := a.RunsList(jobs.JobRunsListRequest{
 				JobID:         job.JobID,
@@ -664,9 +675,5 @@ func (ic *importContext) getUpdatedSinceStr() string {
 }
 
 func (ic *importContext) getUpdatedSinceMs() int64 {
-	if ic.updatedSinceMs == 0 {
-		tm, _ := time.Parse(time.RFC3339, ic.updatedSinceStr)
-		ic.updatedSinceMs = tm.UnixMilli()
-	}
 	return ic.updatedSinceMs
 }

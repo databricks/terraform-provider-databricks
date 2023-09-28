@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -52,28 +53,24 @@ import (
 */
 
 type importContext struct {
-	Module              string
-	Context             context.Context
-	Client              *common.DatabricksClient
-	State               stateApproximation
-	Importables         map[string]importable
-	Resources           map[string]*schema.Resource
-	Scope               importedResources
-	Files               map[string]*hclwrite.File
-	Directory           string
-	importing           map[string]bool
-	nameFixes           []regexFix
-	hclFixes            []regexFix
-	allUsers            []scim.User
-	allGroups           []scim.Group
-	mountMap            map[string]mount
-	variables           map[string]string
-	testEmits           map[string]bool
-	sqlDatasources      map[string]string
-	workspaceConfKeys   map[string]any
-	allDirectories      []workspace.ObjectStatus
-	allWorkspaceObjects []workspace.ObjectStatus
+	// not modified/used only in single thread
+	Module            string
+	Context           context.Context
+	Client            *common.DatabricksClient
+	Importables       map[string]importable
+	Resources         map[string]*schema.Resource
+	Files             map[string]*hclwrite.File
+	Directory         string
+	nameFixes         []regexFix
+	hclFixes          []regexFix
+	variables         map[string]string
+	workspaceConfKeys map[string]any
 
+	// mutable resources
+	State stateApproximation
+	Scope importedResources
+
+	// command-line resources (immutable)
 	includeUserDomains  bool
 	importAllUsers      bool
 	debug               bool
@@ -84,14 +81,38 @@ type importContext struct {
 	match               string
 	lastActiveDays      int64
 	lastActiveMs        int64
-	updatedSinceStr     string
-	updatedSinceMs      int64
 	generateDeclaration bool
 	meAdmin             bool
 	prefix              string
 	accountLevel        bool
 	shImports           map[string]bool
 	notebooksFormat     string
+
+	// TODO: protect by mutex?
+	updatedSinceStr string
+	updatedSinceMs  int64
+	mountMap        map[string]mount
+
+	//
+	testEmits      map[string]bool
+	testEmitsMutex sync.Mutex
+
+	//
+	allGroups   []scim.Group
+	groupsMutex sync.Mutex
+
+	//
+	importing      map[string]bool
+	importingMutex sync.RWMutex
+
+	//
+	sqlDatasources      map[string]string
+	sqlDatasourcesMutex sync.Mutex
+
+	// workspace-related objects & corresponding mutex
+	allDirectories      []workspace.ObjectStatus
+	allWorkspaceObjects []workspace.ObjectStatus
+	wsObjectsMutex      sync.RWMutex
 }
 
 type mount struct {
@@ -143,12 +164,11 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		Importables: resourcesMap,
 		Resources:   p.ResourcesMap,
 		Files:       map[string]*hclwrite.File{},
-		Scope:       []*resource{},
+		Scope:       importedResources{},
 		importing:   map[string]bool{},
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
-		allUsers:            []scim.User{},
 		variables:           map[string]string{},
 		allDirectories:      []workspace.ObjectStatus{},
 		allWorkspaceObjects: []workspace.ObjectStatus{},
@@ -198,6 +218,8 @@ func (ic *importContext) Run() error {
 				ic.updatedSinceStr)
 		}
 		ic.updatedSinceStr = tm.UTC().Format(time.RFC3339)
+		tm, _ = time.Parse(time.RFC3339, ic.updatedSinceStr)
+		ic.updatedSinceMs = tm.UnixMilli()
 	}
 
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
@@ -258,7 +280,7 @@ func (ic *importContext) Run() error {
 			continue
 		}
 	}
-	if len(ic.Scope) == 0 {
+	if ic.Scope.Len() == 0 {
 		return fmt.Errorf("no resources to import")
 	}
 	shFileName := fmt.Sprintf("%s/import.sh", ic.Directory)
@@ -350,7 +372,7 @@ func (ic *importContext) Run() error {
 		statsData := map[string]any{
 			"startTime":       startTime.UTC().Format(time.RFC3339),
 			"duration":        fmt.Sprintf("%f sec", time.Since(startTime).Seconds()),
-			"exportedObjects": len(ic.Scope),
+			"exportedObjects": ic.Scope.Len(),
 		}
 		statsBytes, _ := json.Marshal(statsData)
 		if _, err = stats.Write(statsBytes); err != nil {
@@ -455,10 +477,10 @@ func (ic *importContext) generateVariables() error {
 }
 
 func (ic *importContext) generateHclForResources(sh *os.File) {
-	sort.Sort(ic.Scope)
-	scopeSize := len(ic.Scope)
+	resources := ic.Scope.Sorted()
+	scopeSize := ic.Scope.Len()
 	log.Printf("[INFO] Generating configuration for %d resources", scopeSize)
-	for i, r := range ic.Scope {
+	for i, r := range resources {
 		ir := ic.Importables[r.Resource]
 		f, ok := ic.Files[ir.Service]
 		if !ok {
@@ -505,8 +527,9 @@ func (ic *importContext) MatchesName(n string) bool {
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
+// this will run single threaded
 func (ic *importContext) Find(r *resource, pick string, ref reference) (string, hcl.Traversal) {
-	for _, sr := range ic.State.Resources {
+	for _, sr := range ic.State.Resources() {
 		if sr.Type != r.Resource {
 			continue
 		}
@@ -569,31 +592,33 @@ func (ic *importContext) Has(r *resource) bool {
 	return ic.HasInState(r, false)
 }
 
+func (ic *importContext) isImporting(s string) (bool, bool) {
+	ic.importingMutex.RLocker().Lock()
+	defer ic.importingMutex.RLocker().Unlock()
+	v, visiting := ic.importing[s]
+	return v, visiting
+}
+
 // This function checks if resource exist. onlyAdded flag enforces that true is returned only if it was added with Add()
 func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
-	if v, visiting := ic.importing[r.String()]; visiting && (v || !onlyAdded) {
+	v, visiting := ic.isImporting(r.String())
+	if visiting && (v || !onlyAdded) {
 		return true
 	}
-	k, v := r.MatchPair()
-	for _, sr := range ic.State.Resources {
-		if sr.Type != r.Resource {
-			continue
-		}
-		for _, i := range sr.Instances {
-			tv, ok := i.Attributes[k].(string)
-			if ok && tv == v {
-				return true
-			}
-		}
-	}
-	return false
+	return ic.State.Has(r)
+}
+
+func (ic *importContext) setImportingState(s string, state bool) {
+	ic.importingMutex.Lock()
+	defer ic.importingMutex.Unlock()
+	ic.importing[s] = state
 }
 
 func (ic *importContext) Add(r *resource) {
 	if ic.HasInState(r, true) { // resource must exist and already marked as added
 		return
 	}
-	ic.importing[r.String()] = true // mark resource as added
+	ic.setImportingState(r.String(), true) // mark resource as added
 	state := r.Data.State()
 	if state == nil {
 		log.Printf("[ERROR] state is nil for %s", r)
@@ -609,7 +634,7 @@ func (ic *importContext) Add(r *resource) {
 		r.Mode = "managed"
 	}
 	inst.Attributes["id"] = r.ID
-	ic.State.Resources = append(ic.State.Resources, resourceApproximation{
+	ic.State.Append(resourceApproximation{
 		Mode:      r.Mode,
 		Module:    ic.Module,
 		Type:      r.Resource,
@@ -617,7 +642,7 @@ func (ic *importContext) Add(r *resource) {
 		Instances: []instanceApproximation{inst},
 	})
 	// in single-threaded scenario scope is toposorted
-	ic.Scope = append(ic.Scope, r)
+	ic.Scope.Append(r)
 }
 
 func (ic *importContext) regexFix(s string, fixes []regexFix) string {
@@ -661,10 +686,12 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	if ic.testEmits != nil {
 		log.Printf("[INFO] %s is emitted in test mode", r)
+		ic.testEmitsMutex.Lock()
 		ic.testEmits[r.String()] = true
+		ic.testEmitsMutex.Unlock()
 		return
 	}
-	ic.importing[r.String()] = false // we're starting to add a new resource
+	ic.setImportingState(r.String(), false) // we're starting to add a new resource
 	pr, ok := ic.Resources[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available in provider", r)
@@ -679,8 +706,10 @@ func (ic *importContext) Emit(r *resource) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the account level export",
 			r.Resource, ir.Service)
 		return
-
 	}
+	// TODO: add similar condition for checking workspace-level objects only. After new ACLs import is merged
+
+	// TODO: split services into slice?
 	if !strings.Contains(ic.services, ir.Service) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the import",
 			r.Resource, ir.Service)

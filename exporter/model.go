@@ -3,6 +3,8 @@ package exporter
 import (
 	"fmt"
 	"regexp"
+	"sort"
+	"sync"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -30,7 +32,42 @@ type resourceApproximation struct {
 }
 
 type stateApproximation struct {
-	Resources []resourceApproximation `json:"resources"`
+	mutex sync.RWMutex
+	// TODO: use map by type -> should speedup Has function?
+	resources []resourceApproximation
+}
+
+// TODO: check if it's used directly by multiple threads?
+func (s *stateApproximation) Resources() []resourceApproximation {
+	s.mutex.RLocker().Lock()
+	defer s.mutex.RLocker().Unlock()
+	c := make([]resourceApproximation, len(s.resources))
+	copy(c, s.resources)
+	return c
+}
+
+func (s *stateApproximation) Has(r *resource) bool {
+	s.mutex.RLocker().Lock()
+	defer s.mutex.RLocker().Unlock()
+	k, v := r.MatchPair()
+	for _, sr := range s.resources {
+		if sr.Type != r.Resource {
+			continue
+		}
+		for _, i := range sr.Instances {
+			tv, ok := i.Attributes[k].(string)
+			if ok && tv == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *stateApproximation) Append(ra resourceApproximation) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.resources = append(s.resources, ra)
 }
 
 type importable struct {
@@ -134,14 +171,41 @@ func (r *resource) ImportCommand(ic *importContext) string {
 	return fmt.Sprintf(`terraform import %s%s.%s "%s"`, m, r.Resource, r.Name, r.ID)
 }
 
-type importedResources []*resource
+// TODO: split resources into a map of resource type -> list of resources (guarded by RW locks)
+type resourcesList []*resource
 
-func (a importedResources) Len() int {
+type importedResources struct {
+	resources resourcesList
+	mutex     sync.RWMutex
+}
+
+func (a *importedResources) Append(r *resource) {
+	defer a.mutex.Unlock()
+	a.mutex.Lock()
+	a.resources = append(a.resources, r)
+}
+
+func (a *importedResources) Len() int {
+	defer a.mutex.RLocker().Unlock()
+	a.mutex.RLocker().Lock()
+	return len(a.resources)
+}
+
+func (a resourcesList) Len() int {
 	return len(a)
 }
-func (a importedResources) Swap(i, j int) {
+
+func (a resourcesList) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
-func (a importedResources) Less(i, j int) bool {
+func (a resourcesList) Less(i, j int) bool {
 	return a[i].Name < a[j].Name
+}
+
+func (a *importedResources) Sorted() []*resource {
+	defer a.mutex.Unlock()
+	a.mutex.Lock()
+	// TODO: make a copy...
+	sort.Sort(a.resources)
+	return a.resources
 }

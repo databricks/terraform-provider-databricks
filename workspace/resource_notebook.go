@@ -164,7 +164,7 @@ const (
 	directoryListingMaxAttempts = 3
 	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
 	envVarDirectoryChannelSize  = "EXPORTER_CHANNEL_SIZE"
-	defaultWorkersPoolSize      = 5
+	defaultWorkersPoolSize      = 10
 	defaultDirectoryChannelSize = 100000
 )
 

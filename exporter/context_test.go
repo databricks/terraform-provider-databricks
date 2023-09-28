@@ -21,7 +21,7 @@ func TestMatchesName(t *testing.T) {
 func TestImportContextFindSkips(t *testing.T) {
 	_, traversal := (&importContext{
 		State: stateApproximation{
-			Resources: []resourceApproximation{
+			resources: []resourceApproximation{
 				{
 					Type: "a",
 					Instances: []instanceApproximation{
@@ -45,7 +45,7 @@ func TestImportContextFindSkips(t *testing.T) {
 func TestImportContextHas(t *testing.T) {
 	assert.True(t, (&importContext{
 		State: stateApproximation{
-			Resources: []resourceApproximation{
+			resources: []resourceApproximation{
 				{
 					Type: "a",
 					Instances: []instanceApproximation{

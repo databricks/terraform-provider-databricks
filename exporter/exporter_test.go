@@ -204,9 +204,10 @@ func TestImportingMounts(t *testing.T) {
 			err := ic.Importables["databricks_mount"].List(ic)
 			assert.NoError(t, err)
 
-			for i := 0; i < len(ic.Scope); i++ {
+			resources := ic.Scope.Sorted()
+			for i := 0; i < len(resources); i++ {
 				err = ic.Importables["databricks_mount"].Body(ic,
-					hclwrite.NewEmptyFile().Body(), ic.Scope[i])
+					hclwrite.NewEmptyFile().Body(), resources[i])
 				assert.NoError(t, err)
 			}
 		})
@@ -967,7 +968,8 @@ func TestImportingJobs_JobList(t *testing.T) {
 			err := ic.Importables["databricks_job"].List(ic)
 			assert.NoError(t, err)
 
-			for _, res := range ic.Scope {
+			resources := ic.Scope.Sorted()
+			for _, res := range resources {
 				if res.Resource != "databricks_job" {
 					continue
 				}
@@ -1216,7 +1218,8 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			err := ic.Importables["databricks_job"].List(ic)
 			assert.NoError(t, err)
 
-			for _, res := range ic.Scope {
+			resources := ic.Scope.Sorted()
+			for _, res := range resources {
 				if res.Resource != "databricks_job" {
 					continue
 				}

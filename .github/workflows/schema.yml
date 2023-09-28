@@ -12,12 +12,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
 
-      - name: Setup Go
+      - name: 'Setup Go'
         uses: actions/setup-go@v4
         with:
           go-version: 1.21.x
+
+      - name: 'Setup Terraform'
+        uses: hashicorp/setup-terraform@v2
 
       - run: make install
 
@@ -48,19 +51,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 'Checkout'
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
 
       - name: 'Setup Go'
         uses: actions/setup-go@v4
         with:
           go-version: 1.21.x
 
+      - name: 'Setup Terraform'
+        uses: hashicorp/setup-terraform@v2
+
       - run: make install
 
-      - name: 'Generate provider schema'
+      - name: Generate provider schema
         run: |
           cd /tmp
           cat > main.tf <<EOF

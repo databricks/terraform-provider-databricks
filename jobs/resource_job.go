@@ -232,6 +232,7 @@ type ContinuousConf struct {
 }
 
 type Queue struct {
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 type JobRunAs struct {

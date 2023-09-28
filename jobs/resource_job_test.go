@@ -48,7 +48,9 @@ func TestResourceJobCreate(t *testing.T) {
 					MinRetryIntervalMillis: 5000,
 					RetryOnTimeout:         true,
 					MaxConcurrentRuns:      1,
-					Queue:                  &Queue{},
+					Queue:                  &Queue{
+						Enabled: true,
+					},
 					RunAs: &JobRunAs{
 						UserName: "user@mail.com",
 					},
@@ -86,7 +88,9 @@ func TestResourceJobCreate(t *testing.T) {
 							TimezoneID:           "America/Los_Angeles",
 							PauseStatus:          "PAUSED",
 						},
-						Queue: &Queue{},
+						Queue: &Queue{
+							Enabled: true,
+						},
 					},
 				},
 			},
@@ -113,7 +117,9 @@ func TestResourceJobCreate(t *testing.T) {
 		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}
-		queue {}
+		queue {
+			enabled = true
+		}
 		run_as {
 			user_name = "user@mail.com"
 		}`,

@@ -768,6 +768,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nameNormalizationRegex.ReplaceAllString(strings.Split(s, "@")[0], "_") + "_" + d.Id()
 		},
+		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findUserByName(r.Value)
 			if err != nil {
@@ -805,6 +806,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return name + "_" + d.Id()
 		},
+		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findSpnByAppID(r.Value)
 			if err != nil {

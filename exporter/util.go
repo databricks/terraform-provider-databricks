@@ -247,7 +247,7 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 func (ic *importContext) cacheGroups() error {
 	ic.groupsMutex.Lock()
 	defer ic.groupsMutex.Unlock()
-	if len(ic.allGroups) == 0 {
+	if ic.allGroups == nil {
 		log.Printf("[INFO] Caching groups in memory ...")
 		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
 		g, err := groupsAPI.Filter("")
@@ -260,7 +260,25 @@ func (ic *importContext) cacheGroups() error {
 	return nil
 }
 
+const (
+	nonExistingUserOrSp = "__USER_OR_SPN_DOES_NOT_EXIST__"
+)
+
 func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
+	log.Printf("[DEBUG] Looking for user %s", name)
+	ic.usersMutex.RLocker().Lock()
+	user, exists := ic.allUsers[name]
+	ic.usersMutex.RLocker().Unlock()
+	if exists {
+		if user.UserName == nonExistingUserOrSp {
+			log.Printf("[DEBUG] non-existing user %s is found in the cache", name)
+			err = fmt.Errorf("user %s not found", name)
+		} else {
+			log.Printf("[DEBUG] existing user %s is found in the cache", name)
+			u = user
+		}
+		return
+	}
 	a := scim.NewUsersAPI(ic.Context, ic.Client)
 	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name), false)
 	if err != nil {
@@ -268,13 +286,31 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	}
 	if len(users) == 0 {
 		err = fmt.Errorf("user %s not found", name)
-		return
+		u = scim.User{UserName: nonExistingUserOrSp}
+	} else {
+		u = users[0]
 	}
-	u = users[0]
+	ic.usersMutex.Lock()
+	ic.allUsers[name] = u
+	ic.usersMutex.Unlock()
 	return
 }
 
 func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
+	log.Printf("[DEBUG] Looking for SP %s", applicationID)
+	ic.spsMutex.RLocker().Lock()
+	sp, exists := ic.allSps[applicationID]
+	ic.spsMutex.RLocker().Unlock()
+	if exists {
+		if sp.ApplicationID == nonExistingUserOrSp {
+			log.Printf("[DEBUG] non-existing SP %s is found in the cache", applicationID)
+			err = fmt.Errorf("user %s not found", applicationID)
+		} else {
+			log.Printf("[DEBUG] existing SP %s is found in the cache", applicationID)
+			u = sp
+		}
+		return
+	}
 	a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
 	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")), false)
 	if err != nil {
@@ -282,9 +318,14 @@ func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err 
 	}
 	if len(users) == 0 {
 		err = fmt.Errorf("service principal %s not found", applicationID)
-		return
+		u = scim.User{ApplicationID: nonExistingUserOrSp}
+	} else {
+		u = users[0]
 	}
-	u = users[0]
+	ic.usersMutex.Lock()
+	ic.allSps[applicationID] = u
+	ic.usersMutex.Unlock()
+
 	return
 }
 

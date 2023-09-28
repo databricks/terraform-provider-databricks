@@ -107,6 +107,14 @@ type importContext struct {
 	groupsMutex sync.Mutex
 
 	//
+	allUsers   map[string]scim.User
+	usersMutex sync.RWMutex
+
+	//
+	allSps   map[string]scim.User
+	spsMutex sync.RWMutex
+
+	//
 	importing      map[string]bool
 	importingMutex sync.RWMutex
 
@@ -156,6 +164,7 @@ const (
 	defaultNumRoutines = 2
 )
 
+// TODO: think how to customize this
 var goroutinesNumber = map[string]int{
 	"databricks_notebook":          7,
 	"databricks_directory":         5,
@@ -203,6 +212,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		workspaceConfKeys:   workspaceConfKeys,
 		shImports:           make(map[string]bool),
 		notebooksFormat:     "SOURCE",
+		allUsers:            map[string]scim.User{},
+		allSps:              map[string]scim.User{},
 	}
 }
 

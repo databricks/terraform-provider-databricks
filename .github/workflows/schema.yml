@@ -142,3 +142,4 @@ jobs:
       - run: ls -l schema*/*
 
       - run: jd -color schema-current/provider.json schema-new/provider.json
+        continue-on-error: true

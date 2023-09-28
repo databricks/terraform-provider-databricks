@@ -95,7 +95,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 'Setup Go'
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+          cache: false
+
+      - run: go install github.com/josephburnett/jd@latest
+
       - name: 'Download provider schemas'
         uses: actions/download-artifact@v3
 
-      - run: ls -l
+      - run: ls -l schema*/*
+
+      - run: jd -color schema-current/provider.json schema-new/provider.json

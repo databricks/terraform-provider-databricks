@@ -25,6 +25,7 @@ jobs:
       - run: make install
 
       - name: Generate provider schema
+        shell: bash
         run: |
           cd /tmp
           cat > main.tf <<EOF
@@ -67,6 +68,7 @@ jobs:
       - run: make install
 
       - name: Generate provider schema
+        shell: bash
         run: |
           cd /tmp
           cat > main.tf <<EOF

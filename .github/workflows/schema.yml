@@ -95,8 +95,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: my-artifact
+      - name: 'Download provider schemas'
+        uses: actions/download-artifact@v3
 
       - run: ls -l

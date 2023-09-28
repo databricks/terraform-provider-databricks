@@ -25,6 +25,8 @@ type ConnectionInfo struct {
 	NameArg string `json:"-" url:"-"`
 	// A map of key-value properties attached to the securable.
 	Options map[string]string `json:"options" tf:"sensitive"`
+	// Username of current owner of the connection.
+	Owner string `json:"owner,omitempty" tf:"force_new,suppress_diff"`
 	// An object containing map of key-value properties attached to the
 	// connection.
 	Properties map[string]string `json:"properties,omitempty" tf:"force_new"`
@@ -37,11 +39,6 @@ var sensitiveOptions = []string{"user", "password", "personalAccessToken", "acce
 func ResourceConnection() *schema.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["owner"] = &schema.Schema{
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: `owner field is deprecated due the Catalog API changes. Owner cannot be specified when creating a connection.`,
-			}
 			return m
 		})
 	pi := common.NewPairID("metastore_id", "name").Schema(

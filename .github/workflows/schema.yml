@@ -27,6 +27,7 @@ jobs:
       - name: Generate provider schema
         shell: bash
         run: |
+          set -ex
           cd /tmp
           cat > main.tf <<EOF
           terraform {
@@ -70,6 +71,7 @@ jobs:
       - name: Generate provider schema
         shell: bash
         run: |
+          set -ex
           cd /tmp
           cat > main.tf <<EOF
           terraform {

@@ -96,9 +96,7 @@ func (a DashboardAPI) Delete(dashboardID string) error {
 func ResourceSqlDashboard() *schema.Resource {
 	s := common.StructToSchema(
 		DashboardEntity{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+		common.NoCustomize)
 
 	return common.Resource{
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {

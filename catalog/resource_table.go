@@ -65,9 +65,7 @@ func (a TablesAPI) deleteTable(name string) error {
 
 func ResourceTable() *schema.Resource {
 	tableSchema := common.StructToSchema(TableInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+		common.NoCustomize)
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
 		"owner", "name", "data_source_format", "columns", "storage_location",
 		"view_definition", "comment", "properties"})

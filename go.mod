@@ -2,14 +2,13 @@ module github.com/databricks/terraform-provider-databricks
 
 go 1.19
 
-replace github.com/databricks/databricks-sdk-go => /Users/hector.castejon/databricks-sdk-go
-
 require (
-	github.com/databricks/databricks-sdk-go v0.19.2
+	github.com/databricks/databricks-sdk-go v0.21.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/hcl/v2 v2.18.0
+	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 	github.com/stretchr/testify v1.8.4
 	github.com/zclconf/go-cty v1.14.0
@@ -45,7 +44,6 @@ require (
 	github.com/hashicorp/terraform-exec v0.19.0 // indirect
 	github.com/hashicorp/terraform-json v0.17.1 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.19.0 // indirect
-	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.2.2 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
@@ -69,9 +67,9 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/api v0.140.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230911183012-2d3300fd4832 // indirect
-	google.golang.org/grpc v1.57.0 // indirect
+	google.golang.org/grpc v1.58.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

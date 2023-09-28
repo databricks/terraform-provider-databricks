@@ -42,7 +42,7 @@ func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 type DatabricksClient struct {
 	*client.DatabricksClient
 
-	// callback used to create API1.2 call wrapper, which simplifies unit tessting
+	// callback used to create API1.2 call wrapper, which simplifies unit testing
 	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
 	cachedWorkspaceClient *databricks.WorkspaceClient
 	cachedAccountClient   *databricks.AccountClient

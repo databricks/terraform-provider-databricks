@@ -83,9 +83,17 @@ func unityAccountLevel(t *testing.T, steps ...step) {
 	run(t, steps)
 }
 
+// A step in a terraform acceptance test
 type step struct {
+	// Terraform HCL for resources to materialize in this test step.
 	Template string
-	Check    func(*terraform.State) error
+
+	// This function is called after the template is applied. Useful for making assertions
+	// or doing cleanup.
+	Check func(*terraform.State) error
+
+	// Setup function called before the template is materialized.
+	PreConfig func()
 
 	Destroy                   bool
 	ExpectNonEmptyPlan        bool
@@ -148,7 +156,8 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 	return commands.TrimLeadingWhitespace(template)
 }
 
-// Test wrapper over terraform testing framework
+// Test wrapper over terraform testing framework. Multiple steps share the same
+// terraform state context.
 func run(t *testing.T, steps []step) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
@@ -170,13 +179,7 @@ func run(t *testing.T, steps []step) {
 	}
 	ts := []resource.TestStep{}
 	ctx := context.Background()
-	type testResource struct {
-		ID       string
-		Name     string
-		Resource *schema.Resource
-	}
 
-	resourcesEverCreated := map[testResource]bool{}
 	stepConfig := ""
 	for i, s := range steps {
 		if s.Template != "" {
@@ -185,6 +188,7 @@ func run(t *testing.T, steps []step) {
 		stepNum := i
 		thisStep := s
 		stepCheck := thisStep.Check
+		stepPreConfig := s.PreConfig
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
 				if stepConfig == "" {
@@ -193,6 +197,10 @@ func run(t *testing.T, steps []step) {
 				logger.Infof(ctx, "Test %s (%s) step %d config is:\n%s",
 					t.Name(), cloudEnv, stepNum,
 					commands.TrimLeadingWhitespace(stepConfig))
+
+				if stepPreConfig != nil {
+					stepPreConfig()
+				}
 			},
 			Config:                    stepConfig,
 			Destroy:                   s.Destroy,
@@ -205,20 +213,17 @@ func run(t *testing.T, steps []step) {
 			Check: func(state *terraform.State) error {
 				// get configured client from provider
 				client := provider.Meta().(*common.DatabricksClient)
+
+				// Default check for all runs. Asserts that the read operation succeeds.
 				for n, is := range state.RootModule().Resources {
 					p := strings.Split(n, ".")
+
+					// Skip data resources.
 					if p[0] == "data" {
 						continue
 					}
 					r := provider.ResourcesMap[p[0]]
-					resourcesEverCreated[testResource{
-						ID:       is.Primary.ID,
-						Name:     p[1],
-						Resource: r,
-					}] = true
-					dia := r.ReadContext(ctx, r.Data(&terraform.InstanceState{
-						ID: is.Primary.ID,
-					}), client)
+					dia := r.ReadContext(ctx, r.Data(is.Primary), client)
 					if dia != nil {
 						return fmt.Errorf("%v", dia)
 					}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"golang.org/x/exp/slices"
 )
@@ -48,6 +49,9 @@ func ResourceConnection() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			if d.Get("owner") != "" {
+				tflog.Warn(context.Background(), "onwer field not currently supported. Support will be enabled in a future update.")
+			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -86,6 +90,9 @@ func ResourceConnection() *schema.Resource {
 			return common.StructToData(conn, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			if d.Get("owner") != "" {
+				tflog.Warn(context.Background(), "onwer field not currently supported. Support will be enabled in a future update.")
+			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

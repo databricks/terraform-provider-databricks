@@ -50,7 +50,7 @@ func ResourceConnection() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if d.Get("owner") != "" {
-				tflog.Warn(context.Background(), "onwer field not currently supported. Support will be enabled in a future update.")
+				tflog.Warn(context.Background(), "owner field not currently supported. Support will be enabled in a future update.")
 			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -91,7 +91,7 @@ func ResourceConnection() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if d.Get("owner") != "" {
-				tflog.Warn(context.Background(), "onwer field not currently supported. Support will be enabled in a future update.")
+				tflog.Warn(context.Background(), "owner field not currently supported. Support will be enabled in a future update.")
 			}
 			w, err := c.WorkspaceClient()
 			if err != nil {

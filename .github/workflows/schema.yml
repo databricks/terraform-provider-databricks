@@ -1,7 +1,19 @@
 name: schema
 
 on:
+  pull_request:
+    types: [opened, synchronize]
+
   workflow_dispatch:
+    inputs:
+      base:
+        description: 'Base ref'
+        default: 'master'
+        required: true
+      head:
+        description: 'Head ref'
+        default: 'master'
+        required: true
 
 jobs:
   compute_current:
@@ -9,10 +21,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - if: github.event_name == 'pull_request'
+        name: Checkout
         uses: actions/checkout@v4
         with:
+          # Checkout main branch to generate schema for current release
           ref: master
+
+      - if: github.event_name == 'workflow_dispatch'
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.base }}
 
       - name: 'Setup Go'
         uses: actions/setup-go@v4
@@ -55,10 +75,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - if: github.event_name == 'pull_request'
+        name: Checkout
+        uses: actions/checkout@v4
+
+      - if: github.event_name == 'workflow_dispatch'
+        name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: ${{ github.event.inputs.head }}
 
       - name: 'Setup Go'
         uses: actions/setup-go@v4

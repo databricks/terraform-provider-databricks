@@ -162,18 +162,19 @@ var workspaceConfKeys = map[string]any{
 const (
 	defaultChannelSize = 100000
 	defaultNumRoutines = 2
+	envVariablePrefix  = "EXPORTER_PARALLELISM_"
 )
 
-// TODO: think how to customize this
+// increased concurrency limits, could be also overridden via environment variables with name: envVariablePrefix + resource type
 var goroutinesNumber = map[string]int{
 	"databricks_notebook":          7,
 	"databricks_directory":         5,
 	"databricks_workspace_file":    3,
 	"databricks_user":              2,
 	"databricks_service_principal": 2,
-	"databricks_dashboard":         3,
-	"databricks_query":             5,
-	"databricks_alert":             2,
+	"databricks_sql_dashboard":     3,
+	"databricks_sql_query":         5,
+	"databricks_sql_alert":         2,
 	"databricks_permissions":       10,
 }
 
@@ -202,7 +203,6 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		Scope:       importedResources{},
 		importing:   map[string]bool{},
 		channels:    channels,
-		waitGroup:   &sync.WaitGroup{},
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
@@ -300,14 +300,20 @@ func (ic *importContext) Run() error {
 		}
 	}
 	// Concurrent execution part
+	if ic.waitGroup == nil {
+		ic.waitGroup = &sync.WaitGroup{}
+	}
 	// Start goroutines for each resource type
 	for rt, c := range ic.channels {
 		ch := c
 		resourceType := rt
+		// find number of goroutines for a specific resource type
 		numRoutines, exists := goroutinesNumber[resourceType]
 		if !exists {
 			numRoutines = defaultNumRoutines
 		}
+		numRoutines = getEnvAsInt(envVariablePrefix+resourceType, numRoutines)
+		//
 		for i := 0; i < numRoutines; i++ {
 			num := i
 			go func() {

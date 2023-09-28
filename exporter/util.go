@@ -718,3 +718,14 @@ func (ic *importContext) getUpdatedSinceStr() string {
 func (ic *importContext) getUpdatedSinceMs() int64 {
 	return ic.updatedSinceMs
 }
+
+func getEnvAsInt(envName string, defaultValue int) int {
+	if val, exists := os.LookupEnv(envName); exists {
+		parsedVal, err := strconv.Atoi(val)
+		if err == nil {
+			return parsedVal
+		}
+	}
+	return defaultValue
+}
+

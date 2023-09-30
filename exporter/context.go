@@ -169,9 +169,10 @@ const (
 var goroutinesNumber = map[string]int{
 	"databricks_notebook":          7,
 	"databricks_directory":         5,
-	"databricks_workspace_file":    3,
-	"databricks_user":              2,
-	"databricks_service_principal": 2,
+	"databricks_workspace_file":    5,
+	"databricks_dbfs_file":         3,
+	"databricks_user":              1,
+	"databricks_service_principal": 1,
 	"databricks_sql_dashboard":     3,
 	"databricks_sql_query":         5,
 	"databricks_sql_alert":         2,
@@ -441,12 +442,6 @@ func (ic *importContext) Run() error {
 		return err
 	}
 
-	cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
-	cmd.Dir = ic.Directory
-	err = cmd.Run()
-	if err != nil {
-		return err
-	}
 	//
 	if stats, err := os.Create(statsFileName); err == nil {
 		defer stats.Close()
@@ -459,6 +454,16 @@ func (ic *importContext) Run() error {
 		if _, err = stats.Write(statsBytes); err != nil {
 			return err
 		}
+	}
+
+	// TODO: add a command-line option to skip formatting
+	// format generated source code
+	cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
+	cmd.Dir = ic.Directory
+	err = cmd.Run()
+	if err != nil {
+		log.Printf("[ERROR] problems when formatting the generated code: %v", err)
+		return err
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil

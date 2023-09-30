@@ -173,7 +173,7 @@ func getFormattedNowTime() string {
 }
 
 func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChannel chan directoryInfo,
-	answer *syncAnswer, wg *sync.WaitGroup) {
+	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(ObjectStatus) bool) {
 	defer wg.Done()
 	notebookInfoList, err := a.list(directory.Path)
 	if err != nil {
@@ -183,15 +183,26 @@ func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChan
 			dirChannel <- directoryInfo{Path: directory.Path, Attempts: directory.Attempts + 1}
 		}
 	}
-	answer.append(notebookInfoList)
+
+	newList := make([]ObjectStatus, 0, len(notebookInfoList))
+	directories := make([]ObjectStatus, 0, len(notebookInfoList))
 	for _, v := range notebookInfoList {
 		if v.ObjectType == Directory {
-			wg.Add(1)
-			log.Printf("[DEBUG] %s: putting directory '%s' into channel. Channel size: %d",
-				getFormattedNowTime(), v.Path, len(dirChannel))
-			dirChannel <- directoryInfo{Path: v.Path}
-			time.Sleep(15 * time.Millisecond)
+			if shouldIncludeDir(v) {
+				newList = append(newList, v)
+				directories = append(directories, v)
+			}
+		} else {
+			newList = append(newList, v)
 		}
+	}
+	answer.append(newList)
+	for _, v := range directories {
+		wg.Add(1)
+		log.Printf("[DEBUG] %s: putting directory '%s' into channel. Channel size: %d",
+			getFormattedNowTime(), v.Path, len(dirChannel))
+		dirChannel <- directoryInfo{Path: v.Path}
+		time.Sleep(15 * time.Millisecond)
 	}
 }
 
@@ -205,9 +216,13 @@ func getEnvAsInt(envName string, defaultValue int) int {
 	return defaultValue
 }
 
-func (a NotebooksAPI) ListParallel(path string, recursive bool) ([]ObjectStatus, error) {
+func (a NotebooksAPI) ListParallel(path string, shouldIncludeDir func(ObjectStatus) bool) ([]ObjectStatus, error) {
 	var answer syncAnswer
 	wg := &sync.WaitGroup{}
+
+	if shouldIncludeDir == nil {
+		shouldIncludeDir = func(ObjectStatus) bool { return true }
+	}
 
 	numWorkers := getEnvAsInt(envVarListParallelism, defaultWorkersPoolSize)
 	channelSize := getEnvAsInt(envVarDirectoryChannelSize, defaultDirectoryChannelSize)
@@ -218,14 +233,14 @@ func (a NotebooksAPI) ListParallel(path string, recursive bool) ([]ObjectStatus,
 			log.Printf("[DEBUG] %s: starting go routine %d", getFormattedNowTime(), t)
 			for directory := range dirChannel {
 				log.Printf("[DEBUG] %s: processing directory %s", getFormattedNowTime(), directory.Path)
-				a.recursiveAddPathsParallel(directory, dirChannel, &answer, wg)
+				a.recursiveAddPathsParallel(directory, dirChannel, &answer, wg, shouldIncludeDir)
 			}
 		}()
 
 	}
 	log.Printf("[DEBUG] %s: pushing initial path to channel", getFormattedNowTime())
 	wg.Add(1)
-	a.recursiveAddPathsParallel(directoryInfo{Path: path}, dirChannel, &answer, wg)
+	a.recursiveAddPathsParallel(directoryInfo{Path: path}, dirChannel, &answer, wg, shouldIncludeDir)
 	log.Printf("[DEBUG] %s: starting to wait", getFormattedNowTime())
 	wg.Wait()
 	log.Printf("[DEBUG] %s: closing the directory channel", getFormattedNowTime())

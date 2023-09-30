@@ -22,6 +22,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+	"golang.org/x/exp/slices"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -162,6 +163,20 @@ func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	return ic.allDirectories
 }
 
+var directoriesToIgnore = []string{".ide", ".bundle", "__pycache__"}
+
+func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
+	if v.ObjectType != workspace.Directory {
+		return true
+	}
+	parts := strings.Split(v.Path, "/")
+	result := len(parts) > 1 && slices.Contains[[]string, string](directoriesToIgnore, parts[len(parts)-1])
+	if result {
+		log.Printf("[DEBUG] Ignoring directory %s", v.Path)
+	}
+	return !result
+}
+
 func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 	ic.wsObjectsMutex.Lock()
 	defer ic.wsObjectsMutex.Unlock()
@@ -169,7 +184,7 @@ func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 		t1 := time.Now()
 		log.Printf("[DEBUG] %v. Starting to list all workspace objects", t1.Local().Format(time.RFC3339))
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", true)
+		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories)
 		t2 := time.Now()
 		log.Printf("[DEBUG] %v. Finished listing of all workspace objects. %d objects in total. %v seconds",
 			t2.Local().Format(time.RFC3339), len(ic.allWorkspaceObjects), t2.Sub(t1).Seconds())

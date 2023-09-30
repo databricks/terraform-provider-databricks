@@ -362,30 +362,6 @@ func TestJobListNoNameMatch(t *testing.T) {
 	assert.Equal(t, 0, len(ic.testEmits))
 }
 
-func TestJobList_FailGetRuns(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=1&limit=1",
-			Status:   404,
-			Response: apierr.NotFound("nope"),
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-		ic.importJobs([]jobs.Job{
-			{
-				JobID: 1,
-				Settings: &jobs.JobSettings{
-					Name: "abc",
-				},
-			},
-		})
-		assert.Equal(t, 0, len(ic.testEmits))
-	})
-}
-
 func TestClusterPolicyWrongDef(t *testing.T) {
 	d := policies.ResourceClusterPolicy().TestResourceData()
 	d.Set("name", "abc")

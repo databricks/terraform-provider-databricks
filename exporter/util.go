@@ -540,36 +540,11 @@ func eitherString(a any, b any) string {
 }
 
 func (ic *importContext) importJobs(l []jobs.Job) {
-	nowSeconds := time.Now().Unix()
-	a := jobs.NewJobsAPI(ic.Context, ic.Client)
-	starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
 	i := 0
 	for offset, job := range l {
 		if !ic.MatchesName(job.Settings.Name) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
-		}
-		// TODO: skip inactive jobs check, and import everything...
-		if ic.lastActiveDays != 3650 {
-			rl, err := a.RunsList(jobs.JobRunsListRequest{
-				JobID:         job.JobID,
-				CompletedOnly: true,
-				Limit:         1,
-			})
-			if err != nil {
-				log.Printf("[WARN] Failed to get runs: %s", err)
-				continue
-			}
-			if len(rl.Runs) == 0 {
-				log.Printf("[INFO] Job %#v (%d) did never run. Skipping", job.Settings.Name, job.JobID)
-				continue
-			}
-			if rl.Runs[0].StartTime < starterAfter {
-				log.Printf("[INFO] Job %#v (%d) didn't run for %d days. Skipping",
-					job.Settings.Name, job.JobID,
-					(nowSeconds*1000-rl.Runs[0].StartTime)/24*60*60/1000)
-				continue
-			}
 		}
 		ic.Emit(&resource{
 			Resource: "databricks_job",
@@ -687,6 +662,7 @@ func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
 
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
+		// TODO: can we pass a visitor here, that will emit corresponding object earlier?
 		objectsList := ic.getAllWorkspaceObjects()
 		updatedSinceMs := ic.getUpdatedSinceMs()
 		for offset, object := range objectsList {
@@ -743,4 +719,3 @@ func getEnvAsInt(envName string, defaultValue int) int {
 	}
 	return defaultValue
 }
-

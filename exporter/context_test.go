@@ -3,6 +3,7 @@ package exporter
 import (
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -92,7 +93,8 @@ func TestEmitNoImportable(t *testing.T) {
 }
 
 func TestEmitNoSearchAvail(t *testing.T) {
-	(&importContext{
+	ch := make(resourceChannel)
+	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
@@ -102,17 +104,30 @@ func TestEmitNoSearchAvail(t *testing.T) {
 				Service: "e",
 			},
 		},
-		services: "e",
-	}).Emit(&resource{
+		services:  "e",
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+	}
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
 		Name:      "c",
 	})
+	ic.waitGroup.Wait()
+	close(ch)
 }
 
 func TestEmitNoSearchFails(t *testing.T) {
-	(&importContext{
+	ch := make(resourceChannel, 10)
+	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
@@ -125,17 +140,30 @@ func TestEmitNoSearchFails(t *testing.T) {
 				},
 			},
 		},
-		services: "e",
-	}).Emit(&resource{
+		services:  "e",
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+	}
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
 		Name:      "c",
 	})
+	ic.waitGroup.Wait()
+	close(ch)
 }
 
 func TestEmitNoSearchNoId(t *testing.T) {
-	(&importContext{
+	ch := make(resourceChannel, 10)
+	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
@@ -148,17 +176,30 @@ func TestEmitNoSearchNoId(t *testing.T) {
 				},
 			},
 		},
-		services: "e",
-	}).Emit(&resource{
+		services:  "e",
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+	}
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
 		Name:      "c",
 	})
+	ic.waitGroup.Wait()
+	close(ch)
 }
 
 func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
-	(&importContext{
+	ch := make(resourceChannel, 10)
+	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
@@ -175,14 +216,26 @@ func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 				},
 			},
 		},
-		services: "e",
-	}).Emit(&resource{
+		services:  "e",
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+	}
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
 		Data:      &schema.ResourceData{},
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
 		Name:      "c",
 	})
+	ic.waitGroup.Wait()
+	close(ch)
 }
 
 func TestLoadingLastRun(t *testing.T) {

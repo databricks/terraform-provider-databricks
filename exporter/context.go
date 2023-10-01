@@ -179,6 +179,14 @@ var goroutinesNumber = map[string]int{
 	"databricks_permissions":       10,
 }
 
+func makeResourcesChannels(p *schema.Provider) map[string]resourceChannel {
+	channels := make(map[string]resourceChannel, len(p.ResourcesMap))
+	for r := range p.ResourcesMap {
+		channels[r] = make(resourceChannel, defaultChannelSize)
+	}
+	return channels
+}
+
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
@@ -190,10 +198,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		c *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, c)
 	})
-	channels := make(map[string]resourceChannel, len(p.ResourcesMap))
-	for r := range p.ResourcesMap {
-		channels[r] = make(resourceChannel, defaultChannelSize)
-	}
+
 	return &importContext{
 		Client:      c,
 		Context:     ctx,
@@ -203,7 +208,6 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		Files:       map[string]*hclwrite.File{},
 		Scope:       importedResources{},
 		importing:   map[string]bool{},
-		channels:    channels,
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
@@ -215,6 +219,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		notebooksFormat:     "SOURCE",
 		allUsers:            map[string]scim.User{},
 		allSps:              map[string]scim.User{},
+		waitGroup:           &sync.WaitGroup{},
+		channels:            makeResourcesChannels(p),
 	}
 }
 
@@ -305,29 +311,7 @@ func (ic *importContext) Run() error {
 		ic.waitGroup = &sync.WaitGroup{}
 	}
 	// Start goroutines for each resource type
-	for rt, c := range ic.channels {
-		ch := c
-		resourceType := rt
-		// find number of goroutines for a specific resource type
-		numRoutines, exists := goroutinesNumber[resourceType]
-		if !exists {
-			numRoutines = defaultNumRoutines
-		}
-		numRoutines = getEnvAsInt(envVariablePrefix+resourceType, numRoutines)
-		//
-		for i := 0; i < numRoutines; i++ {
-			num := i
-			go func() {
-				log.Printf("[DEBUG] Starting goroutine %d for resource %s", num, resourceType)
-				for r := range ch {
-					log.Printf("[DEBUG] channel for %s, channel size=%d got %v", resourceType, len(ch), r)
-					if r != nil {
-						r.ImportResource(ic)
-					}
-				}
-			}()
-		}
-	}
+	ic.startImportChannels()
 
 	// Start listing of objects
 	for rnLoop, irLoop := range ic.Importables {
@@ -356,10 +340,7 @@ func (ic *importContext) Run() error {
 
 	ic.waitGroup.Wait()
 	// close channels
-	for rt, ch := range ic.channels {
-		log.Printf("[DEBUG] Closing channel for resource %s", rt)
-		close(ch)
-	}
+	ic.closeImportChannels()
 
 	// This should be single threaded...
 	if ic.Scope.Len() == 0 {
@@ -467,6 +448,39 @@ func (ic *importContext) Run() error {
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil
+}
+
+func (ic *importContext) startImportChannels() {
+	for rt, c := range ic.channels {
+		ch := c
+		resourceType := rt
+
+		numRoutines, exists := goroutinesNumber[resourceType]
+		if !exists {
+			numRoutines = defaultNumRoutines
+		}
+		numRoutines = getEnvAsInt(envVariablePrefix+resourceType, numRoutines)
+
+		for i := 0; i < numRoutines; i++ {
+			num := i
+			go func() {
+				log.Printf("[DEBUG] Starting goroutine %d for resource %s", num, resourceType)
+				for r := range ch {
+					log.Printf("[DEBUG] channel for %s, channel size=%d got %v", resourceType, len(ch), r)
+					if r != nil {
+						r.ImportResource(ic)
+					}
+				}
+			}()
+		}
+	}
+}
+
+func (ic *importContext) closeImportChannels() {
+	for rt, ch := range ic.channels {
+		log.Printf("[DEBUG] Closing channel for resource %s", rt)
+		close(ch)
+	}
 }
 
 func generateBlockFullName(block *hclwrite.Block) string {

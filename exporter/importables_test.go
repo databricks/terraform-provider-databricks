@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -37,6 +38,10 @@ func importContextForTest() *importContext {
 		Files:       map[string]*hclwrite.File{},
 		testEmits:   map[string]bool{},
 		nameFixes:   nameFixes,
+		waitGroup:   &sync.WaitGroup{},
+		allUsers:    map[string]scim.User{},
+		allSps:      map[string]scim.User{},
+		channels:    makeResourcesChannels(p),
 	}
 }
 
@@ -739,6 +744,7 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, cb f
 		ic.importing = map[string]bool{}
 		ic.variables = map[string]string{}
 		ic.services = services
+		ic.startImportChannels()
 		cb(ic)
 	})
 }
@@ -782,6 +788,8 @@ func TestNotebookGeneration(t *testing.T) {
 		ic.notebooksFormat = "SOURCE"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
@@ -830,6 +838,8 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 		ic.notebooksFormat = "JUPYTER"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
@@ -878,6 +888,8 @@ func TestDirectoryGeneration(t *testing.T) {
 		err := resourcesMap["databricks_directory"].List(ic)
 		assert.NoError(t, err)
 
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_directory" "first_1234" {
@@ -904,6 +916,8 @@ func TestGlobalInitScriptGen(t *testing.T) {
 			ID:       "a",
 		})
 
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_global_init_script" "new_importing_things" {
@@ -934,6 +948,8 @@ func TestSecretGen(t *testing.T) {
 			ID:       "a|||b",
 		})
 
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_secret" "a_b_eb2980a5a2" {
@@ -967,6 +983,8 @@ func TestDbfsFileGen(t *testing.T) {
 			ID:       "a",
 		})
 
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_dbfs_file" "_0cc175b9c0f1b6a831c399e269772661_a" {
@@ -1042,7 +1060,10 @@ func TestIncrementalListDLT(t *testing.T) {
 		ic.Context = ctx
 		ic.incremental = true
 		ic.updatedSinceStr = "2023-07-24T00:00:00Z"
+		ic.updatedSinceMs = 1690156700000
 		err := resourcesMap["databricks_pipeline"].List(ic)
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(ic.testEmits))
 	})

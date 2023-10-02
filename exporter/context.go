@@ -819,7 +819,7 @@ func (ic *importContext) Emit(r *resource) {
 	// from here, it should be done by the goroutine...  send resource into the channel
 	ch, exists := ic.channels[r.Resource]
 	if exists {
-		log.Printf("[DEBUG] increasing counter & sending to the channel for resource %s", r.Resource)
+		log.Printf("[TRACE] increasing counter & sending to the channel for resource %s", r.Resource)
 		ic.waitGroup.Add(1)
 		ch <- r
 	} else {

@@ -14,8 +14,8 @@ type TfLogger struct {
 }
 
 // This function is always enabled because we extend the Logger from Go SDK and there we check
-// the logging based on level (defaulting to Info). This however isn't required in terraform since we use the tflog package
-// which doesn't require this.
+// the logging is enabled based on level (which default to Info). This however isn't required in terraform
+// since we use the tflog package which automatically reads from TF_LOG environment variable.
 func (tfLogger *TfLogger) Enabled(_ context.Context, _ logger.Level) bool {
 	return true
 }

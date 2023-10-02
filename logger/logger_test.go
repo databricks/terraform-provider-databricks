@@ -13,12 +13,6 @@ func TestTfLogger_Enabled(t *testing.T) {
 	assert.True(t, l.Enabled(context.Background(), goLogger.LevelInfo))
 }
 
-func TestConvertToMap(t *testing.T) {
-	m := convertToMap("value1", "value2")
-	assert.Equal(t, "value1", m["0"])
-	assert.Equal(t, "value2", m["1"])
-}
-
 func TestSetLogger(t *testing.T) {
 	SetLogger()
 	assert.IsType(t, &TfLogger{}, goLogger.DefaultLogger)

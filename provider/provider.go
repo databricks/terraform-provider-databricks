@@ -21,6 +21,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
+	tflogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
@@ -169,6 +170,7 @@ func DatabricksProvider() *schema.Provider {
 		if p.TerraformVersion != "" {
 			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 		}
+		tflogger.SetLogger()
 		return configureDatabricksClient(ctx, d)
 	}
 	common.AddContextToAllResources(p, "databricks")

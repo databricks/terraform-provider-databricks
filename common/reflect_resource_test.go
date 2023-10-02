@@ -582,6 +582,31 @@ func TestDataToReflectValueBypass(t *testing.T) {
 	assert.EqualError(t, err, "value of Struct is expected, but got Int: 0")
 }
 
+func TestDeserializeForceSendFields(t *testing.T) {
+	type forceSendFieldsStruct struct {
+		Int             int `json:"int"`
+		ForceSendFields []string
+	}
+	r := func() *schema.Resource {
+		return DataResource(forceSendFieldsStruct{}, func(ctx context.Context, e any, c *DatabricksClient) error {
+			return nil
+		})
+	}()
+
+	jobSchema := StructToSchema(forceSendFieldsStruct{},
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
+
+	d := r.TestResourceData()
+	d.Set("int", 3)
+	var result forceSendFieldsStruct
+	DataToStructPointer(d, jobSchema, &result)
+
+	assert.Equal(t, result.Int, 3)
+	assert.Equal(t, result.ForceSendFields, []string{"Int"})
+}
+
 func TestDataResource(t *testing.T) {
 	r := func() *schema.Resource {
 		type entry struct {

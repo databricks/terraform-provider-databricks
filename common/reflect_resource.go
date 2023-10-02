@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -198,7 +199,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 		tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldName(typeField)
-		if fieldName == "-" {
+		if fieldName == "-" || fieldName == "ForceSendFields" {
 			continue
 		}
 		scm[fieldName] = &schema.Schema{}
@@ -524,29 +525,36 @@ func DataToReflectValue(d *schema.ResourceData, r *schema.Resource, rv reflect.V
 
 func readReflectValueFromData(path []string, d attributeGetter,
 	rv reflect.Value, s map[string]*schema.Schema) error {
-	return iterFields(rv, path, s, func(fieldSchema *schema.Schema,
+	names := getJsonToFieldNameMap(rv.Type())
+	forceSendFields := []string{}
+	err := iterFields(rv, path, s, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
 			return nil
 		}
+		alias := path[len(path)-1]
 		switch fieldSchema.Type {
 		case schema.TypeInt:
 			if v, ok := raw.(int); ok {
 				valueField.SetInt(int64(v))
+				forceSendFields = append(forceSendFields, names[alias])
 			}
 		case schema.TypeString:
 			if v, ok := raw.(string); ok {
 				valueField.SetString(v)
+				forceSendFields = append(forceSendFields, names[alias])
 			}
 		case schema.TypeBool:
 			if v, ok := raw.(bool); ok {
 				valueField.SetBool(v)
+				forceSendFields = append(forceSendFields, names[alias])
 			}
 		case schema.TypeFloat:
 			if v, ok := raw.(float64); ok {
 				valueField.SetFloat(v)
+				forceSendFields = append(forceSendFields, names[alias])
 			}
 		case schema.TypeMap:
 			mapValueKind := valueField.Type().Elem().Kind()
@@ -575,6 +583,34 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return setForceSendFields(rv, forceSendFields)
+}
+
+func setForceSendFields(rv reflect.Value, presentFields []string) error {
+	if rv.Kind() != reflect.Ptr && rv.Kind() != reflect.Struct {
+		return nil
+	}
+
+	field := rv.FieldByName("ForceSendFields")
+
+	if !field.IsValid() {
+		return nil
+	}
+
+	if !field.CanSet() || field.Kind() != reflect.Slice {
+		return errors.New("cannot set field")
+	}
+
+	if len(presentFields) == 0 {
+		return nil
+	}
+	presentFieldsValue := reflect.ValueOf(presentFields)
+	field.Set(presentFieldsValue)
+
+	return nil
 }
 
 func primitiveReflectValueFromInterface(rk reflect.Kind,

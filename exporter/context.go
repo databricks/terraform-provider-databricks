@@ -79,6 +79,7 @@ type importContext struct {
 	debug               bool
 	incremental         bool
 	mounts              bool
+	noFormat            bool
 	services            string
 	listing             string
 	match               string
@@ -437,14 +438,15 @@ func (ic *importContext) Run() error {
 		}
 	}
 
-	// TODO: add a command-line option to skip formatting
-	// format generated source code
-	cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
-	cmd.Dir = ic.Directory
-	err = cmd.Run()
-	if err != nil {
-		log.Printf("[ERROR] problems when formatting the generated code: %v", err)
-		return err
+	if !ic.noFormat {
+		// format generated source code
+		cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
+		cmd.Dir = ic.Directory
+		err = cmd.Run()
+		if err != nil {
+			log.Printf("[ERROR] problems when formatting the generated code: %v", err)
+			return err
+		}
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil

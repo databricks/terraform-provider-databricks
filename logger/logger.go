@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/logger"
@@ -9,51 +10,53 @@ import (
 )
 
 type TfLogger struct {
-	Name  string
-	Level logger.Level
+	Name string
 }
 
-func (tfLogger *TfLogger) Enabled(_ context.Context, level logger.Level) bool {
+// This function is always enabled because we extend the Logger from Go SDK and there we check
+// the logging based on level (defaulting to Info). This however isn't required in terraform since we use the tflog package
+// which doesn't require this.
+func (tfLogger *TfLogger) Enabled(_ context.Context, _ logger.Level) bool {
 	return true
 }
 
 func (tfLogger *TfLogger) Tracef(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Trace(ctx, format, convertToMap(v))
+		tflog.Trace(ctx, fmt.Sprintf(format, v...), convertToMap(v))
 	} else {
-		tflog.SubsystemTrace(ctx, tfLogger.Name, format, convertToMap(v))
+		tflog.SubsystemTrace(ctx, tfLogger.Name, fmt.Sprintf(format, v...), convertToMap(v))
 	}
 }
 
 func (tfLogger *TfLogger) Debugf(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Debug(ctx, format, convertToMap(v))
+		tflog.Debug(ctx, fmt.Sprintf(format, v...), convertToMap(v))
 	} else {
-		tflog.SubsystemDebug(ctx, tfLogger.Name, format, convertToMap(v))
+		tflog.SubsystemDebug(ctx, tfLogger.Name, fmt.Sprintf(format, v...), convertToMap(v))
 	}
 }
 
 func (tfLogger *TfLogger) Infof(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Info(ctx, format, convertToMap(v))
+		tflog.Info(ctx, fmt.Sprintf(format, v...), convertToMap(v))
 	} else {
-		tflog.SubsystemInfo(ctx, tfLogger.Name, format, convertToMap(v))
+		tflog.SubsystemInfo(ctx, tfLogger.Name, fmt.Sprintf(format, v...), convertToMap(v))
 	}
 }
 
 func (tfLogger *TfLogger) Warnf(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Warn(ctx, format, convertToMap(v))
+		tflog.Warn(ctx, fmt.Sprintf(format, v...), convertToMap(v))
 	} else {
-		tflog.SubsystemWarn(ctx, tfLogger.Name, format, convertToMap(v))
+		tflog.SubsystemWarn(ctx, tfLogger.Name, fmt.Sprintf(format, v...), convertToMap(v))
 	}
 }
 
 func (tfLogger *TfLogger) Errorf(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Error(ctx, format, convertToMap(v))
+		tflog.Error(ctx, fmt.Sprintf(format, v...), convertToMap(v))
 	} else {
-		tflog.SubsystemError(ctx, tfLogger.Name, format, convertToMap(v))
+		tflog.SubsystemError(ctx, tfLogger.Name, fmt.Sprintf(format, v...), convertToMap(v))
 	}
 }
 

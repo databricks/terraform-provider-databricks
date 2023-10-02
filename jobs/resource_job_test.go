@@ -48,7 +48,7 @@ func TestResourceJobCreate(t *testing.T) {
 					MinRetryIntervalMillis: 5000,
 					RetryOnTimeout:         true,
 					MaxConcurrentRuns:      1,
-					Queue: &Queue{
+					Queue: &jobs.QueueSettings{
 						Enabled: true,
 					},
 					RunAs: &JobRunAs{
@@ -88,7 +88,7 @@ func TestResourceJobCreate(t *testing.T) {
 							TimezoneID:           "America/Los_Angeles",
 							PauseStatus:          "PAUSED",
 						},
-						Queue: &Queue{
+						Queue: &jobs.QueueSettings{
 							Enabled: true,
 						},
 						RunAs: &JobRunAs{

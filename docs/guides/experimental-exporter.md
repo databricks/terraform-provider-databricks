@@ -79,6 +79,15 @@ Services are just logical groups of resources used for filtering and organizatio
 
 For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. Importer will create a variable in `vars.tf`, that would have the same name as secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.
 
+## Parallel execution
+
+To speedup export, Terraform Exporter performs many operations, such as, listing & actual data exporting, in parallel using Goroutines.  There are built-in defaults controlling the parallelism, but it's also possible to tune some parameters using environment variables specific to exporter:
+
+* `EXPORTER_WS_LIST_PARALLELISM` (default: `5`) controls how many Goroutines are used to perform parallel listing of Databricks Workspace objects (notebooks, directories, workspace files, ...).
+* `EXPORTER_DIRECTORIES_CHANNEL_SIZE` (default: `100000`) controls capacity of the channel that is used when listing workspace objects. Please make sure that this value is big enough (default value should be ok), otherwise there is a chance of deadlock. 
+* `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of specific type (replace `NNN` with resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets number of Goroutines for `databricks_notebook` resource to `10`).  Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go`, or equal to `2` if there is no value there.  *Don't increase default values too much to avoid REST API throttling!*
+
+
 ## Support Matrix
 
 Exporter aims to generate HCL code for the most of resources within the Databricks workspace:

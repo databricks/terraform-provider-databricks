@@ -163,7 +163,7 @@ type directoryInfo struct {
 const (
 	directoryListingMaxAttempts = 3
 	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
-	envVarDirectoryChannelSize  = "EXPORTER_CHANNEL_SIZE"
+	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
 	defaultWorkersPoolSize      = 10
 	defaultDirectoryChannelSize = 100000
 )

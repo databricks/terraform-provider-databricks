@@ -163,6 +163,7 @@ func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	return ic.allDirectories
 }
 
+// TODO: Ignore databricks_automl as well?
 var directoriesToIgnore = []string{".ide", ".bundle", "__pycache__"}
 
 func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {

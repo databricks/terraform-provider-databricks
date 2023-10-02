@@ -15,7 +15,7 @@ type TfLogger struct {
 // This function is always enabled because TfLogger implements the Logger interface from Go SDK and there we check
 // if the logging is enabled based on level (which default to Info).
 // This however isn't possible here since tflog isn't enabled / disabled based on log level.
-// Ommiting is done internally through the `ShouldOmit` method that filters based on logger configurations.
+// Omitting is done internally through the `ShouldOmit` method that filters based on logger configurations.
 func (tfLogger *TfLogger) Enabled(_ context.Context, _ logger.Level) bool {
 	return true
 }

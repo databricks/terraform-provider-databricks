@@ -29,7 +29,7 @@ func (a DefaultNamespaceSettingsAPI) isEtagVersionError(err error) bool {
 	if !errors.As(err, &aerr) {
 		return false
 	}
-	return aerr.StatusCode == http.StatusNotFound || (aerr.StatusCode == http.StatusConflict || aerr.ErrorCode == "RESOURCE_CONFLICT")
+	return aerr.StatusCode == http.StatusNotFound || (aerr.StatusCode == http.StatusConflict && aerr.ErrorCode == "RESOURCE_CONFLICT")
 }
 
 func (a DefaultNamespaceSettingsAPI) getEtagFromError(err error) (string, error) {

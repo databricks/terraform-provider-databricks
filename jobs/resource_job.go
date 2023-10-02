@@ -231,10 +231,6 @@ type ContinuousConf struct {
 	PauseStatus string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
-type Queue struct {
-	Enabled bool `json:"enabled,omitempty"`
-}
-
 type JobRunAs struct {
 	UserName             string `json:"user_name,omitempty"`
 	ServicePrincipalName string `json:"service_principal_name,omitempty"`
@@ -292,7 +288,7 @@ type JobSettings struct {
 	WebhookNotifications *WebhookNotifications         `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
 	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string             `json:"tags,omitempty"`
-	Queue                *Queue                        `json:"queue,omitempty"`
+	Queue                *jobs.QueueSettings           `json:"queue,omitempty"`
 	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"suppress_diff"`
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`

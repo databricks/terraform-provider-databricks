@@ -352,6 +352,10 @@ func (s SensitiveString) GoString() string {
 	return "****"
 }
 
+func (s SensitiveString) String() string {
+	return "****"
+}
+
 // ephemeral entity to use with StructToData()
 type WorkspaceToken struct {
 	WorkspaceURL string `json:"workspace_url,omitempty"`

@@ -99,7 +99,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 						CredentialInfo: &create,
 					})
 				if err != nil {
-					return err
+					return fmt.Errorf("create storage credentials: %w", err)
 				}
 				if d.Get("is_default").(bool) {
 					_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
@@ -109,7 +109,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 						},
 					})
 					if err != nil {
-						return err
+						return fmt.Errorf("update metastore: %w", err)
 					}
 				}
 				p.Pack(d)
@@ -117,7 +117,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			}, func(w *databricks.WorkspaceClient) error {
 				dac, err := w.StorageCredentials.Create(ctx, create)
 				if err != nil {
-					return err
+					return fmt.Errorf("create storage credentials: %w", err)
 				}
 				if d.Get("is_default").(bool) {
 					_, err = w.Metastores.Update(ctx, catalog.UpdateMetastore{
@@ -126,7 +126,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 					})
 				}
 				if err != nil {
-					return err
+					return fmt.Errorf("update metastore: %w", err)
 				}
 				p.Pack(d)
 				return nil
@@ -146,12 +146,12 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 					Name:        dacName,
 				})
 				if err != nil {
-					return err
+					return fmt.Errorf("get storage credentials: %w", err)
 				}
 				m, err := acc.Metastores.GetByMetastoreId(ctx, metastoreId)
 				metastore = m.MetastoreInfo
 				if err != nil {
-					return err
+					return fmt.Errorf("get metastore: %w", err)
 				}
 				isDefault := metastore.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
@@ -160,11 +160,11 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				var storageCredential *catalog.StorageCredentialInfo
 				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacName)
 				if err != nil {
-					return err
+					return fmt.Errorf("get storage credentials: %w", err)
 				}
 				m, err := w.Metastores.Summary(ctx)
 				if err != nil {
-					return err
+					return fmt.Errorf("metastore summary: %w", err)
 				}
 				isDefault := m.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)

@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -1657,4 +1658,19 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 		Gcp:    true,
 		Create: true,
 	}.ApplyNoError(t)
+}
+
+func TestSensitiveDataInLogs(t *testing.T) {
+	tk := Token{
+		Comment:         "comment",
+		LifetimeSeconds: 123,
+		TokenID:         "tokenID",
+		TokenValue:      "sensitive",
+	}
+	assert.Contains(t, fmt.Sprintf("%v", tk), "comment")
+	assert.Contains(t, fmt.Sprintf("%#v", tk), "comment")
+	assert.Contains(t, fmt.Sprintf("%+v", tk), "comment")
+	assert.NotContains(t, fmt.Sprintf("%v", tk), "sensitive")
+	assert.NotContains(t, fmt.Sprintf("%#v", tk), "sensitive")
+	assert.NotContains(t, fmt.Sprintf("%+v", tk), "sensitive")
 }

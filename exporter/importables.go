@@ -768,6 +768,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nameNormalizationRegex.ReplaceAllString(strings.Split(s, "@")[0], "_") + "_" + d.Id()
 		},
+		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findUserByName(r.Value)
 			if err != nil {
@@ -805,6 +806,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return name + "_" + d.Id()
 		},
+		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findSpnByAppID(r.Value)
 			if err != nil {
@@ -1102,19 +1104,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		List: func(ic *importContext) error {
-			// TODO: Should we use parallel listing instead?
-			repoList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
+			objList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
 			if err != nil {
 				return err
 			}
-			for offset, repo := range repoList {
+			for offset, repo := range objList {
 				if repo.Url != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_repo",
 						ID:       fmt.Sprintf("%d", repo.ID),
 					})
 				}
-				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(repoList))
+				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(objList))
 			}
 			return nil
 		},

@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -72,29 +73,38 @@ func (a *AlertEntity) toEditAlertApiObject(s map[string]*schema.Schema, data *sc
 func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Schema, data *schema.ResourceData) error {
 	a.Name = apiAlert.Name
 	a.Parent = apiAlert.Parent
-	a.QueryId = apiAlert.Query.Id
+	if apiAlert.Query != nil {
+		a.QueryId = apiAlert.Query.Id
+	} else {
+		log.Printf("[WARN] Query object is nil in alert '%s' (id: %s) ", apiAlert.Name, apiAlert.Id)
+	}
 	a.Rearm = apiAlert.Rearm
 	a.CreatedAt = apiAlert.CreatedAt
 	a.UpdatedAt = apiAlert.UpdatedAt
 
-	a.Options = &AlertOptions{
-		Column:        apiAlert.Options.Column,
-		Op:            apiAlert.Options.Op,
-		Muted:         apiAlert.Options.Muted,
-		CustomBody:    apiAlert.Options.CustomBody,
-		CustomSubject: apiAlert.Options.CustomSubject,
-	}
+	if apiAlert.Options != nil {
+		a.Options = &AlertOptions{
+			Column:        apiAlert.Options.Column,
+			Op:            apiAlert.Options.Op,
+			Muted:         apiAlert.Options.Muted,
+			CustomBody:    apiAlert.Options.CustomBody,
+			CustomSubject: apiAlert.Options.CustomSubject,
+		}
 
-	// value can be a string or a float64 - unfortunately this can't be encoded in OpenAPI yet
-	switch value := apiAlert.Options.Value.(type) {
-	case string:
-		a.Options.Value = value
-	case float64:
-		a.Options.Value = strconv.FormatFloat(value, 'f', 0, 64)
-	case bool:
-		a.Options.Value = strconv.FormatBool(value)
-	default:
-		return fmt.Errorf("unexpected type for value: %T", value)
+		// value can be a string or a float64 - unfortunately this can't be encoded in OpenAPI yet
+		switch value := apiAlert.Options.Value.(type) {
+		case string:
+			a.Options.Value = value
+		case float64:
+			a.Options.Value = strconv.FormatFloat(value, 'f', 0, 64)
+		case bool:
+			a.Options.Value = strconv.FormatBool(value)
+		default:
+			return fmt.Errorf("unexpected type for value: %T", value)
+		}
+	} else {
+		log.Printf("[WARN] Options object is nil in alert '%s' (id: %s) ", apiAlert.Name, apiAlert.Id)
+		a.Options = &AlertOptions{}
 	}
 
 	return common.StructToData(a, s, data)
@@ -132,6 +142,7 @@ func ResourceSqlAlert() *schema.Resource {
 			}
 			apiAlert, err := w.Alerts.GetByAlertId(ctx, data.Id())
 			if err != nil {
+				log.Printf("[WARN] error getting alert by ID: %v", err)
 				return err
 			}
 			var a AlertEntity

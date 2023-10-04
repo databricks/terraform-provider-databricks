@@ -645,6 +645,7 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			res := ref.Regexp.FindStringSubmatch(r.Value)
 			if len(res) < 2 {
 				log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, r.Value)
+				continue
 			}
 			matchValue = res[1]
 		}

@@ -205,7 +205,7 @@ func TestImportingMounts(t *testing.T) {
 			assert.NoError(t, err)
 
 			resources := ic.Scope.Sorted()
-			for i := 0; i < len(resources); i++ {
+			for i := range resources {
 				err = ic.Importables["databricks_mount"].Body(ic,
 					hclwrite.NewEmptyFile().Body(), resources[i])
 				assert.NoError(t, err)

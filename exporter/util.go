@@ -151,6 +151,7 @@ func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
 		objects := ic.getAllWorkspaceObjects()
 		ic.wsObjectsMutex.Lock()
+		defer ic.wsObjectsMutex.Unlock()
 		if len(ic.allDirectories) == 0 {
 			for _, v := range objects {
 				if v.ObjectType == workspace.Directory {
@@ -158,7 +159,6 @@ func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 				}
 			}
 		}
-		ic.wsObjectsMutex.Unlock()
 	}
 	return ic.allDirectories
 }
@@ -717,6 +717,7 @@ func getEnvAsInt(envName string, defaultValue int) int {
 		if err == nil {
 			return parsedVal
 		}
+		log.Printf("[ERROR] Can't parse value '%s' of environment variable '%s'", val, envName)
 	}
 	return defaultValue
 }

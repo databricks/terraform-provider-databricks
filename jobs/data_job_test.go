@@ -145,7 +145,7 @@ func TestDataSourceQueryableJobRunAsSameUser(t *testing.T) {
 	})
 }
 
-func TestDataSourceQueryableJobRunAsAnoterUser(t *testing.T) {
+func TestDataSourceQueryableJobRunAsAnotherUser(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

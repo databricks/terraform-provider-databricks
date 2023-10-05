@@ -84,6 +84,97 @@ func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 	})
 }
 
+func TestDataSourceQueryableJobRunAsSP(t *testing.T) {
+	spID := "3f670caf-9a4b-4479-8143-1a0878da8f57"
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=234",
+				Response: Job{
+					JobID: 234,
+					Settings: &JobSettings{
+						Name: "Second",
+					},
+					CreatorUserName: "user@domain.com",
+					RunAsUserName:   spID,
+				},
+			},
+		},
+		Resource:    DataSourceJob(),
+		Read:        true,
+		New:         true,
+		NonWritable: true,
+		HCL:         `job_id = "234"`,
+		ID:          "234",
+	}.ApplyAndExpectData(t, map[string]any{
+		"job_id":                         "234",
+		"id":                             "234",
+		"job_settings.0.settings.0.name": "Second",
+		"job_settings.0.settings.0.run_as.0.service_principal_name": spID,
+	})
+}
+
+func TestDataSourceQueryableJobRunAsSameUser(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=234",
+				Response: Job{
+					JobID: 234,
+					Settings: &JobSettings{
+						Name: "Second",
+					},
+					CreatorUserName: "user@domain.com",
+					RunAsUserName:   "user@domain.com",
+				},
+			},
+		},
+		Resource:    DataSourceJob(),
+		Read:        true,
+		New:         true,
+		NonWritable: true,
+		HCL:         `job_id = "234"`,
+		ID:          "234",
+	}.ApplyAndExpectData(t, map[string]any{
+		"job_id":                             "234",
+		"id":                                 "234",
+		"job_settings.0.settings.0.name":     "Second",
+		"job_settings.0.settings.0.run_as.0": map[string]any{},
+	})
+}
+
+func TestDataSourceQueryableJobRunAsAnoterUser(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=234",
+				Response: Job{
+					JobID: 234,
+					Settings: &JobSettings{
+						Name: "Second",
+					},
+					CreatorUserName: "user1@domain.com",
+					RunAsUserName:   "user2@domain.com",
+				},
+			},
+		},
+		Resource:    DataSourceJob(),
+		Read:        true,
+		New:         true,
+		NonWritable: true,
+		HCL:         `job_id = "234"`,
+		ID:          "234",
+	}.ApplyAndExpectData(t, map[string]any{
+		"job_id":                         "234",
+		"id":                             "234",
+		"job_settings.0.settings.0.name": "Second",
+		"job_settings.0.settings.0.run_as.0.user_name": "user2@domain.com",
+	})
+}
+
 func TestDataSourceQueryableJobMatchesName(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    commonFixtures("First"),

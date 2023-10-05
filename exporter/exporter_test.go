@@ -2081,6 +2081,61 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 		})
 }
 
+func TestImportingMlflowModels(t *testing.T) {
+	// TODO: the empty resource doesn't help
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/registered-models/list?",
+				Response: ml.ListModelsResponse{
+					RegisteredModels: []ml.Model{
+						{
+							Name: "abc",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=abc",
+				Response: ml.GetModelResponse{
+					RegisteredModelDatabricks: &ml.ModelDatabricks{
+						Name: "abc",
+					},
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/mlflow/registered-models/list?name=abc",
+				Response: ml.ListModelsResponse{
+					RegisteredModels: []ml.Model{
+						{
+							Name: "abc",
+						},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "mlflow-models"
+			ic.services = "mlflow-models"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+		})
+}
+
 func TestIncrementalErrors(t *testing.T) {
 	// Testing missing `-updated-since`
 	qa.HTTPFixturesApply(t,

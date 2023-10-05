@@ -1971,4 +1971,46 @@ var resourcesMap map[string]importable = map[string]importable{
 			// {Path: "http_url_spec.authorization", Variable: true},
 		},
 	},
+	"databricks_mlflow_model": {
+		Service: "mlflow-models", // why model instead of mlflow
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return d.Id()
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			models, err := w.ModelRegistry.ListModelsAll(ic.Context, ml.ListModelsRequest{})
+			if err != nil {
+				return err
+			}
+
+			updatedSinceMs := ic.getUpdatedSinceMs()
+			for offset, model := range models {
+				modifiedAt := model.LastUpdatedTimestamp
+				if ic.incremental && modifiedAt < updatedSinceMs {
+					log.Printf("[DEBUG] skipping MLflow model '%s' that was modified at %d (last active=%d)",
+						model.Name, modifiedAt, updatedSinceMs)
+					continue
+				}
+				log.Printf("[DEBUG] emitting MLflow model '%s' that was modified at %d (last active=%d)",
+					model.Name, modifiedAt, updatedSinceMs)
+				ic.Emit(&resource{
+					Resource: "databricks_mlflow_model",
+					ID:       model.Name,
+				})
+				if offset%50 == 0 {
+					log.Printf("[INFO] Scanned %d of %d MLflow model", offset+1, len(models))
+				}
+			}
+			return nil
+		},
+		// Depends: []reference{
+		// 	{Path: "job_spec.job_id", Resource: "databricks_job"},
+		// 	{Path: "job_spec.access_token", Variable: true},
+		// 	// We can enable it, but we don't know if authorization is set or not because API doesn't return it
+		// 	// {Path: "http_url_spec.authorization", Variable: true},
+		// },
+	},
 }

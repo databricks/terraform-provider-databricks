@@ -52,10 +52,12 @@ Databricks SQL
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
 * Provide [global configuration for all SQL warehouses](docs/resources/sql_global_config.md)
 
-MLFlow
+Machine Learning
 
-* Create [MLFlow models](resources/mlflow_model.md).
-* Create [MLFlow experiments](resources/mlflow_experiment.md).
+* Create [models in Unity Catalog](resources/registered_model.md).
+* Create [MLflow experiments](resources/mlflow_experiment.md).
+* Create [workspace models](resources/mlflow_model.md).
+* Create [model serving endpoints](resources/model_serving.md).
 
 ## Example Usage
 

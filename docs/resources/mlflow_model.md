@@ -48,6 +48,7 @@ $ terraform import databricks_mlflow_model.this <name>
 
 The following resources are often used in the same context:
 
+* [databricks_registered_model](registered_model.md) to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_model_serving](model_serving.md) to serve this model on a Databricks serving endpoint.
 * [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).

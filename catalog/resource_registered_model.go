@@ -52,11 +52,9 @@ func ResourceRegisteredModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			var m catalog.CreateRegisteredModelRequest
 			var u catalog.UpdateRegisteredModelRequest
-			common.DataToStructPointer(d, s, &m)
+			common.DataToStructPointer(d, s, &u)
 			u.FullName = d.Id()
-			u.Comment = m.Comment
 			_, err = w.RegisteredModels.Update(ctx, u)
 			return err
 		},

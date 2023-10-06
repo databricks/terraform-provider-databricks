@@ -45,11 +45,7 @@ func ResourceRegisteredModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			err = common.StructToData(*model, s, d)
-			if err != nil {
-				return err
-			}
-			return nil
+			return common.StructToData(*model, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

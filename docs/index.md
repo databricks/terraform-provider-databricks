@@ -56,7 +56,7 @@ Machine Learning
 
 * Create [models in Unity Catalog](resources/registered_model.md).
 * Create [MLflow experiments](resources/mlflow_experiment.md).
-* Create [workspace models](resources/mlflow_model.md).
+* Create [models in the workspace model registry](resources/mlflow_model.md).
 * Create [model serving endpoints](resources/model_serving.md).
 
 ## Example Usage

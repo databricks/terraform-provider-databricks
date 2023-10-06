@@ -106,7 +106,7 @@ The following resources are often used in the same context:
 * [databricks_registered_model](registered_model.md) to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).
-* [databricks_mlflow_model](mlflow_model.md) to create [workspace models](https://docs.databricks.com/applications/mlflow/models.html) in Databricks.
+* [databricks_mlflow_model](mlflow_model.md) to create models in the [workspace model registry](https://docs.databricks.com/en/mlflow/model-registry.html) in Databricks.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
 * [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

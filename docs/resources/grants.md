@@ -194,9 +194,9 @@ resource "databricks_grants" "volume" {
 }
 ```
 
-## Function grants
+## Registered model grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, and `EXECUTE` privileges to [_`catalog.schema.function`_](registered_model.md) specified in the `function` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, and `EXECUTE` privileges to [_`catalog.schema.model`_](registered_model.md) specified in the `function` attribute.
 
 ```hcl
 resource "databricks_grants" "customers" {

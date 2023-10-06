@@ -32,7 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Access Control
 
-* [databricks_grants](grants.md#function-grants) can be used to grant principals `ALL_PRIVILEGES`, `APPLY_TAG`, and `EXECUTE` privileges. NOTE: the securable type for this resource is `function`.
+* [databricks_grants](grants.md#registered-model-grants) can be used to grant principals `ALL_PRIVILEGES`, `APPLY_TAG`, and `EXECUTE` privileges. NOTE: the securable type for this resource is `function`.
 
 ## Import
 

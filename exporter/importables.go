@@ -816,13 +816,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			// application_id should be provided only on Azure
-			if pathString == "display_name" && ic.Client.IsAzure() {
-				applicationID := d.Get("application_id").(string)
-				displayName := d.Get("display_name").(string)
-				return applicationID == displayName
+			if pathString == "display_name" {
+				if ic.Client.IsAzure() {
+					applicationID := d.Get("application_id").(string)
+					displayName := d.Get("display_name").(string)
+					return applicationID == displayName
+				}
+				return false
 			}
-			return (pathString == "application_id" && !ic.Client.IsAzure()) || defaultShouldOmitFieldFunc(ic, pathString, as, d)
+			// application_id should be provided only on Azure
+			if pathString == "application_id" {
+				return !ic.Client.IsAzure()
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			applicationID := r.Data.Get("application_id").(string)

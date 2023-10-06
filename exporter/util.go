@@ -360,11 +360,11 @@ func (ic *importContext) getSpsMapping() {
 		// Reimplement it myself
 		if ic.accountLevel {
 			sps, err = ic.accountClient.ServicePrincipals.ListAll(ic.Context, iam.ListAccountServicePrincipalsRequest{
-				ExcludedAttributes: "groups,roles,entitlements",
+				Attributes: "id,userName",
 			})
 		} else {
 			sps, err = ic.workspaceClient.ServicePrincipals.ListAll(ic.Context, iam.ListServicePrincipalsRequest{
-				ExcludedAttributes: "groups,roles,entitlements",
+				Attributes: "id,userName",
 			})
 		}
 		if err != nil {
@@ -372,7 +372,6 @@ func (ic *importContext) getSpsMapping() {
 			return
 		}
 		for _, sp := range sps {
-			log.Printf("[DEBUG] adding sp %v", sp)
 			ic.allSpsMapping[sp.ApplicationId] = sp.Id
 		}
 	}
@@ -402,13 +401,12 @@ func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err 
 		u = scim.User{ApplicationID: nonExistingUserOrSp}
 	} else {
 		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
-		u, err = a.Read(spId)
+		u, err = a.Read(spId, "userName,displayName,active,externalId,entitlements,groups,roles")
 		if err != nil {
 			log.Printf("[WARN] error reading service principal with AppID '%s', SP ID: %s", applicationID, spId)
 			u = scim.User{ApplicationID: nonExistingUserOrSp}
 		}
 	}
-	log.Printf("[DEBUG] Adding SP with full details: %v", u)
 	ic.spsMutex.Lock()
 	defer ic.spsMutex.Unlock()
 	ic.allSps[applicationID] = u

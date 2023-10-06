@@ -3,6 +3,7 @@ package scim
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -33,8 +34,12 @@ func (a ServicePrincipalsAPI) Create(rsp User) (sp User, err error) {
 	return sp, err
 }
 
-func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (sp User, err error) {
-	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
+func (a ServicePrincipalsAPI) Read(servicePrincipalID string, attributes string) (sp User, err error) {
+	attrs := ""
+	if attributes != "" {
+		attrs = "?attributes=" + attributes
+	}
+	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v%s", servicePrincipalID, attrs)
 	err = a.client.Scim(a.context, "GET", servicePrincipalPath, nil, &sp)
 	return
 }
@@ -63,8 +68,8 @@ func (a ServicePrincipalsAPI) Patch(servicePrincipalID string, r patchRequest) e
 }
 
 // Update replaces resource-friendly-entity
-func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest User) error {
-	servicePrincipal, err := a.Read(servicePrincipalID)
+func (a ServicePrincipalsAPI) Update(servicePrincipalID string, attributes string, updateRequest User) error {
+	servicePrincipal, err := a.Read(servicePrincipalID, attributes)
 	if err != nil {
 		return err
 	}
@@ -157,10 +162,11 @@ func ResourceServicePrincipal() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			sp, err := NewServicePrincipalsAPI(ctx, c).Read(d.Id())
+			sp, err := NewServicePrincipalsAPI(ctx, c).Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
 			}
+			log.Printf("[DEBUG] read SP '%s': %v", d.Id(), sp)
 			d.Set("home", fmt.Sprintf("/Users/%s", sp.ApplicationID))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", sp.ApplicationID))
 			d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID))
@@ -175,7 +181,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			if c.IsAzure() {
 				applicationId = d.Get("application_id").(string)
 			}
-			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), User{
+			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), userAttributes, User{
 				DisplayName:   d.Get("display_name").(string),
 				Active:        d.Get("active").(bool),
 				Entitlements:  readEntitlementsFromData(d),
@@ -254,5 +260,5 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 	}
 	sp := spList[0]
 	d.SetId(sp.ID)
-	return spAPI.Update(d.Id(), u)
+	return spAPI.Update(d.Id(), userAttributes, u)
 }

@@ -504,7 +504,7 @@ func TestSpnSearchFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=groups%2Croles%2Centitlements",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
 
 			Response: map[string]any{},
 		},
@@ -529,7 +529,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=groups%2Croles%2Centitlements",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
 
 			Response: iam.ListServicePrincipalResponse{
 				Resources: []iam.ServicePrincipal{
@@ -541,7 +541,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 		}, {
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/321",
+			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/321?attributes=userName,displayName,active,externalId,entitlements,groups,roles",
 			Response:     scim.User{ID: "321", DisplayName: "spn", ApplicationID: "dbc"},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {

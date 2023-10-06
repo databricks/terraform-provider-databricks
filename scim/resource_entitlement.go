@@ -51,7 +51,7 @@ func ResourceEntitlements() *schema.Resource {
 				user.Entitlements.generateEmpty(d)
 				return user.Entitlements.readIntoData(d)
 			case "spn":
-				spn, err := NewServicePrincipalsAPI(ctx, c).Read(split[1])
+				spn, err := NewServicePrincipalsAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}

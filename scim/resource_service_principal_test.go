@@ -19,7 +19,7 @@ func TestResourceServicePrincipalRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					ID:            "abc",
 					ApplicationID: "bcd",
@@ -53,7 +53,7 @@ func TestResourceServicePrincipalRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   404,
 			},
 		},
@@ -71,7 +71,7 @@ func TestResourceServicePrincipalRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   400,
 				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
@@ -109,7 +109,7 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example Service Principal",
 					Active:      true,
@@ -158,7 +158,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					// application ID is created by platform on AWS
 					ApplicationID: "existing-application-id",
@@ -211,7 +211,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					Schemas:       []URN{ServicePrincipalSchema},
 					ApplicationID: "existing-application-id",
@@ -260,7 +260,7 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					// application id is specified by user on Azure
 					ApplicationID: "existing-application-id",
@@ -289,7 +289,7 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					Schemas:       []URN{ServicePrincipalSchema},
 					ApplicationID: "existing-application-id",
@@ -340,7 +340,7 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Response: User{
 					DisplayName: "Example Service Principal",
 					Active:      true,
@@ -612,7 +612,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 			Response: User{
 				ID: "abc",
 			},

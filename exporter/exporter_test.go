@@ -380,8 +380,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyGlobalSQLConfig,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=groups%2Croles%2Centitlements",
-
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
 				Response: iam.ListServicePrincipalResponse{
 					Resources: []iam.ServicePrincipal{
 						{
@@ -393,11 +392,21 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/345",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/345?attributes=userName,displayName,active,externalId,entitlements",
 				Response: iam.ServicePrincipal{
 					Id:            "345",
 					ApplicationId: "spn",
 				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/345?attributes=userName,displayName,active,externalId,entitlements,groups,roles",
+				Response: iam.ServicePrincipal{
+					Id:            "345",
+					ApplicationId: "spn",
+				},
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -432,7 +441,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn?attributes=userName,displayName,active,externalId,entitlements",
 				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},

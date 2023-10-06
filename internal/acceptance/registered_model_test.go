@@ -20,7 +20,7 @@ func TestAccRegisteredModel(t *testing.T) {
 			}
 			
 			resource "databricks_grants" "model_grants" {
-				function = databricks_registered_model.model.id
+				model = databricks_registered_model.model.id
 			  
 				grant {
 				  principal = "account users"

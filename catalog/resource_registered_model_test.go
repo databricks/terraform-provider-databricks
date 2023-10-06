@@ -53,7 +53,11 @@ func TestRegisteredModelCreate(t *testing.T) {
 			comment = "comment"
 			`,
 		Create: true,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id": "catalog.schema.model",
+		},
+	)
 }
 
 func TestRegisteredModelCreate_Error(t *testing.T) {
@@ -92,7 +96,11 @@ func TestRegisteredModelRead(t *testing.T) {
 		Resource: ResourceRegisteredModel(),
 		Read:     true,
 		ID:       "catalog.schema.model",
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id": "catalog.schema.model",
+		},
+	)
 }
 
 func TestRegisteredModelRead_Error(t *testing.T) {

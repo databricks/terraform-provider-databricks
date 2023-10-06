@@ -22,6 +22,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+
+	"github.com/databricks/databricks-sdk-go/service/iam"
+
 	"golang.org/x/exp/slices"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -284,6 +287,33 @@ const (
 	nonExistingUserOrSp = "__USER_OR_SPN_DOES_NOT_EXIST__"
 )
 
+func (ic *importContext) getUsersMapping() {
+	ic.usersMutex.Lock()
+	defer ic.usersMutex.Unlock()
+	if ic.allUsersMapping == nil {
+		ic.allUsersMapping = make(map[string]string)
+		var users []iam.User
+		var err error
+		if ic.accountLevel {
+			users, err = ic.accountClient.Users.ListAll(ic.Context, iam.ListAccountUsersRequest{
+				Attributes: "userName,id",
+			})
+		} else {
+			users, err = ic.workspaceClient.Users.ListAll(ic.Context, iam.ListUsersRequest{
+				Attributes: "userName,id",
+			})
+		}
+		if err != nil {
+			log.Printf("[WARN] can't fetch list of users")
+			return
+		}
+		for _, user := range users {
+			// log.Printf("[DEBUG] adding user %v into the map. %d out of %d", user, i+1, len(users))
+			ic.allUsersMapping[user.UserName] = user.Id
+		}
+	}
+}
+
 func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	log.Printf("[DEBUG] Looking for user %s", name)
 	ic.usersMutex.RLocker().Lock()
@@ -292,28 +322,60 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	if exists {
 		if user.UserName == nonExistingUserOrSp {
 			log.Printf("[DEBUG] non-existing user %s is found in the cache", name)
-			err = fmt.Errorf("user %s not found", name)
+			err = fmt.Errorf("user %s is not found", name)
 		} else {
 			log.Printf("[DEBUG] existing user %s is found in the cache", name)
 			u = user
 		}
 		return
 	}
-	a := scim.NewUsersAPI(ic.Context, ic.Client)
-	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name), false)
-	if err != nil {
-		return
-	}
-	if len(users) == 0 {
-		err = fmt.Errorf("user %s not found", name)
+	ic.getUsersMapping()
+	ic.usersMutex.RLocker().Lock()
+	userId, exists := ic.allUsersMapping[name]
+	ic.usersMutex.RLocker().Unlock()
+	if !exists {
+		err = fmt.Errorf("there is no user '%s'", name)
 		u = scim.User{UserName: nonExistingUserOrSp}
 	} else {
-		u = users[0]
+		a := scim.NewUsersAPI(ic.Context, ic.Client)
+		u, err = a.Read(userId, "id,userName,displayName,active,externalId,entitlements,groups,roles")
+		if err != nil {
+			log.Printf("[WARN] error reading user with name '%s', user ID: %s", name, userId)
+			u = scim.User{UserName: nonExistingUserOrSp}
+		}
 	}
 	ic.usersMutex.Lock()
+	defer ic.usersMutex.Unlock()
 	ic.allUsers[name] = u
-	ic.usersMutex.Unlock()
 	return
+}
+
+func (ic *importContext) getSpsMapping() {
+	ic.spsMutex.Lock()
+	defer ic.spsMutex.Unlock()
+	if ic.allSpsMapping == nil {
+		ic.allSpsMapping = make(map[string]string)
+		var sps []iam.ServicePrincipal
+		var err error
+		// Reimplement it myself
+		if ic.accountLevel {
+			sps, err = ic.accountClient.ServicePrincipals.ListAll(ic.Context, iam.ListAccountServicePrincipalsRequest{
+				ExcludedAttributes: "groups,roles,entitlements",
+			})
+		} else {
+			sps, err = ic.workspaceClient.ServicePrincipals.ListAll(ic.Context, iam.ListServicePrincipalsRequest{
+				ExcludedAttributes: "groups,roles,entitlements",
+			})
+		}
+		if err != nil {
+			log.Printf("[WARN] can't fetch list of service principals")
+			return
+		}
+		for _, sp := range sps {
+			log.Printf("[DEBUG] adding sp %v", sp)
+			ic.allSpsMapping[sp.ApplicationId] = sp.Id
+		}
+	}
 }
 
 func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
@@ -324,27 +386,32 @@ func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err 
 	if exists {
 		if sp.ApplicationID == nonExistingUserOrSp {
 			log.Printf("[DEBUG] non-existing SP %s is found in the cache", applicationID)
-			err = fmt.Errorf("user %s not found", applicationID)
+			err = fmt.Errorf("service principal %s is not found", applicationID)
 		} else {
 			log.Printf("[DEBUG] existing SP %s is found in the cache", applicationID)
 			u = sp
 		}
 		return
 	}
-	a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
-	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")), false)
-	if err != nil {
-		return
-	}
-	if len(users) == 0 {
-		err = fmt.Errorf("service principal %s not found", applicationID)
+	ic.getSpsMapping()
+	ic.spsMutex.RLocker().Lock()
+	spId, exists := ic.allSpsMapping[applicationID]
+	ic.spsMutex.RLocker().Unlock()
+	if !exists {
+		err = fmt.Errorf("there is no service principal '%s'", applicationID)
 		u = scim.User{ApplicationID: nonExistingUserOrSp}
 	} else {
-		u = users[0]
+		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
+		u, err = a.Read(spId)
+		if err != nil {
+			log.Printf("[WARN] error reading service principal with AppID '%s', SP ID: %s", applicationID, spId)
+			u = scim.User{ApplicationID: nonExistingUserOrSp}
+		}
 	}
-	ic.usersMutex.Lock()
+	log.Printf("[DEBUG] Adding SP with full details: %v", u)
+	ic.spsMutex.Lock()
+	defer ic.spsMutex.Unlock()
 	ic.allSps[applicationID] = u
-	ic.usersMutex.Unlock()
 
 	return
 }

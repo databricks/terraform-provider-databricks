@@ -195,11 +195,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return raw.(string)
 		},
 		List: func(ic *importContext) error {
-			w, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			pools, err := w.InstancePools.ListAll(ic.Context)
+			pools, err := ic.workspaceClient.InstancePools.ListAll(ic.Context)
 			if err != nil {
 				return err
 			}
@@ -1271,11 +1267,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return globalWorkspaceConfName
 		},
 		List: func(ic *importContext) error {
-			w, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			_, err = w.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
+			_, err := ic.workspaceClient.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
 				Keys: "zDummyKey",
 			})
 			/* this is done to pass the TestImportingNoResourcesError test in exporter_test.go
@@ -1293,17 +1285,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			w, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			loaded := map[string]any{}
 			keyNames := []string{}
 			for k := range ic.workspaceConfKeys {
 				keyNames = append(keyNames, k)
 			}
 			sort.Strings(keyNames)
-			conf, err := w.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
+			conf, err := ic.workspaceClient.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
 				Keys: strings.Join(keyNames, ","),
 			})
 			if err != nil {
@@ -1326,11 +1314,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("list_type").(string) + "_" + d.Get("label").(string)
 		},
 		List: func(ic *importContext) error {
-			w, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ipListsResp, err := w.IpAccessLists.Impl().List(ic.Context)
+			ipListsResp, err := ic.workspaceClient.IpAccessLists.Impl().List(ic.Context)
 
 			if err != nil {
 				return err
@@ -1775,12 +1759,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string) + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			wc, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			updatedSinceStr := ic.getUpdatedSinceStr()
-			alerts, err := wc.Alerts.List(ic.Context)
+			alerts, err := ic.workspaceClient.Alerts.List(ic.Context)
 			if err != nil {
 				return err
 			}
@@ -2021,11 +2001,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return strings.ToLower(d.Id()) + "_" + nameMd5[:8]
 		},
 		List: func(ic *importContext) error {
-			w, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			endpointsList, err := w.ServingEndpoints.ListAll(ic.Context)
+			endpointsList, err := ic.workspaceClient.ServingEndpoints.ListAll(ic.Context)
 			if err != nil {
 				return err
 			}
@@ -2075,11 +2051,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return "webhook_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			w, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			webhooks, err := w.ModelRegistry.ListWebhooksAll(ic.Context, ml.ListWebhooksRequest{})
+			webhooks, err := ic.workspaceClient.ModelRegistry.ListWebhooksAll(ic.Context, ml.ListWebhooksRequest{})
 			if err != nil {
 				return err
 			}

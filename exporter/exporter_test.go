@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
@@ -64,6 +65,16 @@ func workspaceConfKeysToURL() string {
 	}
 	sort.Strings(keys)
 	return strings.Join(keys, "%2C")
+}
+
+func (ic *importContext) setClientsForTests() {
+	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	if ic.accountLevel {
+		ic.meAdmin = true
+		ic.accountClient, _ = ic.Client.AccountClient()
+	} else {
+		ic.workspaceClient, _ = ic.Client.WorkspaceClient()
+	}
 }
 
 func TestImportingMounts(t *testing.T) {
@@ -197,6 +208,7 @@ func TestImportingMounts(t *testing.T) {
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.setClientsForTests()
 			ic.services = "mounts"
 			ic.listing = "mounts"
 			ic.mounts = true
@@ -368,6 +380,40 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyGlobalSQLConfig,
 			{
 				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=groups%2Croles%2Centitlements",
+
+				Response: iam.ListServicePrincipalResponse{
+					Resources: []iam.ServicePrincipal{
+						{
+							Id:            "345",
+							ApplicationId: "spn",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/345",
+				Response: iam.ServicePrincipal{
+					Id:            "345",
+					ApplicationId: "spn",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+
+				Response: iam.ListUsersResponse{
+					Resources: []iam.User{
+						{
+							Id:       "123",
+							UserName: "test@test.com",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
 				Response: scim.GroupList{
 					Resources: []scim.Group{
@@ -387,15 +433,6 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn",
-				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
-					Groups: []scim.ComplexValue{
-						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
-					}},
-				ReuseRequest: true,
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27spn%27",
 				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
@@ -461,15 +498,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test%40test.com%27",
-				Response: scim.UserList{
-					Resources: []scim.User{
-						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
-					},
-					StartIndex:   1,
-					TotalResults: 1,
-					ItemsPerPage: 1,
-				},
+				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=id,userName,displayName,active,externalId,entitlements,groups,roles",
+				Response: scim.User{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 			},
 			{
 				Method:   "GET",
@@ -1407,26 +1437,35 @@ func TestImportingUser(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+				Response: iam.ListUsersResponse{
+					Resources: []iam.User{
+						{
+							Id:       "123",
+							UserName: "me",
+						},
+					},
+				},
+			},
+			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%27",
-				Response: scim.UserList{
-					Resources: []scim.User{
+				Resource:     "/api/2.0/preview/scim/v2/Users/123?attributes=id,userName,displayName,active,externalId,entitlements,groups,roles",
+				Response: scim.User{
+					ID:       "123",
+					UserName: "me",
+					Groups: []scim.ComplexValue{
 						{
-							ID:       "123",
-							UserName: "me",
-							Groups: []scim.ComplexValue{
-								{
-									Value: "abc",
-									Type:  "direct",
-								},
-							},
+							Value: "abc",
+							Type:  "direct",
 						},
 					},
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.setClientsForTests()
 			err := resourcesMap["databricks_user"].Search(ic, &resource{
 				Resource: "databricks_user",
 				Value:    "me",
@@ -1756,21 +1795,25 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27user%40domain.com%27",
-				Response: scim.UserList{
-					Resources: []scim.User{
-						{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+
+				Response: iam.ListUsersResponse{
+					Resources: []iam.User{
+						{Id: "123", UserName: "user@domain.com"},
 					},
-					StartIndex:   1,
-					TotalResults: 1,
-					ItemsPerPage: 1,
 				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalId,entitlements",
+				Response:     scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
 				ReuseRequest: true,
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalId,entitlements",
-				Response: scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users/123?attributes=id,userName,displayName,active,externalId,entitlements,groups,roles",
+				Response:     scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",

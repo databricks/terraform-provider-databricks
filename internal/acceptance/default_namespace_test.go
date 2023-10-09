@@ -29,6 +29,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				Etag: id,
 			})
 			assert.NoError(t, err)
+			// Check that the resource has been created and that it has the correct value.
 			assert.Equal(t, res.Namespace.Value, "namespace_value")
 			return nil
 		}),

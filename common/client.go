@@ -107,22 +107,22 @@ func (c *DatabricksClient) Post(ctx context.Context, path string, request any, r
 	return c.Do(ctx, http.MethodPost, path, nil, request, response, c.addApiPrefix)
 }
 
-// Delete on path
+// Delete on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
 	return c.Do(ctx, http.MethodDelete, path, nil, request, nil, c.addApiPrefix)
 }
 
-// Delete on path
+// Delete on path. Deserializes the response into the response parameter.
 func (c *DatabricksClient) DeleteWithResponse(ctx context.Context, path string, request any, response any) error {
 	return c.Do(ctx, http.MethodDelete, path, nil, request, response, c.addApiPrefix)
 }
 
-// Patch on path
+// Patch on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
 	return c.Do(ctx, http.MethodPatch, path, nil, request, nil, c.addApiPrefix)
 }
 
-// Patch on path
+// Patch on path. Deserializes the response into the response parameter.
 func (c *DatabricksClient) PatchWithResponse(ctx context.Context, path string, request any, response any) error {
 	return c.Do(ctx, http.MethodPatch, path, nil, request, response, c.addApiPrefix)
 }

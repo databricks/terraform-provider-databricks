@@ -39,7 +39,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 				w, err := client.WorkspaceClient()
 				assert.NoError(t, err)
-				// The resource is not updated in Terraform on Destroy, so we don't have the correct eTag.
+				// Terraform Check returns the latest resource status before it is destroyed, which has an outdated eTag.
 				// We are making an update call to get the correct eTag in the response error.
 				_, err = w.Settings.UpdateDefaultWorkspaceNamespace(ctx, settings.UpdateDefaultWorkspaceNamespaceRequest{
 					AllowMissing: true,

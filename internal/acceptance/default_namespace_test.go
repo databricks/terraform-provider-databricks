@@ -39,16 +39,33 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 				w, err := client.WorkspaceClient()
 				assert.NoError(t, err)
-				_, err = w.Settings.ReadDefaultWorkspaceNamespace(ctx, settings.ReadDefaultWorkspaceNamespaceRequest{
-					Etag: id,
+				// The resource is not updated in Terraform on Destroy, so we don't have the correct eTag.
+				// We are making an update call to get the correct eTag in the response error.
+				_, err = w.Settings.UpdateDefaultWorkspaceNamespace(ctx, settings.UpdateDefaultWorkspaceNamespaceRequest{
+					AllowMissing: true,
+					Setting: &settings.DefaultNamespaceSetting{
+						Namespace: settings.StringMessage{
+							Value: "this_call_should_fail",
+						},
+					},
+					FieldMask: "namespace.value",
 				})
 				assert.Error(t, err)
 				var aerr *apierr.APIError
 				if !errors.As(err, &aerr) {
 					assert.FailNow(t, "cannot parse error message %v", err)
 				}
-				assert.Equal(t, aerr.Message, "NOT_FOUND")
+				etag := aerr.Details[0].Metadata["etag"]
+				_, err = w.Settings.ReadDefaultWorkspaceNamespace(ctx, settings.ReadDefaultWorkspaceNamespaceRequest{
+					Etag: etag,
+				})
+				if !errors.As(err, &aerr) {
+					assert.FailNow(t, "cannot parse error message %v", err)
+				}
+
+				assert.Equal(t, aerr.ErrorCode, "RESOURCE_DOES_NOT_EXIST")
 				return nil
-			})},
+			}),
+		},
 	)
 }

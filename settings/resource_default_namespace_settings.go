@@ -101,8 +101,8 @@ func (a DefaultNamespaceSettingsAPI) Read(etag string) (settings.DefaultNamespac
 
 var resourceSchema = common.StructToSchema(settings.DefaultNamespaceSetting{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		delete(s, "etag")
-		delete(s, "setting_name")
+		s["etag"].Computed = true
+		s["setting_name"].Computed = true
 
 		return s
 	})

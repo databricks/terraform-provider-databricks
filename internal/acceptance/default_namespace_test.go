@@ -34,7 +34,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 		}),
 	},
 		step{
-			Template: ``,
+			Destroy: true,
 			Check: resourceCheck("databricks_default_namespace_settings.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 				w, err := client.WorkspaceClient()

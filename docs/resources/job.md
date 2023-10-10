@@ -146,12 +146,12 @@ resource "databricks_job" "this" {
 ### run_as Configuration Block
 
 The `run_as` block allows specifying the user or the service principal that the job runs as. If not specified, the job runs as the user or service
-principal that created the job.
+principal that created the job. Only one of `user_name` or `service_principal_name` can be specified. 
 
 * `user_name` - (Optional) The email of an active workspace user. Non-admin users can only set this field to their own email.
 * `service_principal_name` - (Optional) The application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role.
 
-Example
+Example:
 
 ```hcl
 resource "databricks_job" "this" {

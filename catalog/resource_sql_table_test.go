@@ -620,9 +620,10 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/sql/statements/",
 				ExpectedRequest: sql.ExecuteStatementRequest{
-					Statement:   "CREATE TABLE `main`.`foo`.`bar` (id int, name string COMMENT 'name of thing')\nUSING DELTA\nCOMMENT 'this table is managed by terraform'\nLOCATION 'abfss://container@account/somepath';",
-					WaitTimeout: "300s",
-					WarehouseId: "existingwarehouse",
+					Statement:     "CREATE TABLE `main`.`foo`.`bar` (id int, name string COMMENT 'name of thing')\nUSING DELTA\nCOMMENT 'this table is managed by terraform'\nLOCATION 'abfss://container@account/somepath';",
+					WaitTimeout:   "50s",
+					WarehouseId:   "existingwarehouse",
+					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
 				},
 				Response: sql.ExecuteStatementResponse{
 					StatementId: "statement1",

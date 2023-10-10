@@ -317,13 +317,13 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 	return statements, nil
 }
 
-func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo, c *common.DatabricksClient) error {
+func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
 	statements, err := ti.diff(oldti)
 	if err != nil {
 		return err
 	}
 	for _, statement := range statements {
-		err = ti.applySql(statement, c)
+		err = ti.applySql(statement)
 		if err != nil {
 			return err
 		}
@@ -331,15 +331,15 @@ func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo, c *common.DatabricksCli
 	return nil
 }
 
-func (ti *SqlTableInfo) createTable(c *common.DatabricksClient) error {
-	return ti.applySql(ti.buildTableCreateStatement(), c)
+func (ti *SqlTableInfo) createTable() error {
+	return ti.applySql(ti.buildTableCreateStatement())
 }
 
-func (ti *SqlTableInfo) deleteTable(c *common.DatabricksClient) error {
-	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.SQLFullName()), c)
+func (ti *SqlTableInfo) deleteTable() error {
+	return ti.applySql(fmt.Sprintf("DROP %s %s", ti.getTableTypeString(), ti.SQLFullName()))
 }
 
-func (ti *SqlTableInfo) applySql(sqlQuery string, c *common.DatabricksClient) error {
+func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	log.Printf("[INFO] Executing Sql: %s", sqlQuery)
 	if ti.WarehouseID != "" {
 		execCtx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
@@ -413,7 +413,7 @@ func ResourceSqlTable() *schema.Resource {
 			if err := ti.initCluster(ctx, d, c); err != nil {
 				return err
 			}
-			if err := ti.createTable(c); err != nil {
+			if err := ti.createTable(); err != nil {
 				return err
 			}
 			d.SetId(ti.FullName())
@@ -436,7 +436,7 @@ func ResourceSqlTable() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return newti.updateTable(&oldti, c)
+			return newti.updateTable(&oldti)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)
@@ -444,7 +444,7 @@ func ResourceSqlTable() *schema.Resource {
 			if err := ti.initCluster(ctx, d, c); err != nil {
 				return err
 			}
-			return ti.deleteTable(c)
+			return ti.deleteTable()
 		},
 	}.ToResource()
 }

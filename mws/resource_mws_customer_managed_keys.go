@@ -13,7 +13,7 @@ import (
 // AwsKeyInfo has information about the KMS key for BYOK
 type AwsKeyInfo struct {
 	KeyArn    string `json:"key_arn"`
-	KeyAlias  string `json:"key_alias"`
+	KeyAlias  string `json:"key_alias" tf:"optional"`
 	KeyRegion string `json:"key_region,omitempty" tf:"computed"`
 }
 
@@ -148,7 +148,8 @@ func ResourceCustomerManagedKeyV0() cty.Type {
 							Type: schema.TypeString,
 						},
 						"key_alias": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"key_region": {
 							Type:     schema.TypeString,

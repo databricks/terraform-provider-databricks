@@ -144,3 +144,110 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 		}`,
 	})
 }
+
+func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_sql_endpoint" "this" {
+			name = "tf-{var.RANDOM}"
+			cluster_size = "2X-Small"
+			max_num_clusters = 1
+		}
+
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			warehouse_id       = databricks_sql_endpoint.this.id
+			properties         = {
+				them      = "that"
+				something = "else"
+			}
+			options         = {
+				this      = "blue"
+				that      = "green"
+			}			
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			partitions = ["id"]
+			comment = "this table is managed by terraform"
+		}`,
+	})
+}
+func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				this      = "that"
+				something = "else"
+			}
+			options         = {
+				this      = "blue"
+				that      = "green"
+			}			
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "varchar(64)"
+			}
+			cluster_keys = ["id"]
+			comment = "this table is managed by terraform"
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				that      = "this"
+				something = "else2"
+			}
+			options         = {
+				this      = "blue"
+				that      = "green"
+			}
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			cluster_keys = ["id"]			
+			comment = "this table is managed by terraform..."
+		}`,
+	})
+}

@@ -97,9 +97,6 @@ type ResourceFixture struct {
 	// level so any command execution API requests are not sent to the server.
 	CommandMock common.CommandMock
 
-	// Sets different RetryTimeoutSeconds
-	RetryTimeoutSeconds int
-
 	// Set one of them to true to test the corresponding CRUD function for the
 	// terraform resource.
 	Create bool
@@ -200,9 +197,6 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	if f.AccountID != "" {
 		client.Config.AccountID = f.AccountID
-	}
-	if f.RetryTimeoutSeconds > 0 {
-		client.Config.RetryTimeoutSeconds = f.RetryTimeoutSeconds
 	}
 	if len(f.HCL) > 0 {
 		var out any

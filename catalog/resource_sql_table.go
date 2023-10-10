@@ -342,12 +342,13 @@ func (ti *SqlTableInfo) deleteTable(c *common.DatabricksClient) error {
 func (ti *SqlTableInfo) applySql(sqlQuery string, c *common.DatabricksClient) error {
 	log.Printf("[INFO] Executing Sql: %s", sqlQuery)
 	if ti.WarehouseID != "" {
-		execCtx, cancel := context.WithTimeout(context.Background(), time.Duration(c.Config.RetryTimeoutSeconds)*time.Second)
+		execCtx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
 		defer cancel()
 		sqlRes, err := ti.sqlExec.ExecuteStatement(execCtx, sql.ExecuteStatementRequest{
-			Statement:   sqlQuery,
-			WaitTimeout: fmt.Sprintf("%d%s", c.Config.RetryTimeoutSeconds, "s"),
-			WarehouseId: ti.WarehouseID,
+			Statement:     sqlQuery,
+			WaitTimeout:   "50s", //max allowed by sql exec
+			WarehouseId:   ti.WarehouseID,
+			OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
 		})
 		if err != nil {
 			return err
@@ -359,8 +360,10 @@ func (ti *SqlTableInfo) applySql(sqlQuery string, c *common.DatabricksClient) er
 	}
 
 	r := ti.exec.Execute(ti.ClusterID, "sql", sqlQuery)
-
-	return fmt.Errorf("cannot execute %s: %s", sqlQuery, r.Error())
+	if r.Failed() {
+		return fmt.Errorf("cannot execute %s: %s", sqlQuery, r.Error())
+	}
+	return nil
 }
 
 func ResourceSqlTable() *schema.Resource {
@@ -390,7 +393,7 @@ func ResourceSqlTable() *schema.Resource {
 				newProps := new.(map[string]any)
 				for key := range oldProps {
 					if _, ok := newProps[key]; !ok {
-						if sqlTableIsManagedProperty(key) {
+						if sqlTableIsManagedProperty(key) || strings.HasPrefix(key, "option.") {
 							newProps[key] = oldProps[key]
 						}
 					}

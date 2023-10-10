@@ -595,7 +595,6 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 				Data:       nil,
 			}
 		},
-		RetryTimeoutSeconds: 300,
 		HCL: `
 		name               = "bar"
 		catalog_name       = "main"

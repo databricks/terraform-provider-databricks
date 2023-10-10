@@ -40,7 +40,7 @@ type SqlTableInfo struct {
 	Properties            map[string]string `json:"properties,omitempty" tf:"computed"`
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
-	WarehouseID           string            `json:"warehouse_id,omitempty" tf:"computed"`
+	WarehouseID           string            `json:"warehouse_id,omitempty"`
 
 	exec    common.CommandExecutor
 	sqlExec *sql.StatementExecutionAPI
@@ -114,18 +114,9 @@ func sqlTableIsManagedProperty(key string) bool {
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	defaultClusterName := "terraform-sql-table"
 	clustersAPI := clusters.NewClustersAPI(ctx, c)
-
+	// if a cluster id is specified, start the cluster
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ti.ClusterID = ci.(string)
-	} else if wi, ok := d.GetOk("warehouse_id"); ok {
-		ti.WarehouseID = wi.(string)
-	} else {
-		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
-		if err != nil {
-			return
-		}
-	}
-	if ti.WarehouseID == "" {
 		_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
 		if apierr.IsMissing(err) {
 			// cluster that was previously in a tfstate was deleted
@@ -135,6 +126,15 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 			}
 			_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
 		}
+		if err != nil {
+			return
+		}
+		// if a warehouse id is specified, use the warehouse
+	} else if wi, ok := d.GetOk("warehouse_id"); ok {
+		ti.WarehouseID = wi.(string)
+		// else, create a default cluster
+	} else {
+		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
 		if err != nil {
 			return
 		}

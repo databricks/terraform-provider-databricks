@@ -7,7 +7,7 @@ Within a metastore, Unity Catalog provides a 3-level namespace for organizing da
 
 A `databricks_sql_table` is contained within [databricks_schema](schema.md), and can represent either a managed table, an external table or a view.
 
-This resource creates and updates the Unity Catalog table/view by executing the necessary SQL queries on a special auto-terminating cluster it would create for this operation.
+This resource creates and updates the Unity Catalog table/view by executing the necessary SQL queries on a special auto-terminating cluster it would create for this operation. You could also specify a SQL warehouse or cluster for the queries to be executed on.
 
 ## Example Usage
 
@@ -58,6 +58,51 @@ resource "databricks_sql_table" "thing_view" {
   schema_name  = databricks_schema.things.name
   table_type   = "VIEW"
   cluster_id   = "0423-201305-xsrt82qn"
+
+  view_definition = format("SELECT name FROM %s WHERE id == 1", databricks_sql_table.thing.id)
+
+  comment = "this view is managed by terraform"
+}
+```
+
+### Use an existing warehouse to create a table
+
+```hcl
+resource "databricks_sql_endpoint" "this" {
+  name = "endpoint"
+  cluster_size = "2X-Small"
+  max_num_clusters = 1
+}
+
+resource "databricks_sql_table" "thing" {
+  provider           = databricks.workspace
+  name               = "quickstart_table"
+  catalog_name       = databricks_catalog.sandbox.name
+  schema_name        = databricks_schema.things.name
+  table_type         = "MANAGED"
+  data_source_format = "DELTA"
+  storage_location   = ""
+  warehouse_id       = databricks_sql_endpoint.this.id
+
+  column {
+    name = "id"
+    type = "int"
+  }
+  column {
+    name    = "name"
+    type    = "string"
+    comment = "name of thing"
+  }
+  comment = "this table is managed by terraform"
+}
+
+resource "databricks_sql_table" "thing_view" {
+  provider     = databricks.workspace
+  name         = "quickstart_table_view"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  table_type   = "VIEW"
+  warehouse_id = databricks_sql_endpoint.this.id
 
   view_definition = format("SELECT name FROM %s WHERE id == 1", databricks_sql_table.thing.id)
 

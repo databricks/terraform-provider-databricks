@@ -70,16 +70,20 @@ resource "databricks_sql_table" "thing_view" {
 The following arguments are supported:
 
 * `name` - Name of table relative to parent catalog and schema. Change forces creation of a new resource.
-* `catalog_name` - Name of parent catalog
-* `schema_name` - Name of parent Schema relative to parent Catalog
+* `catalog_name` - Name of parent catalog. This cannot be updated.
+* `schema_name` - Name of parent Schema relative to parent Catalog. This cannot be updated.
 * `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL` or `VIEW`. Change forces creation of a new resource.
 * `storage_location` - (Optional) URL of storage location for Table data (required for EXTERNAL Tables). Not supported for `VIEW` or `MANAGED` table_type.
 * `data_source_format` - (Optional) External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`. Change forces creation of a new resource. Not supported for `MANAGED` tables or `VIEW`.
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`). Not supported for `MANAGED` or `EXTERNAL` table_type.
-* `cluster_id` - (Optional) All table CRUD operations must be executed on a running cluster. If a cluster_id is specified, it will be used to execute SQL commands to manage this table. If empty, a cluster will be created automatically with the name `terraform-sql-table`.
-* `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. This cannot be updated
+* `cluster_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a cluster_id is specified, it will be used to execute SQL commands to manage this table. If empty, a cluster will be created automatically with the name `terraform-sql-table`.
+* `warehouse_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a `warehouse_id` is specified, that SQL warehouse will be used to execute SQL commands to manage this table. Conflicts with `cluster_id`
+* `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. This cannot be updated.
+* `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. This cannot be updated.
 * `comment` - (Optional) User-supplied free-form text. Changing comment is not currently supported on `VIEW` table_type.
-* `properties` - (Optional) Extensible Table properties.
+* `options` - (Optional) Map of user defined table options. This cannot be updated.
+* `properties` - (Optional) Map of table properties.
+* `partitions` - (Optional) a subset of columns to partition the table by. This cannot be updated.
 
 ### `column` configuration block
 

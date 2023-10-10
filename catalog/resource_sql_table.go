@@ -402,8 +402,15 @@ func ResourceSqlTable() *schema.Resource {
 				old, new := d.GetChange("properties")
 				oldProps := old.(map[string]any)
 				newProps := new.(map[string]any)
+				old, _ = d.GetChange("options")
+				options := old.(map[string]any)
 				for key := range oldProps {
 					if _, ok := newProps[key]; !ok {
+						//options also gets exposed as properties
+						if _, ok := options[key]; ok {
+							newProps[key] = oldProps[key]
+						}
+						//some options are exposed as option.[...] properties
 						if sqlTableIsManagedProperty(key) || strings.HasPrefix(key, "option.") {
 							newProps[key] = oldProps[key]
 						}

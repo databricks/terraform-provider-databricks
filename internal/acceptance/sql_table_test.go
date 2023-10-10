@@ -200,7 +200,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
 			properties         = {
-				this      = "that"
+				them      = "that"
 				something = "else"
 			}
 			options         = {

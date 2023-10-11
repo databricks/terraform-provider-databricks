@@ -10,16 +10,16 @@ import (
 )
 
 type StorageCredentialInfo struct {
-	Name        string                 `json:"name" tf:"force_new"`
-	Owner       string                 `json:"owner,omitempty" tf:"computed"`
-	Comment     string                 `json:"comment,omitempty"`
-	Aws         *AwsIamRole            `json:"aws_iam_role,omitempty" tf:"group:access"`
-	Azure       *AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI        *AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
-	GcpSAKey    *GcpServiceAccountKey  `json:"gcp_service_account_key,omitempty" tf:"group:access"`
-	DBGcpSA     *DbGcpServiceAccount   `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
-	MetastoreID string                 `json:"metastore_id,omitempty" tf:"computed"`
-	ReadOnly    bool                   `json:"read_only,omitempty"`
+	Name        string                                       `json:"name" tf:"force_new"`
+	Owner       string                                       `json:"owner,omitempty" tf:"computed"`
+	Comment     string                                       `json:"comment,omitempty"`
+	Aws         AwsIamRole                                   `json:"aws_iam_role,omitempty" tf:"group:access"`
+	Azure       *catalog.AzureServicePrincipal               `json:"azure_service_principal,omitempty" tf:"group:access"`
+	AzMI        *catalog.AzureManagedIdentity                `json:"azure_managed_identity,omitempty" tf:"group:access"`
+	GcpSAKey    *GcpServiceAccountKey                        `json:"gcp_service_account_key,omitempty" tf:"group:access"`
+	DBGcpSA     *catalog.DatabricksGcpServiceAccountResponse `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
+	MetastoreID string                                       `json:"metastore_id,omitempty" tf:"computed"`
+	ReadOnly    bool                                         `json:"read_only,omitempty"`
 }
 
 func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {
@@ -32,34 +32,27 @@ func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*sche
 	return tmpSchema
 }
 
+var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
+	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		return adjustDataAccessSchema(m)
+	})
+
 func ResourceStorageCredential() *schema.Resource {
-	s := common.StructToSchema(StorageCredentialInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["force_destroy"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["aws_iam_role"].AtLeastOneOf = alofCred
-			m["azure_service_principal"].AtLeastOneOf = alofCred
-			m["azure_managed_identity"].AtLeastOneOf = alofCred
-			m["gcp_service_account_key"].AtLeastOneOf = alofCred
-			m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
-
-			// suppress changes for private_key
-			m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
-
-			return m
-		})
 	return common.Resource{
-		Schema: s,
+		Schema: storageCredentialSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId := d.Get("metastore_id").(string)
-			tmpSchema := removeGcpSaField(s)
+			tmpSchema := removeGcpSaField(storageCredentialSchema)
 
 			var create catalog.CreateStorageCredential
 			var update catalog.UpdateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
 			common.DataToStructPointer(d, tmpSchema, &update)
+
+			//manually add empty struct back for databricks_gcp_service_account
+			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
+				create.DatabricksGcpServiceAccount = struct{}{}
+			}
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,
@@ -114,18 +107,18 @@ func ResourceStorageCredential() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				return common.StructToData(storageCredential, s, d)
+				return common.StructToData(storageCredential, storageCredentialSchema, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				storageCredential, err := w.StorageCredentials.GetByName(ctx, d.Id())
 				if err != nil {
 					return err
 				}
-				return common.StructToData(storageCredential, s, d)
+				return common.StructToData(storageCredential, storageCredentialSchema, d)
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateStorageCredential
-			common.DataToStructPointer(d, s, &update)
+			common.DataToStructPointer(d, storageCredentialSchema, &update)
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{

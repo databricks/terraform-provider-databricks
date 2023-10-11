@@ -386,6 +386,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
+			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "run_as.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var job jobs.JobSettings
@@ -512,6 +514,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for _, jc := range job.JobClusters {
 				ic.importCluster(jc.NewCluster)
+			}
+			if job.RunAs != nil {
+				if job.RunAs.UserName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_user",
+						Attribute: "user_name",
+						Value:     job.RunAs.UserName,
+					})
+				}
+				if job.RunAs.ServicePrincipalName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_service_principal",
+						Attribute: "application_id",
+						Value:     job.RunAs.ServicePrincipalName,
+					})
+				}
 			}
 
 			return ic.importLibraries(r.Data, s)
@@ -750,6 +768,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nameNormalizationRegex.ReplaceAllString(strings.Split(s, "@")[0], "_") + "_" + d.Id()
 		},
+		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findUserByName(r.Value)
 			if err != nil {
@@ -787,6 +806,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return name + "_" + d.Id()
 		},
+		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findSpnByAppID(r.Value)
 			if err != nil {
@@ -796,13 +816,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			// application_id should be provided only on Azure
-			if pathString == "display_name" && ic.Client.IsAzure() {
-				applicationID := d.Get("application_id").(string)
-				displayName := d.Get("display_name").(string)
-				return applicationID == displayName
+			if pathString == "display_name" {
+				if ic.Client.IsAzure() {
+					applicationID := d.Get("application_id").(string)
+					displayName := d.Get("display_name").(string)
+					return applicationID == displayName
+				}
+				return false
 			}
-			return (pathString == "application_id" && !ic.Client.IsAzure()) || defaultShouldOmitFieldFunc(ic, pathString, as, d)
+			// application_id should be provided only on Azure
+			if pathString == "application_id" {
+				return !ic.Client.IsAzure()
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			applicationID := r.Data.Get("application_id").(string)
@@ -1027,7 +1053,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, gis := range globalInitScripts {
 				modifiedAt := gis.UpdatedAt
-				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				if ic.incremental && modifiedAt < updatedSinceMs {
 					log.Printf("[DEBUG] skipping global init script '%s' that was modified at %d (last active=%d)",
 						gis.Name, modifiedAt, updatedSinceMs)
 					continue
@@ -1084,18 +1110,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		List: func(ic *importContext) error {
-			repoList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
+			objList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
 			if err != nil {
 				return err
 			}
-			for offset, repo := range repoList {
+			for offset, repo := range objList {
 				if repo.Url != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_repo",
 						ID:       fmt.Sprintf("%d", repo.ID),
 					})
 				}
-				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(repoList))
+				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(objList))
 			}
 			return nil
 		},
@@ -1195,7 +1221,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, ipList := range ipLists {
 				modifiedAt := ipList.UpdatedAt
-				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				if ic.incremental && modifiedAt < updatedSinceMs {
 					log.Printf("[DEBUG] skipping IP access list '%s' that was modified at %d (last active=%d)",
 						ipList.Label, modifiedAt, updatedSinceMs)
 					continue
@@ -1700,7 +1726,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						return err
 					}
 					modifiedAt := pipeline.LastModified
-					if modifiedAt != 0 && modifiedAt < updatedSinceMs {
+					if modifiedAt < updatedSinceMs {
 						log.Printf("[DEBUG] skipping DLT Pipeline '%s' that was modified at %d (last active=%d)",
 							pipeline.Name, modifiedAt, updatedSinceMs)
 						continue
@@ -1868,7 +1894,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, endpoint := range endpointsList {
 				modifiedAt := endpoint.LastUpdatedTimestamp
-				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				if ic.incremental && modifiedAt < updatedSinceMs {
 					log.Printf("[DEBUG] skipping serving endpoint '%s' that was modified at %d (last active=%d)",
 						endpoint.Name, modifiedAt, updatedSinceMs)
 					continue
@@ -1921,7 +1947,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, webhook := range webhooks {
 				modifiedAt := webhook.LastUpdatedTimestamp
-				if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+				if ic.incremental && modifiedAt < updatedSinceMs {
 					log.Printf("[DEBUG] skipping MLflow webhook '%s' that was modified at %d (last active=%d)",
 						webhook.Id, modifiedAt, updatedSinceMs)
 					continue

@@ -3,9 +3,13 @@ package workspace
 import (
 	"context"
 	"encoding/base64"
+	"log"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -137,6 +141,114 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 	return a.client.Post(a.context, "/workspace/mkdirs", map[string]string{
 		"path": path,
 	}, nil)
+}
+
+type syncAnswer struct {
+	MU   sync.Mutex
+	data []ObjectStatus
+}
+
+func (a *syncAnswer) append(objs []ObjectStatus) {
+	a.MU.Lock()
+	a.data = append(a.data, objs...)
+	a.MU.Unlock()
+}
+
+type directoryInfo struct {
+	Path     string
+	Attempts int
+}
+
+// constants related to the parallel listing
+const (
+	directoryListingMaxAttempts = 3
+	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
+	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
+	defaultWorkersPoolSize      = 10
+	defaultDirectoryChannelSize = 100000
+)
+
+func getFormattedNowTime() string {
+	return time.Now().Local().Format(time.RFC3339Nano)
+}
+
+func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChannel chan directoryInfo,
+	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(ObjectStatus) bool) {
+	defer wg.Done()
+	notebookInfoList, err := a.list(directory.Path)
+	if err != nil {
+		log.Printf("[WARN] error listing '%s': %v", directory.Path, err)
+		if directory.Attempts < directoryListingMaxAttempts {
+			wg.Add(1)
+			dirChannel <- directoryInfo{Path: directory.Path, Attempts: directory.Attempts + 1}
+		}
+	}
+
+	newList := make([]ObjectStatus, 0, len(notebookInfoList))
+	directories := make([]ObjectStatus, 0, len(notebookInfoList))
+	for _, v := range notebookInfoList {
+		if v.ObjectType == Directory {
+			if shouldIncludeDir(v) {
+				newList = append(newList, v)
+				directories = append(directories, v)
+			}
+		} else {
+			newList = append(newList, v)
+		}
+	}
+	answer.append(newList)
+	for _, v := range directories {
+		wg.Add(1)
+		log.Printf("[DEBUG] %s: putting directory '%s' into channel. Channel size: %d",
+			getFormattedNowTime(), v.Path, len(dirChannel))
+		dirChannel <- directoryInfo{Path: v.Path}
+		time.Sleep(15 * time.Millisecond)
+	}
+}
+
+func getEnvAsInt(envName string, defaultValue int) int {
+	if val, exists := os.LookupEnv(envName); exists {
+		parsedVal, err := strconv.Atoi(val)
+		if err == nil {
+			return parsedVal
+		}
+	}
+	return defaultValue
+}
+
+func (a NotebooksAPI) ListParallel(path string, shouldIncludeDir func(ObjectStatus) bool) ([]ObjectStatus, error) {
+	var answer syncAnswer
+	wg := &sync.WaitGroup{}
+
+	if shouldIncludeDir == nil {
+		shouldIncludeDir = func(ObjectStatus) bool { return true }
+	}
+
+	numWorkers := getEnvAsInt(envVarListParallelism, defaultWorkersPoolSize)
+	channelSize := getEnvAsInt(envVarDirectoryChannelSize, defaultDirectoryChannelSize)
+	dirChannel := make(chan directoryInfo, channelSize)
+	for i := 0; i < numWorkers; i++ {
+		t := i
+		go func() {
+			log.Printf("[DEBUG] %s: starting go routine %d", getFormattedNowTime(), t)
+			for directory := range dirChannel {
+				log.Printf("[DEBUG] %s: processing directory %s", getFormattedNowTime(), directory.Path)
+				a.recursiveAddPathsParallel(directory, dirChannel, &answer, wg, shouldIncludeDir)
+			}
+		}()
+
+	}
+	log.Printf("[DEBUG] %s: pushing initial path to channel", getFormattedNowTime())
+	wg.Add(1)
+	a.recursiveAddPathsParallel(directoryInfo{Path: path}, dirChannel, &answer, wg, shouldIncludeDir)
+	log.Printf("[DEBUG] %s: starting to wait", getFormattedNowTime())
+	wg.Wait()
+	log.Printf("[DEBUG] %s: closing the directory channel", getFormattedNowTime())
+	close(dirChannel)
+
+	answer.MU.Lock()
+	defer answer.MU.Unlock()
+	return answer.data, nil
 }
 
 // List will list all objects in a path on the workspace

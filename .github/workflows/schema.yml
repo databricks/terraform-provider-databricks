@@ -1,0 +1,145 @@
+name: Provider schema
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Base ref'
+        default: 'master'
+        required: true
+      head:
+        description: 'Head ref'
+        default: 'master'
+        required: true
+
+jobs:
+  compute_current:
+    name: "Generate current"
+    runs-on: ubuntu-latest
+
+    steps:
+      - if: github.event_name == 'pull_request'
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Checkout main branch to generate schema for current release
+          ref: master
+
+      - if: github.event_name == 'workflow_dispatch'
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.base }}
+
+      - name: 'Setup Go'
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+
+      - name: 'Setup Terraform'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      - run: make install
+
+      - name: Generate provider schema
+        shell: bash
+        run: |
+          set -ex
+          cd /tmp
+          cat > main.tf <<EOF
+          terraform {
+            required_providers {
+              databricks = {
+                source = "databricks/databricks"
+              }
+            }
+          }
+          EOF
+          terraform init
+          terraform providers schema -json > provider.json
+
+      - name: 'Upload provider schema'
+        uses: actions/upload-artifact@v3
+        with:
+          name: schema-current
+          path: /tmp/provider.json
+          retention-days: 1
+
+  compute_new:
+    name: "Generate new"
+    runs-on: ubuntu-latest
+
+    steps:
+      - if: github.event_name == 'pull_request'
+        name: Checkout
+        uses: actions/checkout@v4
+
+      - if: github.event_name == 'workflow_dispatch'
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.head }}
+
+      - name: 'Setup Go'
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+
+      - name: 'Setup Terraform'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      - run: make install
+
+      - name: Generate provider schema
+        shell: bash
+        run: |
+          set -ex
+          cd /tmp
+          cat > main.tf <<EOF
+          terraform {
+            required_providers {
+              databricks = {
+                source = "databricks/databricks"
+              }
+            }
+          }
+          EOF
+          terraform init
+          terraform providers schema -json > provider.json
+
+      - name: 'Upload provider schema'
+        uses: actions/upload-artifact@v3
+        with:
+          name: schema-new
+          path: /tmp/provider.json
+          retention-days: 1
+
+  diff:
+    needs: [compute_current, compute_new]
+
+    name: "Compute diff"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Setup Go'
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.x
+          cache: false
+
+      - run: go install github.com/josephburnett/jd@latest
+
+      - name: 'Download provider schemas'
+        uses: actions/download-artifact@v3
+
+      - run: ls -l schema*/*
+
+      - run: jd -color schema-current/provider.json schema-new/provider.json
+        continue-on-error: true

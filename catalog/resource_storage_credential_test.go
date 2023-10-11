@@ -17,10 +17,10 @@ func TestCreateStorageCredentials(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
 					},
 					Comment: "c",
 				},
@@ -58,10 +58,10 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
 					},
 					Comment: "c",
 				},
@@ -72,10 +72,10 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.UpdateStorageCredential{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
 					},
 					Comment: "c",
 					Owner:   "administrators",
@@ -116,10 +116,10 @@ func TestCreateStorageCredentialsReadOnly(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
 					},
 					Comment:  "c",
 					ReadOnly: true,
@@ -131,10 +131,10 @@ func TestCreateStorageCredentialsReadOnly(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.UpdateStorageCredential{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "def",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "def",
 					},
 					Comment:  "c",
 					ReadOnly: true,
@@ -175,10 +175,10 @@ func TestUpdateStorageCredentials(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.UpdateStorageCredential{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "CHANGED",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "CHANGED",
 					},
 					Comment: "c",
 				},
@@ -186,12 +186,12 @@ func TestUpdateStorageCredentials(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
-				Response: StorageCredentialInfo{
+				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					Aws: &AwsIamRole{
-						RoleARN: "CHANGED",
+					AwsIamRole: &catalog.AwsIamRole{
+						RoleArn: "CHANGED",
 					},
-					MetastoreID: "d",
+					MetastoreId: "d",
 					Comment:     "c",
 				},
 			},
@@ -219,10 +219,10 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "a",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "def",
+					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "def",
 					},
 					Comment: "c",
 				},
@@ -233,10 +233,10 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.UpdateStorageCredential{
 					Name: "a",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "def",
+					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "def",
 					},
 					Comment: "c",
 				},
@@ -274,12 +274,12 @@ func TestUpdateAzStorageCredentials(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.UpdateStorageCredential{
 					Name:    "a",
 					Comment: "c",
-					Azure: &AzureServicePrincipal{
-						DirectoryID:   "CHANGED",
-						ApplicationID: "CHANGED",
+					AzureServicePrincipal: &catalog.AzureServicePrincipal{
+						DirectoryId:   "CHANGED",
+						ApplicationId: "CHANGED",
 						ClientSecret:  "CHANGED",
 					},
 				},
@@ -323,9 +323,10 @@ func TestCreateStorageCredentialWithDbGcpSA(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
-				ExpectedRequest: StorageCredentialInfo{
-					Name:    "a",
-					Comment: "c",
+				ExpectedRequest: catalog.CreateStorageCredential{
+					Name:                        "a",
+					Comment:                     "c",
+					DatabricksGcpServiceAccount: struct{}{},
 				},
 				Response: catalog.StorageCredentialInfo{
 					Name: "a",
@@ -337,7 +338,7 @@ func TestCreateStorageCredentialWithDbGcpSA(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.UpdateStorageCredential{
 					Name:    "a",
 					Comment: "c",
 				},
@@ -376,11 +377,11 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
-				ExpectedRequest: StorageCredentialInfo{
+				ExpectedRequest: catalog.UpdateStorageCredential{
 					Name:    "a",
 					Comment: "c",
-					AzMI: &AzureManagedIdentity{
-						AccessConnectorID: "CHANGED",
+					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+						AccessConnectorId: "CHANGED",
 					},
 				},
 			},

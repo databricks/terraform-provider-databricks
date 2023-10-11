@@ -13,11 +13,11 @@ import (
 // We also need to annotate tf:"computed" for the Owner field.
 type VolumeInfo struct {
 	// The name of the catalog where the schema and the volume are
-	CatalogName string `json:"catalog_name"`
+	CatalogName string `json:"catalog_name" tf:"force_new"`
 	// The comment attached to the volume
 	Comment string `json:"comment,omitempty"`
 	// The name of the schema where the volume is
-	SchemaName  string `json:"schema_name"`
+	SchemaName  string `json:"schema_name" tf:"force_new"`
 	FullNameArg string `json:"-" url:"-"`
 	// The name of the volume
 	Name string `json:"name"`

@@ -100,6 +100,12 @@ In addition to all arguments above, the following attributes are exported:
   * `updated_at` - Time at which this recipient Token was updated, in epoch milliseconds.
   * `updated_by` - Username of recipient Token updater.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this recipient - same as the `name`.
+
 ## Related Resources
 
 The following resources are often used in the same context:

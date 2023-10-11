@@ -32,7 +32,7 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE", "READ_FILES"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
 }
 ```
@@ -69,7 +69,7 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE", "READ_FILES"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
 }
 ```
@@ -128,9 +128,15 @@ The following arguments are required:
 - `access_point` - (Optional) The ARN of the s3 access point to use with the external location (AWS).
 - `encryption_details` - (Optional) The options for Server-Side Encryption to be used by each Databricks s3 client when connecting to S3 cloud storage (AWS).
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this external location - same as `name`.
+
 ## Import
 
-This resource can be imported by name:
+This resource can be imported by `name`:
 
 ```bash
 terraform import databricks_external_location.this <name>

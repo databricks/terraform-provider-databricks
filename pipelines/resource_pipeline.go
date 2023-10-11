@@ -299,6 +299,8 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
 	common.MustSchemaPath(clustersSchema, "autoscale", "mode").DiffSuppressFunc = common.EqualFoldDiffSuppress
 
+	common.MustSchemaPath(clustersSchema, "init_scripts", "dbfs").Deprecated = clusters.DbfsDeprecationWarning
+
 	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
 	gcpAttributesSchema := gcpAttributes.Schema
 	delete(gcpAttributesSchema, "use_preemptible_executors")

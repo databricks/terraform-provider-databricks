@@ -15,6 +15,8 @@ import (
 // DefaultProvisionTimeout ...
 const DefaultProvisionTimeout = 30 * time.Minute
 
+const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
+
 var clusterSchema = resourceClusterSchema()
 
 // ResourceCluster - returns Cluster resource description
@@ -61,6 +63,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = ZoneDiffSuppress
 		common.MustSchemaPath(s, "gcp_attributes", "use_preemptible_executors").Deprecated = "Please use 'availability' instead."
 
+		common.MustSchemaPath(s, "init_scripts", "dbfs").Deprecated = DbfsDeprecationWarning
+
 		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
 			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
@@ -86,6 +90,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 		s["node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
 
 		s["runtime_engine"].ValidateFunc = validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false)
+
+		s["cluster_mount_info"].Deprecated = "cluster_mount_info block is deprecated due the Clusters API changes."
 
 		s["is_pinned"] = &schema.Schema{
 			Type:     schema.TypeBool,

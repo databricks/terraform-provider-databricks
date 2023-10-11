@@ -57,6 +57,8 @@ The following arguments are required:
 
 * `name` - Name of Data Access Configuration, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
 * `metastore_id` - Unique identifier of the parent Metastore
+* `owner` - (Optional) Username/groupname/sp application_id of the data access configuration owner.
+* `force_destroy` - (Optional) Delete the data access configuration regardless of its dependencies.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
@@ -64,7 +66,8 @@ The following arguments are required:
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (Recommended):
 
-* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`
+* `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`.
+* `managed_identity_id` - (Optional) The Resource ID of the Azure User Assigned Managed Identity associated with Azure Databricks Access Connector, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.ManagedIdentity/userAssignedIdentities/user-managed-identity-name`.
 
 `databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
 
@@ -76,6 +79,16 @@ The following arguments are required:
 * `application_id` - The application ID of the application registration within the referenced AAD tenant
 * `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this data access configuration in form of `<metastore_id>|<name>`.
+
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+This resource can be imported by combination of metastore id and the data access name.
+
+```bash
+terraform import databricks_metastore_data_access.this '<metastore_id>|<name>'
+```

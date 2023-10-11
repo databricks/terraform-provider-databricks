@@ -128,6 +128,9 @@ func (a ClustersAPI) LatestSparkVersionOrDefault(svr SparkVersionRequest) string
 func DataSourceSparkVersion() *schema.Resource {
 	s := common.StructToSchema(SparkVersionRequest{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
+
+		s["photon"].Deprecated = "Specify runtime_engine=\"PHOTON\" in the cluster configuration"
+		s["graviton"].Deprecated = "Not required anymore - it's automatically enabled on the Graviton-based node types"
 		return s
 	})
 

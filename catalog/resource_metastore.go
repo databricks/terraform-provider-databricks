@@ -95,7 +95,7 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				return common.StructToData(mi, s, d)
+				return common.StructToData(mi.MetastoreInfo, s, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				mi, err := w.Metastores.GetById(ctx, d.Id())
 				if err != nil {

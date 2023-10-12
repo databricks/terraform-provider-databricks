@@ -107,6 +107,7 @@ func TestAccModelServing(t *testing.T) {
 						model_name = "%[1]s-model"
 						model_version = "1"
 						workload_size = "Small"
+						workload_type = "CPU"
 						scale_to_zero_enabled = true
 					}
 					served_models {
@@ -114,6 +115,7 @@ func TestAccModelServing(t *testing.T) {
 						model_name = "%[1]s-model"
 						model_version = "2"
 						workload_size = "Small"
+						workload_type = "CPU"
 						scale_to_zero_enabled = false
 					}
 					traffic_config {
@@ -155,6 +157,7 @@ func TestAccModelServing(t *testing.T) {
 						model_name = "%[1]s-model"
 						model_version = "1"
 						workload_size = "Small"
+						workload_type = "CPU"
 						scale_to_zero_enabled = true
 					}
 					traffic_config {

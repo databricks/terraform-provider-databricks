@@ -87,7 +87,7 @@ resource "databricks_user" "account_user" {
 
 The following arguments are available:
 
-* `user_name` - (Required) This is the username of the given user and will be their form of access and identity.
+* `user_name` - (Required) This is the username of the given user and will be their form of access and identity.  Provided username will be converted to lower case if it contains upper case characters.
 * `display_name` - (Optional) This is an alias for the username that can be the full name of the user.
 * `external_id` - (Optional) ID of the user in an external identity provider.
 * `allow_cluster_create` -  (Optional) Allow the user to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.

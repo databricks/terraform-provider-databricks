@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var MaxSqlExecWaitTimeout = 50
+
 type SqlColumnInfo struct {
 	Name     string `json:"name"`
 	Type     string `json:"type_text,omitempty" tf:"suppress_diff,alias:type"`
@@ -353,11 +355,11 @@ func (ti *SqlTableInfo) deleteTable() error {
 func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	log.Printf("[INFO] Executing Sql: %s", sqlQuery)
 	if ti.WarehouseID != "" {
-		execCtx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+		execCtx, cancel := context.WithTimeout(context.Background(), time.Duration(MaxSqlExecWaitTimeout)*time.Second)
 		defer cancel()
 		sqlRes, err := ti.sqlExec.ExecuteStatement(execCtx, sql.ExecuteStatementRequest{
 			Statement:     sqlQuery,
-			WaitTimeout:   "50s", //max allowed by sql exec
+			WaitTimeout:   fmt.Sprintf("%ds", MaxSqlExecWaitTimeout), //max allowed by sql exec
 			WarehouseId:   ti.WarehouseID,
 			OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
 		})

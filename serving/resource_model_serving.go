@@ -22,6 +22,8 @@ func ResourceModelServing() *schema.Resource {
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
 			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
 
+			common.MustSchemaPath(m, "config", "served_models", "workload_type").Default = "CPU"
+
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
 
 			m["serving_endpoint_id"] = &schema.Schema{

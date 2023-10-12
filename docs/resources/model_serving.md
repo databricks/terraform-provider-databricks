@@ -58,6 +58,7 @@ The following arguments are supported:
 * `model_version` - (Required) The version of the model in Databricks Model Registry to be served.
 * `workload_size` - (Required) The workload size of the served model. The workload size corresponds to a range of provisioned concurrency that the compute will autoscale between. A single unit of provisioned concurrency can process one request at a time. Valid workload sizes are "Small" (4 - 4 provisioned concurrency), "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64 provisioned concurrency).
 * `scale_to_zero_enabled` - Whether the compute resources for the served model should scale down to zero. If scale-to-zero is enabled, the lower bound of the provisioned concurrency for each workload size will be 0. The default value is `true`.
+* `workload_type` - The workload type of the served model. The workload type selects which type of compute to use in the endpoint. For deep learning workloads, GPU acceleration is available by selecting workload types like `GPU_SMALL` and others. See documentation for all options. The default value is `CPU`.
 * `environment_vars` - (Optional) a map of environment variable name/values that will be used for serving this model.  Environment variables may refer to Databricks secrets using the standard syntax: `{{secrets/secret_scope/secret_key}}`.
 * `instance_profile_arn` - (Optional) ARN of the instance profile that the served model will use to access AWS resources.
 
@@ -96,7 +97,7 @@ timeouts {
 The model serving resource can be imported using the name of the endpoint.
 
 ```bash
-$ terraform import databricks_model_serving.this <model-serving-endpoint-name>
+terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
 
 ## Related Resources

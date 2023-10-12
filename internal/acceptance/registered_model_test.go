@@ -1,20 +1,15 @@
 package acceptance
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
-func TestAccRegisteredModel(t *testing.T) {
-	name := fmt.Sprintf("terraform-test-registered-model-%[1]s",
-		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
-	workspaceLevel(t,
+func TestUcAccRegisteredModel(t *testing.T) {
+	unityWorkspaceLevel(t,
 		step{
-			Template: fmt.Sprintf(`
+			Template: `
 			resource "databricks_registered_model" "model" {
-				name = "%[1]s"
+				name = "terraform-test-registered-model-{var.STICKY_RANDOM}"
 				catalog_name = "main"
 				schema_name = "default"
 			}
@@ -27,17 +22,27 @@ func TestAccRegisteredModel(t *testing.T) {
 				  privileges = ["EXECUTE"]
 				}
 			
-		`, name),
+		`,
 		},
 		step{
-			Template: fmt.Sprintf(`
+			Template: `
 			resource "databricks_registered_model" "model" {
-				name = "%[1]s"
+				name = "terraform-test-registered-model-{var.STICKY_RANDOM}"
 				catalog_name = "main"
 				schema_name = "default"
 				comment = "new comment"
 			}
-		`, name),
+		`,
+		},
+		step{
+			Template: `
+			resource "databricks_registered_model" "model" {
+				name = "terraform-test-registered-model-update-{var.STICKY_RANDOM}"
+				catalog_name = "main"
+				schema_name = "default"
+				comment = "new comment"
+			}
+		`,
 		},
 	)
 }

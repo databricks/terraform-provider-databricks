@@ -21,7 +21,7 @@ func TestUcAccRegisteredModel(t *testing.T) {
 				  principal = "account users"
 				  privileges = ["EXECUTE"]
 				}
-			
+			}
 		`,
 		},
 		step{

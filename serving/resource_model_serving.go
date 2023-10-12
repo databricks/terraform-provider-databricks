@@ -21,6 +21,15 @@ func ResourceModelServing() *schema.Resource {
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
 			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
+
+			common.MustSchemaPath(m, "config", "served_models", "workload_type").Default = "CPU"
+			// if GPU serving is not enabled, workload_type will always be empty
+			common.MustSchemaPath(m, "config", "served_models", "workload_type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" || new == "" {
+					return true
+				}
+				return false
+			}
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
 
 			m["serving_endpoint_id"] = &schema.Schema{

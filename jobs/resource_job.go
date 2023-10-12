@@ -690,6 +690,12 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
+
+		// we need to have only one of user name vs service principal in the run_as block
+		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
+		common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
+		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
+
 		return s
 	})
 

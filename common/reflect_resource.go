@@ -199,7 +199,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 		tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldName(typeField)
-		if fieldName == "-" || fieldName == "ForceSendFields" {
+		if fieldName == "-" {
 			continue
 		}
 		scm[fieldName] = &schema.Schema{}

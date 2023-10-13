@@ -2,10 +2,11 @@ package mlflow
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"testing"
 )
 
 func TestDataSourceModel(t *testing.T) {

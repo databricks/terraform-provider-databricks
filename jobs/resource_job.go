@@ -572,16 +572,14 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 		job.Settings.sortWebhooksByID()
 	}
 
-	if job.RunAsUserName != "" && job.Settings != nil {
-		userNameIsEmail := strings.Contains(job.RunAsUserName, "@")
-
-		if userNameIsEmail {
+	if job.Settings != nil && job.RunAsUserName != "" && job.RunAsUserName != job.CreatorUserName {
+		if common.StringIsUUID(job.RunAsUserName) {
 			job.Settings.RunAs = &JobRunAs{
-				UserName: job.RunAsUserName,
+				ServicePrincipalName: job.RunAsUserName,
 			}
 		} else {
 			job.Settings.RunAs = &JobRunAs{
-				ServicePrincipalName: job.RunAsUserName,
+				UserName: job.RunAsUserName,
 			}
 		}
 	}

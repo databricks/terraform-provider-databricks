@@ -142,8 +142,8 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				var storageCredential *catalog.AccountsStorageCredentialInfo
 				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
-					MetastoreId: metastoreId,
-					Name:        dacName,
+					MetastoreId:           metastoreId,
+					StorageCredentialName: dacName,
 				})
 				if err != nil {
 					return err
@@ -179,9 +179,9 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
-					MetastoreId: metastoreId,
-					Name:        dacName,
-					Force:       force,
+					MetastoreId:           metastoreId,
+					StorageCredentialName: dacName,
+					Force:                 force,
 				})
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{

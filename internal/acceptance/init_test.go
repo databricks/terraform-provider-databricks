@@ -30,10 +30,14 @@ import (
 func init() {
 	rand.Seed(time.Now().UnixMicro())
 	databricks.WithProduct("tf-integration-tests", common.Version())
+	initLoggerIfDebug()
+}
+
+// Terraform SDK v2 intercepts default logger
+// that Go SDK SimpleLogger is using, so we have
+// to re-implement one again.
+func initLoggerIfDebug() {
 	if isInDebug() {
-		// Terraform SDK v2 intercepts default logger
-		// that Go SDK SimpleLogger is using, so we have
-		// to re-implement one again.
 		logger.DefaultLogger = stdErrLogger{}
 	}
 }
@@ -180,8 +184,8 @@ func run(t *testing.T, steps []step) {
 	ts := []resource.TestStep{}
 	ctx := context.Background()
 
-	stepConfig := ""
 	for i, s := range steps {
+		stepConfig := ""
 		if s.Template != "" {
 			stepConfig = environmentTemplate(t, s.Template, vars)
 		}
@@ -191,6 +195,7 @@ func run(t *testing.T, steps []step) {
 		stepPreConfig := s.PreConfig
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
+				initLoggerIfDebug()
 				if stepConfig == "" {
 					return
 				}

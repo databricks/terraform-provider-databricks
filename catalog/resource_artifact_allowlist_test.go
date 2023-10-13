@@ -52,6 +52,22 @@ var artifactInfo = catalog.ArtifactAllowlistInfo{
 	MetastoreId: "abc",
 }
 
+var updatedArtifactInfo = catalog.ArtifactAllowlistInfo{
+	ArtifactMatchers: []catalog.ArtifactMatcher{
+		{
+			Artifact:  "/Volumes/inits",
+			MatchType: catalog.MatchTypePrefixMatch,
+		},
+		{
+			Artifact:  "/Volumes/new_inits",
+			MatchType: catalog.MatchTypePrefixMatch,
+		},
+	},
+	CreatedAt:   12345,
+	CreatedBy:   "admin",
+	MetastoreId: "abc",
+}
+
 func TestArtifactAllowlistCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -167,7 +183,7 @@ func TestArtifactAllowlistUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/artifact-allowlists/INIT_SCRIPT?",
-				Response: artifactInfo,
+				Response: updatedArtifactInfo,
 			},
 		},
 		Resource: ResourceArtifactAllowlist(),
@@ -193,7 +209,7 @@ func TestArtifactAllowlistUpdate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "INIT_SCRIPT", d.Get("artifact_type"))
-	assert.Equal(t, 1, d.Get("artifact_matcher.#"))
+	assert.Equal(t, 2, d.Get("artifact_matcher.#"))
 }
 
 func TestArtifactAllowlistUpdate_Error(t *testing.T) {

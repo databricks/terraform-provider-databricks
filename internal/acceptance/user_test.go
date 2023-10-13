@@ -138,7 +138,8 @@ func TestAccUserResource(t *testing.T) {
 		user_name = "tf-derde+{var.RANDOM}@example.com"
 		display_name = "Derde {var.RANDOM}"
 		allow_instance_pool_create = true
-	}`
+	}
+	`
 	workspaceLevel(t, step{
 		Template: differentUsers,
 		Check: resource.ComposeTestCheckFunc(
@@ -151,5 +152,20 @@ func TestAccUserResource(t *testing.T) {
 		),
 	}, step{
 		Template: differentUsers,
+	})
+}
+
+func TestAccUserResourceCaseInsensitive(t *testing.T) {
+	username := "CSTF-" + qa.RandomEmail()
+	csUser := `resource "databricks_user" "first" {
+		user_name = "` + username + `"
+		}`
+	workspaceLevel(t, step{
+		Template: csUser,
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_user.first", "user_name", strings.ToLower(username)),
+		),
+	}, step{
+		Template: csUser,
 	})
 }

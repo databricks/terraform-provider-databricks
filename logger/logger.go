@@ -61,5 +61,6 @@ func (tfLogger *TfLogger) Errorf(ctx context.Context, format string, v ...any) {
 }
 
 func SetLogger() {
-	logger.DefaultLogger = &TfLogger{}
+	var tfLogger *TfLogger
+	logger.DefaultLogger = tfLogger
 }

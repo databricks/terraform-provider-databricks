@@ -20,6 +20,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	dbproviderlogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -30,12 +31,8 @@ import (
 func init() {
 	rand.Seed(time.Now().UnixMicro())
 	databricks.WithProduct("tf-integration-tests", common.Version())
-	if isInDebug() {
-		// Terraform SDK v2 intercepts default logger
-		// that Go SDK SimpleLogger is using, so we have
-		// to re-implement one again.
-		logger.DefaultLogger = stdErrLogger{}
-	}
+	os.Setenv("TF_LOG", "DEBUG")
+	dbproviderlogger.SetLogger()
 }
 
 func workspaceLevel(t *testing.T, steps ...step) {
@@ -180,8 +177,8 @@ func run(t *testing.T, steps []step) {
 	ts := []resource.TestStep{}
 	ctx := context.Background()
 
-	stepConfig := ""
 	for i, s := range steps {
+		stepConfig := ""
 		if s.Template != "" {
 			stepConfig = environmentTemplate(t, s.Template, vars)
 		}

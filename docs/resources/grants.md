@@ -196,7 +196,7 @@ resource "databricks_grants" "volume" {
 
 ## Storage credential grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -216,7 +216,7 @@ resource "databricks_grants" "external_creds" {
 }
 ```
 
-## Storage location grants
+## External location grants
 
 You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `CREATE_MANAGED_STORAGE`, `CREATE EXTERNAL VOLUME`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
 
@@ -233,6 +233,18 @@ resource "databricks_grants" "some" {
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_TABLE", "READ_FILES"]
+  }
+  grant {
+    principal  = databricks_service_principal.my_sp.application_id
+    privileges = ["USE_SCHEMA", "MODIFY"]
+  }
+  grant {
+    principal  = databricks_group.my_group.display_name
+    privileges = ["USE_SCHEMA", "MODIFY"]
+  }
+  grant {
+    principal  = databricks_group.my_user.user_name
+    privileges = ["USE_SCHEMA", "MODIFY"]
   }
 }
 ```

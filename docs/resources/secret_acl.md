@@ -7,7 +7,7 @@ Create or overwrite the ACL associated with the given principal (user or group) 
 
 ## Example Usage
 
-This way, data scientists can read the Publishing API key that is synchronized from example, Azure Key Vault.
+This way, data scientists can read the Publishing API key that is synchronized from, for example, Azure Key Vault.
 
 ```hcl
 resource "databricks_group" "ds" {
@@ -37,8 +37,11 @@ resource "databricks_secret" "publishing_api" {
 The following arguments are required:
 
 * `scope` - (Required) name of the scope
-* `principal` - (Required) name of the principals. It can be `users` for all users or name or `display_name` of [databricks_group](group.md)
-* `permission` - (Required) `READ`, `WRITE` or `MANAGE`. 
+* `principal` - (Required) principal's identifier. It can be:
+  * `user_name` attribute of [databricks_user](user.md).
+  * `display_name` attribute of [databricks_group](group.md).  Use `users` to allow access for all workspace users.
+  * `application_id` attribute of [databricks_service_principal](service_principal.md).
+* `permission` - (Required) `READ`, `WRITE` or `MANAGE`.
 
 ## Import
 

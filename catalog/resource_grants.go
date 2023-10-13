@@ -105,6 +105,9 @@ func getPermissionEndpoint(securable, name string) string {
 	if securable == "foreign_connection" {
 		return fmt.Sprintf("/unity-catalog/permissions/connection/%s", name)
 	}
+	if securable == "model" {
+		return fmt.Sprintf("/unity-catalog/permissions/function/%s", name)
+	}
 	return fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name)
 }
 

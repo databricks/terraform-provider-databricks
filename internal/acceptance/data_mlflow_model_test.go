@@ -27,7 +27,7 @@ func TestAccDataSourceMlflowModel(t *testing.T) {
 			Template: `
 			data "databricks_mlflow_model" "this" {
 			  depends_on = [databricks_mlflow_model.this]
-			  name       = "model-{var.RANDOM}"
+			  name       = databricks_mlflow_model.this.name
 			}
 			
 			output "model" {

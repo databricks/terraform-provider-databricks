@@ -188,7 +188,6 @@ func run(t *testing.T, steps []step) {
 		stepPreConfig := s.PreConfig
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
-				initLoggerIfDebug()
 				if stepConfig == "" {
 					return
 				}

@@ -34,7 +34,7 @@ func ResourceIPAccessList() *schema.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl settings.CreateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				status, err := acc.IpAccessLists.Create(ctx, iacl)
 				if err != nil {
 					return err
@@ -51,12 +51,22 @@ func ResourceIPAccessList() *schema.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
-				status, err := acc.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
 				if err != nil {
 					return err
 				}
-				common.StructToData(status.IpAccessLists, s, d)
+				// GetByIpAccessListId returns a blank response
+				ipAccessLists, err := acc.IpAccessLists.ListAll(ctx)
+				if err != nil {
+					return err
+				}
+				for _, ipAccessList := range ipAccessLists {
+					if ipAccessList.ListId == d.Id() {
+						common.StructToData(ipAccessList, s, d)
+						return nil
+					}
+				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
 				status, err := w.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
@@ -71,14 +81,14 @@ func ResourceIPAccessList() *schema.Resource {
 			var iacl settings.UpdateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
 			iacl.IpAccessListId = d.Id()
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.IpAccessLists.Update(ctx, iacl)
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.IpAccessLists.Update(ctx, iacl)
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return c.WorkspaceOrAccountRequest(func(acc *databricks.AccountClient) error {
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())

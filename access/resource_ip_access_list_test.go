@@ -27,7 +27,7 @@ var (
 )
 
 func TestIPACLCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
@@ -78,13 +78,14 @@ func TestIPACLCreate(t *testing.T) {
 			"ip_addresses": TestingIpAddressesState,
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":             TestingId,
+			"label":          TestingLabel,
+			"list_type":      TestingListTypeString,
+			"enabled":        TestingEnabled,
+			"ip_addresses.#": 2,
+		})
 }
 
 func TestAPIACLCreate_Error(t *testing.T) {
@@ -114,7 +115,7 @@ func TestAPIACLCreate_Error(t *testing.T) {
 }
 
 func TestIPACLUpdate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -167,13 +168,14 @@ func TestIPACLUpdate(t *testing.T) {
 		},
 		Update: true,
 		ID:     TestingId,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":             TestingId,
+			"label":          TestingLabel,
+			"list_type":      TestingListTypeString,
+			"enabled":        TestingEnabled,
+			"ip_addresses.#": 2,
+		})
 }
 
 func TestIPACLUpdate_Error(t *testing.T) {
@@ -200,7 +202,7 @@ func TestIPACLUpdate_Error(t *testing.T) {
 }
 
 func TestIPACLRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -225,13 +227,14 @@ func TestIPACLRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       TestingId,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":             TestingId,
+			"label":          TestingLabel,
+			"list_type":      TestingListTypeString,
+			"enabled":        TestingEnabled,
+			"ip_addresses.#": 2,
+		})
 }
 
 func TestIPACLRead_NotFound(t *testing.T) {
@@ -336,7 +339,7 @@ func TestListIpAccessLists(t *testing.T) {
 }
 
 func TestAccIPACLCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
@@ -364,18 +367,25 @@ func TestAccIPACLCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
-				Response: settings.CreateIpAccessListResponse{
-					IpAccessList: &settings.IpAccessListInfo{
-						ListId:       TestingId,
-						Label:        TestingLabel,
-						ListType:     TestingListType,
-						IpAddresses:  TestingIpAddresses,
-						AddressCount: 2,
-						CreatedAt:    87939234,
-						CreatedBy:    1234556,
-						UpdatedAt:    87939234,
-						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
+				Response: settings.GetIpAccessListResponse{},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/accounts/100/ip-access-lists",
+				Response: settings.GetIpAccessListResponse{
+					IpAccessLists: []settings.IpAccessListInfo{
+						{
+							ListId:       TestingId,
+							Label:        TestingLabel,
+							ListType:     TestingListType,
+							IpAddresses:  TestingIpAddresses,
+							AddressCount: 2,
+							CreatedAt:    87939234,
+							CreatedBy:    1234556,
+							UpdatedAt:    87939234,
+							UpdatedBy:    1234556,
+							Enabled:      TestingEnabled,
+						},
 					},
 				},
 			},
@@ -388,13 +398,14 @@ func TestAccIPACLCreate(t *testing.T) {
 			"ip_addresses": TestingIpAddressesState,
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":             TestingId,
+			"label":          TestingLabel,
+			"list_type":      TestingListTypeString,
+			"enabled":        TestingEnabled,
+			"ip_addresses.#": 2,
+		})
 }
 
 func TestAccIPACLCreate_Error(t *testing.T) {
@@ -425,26 +436,8 @@ func TestAccIPACLCreate_Error(t *testing.T) {
 }
 
 func TestAccIPACLUpdate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
-				Response: settings.CreateIpAccessListResponse{
-					IpAccessList: &settings.IpAccessListInfo{
-						ListId:       TestingId,
-						Label:        TestingLabel,
-						ListType:     TestingListType,
-						IpAddresses:  TestingIpAddresses,
-						AddressCount: 2,
-						CreatedAt:    87939234,
-						CreatedBy:    1234556,
-						UpdatedAt:    87939234,
-						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
-					},
-				},
-			},
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId,
@@ -454,18 +447,29 @@ func TestAccIPACLUpdate(t *testing.T) {
 					IpAddresses: TestingIpAddresses,
 					Enabled:     TestingEnabled,
 				},
-				Response: settings.CreateIpAccessListResponse{
-					IpAccessList: &settings.IpAccessListInfo{
-						ListId:       TestingId,
-						Label:        TestingLabel,
-						ListType:     TestingListType,
-						IpAddresses:  TestingIpAddresses,
-						AddressCount: 2,
-						CreatedAt:    87939234,
-						CreatedBy:    1234556,
-						UpdatedAt:    87939234,
-						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
+				Response: settings.GetIpAccessListResponse{},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/accounts/100/ip-access-lists",
+				Response: settings.GetIpAccessListResponse{
+					IpAccessLists: []settings.IpAccessListInfo{
+						{
+							ListId:       TestingId,
+							Label:        TestingLabel,
+							ListType:     TestingListType,
+							IpAddresses:  TestingIpAddresses,
+							AddressCount: 2,
+							CreatedAt:    87939234,
+							CreatedBy:    1234556,
+							UpdatedAt:    87939234,
+							UpdatedBy:    1234556,
+							Enabled:      TestingEnabled,
+						},
 					},
 				},
 			},
@@ -479,13 +483,14 @@ func TestAccIPACLUpdate(t *testing.T) {
 		Update:    true,
 		ID:        TestingId,
 		AccountID: "100",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":             TestingId,
+			"label":          TestingLabel,
+			"list_type":      TestingListTypeString,
+			"enabled":        TestingEnabled,
+			"ip_addresses.#": 2,
+		})
 }
 
 func TestAccIPACLUpdate_Error(t *testing.T) {
@@ -513,23 +518,30 @@ func TestAccIPACLUpdate_Error(t *testing.T) {
 }
 
 func TestAccIPACLRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
-				Response: settings.FetchIpAccessListResponse{
-					IpAccessList: &settings.IpAccessListInfo{
-						ListId:       TestingId,
-						Label:        TestingLabel,
-						ListType:     TestingListType,
-						IpAddresses:  TestingIpAddresses,
-						AddressCount: 2,
-						CreatedAt:    87939234,
-						CreatedBy:    1234556,
-						UpdatedAt:    87939234,
-						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
+				Response: settings.GetIpAccessListResponse{},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/accounts/100/ip-access-lists",
+				Response: settings.GetIpAccessListResponse{
+					IpAccessLists: []settings.IpAccessListInfo{
+						{
+							ListId:       TestingId,
+							Label:        TestingLabel,
+							ListType:     TestingListType,
+							IpAddresses:  TestingIpAddresses,
+							AddressCount: 2,
+							CreatedAt:    87939234,
+							CreatedBy:    1234556,
+							UpdatedAt:    87939234,
+							UpdatedBy:    1234556,
+							Enabled:      TestingEnabled,
+						},
 					},
 				},
 			},
@@ -539,13 +551,14 @@ func TestAccIPACLRead(t *testing.T) {
 		New:       true,
 		ID:        TestingId,
 		AccountID: "100",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, TestingId, d.Id())
-	assert.Equal(t, TestingLabel, d.Get("label"))
-	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
-	assert.Equal(t, TestingEnabled, d.Get("enabled"))
-	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":             TestingId,
+			"label":          TestingLabel,
+			"list_type":      TestingListTypeString,
+			"enabled":        TestingEnabled,
+			"ip_addresses.#": 2,
+		})
 }
 
 func TestAccIPACLRead_NotFound(t *testing.T) {

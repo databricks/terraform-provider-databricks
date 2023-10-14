@@ -360,8 +360,18 @@ func TestAccIPACLCreate(t *testing.T) {
 						CreatedBy:    1234556,
 						UpdatedAt:    87939234,
 						UpdatedBy:    1234556,
-						Enabled:      TestingEnabled,
+						Enabled:      false,
 					},
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId,
+				ExpectedRequest: ipAccessListUpdateRequest{
+					Label:       TestingLabel,
+					ListType:    TestingListType,
+					IpAddresses: TestingIpAddresses,
+					Enabled:     TestingEnabled,
 				},
 			},
 			{

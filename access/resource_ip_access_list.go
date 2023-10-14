@@ -33,11 +33,21 @@ func ResourceIPAccessList() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl settings.CreateIpAccessList
+			var updateIacl settings.UpdateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
+			common.DataToStructPointer(d, s, &updateIacl)
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				status, err := acc.IpAccessLists.Create(ctx, iacl)
 				if err != nil {
 					return err
+				}
+				//need to enable the IP Access List with update
+				if d.Get("enabled").(bool) {
+					updateIacl.IpAccessListId = status.IpAccessList.ListId
+					err = acc.IpAccessLists.Update(ctx, updateIacl)
+					if err != nil {
+						return err
+					}
 				}
 				d.SetId(status.IpAccessList.ListId)
 				return nil

@@ -28,7 +28,7 @@ func TestAccIPACLListsResourceFullLifecycle(t *testing.T) {
 	})
 }
 
-func TestAccAccIPACLListsResourceFullLifecycle(t *testing.T) {
+func TestMwsAccIPACLListsResourceFullLifecycle(t *testing.T) {
 	accountLevel(t, step{
 		Template: `
 		resource "databricks_ip_access_list" "this" {

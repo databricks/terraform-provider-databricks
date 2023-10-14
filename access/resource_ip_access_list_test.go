@@ -343,7 +343,7 @@ func TestAccIPACLCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists",
+				Resource: "/api/2.0/accounts/100/ip-access-lists",
 				ExpectedRequest: settings.CreateIpAccessList{
 					Label:       TestingLabel,
 					ListType:    TestingListType,
@@ -366,13 +366,13 @@ func TestAccIPACLCreate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
+				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId + "?",
 				Response: settings.GetIpAccessListResponse{},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists",
-				Response: settings.GetIpAccessListResponse{
+				Resource: "/api/2.0/accounts/100/ip-access-lists",
+				Response: settings.GetIpAccessListsResponse{
 					IpAccessLists: []settings.IpAccessListInfo{
 						{
 							ListId:       TestingId,
@@ -413,7 +413,7 @@ func TestAccIPACLCreate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists",
+				Resource: "/api/2.0/accounts/100/ip-access-lists",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_ALREADY_EXISTS",
 					Message:   "IP access list with type (" + TestingListTypeString + ") and label (" + TestingLabel + ") already exists",
@@ -440,7 +440,7 @@ func TestAccIPACLUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId,
+				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId,
 				ExpectedRequest: ipAccessListUpdateRequest{
 					Label:       TestingLabel,
 					ListType:    TestingListType,
@@ -450,13 +450,13 @@ func TestAccIPACLUpdate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
+				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId + "?",
 				Response: settings.GetIpAccessListResponse{},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists",
-				Response: settings.GetIpAccessListResponse{
+				Resource: "/api/2.0/accounts/100/ip-access-lists",
+				Response: settings.GetIpAccessListsResponse{
 					IpAccessLists: []settings.IpAccessListInfo{
 						{
 							ListId:       TestingId,
@@ -498,7 +498,7 @@ func TestAccIPACLUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId,
+				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId,
 				ExpectedRequest: ipAccessListUpdateRequest{
 					Enabled: TestingEnabled,
 				},
@@ -522,13 +522,13 @@ func TestAccIPACLRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
+				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId + "?",
 				Response: settings.GetIpAccessListResponse{},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists",
-				Response: settings.GetIpAccessListResponse{
+				Resource: "/api/2.0/accounts/100/ip-access-lists",
+				Response: settings.GetIpAccessListsResponse{
 					IpAccessLists: []settings.IpAccessListInfo{
 						{
 							ListId:       TestingId,
@@ -566,7 +566,7 @@ func TestAccIPACLRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
+				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId + "?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Can't find an IP access list with id: " + TestingId + ".",
@@ -587,7 +587,7 @@ func TestAccIPACLRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/accounts/100/ip-access-lists/" + TestingId + "?",
+				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId + "?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
@@ -610,7 +610,7 @@ func TestAccIPACLDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/100/ip-access-lists/%s?", TestingId),
+				Resource: fmt.Sprintf("/api/2.0/accounts/100/ip-access-lists/%s?", TestingId),
 			},
 		},
 		Resource:  ResourceIPAccessList(),
@@ -627,7 +627,7 @@ func TestAccIPACLDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: fmt.Sprintf("/api/2.0/preview/accounts/100/ip-access-lists/%s?", TestingId),
+				Resource: fmt.Sprintf("/api/2.0/accounts/100/ip-access-lists/%s?", TestingId),
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",

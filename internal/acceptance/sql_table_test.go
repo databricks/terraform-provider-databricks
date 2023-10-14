@@ -246,7 +246,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 				name      = "name"
 				type      = "string"
 			}
-			cluster_keys = ["id"]			
+			cluster_keys = ["id", "name"]			
 			comment = "this table is managed by terraform..."
 		}`,
 	})

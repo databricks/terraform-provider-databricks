@@ -122,13 +122,13 @@ The following arguments are supported:
 * `data_source_format` - (Optional) External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`. Change forces creation of a new resource. Not supported for `MANAGED` tables or `VIEW`.
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`). Not supported for `MANAGED` or `EXTERNAL` table_type.
 * `cluster_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a cluster_id is specified, it will be used to execute SQL commands to manage this table. If empty, a cluster will be created automatically with the name `terraform-sql-table`.
-* `warehouse_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a `warehouse_id` is specified, that SQL warehouse will be used to execute SQL commands to manage this table. Conflicts with `cluster_id`
-* `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. Change forces creation of a new resource.
+* `warehouse_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a `warehouse_id` is specified, that SQL warehouse will be used to execute SQL commands to manage this table. Conflicts with `cluster_id`.
+* `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. Conflicts with `partitions`.
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.
 * `comment` - (Optional) User-supplied free-form text. Changing comment is not currently supported on `VIEW` table_type.
 * `options` - (Optional) Map of user defined table options. Change forces creation of a new resource.
 * `properties` - (Optional) Map of table properties.
-* `partitions` - (Optional) a subset of columns to partition the table by. Change forces creation of a new resource.
+* `partitions` - (Optional) a subset of columns to partition the table by. Change forces creation of a new resource. Conflicts with `cluster_keys`.
 
 ### `column` configuration block
 

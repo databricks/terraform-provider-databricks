@@ -305,6 +305,9 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		if ti.StorageLocation != oldti.StorageLocation {
 			statements = append(statements, fmt.Sprintf("ALTER TABLE %s SET %s", ti.SQLFullName(), ti.buildLocationStatement()))
 		}
+		if !reflect.DeepEqual(ti.ClusterKeys, oldti.ClusterKeys) {
+			statements = append(statements, fmt.Sprintf("ALTER TABLE %s CLUSTER BY (%s)", ti.SQLFullName(), strings.Join(ti.ClusterKeys, ", ")))
+		}
 	}
 
 	// Attributes common to both views and tables

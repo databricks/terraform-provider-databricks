@@ -1,7 +1,11 @@
 package acceptance
 
 import (
+	"context"
 	"testing"
+	"time"
+
+	"github.com/databricks/terraform-provider-databricks/common"
 )
 
 func TestAccIPACLListsResourceFullLifecycle(t *testing.T) {
@@ -29,6 +33,12 @@ func TestAccIPACLListsResourceFullLifecycle(t *testing.T) {
 }
 
 func TestMwsAccIPACLListsResourceFullLifecycle(t *testing.T) {
+	// need to wait for internal state to stabilise, otherwise will get 409 Resource Conflict
+	waitForState := func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		// sleep for 3 seconds
+		time.Sleep(3 * time.Second)
+		return nil
+	}
 	accountLevel(t, step{
 		Template: `
 		resource "databricks_ip_access_list" "this" {
@@ -39,6 +49,7 @@ func TestMwsAccIPACLListsResourceFullLifecycle(t *testing.T) {
 				"10.0.10.0/24"
 			]
 		}`,
+		Check: resourceCheck("databricks_ip_access_list.this", waitForState),
 	}, step{
 		Template: `
 		resource "databricks_ip_access_list" "this" {
@@ -49,5 +60,6 @@ func TestMwsAccIPACLListsResourceFullLifecycle(t *testing.T) {
 				"10.0.11.0/24"
 			]
 		}`,
+		Check: resourceCheck("databricks_ip_access_list.this", waitForState),
 	})
 }

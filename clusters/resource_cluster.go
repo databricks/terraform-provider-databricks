@@ -91,8 +91,6 @@ func resourceClusterSchema() map[string]*schema.Schema {
 
 		s["runtime_engine"].ValidateFunc = validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false)
 
-		s["cluster_mount_info"].Deprecated = "cluster_mount_info block is deprecated due the Clusters API changes."
-
 		s["is_pinned"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,

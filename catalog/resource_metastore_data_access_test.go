@@ -209,7 +209,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/?",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
 					AwsIamRole: &catalog.AwsIamRole{
@@ -274,7 +274,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/?",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
 					AzureManagedIdentity: &catalog.AzureManagedIdentity{
@@ -340,7 +340,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/?",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
 					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{

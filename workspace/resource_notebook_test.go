@@ -436,7 +436,7 @@ func TestParallelListing(t *testing.T) {
 	os.Setenv("EXPORTER_CHANNEL_SIZE", "100")
 	ctx := context.Background()
 	api := NewNotebooksAPI(ctx, client)
-	objects, err := api.ListParallel("/", true)
+	objects, err := api.ListParallel("/", nil)
 
 	require.NoError(t, err)
 	require.Equal(t, 4, len(objects))

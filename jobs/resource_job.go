@@ -231,9 +231,6 @@ type ContinuousConf struct {
 	PauseStatus string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
-type Queue struct {
-}
-
 type JobRunAs struct {
 	UserName             string `json:"user_name,omitempty"`
 	ServicePrincipalName string `json:"service_principal_name,omitempty"`
@@ -291,7 +288,7 @@ type JobSettings struct {
 	WebhookNotifications *WebhookNotifications         `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
 	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string             `json:"tags,omitempty"`
-	Queue                *Queue                        `json:"queue,omitempty"`
+	Queue                *jobs.QueueSettings           `json:"queue,omitempty"`
 	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"suppress_diff"`
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
@@ -575,16 +572,14 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 		job.Settings.sortWebhooksByID()
 	}
 
-	if job.RunAsUserName != "" && job.Settings != nil {
-		userNameIsEmail := strings.Contains(job.RunAsUserName, "@")
-
-		if userNameIsEmail {
+	if job.Settings != nil && job.RunAsUserName != "" && job.RunAsUserName != job.CreatorUserName {
+		if common.StringIsUUID(job.RunAsUserName) {
 			job.Settings.RunAs = &JobRunAs{
-				UserName: job.RunAsUserName,
+				ServicePrincipalName: job.RunAsUserName,
 			}
 		} else {
 			job.Settings.RunAs = &JobRunAs{
-				ServicePrincipalName: job.RunAsUserName,
+				UserName: job.RunAsUserName,
 			}
 		}
 	}
@@ -693,6 +688,12 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
+
+		// we need to have only one of user name vs service principal in the run_as block
+		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
+		common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
+		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
+
 		return s
 	})
 

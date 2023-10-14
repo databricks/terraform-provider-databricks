@@ -88,6 +88,29 @@ resource "databricks_permissions" "q1" {
 }
 ```
 
+## Argument Reference
+
+The following arguments are supported:
+
+* `data_source_id` - Data source ID of a [SQL warehouse](sql_endpoint.md)
+* `query` - The text of the query to be run.
+* `name` - The title of this query that appears in list views, widget headings, and on the query page.
+* `parent` - The identifier of the workspace folder containing the object.
+* `description` - General description that conveys additional information about this query such as usage notes.
+* `run_as_role` - Run as role. Possible values are `viewer`, `owner`.
+
+### `parameter` configuration block
+
+For parameter definition
+
+* `title` - The text displayed in a parameter picking widget.
+* `name` - The literal parameter marker that appears between double curly braces in the query text.
+Parameters can have several different types. Type is specified using one of the following configuration blocks: `text`, `number`, `enum`, `query`, `date`, `datetime`, `datetimesec`, `date_range`, `datetime_range`, `datetimesec_range`.
+
+For `text`, `number`, `date`, `datetime`, `datetimesec` block
+
+* `value` - The default value for this parameter.
+
 ## Import
 
 You can import a `databricks_sql_query` resource with ID like the following:

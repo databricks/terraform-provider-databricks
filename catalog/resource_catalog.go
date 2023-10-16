@@ -93,15 +93,17 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
-				Name:             ci.Name,
-				AssignWorkspaces: []int64{currentMetastoreAssignment.WorkspaceId},
+			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: ci.Name,
+				SecurableType: "catalog",
+				Add: []catalog.WorkspaceBinding{
+					{
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+						WorkspaceId: currentMetastoreAssignment.WorkspaceId,
+					},
+				},
 			})
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return err
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -139,11 +141,16 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
-				Name:             ci.Name,
-				AssignWorkspaces: []int64{currentMetastoreAssignment.WorkspaceId},
+			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: ci.Name,
+				SecurableType: "catalog",
+				Add: []catalog.WorkspaceBinding{
+					{
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+						WorkspaceId: currentMetastoreAssignment.WorkspaceId,
+					},
+				},
 			})
-
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

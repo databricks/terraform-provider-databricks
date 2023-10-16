@@ -39,6 +39,18 @@ var kindMap = map[reflect.Kind]string{
 	reflect.UnsafePointer: "UnsafePointer",
 }
 
+var basicTypes = map[schema.ValueType]bool{
+	schema.TypeInt:    true,
+	schema.TypeString: true,
+	schema.TypeBool:   true,
+	schema.TypeFloat:  true,
+}
+
+func isBasicType(v schema.ValueType) bool {
+	b, ok := basicTypes[v]
+	return b && ok
+}
+
 func reflectKind(k reflect.Kind) string {
 	n, ok := kindMap[k]
 	if !ok {
@@ -488,6 +500,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 // TF SDK - feel free to replace the usages of this interface in a PR.
 type attributeGetter interface {
 	GetOk(key string) (any, bool)
+	GetOkExists(key string) (any, bool)
 }
 
 // DiffToStructPointer reads resource diff with given schema onto result pointer. Panics.
@@ -530,31 +543,31 @@ func readReflectValueFromData(path []string, d attributeGetter,
 	err := iterFields(rv, path, s, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
 		fieldPath := strings.Join(path, ".")
+		alias := path[len(path)-1]
+		// Add existing fields to ForceSendFields.
+		if _, exists := d.GetOkExists(fieldPath); exists && isBasicType(fieldSchema.Type) {
+			forceSendFields = append(forceSendFields, names[alias])
+		}
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
 			return nil
 		}
-		alias := path[len(path)-1]
 		switch fieldSchema.Type {
 		case schema.TypeInt:
 			if v, ok := raw.(int); ok {
 				valueField.SetInt(int64(v))
-				forceSendFields = append(forceSendFields, names[alias])
 			}
 		case schema.TypeString:
 			if v, ok := raw.(string); ok {
 				valueField.SetString(v)
-				forceSendFields = append(forceSendFields, names[alias])
 			}
 		case schema.TypeBool:
 			if v, ok := raw.(bool); ok {
 				valueField.SetBool(v)
-				forceSendFields = append(forceSendFields, names[alias])
 			}
 		case schema.TypeFloat:
 			if v, ok := raw.(float64); ok {
 				valueField.SetFloat(v)
-				forceSendFields = append(forceSendFields, names[alias])
 			}
 		case schema.TypeMap:
 			mapValueKind := valueField.Type().Elem().Kind()

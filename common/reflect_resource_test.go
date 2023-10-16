@@ -467,6 +467,10 @@ func (a data) GetOk(key string) (any, bool) {
 	return v, ok
 }
 
+func (a data) GetOkExists(key string) (any, bool) {
+	return a.GetOk(key)
+}
+
 func TestDiffToStructPointerPanic(t *testing.T) {
 	type Nonsense struct {
 		New int `json:"new,omitempty"`
@@ -606,6 +610,22 @@ func TestDeserializeForceSendFields(t *testing.T) {
 	DataToStructPointer(d, jobSchema, &result)
 
 	assert.Equal(t, result.Int, 3)
+	assert.Equal(t, result.ForceSendFields, []string{"Int"})
+}
+
+func TestDeserializeForceSendFieldsZero(t *testing.T) {
+
+	jobSchema := StructToSchema(forceSendFieldsStruct{},
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
+
+	d := resource.TestResourceData()
+	d.Set("int", 0)
+	var result forceSendFieldsStruct
+	DataToStructPointer(d, jobSchema, &result)
+
+	assert.Equal(t, result.Int, 0)
 	assert.Equal(t, result.ForceSendFields, []string{"Int"})
 }
 

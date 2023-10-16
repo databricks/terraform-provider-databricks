@@ -20,7 +20,6 @@ var getSecurableName = func(d *schema.ResourceData) string {
 }
 
 func ResourceCatalogWorkspaceBinding() *schema.Resource {
-	p := common.NewPairID("workspace_id", fmt.Sprintf("%s|%s", "securable_type", "securable_name"))
 	workspaceBindingSchema := common.StructToSchema(catalog.WorkspaceBinding{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["catalog_name"] = &schema.Schema{
@@ -56,13 +55,14 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			}
 			var update catalog.WorkspaceBinding
 			common.DataToStructPointer(d, workspaceBindingSchema, &update)
+
+			securableName := getSecurableName(d)
 			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
 				Add:           []catalog.WorkspaceBinding{update},
-				SecurableName: getSecurableName(d),
+				SecurableName: securableName,
 				SecurableType: d.Get("securable_type").(string),
 			})
-			d.Set("securable_name", getSecurableName(d))
-			p.Pack(d)
+			d.SetId(fmt.Sprintf("%d|%s|%s", update.WorkspaceId, d.Get("securable_type").(string), securableName))
 			return err
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

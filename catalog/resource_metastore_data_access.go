@@ -42,6 +42,8 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 	m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
 
 	common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
+	common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
+	common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
 
 	m["force_destroy"] = &schema.Schema{
 		Type:     schema.TypeBool,
@@ -155,7 +157,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				}
 				isDefault := metastore.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
-				return common.StructToData(storageCredential, dacSchema, d)
+				return common.StructToData(storageCredential.CredentialInfo, dacSchema, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				var storageCredential *catalog.StorageCredentialInfo
 				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacName)

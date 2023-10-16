@@ -544,7 +544,8 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		path []string, valueField *reflect.Value) error {
 		fieldPath := strings.Join(path, ".")
 		alias := path[len(path)-1]
-		// Add existing fields to ForceSendFields.
+		// GetOk returns false for default fields.
+		// Using GetOkExists determine which fields should be added to ForceSendFields.
 		if _, exists := d.GetOkExists(fieldPath); exists && isBasicType(fieldSchema.Type) {
 			forceSendFields = append(forceSendFields, names[alias])
 		}

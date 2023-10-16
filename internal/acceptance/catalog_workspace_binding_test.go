@@ -41,3 +41,21 @@ func TestUcAccCatalogWorkspaceBindingToSameWorkspace(t *testing.T) {
 		`,
 	})
 }
+
+func TestUcAccSecurableWorkspaceBindingToSameWorkspaceReadOnly(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_catalog" "dev" {
+			name           = "dev{var.RANDOM}"
+			isolation_mode = "ISOLATED"
+		}
+
+		resource "databricks_catalog_workspace_binding" "test" {
+			securable_name = databricks_catalog.dev.name
+			securable_type = "catalog"
+			workspace_id   = {env.THIS_WORKSPACE_ID}
+			binding_type   = "BINDING_TYPE_READ_ONLY"
+		}
+		`,
+	})
+}

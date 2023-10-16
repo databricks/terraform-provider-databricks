@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -551,9 +552,37 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_cluster_policy": {
-		Service: "compute",
+		Service: "policies",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("name").(string)
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			policies, err := w.ClusterPolicies.ListAll(ic.Context, compute.ListClusterPoliciesRequest{})
+			if err != nil {
+				return err
+			}
+			for offset, policy := range policies {
+				log.Printf("[INFO] Scanning %d:  %v", offset+1, policy)
+				if slices.Contains(predefinedClusterPolicies, policy.Name) {
+					continue
+				}
+				if !ic.MatchesName(policy.Name) {
+					log.Printf("[DEBUG] Policy %s doesn't match %s filter", policy.Name, ic.match)
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_cluster_policy",
+					ID:       policy.PolicyId,
+				})
+				if offset%10 == 0 {
+					log.Printf("[INFO] Scanned %d of %d cluster policies", offset+1, len(policies))
+				}
+			}
+			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			if ic.meAdmin {
@@ -573,7 +602,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				defaultValue, dok := policy["defaultValue"]
 				typ := policy["type"]
 				if !vok && !dok {
-					log.Printf("[INFO] Skipping policy element as it doesn't have both value and defaultValue")
+					log.Printf("[DEBUG] Skipping policy element as it doesn't have both value and defaultValue. k='%v', policy='%v'",
+						k, policy)
 					continue
 				}
 				if k == "aws_attributes.instance_profile_arn" {
@@ -598,6 +628,15 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_workspace_file",
 						ID:       eitherString(value, defaultValue),
 					})
+				}
+				if typ == "fixed" && (strings.HasPrefix(k, "spark_conf.") || strings.HasPrefix(k, "spark_env_vars.")) {
+					either := eitherString(value, defaultValue)
+					if res := secretPathRegex.FindStringSubmatch(either); res != nil {
+						ic.Emit(&resource{
+							Resource: "databricks_secret_scope",
+							ID:       res[1],
+						})
+					}
 				}
 			}
 			policyName := r.Data.Get("name").(string)
@@ -945,6 +984,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			return nil
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			return r.Data.Get("name").(string) == ""
 		},
 	},
 	"databricks_secret": {

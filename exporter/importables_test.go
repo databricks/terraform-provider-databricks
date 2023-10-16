@@ -626,6 +626,61 @@ func TestSecretScopeListNoNameMatch(t *testing.T) {
 	})
 }
 
+func TestPoliciesListing(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policies/clusters/list?",
+			Response: compute.ListPoliciesResponse{
+				Policies: []compute.Policy{
+					{
+						Name:     "Personal Compute",
+						PolicyId: "123",
+					},
+					{
+						Name:     "abcd",
+						PolicyId: "456",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_cluster_policy"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(ic.testEmits))
+	})
+}
+
+func TestPoliciesListNoNameMatch(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policies/clusters/list?",
+			Response: compute.ListPoliciesResponse{
+				Policies: []compute.Policy{
+					{
+						Name: "Personal Compute",
+					},
+					{
+						Name: "abcd",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.match = "bcd"
+		err := resourcesMap["databricks_cluster_policy"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
 func TestAwsS3MountProfile(t *testing.T) {
 	ic := importContextForTest()
 	ic.mounts = true

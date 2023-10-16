@@ -135,6 +135,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
 			"databricks_provider":                    catalog.ResourceProvider(),
 			"databricks_recipient":                   catalog.ResourceRecipient(),
+			"databricks_registered_model":            catalog.ResourceRegisteredModel(),
 			"databricks_repo":                        repos.ResourceRepo(),
 			"databricks_schema":                      catalog.ResourceSchema(),
 			"databricks_secret":                      secrets.ResourceSecret(),

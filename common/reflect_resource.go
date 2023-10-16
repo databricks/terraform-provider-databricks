@@ -603,6 +603,10 @@ func readReflectValueFromData(path []string, d attributeGetter,
 }
 
 func setForceSendFields(rv reflect.Value, presentFields []string) error {
+	if len(presentFields) == 0 {
+		return nil
+	}
+
 	if rv.Kind() != reflect.Ptr && rv.Kind() != reflect.Struct {
 		return nil
 	}
@@ -617,9 +621,6 @@ func setForceSendFields(rv reflect.Value, presentFields []string) error {
 		return errors.New("cannot set field")
 	}
 
-	if len(presentFields) == 0 {
-		return nil
-	}
 	presentFieldsValue := reflect.ValueOf(presentFields)
 	field.Set(presentFieldsValue)
 

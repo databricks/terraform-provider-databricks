@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccMlflowModel(t *testing.T) {
+func TestAccDataMlflowModel(t *testing.T) {
 	workspaceLevel(t,
 		step{
 			Template: `

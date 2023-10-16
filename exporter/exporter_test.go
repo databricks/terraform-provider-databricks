@@ -233,6 +233,13 @@ var emptyPipelines = qa.HTTPFixture{
 	Response:     pipelines.PipelineListResponse{},
 }
 
+var emptyClusterPolicies = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/policies/clusters/list?",
+	Response:     compute.ListPoliciesResponse{},
+}
+
 var emptyMlflowWebhooks = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -354,6 +361,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlQueries,
 			emptySqlAlerts,
 			emptyPipelines,
+			emptyClusterPolicies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfs,
 			dummyWorkspaceConf,
@@ -555,6 +563,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,
 			emptyInstancePools,
+			emptyClusterPolicies,
 			dummyWorkspaceConf,
 			{
 				Method:   "GET",
@@ -750,6 +759,30 @@ func TestImportingClusters(t *testing.T) {
 				Resource:     "/api/2.0/permissions/instance-pools/pool1",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-response.json"),
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
@@ -1494,14 +1527,14 @@ func TestImportingIPAccessLists(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists/123?",
 				Response: settings.GetIpAccessListResponse{
-					IpAccessLists: []settings.IpAccessListInfo{resp},
+					IpAccessList: &resp,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists/124?",
 				Response: settings.GetIpAccessListResponse{
-					IpAccessLists: []settings.IpAccessListInfo{resp2},
+					IpAccessList: &resp2,
 				},
 			},
 			{

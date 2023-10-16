@@ -59,10 +59,10 @@ func DataSourceCurrentUser() *schema.Resource {
 			d.Set("user_name", me.UserName)
 			d.Set("home", fmt.Sprintf("/Users/%s", me.UserName))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", me.UserName))
-			if strings.Contains(me.UserName, "@") {
-				d.Set("acl_principal_id", fmt.Sprintf("users/%s", me.UserName))
-			} else {
+			if common.StringIsUUID(me.UserName) {
 				d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", me.UserName))
+			} else {
+				d.Set("acl_principal_id", fmt.Sprintf("users/%s", me.UserName))
 			}
 			d.Set("external_id", me.ExternalId)
 			splits := strings.Split(me.UserName, "@")

@@ -194,6 +194,24 @@ resource "databricks_grants" "volume" {
 }
 ```
 
+## Registered model grants
+
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, and `EXECUTE` privileges to [_`catalog.schema.model`_](registered_model.md) specified in the `model` attribute.
+
+```hcl
+resource "databricks_grants" "customers" {
+  model = "main.reporting.customer_model"
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["APPLY_TAG", "EXECUTE"]
+  }
+  grant {
+    principal  = "Data Analysts"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
 ## Storage credential grants
 
 You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:

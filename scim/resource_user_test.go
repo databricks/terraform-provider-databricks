@@ -727,3 +727,10 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		assert.Equal(t, "abc", d.Id())
 	})
 }
+
+func TestUserResource_SparkConfDiffSuppress(t *testing.T) {
+	jr := ResourceUser()
+	scs := jr.Schema["user_name"]
+	assert.True(t, scs.DiffSuppressFunc("user_name", "abcdef@example.com", "AbcDef@example.com", nil))
+	assert.False(t, scs.DiffSuppressFunc("user_name", "abcdef@example.com", "abcdef2@example.com", nil))
+}

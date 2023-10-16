@@ -96,13 +96,15 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	if userOrSPName == "" {
 		return
 	}
+	// TODO: think about another way of checking for a user. ideally we need to check against the
+	// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
 	if strings.Contains(userOrSPName, "@") {
 		ic.Emit(&resource{
 			Resource:  "databricks_user",
 			Attribute: "user_name",
 			Value:     userOrSPName,
 		})
-	} else if uuidRegex.MatchString(userOrSPName) {
+	} else if common.StringIsUUID(userOrSPName) {
 		ic.Emit(&resource{
 			Resource:  "databricks_service_principal",
 			Attribute: "application_id",
@@ -126,8 +128,10 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 	}
 	parts := strings.SplitN(path, "/", 4)
 	if len(parts) == 3 || (len(parts) == 4 && parts[3] == "") {
+		// TODO: think about another way of checking for a user. ideally we need to check against the
+		// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
 		userOrSPName := parts[2]
-		return strings.Contains(userOrSPName, "@") || uuidRegex.MatchString(userOrSPName)
+		return strings.Contains(userOrSPName, "@") || common.StringIsUUID(userOrSPName)
 	}
 	return false
 }

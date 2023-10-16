@@ -16,7 +16,7 @@
  * Suppress diff for `user_name` in [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) when the changes only in character case ([#2786](https://github.com/databricks/terraform-provider-databricks/pull/2786)).
  * Added [databricks_system_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/system_schema) resource ([#2606](https://github.com/databricks/terraform-provider-databricks/pull/2606)).
  * Refresh grant lists ([#2746](https://github.com/databricks/terraform-provider-databricks/pull/2746)).
- * Suppress diff ([#2799](https://github.com/databricks/terraform-provider-databricks/pull/2799)).
+ * Fixed run_as_role drift for databricks_sql_query resource ([#2799](https://github.com/databricks/terraform-provider-databricks/pull/2799)).
  * Fixed metastore read and add test ([#2795](https://github.com/databricks/terraform-provider-databricks/pull/2795)).
 
 Exporter:

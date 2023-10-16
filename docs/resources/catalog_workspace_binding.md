@@ -5,7 +5,7 @@ subcategory: "Unity Catalog"
 
 If you use workspaces to isolate user data access, you may want to limit catalog access to specific workspaces in your account, also known as workspace-catalog binding
 
-By default, Databricks assigns the catalog to all workspaces attached to the current metastore. By using `databricks_catalog_workspace_binding`, the catalog will be unassigned from all workspaces and only assigned explicitly using this resource. 
+By default, Databricks assigns the catalog to all workspaces attached to the current metastore. By using `databricks_catalog_workspace_binding`, the catalog will be unassigned from all workspaces and only assigned explicitly using this resource.
 
 -> **Note**
   To use this resource the catalog must have its isolation mode set to `ISOLATED` in the [`databricks_catalog`](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/catalog#isolation_mode) resource. Alternatively, the isolation mode can be set using the UI or API by following [this guide](https://docs.databricks.com/data-governance/unity-catalog/create-catalogs.html#configuration).
@@ -31,8 +31,10 @@ resource "databricks_catalog_workspace_binding" "sandbox" {
 
 The following arguments are required:
 
-* `catalog_name` - Name of Catalog. Change forces creation of a new resource.
 * `workspace_id` - ID of the workspace. Change forces creation of a new resource.
+* `securable_name` - Name of securable. Change forces creation of a new resource.
+* `securable_type` - Type of securable. Default to `catalog`. Change forces creation of a new resource.
+* `binding_type` - Binding mode. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`
 
 ## Import
 

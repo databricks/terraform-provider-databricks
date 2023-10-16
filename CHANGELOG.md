@@ -6,7 +6,7 @@
  * Added enabled field for queueing ([#2741](https://github.com/databricks/terraform-provider-databricks/pull/2741)).
  * Added [databricks_registered_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/registered_model) resource ([#2771](https://github.com/databricks/terraform-provider-databricks/pull/2771)).
  * Added logging package and fixed issue with API calls not being shown in DEBUG or lower log levels ([#2747](https://github.com/databricks/terraform-provider-databricks/pull/2747)).
- * Clarified possible values for `principal` attribute of [databricks_secret_acl](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/secret_acl) ([#2772](https://github.com/databricks/terraform-provider-databricks/pull/2772)).
+ * Added [databricks_system_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/system_schema) resource ([#2606](https://github.com/databricks/terraform-provider-databricks/pull/2606)).
  * Don't rely on having `@` to check if it's user or SP ([#2765](https://github.com/databricks/terraform-provider-databricks/pull/2765)).
  * Forced recreation of UC Volume when `volume_type` and `storage_location` are changed ([#2734](https://github.com/databricks/terraform-provider-databricks/pull/2734)).
  * Improved Provider Logging ([#2801](https://github.com/databricks/terraform-provider-databricks/pull/2801)).
@@ -14,7 +14,6 @@
  * Masked sensitive field ([#2755](https://github.com/databricks/terraform-provider-databricks/pull/2755)).
  * Removed deprecation warning from `cluster_mount_info` in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster), but mark it as experimental ([#2787](https://github.com/databricks/terraform-provider-databricks/pull/2787)).
  * Suppress diff for `user_name` in [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) when the changes only in character case ([#2786](https://github.com/databricks/terraform-provider-databricks/pull/2786)).
- * Added [databricks_system_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/system_schema) resource ([#2606](https://github.com/databricks/terraform-provider-databricks/pull/2606)).
  * Refresh grant lists ([#2746](https://github.com/databricks/terraform-provider-databricks/pull/2746)).
  * Fixed run_as_role drift for databricks_sql_query resource ([#2799](https://github.com/databricks/terraform-provider-databricks/pull/2799)).
  * Fixed metastore read and add test ([#2795](https://github.com/databricks/terraform-provider-databricks/pull/2795)).
@@ -27,6 +26,7 @@ Exporter:
 Documentation:
  * Updated [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) examples for [databricks_external_location](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/external_location) ([#2735](https://github.com/databricks/terraform-provider-databricks/pull/2735)).
  * Fixed documentation for [databricks_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/schema) about default value for `storage_root` ([#2790](https://github.com/databricks/terraform-provider-databricks/pull/2790)).
+ * Clarified possible values for `principal` attribute of [databricks_secret_acl](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/secret_acl) ([#2772](https://github.com/databricks/terraform-provider-databricks/pull/2772)).
 
 Other Changes:
  * Bumped databricks-sdk-go dependency to 0.21.0 ([#2738](https://github.com/databricks/terraform-provider-databricks/pull/2738)).

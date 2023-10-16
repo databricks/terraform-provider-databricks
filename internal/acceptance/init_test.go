@@ -378,33 +378,3 @@ func loadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 		os.Setenv(k, v)
 	}
 }
-
-type stdErrLogger struct {
-	traceEnabled bool
-}
-
-func (l stdErrLogger) Enabled(_ context.Context, level logger.Level) bool {
-	return true
-}
-
-func (l stdErrLogger) Tracef(_ context.Context, format string, v ...interface{}) {
-	if l.traceEnabled {
-		fmt.Fprintf(os.Stderr, "[TRACE] "+format+"\n", v...)
-	}
-}
-
-func (l stdErrLogger) Debugf(_ context.Context, format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "\n[DEBUG] "+format+"\n", v...)
-}
-
-func (l stdErrLogger) Infof(_ context.Context, format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "\n[INFO] "+format+"\n", v...)
-}
-
-func (l stdErrLogger) Warnf(_ context.Context, format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "\n[WARN] "+format+"\n", v...)
-}
-
-func (l stdErrLogger) Errorf(_ context.Context, format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[ERROR] "+format+"\n", v...)
-}

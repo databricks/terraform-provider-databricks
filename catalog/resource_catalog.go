@@ -131,7 +131,20 @@ func ResourceCatalog() *schema.Resource {
 			// So if we don't update the field then the requests would be made to old Name which doesn't exists.
 			d.SetId(ci.Name)
 
-			return nil
+			if d.Get("isolation_mode") != "ISOLATED" {
+				return nil
+			}
+			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
+			currentMetastoreAssignment, err := w.Metastores.Current(ctx)
+			if err != nil {
+				return err
+			}
+			_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
+				Name:             ci.Name,
+				AssignWorkspaces: []int64{currentMetastoreAssignment.WorkspaceId},
+			})
+
+			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

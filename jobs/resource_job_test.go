@@ -2184,7 +2184,7 @@ func TestJobsAPIList(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{
@@ -2205,26 +2205,26 @@ func TestJobsAPIListMultiplePages(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{
 						JobID: 1,
 					},
 				},
-				HasMore: true,
+				HasMore:       true,
+				NextPageToken: "aaaa",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=1",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&page_token=aaaa",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{
 						JobID: 2,
 					},
 				},
-				HasMore: false,
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -2239,7 +2239,7 @@ func TestJobsAPIListByName(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&name=test&offset=0",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&name=test",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{

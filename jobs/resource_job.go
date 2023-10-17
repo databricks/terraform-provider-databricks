@@ -310,8 +310,10 @@ func (js *JobSettings) sortWebhooksByID() {
 
 // JobListResponse returns a list of all jobs
 type JobListResponse struct {
-	Jobs    []Job `json:"jobs"`
-	HasMore bool  `json:"has_more,omitempty"`
+	Jobs          []Job  `json:"jobs"`
+	HasMore       bool   `json:"has_more,omitempty"`
+	NextPageToken string `json:"next_page_token,omitempty"`
+	PrevPageToken string `json:"prev_page_token,omitempty"`
 }
 
 // Job contains the information when using a GET request from the Databricks Jobs api
@@ -416,12 +418,14 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 	if name != "" {
 		params["name"] = name
 	}
-	offset := 0
 
+	nextPageToken := ""
 	ctx := context.WithValue(a.context, common.Api, common.API_2_1)
 	for {
 		var resp JobListResponse
-		params["offset"] = offset
+		if nextPageToken != "" {
+			params["page_token"] = nextPageToken
+		}
 		err := a.client.Get(ctx, "/jobs/list", params, &resp)
 		if err != nil {
 			return nil, err
@@ -430,7 +434,7 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 		if !resp.HasMore {
 			break
 		}
-		offset += len(resp.Jobs)
+		nextPageToken = resp.NextPageToken
 	}
 	return jobs, nil
 }

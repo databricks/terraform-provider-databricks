@@ -107,7 +107,7 @@ func ResourceStorageCredential() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				return common.StructToData(storageCredential, storageCredentialSchema, d)
+				return common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				storageCredential, err := w.StorageCredentials.GetByName(ctx, d.Id())
 				if err != nil {

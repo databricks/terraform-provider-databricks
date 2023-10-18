@@ -25,10 +25,7 @@ func ResourceModelServing() *schema.Resource {
 			common.MustSchemaPath(m, "config", "served_models", "workload_type").Default = "CPU"
 			// if GPU serving is not enabled, workload_type will always be empty
 			common.MustSchemaPath(m, "config", "served_models", "workload_type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				if old == "" || new == "" {
-					return true
-				}
-				return false
+				return new == ""
 			}
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
 

@@ -28,6 +28,7 @@ func TestModelServingCreate(t *testing.T) {
 								ModelName:          "ads1",
 								ModelVersion:       "2",
 								WorkloadSize:       "Small",
+								WorkloadType:       "CPU",
 								ScaleToZeroEnabled: true,
 							},
 							{
@@ -35,6 +36,7 @@ func TestModelServingCreate(t *testing.T) {
 								ModelName:          "ads1",
 								ModelVersion:       "4",
 								WorkloadSize:       "Small",
+								WorkloadType:       "CPU",
 								ScaleToZeroEnabled: false,
 							},
 						},
@@ -371,6 +373,7 @@ func TestModelServingUpdate(t *testing.T) {
 							ModelName:          "ads1",
 							ModelVersion:       "2",
 							WorkloadSize:       "Small",
+							WorkloadType:       "CPU",
 							ScaleToZeroEnabled: true,
 						},
 					},

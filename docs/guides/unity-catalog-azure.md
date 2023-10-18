@@ -79,8 +79,9 @@ provider "databricks" {
 }
 
 provider "databricks" {
-  alias = "accounts"
-  host  = "https://accounts.azuredatabricks.net"
+  alias      = "accounts"
+  host       = "https://accounts.azuredatabricks.net"
+  account_id = var.databricks_account_id
 }
 ```
 

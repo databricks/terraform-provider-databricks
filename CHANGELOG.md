@@ -1,5 +1,9 @@
 # Version changelog
 
+## 1.28.1
+ * Fixed storage credential read ([#2804](https://github.com/databricks/terraform-provider-databricks/pull/2804)).
+ 
+
 ## 1.28.0
 * Added `dashboard_filters_enabled` attribute to [databricks_sql_dashboard](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_dashboard) resource ([#2725](https://github.com/databricks/terraform-provider-databricks/pull/2725)).
  * Added `empty_result_state` attribute to the [databricks_sql_alert](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_alert) resource ([#2724](https://github.com/databricks/terraform-provider-databricks/pull/2724)).

@@ -1,7 +1,7 @@
 # Version changelog
 
 ## 1.28.1
- * Fixed storage credential read ([#2804](https://github.com/databricks/terraform-provider-databricks/pull/2804)).
+ * Fixed read method for `databricks_storage_credential` resource ([#2804](https://github.com/databricks/terraform-provider-databricks/pull/2804)).
  
 
 ## 1.28.0

@@ -467,6 +467,10 @@ func (a data) GetOk(key string) (any, bool) {
 	return v, ok
 }
 
+func (a data) GetOkExists(key string) (any, bool) {
+	return a.GetOk(key)
+}
+
 func TestDiffToStructPointerPanic(t *testing.T) {
 	type Nonsense struct {
 		New int `json:"new,omitempty"`
@@ -577,9 +581,67 @@ func TestStructToData_CornerCases(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+type forceSendFieldsStruct struct {
+	Int             int `json:"int"`
+	ForceSendFields []string
+}
+
+var resource = func() *schema.Resource {
+	return DataResource(forceSendFieldsStruct{}, func(ctx context.Context, e any, c *DatabricksClient) error {
+		return nil
+	})
+}()
+
 func TestDataToReflectValueBypass(t *testing.T) {
 	err := DataToReflectValue(nil, &schema.Resource{Schema: map[string]*schema.Schema{}}, reflect.ValueOf(0))
 	assert.EqualError(t, err, "value of Struct is expected, but got Int: 0")
+}
+
+func TestDeserializeForceSendFields(t *testing.T) {
+
+	jobSchema := StructToSchema(forceSendFieldsStruct{},
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
+
+	d := resource.TestResourceData()
+	d.Set("int", 3)
+	var result forceSendFieldsStruct
+	DataToStructPointer(d, jobSchema, &result)
+
+	assert.Equal(t, result.Int, 3)
+	assert.Equal(t, result.ForceSendFields, []string{"Int"})
+}
+
+func TestDeserializeForceSendFieldsZero(t *testing.T) {
+
+	jobSchema := StructToSchema(forceSendFieldsStruct{},
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
+
+	d := resource.TestResourceData()
+	d.Set("int", 0)
+	var result forceSendFieldsStruct
+	DataToStructPointer(d, jobSchema, &result)
+
+	assert.Equal(t, result.Int, 0)
+	assert.Equal(t, result.ForceSendFields, []string{"Int"})
+}
+
+func TestDeserializeForceSendFieldsNotSpecified(t *testing.T) {
+
+	jobSchema := StructToSchema(forceSendFieldsStruct{},
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			return s
+		})
+
+	d := resource.TestResourceData()
+	var result forceSendFieldsStruct
+	DataToStructPointer(d, jobSchema, &result)
+
+	assert.Equal(t, result.Int, 0)
+	assert.Equal(t, result.ForceSendFields, []string(nil))
 }
 
 func TestDataResource(t *testing.T) {

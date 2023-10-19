@@ -14,11 +14,12 @@ func getJsonToFieldNameMap(structType reflect.Type) map[string]string {
 		return nil
 	}
 	mutex.Lock()
-	defer mutex.Unlock()
-	if res, ok := mapCache[structType]; ok {
+	res, ok := mapCache[structType]
+	mutex.Unlock()
+	if ok {
 		return res
 	}
-	res := map[string]string{}
+	res = map[string]string{}
 	for i := 0; i < structType.NumField(); i++ {
 		field := structType.Field(i)
 		fieldName := chooseFieldName(field)
@@ -26,6 +27,8 @@ func getJsonToFieldNameMap(structType reflect.Type) map[string]string {
 			res[fieldName] = field.Name
 		}
 	}
+	mutex.Lock()
 	mapCache[structType] = res
+	mutex.Unlock()
 	return res
 }

@@ -23,7 +23,8 @@ func ResourceModelServing() *schema.Resource {
 			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
 
 			common.MustSchemaPath(m, "config", "served_models", "workload_type").Default = "CPU"
-			// if GPU serving is not enabled, workload_type will always be empty
+			// TODO: `config.served_models.workload_type` should be a `Optional+Computed` field. Also consider this for other similar fields.
+			// In this scenario, if a workspace does not have GPU serving, specifying `workload_type` = 'CPU' will get empty response from API.
 			common.MustSchemaPath(m, "config", "served_models", "workload_type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old == "" && new == "CPU"
 			}

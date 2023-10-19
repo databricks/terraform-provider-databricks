@@ -52,13 +52,16 @@ All arguments are optional and they tune what code is being generated.
 
 ## Services
 
-Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which technically allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. With the exception of notebooks and possibly libraries, which may have their own CI/CD processes.
+Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which technically allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. With the exception of notebooks and possibly libraries, which may have their own CI/CD processes.  
+
+-> **Note**
+  Please note that for services not marked with **listing** we'll export resources only if they are referenced from other resources.
 
 * `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md) and [databricks_ip_access_list](../resources/ip_access_list.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `directories` - **listing** [databricks_directory](../resources/directory.md).
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
-* `groups` - [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
+* `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated jobs than interactive clusters, so they get their own file in this tool's output.
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
@@ -70,10 +73,9 @@ Services are just logical groups of resources used for filtering and organizatio
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md). 
 * `sql-alerts` - **listing** [databricks_sql_alert](../resources/sql_alert.md).
 * `sql-dashboards` - **listing** [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
-* `sql-dashboards` - **listing** [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
 * `sql-queries` - **listing** [databricks_sql_query](../resources/sql_query.md).
-* `storage` - any referenced [databricks_dbfs_file](../resources/dbfs_file.md) will be downloaded locally and properly arranged into terraform state.
+* `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
 * `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, the only use-case for importing `users` service is to migrate workspaces.
 * `workspace` - [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md).
 

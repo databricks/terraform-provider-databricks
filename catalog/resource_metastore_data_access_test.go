@@ -209,11 +209,13 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/?",
-				Response: catalog.StorageCredentialInfo{
-					Name: "bcd",
-					AwsIamRole: &catalog.AwsIamRole{
-						RoleArn: "def",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "bcd",
+						AwsIamRole: &catalog.AwsIamRole{
+							RoleArn: "def",
+						},
 					},
 				},
 			},
@@ -274,11 +276,13 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/?",
-				Response: catalog.StorageCredentialInfo{
-					Name: "bcd",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
-						AccessConnectorId: "def",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "bcd",
+						AzureManagedIdentity: &catalog.AzureManagedIdentity{
+							AccessConnectorId: "def",
+						},
 					},
 				},
 			},
@@ -340,11 +344,13 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/?",
-				Response: catalog.StorageCredentialInfo{
-					Name: "bcd",
-					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
-						Email: "a@example.com",
+				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials/bcd?",
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "bcd",
+						DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
+							Email: "a@example.com",
+						},
 					},
 				},
 			},
@@ -367,5 +373,9 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 		is_default = true
 		databricks_gcp_service_account {}
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"databricks_gcp_service_account.#":       1,
+			"databricks_gcp_service_account.0.email": "a@example.com",
+		})
 }

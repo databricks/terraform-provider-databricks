@@ -1,13 +1,19 @@
 package exporter
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"regexp"
+	"sort"
+	"strings"
+	"sync"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 type regexFix struct {
@@ -30,7 +36,42 @@ type resourceApproximation struct {
 }
 
 type stateApproximation struct {
-	Resources []resourceApproximation `json:"resources"`
+	mutex sync.RWMutex
+	// TODO: use map by type -> should speedup Has function?
+	resources []resourceApproximation
+}
+
+// TODO: check if it's used directly by multiple threads?
+func (s *stateApproximation) Resources() []resourceApproximation {
+	s.mutex.RLocker().Lock()
+	defer s.mutex.RLocker().Unlock()
+	c := make([]resourceApproximation, len(s.resources))
+	copy(c, s.resources)
+	return c
+}
+
+func (s *stateApproximation) Has(r *resource) bool {
+	s.mutex.RLocker().Lock()
+	defer s.mutex.RLocker().Unlock()
+	k, v := r.MatchPair()
+	for _, sr := range s.resources {
+		if sr.Type != r.Resource {
+			continue
+		}
+		for _, i := range sr.Instances {
+			tv, ok := i.Attributes[k].(string)
+			if ok && tv == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *stateApproximation) Append(ra resourceApproximation) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.resources = append(s.resources, ra)
 }
 
 type importable struct {
@@ -134,14 +175,104 @@ func (r *resource) ImportCommand(ic *importContext) string {
 	return fmt.Sprintf(`terraform import %s%s.%s "%s"`, m, r.Resource, r.Name, r.ID)
 }
 
-type importedResources []*resource
+func (r *resource) ImportResource(ic *importContext) {
+	defer ic.waitGroup.Done()
+	pr, ok := ic.Resources[r.Resource]
+	if !ok {
+		log.Printf("[ERROR] %s is not available in provider", r)
+		return
+	}
+	ir, ok := ic.Importables[r.Resource]
+	if !ok {
+		log.Printf("[ERROR] %s is not available for import", r)
+		return
+	}
+	if ic.HasInState(r, true) {
+		log.Printf("[DEBUG] %s already imported", r)
+		return
+	}
 
-func (a importedResources) Len() int {
+	if r.ID == "" {
+		if ir.Search == nil {
+			log.Printf("[ERROR] Searching %s is not available", r)
+			return
+		}
+		if err := ir.Search(ic, r); err != nil {
+			log.Printf("[ERROR] Cannot search for a resource %s: %v", err, r)
+			return
+		}
+		if r.ID == "" {
+			log.Printf("[INFO] Cannot find %s", r)
+			return
+		}
+	}
+	if r.Data == nil {
+		// empty data with resource schema
+		r.Data = pr.Data(&terraform.InstanceState{
+			Attributes: map[string]string{},
+			ID:         r.ID,
+		})
+		r.Data.MarkNewResource()
+		resource := strings.ReplaceAll(r.Resource, "databricks_", "")
+		ctx := context.WithValue(ic.Context, common.ResourceName, resource)
+		apiVersion := ic.Importables[r.Resource].ApiVersion
+		if apiVersion != "" {
+			ctx = context.WithValue(ctx, common.Api, apiVersion)
+		}
+		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
+			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
+			return
+		}
+		if r.Data.Id() == "" {
+			r.Data.SetId(r.ID)
+		}
+	}
+	r.Name = ic.ResourceName(r)
+	if ir.Import != nil {
+		if err := ir.Import(ic, r); err != nil {
+			log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
+			return
+		}
+	}
+	ic.Add(r)
+}
+
+// TODO: split resources into a map of resource type -> list of resources (guarded by RW locks)
+type resourcesList []*resource
+
+type importedResources struct {
+	resources resourcesList
+	mutex     sync.RWMutex
+}
+
+func (a *importedResources) Append(r *resource) {
+	defer a.mutex.Unlock()
+	a.mutex.Lock()
+	a.resources = append(a.resources, r)
+}
+
+func (a *importedResources) Len() int {
+	defer a.mutex.RLocker().Unlock()
+	a.mutex.RLocker().Lock()
+	return len(a.resources)
+}
+
+func (a resourcesList) Len() int {
 	return len(a)
 }
-func (a importedResources) Swap(i, j int) {
+
+func (a resourcesList) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
-func (a importedResources) Less(i, j int) bool {
+func (a resourcesList) Less(i, j int) bool {
 	return a[i].Name < a[j].Name
+}
+
+func (a *importedResources) Sorted() []*resource {
+	defer a.mutex.Unlock()
+	a.mutex.Lock()
+	c := make(resourcesList, len(a.resources))
+	copy(c, a.resources)
+	sort.Sort(c)
+	return c
 }

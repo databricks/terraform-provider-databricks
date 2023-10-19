@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -37,6 +38,10 @@ func importContextForTest() *importContext {
 		Files:       map[string]*hclwrite.File{},
 		testEmits:   map[string]bool{},
 		nameFixes:   nameFixes,
+		waitGroup:   &sync.WaitGroup{},
+		allUsers:    map[string]scim.User{},
+		allSps:      map[string]scim.User{},
+		channels:    makeResourcesChannels(p),
 	}
 }
 
@@ -362,30 +367,6 @@ func TestJobListNoNameMatch(t *testing.T) {
 	assert.Equal(t, 0, len(ic.testEmits))
 }
 
-func TestJobList_FailGetRuns(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=1&limit=1",
-			Status:   404,
-			Response: apierr.NotFound("nope"),
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-		ic.importJobs([]jobs.Job{
-			{
-				JobID: 1,
-				Settings: &jobs.JobSettings{
-					Name: "abc",
-				},
-			},
-		})
-		assert.Equal(t, 0, len(ic.testEmits))
-	})
-}
-
 func TestClusterPolicyWrongDef(t *testing.T) {
 	d := policies.ResourceClusterPolicy().TestResourceData()
 	d.Set("name", "abc")
@@ -645,6 +626,61 @@ func TestSecretScopeListNoNameMatch(t *testing.T) {
 	})
 }
 
+func TestPoliciesListing(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policies/clusters/list?",
+			Response: compute.ListPoliciesResponse{
+				Policies: []compute.Policy{
+					{
+						Name:     "Personal Compute",
+						PolicyId: "123",
+					},
+					{
+						Name:     "abcd",
+						PolicyId: "456",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		err := resourcesMap["databricks_cluster_policy"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(ic.testEmits))
+	})
+}
+
+func TestPoliciesListNoNameMatch(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policies/clusters/list?",
+			Response: compute.ListPoliciesResponse{
+				Policies: []compute.Policy{
+					{
+						Name: "Personal Compute",
+					},
+					{
+						Name: "abcd",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTest()
+		ic.Client = client
+		ic.Context = ctx
+		ic.match = "bcd"
+		err := resourcesMap["databricks_cluster_policy"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
 func TestAwsS3MountProfile(t *testing.T) {
 	ic := importContextForTest()
 	ic.mounts = true
@@ -763,6 +799,7 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, cb f
 		ic.importing = map[string]bool{}
 		ic.variables = map[string]string{}
 		ic.services = services
+		ic.startImportChannels()
 		cb(ic)
 	})
 }
@@ -806,6 +843,8 @@ func TestNotebookGeneration(t *testing.T) {
 		ic.notebooksFormat = "SOURCE"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
@@ -854,6 +893,8 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 		ic.notebooksFormat = "JUPYTER"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
@@ -902,6 +943,8 @@ func TestDirectoryGeneration(t *testing.T) {
 		err := resourcesMap["databricks_directory"].List(ic)
 		assert.NoError(t, err)
 
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_directory" "first_1234" {
@@ -928,6 +971,8 @@ func TestGlobalInitScriptGen(t *testing.T) {
 			ID:       "a",
 		})
 
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_global_init_script" "new_importing_things" {
@@ -958,6 +1003,8 @@ func TestSecretGen(t *testing.T) {
 			ID:       "a|||b",
 		})
 
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_secret" "a_b_eb2980a5a2" {
@@ -991,6 +1038,8 @@ func TestDbfsFileGen(t *testing.T) {
 			ID:       "a",
 		})
 
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_dbfs_file" "_0cc175b9c0f1b6a831c399e269772661_a" {
@@ -1066,7 +1115,10 @@ func TestIncrementalListDLT(t *testing.T) {
 		ic.Context = ctx
 		ic.incremental = true
 		ic.updatedSinceStr = "2023-07-24T00:00:00Z"
+		ic.updatedSinceMs = 1690156700000
 		err := resourcesMap["databricks_pipeline"].List(ic)
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(ic.testEmits))
 	})

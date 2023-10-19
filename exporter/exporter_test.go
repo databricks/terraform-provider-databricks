@@ -204,9 +204,10 @@ func TestImportingMounts(t *testing.T) {
 			err := ic.Importables["databricks_mount"].List(ic)
 			assert.NoError(t, err)
 
-			for i := 0; i < len(ic.Scope); i++ {
+			resources := ic.Scope.Sorted()
+			for i := range resources {
 				err = ic.Importables["databricks_mount"].Body(ic,
-					hclwrite.NewEmptyFile().Body(), ic.Scope[i])
+					hclwrite.NewEmptyFile().Body(), resources[i])
 				assert.NoError(t, err)
 			}
 		})
@@ -230,6 +231,13 @@ var emptyPipelines = qa.HTTPFixture{
 	ReuseRequest: true,
 	Resource:     "/api/2.0/pipelines?max_results=50",
 	Response:     pipelines.PipelineListResponse{},
+}
+
+var emptyClusterPolicies = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/policies/clusters/list?",
+	Response:     compute.ListPoliciesResponse{},
 }
 
 var emptyMlflowWebhooks = qa.HTTPFixture{
@@ -353,6 +361,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlQueries,
 			emptySqlAlerts,
 			emptyPipelines,
+			emptyClusterPolicies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfs,
 			dummyWorkspaceConf,
@@ -554,6 +563,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,
 			emptyInstancePools,
+			emptyClusterPolicies,
 			dummyWorkspaceConf,
 			{
 				Method:   "GET",
@@ -750,8 +760,33 @@ func TestImportingClusters(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
 			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-response.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
+			os.Setenv("EXPORTER_PARALLELISM_databricks_cluster", "1")
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -967,7 +1002,8 @@ func TestImportingJobs_JobList(t *testing.T) {
 			err := ic.Importables["databricks_job"].List(ic)
 			assert.NoError(t, err)
 
-			for _, res := range ic.Scope {
+			resources := ic.Scope.Sorted()
+			for _, res := range resources {
 				if res.Resource != "databricks_job" {
 					continue
 				}
@@ -1216,7 +1252,8 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			err := ic.Importables["databricks_job"].List(ic)
 			assert.NoError(t, err)
 
-			for _, res := range ic.Scope {
+			resources := ic.Scope.Sorted()
+			for _, res := range resources {
 				if res.Resource != "databricks_job" {
 					continue
 				}
@@ -1490,14 +1527,14 @@ func TestImportingIPAccessLists(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists/123?",
 				Response: settings.GetIpAccessListResponse{
-					IpAccessLists: []settings.IpAccessListInfo{resp},
+					IpAccessList: &resp,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists/124?",
 				Response: settings.GetIpAccessListResponse{
-					IpAccessLists: []settings.IpAccessListInfo{resp2},
+					IpAccessList: &resp2,
 				},
 			},
 			{

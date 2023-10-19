@@ -42,6 +42,8 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 	m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
 
 	common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
+	common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
+	common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
 
 	m["force_destroy"] = &schema.Schema{
 		Type:     schema.TypeBool,
@@ -142,8 +144,8 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				var storageCredential *catalog.AccountsStorageCredentialInfo
 				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
-					MetastoreId: metastoreId,
-					Name:        dacName,
+					MetastoreId:           metastoreId,
+					StorageCredentialName: dacName,
 				})
 				if err != nil {
 					return err
@@ -155,7 +157,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				}
 				isDefault := metastore.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
-				return common.StructToData(storageCredential, dacSchema, d)
+				return common.StructToData(storageCredential.CredentialInfo, dacSchema, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				var storageCredential *catalog.StorageCredentialInfo
 				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacName)
@@ -179,9 +181,9 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
-					MetastoreId: metastoreId,
-					Name:        dacName,
-					Force:       force,
+					MetastoreId:           metastoreId,
+					StorageCredentialName: dacName,
+					Force:                 force,
 				})
 			}, func(w *databricks.WorkspaceClient) error {
 				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{

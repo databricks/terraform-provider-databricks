@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -42,7 +43,6 @@ var (
 	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
 	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
-	uuidRegex                    = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 	predefinedClusterPolicies    = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
 	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
@@ -552,9 +552,37 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_cluster_policy": {
-		Service: "compute",
+		Service: "policies",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("name").(string)
+		},
+		List: func(ic *importContext) error {
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			policies, err := w.ClusterPolicies.ListAll(ic.Context, compute.ListClusterPoliciesRequest{})
+			if err != nil {
+				return err
+			}
+			for offset, policy := range policies {
+				log.Printf("[INFO] Scanning %d:  %v", offset+1, policy)
+				if slices.Contains(predefinedClusterPolicies, policy.Name) {
+					continue
+				}
+				if !ic.MatchesName(policy.Name) {
+					log.Printf("[DEBUG] Policy %s doesn't match %s filter", policy.Name, ic.match)
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_cluster_policy",
+					ID:       policy.PolicyId,
+				})
+				if offset%10 == 0 {
+					log.Printf("[INFO] Scanned %d of %d cluster policies", offset+1, len(policies))
+				}
+			}
+			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			if ic.meAdmin {
@@ -574,7 +602,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				defaultValue, dok := policy["defaultValue"]
 				typ := policy["type"]
 				if !vok && !dok {
-					log.Printf("[INFO] Skipping policy element as it doesn't have both value and defaultValue")
+					log.Printf("[DEBUG] Skipping policy element as it doesn't have both value and defaultValue. k='%v', policy='%v'",
+						k, policy)
 					continue
 				}
 				if k == "aws_attributes.instance_profile_arn" {
@@ -599,6 +628,15 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_workspace_file",
 						ID:       eitherString(value, defaultValue),
 					})
+				}
+				if typ == "fixed" && (strings.HasPrefix(k, "spark_conf.") || strings.HasPrefix(k, "spark_env_vars.")) {
+					either := eitherString(value, defaultValue)
+					if res := secretPathRegex.FindStringSubmatch(either); res != nil {
+						ic.Emit(&resource{
+							Resource: "databricks_secret_scope",
+							ID:       res[1],
+						})
+					}
 				}
 			}
 			policyName := r.Data.Get("name").(string)
@@ -768,6 +806,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nameNormalizationRegex.ReplaceAllString(strings.Split(s, "@")[0], "_") + "_" + d.Id()
 		},
+		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findUserByName(r.Value)
 			if err != nil {
@@ -805,6 +844,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return name + "_" + d.Id()
 		},
+		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findSpnByAppID(r.Value)
 			if err != nil {
@@ -814,13 +854,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			// application_id should be provided only on Azure
-			if pathString == "display_name" && ic.Client.IsAzure() {
-				applicationID := d.Get("application_id").(string)
-				displayName := d.Get("display_name").(string)
-				return applicationID == displayName
+			if pathString == "display_name" {
+				if ic.Client.IsAzure() {
+					applicationID := d.Get("application_id").(string)
+					displayName := d.Get("display_name").(string)
+					return applicationID == displayName
+				}
+				return false
 			}
-			return (pathString == "application_id" && !ic.Client.IsAzure()) || defaultShouldOmitFieldFunc(ic, pathString, as, d)
+			// application_id should be provided only on Azure
+			if pathString == "application_id" {
+				return !ic.Client.IsAzure()
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			applicationID := r.Data.Get("application_id").(string)
@@ -938,6 +984,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			return nil
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			return r.Data.Get("name").(string) == ""
 		},
 	},
 	"databricks_secret": {
@@ -1102,19 +1151,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		List: func(ic *importContext) error {
-			// TODO: Should we use parallel listing instead?
-			repoList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
+			objList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
 			if err != nil {
 				return err
 			}
-			for offset, repo := range repoList {
+			for offset, repo := range objList {
 				if repo.Url != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_repo",
 						ID:       fmt.Sprintf("%d", repo.ID),
 					})
 				}
-				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(repoList))
+				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(objList))
 			}
 			return nil
 		},

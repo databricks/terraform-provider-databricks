@@ -331,3 +331,7 @@ func EqualFoldDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	}
 	return false
 }
+
+func NoCustomize(m map[string]*schema.Schema) map[string]*schema.Schema {
+	return m
+}

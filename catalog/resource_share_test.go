@@ -185,7 +185,7 @@ func TestCreateShare(t *testing.T) {
 				ExpectedRequest: ShareInfo{
 					Name: "a",
 				},
-				Response: ShareInfo{
+				Response: RecipientInfo{
 					Name: "a",
 				},
 			},
@@ -213,7 +213,7 @@ func TestCreateShare(t *testing.T) {
 						},
 					},
 				},
-				Response: ShareInfo{
+				Response: RecipientInfo{
 					Name: "a",
 				},
 			},
@@ -462,7 +462,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 				ExpectedRequest: ShareInfo{
 					Name: "a",
 				},
-				Response: ShareInfo{
+				Response: RecipientInfo{
 					Name: "a",
 				},
 			},

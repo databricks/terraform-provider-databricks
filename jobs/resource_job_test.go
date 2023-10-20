@@ -54,6 +54,10 @@ func TestResourceJobCreate(t *testing.T) {
 					RunAs: &JobRunAs{
 						UserName: "user@mail.com",
 					},
+					Deployment: &jobs.JobDeployment{
+						Kind:             "BUNDLE",
+						MetadataFilePath: "/a/b/c",
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -94,6 +98,10 @@ func TestResourceJobCreate(t *testing.T) {
 						RunAs: &JobRunAs{
 							UserName: "user@mail.com",
 						},
+						Deployment: &jobs.JobDeployment{
+							Kind:             "BUNDLE",
+							MetadataFilePath: "/a/b/c",
+						},
 					},
 				},
 			},
@@ -125,6 +133,10 @@ func TestResourceJobCreate(t *testing.T) {
 		}
 		run_as {
 			user_name = "user@mail.com"
+		}
+		deployment {
+			kind = "BUNDLE"
+			metadata_file_path = "/a/b/c"
 		}`,
 	}.Apply(t)
 	assert.NoError(t, err)

@@ -764,14 +764,15 @@ func (ic *importContext) ResourceName(r *resource) string {
 		name = r.ID
 	}
 	name = ic.prefix + name
+	origCaseName := name
 	name = strings.ToLower(name)
 	name = ic.regexFix(name, ic.nameFixes)
 	// this is either numeric id or all-non-ascii
 	if regexp.MustCompile(`^\d`).MatchString(name) || name == "" {
 		if name == "" {
-			name = r.ID
+			origCaseName = r.ID
 		}
-		name = fmt.Sprintf("r%x", md5.Sum([]byte(name)))[0:12]
+		name = fmt.Sprintf("r%x", md5.Sum([]byte(origCaseName)))[0:12]
 	}
 	return name
 }

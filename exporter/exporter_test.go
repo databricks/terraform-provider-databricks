@@ -1348,7 +1348,12 @@ func TestResourceName(t *testing.T) {
 	norm = ic.ResourceName(&resource{
 		Name: "9721431b_bcd3_4526_b90f_f5de2befec8c|8737798193",
 	})
-	assert.Equal(t, "r7322b058678", norm)
+	assert.Equal(t, "r56cde0f5eda", norm)
+
+	assert.NotEqual(t, ic.ResourceName(&resource{
+		Name: "0A"}), ic.ResourceName(&resource{
+		Name: "0a",
+	}))
 
 	norm = ic.ResourceName(&resource{
 		Name: "General Policy - All Users",

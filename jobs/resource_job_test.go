@@ -290,6 +290,67 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_ConditionTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "ConditionTaskTesting",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "a",
+							ConditionTask: &jobs.ConditionTask{
+								Left:  "123",
+								Op:    "EQUAL_TO",
+								Right: "123",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+				Response: Job{
+					JobID: 231,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=231",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "a",
+								ConditionTask: &jobs.ConditionTask{
+									Left:  "123",
+									Op:    "EQUAL_TO",
+									Right: "123",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "ConditionTaskTesting"
+	
+		task {
+			task_key = "a"
+			condition_task {
+				left = "123"
+				op = "EQUAL_TO"
+				right = "123"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "231", d.Id())
+}
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

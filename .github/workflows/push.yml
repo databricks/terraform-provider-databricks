@@ -1,6 +1,8 @@
 name: build
 
 on:
+  push:
+    branches: [ master, main ]
   pull_request:
     types: [opened, synchronize]
   merge_group:

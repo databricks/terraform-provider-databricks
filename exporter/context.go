@@ -287,15 +287,15 @@ func (ic *importContext) Run() error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
-	w, err := ic.Client.WorkspaceClient()
-	if err != nil {
-		return err
-	}
 
 	ic.accountLevel = ic.Client.Config.IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
 	} else {
+		w, err := ic.Client.WorkspaceClient()
+		if err != nil {
+			return err
+		}
 		me, err := w.CurrentUser.Me(ic.Context)
 		if err != nil {
 			return err
@@ -326,7 +326,11 @@ func (ic *importContext) Run() error {
 			continue
 		}
 		if ic.accountLevel && !ir.AccountLevel {
-			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
+			log.Printf("[DEBUG] %s (%s service) is not a account level resource", resourceName, ir.Service)
+			continue
+		}
+		if !ic.accountLevel && !ir.WorkspaceLevel {
+			log.Printf("[DEBUG] %s (%s service) is not a workspace level resource", resourceName, ir.Service)
 			continue
 		}
 		ic.waitGroup.Add(1)

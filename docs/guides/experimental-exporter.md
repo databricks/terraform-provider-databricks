@@ -98,6 +98,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 
 | Resource | Generated code | Incremental |
 | --- | --- | --- |
+| [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No |
 | [databricks_cluster](../resources/cluster.md) | Yes | No |
 | [databricks_cluster_policy](../resources/cluster_policy.md) | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No |

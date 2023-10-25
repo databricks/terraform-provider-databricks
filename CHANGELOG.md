@@ -1,5 +1,39 @@
 # Version changelog
 
+## 1.29.0
+
+New Features and Improvements:
+ * Added [databricks_artifact_allowlist](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/artifact_allowlist) ([#27[44](https://github.com/databricks/eng-dev-ecosystem/actions/runs/6635966983/job/18046250964#step:4:45)](https://github.com/databricks/terraform-provider-databricks/pull/2744)).
+ * Added deployment field to databricks_job ([#2821](https://github.com/databricks/terraform-provider-databricks/pull/2821)).
+ * Added support for `warehouse_id`, `options`, `partitions` and liquid clustering for [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) resource ([#2789](https://github.com/databricks/terraform-provider-databricks/pull/2789)).
+ * Added support for ForceSendFields ([#2753](https://github.com/databricks/terraform-provider-databricks/pull/2753)).
+
+Bugfixes:
+ * Fixed DiffSuppressFunc for [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) resource ([#2813](https://github.com/databricks/terraform-provider-databricks/pull/2813)).
+ * Fixed [databricks_catalog](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/catalog) `isolation_mode` ([#2805](https://github.com/databricks/terraform-provider-databricks/pull/2805)).
+
+Exporter:
+ * Exporter: Correct treatment of disallowed characters in notebooks/directory names ([#2831](https://github.com/databricks/terraform-provider-databricks/pull/2831)).
+ * Exporter: Added support for exporting [databricks_access_control_rule_set](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set) on account level ([#2699](https://github.com/databricks/terraform-provider-databricks/pull/2699)).
+ * Exporter: Adjusted generation & normalization of job names ([#28[36](https://github.com/databricks/eng-dev-ecosystem/actions/runs/6635966983/job/18046250964#step:4:37)](https://github.com/databricks/terraform-provider-databricks/pull/2836)).
+ * Exporter: Clarified behaviour of services not marked with listing ([#2785](https://github.com/databricks/terraform-provider-databricks/pull/2785)).
+ * Exporter: Fixed generation of names for [databricks_library](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/library) resources ([#2832](https://github.com/databricks/terraform-provider-databricks/pull/2832)).
+ * Clarified experimental status of the exporter ([#2816](https://github.com/databricks/terraform-provider-databricks/pull/2816)).
+
+Documentation changes:
+ * Added `account_id` parameter to provider blocks in the guides ([#2817](https://github.com/databricks/terraform-provider-databricks/pull/2817)).
+ * Changed CREATE_TABLE to CREATE_EXTERNAL_TABLE ([#2812](https://github.com/databricks/terraform-provider-databricks/pull/2812)).
+ * Corrected max number of pinned clusters in the [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) docs ([#2825](https://github.com/databricks/terraform-provider-databricks/pull/2825)).
+ * Put `empty_result_state` under `options` in the [databricks_sql_alert](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_alert) resource ([#2834](https://github.com/databricks/terraform-provider-databricks/pull/2834)).
+ * Corrected grammar & rewording for better readability (part 1) ([#2781](https://github.com/databricks/terraform-provider-databricks/pull/2781)).
+
+Internal changes:
+ * Added additional integration tests for condition_task tasks in databricks_job ([#2830](https://github.com/databricks/terraform-provider-databricks/pull/2830)).
+ * Bump github.com/databricks/databricks-sdk-go from 0.23.0 to 0.24.0 ([#2835](https://github.com/databricks/terraform-provider-databricks/pull/2835)).
+ * Bump github.com/hashicorp/hcl/v2 from 2.18.1 to 2.19.1 ([#2819](https://github.com/databricks/terraform-provider-databricks/pull/2819)).
+ * Enabled Cluster Integration test ([#2815](https://github.com/databricks/terraform-provider-databricks/pull/2815)).
+ * Changed Jobs List operations to use token-based pagination ([#2810](https://github.com/databricks/terraform-provider-databricks/pull/2810)).
+
 ## 1.28.1
  * Fixed read method for `databricks_storage_credential` resource ([#2804](https://github.com/databricks/terraform-provider-databricks/pull/2804)).
  

@@ -799,7 +799,7 @@ func TestRepoListFails(t *testing.T) {
 	})
 }
 
-func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, cb func(*importContext)) {
+func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAdmin bool, cb func(*importContext)) {
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTest()
 		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -807,6 +807,7 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, cb f
 		ic.Client = client
 		ic.Context = ctx
 		ic.testEmits = nil
+		ic.meAdmin = asAdmin
 		ic.importing = map[string]bool{}
 		ic.variables = map[string]string{}
 		ic.services = services
@@ -850,7 +851,7 @@ func TestNotebookGeneration(t *testing.T) {
 				Content: "YWJj",
 			},
 		},
-	}, "notebooks", func(ic *importContext) {
+	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
@@ -859,7 +860,7 @@ func TestNotebookGeneration(t *testing.T) {
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
-		  source = "${path.module}/notebooks/First/Second.py"
+		  source = "${path.module}/notebooks/First/Second_123.py"
 		  path   = "/First/Second"
 		}`), string(ic.Files["notebooks"].Bytes()))
 	})
@@ -900,7 +901,7 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 				Content: "YWJj",
 			},
 		},
-	}, "notebooks", func(ic *importContext) {
+	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "JUPYTER"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
@@ -909,10 +910,70 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
-		  source   = "${path.module}/notebooks/First/Second.ipynb"
+		  source   = "${path.module}/notebooks/First/Second_123.ipynb"
 		  path     = "/First/Second"
 		  language = "PYTHON"
 		  format   = "JUPYTER"
+		}`), string(ic.Files["notebooks"].Bytes()))
+	})
+}
+
+func TestNotebookGenerationBadCharacters(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						Path:       "/Repos/Foo/Bar",
+						ObjectType: "NOTEBOOK",
+					},
+					{
+						Path:       "/Fir\"st\\/Second",
+						ObjectType: "NOTEBOOK",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FFir%22st%5C",
+
+			Response: workspace.ObjectStatus{
+				ObjectID:   124,
+				ObjectType: "DIRECTORY",
+				Path:       "/Fir\"st\\",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FFir%22st%5C%2FSecond",
+			Response: workspace.ObjectStatus{
+				ObjectID:   123,
+				ObjectType: "NOTEBOOK",
+				Path:       "/Fir\"st\\/Second",
+				Language:   "PYTHON",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FFir%22st%5C%2FSecond",
+			Response: workspace.ExportPath{
+				Content: "YWJj",
+			},
+		},
+	}, "notebooks,directories", true, func(ic *importContext) {
+		ic.notebooksFormat = "SOURCE"
+		err := resourcesMap["databricks_notebook"].List(ic)
+		assert.NoError(t, err)
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
+		ic.generateHclForResources(nil)
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
+		resource "databricks_notebook" "fir_st_second_123" {
+		  source = "${path.module}/notebooks/Fir_st_/Second_123.py"
+		  path   = "/Fir\"st\\/Second"
 		}`), string(ic.Files["notebooks"].Bytes()))
 	})
 }
@@ -950,7 +1011,7 @@ func TestDirectoryGeneration(t *testing.T) {
 				Path:       "/first",
 			},
 		},
-	}, "directories", func(ic *importContext) {
+	}, "directories", false, func(ic *importContext) {
 		err := resourcesMap["databricks_directory"].List(ic)
 		assert.NoError(t, err)
 
@@ -976,7 +1037,7 @@ func TestGlobalInitScriptGen(t *testing.T) {
 				ContentBase64: "YWJj",
 			},
 		},
-	}, "workspace", func(ic *importContext) {
+	}, "workspace", false, func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_global_init_script",
 			ID:       "a",
@@ -1008,7 +1069,7 @@ func TestSecretGen(t *testing.T) {
 				},
 			},
 		},
-	}, "secrets", func(ic *importContext) {
+	}, "secrets", false, func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_secret",
 			ID:       "a|||b",
@@ -1043,7 +1104,7 @@ func TestDbfsFileGen(t *testing.T) {
 				BytesRead: 3,
 			},
 		},
-	}, "storage", func(ic *importContext) {
+	}, "storage", false, func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_dbfs_file",
 			ID:       "a",

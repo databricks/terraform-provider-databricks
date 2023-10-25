@@ -41,6 +41,7 @@ var (
 	gsRegex                      = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
 	globalWorkspaceConfName      = "global_workspace_conf"
 	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
+	fileNameNormalizationRegex   = regexp.MustCompile(`[^-_\w/.@]`)
 	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 	predefinedClusterPolicies    = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
@@ -1313,7 +1314,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				fileExtension = fileExtensionFormatMapping[ic.notebooksFormat]
 			}
 			r.Data.Set("format", ic.notebooksFormat)
-			name := r.ID[1:] + fileExtension // todo: replace non-alphanum+/ with _
+			objectId := r.Data.Get("object_id").(int)
+			name := fileNameNormalizationRegex.ReplaceAllString(r.ID[1:], "_") + "_" + strconv.Itoa(objectId) + fileExtension
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
 			if err != nil {
@@ -1322,7 +1324,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/notebooks/%d", r.Data.Get("object_id").(int)),
+					ID:       fmt.Sprintf("/notebooks/%d", objectId),
 					Name:     "notebook_" + ic.Importables["databricks_notebook"].Name(ic, r.Data),
 				})
 			}
@@ -1359,7 +1361,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			name := r.ID[1:]
+			objectId := r.Data.Get("object_id").(int)
+			parts := strings.Split(r.ID, "/")
+			plen := len(parts)
+			if idx := strings.Index(parts[plen-1], "."); idx != -1 {
+				parts[plen-1] = parts[plen-1][:idx] + "_" + strconv.Itoa(objectId) + parts[plen-1][idx:]
+			} else {
+				parts[plen-1] = parts[plen-1] + "_" + strconv.Itoa(objectId)
+			}
+			name := fileNameNormalizationRegex.ReplaceAllString(strings.Join(parts, "/")[1:], "_")
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("workspace_files", name, []byte(content))
 			if err != nil {
@@ -1369,7 +1379,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/files/%d", r.Data.Get("object_id").(int)),
+					ID:       fmt.Sprintf("/files/%d", objectId),
 					Name:     "ws_file_" + ic.Importables["databricks_workspace_file"].Name(ic, r.Data),
 				})
 			}

@@ -809,7 +809,7 @@ The remote registry returned warnings for registry.terraform.io/databrickslabs/d
 
 After you replace `databrickslabs/databricks` with `databricks/databricks` in the `required_providers` block, the warning will disappear. Do a global "search and replace" in `*.tf` files. Alternatively you can run `python3 -c "$(curl -Ls https://dbricks.co/updtfns)"` from the command-line, that would do all the boring work for you.
 
-If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](https://github.com/databrickslabs/terraform-provider-databricks/blob/master/docs/guides/troubleshooting.md).
+If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](https://github.com/databrickslabs/terraform-provider-databricks/blob/main/docs/guides/troubleshooting.md).
 
 ## 0.6.2
 
@@ -1323,7 +1323,7 @@ Updated dependency versions:
 
 * Added `databricks_global_init_script` resource to configure global init scripts ([#487](https://github.com/databricks/terraform-provider-databricks/issues/487)).
 * Added `databricks_sql_endpoint` resource ([#498](https://github.com/databricks/terraform-provider-databricks/pull/498))
-* Added [experimental resource exporter](https://github.com/databricks/terraform-provider-databricks/blob/master/docs/guides/experimental-exporter.md) to generate configuration for entire workspace.
+* Added [experimental resource exporter](https://github.com/databricks/terraform-provider-databricks/blob/main/docs/guides/experimental-exporter.md) to generate configuration for entire workspace.
 * Improved user-facing documentaiton ([#508](https://github.com/databricks/terraform-provider-databricks/pull/508/files), [#516](https://github.com/databricks/terraform-provider-databricks/pull/516), [#511](https://github.com/databricks/terraform-provider-databricks/pull/511), [#504](https://github.com/databricks/terraform-provider-databricks/pull/504), [#492]([Update docs in various places](https://github.com/databricks/terraform-provider-databricks/pull/492)))
 * Simplified authentication issues debugging ([#490](https://github.com/databricks/terraform-provider-databricks/pull/490))
 * Made cleaner error message for no config profile ([#491](https://github.com/databricks/terraform-provider-databricks/pull/491))
@@ -1470,7 +1470,7 @@ Updated dependency versions:
 
 ## 0.2.4
 
-* Added [Azure CLI authentication](https://github.com/databricks/terraform-provider-databricks/blob/master/docs/index.md#authenticating-with-azure-cli) to bridge the gap of local development workflows and let more people use the provider.
+* Added [Azure CLI authentication](https://github.com/databricks/terraform-provider-databricks/blob/main/docs/index.md#authenticating-with-azure-cli) to bridge the gap of local development workflows and let more people use the provider.
 * All authentication is completely [lazy-initialized](https://github.com/databricks/terraform-provider-databricks/pull/270), which makes it provider overall more stable.
 * Significantly increased [unit test coverage](https://codecov.io/gh/databricks/terraform-provider-databricks), which runs before every merge of a pull request.
 * Introduced constantly running integration test suite environments: azsp, azcli & awsmt
@@ -1491,7 +1491,7 @@ Updated dependency versions:
 * gopkg.in/ini.v1 v1.60.2
 
 **Deprecations**
-* `library_*` is no longer receiving fixes and will be removed in `0.3`, please rewrite cluster & job resources to use [`library` configuration block](https://github.com/databricks/terraform-provider-databricks/blob/master/docs/resources/cluster.md#library-configuration-block).
+* `library_*` is no longer receiving fixes and will be removed in `0.3`, please rewrite cluster & job resources to use [`library` configuration block](https://github.com/databricks/terraform-provider-databricks/blob/main/docs/resources/cluster.md#library-configuration-block).
 * `basic_auth` provider block is no longer receiving fixesand will be removed in `0.3`, please use `username` and `password` options
 * `azure_auth` provider block is no longer receiving fixesand will be removed in `0.3`, please use `azure_*` options 
 

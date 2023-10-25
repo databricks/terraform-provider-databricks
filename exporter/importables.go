@@ -337,7 +337,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		ApiVersion: common.API_2_1,
 		Service:    "jobs",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return fmt.Sprintf("%s_%s", d.Get("name").(string), d.Id())
+			name := d.Get("name").(string)
+			if name == "" {
+				name = "job"
+			}
+			return nameNormalizationRegex.ReplaceAllString(
+				fmt.Sprintf("%s_%s", name, d.Id()), "_")
 		},
 		Depends: []reference{
 			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name"},

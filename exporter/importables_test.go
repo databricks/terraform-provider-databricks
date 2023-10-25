@@ -222,6 +222,17 @@ func TestClusterNameFromID(t *testing.T) {
 	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(ic, d))
 }
 
+func TestJobName(t *testing.T) {
+	ic := importContextForTest()
+	d := jobs.ResourceJob().TestResourceData()
+	d.SetId("12345")
+	// job without name
+	assert.Equal(t, "job_12345", resourcesMap["databricks_job"].Name(ic, d))
+	// job with name
+	d.Set("name", "test@1pm")
+	assert.Equal(t, "test_1pm_12345", resourcesMap["databricks_job"].Name(ic, d))
+}
+
 func TestClusterLibrary(t *testing.T) {
 	ic := importContextForTest()
 	d := clusters.ResourceLibrary().TestResourceData()

@@ -475,7 +475,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 		// If the ForceSendFields field is present, and the field is not in the list, and its value
 		// is the zero value, then the server did not respond with this field, so it should not be set
 		// in the resource data.
-		if hasForceSendFields && !slices.Contains(forceSendFields, fieldPath) && valueField.IsZero() {
+		if hasForceSendFields && isBasicType(fieldSchema.Type) && !slices.Contains(forceSendFields, fieldPath) && valueField.IsZero() {
 			log.Printf("[TRACE] Skipping field %s because it is not in ForceSendFields and is zero value", fieldPath)
 			return nil
 		}

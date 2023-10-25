@@ -237,7 +237,7 @@ func TestClusterLibrary(t *testing.T) {
 	ic := importContextForTest()
 	d := clusters.ResourceLibrary().TestResourceData()
 	d.SetId("a-b-c")
-	assert.Equal(t, "a-b-c", resourcesMap["databricks_library"].Name(ic, d))
+	assert.Equal(t, "lib_a-b-c_7b193b3d", resourcesMap["databricks_library"].Name(ic, d))
 }
 
 func TestImportClusterLibraries(t *testing.T) {

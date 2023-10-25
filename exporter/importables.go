@@ -261,7 +261,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Id()
+			id := d.Id()
+			return "lib_" + id + fmt.Sprintf("_%x", md5.Sum([]byte(id)))[:9]
 		},
 	},
 	"databricks_cluster": {

@@ -1175,9 +1175,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("path").(string)
 			if name == "" {
-				return d.Id()
+				return "repo_" + d.Id()
 			}
-			return nameNormalizationRegex.ReplaceAllString(name[7:], "_")
+			return nameNormalizationRegex.ReplaceAllString(name[7:], "_") + "_" + d.Id()
 		},
 		Search: func(ic *importContext, r *resource) error {
 			reposAPI := repos.NewReposAPI(ic.Context, ic.Client)

@@ -6,7 +6,6 @@ New Features and Improvements:
  * Added [databricks_artifact_allowlist](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/artifact_allowlist) ([#27[44](https://github.com/databricks/eng-dev-ecosystem/actions/runs/6635966983/job/18046250964#step:4:45)](https://github.com/databricks/terraform-provider-databricks/pull/2744)).
  * Added deployment field to databricks_job ([#2821](https://github.com/databricks/terraform-provider-databricks/pull/2821)).
  * Added support for `warehouse_id`, `options`, `partitions` and liquid clustering for [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) resource ([#2789](https://github.com/databricks/terraform-provider-databricks/pull/2789)).
- * Added support for ForceSendFields ([#2753](https://github.com/databricks/terraform-provider-databricks/pull/2753)).
 
 Bugfixes:
  * Fixed DiffSuppressFunc for [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) resource ([#2813](https://github.com/databricks/terraform-provider-databricks/pull/2813)).

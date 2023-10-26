@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"golang.org/x/exp/slices"
 )
 
 var kindMap = map[reflect.Kind]string{
@@ -455,7 +454,6 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	forceSendFields, hasForceSendFields := getForceSendFields(v)
 	return iterFields(v, []string{}, s, func(
 		fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
 		fieldValue := valueField.Interface()
@@ -470,13 +468,6 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 		if !d.IsNewResource() && !fieldSchema.Computed && !configured {
 			log.Printf("[TRACE] Removing default fields sent back by server: %s - %#v",
 				fieldPath, fieldValue)
-			return nil
-		}
-		// If the ForceSendFields field is present, and the field is not in the list, and its value
-		// is the zero value, then the server did not respond with this field, so it should not be set
-		// in the resource data.
-		if hasForceSendFields && isBasicType(fieldSchema.Type) && !slices.Contains(forceSendFields, fieldPath) && valueField.IsZero() {
-			log.Printf("[TRACE] Skipping field %s because it is not in ForceSendFields and is zero value", fieldPath)
 			return nil
 		}
 		switch fieldSchema.Type {
@@ -610,15 +601,6 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		return err
 	}
 	return setForceSendFields(rv, forceSendFields)
-}
-
-func getForceSendFields(rv reflect.Value) ([]string, bool) {
-	field := rv.FieldByName("ForceSendFields")
-
-	if !field.IsValid() {
-		return nil, false
-	}
-	return field.Interface().([]string), true
 }
 
 func setForceSendFields(rv reflect.Value, presentFields []string) error {

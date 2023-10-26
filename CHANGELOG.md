@@ -3,7 +3,7 @@
 ## 1.29.0
 
 New Features and Improvements:
- * Added [databricks_artifact_allowlist](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/artifact_allowlist) ([#27[44](https://github.com/databricks/eng-dev-ecosystem/actions/runs/6635966983/job/18046250964#step:4:45)](https://github.com/databricks/terraform-provider-databricks/pull/2744)).
+ * Added [databricks_artifact_allowlist](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/artifact_allowlist) ([#2744](https://github.com/databricks/terraform-provider-databricks/pull/2744)).
  * Added deployment field to databricks_job ([#2821](https://github.com/databricks/terraform-provider-databricks/pull/2821)).
  * Added support for `warehouse_id`, `options`, `partitions` and liquid clustering for [databricks_sql_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table) resource ([#2789](https://github.com/databricks/terraform-provider-databricks/pull/2789)).
 
@@ -14,10 +14,11 @@ Bugfixes:
 Exporter:
  * Exporter: Correct treatment of disallowed characters in notebooks/directory names ([#2831](https://github.com/databricks/terraform-provider-databricks/pull/2831)).
  * Exporter: Added support for exporting [databricks_access_control_rule_set](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set) on account level ([#2699](https://github.com/databricks/terraform-provider-databricks/pull/2699)).
- * Exporter: Adjusted generation & normalization of job names ([#28[36](https://github.com/databricks/eng-dev-ecosystem/actions/runs/6635966983/job/18046250964#step:4:37)](https://github.com/databricks/terraform-provider-databricks/pull/2836)).
+ * Exporter: Adjusted generation & normalization of job names ([2836](https://github.com/databricks/terraform-provider-databricks/pull/2836)).
  * Exporter: Clarified behaviour of services not marked with listing ([#2785](https://github.com/databricks/terraform-provider-databricks/pull/2785)).
  * Exporter: Fixed generation of names for [databricks_library](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/library) resources ([#2832](https://github.com/databricks/terraform-provider-databricks/pull/2832)).
  * Clarified experimental status of the exporter ([#2816](https://github.com/databricks/terraform-provider-databricks/pull/2816)).
+ * Exporter: Ensured that name of databricks_repo is unique ([#2842](https://github.com/databricks/terraform-provider-databricks/pull/2842)).
 
 Documentation changes:
  * Added `account_id` parameter to provider blocks in the guides ([#2817](https://github.com/databricks/terraform-provider-databricks/pull/2817)).

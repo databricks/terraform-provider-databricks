@@ -858,6 +858,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.emitRoles("user", u.ID, u.Roles)
 			return nil
 		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "display_name" {
+				userName := d.Get("user_name").(string)
+				displayName := d.Get("display_name").(string)
+				return displayName == "" || userName == displayName
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
 	},
 	"databricks_service_principal": {
 		Service:        "users",

@@ -575,6 +575,21 @@ func TestSpnSearchSuccess(t *testing.T) {
 	})
 }
 
+func TestShouldOmitForUsers(t *testing.T) {
+	d := scim.ResourceUser().TestResourceData()
+	d.SetId("user1")
+	d.Set("user_name", "user@domain.com")
+	d.Set("display_name", "")
+	assert.True(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
+		scim.ResourceUser().Schema["application_id"], d))
+	d.Set("display_name", "user@domain.com")
+	assert.True(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
+		scim.ResourceUser().Schema["application_id"], d))
+	d.Set("display_name", "Some user")
+	assert.False(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
+		scim.ResourceUser().Schema["application_id"], d))
+}
+
 func TestUserImportSkipNonDirectGroups(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

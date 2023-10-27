@@ -627,6 +627,10 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 			return workerInstPoolID != ""
 		case prefix + "enable_local_disk_encryption":
 			return false
+		case prefix + "spark_conf":
+			return fmt.Sprintf("%v", d.Get(prefix+"spark_conf")) == "map[spark.databricks.delta.preview.enabled:true]"
+		case prefix + "spark_env_vars":
+			return fmt.Sprintf("%v", d.Get(prefix+"spark_env_vars")) == "map[PYSPARK_PYTHON:/databricks/python3/bin/python3]"
 		}
 
 		return defaultShouldOmitFieldFunc(ic, pathString, as, d)

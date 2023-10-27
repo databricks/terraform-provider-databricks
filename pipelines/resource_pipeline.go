@@ -215,6 +215,11 @@ func (a PipelinesAPI) Create(s PipelineSpec, timeout time.Duration) (string, err
 func adjustForceSendFields(s *PipelineSpec) {
 	for i := range s.Clusters {
 		cluster := &s.Clusters[i]
+		// TF Go SDK doesn't differentiate between the default and not set values.
+		// If nothing is specified, DLT creates a cluster with enhanced autoscaling
+		// from 1 to 5 nodes, which is different than sending a request for zero workers.
+		// The solution here is to look for the Spark configuration to determine
+		// if the user only wants a single node cluster (only master, no workers).
 		if cluster.SparkConf["spark.databricks.cluster.profile"] == "singleNode" {
 			cluster.ForceSendFields = append(cluster.ForceSendFields, "NumWorkers")
 		}

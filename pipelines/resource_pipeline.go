@@ -215,7 +215,7 @@ func (a PipelinesAPI) Create(s PipelineSpec, timeout time.Duration) (string, err
 func adjustForceSendFields(s *PipelineSpec) {
 	for i := range s.Clusters {
 		cluster := &s.Clusters[i]
-		if cluster.Autoscale == nil {
+		if cluster.SparkConf["spark.databricks.cluster.profile"] == "singleNode" {
 			cluster.ForceSendFields = append(cluster.ForceSendFields, "NumWorkers")
 		}
 	}

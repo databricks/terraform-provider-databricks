@@ -14,6 +14,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -41,6 +42,7 @@ var (
 	gsRegex                      = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
 	globalWorkspaceConfName      = "global_workspace_conf"
 	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
+	fileNameNormalizationRegex   = regexp.MustCompile(`[^-_\w/.@]`)
 	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 	predefinedClusterPolicies    = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
@@ -153,7 +155,8 @@ func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) erro
 
 var resourcesMap map[string]importable = map[string]importable{
 	"databricks_dbfs_file": {
-		Service: "storage",
+		WorkspaceLevel: true,
+		Service:        "storage",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			fileNameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(d.Id())))
 			s := strings.Split(d.Id(), "/")
@@ -180,7 +183,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_instance_pool": {
-		Service: "pools",
+		WorkspaceLevel: true,
+		Service:        "pools",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			raw, ok := d.GetOk("instance_pool_name")
 			if !ok || raw.(string) == "" {
@@ -229,31 +233,35 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_group_role": {
-		Service:      "access",
-		AccountLevel: true,
+		Service:        "access",
+		AccountLevel:   true,
+		WorkspaceLevel: true,
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
 	"databricks_user_role": {
-		Service:      "access",
-		AccountLevel: true,
+		Service:        "access",
+		AccountLevel:   true,
+		WorkspaceLevel: true,
 		Depends: []reference{
 			{Path: "user_id", Resource: "databricks_user"},
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
 	"databricks_service_principal_role": {
-		Service:      "access",
-		AccountLevel: true,
+		Service:        "access",
+		AccountLevel:   true,
+		WorkspaceLevel: true,
 		Depends: []reference{
 			{Path: "service_principal_id", Resource: "databricks_service_principal"},
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
 	"databricks_library": {
-		Service: "compute",
+		WorkspaceLevel: true,
+		Service:        "compute",
 		Depends: []reference{
 			{Path: "cluster_id", Resource: "databricks_cluster"},
 			{Path: "jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -261,11 +269,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		},
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Id()
+			id := d.Id()
+			return "lib_" + id + fmt.Sprintf("_%x", md5.Sum([]byte(id)))[:9]
 		},
 	},
 	"databricks_cluster": {
-		Service: "compute",
+		WorkspaceLevel: true,
+		Service:        "compute",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("cluster_name").(string)
 			if name == "" {
@@ -334,10 +344,16 @@ var resourcesMap map[string]importable = map[string]importable{
 		ShouldOmitField: makeShouldOmitFieldForCluster(nil),
 	},
 	"databricks_job": {
-		ApiVersion: common.API_2_1,
-		Service:    "jobs",
+		ApiVersion:     common.API_2_1,
+		WorkspaceLevel: true,
+		Service:        "jobs",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return fmt.Sprintf("%s_%s", d.Get("name").(string), d.Id())
+			name := d.Get("name").(string)
+			if name == "" {
+				name = "job"
+			}
+			return nameNormalizationRegex.ReplaceAllString(
+				fmt.Sprintf("%s_%s", name, d.Id()), "_")
 		},
 		Depends: []reference{
 			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name"},
@@ -552,7 +568,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_cluster_policy": {
-		Service: "policies",
+		WorkspaceLevel: true,
+		Service:        "policies",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("name").(string)
 		},
@@ -653,8 +670,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group": {
-		Service:      "groups",
-		AccountLevel: true,
+		Service:        "groups",
+		WorkspaceLevel: true,
+		AccountLevel:   true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("display_name").(string) + "_" + d.Id()
 		},
@@ -781,13 +799,22 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 			}
+			if ic.accountLevel {
+				ic.Emit(&resource{
+					Resource: "databricks_access_control_rule_set",
+					ID: fmt.Sprintf("accounts/%s/groups/%s/ruleSets/default",
+						ic.Client.Config.AccountID, r.ID),
+				})
+			}
+
 			return nil
 		},
 		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group_member": {
-		Service:      "groups",
-		AccountLevel: true,
+		Service:        "groups",
+		AccountLevel:   true,
+		WorkspaceLevel: true,
 		Depends: []reference{
 			{Path: "group_id", Resource: "databricks_group"},
 			{Path: "member_id", Resource: "databricks_user"},
@@ -796,8 +823,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_user": {
-		Service:      "users",
-		AccountLevel: true,
+		Service:        "users",
+		AccountLevel:   true,
+		WorkspaceLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			s := d.Get("user_name").(string)
 			// if CLI argument includeUserDomains is set then it includes domain portion as well
@@ -832,8 +860,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_service_principal": {
-		Service:      "users",
-		AccountLevel: true,
+		Service:        "users",
+		AccountLevel:   true,
+		WorkspaceLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("display_name").(string)
 			if name == "" {
@@ -881,11 +910,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			ic.emitGroups(u, spnName)
 			ic.emitRoles("service_principal", u.ID, u.Roles)
+			if ic.accountLevel {
+				ic.Emit(&resource{
+					Resource: "databricks_access_control_rule_set",
+					ID: fmt.Sprintf("accounts/%s/servicePrincipals/%s/ruleSets/default",
+						ic.Client.Config.AccountID, applicationID),
+				})
+			}
 			return nil
 		},
 	},
 	"databricks_permissions": {
-		Service: "access",
+		Service:        "access",
+		WorkspaceLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			s := strings.Split(d.Id(), "/")
 			return s[len(s)-1]
@@ -940,7 +977,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_secret_scope": {
-		Service: "secrets",
+		Service:        "secrets",
+		WorkspaceLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			return name + "_" + generateUniqueID(name)
@@ -990,7 +1028,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_secret": {
-		Service: "secrets",
+		WorkspaceLevel: true,
+		Service:        "secrets",
 		Depends: []reference{
 			{Path: "string_value", Variable: true},
 			{Path: "scope", Resource: "databricks_secret_scope"},
@@ -1005,7 +1044,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_secret_acl": {
-		Service: "secrets",
+		WorkspaceLevel: true,
+		Service:        "secrets",
 		Depends: []reference{
 			{Path: "scope", Resource: "databricks_secret_scope"},
 			{Path: "principal", Resource: "databricks_group", Match: "display_name"},
@@ -1014,8 +1054,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_mount": {
-		Service: "mounts",
-		Body:    generateMountBody,
+		WorkspaceLevel: true,
+		Service:        "mounts",
+		Body:           generateMountBody,
 		List: func(ic *importContext) error {
 			if !ic.mounts {
 				return nil
@@ -1078,7 +1119,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_global_init_script": {
-		Service: "workspace",
+		WorkspaceLevel: true,
+		Service:        "workspace",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -1128,13 +1170,14 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_repo": {
-		Service: "repos",
+		WorkspaceLevel: true,
+		Service:        "repos",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("path").(string)
 			if name == "" {
-				return d.Id()
+				return "repo_" + d.Id()
 			}
-			return nameNormalizationRegex.ReplaceAllString(name[7:], "_")
+			return nameNormalizationRegex.ReplaceAllString(name[7:], "_") + "_" + d.Id()
 		},
 		Search: func(ic *importContext, r *resource) error {
 			reposAPI := repos.NewReposAPI(ic.Context, ic.Client)
@@ -1190,7 +1233,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_workspace_conf": {
-		Service: "workspace",
+		WorkspaceLevel: true,
+		Service:        "workspace",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return globalWorkspaceConfName
 		},
@@ -1244,7 +1288,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_ip_access_list": {
-		Service: "access",
+		WorkspaceLevel: true,
+		Service:        "access",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("list_type").(string) + "_" + d.Get("label").(string)
 		},
@@ -1288,9 +1333,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_notebook": {
-		Service: "notebooks",
-		Name:    workspaceObjectResouceName,
-		List:    createListWorkspaceObjectsFunc(workspace.Notebook, "databricks_notebook", "notebook"),
+		WorkspaceLevel: true,
+		Service:        "notebooks",
+		Name:           workspaceObjectResouceName,
+		List:           createListWorkspaceObjectsFunc(workspace.Notebook, "databricks_notebook", "notebook"),
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -1307,7 +1353,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				fileExtension = fileExtensionFormatMapping[ic.notebooksFormat]
 			}
 			r.Data.Set("format", ic.notebooksFormat)
-			name := r.ID[1:] + fileExtension // todo: replace non-alphanum+/ with _
+			objectId := r.Data.Get("object_id").(int)
+			name := fileNameNormalizationRegex.ReplaceAllString(r.ID[1:], "_") + "_" + strconv.Itoa(objectId) + fileExtension
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
 			if err != nil {
@@ -1316,7 +1363,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/notebooks/%d", r.Data.Get("object_id").(int)),
+					ID:       fmt.Sprintf("/notebooks/%d", objectId),
 					Name:     "notebook_" + ic.Importables["databricks_notebook"].Name(ic, r.Data),
 				})
 			}
@@ -1343,9 +1390,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_workspace_file": {
-		Service: "notebooks",
-		Name:    workspaceObjectResouceName,
-		List:    createListWorkspaceObjectsFunc(workspace.File, "databricks_workspace_file", "workspace_file"),
+		WorkspaceLevel: true,
+		Service:        "notebooks",
+		Name:           workspaceObjectResouceName,
+		List:           createListWorkspaceObjectsFunc(workspace.File, "databricks_workspace_file", "workspace_file"),
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -1353,7 +1401,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			name := r.ID[1:]
+			objectId := r.Data.Get("object_id").(int)
+			parts := strings.Split(r.ID, "/")
+			plen := len(parts)
+			if idx := strings.Index(parts[plen-1], "."); idx != -1 {
+				parts[plen-1] = parts[plen-1][:idx] + "_" + strconv.Itoa(objectId) + parts[plen-1][idx:]
+			} else {
+				parts[plen-1] = parts[plen-1] + "_" + strconv.Itoa(objectId)
+			}
+			name := fileNameNormalizationRegex.ReplaceAllString(strings.Join(parts, "/")[1:], "_")
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
 			fileName, err := ic.createFileIn("workspace_files", name, []byte(content))
 			if err != nil {
@@ -1363,7 +1419,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/files/%d", r.Data.Get("object_id").(int)),
+					ID:       fmt.Sprintf("/files/%d", objectId),
 					Name:     "ws_file_" + ic.Importables["databricks_workspace_file"].Name(ic, r.Data),
 				})
 			}
@@ -1390,7 +1446,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_query": {
-		Service: "sql-queries",
+		WorkspaceLevel: true,
+		Service:        "sql-queries",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("name").(string) + "_" + d.Id()
 		},
@@ -1472,7 +1529,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_endpoint": {
-		Service: "sql-endpoints",
+		WorkspaceLevel: true,
+		Service:        "sql-endpoints",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -1513,7 +1571,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_global_config": {
-		Service: "sql-endpoints",
+		WorkspaceLevel: true,
+		Service:        "sql-endpoints",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return "sql_global_config"
 		},
@@ -1541,7 +1600,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_dashboard": {
-		Service: "sql-dashboards",
+		WorkspaceLevel: true,
+		Service:        "sql-dashboards",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("name").(string) + "_" + d.Id()
 		},
@@ -1655,7 +1715,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_widget": {
-		Service: "sql-dashboards",
+		WorkspaceLevel: true,
+		Service:        "sql-dashboards",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Id()
 		},
@@ -1665,7 +1726,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_visualization": {
-		Service: "sql-dashboards",
+		WorkspaceLevel: true,
+		Service:        "sql-dashboards",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string) + "_" + d.Id()
 			return name
@@ -1675,7 +1737,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_sql_alert": {
-		Service: "sql-alerts",
+		WorkspaceLevel: true,
+		Service:        "sql-alerts",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return d.Get("name").(string) + "_" + d.Id()
 		},
@@ -1742,7 +1805,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_pipeline": {
-		Service: "dlt",
+		WorkspaceLevel: true,
+		Service:        "dlt",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -1853,8 +1917,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_directory": {
-		Service: "directories",
-		Name:    workspaceObjectResouceName,
+		WorkspaceLevel: true,
+		Service:        "directories",
+		Name:           workspaceObjectResouceName,
 		Search: func(ic *importContext, r *resource) error {
 			directoryList := ic.getAllDirectories()
 			objId, err := strconv.ParseInt(r.Value, 10, 64)
@@ -1917,7 +1982,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_model_serving": {
-		Service: "model-serving",
+		WorkspaceLevel: true,
+		Service:        "model-serving",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			nameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(d.Id())))
 			return strings.ToLower(d.Id()) + "_" + nameMd5[:8]
@@ -1971,7 +2037,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_mlflow_webhook": {
-		Service: "mlflow-webhooks",
+		WorkspaceLevel: true,
+		Service:        "mlflow-webhooks",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return "webhook_" + d.Id()
 		},
@@ -2016,6 +2083,77 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "job_spec.access_token", Variable: true},
 			// We can enable it, but we don't know if authorization is set or not because API doesn't return it
 			// {Path: "http_url_spec.authorization", Variable: true},
+		},
+	},
+	"databricks_access_control_rule_set": {
+		AccountLevel: true,
+		Service:      "access",
+		// Name: func(ic *importContext, d *schema.ResourceData) string {
+		// 	return "webhook_" + d.Id()
+		// },
+		List: func(ic *importContext) error {
+			accountId := ic.Client.Config.AccountID
+			// emit default ruleset
+			ic.Emit(&resource{
+				Resource: "databricks_access_control_rule_set",
+				ID:       fmt.Sprintf("accounts/%s/ruleSets/default", accountId),
+			})
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			var rule iam.RuleSetResponse
+			s := ic.Resources["databricks_access_control_rule_set"].Schema
+			common.DataToStructPointer(r.Data, s, &rule)
+
+			for _, grant := range rule.GrantRules {
+				for _, principal := range grant.Principals {
+					parts := strings.Split(principal, "/")
+					if len(parts) != 2 {
+						log.Printf("[WARN] Incorrect principal: '%s'", principal)
+						continue
+					}
+					switch parts[0] {
+					case "users":
+						ic.Emit(&resource{
+							Resource:  "databricks_user",
+							Attribute: "user_name",
+							Value:     parts[1],
+						})
+					case "servicePrincipals":
+						ic.Emit(&resource{
+							Resource:  "databricks_service_principal",
+							Attribute: "application_id",
+							Value:     parts[1],
+						})
+					case "groups":
+						ic.Emit(&resource{
+							Resource:  "databricks_group",
+							Attribute: "display_name",
+							Value:     parts[1],
+						})
+					default:
+						log.Printf("[WARN] Unknown principal type: '%s'", parts[0])
+					}
+				}
+			}
+
+			return nil
+		},
+		Depends: []reference{
+			{Path: "grant_rules.principals", Resource: "databricks_user", Match: "acl_principal_id"},
+			{Path: "grant_rules.principals", Resource: "databricks_group", Match: "acl_principal_id"},
+			{Path: "grant_rules.principals", Resource: "databricks_service_principal", Match: "acl_principal_id"},
+			{Path: "name", Resource: "databricks_service_principal", Match: "application_id", MatchType: MatchRegexp,
+				Regexp: regexp.MustCompile("^accounts/[^/]+/servicePrincipals/([^/]+)/ruleSets/default$")},
+			{Path: "name", Resource: "databricks_group", MatchType: MatchRegexp,
+				Regexp: regexp.MustCompile("^accounts/[^/]+/groups/([^/]+)/ruleSets/default$")},
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			// We're ignoring ACLs without grant rules because we don't know about that at time of emitting from groups/service principals
+			var rule iam.RuleSetResponse
+			s := ic.Resources["databricks_access_control_rule_set"].Schema
+			common.DataToStructPointer(r.Data, s, &rule)
+			return len(rule.GrantRules) == 0
 		},
 	},
 }

@@ -139,7 +139,7 @@ var nameFixes = []regexFix{
 	{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
 		`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
 	//	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
-	{regexp.MustCompile(`@.*$`), ""},
+	// {regexp.MustCompile(`@.*$`), ""},
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
 	{regexp.MustCompile(`\W+`), "_"},
 	{regexp.MustCompile(`[_]{2,}`), "_"},
@@ -287,15 +287,15 @@ func (ic *importContext) Run() error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
-	w, err := ic.Client.WorkspaceClient()
-	if err != nil {
-		return err
-	}
 
 	ic.accountLevel = ic.Client.Config.IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
 	} else {
+		w, err := ic.Client.WorkspaceClient()
+		if err != nil {
+			return err
+		}
 		me, err := w.CurrentUser.Me(ic.Context)
 		if err != nil {
 			return err
@@ -326,7 +326,11 @@ func (ic *importContext) Run() error {
 			continue
 		}
 		if ic.accountLevel && !ir.AccountLevel {
-			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
+			log.Printf("[DEBUG] %s (%s service) is not a account level resource", resourceName, ir.Service)
+			continue
+		}
+		if !ic.accountLevel && !ir.WorkspaceLevel {
+			log.Printf("[DEBUG] %s (%s service) is not a workspace level resource", resourceName, ir.Service)
 			continue
 		}
 		ic.waitGroup.Add(1)
@@ -764,14 +768,15 @@ func (ic *importContext) ResourceName(r *resource) string {
 		name = r.ID
 	}
 	name = ic.prefix + name
+	origCaseName := name
 	name = strings.ToLower(name)
 	name = ic.regexFix(name, ic.nameFixes)
 	// this is either numeric id or all-non-ascii
 	if regexp.MustCompile(`^\d`).MatchString(name) || name == "" {
 		if name == "" {
-			name = r.ID
+			origCaseName = r.ID
 		}
-		name = fmt.Sprintf("r%x", md5.Sum([]byte(name)))[0:12]
+		name = fmt.Sprintf("r%x", md5.Sum([]byte(origCaseName)))[0:12]
 	}
 	return name
 }
@@ -828,6 +833,12 @@ func (ic *importContext) Emit(r *resource) {
 	}
 }
 
+func maybeAddQuoteCharacter(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, "\"", "\\\"")
+	return s
+}
+
 func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrite.Tokens {
 	matchType := ref.MatchTypeValue()
 	attr := ref.MatchAttribute()
@@ -848,18 +859,18 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"', '$', '{'}}}
 		tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
-		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(rest)})
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(rest))})
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
 		return tokens
 	case MatchRegexp:
 		indices := ref.Regexp.FindStringSubmatchIndex(value)
 		if len(indices) == 4 {
 			tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}}}
-			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(value[0:indices[2]])})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[0:indices[2]]))})
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'$', '{'}})
 			tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
-			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(value[indices[3]:])})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[indices[3]:]))})
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
 			return tokens
 		}

@@ -79,8 +79,9 @@ provider "databricks" {
 }
 
 provider "databricks" {
-  alias = "accounts"
-  host  = "https://accounts.azuredatabricks.net"
+  alias      = "accounts"
+  host       = "https://accounts.azuredatabricks.net"
+  account_id = var.databricks_account_id
 }
 ```
 
@@ -263,7 +264,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
+    privileges = ["CREATE_EXTERNAL_TABLE"]
   }
 }
 
@@ -284,7 +285,7 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE", "READ_FILES"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
 }
 ```

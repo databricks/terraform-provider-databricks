@@ -9,9 +9,9 @@ import (
 )
 
 func commonFixtures(name string) []qa.HTTPFixture {
-	resource := "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0"
+	resource := "/api/2.1/jobs/list?expand_tasks=false&limit=25"
 	if name != "" {
-		resource = fmt.Sprintf("/api/2.1/jobs/list?expand_tasks=true&limit=25&name=%s&offset=0", name)
+		resource = fmt.Sprintf("/api/2.1/jobs/list?expand_tasks=true&limit=25&name=%s", name)
 	}
 	return []qa.HTTPFixture{
 		{
@@ -195,7 +195,7 @@ func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=true&limit=25&name=Third&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=true&limit=25&name=Third",
 				Response: JobListResponse{
 					Jobs: []Job{},
 				},

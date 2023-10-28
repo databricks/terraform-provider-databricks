@@ -106,3 +106,51 @@ type PrivateAccessSettings struct {
 	PrivateAccessLevel    string   `json:"private_access_level,omitempty" tf:"default:ACCOUNT"`
 	AllowedVpcEndpointIDS []string `json:"allowed_vpc_endpoint_ids,omitempty"`
 }
+
+// AzureServiceEndpointRule is the object containing the service endpoints that the Network Connectivity Config attaches to
+type AzureServiceEndpointRule struct {
+	TargetRegion   string   `json:"target_region,omitempty" tf:"computed"`
+	TargetServices []string `json:"target_services,omitempty" tf:"computed,slice_set"`
+	Subnets        []string `json:"subnets,omitempty" tf:"computed,slice_set"`
+}
+
+// NetworkConnectivityConfigDefaultRule defines the egress rules that are not specific to dedicated customer resources
+type NetworkConnectivityConfigDefaultRule struct {
+	AzureServiceEndpointRule *AzureServiceEndpointRule `json:"azure_service_endpoint_rule,omitempty" tf:"computed"`
+}
+
+// NetworkConnectivityConfigAzurePrivateEndpointRule defines Azure private endpoint rules that provides dedicated
+// private connectivity to designated resources
+type NetworkConnectivityConfigAzurePrivateEndpointRule struct {
+	RuleID                      string `json:"rule_id,omitempty" tf:"computed"`
+	NetworkConnectivityConfigID string `json:"network_connectivity_config_id"`
+	ResourceID                  string `json:"resource_id"`
+	GroupID                     string `json:"group_id"`
+	EndpointName                string `json:"endpoint_name,omitempty" tf:"computed"`
+	ConnectionState             string `json:"connection_state,omitempty" tf:"computed"`
+	CreationTime                int64  `json:"creation_time,omitempty" tf:"computed"`
+	UpdatedTime                 int64  `json:"updated_time,omitempty" tf:"computed"`
+}
+
+// NetworkConnectivityConfigTargetRule defines the egress rules that are specific to dedicated customer resources
+type NetworkConnectivityConfigTargetRule struct {
+	AzurePrivateEndpointRules []NetworkConnectivityConfigAzurePrivateEndpointRule `json:"azure_private_endpoint_rules,omitempty" tf:"slice_set"`
+}
+
+// NetworkConnectivityConfigEgressConfig defines the egress network rules that applies to Databricks serverless clusters
+type NetworkConnectivityConfigEgressConfig struct {
+	DefaultRules *NetworkConnectivityConfigDefaultRule `json:"default_rules,omitempty"`
+	TargetRules  *NetworkConnectivityConfigTargetRule  `json:"target_rules,omitempty"`
+}
+
+// NetworkConnectivityConfig defines the network connectivity configuration for a Databricks workspace
+type NetworkConnectivityConfig struct {
+	NetworkConnectivityConfigID string                                 `json:"network_connectivity_config_id,omitempty" tf:"computed"`
+	AccountID                   string                                 `json:"account_id" tf:"sensitive"`
+	Name                        string                                 `json:"name"`
+	Region                      string                                 `json:"region"`
+	EgressConfig                *NetworkConnectivityConfigEgressConfig `json:"egress_config,omitempty" tf:"computed"`
+	Version                     int64                                  `json:"version,omitempty" tf:"computed"`
+	CreationTime                int64                                  `json:"creation_time,omitempty" tf:"computed"`
+	UpdatedTime                 int64                                  `json:"updated_time,omitempty" tf:"computed"`
+}

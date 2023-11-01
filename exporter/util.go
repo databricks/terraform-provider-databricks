@@ -197,10 +197,10 @@ func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 	return ic.allWorkspaceObjects
 }
 
-func (ic *importContext) emitGroups(u scim.User, principal string) {
+func (ic *importContext) emitGroups(u scim.User) {
 	for _, g := range u.Groups {
 		if g.Type != "direct" {
-			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, principal)
+			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, u.DisplayName)
 			continue
 		}
 		ic.Emit(&resource{
@@ -210,7 +210,7 @@ func (ic *importContext) emitGroups(u scim.User, principal string) {
 		ic.Emit(&resource{
 			Resource: "databricks_group_member",
 			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-			Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, principal),
+			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
 		})
 	}
 }

@@ -68,8 +68,8 @@ func (a ServicePrincipalsAPI) Patch(servicePrincipalID string, r patchRequest) e
 }
 
 // Update replaces resource-friendly-entity
-func (a ServicePrincipalsAPI) Update(servicePrincipalID string, attributes string, updateRequest User) error {
-	servicePrincipal, err := a.Read(servicePrincipalID, attributes)
+func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest User) error {
+	servicePrincipal, err := a.Read(servicePrincipalID, "groups")
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			if c.IsAzure() {
 				applicationId = d.Get("application_id").(string)
 			}
-			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), userAttributes, User{
+			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), User{
 				DisplayName:   d.Get("display_name").(string),
 				Active:        d.Get("active").(bool),
 				Entitlements:  readEntitlementsFromData(d),
@@ -260,5 +260,5 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 	}
 	sp := spList[0]
 	d.SetId(sp.ID)
-	return spAPI.Update(d.Id(), userAttributes, u)
+	return spAPI.Update(d.Id(), u)
 }

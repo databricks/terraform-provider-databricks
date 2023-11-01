@@ -158,7 +158,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=groups",
 				Response: User{
 					// application ID is created by platform on AWS
 					ApplicationID: "existing-application-id",
@@ -260,7 +260,7 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=groups",
 				Response: User{
 					// application id is specified by user on Azure
 					ApplicationID: "existing-application-id",
@@ -612,7 +612,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=groups",
 			Response: User{
 				ID: "abc",
 			},

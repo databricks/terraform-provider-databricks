@@ -623,7 +623,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for offset, policy := range policies {
-				log.Printf("[INFO] Scanning %d:  %v", offset+1, policy)
+				log.Printf("[TRACE] Scanning %d:  %v", offset+1, policy)
 				if slices.Contains(predefinedClusterPolicies, policy.Name) {
 					continue
 				}
@@ -890,11 +890,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			userName := u.DisplayName
-			if userName == "" {
-				userName = u.UserName
-			}
-			ic.emitGroups(u, userName)
+			ic.emitGroups(u)
 			ic.emitRoles("user", u.ID, u.Roles)
 			return nil
 		},
@@ -944,11 +940,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			spnName := u.DisplayName
-			if spnName == "" {
-				spnName = u.ApplicationID
-			}
-			ic.emitGroups(u, spnName)
+			ic.emitGroups(u)
 			ic.emitRoles("service_principal", u.ID, u.Roles)
 			if ic.accountLevel {
 				ic.Emit(&resource{

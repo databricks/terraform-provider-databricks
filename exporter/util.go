@@ -272,12 +272,34 @@ func (ic *importContext) cacheGroups() error {
 	defer ic.groupsMutex.Unlock()
 	if ic.allGroups == nil {
 		log.Printf("[INFO] Caching groups in memory ...")
-		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
-		g, err := groupsAPI.Filter("")
+		var groups []iam.Group
+		var err error
+		if ic.accountLevel {
+			groups, err = ic.accountClient.Groups.ListAll(ic.Context, iam.ListAccountGroupsRequest{
+				Attributes: "id",
+			})
+		} else {
+			groups, err = ic.workspaceClient.Groups.ListAll(ic.Context, iam.ListGroupsRequest{
+				Attributes: "id",
+			})
+		}
 		if err != nil {
+			log.Printf("[WARN] can't fetch list of groups")
 			return err
 		}
-		ic.allGroups = g.Resources
+		api := scim.NewGroupsAPI(ic.Context, ic.Client)
+		ic.allGroups = make([]scim.Group, 0, len(groups))
+		for i, g := range groups {
+			group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members")
+			if err != nil {
+				log.Printf("[ERROR] Error reading group with ID %s", g.Id)
+				continue
+			}
+			ic.allGroups = append(ic.allGroups, group)
+			if (i+1)%10 == 0 {
+				log.Printf("[DEBUG] Read %d out of %d groups", i+1, len(groups))
+			}
+		}
 		log.Printf("[INFO] Cached %d groups", len(ic.allGroups))
 	}
 	return nil

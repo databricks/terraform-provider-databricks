@@ -423,20 +423,39 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?",
+				Resource: "/api/2.0/preview/scim/v2/Groups?attributes=id",
 				Response: scim.GroupList{
 					Resources: []scim.Group{
-						// TODO: add another user for which there is no filter resut
-						{ID: "a", DisplayName: "admins",
-							Members: []scim.ComplexValue{
-								{Display: "test@test.com", Value: "123", Ref: "Users/123"},
-								{Display: "Test group", Value: "f", Ref: "Groups/f"},
-								{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
-							},
-						},
-						{ID: "b", DisplayName: "users"},
-						{ID: "c", DisplayName: "test"},
+						{ID: "a"},
+						{ID: "b"},
+						{ID: "c"},
+					}},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/a",
+				Response: scim.Group{
+					// TODO: add another user for which there is no filter resut
+					ID: "a", DisplayName: "admins",
+					Members: []scim.ComplexValue{
+						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+						{Display: "Test group", Value: "f", Ref: "Groups/f"},
+						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
 					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/b",
+				Response: scim.Group{
+					ID: "b", DisplayName: "users",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/c",
+				Response: scim.Group{
+					ID: "b", DisplayName: "test",
 				},
 			},
 			{
@@ -606,7 +625,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			dummyWorkspaceConf,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?",
+				Resource: "/api/2.0/preview/scim/v2/Groups?attributes=id",
 				Response: scim.GroupList{Resources: []scim.Group{}},
 			},
 			emptyGitCredentials,

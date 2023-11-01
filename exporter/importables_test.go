@@ -423,7 +423,7 @@ func TestGroupCacheError(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Groups?",
+			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id",
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},

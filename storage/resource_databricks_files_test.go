@@ -4,6 +4,5 @@ import (
 	"testing"
 )
 
-func TestResourceFiles(t *testing.T) {
-
+func TestResourceFilesCreate(t *testing.T) {
 }

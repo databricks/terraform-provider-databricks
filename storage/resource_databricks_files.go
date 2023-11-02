@@ -2,9 +2,12 @@ package storage
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/md5"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 
@@ -13,6 +16,30 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
+	source := data.Get("source").(string)
+	var reader io.ReadCloser
+	var err error
+	if source != "" {
+		reader, err = os.Open(source)
+		if err != nil {
+			return nil, err
+		}
+	}
+	contentBase64 := data.Get("content_base64").(string)
+	if contentBase64 != "" {
+		decodedString, err := base64.StdEncoding.DecodeString(contentBase64)
+		if err != nil {
+			return nil, err
+		}
+		reader = io.NopCloser(bytes.NewReader(decodedString))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return reader, err
+}
 
 func ResourceFiles() *schema.Resource {
 	s := workspace.FileContentSchema(map[string]*schema.Schema{
@@ -33,12 +60,10 @@ func ResourceFiles() *schema.Resource {
 				return err
 			}
 			path := data.Get("path").(string)
-			source := data.Get("source").(string)
-			reader, err := os.Open(source)
+			reader, err := getContentReader(data)
 			if err != nil {
 				return err
 			}
-
 			err = w.Files.Upload(ctx, files.UploadRequest{Contents: reader, FilePath: path})
 			if err != nil {
 				return err
@@ -82,8 +107,7 @@ func ResourceFiles() *schema.Resource {
 				return err
 			}
 			path := data.Id()
-			source := data.Get("source").(string)
-			reader, err := os.Open(source)
+			reader, err := getContentReader(data)
 			if err != nil {
 				return err
 			}

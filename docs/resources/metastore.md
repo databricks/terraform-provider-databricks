@@ -45,6 +45,23 @@ resource "databricks_metastore_assignment" "this" {
 }
 ```
 
+For GCP
+
+```hcl
+resource "databricks_metastore" "this" {
+  name          = "primary"
+  storage_root  = "gs://${google_storage_bucket.unity_metastore.name}"
+  owner         = "uc admins"
+  region        = us-east1
+  force_destroy = true
+}
+
+resource "databricks_metastore_assignment" "this" {
+  metastore_id = databricks_metastore.this.id
+  workspace_id = local.workspace_id
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:

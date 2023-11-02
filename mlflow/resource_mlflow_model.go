@@ -18,6 +18,10 @@ func ResourceMlflowModel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			}
+			s["registered_model_id"] = &schema.Schema{
+				Computed: true,
+				Type:     schema.TypeString,
+			}
 			return s
 		})
 
@@ -40,7 +44,6 @@ func ResourceMlflowModel() *schema.Resource {
 				return err
 			}
 			d.SetId(model.RegisteredModelDatabricks.Name)
-			d.Set("registered_model_id", model.RegisteredModelDatabricks.Id) // alias
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -55,7 +58,12 @@ func ResourceMlflowModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(res, s, d)
+			err = common.StructToData(res, s, d)
+			if err != nil {
+				return err
+			}
+			d.Set("registered_model_id", res.RegisteredModelDatabricks.Id) // alias
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

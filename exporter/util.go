@@ -22,6 +22,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+	"golang.org/x/exp/slices"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -95,13 +96,15 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	if userOrSPName == "" {
 		return
 	}
+	// TODO: think about another way of checking for a user. ideally we need to check against the
+	// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
 	if strings.Contains(userOrSPName, "@") {
 		ic.Emit(&resource{
 			Resource:  "databricks_user",
 			Attribute: "user_name",
 			Value:     userOrSPName,
 		})
-	} else if uuidRegex.MatchString(userOrSPName) {
+	} else if common.StringIsUUID(userOrSPName) {
 		ic.Emit(&resource{
 			Resource:  "databricks_service_principal",
 			Attribute: "application_id",
@@ -125,8 +128,10 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 	}
 	parts := strings.SplitN(path, "/", 4)
 	if len(parts) == 3 || (len(parts) == 4 && parts[3] == "") {
+		// TODO: think about another way of checking for a user. ideally we need to check against the
+		// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
 		userOrSPName := parts[2]
-		return strings.Contains(userOrSPName, "@") || uuidRegex.MatchString(userOrSPName)
+		return strings.Contains(userOrSPName, "@") || common.StringIsUUID(userOrSPName)
 	}
 	return false
 }
@@ -149,19 +154,45 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
 		objects := ic.getAllWorkspaceObjects()
-		for _, v := range objects {
-			if v.ObjectType == workspace.Directory {
-				ic.allDirectories = append(ic.allDirectories, v)
+		ic.wsObjectsMutex.Lock()
+		defer ic.wsObjectsMutex.Unlock()
+		if len(ic.allDirectories) == 0 {
+			for _, v := range objects {
+				if v.ObjectType == workspace.Directory {
+					ic.allDirectories = append(ic.allDirectories, v)
+				}
 			}
 		}
 	}
 	return ic.allDirectories
 }
 
+// TODO: Ignore databricks_automl as well?
+var directoriesToIgnore = []string{".ide", ".bundle", "__pycache__"}
+
+func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
+	if v.ObjectType != workspace.Directory {
+		return true
+	}
+	parts := strings.Split(v.Path, "/")
+	result := len(parts) > 1 && slices.Contains[[]string, string](directoriesToIgnore, parts[len(parts)-1])
+	if result {
+		log.Printf("[DEBUG] Ignoring directory %s", v.Path)
+	}
+	return !result
+}
+
 func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
+	ic.wsObjectsMutex.Lock()
+	defer ic.wsObjectsMutex.Unlock()
 	if len(ic.allWorkspaceObjects) == 0 {
+		t1 := time.Now()
+		log.Printf("[DEBUG] %v. Starting to list all workspace objects", t1.Local().Format(time.RFC3339))
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allWorkspaceObjects, _ = notebooksAPI.List("/", true, true)
+		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories)
+		t2 := time.Now()
+		log.Printf("[DEBUG] %v. Finished listing of all workspace objects. %d objects in total. %v seconds",
+			t2.Local().Format(time.RFC3339), len(ic.allWorkspaceObjects), t2.Sub(t1).Seconds())
 	}
 	return ic.allWorkspaceObjects
 }
@@ -169,7 +200,7 @@ func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 func (ic *importContext) emitGroups(u scim.User, principal string) {
 	for _, g := range u.Groups {
 		if g.Type != "direct" {
-			log.Printf("Skipping non-direct group %s/%s for %s", g.Value, g.Display, principal)
+			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, principal)
 			continue
 		}
 		ic.Emit(&resource{
@@ -234,7 +265,9 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 }
 
 func (ic *importContext) cacheGroups() error {
-	if len(ic.allGroups) == 0 {
+	ic.groupsMutex.Lock()
+	defer ic.groupsMutex.Unlock()
+	if ic.allGroups == nil {
 		log.Printf("[INFO] Caching groups in memory ...")
 		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
 		g, err := groupsAPI.Filter("")
@@ -247,7 +280,25 @@ func (ic *importContext) cacheGroups() error {
 	return nil
 }
 
+const (
+	nonExistingUserOrSp = "__USER_OR_SPN_DOES_NOT_EXIST__"
+)
+
 func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
+	log.Printf("[DEBUG] Looking for user %s", name)
+	ic.usersMutex.RLocker().Lock()
+	user, exists := ic.allUsers[name]
+	ic.usersMutex.RLocker().Unlock()
+	if exists {
+		if user.UserName == nonExistingUserOrSp {
+			log.Printf("[DEBUG] non-existing user %s is found in the cache", name)
+			err = fmt.Errorf("user %s not found", name)
+		} else {
+			log.Printf("[DEBUG] existing user %s is found in the cache", name)
+			u = user
+		}
+		return
+	}
 	a := scim.NewUsersAPI(ic.Context, ic.Client)
 	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name), false)
 	if err != nil {
@@ -255,13 +306,31 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	}
 	if len(users) == 0 {
 		err = fmt.Errorf("user %s not found", name)
-		return
+		u = scim.User{UserName: nonExistingUserOrSp}
+	} else {
+		u = users[0]
 	}
-	u = users[0]
+	ic.usersMutex.Lock()
+	ic.allUsers[name] = u
+	ic.usersMutex.Unlock()
 	return
 }
 
 func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
+	log.Printf("[DEBUG] Looking for SP %s", applicationID)
+	ic.spsMutex.RLocker().Lock()
+	sp, exists := ic.allSps[applicationID]
+	ic.spsMutex.RLocker().Unlock()
+	if exists {
+		if sp.ApplicationID == nonExistingUserOrSp {
+			log.Printf("[DEBUG] non-existing SP %s is found in the cache", applicationID)
+			err = fmt.Errorf("user %s not found", applicationID)
+		} else {
+			log.Printf("[DEBUG] existing SP %s is found in the cache", applicationID)
+			u = sp
+		}
+		return
+	}
 	a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
 	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")), false)
 	if err != nil {
@@ -269,9 +338,14 @@ func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err 
 	}
 	if len(users) == 0 {
 		err = fmt.Errorf("service principal %s not found", applicationID)
-		return
+		u = scim.User{ApplicationID: nonExistingUserOrSp}
+	} else {
+		u = users[0]
 	}
-	u = users[0]
+	ic.usersMutex.Lock()
+	ic.allSps[applicationID] = u
+	ic.usersMutex.Unlock()
+
 	return
 }
 
@@ -322,6 +396,8 @@ func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, 
 }
 
 func (ic *importContext) getSqlDataSources() (map[string]string, error) {
+	ic.sqlDatasourcesMutex.Lock()
+	defer ic.sqlDatasourcesMutex.Unlock()
 	if ic.sqlDatasources == nil {
 		var dss []sql.DataSource
 		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
@@ -469,35 +545,11 @@ func eitherString(a any, b any) string {
 }
 
 func (ic *importContext) importJobs(l []jobs.Job) {
-	nowSeconds := time.Now().Unix()
-	a := jobs.NewJobsAPI(ic.Context, ic.Client)
-	starterAfter := (nowSeconds - (ic.lastActiveDays * 24 * 60 * 60)) * 1000
 	i := 0
 	for offset, job := range l {
 		if !ic.MatchesName(job.Settings.Name) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
-		}
-		if ic.lastActiveDays != 3650 {
-			rl, err := a.RunsList(jobs.JobRunsListRequest{
-				JobID:         job.JobID,
-				CompletedOnly: true,
-				Limit:         1,
-			})
-			if err != nil {
-				log.Printf("[WARN] Failed to get runs: %s", err)
-				continue
-			}
-			if len(rl.Runs) == 0 {
-				log.Printf("[INFO] Job %#v (%d) did never run. Skipping", job.Settings.Name, job.JobID)
-				continue
-			}
-			if rl.Runs[0].StartTime < starterAfter {
-				log.Printf("[INFO] Job %#v (%d) didn't run for %d days. Skipping",
-					job.Settings.Name, job.JobID,
-					(nowSeconds*1000-rl.Runs[0].StartTime)/24*60*60/1000)
-				continue
-			}
 		}
 		ic.Emit(&resource{
 			Resource: "databricks_job",
@@ -615,6 +667,7 @@ func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
 
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
+		// TODO: can we pass a visitor here, that will emit corresponding object earlier?
 		objectsList := ic.getAllWorkspaceObjects()
 		updatedSinceMs := ic.getUpdatedSinceMs()
 		for offset, object := range objectsList {
@@ -625,7 +678,7 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 				continue
 			}
 			modifiedAt := wsObjectGetModifiedAt(object)
-			if ic.incremental && modifiedAt != 0 && modifiedAt < updatedSinceMs {
+			if ic.incremental && modifiedAt < updatedSinceMs {
 				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
 					modifiedAt, updatedSinceMs)
 				continue
@@ -659,9 +712,16 @@ func (ic *importContext) getUpdatedSinceStr() string {
 }
 
 func (ic *importContext) getUpdatedSinceMs() int64 {
-	if ic.updatedSinceMs == 0 {
-		tm, _ := time.Parse(time.RFC3339, ic.updatedSinceStr)
-		ic.updatedSinceMs = tm.UnixMilli()
-	}
 	return ic.updatedSinceMs
+}
+
+func getEnvAsInt(envName string, defaultValue int) int {
+	if val, exists := os.LookupEnv(envName); exists {
+		parsedVal, err := strconv.Atoi(val)
+		if err == nil {
+			return parsedVal
+		}
+		log.Printf("[ERROR] Can't parse value '%s' of environment variable '%s'", val, envName)
+	}
+	return defaultValue
 }

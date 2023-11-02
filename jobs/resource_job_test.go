@@ -48,9 +48,15 @@ func TestResourceJobCreate(t *testing.T) {
 					MinRetryIntervalMillis: 5000,
 					RetryOnTimeout:         true,
 					MaxConcurrentRuns:      1,
-					Queue:                  &Queue{},
+					Queue: &jobs.QueueSettings{
+						Enabled: true,
+					},
 					RunAs: &JobRunAs{
 						UserName: "user@mail.com",
+					},
+					Deployment: &jobs.JobDeployment{
+						Kind:             "BUNDLE",
+						MetadataFilePath: "/a/b/c",
 					},
 				},
 				Response: Job{
@@ -86,9 +92,15 @@ func TestResourceJobCreate(t *testing.T) {
 							TimezoneID:           "America/Los_Angeles",
 							PauseStatus:          "PAUSED",
 						},
-						Queue: &Queue{},
+						Queue: &jobs.QueueSettings{
+							Enabled: true,
+						},
 						RunAs: &JobRunAs{
 							UserName: "user@mail.com",
+						},
+						Deployment: &jobs.JobDeployment{
+							Kind:             "BUNDLE",
+							MetadataFilePath: "/a/b/c",
 						},
 					},
 				},
@@ -116,9 +128,15 @@ func TestResourceJobCreate(t *testing.T) {
 		library {
 			jar = "dbfs://ff/gg/hh.jar"
 		}
-		queue {}
+		queue {
+			enabled = true
+		}
 		run_as {
 			user_name = "user@mail.com"
+		}
+		deployment {
+			kind = "BUNDLE"
+			metadata_file_path = "/a/b/c"
 		}`,
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -272,6 +290,67 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_ConditionTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "ConditionTaskTesting",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "a",
+							ConditionTask: &jobs.ConditionTask{
+								Left:  "123",
+								Op:    "EQUAL_TO",
+								Right: "123",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+				Response: Job{
+					JobID: 231,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=231",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "a",
+								ConditionTask: &jobs.ConditionTask{
+									Left:  "123",
+									Op:    "EQUAL_TO",
+									Right: "123",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "ConditionTaskTesting"
+	
+		task {
+			task_key = "a"
+			condition_task {
+				left = "123"
+				op = "EQUAL_TO"
+				right = "123"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "231", d.Id())
+}
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -2178,7 +2257,7 @@ func TestJobsAPIList(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{
@@ -2199,26 +2278,26 @@ func TestJobsAPIListMultiplePages(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{
 						JobID: 1,
 					},
 				},
-				HasMore: true,
+				HasMore:       true,
+				NextPageToken: "aaaa",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=1",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&page_token=aaaa",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{
 						JobID: 2,
 					},
 				},
-				HasMore: false,
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -2233,7 +2312,7 @@ func TestJobsAPIListByName(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&name=test&offset=0",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&name=test",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{

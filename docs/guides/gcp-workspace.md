@@ -1,5 +1,5 @@
 ---
-page_title: "Provisioning Databricks workspaces on GCP"
+page_title: "Provisioning Databricks workspaces on GCP."
 ---
 
 # Provisioning Databricks workspaces on GCP
@@ -8,7 +8,7 @@ You can provision multiple Databricks workspaces with Terraform.
 
 ## Creating a GCP service account for Databricks Provisioning
 
-This guide assumes that you are already familiar with Hashicorp Terraform and provisioned some of the Google Compute Cloud infrastructure with it. To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. You can use the following Terraform configuration to create a Service Account for Databricks Provisioning, which can be impersonated by a list of principals defined in `delegate_from` variable. Service Account would be automatically assigned to the newly created Databricks Workspace Creator custom role
+This guide assumes that you are already familiar with Hashicorp Terraform and have provisioned some of the Google Compute Cloud infrastructure. To work with Databricks in GCP in an automated way, please create a service account and manually add it to the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. You can use the following Terraform configuration to create a Service Account for Databricks Provisioning, which can be impersonated by a list of principals defined in `delegate_from` variable. Service Account would be automatically assigned to the newly created Databricks Workspace Creator custom role:
 
 ```hcl
 variable "prefix" {}
@@ -84,13 +84,13 @@ resource "google_project_iam_member" "sa2_can_create_workspaces" {
 }
 ```
 
-After you’ve added Service Account to Databricks Accounts Console, please copy its name into `databricks_google_service_account` variable. If you prefer environment variables - `DATABRICKS_GOOGLE_SERVICE_ACCOUNT` is the one you’ll use instead. Please also copy Account ID into `databricks_account_id` variable.
+After you’ve added the Service Account to Databricks Accounts Console, please copy its name into `databricks_google_service_account` variable. If you prefer environment variables - `DATABRICKS_GOOGLE_SERVICE_ACCOUNT` is the one you’ll use instead. Please also copy the Account ID into `databricks_account_id` variable.
 
 ## Authenticate with Databricks account API
 
-Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). The `gcloud` command is available after installing the SDK. Then run the following commands
+Databricks account-level APIs can only be called by account owners and account admins and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). The `gcloud` command is available after installing the SDK. Then run the following commands:
 
-* `gcloud auth application-default login` to authorise your user with Google Cloud Platform. (If you want to use your [service account's credentials instead](https://cloud.google.com/docs/authentication/provide-credentials-adc#local-key), set the environment variable `GOOGLE_APPLICATION_CREDENTIALS` to the path of the JSON file that contains your service account key)
+* `gcloud auth application-default login` to authorize your user with Google Cloud Platform. (If you want to use your [service account's credentials instead](https://cloud.google.com/docs/authentication/provide-credentials-adc#local-key), set the environment variable `GOOGLE_APPLICATION_CREDENTIALS` to the path of the JSON file that contains your service account key)
 * `terraform init` to load Google and Databricks Terraform providers.
 * `terraform apply` to apply the configuration changes. Terraform will use your credential to impersonate the service account specified in `databricks_google_service_account` to call the Databricks account-level API.
 
@@ -148,7 +148,7 @@ resource "random_string" "suffix" {
 
 ## Creating a VPC
 
-The very first step is VPC creation with necessary resources. Please consult [main documentation page](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. A GCP VPC is registered as [databricks_mws_networks](../resources/mws_networks.md) resource.
+The very first step is VPC creation with the necessary resources. Please consult [main documentation page](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. A GCP VPC is registered as [databricks_mws_networks](../resources/mws_networks.md) resource.
 
 ```hcl
 resource "google_compute_network" "dbx_private_vpc" {
@@ -208,7 +208,7 @@ Once [the VPC](#creating-a-vpc) is set up, you can create Databricks workspace t
 
 Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.accounts` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, which have to be used in the latter modules.
 
--> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](../index.md#environment-variables) don't [conflict with other](../index.md#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, that should indicate authentication attributes used. The other common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article.
+-> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](../index.md#environment-variables) don't [conflict with other](../index.md#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, indicating authentication attributes used. The other common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article.
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
@@ -248,7 +248,7 @@ output "databricks_token" {
 
 ### Data resources and Authentication is not configured errors
 
-*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `default auth: cannot configure default credentials` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `default auth: cannot configure default credentials` error is raised. To work around this issue and guarantee proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if a workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier if your usage involves data resources.
 
 ```hcl
 data "databricks_current_user" "me" {
@@ -267,4 +267,4 @@ provider "databricks" {
 }
 ```
 
-We assume that you have a terraform module in your project that creats a workspace (using [Databricks Workspace](#creating-a-databricks-workspace) section) and you named it as `dbx_gcp` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token during workspace creation to authenticate to the created workspace.
+We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#creating-a-databricks-workspace) section), and you named it as `dbx_gcp` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.

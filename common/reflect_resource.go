@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -36,6 +37,18 @@ var kindMap = map[reflect.Kind]string{
 	reflect.String:        "String",
 	reflect.Struct:        "Struct",
 	reflect.UnsafePointer: "UnsafePointer",
+}
+
+var basicTypes = map[schema.ValueType]bool{
+	schema.TypeInt:    true,
+	schema.TypeString: true,
+	schema.TypeBool:   true,
+	schema.TypeFloat:  true,
+}
+
+func isBasicType(v schema.ValueType) bool {
+	b, ok := basicTypes[v]
+	return b && ok
 }
 
 func reflectKind(k reflect.Kind) string {
@@ -487,6 +500,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 // TF SDK - feel free to replace the usages of this interface in a PR.
 type attributeGetter interface {
 	GetOk(key string) (any, bool)
+	GetOkExists(key string) (any, bool)
 }
 
 // DiffToStructPointer reads resource diff with given schema onto result pointer. Panics.
@@ -524,9 +538,17 @@ func DataToReflectValue(d *schema.ResourceData, r *schema.Resource, rv reflect.V
 
 func readReflectValueFromData(path []string, d attributeGetter,
 	rv reflect.Value, s map[string]*schema.Schema) error {
-	return iterFields(rv, path, s, func(fieldSchema *schema.Schema,
+	names := getJsonToFieldNameMap(rv.Type())
+	forceSendFields := []string{}
+	err := iterFields(rv, path, s, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
 		fieldPath := strings.Join(path, ".")
+		alias := path[len(path)-1]
+		// GetOk returns false for default fields.
+		// Using GetOkExists determine which fields should be added to ForceSendFields.
+		if _, exists := d.GetOkExists(fieldPath); exists && isBasicType(fieldSchema.Type) {
+			forceSendFields = append(forceSendFields, names[alias])
+		}
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
 			return nil
@@ -575,6 +597,35 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return setForceSendFields(rv, forceSendFields)
+}
+
+func setForceSendFields(rv reflect.Value, presentFields []string) error {
+	if len(presentFields) == 0 {
+		return nil
+	}
+
+	if rv.Kind() != reflect.Ptr && rv.Kind() != reflect.Struct {
+		return nil
+	}
+
+	field := rv.FieldByName("ForceSendFields")
+
+	if !field.IsValid() {
+		return nil
+	}
+
+	if !field.CanSet() || field.Kind() != reflect.Slice {
+		return errors.New("cannot set field")
+	}
+
+	presentFieldsValue := reflect.ValueOf(presentFields)
+	field.Set(presentFieldsValue)
+
+	return nil
 }
 
 func primitiveReflectValueFromInterface(rk reflect.Kind,

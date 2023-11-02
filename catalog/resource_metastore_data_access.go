@@ -22,21 +22,6 @@ type GcpServiceAccountKey struct {
 	PrivateKey   string `json:"private_key" tf:"sensitive"`
 }
 
-type DbGcpServiceAccount struct {
-	Email string `json:"email,omitempty" tf:"computed"`
-}
-
-type DataAccessConfiguration struct {
-	ID                string                         `json:"id,omitempty" tf:"computed"`
-	Name              string                         `json:"name"`
-	ConfigurationType string                         `json:"configuration_type,omitempty" tf:"computed"`
-	Aws               *AwsIamRole                    `json:"aws_iam_role,omitempty" tf:"group:access"`
-	Azure             *catalog.AzureServicePrincipal `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI              *catalog.AzureManagedIdentity  `json:"azure_managed_identity,omitempty" tf:"group:access"`
-	GcpSAKey          *GcpServiceAccountKey          `json:"gcp_service_account_key,omitempty" tf:"group:access"`
-	DBGcpSA           *DbGcpServiceAccount           `json:"databricks_gcp_service_account,omitempty" tf:"group:access"`
-}
-
 var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity",
 	"gcp_service_account_key", "databricks_gcp_service_account"}
 
@@ -57,11 +42,18 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 	m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
 
 	common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
+	common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
+	common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
+
+	m["force_destroy"] = &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+	}
 
 	return m
 }
 
-var dacSchema = common.StructToSchema(DataAccessConfiguration{},
+var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["metastore_id"] = &schema.Schema{
 			Type:     schema.TypeString,
@@ -96,6 +88,11 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			tmpSchema := removeGcpSaField(dacSchema)
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
+
+			//manually add empty struct back for databricks_gcp_service_account
+			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
+				create.DatabricksGcpServiceAccount = struct{}{}
+			}
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				dac, err := acc.StorageCredentials.Create(ctx,
@@ -147,8 +144,8 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				var storageCredential *catalog.AccountsStorageCredentialInfo
 				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
-					MetastoreId: metastoreId,
-					Name:        dacName,
+					MetastoreId:           metastoreId,
+					StorageCredentialName: dacName,
 				})
 				if err != nil {
 					return err
@@ -160,7 +157,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				}
 				isDefault := metastore.StorageRootCredentialName == dacName
 				d.Set("is_default", isDefault)
-				return common.StructToData(storageCredential, dacSchema, d)
+				return common.StructToData(storageCredential.CredentialInfo, dacSchema, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				var storageCredential *catalog.StorageCredentialInfo
 				storageCredential, err = w.StorageCredentials.GetByName(ctx, dacName)
@@ -178,16 +175,21 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId, dacName, err := p.Unpack(d)
+			force := d.Get("force_destroy").(bool)
 			if err != nil {
 				return err
 			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
-					MetastoreId: metastoreId,
-					Name:        dacName,
+					MetastoreId:           metastoreId,
+					StorageCredentialName: dacName,
+					Force:                 force,
 				})
 			}, func(w *databricks.WorkspaceClient) error {
-				return w.StorageCredentials.DeleteByName(ctx, dacName)
+				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
+					Name:  dacName,
+					Force: force,
+				})
 			})
 		},
 	}.ToResource()

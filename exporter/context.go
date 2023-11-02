@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -26,7 +27,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -51,47 +51,82 @@ import (
     +--------------------+        +-----------------+       +-----------------+
 */
 
-type importContext struct {
-	Module              string
-	Context             context.Context
-	Client              *common.DatabricksClient
-	State               stateApproximation
-	Importables         map[string]importable
-	Resources           map[string]*schema.Resource
-	Scope               importedResources
-	Files               map[string]*hclwrite.File
-	Directory           string
-	importing           map[string]bool
-	nameFixes           []regexFix
-	hclFixes            []regexFix
-	allUsers            []scim.User
-	allGroups           []scim.Group
-	mountMap            map[string]mount
-	variables           map[string]string
-	testEmits           map[string]bool
-	sqlDatasources      map[string]string
-	workspaceConfKeys   map[string]any
-	allDirectories      []workspace.ObjectStatus
-	allWorkspaceObjects []workspace.ObjectStatus
+type resourceChannel chan *resource
 
+type importContext struct {
+	// not modified/used only in single thread
+	Module            string
+	Context           context.Context
+	Client            *common.DatabricksClient
+	Importables       map[string]importable
+	Resources         map[string]*schema.Resource
+	Files             map[string]*hclwrite.File
+	Directory         string
+	nameFixes         []regexFix
+	hclFixes          []regexFix
+	variables         map[string]string
+	workspaceConfKeys map[string]any
+
+	channels map[string]resourceChannel
+
+	// mutable resources
+	State stateApproximation
+	Scope importedResources
+
+	// command-line resources (immutable, or set by the single thread)
 	includeUserDomains  bool
 	importAllUsers      bool
 	debug               bool
 	incremental         bool
 	mounts              bool
+	noFormat            bool
 	services            string
 	listing             string
 	match               string
 	lastActiveDays      int64
 	lastActiveMs        int64
-	updatedSinceStr     string
-	updatedSinceMs      int64
 	generateDeclaration bool
 	meAdmin             bool
 	prefix              string
 	accountLevel        bool
 	shImports           map[string]bool
 	notebooksFormat     string
+	updatedSinceStr     string
+	updatedSinceMs      int64
+
+	waitGroup *sync.WaitGroup
+
+	// TODO: protect by mutex?
+	mountMap map[string]mount
+
+	//
+	testEmits      map[string]bool
+	testEmitsMutex sync.Mutex
+
+	//
+	allGroups   []scim.Group
+	groupsMutex sync.Mutex
+
+	//
+	allUsers   map[string]scim.User
+	usersMutex sync.RWMutex
+
+	//
+	allSps   map[string]scim.User
+	spsMutex sync.RWMutex
+
+	//
+	importing      map[string]bool
+	importingMutex sync.RWMutex
+
+	//
+	sqlDatasources      map[string]string
+	sqlDatasourcesMutex sync.Mutex
+
+	// workspace-related objects & corresponding mutex
+	allDirectories      []workspace.ObjectStatus
+	allWorkspaceObjects []workspace.ObjectStatus
+	wsObjectsMutex      sync.RWMutex
 }
 
 type mount struct {
@@ -104,7 +139,7 @@ var nameFixes = []regexFix{
 	{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
 		`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
 	//	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
-	{regexp.MustCompile(`@.*$`), ""},
+	// {regexp.MustCompile(`@.*$`), ""},
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
 	{regexp.MustCompile(`\W+`), "_"},
 	{regexp.MustCompile(`[_]{2,}`), "_"},
@@ -125,6 +160,34 @@ var workspaceConfKeys = map[string]any{
 	"enableDeprecatedGlobalInitScripts":                false,
 }
 
+const (
+	defaultChannelSize = 100000
+	defaultNumRoutines = 2
+	envVariablePrefix  = "EXPORTER_PARALLELISM_"
+)
+
+// increased concurrency limits, could be also overridden via environment variables with name: envVariablePrefix + resource type
+var goroutinesNumber = map[string]int{
+	"databricks_notebook":          7,
+	"databricks_directory":         5,
+	"databricks_workspace_file":    5,
+	"databricks_dbfs_file":         3,
+	"databricks_user":              1,
+	"databricks_service_principal": 1,
+	"databricks_sql_dashboard":     3,
+	"databricks_sql_query":         5,
+	"databricks_sql_alert":         2,
+	"databricks_permissions":       10,
+}
+
+func makeResourcesChannels(p *schema.Provider) map[string]resourceChannel {
+	channels := make(map[string]resourceChannel, len(p.ResourcesMap))
+	for r := range p.ResourcesMap {
+		channels[r] = make(resourceChannel, defaultChannelSize)
+	}
+	return channels
+}
+
 func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
@@ -136,6 +199,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		c *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, c)
 	})
+
 	return &importContext{
 		Client:      c,
 		Context:     ctx,
@@ -143,18 +207,21 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		Importables: resourcesMap,
 		Resources:   p.ResourcesMap,
 		Files:       map[string]*hclwrite.File{},
-		Scope:       []*resource{},
+		Scope:       importedResources{},
 		importing:   map[string]bool{},
 		nameFixes:   nameFixes,
 		hclFixes:    []regexFix{ // Be careful with that! it may break working code
 		},
-		allUsers:            []scim.User{},
 		variables:           map[string]string{},
 		allDirectories:      []workspace.ObjectStatus{},
 		allWorkspaceObjects: []workspace.ObjectStatus{},
 		workspaceConfKeys:   workspaceConfKeys,
 		shImports:           make(map[string]bool),
 		notebooksFormat:     "SOURCE",
+		allUsers:            map[string]scim.User{},
+		allSps:              map[string]scim.User{},
+		waitGroup:           &sync.WaitGroup{},
+		channels:            makeResourcesChannels(p),
 	}
 }
 
@@ -198,6 +265,8 @@ func (ic *importContext) Run() error {
 				ic.updatedSinceStr)
 		}
 		ic.updatedSinceStr = tm.UTC().Format(time.RFC3339)
+		tm, _ = time.Parse(time.RFC3339, ic.updatedSinceStr)
+		ic.updatedSinceMs = tm.UnixMilli()
 	}
 
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
@@ -238,27 +307,44 @@ func (ic *importContext) Run() error {
 			}
 		}
 	}
+	// Concurrent execution part
+	if ic.waitGroup == nil {
+		ic.waitGroup = &sync.WaitGroup{}
+	}
+	// Start goroutines for each resource type
+	ic.startImportChannels()
 
-	for resourceName, ir := range ic.Importables {
+	// Start listing of objects
+	for rnLoop, irLoop := range ic.Importables {
+		resourceName := rnLoop
+		ir := irLoop
 		if ir.List == nil {
 			continue
 		}
 		if !strings.Contains(ic.listing, ir.Service) {
-			log.Printf("[DEBUG] %s (%s service) is not part of listing",
-				resourceName, ir.Service)
+			log.Printf("[DEBUG] %s (%s service) is not part of listing", resourceName, ir.Service)
 			continue
 		}
 		if ic.accountLevel && !ir.AccountLevel {
 			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
 			continue
 		}
-		if err := ir.List(ic); err != nil {
-			log.Printf("[ERROR] %s (%s service) listing failed: %s",
-				resourceName, ir.Service, err)
-			continue
-		}
+		ic.waitGroup.Add(1)
+		go func() {
+			if err := ir.List(ic); err != nil {
+				log.Printf("[ERROR] %s (%s service) listing failed: %s", resourceName, ir.Service, err)
+			}
+			log.Printf("[DEBUG] Finished listing for service %s", resourceName)
+			ic.waitGroup.Done()
+		}()
 	}
-	if len(ic.Scope) == 0 {
+
+	ic.waitGroup.Wait()
+	// close channels
+	ic.closeImportChannels()
+
+	// This should be single threaded...
+	if ic.Scope.Len() == 0 {
 		return fmt.Errorf("no resources to import")
 	}
 	shFileName := fmt.Sprintf("%s/import.sh", ic.Directory)
@@ -338,27 +424,65 @@ func (ic *importContext) Run() error {
 		return err
 	}
 
-	cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
-	cmd.Dir = ic.Directory
-	err = cmd.Run()
-	if err != nil {
-		return err
-	}
 	//
 	if stats, err := os.Create(statsFileName); err == nil {
 		defer stats.Close()
 		statsData := map[string]any{
 			"startTime":       startTime.UTC().Format(time.RFC3339),
 			"duration":        fmt.Sprintf("%f sec", time.Since(startTime).Seconds()),
-			"exportedObjects": len(ic.Scope),
+			"exportedObjects": ic.Scope.Len(),
 		}
 		statsBytes, _ := json.Marshal(statsData)
 		if _, err = stats.Write(statsBytes); err != nil {
 			return err
 		}
 	}
+
+	if !ic.noFormat {
+		// format generated source code
+		cmd := exec.CommandContext(context.Background(), "terraform", "fmt")
+		cmd.Dir = ic.Directory
+		err = cmd.Run()
+		if err != nil {
+			log.Printf("[ERROR] problems when formatting the generated code: %v", err)
+			return err
+		}
+	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil
+}
+
+func (ic *importContext) startImportChannels() {
+	for rt, c := range ic.channels {
+		ch := c
+		resourceType := rt
+
+		numRoutines, exists := goroutinesNumber[resourceType]
+		if !exists {
+			numRoutines = defaultNumRoutines
+		}
+		numRoutines = getEnvAsInt(envVariablePrefix+resourceType, numRoutines)
+
+		for i := 0; i < numRoutines; i++ {
+			num := i
+			go func() {
+				log.Printf("[DEBUG] Starting goroutine %d for resource %s", num, resourceType)
+				for r := range ch {
+					log.Printf("[DEBUG] channel for %s, channel size=%d got %v", resourceType, len(ch), r)
+					if r != nil {
+						r.ImportResource(ic)
+					}
+				}
+			}()
+		}
+	}
+}
+
+func (ic *importContext) closeImportChannels() {
+	for rt, ch := range ic.channels {
+		log.Printf("[DEBUG] Closing channel for resource %s", rt)
+		close(ch)
+	}
 }
 
 func generateBlockFullName(block *hclwrite.Block) string {
@@ -455,10 +579,10 @@ func (ic *importContext) generateVariables() error {
 }
 
 func (ic *importContext) generateHclForResources(sh *os.File) {
-	sort.Sort(ic.Scope)
-	scopeSize := len(ic.Scope)
+	resources := ic.Scope.Sorted()
+	scopeSize := ic.Scope.Len()
 	log.Printf("[INFO] Generating configuration for %d resources", scopeSize)
-	for i, r := range ic.Scope {
+	for i, r := range resources {
 		ir := ic.Importables[r.Resource]
 		f, ok := ic.Files[ir.Service]
 		if !ok {
@@ -505,8 +629,9 @@ func (ic *importContext) MatchesName(n string) bool {
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
+// this will run single threaded
 func (ic *importContext) Find(r *resource, pick string, ref reference) (string, hcl.Traversal) {
-	for _, sr := range ic.State.Resources {
+	for _, sr := range ic.State.Resources() {
 		if sr.Type != r.Resource {
 			continue
 		}
@@ -520,6 +645,7 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			res := ref.Regexp.FindStringSubmatch(r.Value)
 			if len(res) < 2 {
 				log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, r.Value)
+				continue
 			}
 			matchValue = res[1]
 		}
@@ -569,31 +695,33 @@ func (ic *importContext) Has(r *resource) bool {
 	return ic.HasInState(r, false)
 }
 
+func (ic *importContext) isImporting(s string) (bool, bool) {
+	ic.importingMutex.RLocker().Lock()
+	defer ic.importingMutex.RLocker().Unlock()
+	v, visiting := ic.importing[s]
+	return v, visiting
+}
+
 // This function checks if resource exist. onlyAdded flag enforces that true is returned only if it was added with Add()
 func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
-	if v, visiting := ic.importing[r.String()]; visiting && (v || !onlyAdded) {
+	v, visiting := ic.isImporting(r.String())
+	if visiting && (v || !onlyAdded) {
 		return true
 	}
-	k, v := r.MatchPair()
-	for _, sr := range ic.State.Resources {
-		if sr.Type != r.Resource {
-			continue
-		}
-		for _, i := range sr.Instances {
-			tv, ok := i.Attributes[k].(string)
-			if ok && tv == v {
-				return true
-			}
-		}
-	}
-	return false
+	return ic.State.Has(r)
+}
+
+func (ic *importContext) setImportingState(s string, state bool) {
+	ic.importingMutex.Lock()
+	defer ic.importingMutex.Unlock()
+	ic.importing[s] = state
 }
 
 func (ic *importContext) Add(r *resource) {
 	if ic.HasInState(r, true) { // resource must exist and already marked as added
 		return
 	}
-	ic.importing[r.String()] = true // mark resource as added
+	ic.setImportingState(r.String(), true) // mark resource as added
 	state := r.Data.State()
 	if state == nil {
 		log.Printf("[ERROR] state is nil for %s", r)
@@ -609,7 +737,7 @@ func (ic *importContext) Add(r *resource) {
 		r.Mode = "managed"
 	}
 	inst.Attributes["id"] = r.ID
-	ic.State.Resources = append(ic.State.Resources, resourceApproximation{
+	ic.State.Append(resourceApproximation{
 		Mode:      r.Mode,
 		Module:    ic.Module,
 		Type:      r.Resource,
@@ -617,7 +745,7 @@ func (ic *importContext) Add(r *resource) {
 		Instances: []instanceApproximation{inst},
 	})
 	// in single-threaded scenario scope is toposorted
-	ic.Scope = append(ic.Scope, r)
+	ic.Scope.Append(r)
 }
 
 func (ic *importContext) regexFix(s string, fixes []regexFix) string {
@@ -636,14 +764,15 @@ func (ic *importContext) ResourceName(r *resource) string {
 		name = r.ID
 	}
 	name = ic.prefix + name
+	origCaseName := name
 	name = strings.ToLower(name)
 	name = ic.regexFix(name, ic.nameFixes)
 	// this is either numeric id or all-non-ascii
 	if regexp.MustCompile(`^\d`).MatchString(name) || name == "" {
 		if name == "" {
-			name = r.ID
+			origCaseName = r.ID
 		}
-		name = fmt.Sprintf("r%x", md5.Sum([]byte(name)))[0:12]
+		name = fmt.Sprintf("r%x", md5.Sum([]byte(origCaseName)))[0:12]
 	}
 	return name
 }
@@ -661,74 +790,49 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	if ic.testEmits != nil {
 		log.Printf("[INFO] %s is emitted in test mode", r)
+		ic.testEmitsMutex.Lock()
 		ic.testEmits[r.String()] = true
+		ic.testEmitsMutex.Unlock()
 		return
 	}
-	ic.importing[r.String()] = false // we're starting to add a new resource
-	pr, ok := ic.Resources[r.Resource]
-	if !ok {
-		log.Printf("[ERROR] %s is not available in provider", r)
-		return
-	}
+	ic.setImportingState(r.String(), false) // we're starting to add a new resource
 	ir, ok := ic.Importables[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
 	}
-	if ic.accountLevel && !ir.AccountLevel {
-		log.Printf("[DEBUG] %s (%s service) is not part of the account level export",
-			r.Resource, ir.Service)
+	_, ok = ic.Resources[r.Resource]
+	if !ok {
+		log.Printf("[ERROR] %s is not available in provider", r)
 		return
+	}
 
-	}
-	if !strings.Contains(ic.services, ir.Service) {
-		log.Printf("[DEBUG] %s (%s service) is not part of the import",
-			r.Resource, ir.Service)
+	if ic.accountLevel && !ir.AccountLevel {
+		log.Printf("[DEBUG] %s (%s service) is not part of the account level export", r.Resource, ir.Service)
 		return
 	}
-	if r.ID == "" {
-		if ir.Search == nil {
-			log.Printf("[ERROR] Searching %s is not available", r)
-			return
-		}
-		if err := ir.Search(ic, r); err != nil {
-			log.Printf("[ERROR] Cannot search for a resource %s: %v", err, r)
-			return
-		}
-		if r.ID == "" {
-			log.Printf("[INFO] Cannot find %s", r)
-			return
-		}
+	// TODO: add similar condition for checking workspace-level objects only. After new ACLs import is merged
+
+	// TODO: split services into slice?
+	if !strings.Contains(ic.services, ir.Service) {
+		log.Printf("[DEBUG] %s (%s service) is not part of the import", r.Resource, ir.Service)
+		return
 	}
-	if r.Data == nil {
-		// empty data with resource schema
-		r.Data = pr.Data(&terraform.InstanceState{
-			Attributes: map[string]string{},
-			ID:         r.ID,
-		})
-		r.Data.MarkNewResource()
-		resource := strings.ReplaceAll(r.Resource, "databricks_", "")
-		ctx := context.WithValue(ic.Context, common.ResourceName, resource)
-		apiVersion := ic.Importables[r.Resource].ApiVersion
-		if apiVersion != "" {
-			ctx = context.WithValue(ctx, common.Api, apiVersion)
-		}
-		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
-			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
-			return
-		}
-		if r.Data.Id() == "" {
-			r.Data.SetId(r.ID)
-		}
+	// from here, it should be done by the goroutine...  send resource into the channel
+	ch, exists := ic.channels[r.Resource]
+	if exists {
+		log.Printf("[TRACE] increasing counter & sending to the channel for resource %s", r.Resource)
+		ic.waitGroup.Add(1)
+		ch <- r
+	} else {
+		log.Printf("[WARN] Can't find channel for resource %s", r.Resource)
 	}
-	r.Name = ic.ResourceName(r)
-	if ir.Import != nil {
-		if err := ir.Import(ic, r); err != nil {
-			log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
-			return
-		}
-	}
-	ic.Add(r)
+}
+
+func maybeAddQuoteCharacter(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, "\"", "\\\"")
+	return s
 }
 
 func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrite.Tokens {
@@ -751,18 +855,18 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"', '$', '{'}}}
 		tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
-		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(rest)})
+		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(rest))})
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
 		return tokens
 	case MatchRegexp:
 		indices := ref.Regexp.FindStringSubmatchIndex(value)
 		if len(indices) == 4 {
 			tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}}}
-			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(value[0:indices[2]])})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[0:indices[2]]))})
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'$', '{'}})
 			tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
-			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(value[indices[3]:])})
+			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[indices[3]:]))})
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
 			return tokens
 		}

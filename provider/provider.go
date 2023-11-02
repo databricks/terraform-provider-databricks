@@ -21,6 +21,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
+	tflogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
@@ -85,6 +86,7 @@ func DatabricksProvider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
 			"databricks_access_control_rule_set":     permissions.ResourceAccessControlRuleSet(),
+			"databricks_artifact_allowlist":          catalog.ResourceArtifactAllowlist(),
 			"databricks_aws_s3_mount":                storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount":       storage.ResourceAzureAdlsGen1Mount(),
 			"databricks_azure_adls_gen2_mount":       storage.ResourceAzureAdlsGen2Mount(),
@@ -135,6 +137,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
 			"databricks_provider":                    catalog.ResourceProvider(),
 			"databricks_recipient":                   catalog.ResourceRecipient(),
+			"databricks_registered_model":            catalog.ResourceRegisteredModel(),
 			"databricks_repo":                        repos.ResourceRepo(),
 			"databricks_schema":                      catalog.ResourceSchema(),
 			"databricks_secret":                      secrets.ResourceSecret(),
@@ -154,6 +157,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_sql_visualization":           sql.ResourceSqlVisualization(),
 			"databricks_sql_widget":                  sql.ResourceSqlWidget(),
 			"databricks_storage_credential":          catalog.ResourceStorageCredential(),
+			"databricks_system_schema":               catalog.ResourceSystemSchema(),
 			"databricks_table":                       catalog.ResourceTable(),
 			"databricks_token":                       tokens.ResourceToken(),
 			"databricks_user":                        scim.ResourceUser(),
@@ -169,6 +173,7 @@ func DatabricksProvider() *schema.Provider {
 		if p.TerraformVersion != "" {
 			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 		}
+		tflogger.SetLogger()
 		return configureDatabricksClient(ctx, d)
 	}
 	common.AddContextToAllResources(p, "databricks")

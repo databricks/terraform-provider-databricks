@@ -105,6 +105,9 @@ func getPermissionEndpoint(securable, name string) string {
 	if securable == "foreign_connection" {
 		return fmt.Sprintf("/unity-catalog/permissions/connection/%s", name)
 	}
+	if securable == "model" {
+		return fmt.Sprintf("/unity-catalog/permissions/function/%s", name)
+	}
 	return fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name)
 }
 
@@ -177,11 +180,13 @@ var mapping = securableMapping{
 
 		// v1.0
 		"ALL_PRIVILEGES": true,
+		"APPLY_TAG":      true,
 		"BROWSE":         true,
 	},
 	"view": {
-		"SELECT": true,
-		"BROWSE": true,
+		"SELECT":    true,
+		"APPLY_TAG": true,
+		"BROWSE":    true,
 	},
 	"catalog": {
 		"CREATE": true,
@@ -189,6 +194,7 @@ var mapping = securableMapping{
 
 		// v1.0
 		"ALL_PRIVILEGES":           true,
+		"APPLY_TAG":                true,
 		"USE_CATALOG":              true,
 		"USE_SCHEMA":               true,
 		"CREATE_SCHEMA":            true,
@@ -211,6 +217,7 @@ var mapping = securableMapping{
 
 		// v1.0
 		"ALL_PRIVILEGES":           true,
+		"APPLY_TAG":                true,
 		"USE_SCHEMA":               true,
 		"CREATE_TABLE":             true,
 		"CREATE_FUNCTION":          true,
@@ -250,12 +257,14 @@ var mapping = securableMapping{
 	"metastore": {
 		// v1.0
 		"CREATE_CATALOG":            true,
+		"CREATE_CLEAN_ROOM":         true,
 		"CREATE_CONNECTION":         true,
 		"CREATE_EXTERNAL_LOCATION":  true,
 		"CREATE_STORAGE_CREDENTIAL": true,
 		"CREATE_SHARE":              true,
 		"CREATE_RECIPIENT":          true,
 		"CREATE_PROVIDER":           true,
+		"MANAGE_ALLOWLIST":          true,
 		"USE_CONNECTION":            true,
 		"USE_PROVIDER":              true,
 		"USE_SHARE":                 true,
@@ -265,6 +274,11 @@ var mapping = securableMapping{
 	},
 	"function": {
 		"ALL_PRIVILEGES": true,
+		"EXECUTE":        true,
+	},
+	"model": {
+		"ALL_PRIVILEGES": true,
+		"APPLY_TAG":      true,
 		"EXECUTE":        true,
 	},
 	"materialized_view": {

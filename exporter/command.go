@@ -76,6 +76,7 @@ func (ic *importContext) interactivePrompts() {
 // Run import according to flags
 func Run(args ...string) error {
 	log.SetOutput(&logLevel)
+	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
 	client, err := client.New(&config.Config{})
 	if err != nil {
 		return err
@@ -104,6 +105,7 @@ func Run(args ...string) error {
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
 		"Items with older than activity specified won't be imported.")
 	flags.BoolVar(&ic.incremental, "incremental", false, "Incremental export of the data. Requires -updated-since parameter")
+	flags.BoolVar(&ic.noFormat, "noformat", false, "Don't run `terraform fmt` on exported files")
 	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
 		"Include only resources updated since a given timestamp (in ISO8601 format, i.e. 2023-07-01T00:00:00Z)")
 	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information.")

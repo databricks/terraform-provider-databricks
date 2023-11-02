@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -214,5 +215,67 @@ func TestAccJobControlRunState(t *testing.T) {
 		// No pause status should be the equivalent of unpaused
 		Template: getJobTemplate(randomName2, `pause_status = "UNPAUSED"`),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
+	})
+}
+
+func runAsTemplate(runAs string) string {
+	return `
+	data "databricks_current_user" "me" {}
+	data "databricks_spark_version" "latest" {}
+	data "databricks_node_type" "smallest" {
+		local_disk = true
+	}
+
+	resource "databricks_notebook" "this" {
+		path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+		language = "PYTHON"
+		content_base64 = base64encode(<<-EOT
+			# created from ${abspath(path.module)}
+			display(spark.range(10))
+			EOT
+		)
+	}
+
+	resource "databricks_job" "this" {
+		name = "{var.RANDOM}"
+
+		job_cluster {
+			job_cluster_key = "j"
+			new_cluster {
+				num_workers   = 20
+				spark_version = data.databricks_spark_version.latest.id
+				node_type_id  = data.databricks_node_type.smallest.id
+			}
+		}
+
+		task {
+			task_key = "c"
+			job_cluster_key = "j"
+			notebook_task {
+				notebook_path = databricks_notebook.this.path
+			}
+		}
+
+		run_as {
+			` + runAs + `
+		}
+	}`
+}
+
+func TestAccJobRunAsUser(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_user" "this" {
+			user_name = "` + qa.RandomEmail() + `"
+		}
+	` + runAsTemplate(`user_name = databricks_user.this.user_name`),
+	})
+}
+
+func TestAccJobRunAsServicePrincipal(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "ucws")
+	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+	unityWorkspaceLevel(t, step{
+		Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 	})
 }

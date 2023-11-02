@@ -24,7 +24,7 @@ type QueryEntity struct {
 	Schedule  *QuerySchedule   `json:"schedule,omitempty"`
 	Tags      []string         `json:"tags,omitempty"`
 	Parameter []QueryParameter `json:"parameter,omitempty"`
-	RunAsRole string           `json:"run_as_role,omitempty"`
+	RunAsRole string           `json:"run_as_role,omitempty" tf:"suppress_diff"`
 	Parent    string           `json:"parent,omitempty" tf:"suppress_diff,force_new"`
 	CreatedAt string           `json:"created_at,omitempty" tf:"computed"`
 	UpdatedAt string           `json:"updated_at,omitempty" tf:"computed"`

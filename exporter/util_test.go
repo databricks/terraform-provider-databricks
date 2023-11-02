@@ -1,9 +1,11 @@
 package exporter
 
 import (
+	"os"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -86,7 +88,6 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 }
 
 func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
-
 	ic := importContextForTest()
 	result_false_partslength_more_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/abc", "/Users")
 	assert.False(t, result_false_partslength_more_than_3)
@@ -114,4 +115,28 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 	ic = importContextForTest()
 	result_true_sp_directory := ic.IsUserOrServicePrincipalDirectory("/Users/0e561119-c5a0-4f29-b246-5a953adb9575", "/Users")
 	assert.True(t, result_true_sp_directory)
+}
+
+func TestGetEnvAsInt(t *testing.T) {
+	os.Setenv("a", "10")
+	assert.Equal(t, 10, getEnvAsInt("a", 1))
+	//
+	os.Setenv("a", "abc")
+	assert.Equal(t, 1, getEnvAsInt("a", 1))
+	//
+	assert.Equal(t, 1, getEnvAsInt("b", 1))
+}
+
+func TestExcludeAuxiliaryDirectories(t *testing.T) {
+	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "", ObjectType: workspace.Directory}))
+	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{ObjectType: workspace.File}))
+	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc",
+		ObjectType: workspace.Directory}))
+	// should be ignored
+	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/.ide",
+		ObjectType: workspace.Directory}))
+	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Shared/.bundle",
+		ObjectType: workspace.Directory}))
+	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
+		ObjectType: workspace.Directory}))
 }

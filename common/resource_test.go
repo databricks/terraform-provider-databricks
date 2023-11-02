@@ -183,3 +183,13 @@ func TestEqualFoldDiffSuppress(t *testing.T) {
 	assert.True(t, EqualFoldDiffSuppress("k", "A", "a", nil))
 	assert.False(t, EqualFoldDiffSuppress("k", "A", "A2", nil))
 }
+
+func TestNoCustomize(t *testing.T) {
+	dummySchema := map[string]*schema.Schema{
+		"dummy": {
+			Type:     schema.TypeBool,
+			Required: true,
+		},
+	}
+	assert.Equal(t, dummySchema, NoCustomize(dummySchema))
+}

@@ -57,6 +57,8 @@ The following arguments are required:
 
 * `name` - Name of Data Access Configuration, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
 * `metastore_id` - Unique identifier of the parent Metastore
+* `owner` - (Optional) Username/groupname/sp application_id of the data access configuration owner.
+* `force_destroy` - (Optional) Delete the data access configuration regardless of its dependencies.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 

@@ -340,10 +340,20 @@ func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 }
 
 type Token struct {
-	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty" tf:"default:2592000"`
-	Comment         string `json:"comment,omitempty" tf:"default:Terraform PAT"`
-	TokenID         string `json:"token_id,omitempty" tf:"computed"`
-	TokenValue      string `json:"token_value,omitempty" tf:"computed,sensitive"`
+	LifetimeSeconds int32           `json:"lifetime_seconds,omitempty" tf:"default:2592000"`
+	Comment         string          `json:"comment,omitempty" tf:"default:Terraform PAT"`
+	TokenID         string          `json:"token_id,omitempty" tf:"computed"`
+	TokenValue      SensitiveString `json:"token_value,omitempty" tf:"computed,sensitive"`
+}
+
+type SensitiveString string
+
+func (s SensitiveString) GoString() string {
+	return "****"
+}
+
+func (s SensitiveString) String() string {
+	return "****"
 }
 
 // ephemeral entity to use with StructToData()
@@ -370,7 +380,7 @@ func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 		return fmt.Errorf("cannot create token: %w", err)
 	}
 	wsToken.Token.TokenID = token.TokenInfo.TokenID
-	wsToken.Token.TokenValue = token.TokenValue
+	wsToken.Token.TokenValue = SensitiveString(token.TokenValue)
 	return common.StructToData(wsToken, workspaceSchema, d)
 }
 

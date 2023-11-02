@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
@@ -123,6 +124,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 0,
 					DeltaSharingOrganizationName:                "acme",
+					ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 				},
 			},
 		},
@@ -400,6 +402,7 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 						DeltaSharingRecipientTokenLifetimeInSeconds: 0,
 						DeltaSharingOrganizationName:                "acme",
+						ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 					},
 				},
 			},
@@ -531,4 +534,97 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 		delta_sharing_recipient_token_lifetime_in_seconds = 1002
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestReadAccountMetastore(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc?",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRoot: "s3://b/abc",
+						Name:        "a",
+						Region:      "us-east1",
+					},
+				},
+			},
+		},
+		Resource:  ResourceMetastore(),
+		AccountID: "100",
+		ID:        "abc",
+		Read:      true,
+		New:       true,
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":           "abc",
+			"storage_root": "s3://b/abc",
+			"name":         "a",
+			"region":       "us-east1",
+		})
+}
+
+func TestReadAccountMetastore_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc?",
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Metastore with the given ID could not be found.",
+				},
+				Status: 404,
+			},
+		},
+		Resource:  ResourceMetastore(),
+		AccountID: "100",
+		ID:        "abc",
+		Read:      true,
+	}.ExpectError(t, "resource is not expected to be removed")
+}
+
+func TestReadMetastore(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc?",
+				Response: catalog.MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			},
+		},
+		Resource: ResourceMetastore(),
+		ID:       "abc",
+		Read:     true,
+		New:      true,
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":           "abc",
+			"storage_root": "s3://b/abc",
+			"name":         "a",
+		})
+}
+
+func TestReadMetastore_Error(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc?",
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Metastore with the given ID could not be found.",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourceMetastore(),
+		ID:       "abc",
+		Read:     true,
+		New:      true,
+	}.ExpectError(t, "resource is not expected to be removed")
 }

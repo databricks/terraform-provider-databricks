@@ -39,17 +39,10 @@ func TestModelCreateMVP(t *testing.T) {
 				Response: ml.GetModelResponse{
 					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name: "xyz",
+						Id:   "123",
 					},
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: ml.GetModelResponse{
-					RegisteredModelDatabricks: &ml.ModelDatabricks{
-						Name: "xyz",
-					},
-				},
+				ReuseRequest: true,
 			},
 		},
 		Resource: ResourceMlflowModel(),
@@ -57,7 +50,7 @@ func TestModelCreateMVP(t *testing.T) {
 		HCL: `
 		name = "xyz"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{"id": "xyz", "registered_model_id": "123"})
 }
 
 func TestModelCreateWithTags(t *testing.T) {

@@ -24,8 +24,8 @@ type VolumeInfo struct {
 	// The identifier of the user who owns the volume
 	Owner string `json:"owner,omitempty" tf:"computed"`
 	// The storage location on the cloud
-	StorageLocation string             `json:"storage_location,omitempty"`
-	VolumeType      catalog.VolumeType `json:"volume_type"`
+	StorageLocation string             `json:"storage_location,omitempty" tf:"force_new"`
+	VolumeType      catalog.VolumeType `json:"volume_type" tf:"force_new"`
 }
 
 func ResourceVolume() *schema.Resource {

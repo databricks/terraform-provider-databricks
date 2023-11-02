@@ -15,7 +15,7 @@ import (
 
 type MetastoreInfo struct {
 	Name                                        string `json:"name"`
-	StorageRoot                                 string `json:"storage_root" tf:"force_new"`
+	StorageRoot                                 string `json:"storage_root,omitempty" tf:"force_new"`
 	DefaultDacID                                string `json:"default_data_access_config_id,omitempty" tf:"suppress_diff"`
 	StorageRootCredentialId                     string `json:"storage_root_credential_id,omitempty" tf:"suppress_diff"`
 	Owner                                       string `json:"owner,omitempty" tf:"computed"`
@@ -39,7 +39,7 @@ func updateForceSendFields(req *catalog.UpdateMetastore) {
 }
 
 func ResourceMetastore() *schema.Resource {
-	s := common.StructToSchema(MetastoreInfo{},
+	s := common.StructToSchema(catalog.MetastoreInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,

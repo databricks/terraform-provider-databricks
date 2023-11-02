@@ -39,7 +39,7 @@ func updateForceSendFields(req *catalog.UpdateMetastore) {
 }
 
 func ResourceMetastore() *schema.Resource {
-	s := common.StructToSchema(catalog.MetastoreInfo{},
+	s := common.StructToSchema(MetastoreInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,

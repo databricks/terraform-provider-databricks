@@ -83,9 +83,11 @@ The resource supports the following arguments:
 * `control_run_state` - (Optional) (Bool) If true, the Databricks provider will stop and start the job as needed to ensure that the active run for the job reflects the deployed configuration. For continuous jobs, the provider respects the `pause_status` by stopping the current active run. This flag cannot be set for non-continuous jobs.
 
   When migrating from `always_running` to `control_run_state`, set `continuous` as follows:
-  ```
+
+  ```hcl
   continuous { }
   ```
+
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
 * `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry.
@@ -103,7 +105,7 @@ The resource supports the following arguments:
 This block describes individual tasks:
 
 * `task_key` - (Required) string specifying an unique key for a given task.
-* `*_task` - (Required) one of the specific task blocks described below: 
+* `*_task` - (Required) one of the specific task blocks described below:
   * `dbt_task`
   * `notebook_task`
   * `pipeline_task`
@@ -129,6 +131,7 @@ This block describes dependencies of a given task:
 * `task_key` - (Required) The name of the task this task depends on.
 
 ### tags Configuration Map
+
 `tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
 
 Example
@@ -146,7 +149,7 @@ resource "databricks_job" "this" {
 ### run_as Configuration Block
 
 The `run_as` block allows specifying the user or the service principal that the job runs as. If not specified, the job runs as the user or service
-principal that created the job. Only one of `user_name` or `service_principal_name` can be specified. 
+principal that created the job. Only one of `user_name` or `service_principal_name` can be specified.
 
 * `user_name` - (Optional) The email of an active workspace user. Non-admin users can only set this field to their own email.
 * `service_principal_name` - (Optional) The application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role.
@@ -178,6 +181,12 @@ resource "databricks_job" "this" {
 ### continuous Configuration Block
 
 * `pause_status` - (Optional) Indicate whether this continuous job is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
+
+### queue Configuration Block
+
+This block describes the queue settings of the job:
+
+* `enabled` - (Required) If true, enable queueing for the job.
 
 ### trigger Configuration Block
 
@@ -239,14 +248,14 @@ This block controls notification settings for both email & webhook notifications
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs.
 * `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
 
-###  parameter Configuration Block
+### parameter Configuration Block
 
 This block defines a job-level parameter for the job. You can define several job-level parameters for the job. Supported options are:
 
 * `name` - (Required) The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`.
 * `default` - (Required) Default value of the parameter.
 
-###  notification_settings Configuration Block (Task Level)
+### notification_settings Configuration Block (Task Level)
 
 This block controls notification settings for both email & webhook notifications on a task level:
 
@@ -328,7 +337,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
   * `subscriptions` - (Optional) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `custom_subject` - (Optional) string specifying a custom subject of email sent.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
-* `alert` - (Optional) block consisting of following fields: 
+* `alert` - (Optional) block consisting of following fields:
   * `alert_id` - (Required) (String) identifier of the Databricks SQL Alert.
   * `subscriptions` - (Required) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.

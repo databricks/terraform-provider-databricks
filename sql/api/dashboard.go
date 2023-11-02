@@ -11,5 +11,6 @@ type Dashboard struct {
 	Parent                  string            `json:"parent,omitempty"`
 	CreatedAt               string            `json:"created_at,omitempty"`
 	UpdatedAt               string            `json:"updated_at,omitempty"`
+	RunAsRole               string            `json:"run_as_role,omitempty"`
 	DashboardFiltersEnabled bool              `json:"dashboard_filters_enabled,omitempty"`
 }

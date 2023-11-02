@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -561,6 +563,44 @@ var resourcesMap map[string]importable = map[string]importable{
 			case "url", "format":
 				return true
 			}
+			var js jobs.JobSettings
+			common.DataToStructPointer(d, ic.Resources["databricks_job"].Schema, &js)
+			switch pathString {
+			case "email_notifications":
+				if js.EmailNotifications != nil {
+					return reflect.DeepEqual(*js.EmailNotifications, jobs.EmailNotifications{})
+				}
+			case "webhook_notifications":
+				if js.WebhookNotifications != nil {
+					return reflect.DeepEqual(*js.WebhookNotifications, jobs.WebhookNotifications{})
+				}
+			case "notification_settings":
+				if js.NotificationSettings != nil {
+					return reflect.DeepEqual(*js.NotificationSettings, sdk_jobs.JobNotificationSettings{})
+				}
+			}
+			if strings.HasPrefix(pathString, "task.") {
+				parts := strings.Split(pathString, ".")
+				if len(parts) > 2 {
+					taskIndex, err := strconv.Atoi(parts[1])
+					if err == nil && taskIndex >= 0 && taskIndex < len(js.Tasks) {
+						blockName := parts[len(parts)-1]
+						switch blockName {
+						case "notification_settings":
+							if js.Tasks[taskIndex].NotificationSettings != nil {
+								return reflect.DeepEqual(*js.Tasks[taskIndex].NotificationSettings, sdk_jobs.TaskNotificationSettings{})
+							}
+						case "email_notifications":
+							if js.Tasks[taskIndex].EmailNotifications != nil {
+								return reflect.DeepEqual(*js.Tasks[taskIndex].EmailNotifications, jobs.EmailNotifications{})
+							}
+						}
+					}
+				}
+				if strings.HasSuffix(pathString, ".notebook_task.0.source") && d.Get(pathString).(string) == "WORKSPACE" {
+					return true
+				}
+			}
 			if res := jobClustersRegex.FindStringSubmatch(pathString); res != nil { // analyze job clusters
 				return makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d)
 			}
@@ -583,7 +623,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for offset, policy := range policies {
-				log.Printf("[INFO] Scanning %d:  %v", offset+1, policy)
+				log.Printf("[TRACE] Scanning %d:  %v", offset+1, policy)
 				if slices.Contains(predefinedClusterPolicies, policy.Name) {
 					continue
 				}
@@ -850,11 +890,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			userName := u.DisplayName
-			if userName == "" {
-				userName = u.UserName
-			}
-			ic.emitGroups(u, userName)
+			ic.emitGroups(u)
 			ic.emitRoles("user", u.ID, u.Roles)
 			return nil
 		},
@@ -904,11 +940,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			spnName := u.DisplayName
-			if spnName == "" {
-				spnName = u.ApplicationID
-			}
-			ic.emitGroups(u, spnName)
+			ic.emitGroups(u)
 			ic.emitRoles("service_principal", u.ID, u.Roles)
 			if ic.accountLevel {
 				ic.Emit(&resource{

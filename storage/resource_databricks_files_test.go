@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestResourceFilesCreate(t *testing.T) {
+func TestResourceFileCreate(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	decodedString, err := base64.StdEncoding.DecodeString("YWJjCg==")
 	assert.NoError(t, err)
@@ -53,7 +53,7 @@ func TestResourceFilesCreate(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 }
 
-func TestResourceFilesCreateSource(t *testing.T) {
+func TestResourceFileCreateSource(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	source := "testdata/tf-test-python.py"
 	reader, err := os.Open(source)
@@ -92,7 +92,7 @@ func TestResourceFilesCreateSource(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 }
 
-func TestResourceFilesCreate_Error(t *testing.T) {
+func TestResourceFileCreate_Error(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -117,7 +117,7 @@ func TestResourceFilesCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
 }
 
-func TestResourceFilesRead(t *testing.T) {
+func TestResourceFileRead(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -144,7 +144,7 @@ func TestResourceFilesRead(t *testing.T) {
 	assert.Equal(t, path, d.Get("path"))
 }
 
-func TestResourceFilesRead_NotFound(t *testing.T) {
+func TestResourceFileRead_NotFound(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -165,7 +165,7 @@ func TestResourceFilesRead_NotFound(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestResourceFilesRead_Error(t *testing.T) {
+func TestResourceFileRead_Error(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -187,7 +187,7 @@ func TestResourceFilesRead_Error(t *testing.T) {
 	assert.Equal(t, path, d.Id(), "Id should not be empty for error reads")
 }
 
-func TestResourceFilesDelete(t *testing.T) {
+func TestResourceFileDelete(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -206,7 +206,7 @@ func TestResourceFilesDelete(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 }
 
-func TestResourceFilesDelete_Error(t *testing.T) {
+func TestResourceFileDelete_Error(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -228,7 +228,7 @@ func TestResourceFilesDelete_Error(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 }
 
-func TestResourceFilesUpdate(t *testing.T) {
+func TestResourceFileUpdate(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

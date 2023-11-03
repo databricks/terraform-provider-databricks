@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestUcAccFilesFullLifeCycle(t *testing.T) {
+func TestUcAccFileFullLifeCycle(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -78,7 +78,7 @@ func TestUcAccFilesFullLifeCycle(t *testing.T) {
 	})
 }
 
-func TestUcAccFilesBase64FullLifeCycle(t *testing.T) {
+func TestUcAccFileBase64FullLifeCycle(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {

@@ -95,8 +95,10 @@ type importable struct {
 	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
-	// Defines if specific service is account level
+	// Defines if specific service is account level resource
 	AccountLevel bool
+	// Defines if specific service is workspace level resource
+	WorkspaceLevel bool
 }
 
 type MatchType string
@@ -113,13 +115,20 @@ const (
 )
 
 type reference struct {
-	Path      string
-	Resource  string
-	Match     string
-	MatchType MatchType // type of match, `prefix` - reference is embedded into string, `` (or `exact`) - full match, ...
-	Variable  bool
-	File      bool
-	Regexp    *regexp.Regexp // regular expression must define a group that will be used to extract value to match
+	// path to a given field, like, `cluster_id`, `access_control.user_name``, ... For references blocks/arrays, the `.N` component isn't required
+	Path string
+	// resource type: databricks_directory, ...
+	Resource string
+	// on what field in the target resource to match
+	Match string
+	// type of match, `prefix` - reference is embedded into string, `` (or `exact`) - full match, ...
+	MatchType MatchType
+	// true if given reference denote a variable
+	Variable bool
+	// true if given reference denote a reference to a generated file
+	File bool
+	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match
+	Regexp *regexp.Regexp
 }
 
 func (r reference) MatchAttribute() string {
@@ -137,14 +146,21 @@ func (r reference) MatchTypeValue() MatchType {
 }
 
 type resource struct {
-	Resource    string
-	ID          string
-	Attribute   string
-	Value       string
-	Name        string
+	// Name of the resource: `databricks_cluster`, `databricks_job`, etc.
+	Resource string
+	// ID of the resource (could be omitted - then we need to perform search by Attribute/Value)
+	ID string
+	// Name of the attribute to search by
+	Attribute string
+	// Value of a given attribute to search by
+	Value string
+	// Terraform resource name
+	Name string
+	// If not specified, then we generate a normal resource block, or we can generate a data block if it's set to "data"
 	Mode        string
 	Incremental bool
-	Data        *schema.ResourceData
+	// Actual Terraform data
+	Data *schema.ResourceData
 }
 
 func (r *resource) MatchPair() (string, string) {

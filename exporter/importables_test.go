@@ -222,6 +222,17 @@ func TestClusterNameFromID(t *testing.T) {
 	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(ic, d))
 }
 
+func TestRepoName(t *testing.T) {
+	ic := importContextForTest()
+	d := repos.ResourceRepo().TestResourceData()
+	d.SetId("12345")
+	// Repo without path
+	assert.Equal(t, "repo_12345", resourcesMap["databricks_repo"].Name(ic, d))
+	// Repo with path
+	d.Set("path", "/Repos/user/test")
+	assert.Equal(t, "user_test_12345", resourcesMap["databricks_repo"].Name(ic, d))
+}
+
 func TestJobName(t *testing.T) {
 	ic := importContextForTest()
 	d := jobs.ResourceJob().TestResourceData()
@@ -773,13 +784,6 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 		})
 		assert.NotNil(t, err) // no exact match because of OS diffs
 	})
-}
-
-func TestRepoIdForName(t *testing.T) {
-	d := repos.ResourceRepo().TestResourceData()
-	d.SetId("x")
-	ic := importContextForTest()
-	assert.Equal(t, "x", resourcesMap["databricks_repo"].Name(ic, d))
 }
 
 func TestRepoListFails(t *testing.T) {

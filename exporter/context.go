@@ -138,8 +138,6 @@ type mount struct {
 var nameFixes = []regexFix{
 	{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
 		`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
-	//	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
-	// {regexp.MustCompile(`@.*$`), ""},
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
 	{regexp.MustCompile(`\W+`), "_"},
 	{regexp.MustCompile(`[_]{2,}`), "_"},
@@ -287,15 +285,15 @@ func (ic *importContext) Run() error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
-	w, err := ic.Client.WorkspaceClient()
-	if err != nil {
-		return err
-	}
 
 	ic.accountLevel = ic.Client.Config.IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
 	} else {
+		w, err := ic.Client.WorkspaceClient()
+		if err != nil {
+			return err
+		}
 		me, err := w.CurrentUser.Me(ic.Context)
 		if err != nil {
 			return err
@@ -326,7 +324,11 @@ func (ic *importContext) Run() error {
 			continue
 		}
 		if ic.accountLevel && !ir.AccountLevel {
-			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
+			log.Printf("[DEBUG] %s (%s service) is not a account level resource", resourceName, ir.Service)
+			continue
+		}
+		if !ic.accountLevel && !ir.WorkspaceLevel {
+			log.Printf("[DEBUG] %s (%s service) is not a workspace level resource", resourceName, ir.Service)
 			continue
 		}
 		ic.waitGroup.Add(1)

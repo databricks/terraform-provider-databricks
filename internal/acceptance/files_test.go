@@ -36,7 +36,7 @@ func TestUcAccFilesFullLifeCycle(t *testing.T) {
 			storage_location   = databricks_external_location.some.url
 		}
 		
-		resource "databricks_files" "this" {
+		resource "databricks_file" "this" {
 			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,
@@ -71,7 +71,7 @@ func TestUcAccFilesFullLifeCycle(t *testing.T) {
 			storage_location   = databricks_external_location.some.url
 		}
 		
-		resource "databricks_files" "this" {
+		resource "databricks_file" "this" {
 			source = "{var.CWD}/../../storage/testdata/tf-test-python2.py"
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,
@@ -110,7 +110,7 @@ func TestUcAccFilesBase64FullLifeCycle(t *testing.T) {
 			storage_location   = databricks_external_location.some.url
 		}
 		
-		resource "databricks_files" "this" {
+		resource "databricks_file" "this" {
 			content_base64 = "YWJjCg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,
@@ -145,7 +145,7 @@ func TestUcAccFilesBase64FullLifeCycle(t *testing.T) {
 			storage_location   = databricks_external_location.some.url
 		}
 		
-		resource "databricks_files" "this" {
+		resource "databricks_file" "this" {
 			content_base64 = "YWJjDg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,

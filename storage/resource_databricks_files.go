@@ -41,7 +41,7 @@ func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
 	return reader, err
 }
 
-func ResourceFiles() *schema.Resource {
+func ResourceFile() *schema.Resource {
 	s := workspace.FileContentSchema(map[string]*schema.Schema{
 		"modification_time": {
 			Type:     schema.TypeInt,

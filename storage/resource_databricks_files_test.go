@@ -42,7 +42,7 @@ func TestResourceFilesCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"path":           path,
@@ -81,7 +81,7 @@ func TestResourceFilesCreateSource(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		State: map[string]any{
 			"source": source,
 			"path":   path,
@@ -106,7 +106,7 @@ func TestResourceFilesCreate_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"path":           path,
@@ -134,7 +134,7 @@ func TestResourceFilesRead(t *testing.T) {
 				Response: ws_api.DownloadResponse{},
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		Read:     true,
 		New:      true,
 		ID:       path,
@@ -158,7 +158,7 @@ func TestResourceFilesRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		Read:     true,
 		Removed:  true,
 		ID:       path,
@@ -179,7 +179,7 @@ func TestResourceFilesRead_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		Read:     true,
 		ID:       path,
 	}.Apply(t)
@@ -197,7 +197,7 @@ func TestResourceFilesDelete(t *testing.T) {
 				Response: nil,
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		Delete:   true,
 		New:      true,
 		ID:       path,
@@ -220,7 +220,7 @@ func TestResourceFilesDelete_Error(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		Delete:   true,
 		ID:       path,
 	}.Apply(t)
@@ -248,7 +248,7 @@ func TestResourceFilesUpdate(t *testing.T) {
 				Response: ws_api.DownloadResponse{},
 			},
 		},
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"path":           path,
@@ -261,7 +261,7 @@ func TestResourceFilesUpdate(t *testing.T) {
 
 func TestResourceFileBadPrefix(t *testing.T) {
 	qa.ResourceFixture{
-		Resource: ResourceFiles(),
+		Resource: ResourceFile(),
 		Create:   true,
 		HCL: `
 		path = "Volumes/CatalogName/SchemaName/VolumeName/fileName"

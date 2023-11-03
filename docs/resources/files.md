@@ -1,9 +1,9 @@
 ---
 subcategory: "Storage"
 ---
-# databricks_files Resource
+# databricks_file Resource
 
-This resource allows uploading and downloading files upto 2GB in octet-stream.
+This resource allows uploading and downloading files in [databricks_volume](volume.md) up to 2GB in octet-stream.
 
 ## Example Usage
 
@@ -50,7 +50,7 @@ resource "databricks_volume" "this" {
   comment          = "this volume is managed by terraform"
 }
 
-resource "databricks_files" "this" {
+resource "databricks_file" "this" {
   source = "/full/path/on/local/system"
   path   = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/{databricks_volume.this.name}/fileName"
 }
@@ -59,7 +59,7 @@ resource "databricks_files" "this" {
 You can also inline sources through `content_base64`  attribute.
 
 ```hcl
-resource "databricks_files" "init_script" {
+resource "databricks_file" "init_script" {
   content_base64 = base64encode(<<-EOT
     #!/bin/bash
     echo "Hello World"
@@ -88,10 +88,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource `databricks_files` can be imported using the path of the file:
+The resource `databricks_file` can be imported using the path of the file:
 
 ```bash
-$ terraform import databricks_files.this <path>
+$ terraform import databricks_file.this <path>
 ```
 
 ## Related Resources

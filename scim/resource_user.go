@@ -110,7 +110,7 @@ func ResourceUser() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return NewUsersAPI(ctx, c).Update(d.Id(), "userName,displayName,active,externalId,entitlements", u)
+			return NewUsersAPI(ctx, c).Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			user := NewUsersAPI(ctx, c)
@@ -181,5 +181,5 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	user := userList[0]
 	d.SetId(user.ID)
-	return usersAPI.Update(d.Id(), "userName,displayName,active,externalId,entitlements", u)
+	return usersAPI.Update(d.Id(), u)
 }

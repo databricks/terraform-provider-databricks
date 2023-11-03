@@ -69,7 +69,7 @@ func (a ServicePrincipalsAPI) Patch(servicePrincipalID string, r patchRequest) e
 
 // Update replaces resource-friendly-entity
 func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest User) error {
-	servicePrincipal, err := a.Read(servicePrincipalID, "groups")
+	servicePrincipal, err := a.Read(servicePrincipalID, "groups,roles")
 	if err != nil {
 		return err
 	}
@@ -77,6 +77,7 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest Us
 		updateRequest.Schemas = []URN{ServicePrincipalSchema}
 	}
 	updateRequest.Groups = servicePrincipal.Groups
+	updateRequest.Roles = servicePrincipal.Roles
 	return a.client.Scim(a.context, "PUT",
 		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
 		updateRequest, nil)

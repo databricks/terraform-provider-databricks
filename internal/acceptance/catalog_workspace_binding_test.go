@@ -10,7 +10,7 @@ func TestUcAccCatalogWorkspaceBindingToOtherWorkspace(t *testing.T) {
 		# The dummy workspace needs to be assigned to the metastore for this test to pass
 		resource "databricks_metastore_assignment" "this" {
 			metastore_id = "{env.TEST_METASTORE_ID}"
-			workspace_id = {env.TEST_WORKSPACE_ID}
+			workspace_id = {env.DUMMY_WORKSPACE_ID}
 		}
 
 		resource "databricks_catalog" "dev" {
@@ -20,7 +20,7 @@ func TestUcAccCatalogWorkspaceBindingToOtherWorkspace(t *testing.T) {
 
 		resource "databricks_catalog_workspace_binding" "test" {
 			catalog_name = databricks_catalog.dev.name
-			workspace_id = {env.TEST_WORKSPACE_ID} # dummy workspace, not the authenticated workspace in this test
+			workspace_id = {env.DUMMY_WORKSPACE_ID} # dummy workspace, not the authenticated workspace in this test
 		}
 		`,
 	})
@@ -36,7 +36,7 @@ func TestUcAccCatalogWorkspaceBindingToSameWorkspace(t *testing.T) {
 
 		resource "databricks_catalog_workspace_binding" "test" {
 			catalog_name = databricks_catalog.dev.name
-			workspace_id = {env.TEST_WORKSPACE_ID}
+			workspace_id = {env.THIS_WORKSPACE_ID}
 		}
 		`,
 	})

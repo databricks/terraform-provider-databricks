@@ -40,6 +40,12 @@ func TestAccDataCurrentConfig(t *testing.T) {
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "gcp", false),
 		})
+	}
+}
+
+func TestMwsAccDataCurrentConfig(t *testing.T) {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	switch cloudEnv {
 	case "MWS":
 		accountLevel(t, step{
 			Template: `data "databricks_current_config" "this" {}`,

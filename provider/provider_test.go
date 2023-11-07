@@ -3,10 +3,13 @@ package provider
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -71,21 +74,22 @@ func (tt providerFixture) rawConfig() map[string]any {
 	return rawConfig
 }
 
-func (tc providerFixture) apply(t *testing.T) {
+func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
 	c, err := configureProviderAndReturnClient(t, tc)
 	if tc.assertError != "" {
 		require.NotNilf(t, err, "Expected to have %s error", tc.assertError)
 		require.True(t, strings.HasPrefix(err.Error(), tc.assertError),
 			"Expected to have '%s' error, but got '%s'", tc.assertError, err)
-		return
+		return nil
 	}
 	if err != nil {
 		require.NoError(t, err)
-		return
+		return nil
 	}
 	assert.Equal(t, tc.assertAzure, c.IsAzure())
 	assert.Equal(t, tc.assertAuth, c.Config.AuthType)
 	assert.Equal(t, tc.assertHost, c.Config.Host)
+	return c
 }
 
 func TestConfig_NoParams(t *testing.T) {
@@ -388,6 +392,59 @@ func TestConfig_CorruptConfig(t *testing.T) {
 	}.apply(t)
 }
 
+func shortLivedOAuthHandler(w http.ResponseWriter, r *http.Request) {
+	if r.RequestURI == "/oidc/.well-known/oauth-authorization-server" {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"authorization_endpoint": "http://%s/authorize", "token_endpoint": "http://%s/token"}`, r.Host, r.Host)
+		return
+	} else if r.RequestURI == "/token" {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"access_token": "x", "token_type": "Bearer", "expires_in": 3}`)
+		return
+	} else if r.RequestURI == "/api/2.0/clusters/get?cluster_id=123" {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"cluster_id": "123"}`)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+}
+
+// Start a local webserver to serve tokens. Configure the CLI to fetch a token from this endpoint.
+// Then, using a context with a short timeout, call an API. Wait for 2x the timeout, then call
+// the API again with a new context with a short timeout. The second call should succeed without
+// the context being cancelled.
+func TestConfig_OAuthFetchesToken(t *testing.T) {
+	// Create a test server
+	ts := httptest.NewServer(http.HandlerFunc(shortLivedOAuthHandler))
+	defer ts.Close()
+
+	client := providerFixture{
+		env: map[string]string{
+			"DATABRICKS_HOST":          ts.URL,
+			"DATABRICKS_CLIENT_ID":     "x",
+			"DATABRICKS_CLIENT_SECRET": "y",
+		},
+		assertAuth: "oauth-m2m",
+		assertHost: ts.URL,
+	}.apply(t)
+
+	ws, err := client.WorkspaceClient()
+	require.NoError(t, err)
+	bgCtx := context.Background()
+	{
+		ctx, cancel := context.WithCancel(bgCtx)
+		_, err = ws.Clusters.GetByClusterId(ctx, "123")
+		require.NoError(t, err)
+		cancel()
+	}
+	log.Printf("[INFO] sleeping for 5 seconds to allow token to expire")
+	time.Sleep(5 * time.Second)
+	{
+		_, err = ws.Clusters.GetByClusterId(bgCtx, "123")
+		require.NoError(t, err)
+	}
+}
+
 func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
 	for k, v := range tt.env {
 		t.Setenv(k, v)
@@ -403,11 +460,6 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	req, _ := http.NewRequest("GET", client.Config.Host, nil)
-	err := client.Config.Authenticate(req)
-	if err != nil {
-		return nil, err
-	}
 
 	return client, nil
 }

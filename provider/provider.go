@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"net/http"
 	"reflect"
 	"sort"
 	"strings"
@@ -239,6 +240,16 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
 			cfg.AuthType = newer
 		}
+	}
+	// The OAuth2 library used by the SDK caches the context, so for long-lived applications
+	// where tokens may need to be refreshed, we need to use a context with no timeout.
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	err = cfg.Authenticate(r.WithContext(context.Background()))
+	if err != nil {
+		return nil, diag.FromErr(err)
 	}
 	client, err := client.New(cfg)
 	if err != nil {

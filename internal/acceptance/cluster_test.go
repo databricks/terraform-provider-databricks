@@ -48,7 +48,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 	})
 }
 
-func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
+func TestAccClusterResource_CreateSingleNodePoolCluster(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: `
 		data "databricks_spark_version" "latest" {
@@ -57,6 +57,24 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 			cluster_name = "singlenode-{var.RANDOM}"
 			spark_version = data.databricks_spark_version.latest.id
 			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+			num_workers = 0
+			autotermination_minutes = 10
+			spark_conf = {
+				"spark.master" = "local[*]"
+			}
+		}`,
+	})
+}
+
+func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `
+		data "databricks_spark_version" "latest" {
+		}
+		resource "databricks_cluster" "this" {
+			cluster_name = "singlenode-{var.RANDOM}"
+			spark_version = data.databricks_spark_version.latest.id
+			node_type_id = "{env.TEST_INSTANCE_POOL_ID}"
 			num_workers = 0
 			autotermination_minutes = 10
 			spark_conf = {

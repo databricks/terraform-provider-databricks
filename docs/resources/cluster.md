@@ -111,6 +111,7 @@ data "databricks_spark_version" "latest_lts" {
 
 resource "databricks_cluster" "single_node" {
   cluster_name            = "Single Node"
+  num_workers             = 0
   spark_version           = data.databricks_spark_version.latest_lts.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 20
@@ -125,6 +126,47 @@ resource "databricks_cluster" "single_node" {
     "ResourceClass" = "SingleNode"
   }
 }
+```
+
+If a cluster with a pool of single nodes is needed, then the configuration should look like this:
+```
+
+data "databricks_node_type" "smallest" {
+  local_disk = true
+}
+
+data "databricks_spark_version" "latest_lts" {
+  long_term_support = true
+}
+
+data "databricks_instance_pool" "single_node_pool" {
+  instance_pool_name       = "single-node-pool"
+  node_type_id             = data.databricks_node_type.smallest.id
+
+  preloaded_spark_versions = [data.databricks_spark_version.latest_lts.id]
+
+
+  custom_tags = {
+    "ResourceClass" = "SingleNode"
+  }
+
+  # aws attributes also go here
+}
+
+resource "databricks_cluster" "single_node_pool_cluster" {
+  cluster_name            = "Single Node Pool Cluster"
+  num_workers             = 0
+  spark_version           = data.databricks_spark_version.latest_lts.id
+  instance_pool_id        = data.databricks_instance_pool.single_node_pool.id
+  driver_instance_pool_id = data.databricks_instance_pool.single_node_pool.id
+
+  spark_conf = {
+    # Single-node
+    "spark.master" : "local[*]"
+  }
+}
+
+
 ```
 
 ### (Legacy) High-Concurrency clusters

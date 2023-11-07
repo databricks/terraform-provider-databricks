@@ -110,6 +110,7 @@ This block describes individual tasks:
   * `notebook_task`
   * `pipeline_task`
   * `python_wheel_task`
+  * `run_job_task`
   * `spark_jar_task`
   * `spark_python_task`
   * `spark_submit_task`

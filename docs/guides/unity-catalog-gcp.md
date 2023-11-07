@@ -104,6 +104,7 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 resource "databricks_metastore" "this" {
   provider      = databricks.accounts
   name          = "primary"
+  region        = var.location
   storage_root  = "gs://${google_storage_bucket.unity_metastore.name}"
   force_destroy = true
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func checkCurrentConfig(t *testing.T, cloudType string, isAccount bool) func(s *terraform.State) error {
+func checkCurrentConfig(t *testing.T, cloudType string, isAccount string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
 		r, ok := s.Modules[0].Resources["data.databricks_current_config.this"]
 		require.True(t, ok, "data.databricks_current_config.this has to be there")
@@ -28,17 +28,17 @@ func TestAccDataCurrentConfig(t *testing.T) {
 	case "aws":
 		workspaceLevel(t, step{
 			Template: `data "databricks_current_config" "this" {}`,
-			Check:    checkCurrentConfig(t, "aws", false),
+			Check:    checkCurrentConfig(t, "aws", "false"),
 		})
 	case "azure":
 		workspaceLevel(t, step{
 			Template: `data "databricks_current_config" "this" {}`,
-			Check:    checkCurrentConfig(t, "azure", false),
+			Check:    checkCurrentConfig(t, "azure", "false"),
 		})
 	case "gcp":
 		workspaceLevel(t, step{
 			Template: `data "databricks_current_config" "this" {}`,
-			Check:    checkCurrentConfig(t, "gcp", false),
+			Check:    checkCurrentConfig(t, "gcp", "false"),
 		})
 	}
 }
@@ -49,17 +49,17 @@ func TestMwsAccDataCurrentConfig(t *testing.T) {
 	case "MWS":
 		accountLevel(t, step{
 			Template: `data "databricks_current_config" "this" {}`,
-			Check:    checkCurrentConfig(t, "aws", true),
+			Check:    checkCurrentConfig(t, "aws", "true"),
 		})
 	case "azure-ucacct":
 		accountLevel(t, step{
 			Template: `data "databricks_current_config" "this" {}`,
-			Check:    checkCurrentConfig(t, "azure", true),
+			Check:    checkCurrentConfig(t, "azure", "true"),
 		})
 	case "gcp-accounts":
 		accountLevel(t, step{
 			Template: `data "databricks_current_config" "this" {}`,
-			Check:    checkCurrentConfig(t, "gcp", true),
+			Check:    checkCurrentConfig(t, "gcp", "true"),
 		})
 	}
 }

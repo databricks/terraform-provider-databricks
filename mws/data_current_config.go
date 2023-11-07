@@ -28,8 +28,10 @@ func DataSourceCurrentConfiguration() *schema.Resource {
 			data.CloudType = "aws"
 		} else if c.Config.IsAzure() {
 			data.CloudType = "azure"
-		} else {
+		} else if c.Config.IsGcp() {
 			data.CloudType = "gcp"
+		} else {
+			data.CloudType = "unknown"
 		}
 		data.AuthType = c.Config.AuthType
 		return nil

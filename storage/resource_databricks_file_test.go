@@ -29,13 +29,6 @@ func TestResourceFileCreate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/fs/get-status?path=%2FVolumes%2FCatalogName%2FSchemaName%2FVolumeName%2FfileName",
-				Response: FileInfo{
-					Path: path,
-				},
-			},
-			{
-				Method:   http.MethodGet,
 				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
 				Response: ws_api.DownloadResponse{
 					Contents: reader,
@@ -65,13 +58,6 @@ func TestResourceFileCreateSource(t *testing.T) {
 				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName",
 				Status:   http.StatusOK,
 				Response: nil,
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/fs/get-status?path=%2FVolumes%2FCatalogName%2FSchemaName%2FVolumeName%2FfileName",
-				Response: FileInfo{
-					Path: path,
-				},
 			},
 			{
 				Method:   http.MethodGet,
@@ -123,13 +109,6 @@ func TestResourceFileRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/fs/get-status?path=%2FVolumes%2FCatalogName%2FSchemaName%2FVolumeName%2FfileName",
-				Response: ws_api.FileInfo{
-					Path: path,
-				},
-			},
-			{
-				Method:   http.MethodGet,
 				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
 				Response: ws_api.DownloadResponse{},
 			},
@@ -150,7 +129,7 @@ func TestResourceFileRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{ // read log output for correct url...
 				Method:   "GET",
-				Resource: "/api/2.0/fs/get-status?path=%2FVolumes%2FCatalogName%2FSchemaName%2FVolumeName%2FfileName",
+				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "File not found",
@@ -171,7 +150,7 @@ func TestResourceFileRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/fs/get-status?path=%2FVolumes%2FCatalogName%2FSchemaName%2FVolumeName%2FfileName",
+				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -236,11 +215,6 @@ func TestResourceFileUpdate(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName",
 				Status:   http.StatusOK,
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/fs/get-status?path=%2FVolumes%2FCatalogName%2FSchemaName%2FVolumeName%2FfileName",
-				Response: FileInfo{},
 			},
 			{
 				Method:   http.MethodGet,

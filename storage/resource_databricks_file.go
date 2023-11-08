@@ -42,16 +42,7 @@ func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
 }
 
 func ResourceFile() *schema.Resource {
-	s := workspace.FileContentSchema(map[string]*schema.Schema{
-		"modification_time": {
-			Type:     schema.TypeInt,
-			Computed: true,
-		},
-		"file_size": {
-			Type:     schema.TypeInt,
-			Computed: true,
-		},
-	})
+	s := workspace.FileContentSchema(map[string]*schema.Schema{})
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
@@ -68,7 +59,6 @@ func ResourceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-
 			data.SetId(path)
 			return nil
 		},
@@ -77,20 +67,11 @@ func ResourceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-
 			path := data.Id()
-			fileInfo, err := w.Files.GetStatus(ctx, files.GetStatusRequest{Path: path})
-			if err != nil {
-				return err
-			}
-			data.Set("modification_time", fileInfo.ModificationTime)
-			data.Set("file_size", fileInfo.FileSize)
-
 			downloadResponse, err := w.Files.Download(ctx, files.DownloadRequest{FilePath: path})
 			if err != nil {
 				return err
 			}
-
 			dataReadCloser := downloadResponse.Contents
 			defer dataReadCloser.Close()
 			reader := bufio.NewReader(dataReadCloser)
@@ -98,8 +79,9 @@ func ResourceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			data.Set("path", path)
 			data.Set("md5", fmt.Sprintf("%x", md5.Sum(dataByte)))
-			return common.StructToData(fileInfo, s, data)
+			return nil
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

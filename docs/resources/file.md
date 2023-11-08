@@ -82,8 +82,6 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Same as `path`.
-* `file_size` - The file size of the file that is being tracked by this resource in bytes.
-* `modification_time` - The last time stamp when the file was modified
 
 
 ## Import

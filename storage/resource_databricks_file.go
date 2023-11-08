@@ -68,6 +68,7 @@ func ResourceFile() *schema.Resource {
 				return err
 			}
 			path := data.Id()
+			data.Set("path", path)
 			downloadResponse, err := w.Files.Download(ctx, files.DownloadRequest{FilePath: path})
 			if err != nil {
 				return err
@@ -79,7 +80,6 @@ func ResourceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			data.Set("path", path)
 			data.Set("md5", fmt.Sprintf("%x", md5.Sum(dataByte)))
 			return nil
 		},

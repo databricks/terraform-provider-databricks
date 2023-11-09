@@ -68,7 +68,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_directory":               workspace.DataSourceDirectory(),
 			"databricks_group":                   scim.DataSourceGroup(),
 			"databricks_instance_pool":           pools.DataSourceInstancePool(),
-			"databricks_instance_profile":        aws.DataSourceInstanceProfiles(),
+			"databricks_instance_profiles":       aws.DataSourceInstanceProfiles(),
 			"databricks_jobs":                    jobs.DataSourceJobs(),
 			"databricks_job":                     jobs.DataSourceJob(),
 			"databricks_metastore":               catalog.DataSourceMetastore(),

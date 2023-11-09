@@ -22,7 +22,9 @@ func NoOpResource() *schema.Resource {
 	return s
 }
 
-func TestAccProviderPlanShouldSucceedWithoutHost(t *testing.T) {
+// This test ensures that, within a single Terraform module, a workspace can be created and that
+// the Databricks provider can be configured to use that workspace.
+func TestAccProviderPlanShouldSucceedWithIncompleteConfiguration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProviderFactories: map[string]func() (*schema.Provider, error){
@@ -38,7 +40,7 @@ func TestAccProviderPlanShouldSucceedWithoutHost(t *testing.T) {
 
 				data "databricks_spark_version" "latest_lts" {
 					long_term_support = true
-					# depend on something so that this is known at apply
+					# depend on something so that we try to configure our provider but do not try to fetch this resource
 					depends_on = [noop_noop.this]
 				}
 				`,

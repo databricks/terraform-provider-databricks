@@ -108,7 +108,7 @@ Exporter aims to generate HCL code for the most of resources within the Databric
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes |
 | [databricks_job](../resources/job.md) | Yes | No |
 | [databricks_library](../resources/library.md) | Yes | No |
-| [databricks_mlflow_model](../resources/mlflow_model.md) | No | No |
+| [databricks_mlflow_model](../resources/mlflow_model.md) | Yes | Yes |
 | [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes |
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes |

@@ -1972,9 +1972,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_mlflow_model": {
-		Service: "mlflow-models", // why model instead of mlflow
+		Service: "mlflow-models",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Id()
+			return d.Id() + "_" + d.Get("registered_model_id").(string)
 		},
 		List: func(ic *importContext) error {
 			w, err := ic.Client.WorkspaceClient()
@@ -2006,11 +2006,5 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		// Depends: []reference{
-		// 	{Path: "job_spec.job_id", Resource: "databricks_job"},
-		// 	{Path: "job_spec.access_token", Variable: true},
-		// 	// We can enable it, but we don't know if authorization is set or not because API doesn't return it
-		// 	// {Path: "http_url_spec.authorization", Variable: true},
-		// },
 	},
 }

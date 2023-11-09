@@ -2082,7 +2082,6 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 }
 
 func TestImportingMlflowModels(t *testing.T) {
-	// TODO: the empty resource doesn't help
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,

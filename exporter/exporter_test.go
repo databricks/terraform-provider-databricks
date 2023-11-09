@@ -247,6 +247,13 @@ var emptyMlflowWebhooks = qa.HTTPFixture{
 	Response:     ml.ListRegistryWebhooks{},
 }
 
+var emptyMlflowModel = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/mlflow/registered-models/list?",
+	Response:     ml.ListModelsResponse{},
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -356,6 +363,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyInstancePools,
 			emptyModelServing,
 			emptyMlflowWebhooks,
+			emptyMlflowModel,
 			emptySqlDashboards,
 			emptySqlEndpoints,
 			emptySqlQueries,
@@ -561,6 +569,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyRepos,
 			emptyModelServing,
 			emptyMlflowWebhooks,
+			emptyMlflowModel,
 			emptyWorkspaceConf,
 			emptyInstancePools,
 			emptyClusterPolicies,

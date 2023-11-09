@@ -3,10 +3,12 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -47,7 +49,15 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 		},
 	)
 	return common.Resource{
-		Schema: workspaceBindingSchema,
+		Schema:        workspaceBindingSchema,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    bindingSchemaV0(),
+				Upgrade: bindingMigrateV0,
+			},
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -100,4 +110,30 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			return err
 		},
 	}.ToResource()
+}
+
+// migrate to v1 state, as catalog_name is moved to securable_name
+func bindingMigrateV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	newState := map[string]any{}
+	log.Printf("[INFO] Upgrade workspace binding schema")
+	newState["securable_name"] = rawState["catalog_name"]
+	newState["securable_type"] = "catalog"
+	newState["catalog_name"] = rawState["catalog_name"]
+	newState["workspace_id"] = rawState["workspace_id"]
+	newState["binding_type"] = string(catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite)
+	return newState, nil
+}
+
+func bindingSchemaV0() cty.Type {
+	return (&schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"catalog_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"workspace_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		}}).CoreConfigSchema().ImpliedType()
 }

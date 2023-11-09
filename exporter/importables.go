@@ -2067,6 +2067,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
+		// Depends: []reference{
+		// 	{Path: }
+		// },
 	},
 	"databricks_mlflow_webhook": {
 		WorkspaceLevel: true,
@@ -2153,6 +2156,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+	},
+
 	"databricks_access_control_rule_set": {
 		AccountLevel: true,
 		Service:      "access",

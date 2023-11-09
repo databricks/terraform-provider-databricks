@@ -427,6 +427,7 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 		assertAuth: "oauth-m2m",
 		assertHost: ts.URL,
 	}.apply(t)
+
 	ws, err := client.WorkspaceClient()
 	require.NoError(t, err)
 	bgCtx := context.Background()

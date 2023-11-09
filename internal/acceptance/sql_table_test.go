@@ -67,7 +67,6 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_External(t *testing.T) {
-	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_storage_credential" "external" {
@@ -79,10 +78,11 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 		}
 		
 		resource "databricks_external_location" "some" {
-			name            = "external"
+			name            = "external-{var.RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
+			force_destroy   = true
 		}
 				
 		resource "databricks_schema" "this" {

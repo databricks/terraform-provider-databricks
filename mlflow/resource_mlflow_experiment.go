@@ -70,9 +70,7 @@ func (a ExperimentsAPI) Delete(id string) error {
 func ResourceMlflowExperiment() *schema.Resource {
 	s := common.StructToSchema(
 		Experiment{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+		common.NoCustomize)
 
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

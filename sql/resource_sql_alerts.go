@@ -13,12 +13,13 @@ import (
 )
 
 type AlertOptions struct {
-	Column        string `json:"column"`
-	Op            string `json:"op"`
-	Value         string `json:"value"`
-	Muted         bool   `json:"muted,omitempty"`
-	CustomBody    string `json:"custom_body,omitempty"`
-	CustomSubject string `json:"custom_subject,omitempty"`
+	Column           string `json:"column"`
+	Op               string `json:"op"`
+	Value            string `json:"value"`
+	Muted            bool   `json:"muted,omitempty"`
+	CustomBody       string `json:"custom_body,omitempty"`
+	CustomSubject    string `json:"custom_subject,omitempty"`
+	EmptyResultState string `json:"empty_result_state,omitempty"`
 }
 
 type AlertEntity struct {
@@ -47,14 +48,18 @@ func (a *AlertEntity) toCreateAlertApiObject(s map[string]*schema.Schema, data *
 		Op:            a.Options.Op,
 		Value:         a.Options.Value,
 	}
-
-	return ca, nil
+	// This is a workaround for Go SDK problem, will be fixed there.
+	var err error
+	if a.Options.EmptyResultState != "" {
+		err = ca.Options.EmptyResultState.Set(a.Options.EmptyResultState)
+	}
+	return ca, err
 }
 
 func (a *AlertEntity) toEditAlertApiObject(s map[string]*schema.Schema, data *schema.ResourceData) (sql.EditAlert, error) {
 	common.DataToStructPointer(data, s, a)
 
-	return sql.EditAlert{
+	ea := sql.EditAlert{
 		AlertId: data.Id(),
 		Name:    a.Name,
 		Options: sql.AlertOptions{
@@ -67,7 +72,13 @@ func (a *AlertEntity) toEditAlertApiObject(s map[string]*schema.Schema, data *sc
 		},
 		QueryId: a.QueryId,
 		Rearm:   a.Rearm,
-	}, nil
+	}
+
+	var err error
+	if a.Options.EmptyResultState != "" {
+		err = ea.Options.EmptyResultState.Set(a.Options.EmptyResultState)
+	}
+	return ea, err
 }
 
 func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Schema, data *schema.ResourceData) error {
@@ -84,11 +95,12 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Sc
 
 	if apiAlert.Options != nil {
 		a.Options = &AlertOptions{
-			Column:        apiAlert.Options.Column,
-			Op:            apiAlert.Options.Op,
-			Muted:         apiAlert.Options.Muted,
-			CustomBody:    apiAlert.Options.CustomBody,
-			CustomSubject: apiAlert.Options.CustomSubject,
+			Column:           apiAlert.Options.Column,
+			Op:               apiAlert.Options.Op,
+			Muted:            apiAlert.Options.Muted,
+			CustomBody:       apiAlert.Options.CustomBody,
+			CustomSubject:    apiAlert.Options.CustomSubject,
+			EmptyResultState: apiAlert.Options.EmptyResultState.String(),
 		}
 
 		// value can be a string or a float64 - unfortunately this can't be encoded in OpenAPI yet

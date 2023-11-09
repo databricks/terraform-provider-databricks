@@ -10,14 +10,9 @@ import (
 
 func ResourceMlflowModel() *schema.Resource {
 	s := common.StructToSchema(
-		ml.Model{},
+		ml.CreateModelRequest{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			delete(s, "latest_versions")
-			s["name"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			}
+			s["name"].ForceNew = true
 			s["registered_model_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,
@@ -37,13 +32,7 @@ func ResourceMlflowModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			model, err := w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{
-				Name: res.RegisteredModel.Name,
-			})
-			if err != nil {
-				return err
-			}
-			d.SetId(model.RegisteredModelDatabricks.Name)
+			d.SetId(res.RegisteredModel.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -58,7 +47,7 @@ func ResourceMlflowModel() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			err = common.StructToData(res, s, d)
+			err = common.StructToData(res.RegisteredModelDatabricks, s, d)
 			if err != nil {
 				return err
 			}

@@ -47,6 +47,49 @@ func TestDashboardCreate(t *testing.T) {
 	assert.Equal(t, "Dashboard name", d.Get("name"))
 }
 
+func TestDashboardCreateWithRunAs(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/sql/dashboards",
+				ExpectedRequest: api.Dashboard{
+					Name:      "Dashboard name",
+					Tags:      []string{"t1", "t2"},
+					RunAsRole: "owner",
+				},
+				Response: api.Dashboard{
+					ID:        "xyz",
+					Name:      "Dashboard name",
+					Tags:      []string{"t1", "t2"},
+					RunAsRole: "owner",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/dashboards/xyz",
+				Response: api.Dashboard{
+					ID:        "xyz",
+					Name:      "Dashboard name",
+					Tags:      []string{"t1", "t2"},
+					RunAsRole: "owner",
+				},
+			},
+		},
+		Resource: ResourceSqlDashboard(),
+		Create:   true,
+		State: map[string]any{
+			"name":        "Dashboard name",
+			"tags":        []any{"t1", "t2"},
+			"run_as_role": "owner",
+		},
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, "Dashboard name", d.Get("name"))
+}
+
 func TestDashboardRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

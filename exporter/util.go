@@ -96,13 +96,15 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	if userOrSPName == "" {
 		return
 	}
+	// TODO: think about another way of checking for a user. ideally we need to check against the
+	// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
 	if strings.Contains(userOrSPName, "@") {
 		ic.Emit(&resource{
 			Resource:  "databricks_user",
 			Attribute: "user_name",
 			Value:     userOrSPName,
 		})
-	} else if uuidRegex.MatchString(userOrSPName) {
+	} else if common.StringIsUUID(userOrSPName) {
 		ic.Emit(&resource{
 			Resource:  "databricks_service_principal",
 			Attribute: "application_id",
@@ -126,8 +128,10 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 	}
 	parts := strings.SplitN(path, "/", 4)
 	if len(parts) == 3 || (len(parts) == 4 && parts[3] == "") {
+		// TODO: think about another way of checking for a user. ideally we need to check against the
+		// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
 		userOrSPName := parts[2]
-		return strings.Contains(userOrSPName, "@") || uuidRegex.MatchString(userOrSPName)
+		return strings.Contains(userOrSPName, "@") || common.StringIsUUID(userOrSPName)
 	}
 	return false
 }
@@ -193,10 +197,10 @@ func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 	return ic.allWorkspaceObjects
 }
 
-func (ic *importContext) emitGroups(u scim.User, principal string) {
+func (ic *importContext) emitGroups(u scim.User) {
 	for _, g := range u.Groups {
 		if g.Type != "direct" {
-			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, principal)
+			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, u.DisplayName)
 			continue
 		}
 		ic.Emit(&resource{
@@ -206,7 +210,7 @@ func (ic *importContext) emitGroups(u scim.User, principal string) {
 		ic.Emit(&resource{
 			Resource: "databricks_group_member",
 			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-			Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, principal),
+			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
 		})
 	}
 }
@@ -623,6 +627,10 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 			return workerInstPoolID != ""
 		case prefix + "enable_local_disk_encryption":
 			return false
+		case prefix + "spark_conf":
+			return fmt.Sprintf("%v", d.Get(prefix+"spark_conf")) == "map[spark.databricks.delta.preview.enabled:true]"
+		case prefix + "spark_env_vars":
+			return fmt.Sprintf("%v", d.Get(prefix+"spark_env_vars")) == "map[PYSPARK_PYTHON:/databricks/python3/bin/python3]"
 		}
 
 		return defaultShouldOmitFieldFunc(ic, pathString, as, d)

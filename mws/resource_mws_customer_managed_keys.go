@@ -13,7 +13,7 @@ import (
 // AwsKeyInfo has information about the KMS key for BYOK
 type AwsKeyInfo struct {
 	KeyArn    string `json:"key_arn"`
-	KeyAlias  string `json:"key_alias"`
+	KeyAlias  string `json:"key_alias,omitempty"`
 	KeyRegion string `json:"key_region,omitempty" tf:"computed"`
 }
 

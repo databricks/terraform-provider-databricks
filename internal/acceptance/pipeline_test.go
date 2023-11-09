@@ -1,7 +1,12 @@
 package acceptance
 
 import (
+	"context"
 	"testing"
+
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -169,5 +174,57 @@ func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 			continuous = false
 		}
 		` + dltNotebookResource,
+	})
+}
+
+func TestAccPipelineResource_CreatePipelineWithoutWorkers(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `
+		locals {
+			name = "pipeline-acceptance-{var.RANDOM}"
+		}
+		resource "databricks_pipeline" "this" {
+			name = local.name
+			storage = "/test/${local.name}"
+			
+			configuration = {
+				key1 = "value1"
+				key2 = "value2"
+			}
+
+			library {
+				notebook {
+					path = databricks_notebook.this.path
+				}
+			}
+
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "default"
+				num_workers = 0
+				spark_conf = {
+					"spark.databricks.cluster.profile" = "singleNode"	
+				}
+			}
+
+			continuous = false
+		}
+		` + dltNotebookResource,
+		Check: resourceCheck("databricks_pipeline.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+			pipeline, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
+				PipelineId: id,
+			})
+			assert.NoError(t, err)
+			cluster := pipeline.Spec.Clusters[0]
+			assert.Nil(t, cluster.Autoscale)
+			assert.Equal(t, 0, cluster.NumWorkers)
+			// Check that the zero was indeed send by the server, and it's not a default value
+			assert.Contains(t, cluster.ForceSendFields, "NumWorkers")
+			return nil
+		},
+		),
 	})
 }

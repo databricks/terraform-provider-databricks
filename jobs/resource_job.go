@@ -292,6 +292,7 @@ type JobSettings struct {
 	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"suppress_diff"`
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
+	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -310,8 +311,10 @@ func (js *JobSettings) sortWebhooksByID() {
 
 // JobListResponse returns a list of all jobs
 type JobListResponse struct {
-	Jobs    []Job `json:"jobs"`
-	HasMore bool  `json:"has_more,omitempty"`
+	Jobs          []Job  `json:"jobs"`
+	HasMore       bool   `json:"has_more,omitempty"`
+	NextPageToken string `json:"next_page_token,omitempty"`
+	PrevPageToken string `json:"prev_page_token,omitempty"`
 }
 
 // Job contains the information when using a GET request from the Databricks Jobs api
@@ -416,12 +419,14 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 	if name != "" {
 		params["name"] = name
 	}
-	offset := 0
 
+	nextPageToken := ""
 	ctx := context.WithValue(a.context, common.Api, common.API_2_1)
 	for {
 		var resp JobListResponse
-		params["offset"] = offset
+		if nextPageToken != "" {
+			params["page_token"] = nextPageToken
+		}
 		err := a.client.Get(ctx, "/jobs/list", params, &resp)
 		if err != nil {
 			return nil, err
@@ -430,7 +435,7 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 		if !resp.HasMore {
 			break
 		}
-		offset += len(resp.Jobs)
+		nextPageToken = resp.NextPageToken
 	}
 	return jobs, nil
 }
@@ -572,16 +577,14 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 		job.Settings.sortWebhooksByID()
 	}
 
-	if job.RunAsUserName != "" && job.Settings != nil {
-		userNameIsEmail := strings.Contains(job.RunAsUserName, "@")
-
-		if userNameIsEmail {
+	if job.Settings != nil && job.RunAsUserName != "" && job.RunAsUserName != job.CreatorUserName {
+		if common.StringIsUUID(job.RunAsUserName) {
 			job.Settings.RunAs = &JobRunAs{
-				UserName: job.RunAsUserName,
+				ServicePrincipalName: job.RunAsUserName,
 			}
 		} else {
 			job.Settings.RunAs = &JobRunAs{
-				ServicePrincipalName: job.RunAsUserName,
+				UserName: job.RunAsUserName,
 			}
 		}
 	}
@@ -690,6 +693,12 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
+
+		// we need to have only one of user name vs service principal in the run_as block
+		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
+		common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
+		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
+
 		return s
 	})
 

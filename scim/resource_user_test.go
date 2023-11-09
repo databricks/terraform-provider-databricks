@@ -272,7 +272,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -659,7 +659,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 			Response: User{
 				ID: "abc",
 			},
@@ -701,7 +701,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 			Response: User{
 				ID: "abc",
 			},
@@ -726,4 +726,11 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "abc", d.Id())
 	})
+}
+
+func TestUserResource_SparkConfDiffSuppress(t *testing.T) {
+	jr := ResourceUser()
+	scs := jr.Schema["user_name"]
+	assert.True(t, scs.DiffSuppressFunc("user_name", "abcdef@example.com", "AbcDef@example.com", nil))
+	assert.False(t, scs.DiffSuppressFunc("user_name", "abcdef@example.com", "abcdef2@example.com", nil))
 }

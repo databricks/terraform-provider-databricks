@@ -76,6 +76,7 @@ func (ic *importContext) interactivePrompts() {
 // Run import according to flags
 func Run(args ...string) error {
 	log.SetOutput(&logLevel)
+	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
 	client, err := client.New(&config.Config{})
 	if err != nil {
 		return err

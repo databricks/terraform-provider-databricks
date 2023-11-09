@@ -233,6 +233,13 @@ var emptyPipelines = qa.HTTPFixture{
 	Response:     pipelines.PipelineListResponse{},
 }
 
+var emptyClusterPolicies = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/policies/clusters/list?",
+	Response:     compute.ListPoliciesResponse{},
+}
+
 var emptyMlflowWebhooks = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -354,6 +361,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlQueries,
 			emptySqlAlerts,
 			emptyPipelines,
+			emptyClusterPolicies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfs,
 			dummyWorkspaceConf,
@@ -465,7 +473,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -555,6 +563,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,
 			emptyInstancePools,
+			emptyClusterPolicies,
 			dummyWorkspaceConf,
 			{
 				Method:   "GET",
@@ -579,7 +588,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -623,7 +632,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -751,6 +760,30 @@ func TestImportingClusters(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
 			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-response.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			os.Setenv("EXPORTER_PARALLELISM_databricks_cluster", "1")
@@ -783,7 +816,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{
 					Jobs: []jobs.Job{
 						{
@@ -1002,7 +1035,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{
 					Jobs: []jobs.Job{
 						{
@@ -1257,7 +1290,7 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -1315,7 +1348,12 @@ func TestResourceName(t *testing.T) {
 	norm = ic.ResourceName(&resource{
 		Name: "9721431b_bcd3_4526_b90f_f5de2befec8c|8737798193",
 	})
-	assert.Equal(t, "r7322b058678", norm)
+	assert.Equal(t, "r56cde0f5eda", norm)
+
+	assert.NotEqual(t, ic.ResourceName(&resource{
+		Name: "0A"}), ic.ResourceName(&resource{
+		Name: "0a",
+	}))
 
 	norm = ic.ResourceName(&resource{
 		Name: "General Policy - All Users",
@@ -1494,14 +1532,14 @@ func TestImportingIPAccessLists(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists/123?",
 				Response: settings.GetIpAccessListResponse{
-					IpAccessLists: []settings.IpAccessListInfo{resp},
+					IpAccessList: &resp,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/ip-access-lists/124?",
 				Response: settings.GetIpAccessListResponse{
-					IpAccessLists: []settings.IpAccessListInfo{resp2},
+					IpAccessList: &resp2,
 				},
 			},
 			{

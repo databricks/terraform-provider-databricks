@@ -172,3 +172,7 @@ The remote registry returned warnings for registry.terraform.io/databrickslabs/d
 After you replace `databrickslabs/databricks` with `databricks/databricks` in the `required_providers` block, the warning will disappear. Do a global "search and replace" in `*.tf` files. Alternatively you can run `python3 -c "$(curl -Ls https://dbricks.co/updtfns)"` from the command-line, that would do all the boring work for you.
 
 If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](docs/guides/troubleshooting.md).
+
+```
+Warning: Exporter is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.
+```

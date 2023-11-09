@@ -96,9 +96,7 @@ func ResourceMwsPermissionAssignment() *schema.Resource {
 		Permissions []string `json:"permissions" tf:"slice_as_set"`
 	}
 	s := common.StructToSchema(entity{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+		common.NoCustomize)
 	pair := common.NewPairID("workspace_id", "principal_id").Schema(
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return s

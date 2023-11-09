@@ -67,13 +67,14 @@ The following arguments are required:
 * `name` - Name of recipient. Change forces creation of a new resource.
 * `comment` - (Optional) Description about the recipient.
 * `sharing_code` - (Optional) The one-time sharing code provided by the data recipient.
+* `owner` - (Optional) Username/groupname/sp application_id of the recipient owner.
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN` and `DATABRICKS`.
-* `data_recipient_global_metastore_id` - Required when authentication_type is DATABRICKS.
-* `ip_access_list` - (Optional) The one-time sharing code provided by the data recipient.
+* `data_recipient_global_metastore_id` - Required when `authentication_type` is `DATABRICKS`.
+* `ip_access_list` - (Optional) Recipient IP access list.
 
 ### Ip Access List Argument
 
-Only one `ip_access_list` blocks is allowed in a recipient. It conflicts with authentication type DATABRICKS.
+Only one `ip_access_list` block is allowed in a recipient. It conflicts with authentication type `DATABRICKS`.
 
 ```hcl
 ip_access_list {
@@ -99,11 +100,6 @@ In addition to all arguments above, the following attributes are exported:
   * `expiration_time` - Expiration timestamp of the token in epoch milliseconds.
   * `updated_at` - Time at which this recipient Token was updated, in epoch milliseconds.
   * `updated_by` - Username of recipient Token updater.
-
-## Attribute Reference
-
-In addition to all arguments above, the following attributes are exported:
-
 * `id` - ID of this recipient - same as the `name`.
 
 ## Related Resources

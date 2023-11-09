@@ -36,6 +36,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	"github.com/databricks/terraform-provider-databricks/serving"
+	"github.com/databricks/terraform-provider-databricks/sharing"
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/tokens"
@@ -140,7 +141,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_permissions":                 permissions.ResourcePermissions(),
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
 			"databricks_provider":                    catalog.ResourceProvider(),
-			"databricks_recipient":                   catalog.ResourceRecipient(),
+			"databricks_recipient":                   sharing.ResourceRecipient(),
 			"databricks_registered_model":            catalog.ResourceRegisteredModel(),
 			"databricks_repo":                        repos.ResourceRepo(),
 			"databricks_schema":                      catalog.ResourceSchema(),

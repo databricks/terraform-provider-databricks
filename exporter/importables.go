@@ -2067,9 +2067,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
-		// Depends: []reference{
-		// 	{Path: }
-		// },
+		Depends: []reference{
+			{Path: "config.served_models.model_name", Resource: "databricks_mlflow_model", Match: "Name"},
+		},
 	},
 	"databricks_mlflow_webhook": {
 		WorkspaceLevel: true,
@@ -2124,7 +2124,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "mlflow-models",
 		WorkspaceLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Id() // + "_" + d.Get("registered_model_id").(string)
+			return d.Id() + "_" + d.Get("registered_model_id").(string)
 		},
 		List: func(ic *importContext) error {
 			w, err := ic.Client.WorkspaceClient()

@@ -2120,11 +2120,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			// {Path: "http_url_spec.authorization", Variable: true},
 		},
 	},
-
 	"databricks_mlflow_model": {
-		Service: "mlflow-models",
+		Service:        "mlflow-models",
+		WorkspaceLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return d.Id() + "_" + d.Get("registered_model_id").(string)
+			return d.Id() // + "_" + d.Get("registered_model_id").(string)
 		},
 		List: func(ic *importContext) error {
 			w, err := ic.Client.WorkspaceClient()
@@ -2157,7 +2157,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 	},
-
 	"databricks_access_control_rule_set": {
 		AccountLevel: true,
 		Service:      "access",

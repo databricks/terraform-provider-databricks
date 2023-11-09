@@ -2118,7 +2118,6 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 			assert.NoError(t, err)
 		})
 }
-
 func TestImportingMlflowModels(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
@@ -2127,12 +2126,14 @@ func TestImportingMlflowModels(t *testing.T) {
 			emptyIpAccessLIst,
 			emptyWorkspace,
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/list?",
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/mlflow/registered-models/list?",
 				Response: ml.ListModelsResponse{
 					RegisteredModels: []ml.Model{
 						{
-							Name: "abc",
+							Name:        "abc",
+							Description: "abc",
 						},
 					},
 				},
@@ -2142,19 +2143,8 @@ func TestImportingMlflowModels(t *testing.T) {
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=abc",
 				Response: ml.GetModelResponse{
 					RegisteredModelDatabricks: &ml.ModelDatabricks{
-						Name: "abc",
-					},
-				},
-			},
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/mlflow/registered-models/list?name=abc",
-				Response: ml.ListModelsResponse{
-					RegisteredModels: []ml.Model{
-						{
-							Name: "abc",
-						},
+						Name:        "abc",
+						Description: "abc",
 					},
 				},
 			},

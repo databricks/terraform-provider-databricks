@@ -460,6 +460,13 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-
+	r, err := http.NewRequest("GET", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	err = client.Config.Authenticate(r)
+	if err != nil {
+		return nil, err
+	}
 	return client, nil
 }

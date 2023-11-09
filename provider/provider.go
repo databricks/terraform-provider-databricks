@@ -2,12 +2,15 @@ package provider
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"reflect"
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -225,7 +228,7 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 		}
 	}
 	sort.Strings(attrsUsed)
-	log.Printf("[INFO] Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", "))
+	tflog.Info(ctx, fmt.Sprintf("Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", ")))
 	if cfg.AuthType != "" {
 		// mapping from previous Google authentication types
 		// and current authentication types from Databricks Go SDK
@@ -246,8 +249,16 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
-	err = cfg.Authenticate(r.WithContext(context.Background()))
-	if err != nil {
+	err = cfg.Authenticate(r)
+	// When a user creates a workspace and then configures the Databricks provider in the same
+	// module for that workspace, the workspace does not exist at planning time, so computed
+	// attributes like the host are not included in the ConfigureProvider call. In this case,
+	// authentication will fail, but it is safe to continue: the client will not be used, as
+	// no resources yet exist in the as-yet-nonexisting workspace, so Terraform will not attempt
+	// to fetch any resources.
+	if errors.Is(err, config.ErrCannotConfigureAuth) {
+		tflog.Debug(ctx, "default authentication failed, continuing. During planning, this is expected when the configured workspace does not yet exist.")
+	} else if err != nil {
 		return nil, diag.FromErr(err)
 	}
 	client, err := client.New(cfg)

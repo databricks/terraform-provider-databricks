@@ -75,7 +75,7 @@ func (tt providerFixture) rawConfig() map[string]any {
 }
 
 func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
-	c, err := configureProviderAndReturnClient(t, tc, true)
+	c, err := configureProviderAndReturnClient(t, tc)
 	if tc.assertError != "" {
 		require.NotNilf(t, err, "Expected to have %s error", tc.assertError)
 		require.True(t, strings.HasPrefix(err.Error(), tc.assertError),
@@ -418,7 +418,7 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(shortLivedOAuthHandler))
 	defer ts.Close()
 
-	pf := providerFixture{
+	client := providerFixture{
 		env: map[string]string{
 			"DATABRICKS_HOST":          ts.URL,
 			"DATABRICKS_CLIENT_ID":     "x",
@@ -426,9 +426,7 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 		},
 		assertAuth: "oauth-m2m",
 		assertHost: ts.URL,
-	}
-	client, err := configureProviderAndReturnClient(t, pf, false)
-	require.NoError(t, err)
+	}.apply(t)
 	ws, err := client.WorkspaceClient()
 	require.NoError(t, err)
 	bgCtx := context.Background()
@@ -446,7 +444,7 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 	}
 }
 
-func configureProviderAndReturnClient(t *testing.T, tt providerFixture, tryAuthenticate bool) (*common.DatabricksClient, error) {
+func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
 	for k, v := range tt.env {
 		t.Setenv(k, v)
 	}
@@ -461,15 +459,13 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture, tryAuthe
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	if tryAuthenticate {
-		r, err := http.NewRequest("GET", "", nil)
-		if err != nil {
-			return nil, err
-		}
-		err = client.Config.Authenticate(r)
-		if err != nil {
-			return nil, err
-		}
+	r, err := http.NewRequest("GET", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	err = client.Config.Authenticate(r)
+	if err != nil {
+		return nil, err
 	}
 	return client, nil
 }

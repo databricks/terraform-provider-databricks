@@ -12,9 +12,9 @@ import (
 )
 
 var getSecurableName = func(d *schema.ResourceData) string {
-	securableName, ok := d.GetOk("catalog_name")
+	securableName, ok := d.GetOk("securable_name")
 	if !ok {
-		securableName = d.Get("securable_name")
+		securableName = d.Get("catalog_name")
 	}
 	return securableName.(string)
 }

@@ -25,13 +25,13 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			m["catalog_name"] = &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
-				AtLeastOneOf: []string{"catalog_name", "securable_name"},
+				ExactlyOneOf: []string{"catalog_name", "securable_name"},
 				Deprecated:   "Please use 'securable_name' and 'securable_type instead.",
 			}
 			m["securable_name"] = &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
-				AtLeastOneOf: []string{"catalog_name", "securable_name"},
+				ExactlyOneOf: []string{"catalog_name", "securable_name"},
 			}
 			m["securable_type"] = &schema.Schema{
 				Type:     schema.TypeString,

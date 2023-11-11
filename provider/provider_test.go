@@ -144,7 +144,9 @@ func TestConfig_UserPasswordEnv(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "default auth: cannot configure default credentials. " +
+		assertError: "default auth: cannot configure default credentials, " +
+			"please check https://docs.databricks.com/en/dev-tools/auth.html#databricks-client-unified-authentication " +
+			"to configure credentials for your preferred authentication method. " +
 			"Config: username=x, password=***. Env: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
 		assertHost: "https://x",
 	}.apply(t)

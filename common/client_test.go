@@ -14,6 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var NoAuth = "default auth: cannot configure default credentials, " +
+	"please check https://docs.databricks.com/en/dev-tools/auth.html#databricks-client-unified-authentication " +
+	"to configure credentials for your preferred authentication method. "
+
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	req, err := http.NewRequest("GET", dc.Config.Host, nil)
 	if err != nil {
@@ -141,7 +145,7 @@ func TestDatabricksClientConfigure_NoHostGivesError(t *testing.T) {
 				Profile:    "nohost",
 			},
 		},
-	}, "default auth: cannot configure default credentials. "+
+	}, NoAuth+
 		"Config: token=***, profile=nohost, config_file=testdata/.databrickscfg")
 }
 
@@ -167,7 +171,7 @@ func TestDatabricksClientConfigure_MissingFile(t *testing.T) {
 				Profile:    "invalidhost",
 			},
 		},
-	}, "default auth: cannot configure default credentials.")
+	}, "default auth: cannot configure default credentials")
 }
 
 func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {

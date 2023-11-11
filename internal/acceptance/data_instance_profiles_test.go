@@ -13,6 +13,9 @@ func TestAccDataSourceInstanceProfiles(t *testing.T) {
 		}
 
 		data "databricks_instance_profiles" "this" {
+			depends_on = [
+				databricks_instance_profile.this
+			]
 		}
 		
 		output "instance_profiles" {

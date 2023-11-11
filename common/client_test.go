@@ -14,10 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var NoAuth = "default auth: cannot configure default credentials, " +
-	"please check https://docs.databricks.com/en/dev-tools/auth.html#databricks-client-unified-authentication " +
-	"to configure credentials for your preferred authentication method. "
-
 func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	req, err := http.NewRequest("GET", dc.Config.Host, nil)
 	if err != nil {
@@ -32,7 +28,7 @@ func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string)
 		log.Printf("[INFO] Auth is: %s", dc.Config.AuthType)
 	}
 	if assert.NotNil(t, err, "expected to have error: %s", message) {
-		assert.True(t, strings.HasPrefix(err.Error(), message), err.Error())
+		assert.True(t, strings.HasPrefix(err.Error(), message), "Expected to have '%s' error, but got '%s'", message, err.Error())
 	}
 }
 
@@ -42,7 +38,7 @@ func TestDatabricksClientConfigure_Nothing(t *testing.T) {
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{},
 		},
-	}, "default auth: cannot configure default credentials")
+	}, NoAuth)
 }
 
 func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
@@ -53,7 +49,7 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 				Password: "bar",
 			},
 		},
-	}, "default auth: cannot configure default credentials")
+	}, NoAuth)
 }
 
 func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
@@ -92,7 +88,7 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 				Token: "dapi345678",
 			},
 		},
-	}, "default auth: cannot configure default credentials")
+	}, NoAuth)
 }
 
 func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
@@ -146,7 +142,7 @@ func TestDatabricksClientConfigure_NoHostGivesError(t *testing.T) {
 			},
 		},
 	}, NoAuth+
-		"Config: token=***, profile=nohost, config_file=testdata/.databrickscfg")
+		". Config: token=***, profile=nohost, config_file=testdata/.databrickscfg")
 }
 
 func TestDatabricksClientConfigure_InvalidProfileGivesError(t *testing.T) {
@@ -171,7 +167,7 @@ func TestDatabricksClientConfigure_MissingFile(t *testing.T) {
 				Profile:    "invalidhost",
 			},
 		},
-	}, "default auth: cannot configure default credentials")
+	}, NoAuth)
 }
 
 func TestDatabricksClientConfigure_InvalidConfigFilePath(t *testing.T) {
@@ -263,7 +259,7 @@ func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
 				AuthType: "nonsense",
 			},
 		},
-	}, "default auth: cannot configure default credentials")
+	}, NoAuth)
 }
 
 func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {

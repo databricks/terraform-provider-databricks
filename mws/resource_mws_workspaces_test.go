@@ -1404,9 +1404,8 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 		DatabricksClient: client,
 	})
 
-	noAuth := "cannot authenticate parent client: default auth: cannot configure default credentials, " +
-		"please check https://docs.databricks.com/en/dev-tools/auth.html#databricks-client-unified-authentication " +
-		"to configure credentials for your preferred authentication method"
+	noAuth := "cannot authenticate parent client: " + common.NoAuth
+
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
 	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")

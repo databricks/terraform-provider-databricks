@@ -473,7 +473,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -588,7 +588,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -632,7 +632,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -816,7 +816,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{
 					Jobs: []jobs.Job{
 						{
@@ -1035,7 +1035,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{
 					Jobs: []jobs.Job{
 						{
@@ -1290,7 +1290,7 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -1348,7 +1348,12 @@ func TestResourceName(t *testing.T) {
 	norm = ic.ResourceName(&resource{
 		Name: "9721431b_bcd3_4526_b90f_f5de2befec8c|8737798193",
 	})
-	assert.Equal(t, "r7322b058678", norm)
+	assert.Equal(t, "r56cde0f5eda", norm)
+
+	assert.NotEqual(t, ic.ResourceName(&resource{
+		Name: "0A"}), ic.ResourceName(&resource{
+		Name: "0a",
+	}))
 
 	norm = ic.ResourceName(&resource{
 		Name: "General Policy - All Users",

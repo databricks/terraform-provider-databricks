@@ -215,3 +215,51 @@ func TestCmkStateUpgrader(t *testing.T) {
 	_, ok := state["use_cases"]
 	assert.True(t, ok)
 }
+
+func TestAwsKeyInfoKeyAliasOptional(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/customer-managed-keys",
+				ExpectedRequest: CustomerManagedKey{
+					AccountID: "abc",
+					AwsKeyInfo: &AwsKeyInfo{
+						KeyArn: "key-arn",
+					},
+					UseCases: []string{"MANAGED_SERVICES"},
+				},
+				Response: CustomerManagedKey{
+					CustomerManagedKeyID: "cmkid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/customer-managed-keys/cmkid",
+				Response: CustomerManagedKey{
+					CustomerManagedKeyID: "cmkid",
+					AwsKeyInfo: &AwsKeyInfo{
+						KeyArn:    "key-arn",
+						KeyRegion: "us-east-1",
+					},
+					AccountID:    "abc",
+					UseCases:     []string{"MANAGED_SERVICES"},
+					CreationTime: 123,
+				},
+			},
+		},
+		Resource: ResourceMwsCustomerManagedKeys(),
+		HCL: `
+			account_id = "abc"
+
+			aws_key_info {
+				key_arn   = "key-arn"
+			}
+			use_cases = ["MANAGED_SERVICES"]
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/cmkid", d.Id())
+	assert.Equal(t, "key-arn", d.Get("aws_key_info.0.key_arn"))
+}

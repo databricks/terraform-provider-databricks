@@ -2,11 +2,15 @@ package provider
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
+	"net/http"
 	"reflect"
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -67,6 +71,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_job":                     jobs.DataSourceJob(),
 			"databricks_metastore":               catalog.DataSourceMetastore(),
 			"databricks_metastores":              catalog.DataSourceMetastores(),
+			"databricks_mlflow_model":            mlflow.DataSourceModel(),
 			"databricks_mws_credentials":         mws.DataSourceMwsCredentials(),
 			"databricks_mws_workspaces":          mws.DataSourceMwsWorkspaces(),
 			"databricks_node_type":               clusters.DataSourceNodeType(),
@@ -88,6 +93,7 @@ func DatabricksProvider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
 			"databricks_access_control_rule_set":     permissions.ResourceAccessControlRuleSet(),
+			"databricks_artifact_allowlist":          catalog.ResourceArtifactAllowlist(),
 			"databricks_aws_s3_mount":                storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount":       storage.ResourceAzureAdlsGen1Mount(),
 			"databricks_azure_adls_gen2_mount":       storage.ResourceAzureAdlsGen2Mount(),
@@ -225,7 +231,7 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 		}
 	}
 	sort.Strings(attrsUsed)
-	log.Printf("[INFO] Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", "))
+	tflog.Info(ctx, fmt.Sprintf("Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", ")))
 	if cfg.AuthType != "" {
 		// mapping from previous Google authentication types
 		// and current authentication types from Databricks Go SDK
@@ -239,6 +245,24 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
 			cfg.AuthType = newer
 		}
+	}
+	// The OAuth2 library used by the SDK caches the context, so for long-lived applications
+	// where tokens may need to be refreshed, we need to use a context with no timeout.
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	err = cfg.Authenticate(r)
+	// When a user creates a workspace and then configures the Databricks provider in the same
+	// module for that workspace, the workspace does not exist at planning time, so computed
+	// attributes like the host are not included in the ConfigureProvider call. In this case,
+	// authentication will fail, but it is safe to continue: the client will not be used, as
+	// no resources yet exist in the as-yet-nonexisting workspace, so Terraform will not attempt
+	// to fetch any resources.
+	if errors.Is(err, config.ErrCannotConfigureAuth) {
+		tflog.Debug(ctx, "default authentication failed, continuing. During planning, this is expected when the configured workspace does not yet exist.")
+	} else if err != nil {
+		return nil, diag.FromErr(err)
 	}
 	client, err := client.New(cfg)
 	if err != nil {

@@ -82,9 +82,7 @@ func ResourcePermissionAssignment() *schema.Resource {
 		Permissions []string `json:"permissions" tf:"slice_as_set"`
 	}
 	s := common.StructToSchema(entity{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+		common.NoCustomize)
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

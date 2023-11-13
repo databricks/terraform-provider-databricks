@@ -25,7 +25,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
+    privileges = ["CREATE_EXTERNAL_TABLE"]
   }
 }
 ```
@@ -45,7 +45,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
+    privileges = ["CREATE_EXTERNAL_TABLE"]
   }
 }
 ```
@@ -62,7 +62,7 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
+    privileges = ["CREATE_EXTERNAL_TABLE"]
   }
 }
 ```

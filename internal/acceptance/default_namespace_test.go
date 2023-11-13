@@ -12,7 +12,6 @@ import (
 )
 
 func TestAccDefaultNamespaceSetting(t *testing.T) {
-	t.Skip("Automatic test disabled until feature is enabled")
 	workspaceLevel(t, step{
 		Template: `
 		resource "databricks_default_namespace_settings" "this" {

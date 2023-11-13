@@ -300,7 +300,7 @@ func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
 	if recursive {
-		log.Printf("[DEBUG] Doing recursive delete...")
+		log.Printf("[DEBUG] Doing recursive delete of path '%s'", path)
 		mtx.Lock()
 		defer mtx.Unlock()
 	}
@@ -389,12 +389,10 @@ func ResourceNotebook() *schema.Resource {
 			if err != nil {
 				if isParentDoesntExistError(err) {
 					parent := filepath.ToSlash(filepath.Dir(path))
-					if parent != "/" {
-						log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
-						err = notebooksAPI.Mkdirs(parent)
-						if err != nil {
-							return err
-						}
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
+					err = notebooksAPI.Mkdirs(parent)
+					if err != nil {
+						return err
 					}
 					err = notebooksAPI.Create(createNotebook)
 				}

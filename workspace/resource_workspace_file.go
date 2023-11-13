@@ -48,12 +48,10 @@ func ResourceWorkspaceFile() *schema.Resource {
 			if err != nil {
 				if isParentDoesntExistError(err) {
 					parent := filepath.ToSlash(filepath.Dir(path))
-					if parent != "/" {
-						log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
-						err = client.Workspace.MkdirsByPath(ctx, parent)
-						if err != nil {
-							return err
-						}
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
+					err = client.Workspace.MkdirsByPath(ctx, parent)
+					if err != nil {
+						return err
 					}
 					err = client.Workspace.Import(ctx, importReq)
 				}

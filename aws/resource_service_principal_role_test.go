@@ -25,7 +25,7 @@ func TestResourceServicePrincipalRoleCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=roles",
 				Response: scim.User{
 					Schemas:     []scim.URN{scim.ServicePrincipalSchema},
 					DisplayName: "ABC SP",
@@ -74,7 +74,7 @@ func TestResourceServicePrincipalRoleRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=roles",
 				Response: scim.User{
 					Schemas:     []scim.URN{scim.ServicePrincipalSchema},
 					DisplayName: "ABC SP",
@@ -98,7 +98,7 @@ func TestResourceServicePrincipalRoleRead_NoRole(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=roles",
 				Response: scim.User{
 					Schemas:     []scim.URN{scim.ServicePrincipalSchema},
 					DisplayName: "ABC SP",
@@ -118,7 +118,7 @@ func TestResourceServicePrincipalRoleRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=roles",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",

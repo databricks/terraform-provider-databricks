@@ -18,6 +18,10 @@ func userExistsErrorMessage(userName string, isAccount bool) string {
 	}
 }
 
+const (
+	userAttributes = "userName,displayName,active,externalId,entitlements"
+)
+
 // ResourceUser manages users within workspace
 func ResourceUser() *schema.Resource {
 	type entity struct {
@@ -92,7 +96,7 @@ func ResourceUser() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(ctx, c).Read(d.Id(), "userName,displayName,active,externalId,entitlements")
+			user, err := NewUsersAPI(ctx, c).Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
 			}

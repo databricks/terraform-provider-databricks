@@ -272,7 +272,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -659,7 +659,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 			Response: User{
 				ID: "abc",
 			},
@@ -701,7 +701,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 			Response: User{
 				ID: "abc",
 			},

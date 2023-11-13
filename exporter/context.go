@@ -138,8 +138,6 @@ type mount struct {
 var nameFixes = []regexFix{
 	{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
 		`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
-	//	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
-	// {regexp.MustCompile(`@.*$`), ""},
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
 	{regexp.MustCompile(`\W+`), "_"},
 	{regexp.MustCompile(`[_]{2,}`), "_"},

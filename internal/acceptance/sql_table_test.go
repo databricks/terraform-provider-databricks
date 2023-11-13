@@ -1,10 +1,14 @@
 package acceptance
 
 import (
+	"os"
 	"testing"
 )
 
 func TestUcAccResourceSqlTable_Managed(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -99,6 +103,9 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_View(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -146,6 +153,9 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_sql_endpoint" "this" {
@@ -187,6 +197,9 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 	})
 }
 func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {

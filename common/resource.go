@@ -335,3 +335,7 @@ func EqualFoldDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 func NoCustomize(m map[string]*schema.Schema) map[string]*schema.Schema {
 	return m
 }
+
+var NoAuth string = "default auth: cannot configure default credentials, " +
+	"please check https://docs.databricks.com/en/dev-tools/auth.html#databricks-client-unified-authentication " +
+	"to configure credentials for your preferred authentication method"

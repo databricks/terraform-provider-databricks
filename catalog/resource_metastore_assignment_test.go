@@ -118,3 +118,44 @@ func TestMetastoreAssignmentAccount_Update(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestMetastoreAssignmentWorskpace_Update(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/workspaces/124/metastores/a",
+				ExpectedRequest: catalog.AccountsCreateMetastoreAssignment{
+					MetastoreAssignment: &catalog.CreateMetastoreAssignment{
+						DefaultCatalogName: "hive_metastore",
+						MetastoreId:        "a",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/workspaces/123/metastore?",
+				Response: catalog.AccountsMetastoreAssignment{
+					MetastoreAssignment: &catalog.MetastoreAssignment{
+						MetastoreId:        "a",
+						WorkspaceId:        123,
+						DefaultCatalogName: "hive_metastore",
+					},
+				},
+			},
+		},
+		Resource:    ResourceMetastoreAssignment(),
+		AccountID:   "100",
+		ID:          "123|a",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"workspace_id": "123",
+			"metastore_id": "a",
+		},
+		HCL: `
+		workspace_id = 124
+		metastore_id = "a"
+		`,
+	}.ApplyNoError(t)
+}

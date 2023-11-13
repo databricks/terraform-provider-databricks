@@ -14,6 +14,8 @@ func ResourceMetastoreAssignment() *schema.Resource {
 	s := common.StructToSchema(catalog.MetastoreAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["default_catalog_name"].Default = "hive_metastore"
+			m["workspace_id"].ForceNew = true
+			m["metastore_id"].ForceNew = true
 			return m
 		})
 	pi := common.NewPairID("workspace_id", "metastore_id").Schema(

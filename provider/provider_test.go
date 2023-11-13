@@ -94,7 +94,7 @@ func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
 
 func TestConfig_NoParams(t *testing.T) {
 	providerFixture{
-		assertError: "default auth: cannot configure default credentials",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 
@@ -103,7 +103,7 @@ func TestConfig_HostEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_HOST": "x",
 		},
-		assertError: "default auth: cannot configure default credentials",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 
@@ -112,7 +112,7 @@ func TestConfig_TokenEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertError: "default auth: cannot configure default credentials. Config: token=***. Env: DATABRICKS_TOKEN",
+		assertError: common.NoAuth + ". Config: token=***. Env: DATABRICKS_TOKEN",
 	}.apply(t)
 }
 
@@ -144,8 +144,8 @@ func TestConfig_UserPasswordEnv(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "default auth: cannot configure default credentials. " +
-			"Config: username=x, password=***. Env: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
+		assertError: common.NoAuth +
+			". Config: username=x, password=***. Env: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
 		assertHost: "https://x",
 	}.apply(t)
 }
@@ -241,7 +241,7 @@ func TestConfig_ConfigFile(t *testing.T) {
 		env: map[string]string{
 			"CONFIG_FILE": "x",
 		},
-		assertError: "default auth: cannot configure default credentials",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 
@@ -263,8 +263,8 @@ func TestConfig_PatFromDatabricksCfg_NohostProfile(t *testing.T) {
 			"HOME":                      "../common/testdata",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 		},
-		assertError: "default auth: cannot configure default credentials. " +
-			"Config: token=***, profile=nohost. Env: DATABRICKS_CONFIG_PROFILE",
+		assertError: common.NoAuth +
+			". Config: token=***, profile=nohost. Env: DATABRICKS_CONFIG_PROFILE",
 	}.apply(t)
 }
 
@@ -275,8 +275,8 @@ func TestConfig_ConfigProfileAndToken(t *testing.T) {
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 			"HOME":                      "../common/testdata",
 		},
-		assertError: "default auth: cannot configure default credentials. " +
-			"Config: token=***, profile=nohost. Env: DATABRICKS_TOKEN, DATABRICKS_CONFIG_PROFILE",
+		assertError: common.NoAuth +
+			". Config: token=***, profile=nohost. Env: DATABRICKS_TOKEN, DATABRICKS_CONFIG_PROFILE",
 	}.apply(t)
 }
 
@@ -333,7 +333,7 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 			"PATH": "whatever",
 			"HOME": "../common/testdata",
 		},
-		assertError: "default auth: cannot configure default credentials.",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 
@@ -388,7 +388,7 @@ func TestConfig_CorruptConfig(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata/corrupt",
 		},
-		assertError: "default auth: cannot configure default credentials",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 

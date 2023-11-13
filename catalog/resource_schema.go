@@ -119,7 +119,7 @@ func ResourceSchema() *schema.Resource {
 				for _, v := range volumes {
 					w.Volumes.DeleteByFullNameArg(ctx, v.FullName)
 				}
-				// delete all volumes
+				// delete all functions
 				functions, err := w.Functions.ListAll(ctx, catalog.ListFunctionsRequest{
 					CatalogName: strings.Split(name, ".")[0],
 					SchemaName:  strings.Split(name, ".")[1],

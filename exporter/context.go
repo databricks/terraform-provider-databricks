@@ -661,6 +661,8 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 				continue
 			}
 			matchValue = res[1]
+		} else if ref.MatchType == MatchCaseInsensitive {
+			matchValue = strings.ToLower(r.Value) // performance optimization to avoid doing it in the loop
 		}
 		for _, i := range sr.Instances {
 			v := i.Attributes[r.Attribute]
@@ -674,6 +676,8 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			switch ref.MatchType {
 			case MatchExact, MatchDefault:
 				matched = (strValue == r.Value)
+			case MatchCaseInsensitive:
+				matched = (strings.ToLower(strValue) == matchValue)
 			case MatchPrefix:
 				matched = strings.HasPrefix(r.Value, strValue)
 			case MatchRegexp:
@@ -861,7 +865,7 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 		return nil
 	}
 	switch matchType {
-	case MatchExact, MatchDefault:
+	case MatchExact, MatchDefault, MatchCaseInsensitive:
 		return hclwrite.TokensForTraversal(traversal)
 	case MatchPrefix:
 		rest := value[len(attrValue):]

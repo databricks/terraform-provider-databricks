@@ -938,6 +938,9 @@ func TestImportingJobs_JobList(t *testing.T) {
 							UserName:             "user@domain.com",
 							ServicePrincipalName: "0000-1111-2222-3333-4444-5555",
 						},
+						EmailNotifications: &jobs.EmailNotifications{
+							OnFailure: []string{"user@domain.com"},
+						},
 						Libraries: []libraries.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
 						},

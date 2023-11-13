@@ -126,8 +126,8 @@ type QueryParameterDateRangeLike struct {
 
 // QueryParameterAllowMultiple ...
 type QueryParameterAllowMultiple struct {
-	Prefix    string `json:"prefix"`
-	Suffix    string `json:"suffix"`
+	Prefix    string `json:"prefix,omitempty"`
+	Suffix    string `json:"suffix,omitempty"`
 	Separator string `json:"separator"`
 }
 

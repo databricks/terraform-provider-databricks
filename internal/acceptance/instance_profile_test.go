@@ -12,7 +12,7 @@ func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
 		step{
 			Template: `
 		resource "databricks_instance_profile" "this" {
-			instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
+			instance_profile_arn = "{env.DUMMY_EC2_INSTANCE_PROFILE}"
 		}
 		resource "databricks_group" "this" {
 			display_name = "tf-{var.RANDOM}"
@@ -25,7 +25,7 @@ func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
 		step{
 			Template: `
 			resource "databricks_instance_profile" "this" {
-				instance_profile_arn = "{env.TEST_EC2_INSTANCE_PROFILE}"
+				instance_profile_arn = "{env.DUMMY_EC2_INSTANCE_PROFILE}"
 			}
 			resource "databricks_mount" "this" {
 				name = "experiments"

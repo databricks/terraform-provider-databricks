@@ -92,6 +92,18 @@ func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
 	}
 }
 
+func (ic *importContext) emitListOfUsers(users []string) {
+	for _, user := range users {
+		if user != "" {
+			ic.Emit(&resource{
+				Resource:  "databricks_user",
+				Attribute: "user_name",
+				Value:     user,
+			})
+		}
+	}
+}
+
 func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	if userOrSPName == "" {
 		return
@@ -102,7 +114,7 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 		ic.Emit(&resource{
 			Resource:  "databricks_user",
 			Attribute: "user_name",
-			Value:     userOrSPName,
+			Value:     strings.ToLower(userOrSPName),
 		})
 	} else if common.StringIsUUID(userOrSPName) {
 		ic.Emit(&resource{

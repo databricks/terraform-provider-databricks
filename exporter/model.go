@@ -108,6 +108,8 @@ const (
 	MatchExact = "exact"
 	// MatchDefault - same meaning as MatchExact
 	MatchDefault = ""
+	// MatchCaseInsensitive is to specify that whole value should match, but case-insensitive
+	MatchCaseInsensitive = "caseinsensitive"
 	// MatchPrefix is to specify that prefix of value should match
 	MatchPrefix = "prefix"
 	// MatchRegexp is to specify that the group extracted from value should match

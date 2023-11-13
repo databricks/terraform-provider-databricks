@@ -295,7 +295,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "policy_id", Resource: "databricks_cluster_policy"},
-			{Path: "single_user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "single_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "single_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 		List: func(ic *importContext) error {
@@ -358,9 +358,11 @@ var resourcesMap map[string]importable = map[string]importable{
 				fmt.Sprintf("%s_%s", name, d.Id()), "_")
 		},
 		Depends: []reference{
-			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name"},
-			{Path: "email_notifications.on_success", Resource: "databricks_user", Match: "user_name"},
-			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name"},
+			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "email_notifications.on_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
+				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "new_cluster.init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
@@ -404,7 +406,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
-			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "run_as.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 		Import: func(ic *importContext, r *resource) error {
@@ -548,6 +550,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						Value:     job.RunAs.ServicePrincipalName,
 					})
 				}
+			}
+			if job.EmailNotifications != nil {
+				ic.emitListOfUsers(job.EmailNotifications.OnDurationWarningThresholdExceeded)
+				ic.emitListOfUsers(job.EmailNotifications.OnFailure)
+				ic.emitListOfUsers(job.EmailNotifications.OnStart)
+				ic.emitListOfUsers(job.EmailNotifications.OnSuccess)
 			}
 
 			return ic.importLibraries(r.Data, s)
@@ -982,7 +990,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "repo_id", Resource: "databricks_repo"},
 			{Path: "directory_id", Resource: "databricks_directory", Match: "object_id"},
 			{Path: "notebook_id", Resource: "databricks_notebook", Match: "object_id"},
-			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name"},
+			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
 			{Path: "access_control.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 		},
@@ -1089,7 +1097,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "scope", Resource: "databricks_secret_scope"},
 			{Path: "principal", Resource: "databricks_group", Match: "display_name"},
-			{Path: "principal", Resource: "databricks_user", Match: "user_name"},
+			{Path: "principal", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "principal", Resource: "databricks_service_principal", Match: "application_id"},
 		},
 	},

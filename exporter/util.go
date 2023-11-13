@@ -284,7 +284,7 @@ func (ic *importContext) cacheGroups() error {
 			})
 		}
 		if err != nil {
-			log.Printf("[WARN] can't fetch list of groups")
+			log.Printf("[ERROR] can't fetch list of groups")
 			return err
 		}
 		api := scim.NewGroupsAPI(ic.Context, ic.Client)
@@ -326,7 +326,7 @@ func (ic *importContext) getUsersMapping() {
 			})
 		}
 		if err != nil {
-			log.Printf("[WARN] can't fetch list of users")
+			log.Printf("[ERROR] can't fetch list of users")
 			return
 		}
 		for _, user := range users {
@@ -390,7 +390,7 @@ func (ic *importContext) getSpsMapping() {
 			})
 		}
 		if err != nil {
-			log.Printf("[WARN] can't fetch list of service principals")
+			log.Printf("[ERROR] can't fetch list of service principals")
 			return
 		}
 		for _, sp := range sps {

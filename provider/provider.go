@@ -36,6 +36,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	"github.com/databricks/terraform-provider-databricks/serving"
+	"github.com/databricks/terraform-provider-databricks/settings"
 	"github.com/databricks/terraform-provider-databricks/sharing"
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
@@ -103,6 +104,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster":                     clusters.ResourceCluster(),
 			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
 			"databricks_dbfs_file":                   storage.ResourceDbfsFile(),
+			"databricks_default_namespace_settings":  settings.ResourceDefaultNamespaceSettings(),
 			"databricks_directory":                   workspace.ResourceDirectory(),
 			"databricks_entitlements":                scim.ResourceEntitlements(),
 			"databricks_external_location":           catalog.ResourceExternalLocation(),

@@ -26,7 +26,8 @@ Bugfixes:
  * Fixed `Read` method of the [databricks_mlflow_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_model) resource ([#2853](https://github.com/databricks/terraform-provider-databricks/pull/2853)).
 
 Exporter:
- * Fix emitting of group membership ([#2868](https://github.com/databricks/terraform-provider-databricks/pull/2868)).
+ * Fixed emitting of group membership 
+([#2868](https://github.com/databricks/terraform-provider-databricks/pull/2868)).
  * Don't omit `display_name` in [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) if it's not equal to `user_name` ([#2851](https://github.com/databricks/terraform-provider-databricks/pull/2851)).
  * Follow recommendations of identity team on decreasing load on SCIM API ([#2773](https://github.com/databricks/terraform-provider-databricks/pull/2773)).
  * Add case-insensitive match type for dependencies ([#2854](https://github.com/databricks/terraform-provider-databricks/pull/2854)).

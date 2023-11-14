@@ -293,6 +293,7 @@ type JobSettings struct {
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
+	EditMode             jobs.CreateJobEditMode        `json:"edit_mode,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {

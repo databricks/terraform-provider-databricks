@@ -58,6 +58,7 @@ func TestResourceJobCreate(t *testing.T) {
 						Kind:             "BUNDLE",
 						MetadataFilePath: "/a/b/c",
 					},
+					EditMode: "UI_LOCKED",
 				},
 				Response: Job{
 					JobID: 789,
@@ -102,6 +103,7 @@ func TestResourceJobCreate(t *testing.T) {
 							Kind:             "BUNDLE",
 							MetadataFilePath: "/a/b/c",
 						},
+						EditMode: "UI_LOCKED",
 					},
 				},
 			},
@@ -137,7 +139,8 @@ func TestResourceJobCreate(t *testing.T) {
 		deployment {
 			kind = "BUNDLE"
 			metadata_file_path = "/a/b/c"
-		}`,
+		}
+		edit_mode = "UI_LOCKED"`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())

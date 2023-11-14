@@ -14,9 +14,9 @@ This setting requires a restart of clusters and SQL warehouses to take effect. A
 
 ```hcl
 resource "databricks_default_namespace_settings" "this" {
-		namespace {
-			value = "namespace_value"
-		}
+  namespace {
+    value = "namespace_value"
+  }
 }
 ```
 

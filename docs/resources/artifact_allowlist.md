@@ -17,7 +17,7 @@ In Databricks Runtime 13.3 and above, you can add libraries and init scripts to 
 resource "databricks_artifact_allowlist" "init_scripts" {
   artifact_type = "INIT_SCRIPT"
   artifact_matcher {
-    artifact = "/Volumes/inits"
+    artifact   = "/Volumes/inits"
     match_type = "PREFIX_MATCH"
   }
 }

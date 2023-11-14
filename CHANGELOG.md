@@ -45,6 +45,7 @@ Internal Changes:
  * Added integration test for SQL warehouse permissions in [databricks_permissions](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permissions) ([#2845](https://github.com/databricks/terraform-provider-databricks/pull/2845)).
  * Bumped github.com/databricks/databricks-sdk-go from 0.24.0 to 0.25.0 ([#2909](https://github.com/databricks/terraform-provider-databricks/pull/2909)).
  * Enabled and fix tests ([#2901](https://github.com/databricks/terraform-provider-databricks/pull/2901)).
+ * Fix Acceptance Tests ([#2916](https://github.com/databricks/terraform-provider-databricks/pull/2916)).
 
 ## 1.29.0
 

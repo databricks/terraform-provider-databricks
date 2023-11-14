@@ -101,8 +101,10 @@ var mtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
 func (a NotebooksAPI) Create(r ImportPath) error {
-	mtx.Lock()
-	defer mtx.Unlock()
+	if r.Format == "DBC" {
+		mtx.Lock()
+		defer mtx.Unlock()
+	}
 	return a.client.Post(a.context, "/workspace/import", r, nil)
 }
 
@@ -297,8 +299,11 @@ func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	mtx.Lock()
-	defer mtx.Unlock()
+	if recursive {
+		log.Printf("[DEBUG] Doing recursive delete of path '%s'", path)
+		mtx.Lock()
+		defer mtx.Unlock()
+	}
 	return a.client.Post(a.context, "/workspace/delete", DeletePath{
 		Path:      path,
 		Recursive: recursive,
@@ -363,13 +368,6 @@ func ResourceNotebook() *schema.Resource {
 			}
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			path := d.Get("path").(string)
-			parent := filepath.ToSlash(filepath.Dir(path))
-			if parent != "/" {
-				err = notebooksAPI.Mkdirs(parent)
-				if err != nil {
-					return err
-				}
-			}
 			createNotebook := ImportPath{
 				Content:   base64.StdEncoding.EncodeToString(content),
 				Language:  d.Get("language").(string),
@@ -389,7 +387,18 @@ func ResourceNotebook() *schema.Resource {
 			}
 			err = notebooksAPI.Create(createNotebook)
 			if err != nil {
-				return err
+				if isParentDoesntExistError(err) {
+					parent := filepath.ToSlash(filepath.Dir(path))
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
+					err = notebooksAPI.Mkdirs(parent)
+					if err != nil {
+						return err
+					}
+					err = notebooksAPI.Create(createNotebook)
+				}
+				if err != nil {
+					return err
+				}
 			}
 			d.SetId(path)
 			return nil
@@ -431,7 +440,13 @@ func ResourceNotebook() *schema.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewNotebooksAPI(ctx, c).Delete(d.Id(), true)
+			objType := d.Get("object_type")
+			return NewNotebooksAPI(ctx, c).Delete(d.Id(), !(objType == Notebook || objType == File))
 		},
 	}.ToResource()
+}
+
+func isParentDoesntExistError(err error) bool {
+	errStr := err.Error()
+	return strings.HasPrefix(errStr, "The parent folder ") && strings.HasSuffix(errStr, " does not exist.")
 }

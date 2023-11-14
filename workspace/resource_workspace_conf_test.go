@@ -222,3 +222,41 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "_", d.Id())
 }
+
+func TestWorkspaceConfUpdateOnInvalidConf(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				Status:   400,
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "some-invalid-conf is an invalid config key",
+				},
+				ExpectedRequest: map[string]string{
+					"some-invalid-conf": "foo",
+					"some-valid-conf":   "",
+				},
+			},
+		},
+		ID: "_",
+		InstanceState: map[string]string{
+			"custom_config.some-valid-conf": "bar",
+		},
+		Resource: ResourceWorkspaceConf(),
+		HCL: `custom_config {
+			some-invalid-conf = "foo"
+		}`,
+		Update: true,
+	}.Apply(t)
+
+	// Expect error returned during update
+	assert.ErrorContains(t, err, "some-invalid-conf is an invalid config key")
+
+	// Expect previous state of the resource to be preserved
+	config := d.Get("custom_config")
+	assert.Equal(t, map[string]any{
+		"some-valid-conf": "bar",
+	}, config)
+}

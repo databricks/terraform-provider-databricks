@@ -22,8 +22,8 @@ resource "databricks_catalog" "sandbox" {
 }
 
 resource "databricks_catalog_workspace_binding" "sandbox" {
-  workspace_id   = databricks_mws_workspaces.other.workspace_id
   securable_name = databricks_catalog.sandbox.name
+  workspace_id   = databricks_mws_workspaces.other.workspace_id
 }
 ```
 

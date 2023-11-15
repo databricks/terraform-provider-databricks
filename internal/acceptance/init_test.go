@@ -207,6 +207,7 @@ func run(t *testing.T, steps []step) {
 			PreventPostDestroyRefresh: s.PreventPostDestroyRefresh,
 			ImportState:               s.ImportState,
 			ImportStateVerify:         s.ImportStateVerify,
+			ExpectError:               s.ExpectError,
 			Check: func(state *terraform.State) error {
 				// get configured client from provider
 				client := provider.Meta().(*common.DatabricksClient)

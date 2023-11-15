@@ -7,6 +7,8 @@ A metastore is the top-level container of objects in Unity Catalog. It stores da
 
 Unity Catalog offers a new metastore with built in security and auditing. This is distinct to the metastore used in previous versions of Databricks (based on the Hive Metastore).
 
+A Unity Catalog metastore can be created without a root location & credential, allowing flexibility for a more distributed governance approach.
+
 ## Example Usage
 
 For AWS
@@ -67,7 +69,7 @@ resource "databricks_metastore_assignment" "this" {
 The following arguments are required:
 
 * `name` - Name of metastore.
-* `storage_root` - (Optional) Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource.
+* `storage_root` - (Optional) Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource. If no `storage_root` is defined for the metastore, each catalog must have a `storage_root` defined.
 * `region` - (Mandatory for account-level) The region of the metastore
 * `owner` - (Optional) Username/groupname/sp application_id of the metastore owner.
 * `delta_sharing_scope` - (Optional) Required along with `delta_sharing_recipient_token_lifetime_in_seconds`. Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.

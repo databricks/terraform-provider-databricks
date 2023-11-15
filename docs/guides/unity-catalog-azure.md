@@ -9,6 +9,8 @@ If your workspace was enabled for Unity Catalog automatically, this guide does n
 
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
+This guide creates a metastore without a storage root location, allowing flexibility for a more distributed governance approach.
+
 This guide uses the following variables in configurations:
 
 - `databricks_resource_id`: The Azure resource ID for the Databricks workspace where Unity Catalog will be deployed. It should be of the format `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.Databricks/workspaces/workspace1`. To find the resource ID, navigate to your Databricks workspace in the Azure portal, select the JSON View link on the Overview page.

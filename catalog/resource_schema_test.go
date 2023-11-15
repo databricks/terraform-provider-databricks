@@ -247,6 +247,72 @@ func TestForceDeleteSchema(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/tables/b.a.d?",
 			},
 			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/volumes?catalog_name=b&schema_name=a",
+				Response: catalog.ListVolumesResponseContent{
+					Volumes: []catalog.VolumeInfo{
+						{
+							CatalogName: "b",
+							SchemaName:  "a",
+							Name:        "c",
+							FullName:    "b.a.c",
+							VolumeType:  catalog.VolumeTypeManaged,
+						},
+						{
+							CatalogName: "b",
+							SchemaName:  "a",
+							Name:        "d",
+							FullName:    "b.a.d",
+							VolumeType:  catalog.VolumeTypeExternal,
+						},
+					},
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/volumes/b.a.c?",
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/volumes/b.a.d?",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/functions?catalog_name=b&schema_name=a",
+				Response: catalog.ListFunctionsResponse{
+					Functions: []catalog.FunctionInfo{
+						{
+							CatalogName: "b",
+							SchemaName:  "a",
+							Name:        "c",
+							FullName:    "b.a.c",
+						},
+					},
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/functions/b.a.c?",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/models?catalog_name=b&schema_name=a",
+				Response: catalog.ListRegisteredModelsResponse{
+					RegisteredModels: []catalog.RegisteredModelInfo{
+						{
+							CatalogName: "b",
+							SchemaName:  "a",
+							Name:        "c",
+							FullName:    "b.a.c",
+						},
+					},
+				},
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.1/unity-catalog/models/b.a.c?",
+			},
+			{
 				Method:   "DELETE",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
 			},

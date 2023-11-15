@@ -7,7 +7,7 @@ A metastore is the top-level container of objects in Unity Catalog. It stores da
 
 Unity Catalog offers a new metastore with built in security and auditing. This is distinct to the metastore used in previous versions of Databricks (based on the Hive Metastore).
 
-A Unity Catalog metastore can be created without a root location & credential, allowing flexibility for a more distributed governance approach.
+A Unity Catalog metastore can be created without a root location & credential to maintain strict separation of storage across catalogs or environments.
 
 ## Example Usage
 

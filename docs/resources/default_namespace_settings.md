@@ -2,7 +2,7 @@
 subcategory: "Settings"
 ---
 
-# databricks_namespace_settings Resource
+# databricks_namespace_setting Resource
 
 The `databricks_default_namespace_setting` resource allows you to operate the setting configuration for the default namespace in the Databricks workspace.
 Setting the default catalog for the workspace determines the catalog that is used when queries do not reference

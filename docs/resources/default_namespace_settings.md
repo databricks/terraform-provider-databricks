@@ -4,7 +4,7 @@ subcategory: "Settings"
 
 # databricks_namespace_settings Resource
 
-The `databricks_default_namespace_settings` resource allows you to operate the setting configuration for the default namespace in the Databricks workspace.
+The `databricks_default_namespace_setting` resource allows you to operate the setting configuration for the default namespace in the Databricks workspace.
 Setting the default catalog for the workspace determines the catalog that is used when queries do not reference
 a fully qualified 3 level name. For example, if the default catalog is set to 'retail_prod' then a query
 'SELECT * FROM myTable' would reference the object 'retail_prod.default.myTable'
@@ -13,7 +13,7 @@ This setting requires a restart of clusters and SQL warehouses to take effect. A
 ## Example Usage
 
 ```hcl
-resource "databricks_default_namespace_settings" "this" {
+resource "databricks_default_namespace_setting" "this" {
 		namespace {
 			value = "namespace_value"
 		}

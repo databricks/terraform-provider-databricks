@@ -14,13 +14,13 @@ import (
 func TestAccDefaultNamespaceSetting(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: `
-		resource "databricks_default_namespace_settings" "this" {
+		resource "databricks_default_namespace_setting" "this" {
 			namespace {
 				value = "namespace_value"
 			}
 		}
 		`,
-		Check: resourceCheck("databricks_default_namespace_settings.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_default_namespace_setting.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			w, err := client.WorkspaceClient()
 			assert.NoError(t, err)
@@ -34,13 +34,13 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 		}),
 	},
 		step{
-			Template: `resource "databricks_default_namespace_settings" "this" {
+			Template: `resource "databricks_default_namespace_setting" "this" {
 				namespace {
 					value = "namespace_value"
 				}
 			}`,
 			Destroy: true,
-			Check: resourceCheck("databricks_default_namespace_settings.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			Check: resourceCheck("databricks_default_namespace_setting.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 				w, err := client.WorkspaceClient()
 				assert.NoError(t, err)

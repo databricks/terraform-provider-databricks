@@ -104,7 +104,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster":                     clusters.ResourceCluster(),
 			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
 			"databricks_dbfs_file":                   storage.ResourceDbfsFile(),
-			"databricks_default_namespace_settings":  settings.ResourceDefaultNamespaceSettings(),
+			"databricks_default_namespace_setting":   settings.ResourceDefaultNamespaceSetting(),
 			"databricks_directory":                   workspace.ResourceDirectory(),
 			"databricks_entitlements":                scim.ResourceEntitlements(),
 			"databricks_external_location":           catalog.ResourceExternalLocation(),

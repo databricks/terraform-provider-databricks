@@ -97,6 +97,7 @@ func ResourceSchema() *schema.Resource {
 				return err
 			}
 			if force {
+				// delete all tables & views
 				tables, err := w.Tables.ListAll(ctx, catalog.ListTablesRequest{
 					CatalogName: strings.Split(name, ".")[0],
 					SchemaName:  strings.Split(name, ".")[1],
@@ -106,6 +107,39 @@ func ResourceSchema() *schema.Resource {
 				}
 				for _, t := range tables {
 					w.Tables.DeleteByFullName(ctx, t.FullName)
+				}
+				// delete all volumes
+				volumes, err := w.Volumes.ListAll(ctx, catalog.ListVolumesRequest{
+					CatalogName: strings.Split(name, ".")[0],
+					SchemaName:  strings.Split(name, ".")[1],
+				})
+				if err != nil {
+					return err
+				}
+				for _, v := range volumes {
+					w.Volumes.DeleteByFullNameArg(ctx, v.FullName)
+				}
+				// delete all functions
+				functions, err := w.Functions.ListAll(ctx, catalog.ListFunctionsRequest{
+					CatalogName: strings.Split(name, ".")[0],
+					SchemaName:  strings.Split(name, ".")[1],
+				})
+				if err != nil {
+					return err
+				}
+				for _, f := range functions {
+					w.Functions.DeleteByName(ctx, f.FullName)
+				}
+				// delete all models
+				models, err := w.RegisteredModels.ListAll(ctx, catalog.ListRegisteredModelsRequest{
+					CatalogName: strings.Split(name, ".")[0],
+					SchemaName:  strings.Split(name, ".")[1],
+				})
+				if err != nil {
+					return err
+				}
+				for _, m := range models {
+					w.RegisteredModels.DeleteByFullName(ctx, m.FullName)
 				}
 			}
 			return w.Schemas.DeleteByFullName(ctx, name)

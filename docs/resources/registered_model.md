@@ -9,9 +9,9 @@ This resource allows you to create [Models in Unity Catalog](https://docs.databr
 
 ```hcl
 resource "databricks_registered_model" "this" {
-  name = "my_model"
+  name         = "my_model"
   catalog_name = "main"
-  schema_name = "default"
+  schema_name  = "default"
 }
 ```
 

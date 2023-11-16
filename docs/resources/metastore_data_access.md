@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_data_access (Resource)
 
-Each [databricks_metastore](docs/resources/metastore.md) requires an IAM role that will be assumed by Unity Catalog to access data. `databricks_metastore_data_access` defines this
+Optionally, each [databricks_metastore](docs/resources/metastore.md) can have root storage credential defined as `databricks_metastore_data_access`. This will be used by Unity Catalog to access data in the root storage location if defined.
 
 ## Example Usage
 

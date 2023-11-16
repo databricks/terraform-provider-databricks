@@ -69,8 +69,8 @@ resource "databricks_sql_table" "thing_view" {
 
 ```hcl
 resource "databricks_sql_endpoint" "this" {
-  name = "endpoint"
-  cluster_size = "2X-Small"
+  name             = "endpoint"
+  cluster_size     = "2X-Small"
   max_num_clusters = 1
 }
 

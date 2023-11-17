@@ -1265,8 +1265,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "path" {
+			switch pathString {
+			case "path":
 				return false
+			case "branch":
+				return d.Get("branch").(string) == ""
+			case "tag":
+				return d.Get("tag").(string) == ""
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},

@@ -250,6 +250,7 @@ type Trigger struct {
 // JobSettings contains the information for configuring a job on databricks
 type JobSettings struct {
 	Name string `json:"name,omitempty" tf:"default:Untitled"`
+	Description string `json:"description,omitempty"`
 
 	// BEGIN Jobs API 2.0
 	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`

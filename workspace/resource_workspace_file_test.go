@@ -285,6 +285,41 @@ func TestResourceWorkspaceFileCreateSource(t *testing.T) {
 	assert.Equal(t, "/Dashboard", d.Id())
 }
 
+func TestResourceWorkspaceFileCreateEmptyFileSource(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ws_api.Import{
+					Content:         "",
+					Path:            "/__init__.py",
+					Overwrite:       true,
+					Format:          "AUTO",
+					ForceSendFields: []string{"Content"},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2F__init__.py",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: File,
+					Path:       "/__init__.py",
+				},
+			},
+		},
+		Resource: ResourceWorkspaceFile(),
+		State: map[string]any{
+			"source": "acceptance/testdata/empty_file",
+			"path":   "/__init__.py",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "/__init__.py", d.Id())
+}
+
 func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

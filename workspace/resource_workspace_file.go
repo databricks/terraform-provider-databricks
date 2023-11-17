@@ -39,10 +39,11 @@ func ResourceWorkspaceFile() *schema.Resource {
 			}
 			path := d.Get("path").(string)
 			importReq := ws_api.Import{
-				Content:   base64.StdEncoding.EncodeToString(content),
-				Format:    ws_api.ImportFormatAuto,
-				Path:      path,
-				Overwrite: true,
+				Content:         base64.StdEncoding.EncodeToString(content),
+				Format:          ws_api.ImportFormatAuto,
+				Path:            path,
+				Overwrite:       true,
+				ForceSendFields: []string{"Content"},
 			}
 			err = client.Workspace.Import(ctx, importReq)
 			if err != nil {
@@ -84,10 +85,11 @@ func ResourceWorkspaceFile() *schema.Resource {
 				return err
 			}
 			return client.Workspace.Import(ctx, ws_api.Import{
-				Content:   base64.StdEncoding.EncodeToString(content),
-				Format:    ws_api.ImportFormatAuto,
-				Overwrite: true,
-				Path:      d.Id(),
+				Content:         base64.StdEncoding.EncodeToString(content),
+				Format:          ws_api.ImportFormatAuto,
+				Overwrite:       true,
+				Path:            d.Id(),
+				ForceSendFields: []string{"Content"},
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

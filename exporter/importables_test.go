@@ -594,6 +594,24 @@ func TestShouldOmitForUsers(t *testing.T) {
 		scim.ResourceUser().Schema["application_id"], d))
 }
 
+func TestShouldOmitFoRepos(t *testing.T) {
+	d := repos.ResourceRepo().TestResourceData()
+	d.SetId("1234")
+	d.Set("path", "/Repos/Test/repo")
+	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "path",
+		repos.ResourceRepo().Schema["path"], d))
+	assert.True(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "branch",
+		repos.ResourceRepo().Schema["branch"], d))
+	assert.True(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "tag",
+		repos.ResourceRepo().Schema["tag"], d))
+	d.Set("branch", "test")
+	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "branch",
+		repos.ResourceRepo().Schema["branch"], d))
+	d.Set("tag", "v123")
+	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "tag",
+		repos.ResourceRepo().Schema["tag"], d))
+}
+
 func TestUserImportSkipNonDirectGroups(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

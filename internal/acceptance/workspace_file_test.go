@@ -18,6 +18,15 @@ func TestAccWorkspaceFile(t *testing.T) {
 	})
 }
 
+func TestAccWorkspaceFileEmptyFile(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `resource "databricks_workspace_file" "empty" {
+			source = "{var.CWD}/../../workspace/acceptance/testdata/empty_file"
+			path = "/Shared/provider-test/empty_{var.RANDOM}"
+		}`,
+	})
+}
+
 func TestAccWorkspaceFileBase64(t *testing.T) {
 	workspaceLevel(t, step{
 		Template: `resource "databricks_workspace_file" "this2" {

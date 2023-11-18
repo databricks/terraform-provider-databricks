@@ -54,6 +54,13 @@ locals {
 resource "databricks_cluster_policy" "fair_use" {
   name       = "${var.team} cluster policy"
   definition = jsonencode(merge(local.default_policy, var.policy_overrides))
+
+  library {
+    pypi {
+      package = "databricks-sdk==0.12.0"
+      // repo can also be specified here
+    }
+  }
 }
 
 resource "databricks_permissions" "can_use_cluster_policyinstance_profile" {
@@ -95,7 +102,7 @@ module "engineering_compute_policy" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
 * `name` - (Required) Cluster policy name. This must be unique. Length must be between 1 and 100 characters.
 * `description` - (Optional) Additional human-readable description of the cluster policy.
@@ -103,6 +110,7 @@ The following arguments are required:
 * `max_clusters_per_user` - (Optional, integer) Maximum number of clusters allowed per user. When omitted, there is no limit. If specified, value must be greater than zero.
 * `policy_family_definition_overrides`(Optional) Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition inherited from the policy family. Policy rules specified here are merged into the inherited policy definition.
 * `policy_family_id` (Optional) ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition. Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy definition.
+* `libraries` (Optional) blocks defining individual libraries that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
 
 ## Attribute Reference
 

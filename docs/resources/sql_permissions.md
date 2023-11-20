@@ -66,7 +66,7 @@ The following arguments are available to specify the data object you need to enf
 * `table` - Name of the table. Can be combined with `database`. 
 * `view` - Name of the view. Can be combined with `database`. 
 * `catalog` - (Boolean) If this access control for the entire catalog. Defaults to `false`.
-* `any_file` - (Boolean) If this access control for reading any file. Defaults to `false`.
+* `any_file` - (Boolean) If this access control for reading/writing any file. Defaults to `false`.
 * `anonymous_function` - (Boolean) If this access control for using anonymous function. Defaults to `false`.
 
 ### `privilege_assignments` blocks

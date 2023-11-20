@@ -37,17 +37,18 @@ import (
 )
 
 var (
-	adlsGen2Regex                = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	adlsGen1Regex                = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
-	wasbsRegex                   = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	s3Regex                      = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
-	gsRegex                      = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
-	globalWorkspaceConfName      = "global_workspace_conf"
-	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
-	fileNameNormalizationRegex   = regexp.MustCompile(`[^-_\w/.@]`)
-	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
-	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
-	predefinedClusterPolicies    = []string{"Personal Compute", "Job Compute", "Power User Compute", "Shared Compute"}
+	adlsGen2Regex              = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen1Regex              = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
+	wasbsRegex                 = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	s3Regex                    = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
+	gsRegex                    = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
+	globalWorkspaceConfName    = "global_workspace_conf"
+	nameNormalizationRegex     = regexp.MustCompile(`\W+`)
+	fileNameNormalizationRegex = regexp.MustCompile(`[^-_\w/.@]`)
+	jobClustersRegex           = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
+	dltClusterRegex            = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
+	predefinedClusterPolicies  = []string{"personal-vm", "shared-data-science", "shared-compute",
+		"power-user", "job-cluster"}
 	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
 	dltDefaultStorageRegex       = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
@@ -628,7 +629,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for offset, policy := range policies {
 				log.Printf("[TRACE] Scanning %d:  %v", offset+1, policy)
-				if slices.Contains(predefinedClusterPolicies, policy.Name) {
+				if policy.PolicyFamilyId != "" && slices.Contains(predefinedClusterPolicies, policy.PolicyFamilyId) &&
+					policy.PolicyFamilyDefinitionOverrides == "" {
 					continue
 				}
 				if !ic.MatchesName(policy.Name) {
@@ -653,8 +655,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					Name:     "cluster_policy_" + ic.Importables["databricks_cluster_policy"].Name(ic, r.Data),
 				})
 			}
+
+			definitionString := r.Data.Get("definition").(string)
 			var definition map[string]map[string]any
-			err := json.Unmarshal([]byte(r.Data.Get("definition").(string)), &definition)
+			err := json.Unmarshal([]byte(definitionString), &definition)
 			if err != nil {
 				return err
 			}
@@ -700,13 +704,17 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 			}
-			policyName := r.Data.Get("name").(string)
-			if slices.Contains(predefinedClusterPolicies, policyName) {
-				r.Mode = "data"
+			policyFamilyId := r.Data.Get("policy_family_id").(string)
+			if policyFamilyId != "" && definitionString != "" {
+				policyOverrides := r.Data.Get("policy_family_definition_overrides").(string)
 				// we need to set definition to empty value because otherwise it will be put into
 				// generated HCL code for data source, and it only supports the `name` attribute
 				r.Data.Set("definition", "")
+				if slices.Contains(predefinedClusterPolicies, policyFamilyId) && policyOverrides == "" {
+					r.Mode = "data"
+				}
 			}
+
 			return nil
 		},
 		// TODO: special formatting required, where JSON is written line by line

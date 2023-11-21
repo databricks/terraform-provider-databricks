@@ -15,6 +15,7 @@ It is possible to create [a Databricks job](https://docs.databricks.com/data-eng
 ```hcl
 resource "databricks_job" "this" {
   name = "Job with multiple tasks"
+  description = "This job executes multiple tasks on a shared job cluster, which will be provisioned as part of execution, and terminated once all tasks are finished."
 
   job_cluster {
     job_cluster_key = "j"
@@ -78,6 +79,7 @@ resource "databricks_job" "this" {
 The resource supports the following arguments:
 
 * `name` - (Optional) An optional name for the job. The default value is Untitled.
+* `description` - (Optional) An optional description for the job. The maximum length is 1024 characters in UTF-8 encoding.
 * `job_cluster` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
 * `always_running` - (Optional, Deprecated) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
 * `control_run_state` - (Optional) (Bool) If true, the Databricks provider will stop and start the job as needed to ensure that the active run for the job reflects the deployed configuration. For continuous jobs, the provider respects the `pause_status` by stopping the current active run. This flag cannot be set for non-continuous jobs.

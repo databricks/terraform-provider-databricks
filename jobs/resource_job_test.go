@@ -2217,7 +2217,7 @@ func TestResourceJobDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/jobs/delete",
+				Resource: "/api/2.1/jobs/delete",
 				ExpectedRequest: map[string]int{
 					"job_id": 789,
 				},

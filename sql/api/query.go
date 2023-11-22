@@ -14,6 +14,7 @@ type Query struct {
 	Query        string `json:"query"`
 	// Deprecated: Use databricks_job resource to schedule a Query
 	Schedule       *QuerySchedule    `json:"schedule"`
+	RunAsRole      string            `json:"run_as_role,omitempty"`
 	Options        *QueryOptions     `json:"options,omitempty"`
 	Tags           []string          `json:"tags,omitempty"`
 	Visualizations []json.RawMessage `json:"visualizations,omitempty"`
@@ -46,8 +47,6 @@ type QuerySchedule struct {
 type QueryOptions struct {
 	Parameters    []any             `json:"-"`
 	RawParameters []json.RawMessage `json:"parameters,omitempty"`
-
-	RunAsRole string `json:"run_as_role,omitempty"`
 }
 
 // MarshalJSON ...

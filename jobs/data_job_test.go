@@ -138,10 +138,10 @@ func TestDataSourceQueryableJobRunAsSameUser(t *testing.T) {
 		HCL:         `job_id = "234"`,
 		ID:          "234",
 	}.ApplyAndExpectData(t, map[string]any{
-		"job_id":                             "234",
-		"id":                                 "234",
-		"job_settings.0.settings.0.name":     "Second",
-		"job_settings.0.settings.0.run_as.0": map[string]any{},
+		"job_id":                         "234",
+		"id":                             "234",
+		"job_settings.0.settings.0.name": "Second",
+		"job_settings.0.settings.0.run_as.0.user_name": "user@domain.com",
 	})
 }
 

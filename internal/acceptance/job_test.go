@@ -279,3 +279,23 @@ func TestAccJobRunAsServicePrincipal(t *testing.T) {
 		Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 	})
 }
+
+func TestAccJobRunAsMutations(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "ucws")
+	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+	unityWorkspaceLevel(
+		t,
+		// Provision job with service principal `run_as`
+		step{
+			Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
+		},
+		// Update job to a user `run_as`
+		step{
+			Template: runAsTemplate(`user_name = data.databricks_current_user.me.user_name`),
+		},
+		// Update job back to a service principal `run_as`
+		step{
+			Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
+		},
+	)
+}

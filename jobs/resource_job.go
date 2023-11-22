@@ -290,7 +290,7 @@ type JobSettings struct {
 	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string             `json:"tags,omitempty"`
 	Queue                *jobs.QueueSettings           `json:"queue,omitempty"`
-	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"suppress_diff"`
+	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"computed"`
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
 	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
@@ -579,7 +579,10 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 		job.Settings.sortWebhooksByID()
 	}
 
-	if job.Settings != nil && job.RunAsUserName != "" && job.RunAsUserName != job.CreatorUserName {
+	// Populate the `run_as` field. In the settings struct it can only be set on write and is not
+	// returned on read. Therefore, we populate it from the top-level `run_as_user_name` field so
+	// that Terraform can still diff it with the intended state.
+	if job.Settings != nil && job.RunAsUserName != "" {
 		if common.StringIsUUID(job.RunAsUserName) {
 			job.Settings.RunAs = &JobRunAs{
 				ServicePrincipalName: job.RunAsUserName,

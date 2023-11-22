@@ -706,6 +706,10 @@ func parseJobId(id string) (int64, error) {
 	return strconv.ParseInt(id, 10, 64)
 }
 
+func jobIdToString(id int64) string {
+	return strconv.FormatInt(id, 10)
+}
+
 // Callbacks to manage runs for jobs after creation and update.
 //
 // There are three types of lifecycle management for jobs:
@@ -720,7 +724,7 @@ type jobLifecycleManager interface {
 	OnUpdate(ctx context.Context) error
 }
 
-func getJobLifecycleManager(d *schema.ResourceData, m any) jobLifecycleManager {
+func getJobLifecycleManager(d *schema.ResourceData, m *common.DatabricksClient) jobLifecycleManager {
 	if d.Get("always_running").(bool) {
 		return alwaysRunningLifecycleManager{d: d, m: m}
 	}
@@ -741,7 +745,7 @@ func (n noopLifecycleManager) OnUpdate(ctx context.Context) error {
 
 type alwaysRunningLifecycleManager struct {
 	d *schema.ResourceData
-	m any
+	m *common.DatabricksClient
 }
 
 func (a alwaysRunningLifecycleManager) OnCreate(ctx context.Context) error {
@@ -749,6 +753,15 @@ func (a alwaysRunningLifecycleManager) OnCreate(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	w, err := a.m.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	var req jobs.RunNow
+	req.JobId = jobID // Only populating the jobID here, not sure if it's sufficient
+	common.DataToStructPointer(a.d, jobSchema, &req)
+	runID, err := w.Jobs.RunNow(ctx, req)
+
 	return NewJobsAPI(ctx, a.m).Start(jobID, a.d.Timeout(schema.TimeoutCreate))
 }
 func (a alwaysRunningLifecycleManager) OnUpdate(ctx context.Context) error {
@@ -875,22 +888,26 @@ func ResourceJob() *schema.Resource {
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettings
-			common.DataToStructPointer(d, jobSchema, &js)
-			if js.isMultiTask() {
+			// var js JobSettings
+			w, err := c.WorkspaceClient()
+			var req jobs.CreateJob
+			// TOOD: Check if this works, jobsSchema might not work here
+			common.DataToStructPointer(d, jobSchema, &req)
+			if req.Format == "MULTI_TASK" || len(req.Tasks) > 0 {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
-			jobsAPI := NewJobsAPI(ctx, c)
-			job, err := jobsAPI.Create(js)
+			job, err := w.Jobs.Create(ctx, req)
 			if err != nil {
 				return err
 			}
-			d.SetId(job.ID())
+			d.SetId(jobIdToString(job.JobId))
 			return getJobLifecycleManager(d, c).OnCreate(ctx)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			job, err := NewJobsAPI(ctx, c).Read(d.Id())
+			w, err := c.WorkspaceClient()
+			jobID, err := parseJobId(d.Id())
+			job, err := w.Jobs.GetByJobId(ctx, jobID)
 			if err != nil {
 				return err
 			}
@@ -915,7 +932,12 @@ func ResourceJob() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			return NewJobsAPI(ctx, c).Delete(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			jobID, err := parseJobId(d.Id())
+			return w.Jobs.DeleteByJobId(ctx, jobID)
 		},
 	}.ToResource()
 }

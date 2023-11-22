@@ -2344,3 +2344,52 @@ resource "databricks_pipeline" "def" {
 			assert.True(t, strings.Contains(contentStr, `variable "job_spec_webhook_def"`))
 		})
 }
+
+func TestImportingRunJobTask(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
+				Response: map[string]any{
+					"jobs": []any{
+						getJSONObject("test-data/run-job-main.json"),
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=1047501313827425",
+				Response: getJSONObject("test-data/run-job-main.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=932035899730845",
+				Response: getJSONObject("test-data/run-job-child.json"),
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "jobs"
+			ic.services = "jobs"
+			ic.match = "runjobtask"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/jobs.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `job_id = databricks_job.jartask_932035899730845.id`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "runjobtask_1047501313827425"`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "jartask_932035899730845"`))
+		})
+}

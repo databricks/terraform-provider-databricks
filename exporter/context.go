@@ -897,7 +897,7 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
-func (ic *importContext) reference(i importable, path []string, value string) hclwrite.Tokens {
+func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value) hclwrite.Tokens {
 	match := dependsRe.ReplaceAllString(strings.Join(path, "."), "")
 	for _, d := range i.Depends {
 		if d.Path != match {
@@ -919,7 +919,7 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 			return tokens
 		}
 	}
-	return hclwrite.TokensForValue(cty.StringVal(value))
+	return hclwrite.TokensForValue(ctyValue)
 }
 
 func (ic *importContext) variable(name, desc string) hclwrite.Tokens {
@@ -972,18 +972,22 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		}
 		switch as.Type {
 		case schema.TypeString:
-			body.SetAttributeRaw(a, ic.reference(i, append(path, a), raw.(string)))
+			value := raw.(string)
+			body.SetAttributeRaw(a, ic.reference(i, append(path, a), value, cty.StringVal(value)))
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))
 		case schema.TypeInt:
+			var num int64
 			switch iv := raw.(type) {
 			case int:
-				body.SetAttributeValue(a, cty.NumberIntVal(int64(iv)))
+				num = int64(iv)
 			case int32:
-				body.SetAttributeValue(a, cty.NumberIntVal(int64(iv)))
+				num = int64(iv)
 			case int64:
-				body.SetAttributeValue(a, cty.NumberIntVal(iv))
+				num = iv
 			}
+			body.SetAttributeRaw(a, ic.reference(i, append(path, a),
+				strconv.FormatInt(num, 10), cty.NumberIntVal(num)))
 		case schema.TypeFloat:
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
@@ -1054,7 +1058,8 @@ func (ic *importContext) readListFromData(i importable, path []string, d *schema
 			}
 			switch x := raw.(type) {
 			case string:
-				toks = append(toks, ic.reference(i, path, x)...)
+				value := raw.(string)
+				toks = append(toks, ic.reference(i, path, value, cty.StringVal(value))...)
 			case int:
 				// probably we don't even use integer lists?...
 				toks = append(toks, hclwrite.TokensForValue(

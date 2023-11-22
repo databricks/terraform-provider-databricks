@@ -925,6 +925,9 @@ func ResourceJob() *schema.Resource {
 				return err
 			}
 			jobID, err := parseJobId(d.Id())
+			if err != nil {
+				return err
+			}
 			return w.Jobs.DeleteByJobId(ctx, jobID)
 		},
 	}.ToResource()

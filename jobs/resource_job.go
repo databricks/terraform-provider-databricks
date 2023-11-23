@@ -895,7 +895,15 @@ func ResourceJob() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			job, err := NewJobsAPI(ctx, c).Read(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			jobID, err := parseJobId(d.Id())
+			if err != nil {
+				return err
+			}
+			job, err := w.Jobs.GetByJobId(ctx, jobID)
 			if err != nil {
 				return err
 			}

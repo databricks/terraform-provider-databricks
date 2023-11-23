@@ -34,54 +34,46 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			assertEnableIpAccessList(t, "true")
 			return nil
 		},
-	})
-}
-
-func TestAccInvalidWorkspaceConfAreIgnored(t *testing.T) {
-	workspaceLevel(t,
+	}, step{
 		// Set enableIpAccessLists to false
-		step{
-			Template: `resource "databricks_workspace_conf" "this" {
+		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
 					"enableIpAccessLists": "false"
 				}
 			}`,
-			Check: func(s *terraform.State) error {
-				// Assert server side configuration is updated
-				assertEnableIpAccessList(t, "false")
+		Check: func(s *terraform.State) error {
+			// Assert server side configuration is updated
+			assertEnableIpAccessList(t, "false")
 
-				// Assert state is persisted
-				conf := s.RootModule().Resources["databricks_workspace_conf.this"]
-				assert.Equal(t, "false", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
-				return nil
-			},
+			// Assert state is persisted
+			conf := s.RootModule().Resources["databricks_workspace_conf.this"]
+			assert.Equal(t, "false", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
+			return nil
 		},
+	}, step{
 		// Set invalid configuration
-		step{
-			Template: `resource "databricks_workspace_conf" "this" {
+		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
 					"enableIpAccessLissss": "invalid"
 				}
 			}`,
-			// Assert on server side error returned
-			ExpectError: regexp.MustCompile(`cannot update workspace conf: Invalid keys`),
-		},
+		// Assert on server side error returned
+		ExpectError: regexp.MustCompile(`cannot update workspace conf: Invalid keys`),
+	}, step{
 		// Set enableIpAccessLists to true
-		step{
-			Template: `resource "databricks_workspace_conf" "this" {
+		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
 					"enableIpAccessLists": "true"
 				}
 			}`,
-			Check: func(s *terraform.State) error {
-				// Assert server side configuration is updated
-				assertEnableIpAccessList(t, "true")
+		Check: func(s *terraform.State) error {
+			// Assert server side configuration is updated
+			assertEnableIpAccessList(t, "true")
 
-				// Assert state is persisted
-				conf := s.RootModule().Resources["databricks_workspace_conf.this"]
-				assert.Equal(t, "true", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
-				return nil
-			},
+			// Assert state is persisted
+			conf := s.RootModule().Resources["databricks_workspace_conf.this"]
+			assert.Equal(t, "true", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
+			return nil
 		},
-	)
+	})
 }

@@ -932,7 +932,7 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -978,7 +978,7 @@ func TestResourceJobCreate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) 
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1126,7 +1126,7 @@ func TestResourceJobCreateSingleNode(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{

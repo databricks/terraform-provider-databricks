@@ -920,7 +920,15 @@ func ResourceJob() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
-			return NewJobsAPI(ctx, c).Delete(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			jobID, err := parseJobId(d.Id())
+			if err != nil {
+				return err
+			}
+			return w.Jobs.DeleteByJobId(ctx, jobID)
 		},
 	}.ToResource()
 }

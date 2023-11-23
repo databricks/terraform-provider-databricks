@@ -118,16 +118,6 @@ type RunJobTask struct {
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
 }
 
-// EmailNotifications contains the information for email notifications after job or task run start or completion
-type EmailNotifications struct {
-	OnStart                            []string `json:"on_start,omitempty"`
-	OnSuccess                          []string `json:"on_success,omitempty"`
-	OnFailure                          []string `json:"on_failure,omitempty"`
-	OnDurationWarningThresholdExceeded []string `json:"on_duration_warning_threshold_exceeded,omitempty"`
-	NoAlertForSkippedRuns              bool     `json:"no_alert_for_skipped_runs,omitempty"`
-	AlertOnLastAttempt                 bool     `json:"alert_on_last_attempt,omitempty"`
-}
-
 // WebhookNotifications contains the information for webhook notifications sent after job start or completion.
 type WebhookNotifications struct {
 	OnStart                            []Webhook `json:"on_start,omitempty"`
@@ -208,7 +198,8 @@ type JobTaskSettings struct {
 	// ConditionTask is in private preview
 	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
 
-	EmailNotifications     *EmailNotifications            `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications   *WebhookNotifications          `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
 	NotificationSettings   *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
 	TimeoutSeconds         int32                          `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32                          `json:"max_retries,omitempty"`
@@ -285,7 +276,7 @@ type JobSettings struct {
 	Continuous           *ContinuousConf               `json:"continuous,omitempty"`
 	Trigger              *Trigger                      `json:"trigger,omitempty"`
 	MaxConcurrentRuns    int32                         `json:"max_concurrent_runs,omitempty"`
-	EmailNotifications   *EmailNotifications           `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	EmailNotifications   *jobs.JobEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications *WebhookNotifications         `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
 	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string             `json:"tags,omitempty"`

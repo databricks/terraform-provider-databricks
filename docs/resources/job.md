@@ -96,8 +96,8 @@ The resource supports the following arguments:
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
-* `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is [documented below](#email_notifications-configuration-block).
-* `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes and fails. The default behavior is to not send any notifications. This field is a block and is documented below.
+* `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes or fails. The default behavior is to not send any emails. This field is a block and is [documented below](#job-level-email_notifications-configuration-block).
+* `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `notification_settings` - (Optional) An optional block controlling the notification settings on the job level (described below).
 * `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
 * `health` - (Optional) An optional block that specifies the health conditions for the job (described below).
@@ -124,7 +124,8 @@ This block describes individual tasks:
 * `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
-* `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes and fails. The default behavior is to not send any emails. This field is a block and is [documented below](#email_notifications-configuration-block).
+* `email_notifications` - (Optional) (List) An optional set of email addresses notified when this task begins, completes or fails. The default behavior is to not send any emails. This field is a block and is [documented below](#task-level-email_notifications-configuration-block).
+* `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `health` - (Optional) block described below that specifies health conditions for a given task.
 
 ### depends_on Configuration Block
@@ -209,13 +210,20 @@ This block is used to specify Git repository information & branch/tag/commit tha
 * `tag` - name of the Git branch to use. Conflicts with `branch` and `commit`.
 * `commit` - hash of Git commit to use. Conflicts with `branch` and `tag`.
 
-### email_notifications Configuration Block
+### Job-level `email_notifications` Configuration Block
 
 * `on_start` - (Optional) (List) list of emails to notify when the run starts.
 * `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
 * `on_failure` - (Optional) (List) list of emails to notify when the run fails.
 * `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs. (It's recommended to use the corresponding setting in the `notification_settings` configuration block).
+
+### Task-level `email_notifications` Configuration Block
+
+* `on_start` - (Optional) (List) list of emails to notify when the run starts.
+* `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
+* `on_failure` - (Optional) (List) list of emails to notify when the run fails.
+* `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
 
 ### webhook_notifications Configuration Block
 

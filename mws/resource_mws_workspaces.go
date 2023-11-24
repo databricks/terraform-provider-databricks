@@ -201,10 +201,10 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	// make a request to SCIM API, just to verify there are no errors
 	var response map[string]any
 	err = wsClient.Get(ctx, "/preview/scim/v2/Me", nil, &response)
-	var apiError *apierr.APIError
-	if errors.As(err, &apiError) {
+	var dnsError *net.DNSError
+	if errors.As(err, &dnsError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
-			ws.WorkspaceURL, apiError)
+			ws.WorkspaceURL, dnsError.Err)
 		log.Printf("[INFO] %s", err)
 		// expected to retry on: dial tcp: lookup XXX: no such host
 		return resource.RetryableError(err)

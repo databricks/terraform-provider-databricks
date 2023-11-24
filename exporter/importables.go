@@ -602,9 +602,9 @@ var resourcesMap map[string]importable = map[string]importable{
 								return reflect.DeepEqual(*js.Tasks[taskIndex].EmailNotifications,
 									sdk_jobs.TaskEmailNotifications{})
 							}
-						case "webhooks_notifications":
-							if js.Tasks[taskIndex].EmailNotifications != nil {
-								return reflect.DeepEqual(*js.Tasks[taskIndex].EmailNotifications,
+						case "webhook_notifications":
+							if js.Tasks[taskIndex].WebhookNotifications != nil {
+								return reflect.DeepEqual(*js.Tasks[taskIndex].WebhookNotifications,
 									sdk_jobs.WebhookNotifications{})
 							}
 						}

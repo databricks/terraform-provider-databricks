@@ -108,6 +108,7 @@ This block describes individual tasks:
 
 * `task_key` - (Required) string specifying an unique key for a given task.
 * `*_task` - (Required) one of the specific task blocks described below:
+  * `condition_task`
   * `dbt_task`
   * `notebook_task`
   * `pipeline_task`
@@ -133,6 +134,7 @@ This block describes individual tasks:
 This block describes dependencies of a given task:
 
 * `task_key` - (Required) The name of the task this task depends on.
+* `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
 
 ### tags Configuration Map
 
@@ -335,6 +337,16 @@ You also need to include a `git_source` block to configure the repository that c
 
 * `job_id` - (Required)(String) ID of the job
 * `job_parameters` - (Optional)(Map) Job parameters for the task
+
+### condition_task Configuration Block
+
+The `condition_task` specifies a condition with an outcome that can be used to control the execution of dependent tasks.
+
+* `left` - The left operand of the condition task. It could be a string value, job state, or a parameter reference.
+* `right` - The right operand of the condition task. It could be a string value, job state, or parameter reference.
+* `op` - The string specifying the operation used to compare operands.  Currently, following operators are supported: `EQUAL_TO`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`. (Check the [API docs](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
+
+This task does not require a cluster to execute and does not support retries or notifications.
 
 ### sql_task Configuration Block
 

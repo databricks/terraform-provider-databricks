@@ -58,7 +58,11 @@ func ResourceGroup() *schema.Resource {
 			d.Set("display_name", group.DisplayName)
 			d.Set("external_id", group.ExternalID)
 			d.Set("acl_principal_id", fmt.Sprintf("groups/%s", group.DisplayName))
-			d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
+			if c.Config.IsAccountClient() {
+				d.Set("url", c.FormatURL("users/groups/", d.Id(), "/information"))
+			} else {
+				d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
+			}
 			return group.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -578,7 +578,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			case "webhook_notifications":
 				if js.WebhookNotifications != nil {
-					return reflect.DeepEqual(*js.WebhookNotifications, jobs.WebhookNotifications{})
+					return reflect.DeepEqual(*js.WebhookNotifications, sdk_jobs.WebhookNotifications{})
 				}
 			case "notification_settings":
 				if js.NotificationSettings != nil {

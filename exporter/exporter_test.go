@@ -1470,7 +1470,7 @@ func TestImportingUser(t *testing.T) {
 		[]qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
 				Response: iam.ListUsersResponse{
 					Resources: []iam.User{
 						{
@@ -1479,6 +1479,11 @@ func TestImportingUser(t *testing.T) {
 						},
 					},
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
+				Response: iam.ListUsersResponse{},
 			},
 			{
 				Method:       "GET",
@@ -1827,13 +1832,17 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
-
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
 				Response: iam.ListUsersResponse{
 					Resources: []iam.User{
 						{Id: "123", UserName: "user@domain.com"},
 					},
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
+				Response: iam.ListUsersResponse{},
 			},
 			{
 				Method:       "GET",

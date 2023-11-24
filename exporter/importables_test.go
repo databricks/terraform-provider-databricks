@@ -529,14 +529,20 @@ func TestSpnSearchSuccess(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&startIndex=1",
-
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
 			Response: iam.ListServicePrincipalResponse{
 				Resources: []iam.ServicePrincipal{
 					{
 						Id: "321", DisplayName: "spn", ApplicationId: "dbc",
 					},
 				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&startIndex=1",
+			Response: iam.ListServicePrincipalResponse{
+				Resources: []iam.ServicePrincipal{},
 			},
 		}, {
 			ReuseRequest: true,
@@ -616,7 +622,7 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
 			Response: iam.ListUsersResponse{
 				Resources: []iam.User{
 					{
@@ -625,6 +631,11 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
+			Response: iam.ListUsersResponse{},
 		},
 		{
 			ReuseRequest: true,

@@ -529,7 +529,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&startIndex=1",
 
 			Response: iam.ListServicePrincipalResponse{
 				Resources: []iam.ServicePrincipal{
@@ -616,7 +616,7 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
 			Response: iam.ListUsersResponse{
 				Resources: []iam.User{
 					{

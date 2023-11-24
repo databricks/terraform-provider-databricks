@@ -3,7 +3,7 @@ module github.com/databricks/terraform-provider-databricks
 go 1.20
 
 require (
-	github.com/databricks/databricks-sdk-go v0.25.0
+	github.com/databricks/databricks-sdk-go v0.25.1-0.20231123150617-fe6b76828faa
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/hcl v1.0.0
@@ -66,7 +66,7 @@ require (
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.4.0 // indirect
-	google.golang.org/api v0.150.0 // indirect
+	google.golang.org/api v0.151.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/grpc v1.59.0 // indirect

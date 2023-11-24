@@ -1253,10 +1253,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						},
 					},
 					Name: "Featurizer",
-					WebhookNotifications: &WebhookNotifications{
-						OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
-						OnSuccess: []Webhook{{ID: "id2"}},
-						OnFailure: []Webhook{{ID: "id3"}},
+					WebhookNotifications: &jobs.WebhookNotifications{
+						OnStart:   []jobs.Webhook{{Id: "id1"}, {Id: "id2"}, {Id: "id3"}},
+						OnSuccess: []jobs.Webhook{{Id: "id2"}},
+						OnFailure: []jobs.Webhook{{Id: "id3"}},
 					},
 					NotificationSettings: &jobs.JobNotificationSettings{
 						NoAlertForSkippedRuns:  true,
@@ -1284,10 +1284,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 							},
 						},
 						Name: "Featurizer",
-						WebhookNotifications: &WebhookNotifications{
-							OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
-							OnSuccess: []Webhook{{ID: "id2"}},
-							OnFailure: []Webhook{{ID: "id3"}},
+						WebhookNotifications: &jobs.WebhookNotifications{
+							OnStart:   []jobs.Webhook{{Id: "id1"}, {Id: "id2"}, {Id: "id3"}},
+							OnSuccess: []jobs.Webhook{{Id: "id2"}},
+							OnFailure: []jobs.Webhook{{Id: "id3"}},
 						},
 						NotificationSettings: &jobs.JobNotificationSettings{
 							NoAlertForSkippedRuns:  true,

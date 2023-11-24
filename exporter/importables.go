@@ -574,11 +574,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			switch pathString {
 			case "email_notifications":
 				if js.EmailNotifications != nil {
-					return reflect.DeepEqual(*js.EmailNotifications, jobs.EmailNotifications{})
+					return reflect.DeepEqual(*js.EmailNotifications, sdk_jobs.JobEmailNotifications{})
 				}
 			case "webhook_notifications":
 				if js.WebhookNotifications != nil {
-					return reflect.DeepEqual(*js.WebhookNotifications, jobs.WebhookNotifications{})
+					return reflect.DeepEqual(*js.WebhookNotifications, sdk_jobs.WebhookNotifications{})
 				}
 			case "notification_settings":
 				if js.NotificationSettings != nil {
@@ -594,11 +594,18 @@ var resourcesMap map[string]importable = map[string]importable{
 						switch blockName {
 						case "notification_settings":
 							if js.Tasks[taskIndex].NotificationSettings != nil {
-								return reflect.DeepEqual(*js.Tasks[taskIndex].NotificationSettings, sdk_jobs.TaskNotificationSettings{})
+								return reflect.DeepEqual(*js.Tasks[taskIndex].NotificationSettings,
+									sdk_jobs.TaskNotificationSettings{})
 							}
 						case "email_notifications":
 							if js.Tasks[taskIndex].EmailNotifications != nil {
-								return reflect.DeepEqual(*js.Tasks[taskIndex].EmailNotifications, jobs.EmailNotifications{})
+								return reflect.DeepEqual(*js.Tasks[taskIndex].EmailNotifications,
+									sdk_jobs.TaskEmailNotifications{})
+							}
+						case "webhooks_notifications":
+							if js.Tasks[taskIndex].EmailNotifications != nil {
+								return reflect.DeepEqual(*js.Tasks[taskIndex].EmailNotifications,
+									sdk_jobs.WebhookNotifications{})
 							}
 						}
 					}

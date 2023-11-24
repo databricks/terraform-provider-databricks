@@ -118,40 +118,22 @@ type RunJobTask struct {
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
 }
 
-// EmailNotifications contains the information for email notifications after job or task run start or completion
-type EmailNotifications struct {
-	OnStart                            []string `json:"on_start,omitempty"`
-	OnSuccess                          []string `json:"on_success,omitempty"`
-	OnFailure                          []string `json:"on_failure,omitempty"`
-	OnDurationWarningThresholdExceeded []string `json:"on_duration_warning_threshold_exceeded,omitempty"`
-	NoAlertForSkippedRuns              bool     `json:"no_alert_for_skipped_runs,omitempty"`
-	AlertOnLastAttempt                 bool     `json:"alert_on_last_attempt,omitempty"`
-}
-
-// WebhookNotifications contains the information for webhook notifications sent after job start or completion.
-type WebhookNotifications struct {
-	OnStart                            []Webhook `json:"on_start,omitempty"`
-	OnSuccess                          []Webhook `json:"on_success,omitempty"`
-	OnFailure                          []Webhook `json:"on_failure,omitempty"`
-	OnDurationWarningThresholdExceeded []Webhook `json:"on_duration_warning_threshold_exceeded,omitempty"`
-}
-
-func (wn *WebhookNotifications) Sort() {
+func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 	if wn == nil {
 		return
 	}
 
-	notifs := [][]Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
+	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
 	for _, ns := range notifs {
 		sort.Slice(ns, func(i, j int) bool {
-			return ns[i].ID < ns[j].ID
+			return ns[i].Id < ns[j].Id
 		})
 	}
-}
 
-// Webhook contains a reference by id to one of the centrally configured webhooks.
-type Webhook struct {
-	ID string `json:"id"`
+	sort.Slice(wn.OnDurationWarningThresholdExceeded, func(i, j int) bool {
+		return wn.OnDurationWarningThresholdExceeded[i].Id < wn.OnDurationWarningThresholdExceeded[j].Id
+	})
+
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -208,7 +190,8 @@ type JobTaskSettings struct {
 	// ConditionTask is in private preview
 	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
 
-	EmailNotifications     *EmailNotifications            `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
 	NotificationSettings   *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
 	TimeoutSeconds         int32                          `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32                          `json:"max_retries,omitempty"`
@@ -285,8 +268,8 @@ type JobSettings struct {
 	Continuous           *ContinuousConf               `json:"continuous,omitempty"`
 	Trigger              *Trigger                      `json:"trigger,omitempty"`
 	MaxConcurrentRuns    int32                         `json:"max_concurrent_runs,omitempty"`
-	EmailNotifications   *EmailNotifications           `json:"email_notifications,omitempty" tf:"suppress_diff"`
-	WebhookNotifications *WebhookNotifications         `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	EmailNotifications   *jobs.JobEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications *jobs.WebhookNotifications    `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
 	NotificationSettings *jobs.JobNotificationSettings `json:"notification_settings,omitempty"`
 	Tags                 map[string]string             `json:"tags,omitempty"`
 	Queue                *jobs.QueueSettings           `json:"queue,omitempty"`
@@ -307,8 +290,15 @@ func (js *JobSettings) sortTasksByKey() {
 	})
 }
 
+func (js *JobSettings) adjustTasks() {
+	js.sortTasksByKey()
+	for _, task := range js.Tasks {
+		sortWebhookNotifications(task.WebhookNotifications)
+	}
+}
+
 func (js *JobSettings) sortWebhooksByID() {
-	js.WebhookNotifications.Sort()
+	sortWebhookNotifications(js.WebhookNotifications)
 }
 
 // JobListResponse returns a list of all jobs
@@ -537,7 +527,7 @@ func (a JobsAPI) StopActiveRun(jobID int64, timeout time.Duration) error {
 // Create creates a job on the workspace given the job settings
 func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 	var job Job
-	jobSettings.sortTasksByKey()
+	jobSettings.adjustTasks()
 	jobSettings.sortWebhooksByID()
 	var gitSource *GitSource = jobSettings.GitSource
 	if gitSource != nil && gitSource.Provider == "" {
@@ -575,7 +565,7 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 		"job_id": jobID,
 	}, &job), id)
 	if job.Settings != nil {
-		job.Settings.sortTasksByKey()
+		job.Settings.adjustTasks()
 		job.Settings.sortWebhooksByID()
 	}
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
@@ -938,7 +939,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 							UserName:             "user@domain.com",
 							ServicePrincipalName: "0000-1111-2222-3333-4444-5555",
 						},
-						EmailNotifications: &jobs.EmailNotifications{
+						EmailNotifications: &sdk_jobs.JobEmailNotifications{
 							OnFailure: []string{"user@domain.com"},
 						},
 						Libraries: []libraries.Library{

@@ -74,7 +74,7 @@ func TestLibraryDelete(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.1/libraries/cluster-status?cluster_id=abc",
+				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
 				Response: libraries.ClusterLibraryStatuses{
 					LibraryStatuses: []libraries.LibraryStatus{
 						{
@@ -88,7 +88,7 @@ func TestLibraryDelete(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/libraries/uninstall",
+				Resource: "/api/2.0/libraries/uninstall",
 				ExpectedRequest: libraries.ClusterLibraryList{
 					Libraries: []libraries.Library{
 						{

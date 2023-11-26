@@ -663,46 +663,46 @@ func gitSourceSchema(r *schema.Resource, prefix string) {
 
 var jobGoSdkSchema = common.StructToSchema(jobs.JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		jobSettingsSchema(&s, "")
-		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
-		jobSettingsSchema(&s["job_cluster"].Elem.(*schema.Resource).Schema, "job_cluster.0.")
-		gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
-		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
-			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
-		}
-		if p, err := common.SchemaPath(s, "trigger", "pause_status"); err == nil {
-			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
-		}
-		if p, err := common.SchemaPath(s, "continuous", "pause_status"); err == nil {
-			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
-		}
-		s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
-		s["max_concurrent_runs"].Default = 1
-		s["url"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		}
-		s["always_running"] = &schema.Schema{
-			Optional:      true,
-			Default:       false,
-			Type:          schema.TypeBool,
-			Deprecated:    "always_running will be replaced by control_run_state in the next major release.",
-			ConflictsWith: []string{"control_run_state", "continuous"},
-		}
-		s["control_run_state"] = &schema.Schema{
-			Optional:      true,
-			Default:       false,
-			Type:          schema.TypeBool,
-			ConflictsWith: []string{"always_running"},
-		}
-		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
-		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
-		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
+		// jobSettingsSchema(&s, "")
+		// jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
+		// jobSettingsSchema(&s["job_cluster"].Elem.(*schema.Resource).Schema, "job_cluster.0.")
+		// gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
+		// if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
+		// 	p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		// }
+		// if p, err := common.SchemaPath(s, "trigger", "pause_status"); err == nil {
+		// 	p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		// }
+		// if p, err := common.SchemaPath(s, "continuous", "pause_status"); err == nil {
+		// 	p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
+		// }
+		// s["max_concurrent_runs"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
+		// s["max_concurrent_runs"].Default = 1
+		// s["url"] = &schema.Schema{
+		// 	Type:     schema.TypeString,
+		// 	Computed: true,
+		// }
+		// s["always_running"] = &schema.Schema{
+		// 	Optional:      true,
+		// 	Default:       false,
+		// 	Type:          schema.TypeBool,
+		// 	Deprecated:    "always_running will be replaced by control_run_state in the next major release.",
+		// 	ConflictsWith: []string{"control_run_state", "continuous"},
+		// }
+		// s["control_run_state"] = &schema.Schema{
+		// 	Optional:      true,
+		// 	Default:       false,
+		// 	Type:          schema.TypeBool,
+		// 	ConflictsWith: []string{"always_running"},
+		// }
+		// s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
+		// s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
+		// s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
 
-		// we need to have only one of user name vs service principal in the run_as block
-		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
-		common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
-		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
+		// // we need to have only one of user name vs service principal in the run_as block
+		// run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
+		// common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
+		// common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
 
 		return s
 	})

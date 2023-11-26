@@ -201,6 +201,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 
 		fieldName := chooseFieldName(typeField)
 		fmt.Println("processed field: " + fieldName)
+		fmt.Println("processed field type: " + typeField.Type.Kind().String())
 		fmt.Println("processed field path: " + strings.Join(path, ", "))
 		if fieldName == "-" {
 			continue

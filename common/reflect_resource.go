@@ -197,12 +197,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 
 		tfTag := typeField.Tag.Get("tf")
 
-		fmt.Println(typeField.Name)
-
 		fieldName := chooseFieldName(typeField)
-		fmt.Println("processed field: " + fieldName)
-		fmt.Println("processed field type: " + typeField.Type.Kind().String())
-		fmt.Println("processed field path: " + strings.Join(path, ", "))
 		if fieldName == "-" {
 			continue
 		}
@@ -249,7 +244,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			scm[fieldName].Type = schema.TypeString
 			// diff suppression needs type for zero value
 			handleSuppressDiff(typeField, scm[fieldName])
-		case reflect.Map, reflect.Interface:
+		case reflect.Map:
 			scm[fieldName].Type = schema.TypeMap
 			elem := typeField.Type.Elem()
 			switch elem.Kind() {
@@ -265,7 +260,6 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			fmt.Println("=====recursive call ptr" + fieldName)
 			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
@@ -285,7 +279,6 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			fmt.Println("=====recursive call struct" + fieldName)
 			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
@@ -298,6 +291,8 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}
+		case reflect.Interface:
+			fmt.Println("skip" + fieldName)
 		case reflect.Slice:
 			ft := schema.TypeList
 			if strings.Contains(tfTag, "slice_set") {
@@ -316,7 +311,6 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
-				fmt.Println("=====recursive call struct slice struct" + fieldName)
 				scm[fieldName].Elem = &schema.Resource{
 					Schema: typeToSchema(sv, elem, append(path, fieldName, "0")),
 				}

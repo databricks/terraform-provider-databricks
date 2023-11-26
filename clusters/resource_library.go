@@ -88,7 +88,6 @@ func ResourceLibrary() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// cll, err := librariesAPI.ClusterStatus(clusterID)
 			cll, err := w.Libraries.ClusterStatusByClusterId(ctx, clusterID)
 			if err != nil {
 				return err

@@ -198,6 +198,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 		tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldName(typeField)
+		fmt.Println("processed field: " + fieldName)
 		if fieldName == "-" {
 			continue
 		}

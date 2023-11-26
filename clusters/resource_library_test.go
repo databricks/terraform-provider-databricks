@@ -74,7 +74,7 @@ func TestLibraryDelete(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/clusters/start",
+				Resource: "/api/2.0/clusters/start",
 				ExpectedRequest: compute.StartCluster{
 					ClusterId: "abc",
 				},

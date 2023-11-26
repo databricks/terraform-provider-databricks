@@ -82,9 +82,7 @@ func ResourceLibrary() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = w.Clusters.Start(ctx, compute.StartCluster{
-				ClusterId: clusterID,
-			})
+			_, err = w.Clusters.StartByClusterIdAndWait(ctx, clusterID)
 			if err != nil {
 				return err
 			}

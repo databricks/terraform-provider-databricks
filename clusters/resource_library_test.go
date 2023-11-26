@@ -3,6 +3,7 @@ package clusters
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
@@ -65,18 +66,17 @@ func TestLibraryDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/start?cluster_id=abc",
 				ReuseRequest: true,
 				Response: ClusterInfo{
 					State: ClusterStateRunning,
 				},
 			},
 			{
-				Method:       "GET",
-				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
-				ReuseRequest: true,
-				Response: ClusterInfo{
-					State: ClusterStateRunning,
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/start",
+				ExpectedRequest: compute.StartCluster{
+					ClusterId: "abc",
 				},
 			},
 			{

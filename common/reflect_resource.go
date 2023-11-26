@@ -249,7 +249,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			scm[fieldName].Type = schema.TypeString
 			// diff suppression needs type for zero value
 			handleSuppressDiff(typeField, scm[fieldName])
-		case reflect.Map:
+		case reflect.Map, reflect.Interface:
 			scm[fieldName].Type = schema.TypeMap
 			elem := typeField.Type.Elem()
 			switch elem.Kind() {

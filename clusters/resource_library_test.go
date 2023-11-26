@@ -65,7 +65,7 @@ func TestLibraryDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: ClusterInfo{
 					State: ClusterStateRunning,
@@ -74,7 +74,7 @@ func TestLibraryDelete(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Resource:     "/api/2.1/libraries/cluster-status?cluster_id=abc",
 				Response: libraries.ClusterLibraryStatuses{
 					LibraryStatuses: []libraries.LibraryStatus{
 						{
@@ -88,7 +88,7 @@ func TestLibraryDelete(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/libraries/uninstall",
+				Resource: "/api/2.1/libraries/uninstall",
 				ExpectedRequest: libraries.ClusterLibraryList{
 					Libraries: []libraries.Library{
 						{

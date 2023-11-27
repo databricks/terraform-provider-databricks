@@ -47,7 +47,7 @@ resource "databricks_mws_credentials" "this" {
 
 The following arguments are required:
 
-* `account_id` - (Required) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - (Optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `credentials_name` - (Required) name of credentials to register
 * `role_arn` - (Required) ARN of cross-account role
 
@@ -61,7 +61,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+This resource can be imported by the combination of its identifier and the account id:
+
+```bash
+terraform import databricks_mws_credentials.this <account_id>/<credentials_id>
+```
 
 ## Related Resources
 

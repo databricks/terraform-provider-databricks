@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDataServicePrincipalReadByAppId(t *testing.T) {
@@ -53,7 +52,7 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 }
 
 func TestDataServicePrincipalReadNotFound(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -66,12 +65,11 @@ func TestDataServicePrincipalReadNotFound(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.Apply(t)
-	require.Error(t, err)
+	}.ExpectError(t, "cannot find SP with ID abc")
 }
 
 func TestDataServicePrincipalReadError(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -84,6 +82,47 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.Apply(t)
-	require.Error(t, err)
+	}.ExpectError(t, "Response from server (500 Internal Server Error) : unexpected end of JSON input")
+}
+
+func TestDataServicePrincipalReadByNameDuplicates(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=displayName%20eq%20%27abc%27",
+				Response: UserList{
+					Resources: []User{
+						{
+							ID:            "abc1",
+							DisplayName:   "abc",
+							Active:        true,
+							ApplicationID: "abc1",
+						},
+						{
+							ID:            "abc2",
+							DisplayName:   "abc",
+							Active:        true,
+							ApplicationID: "abc2",
+						},
+					},
+				},
+			},
+		},
+		Resource:    DataSourceServicePrincipal(),
+		HCL:         `display_name = "abc"`,
+		Read:        true,
+		NonWritable: true,
+		ID:          "abc",
+	}.ExpectError(t, "there are more than 1 service principal with name abc")
+}
+
+func TestDataServicePrincipalReadNoParams(t *testing.T) {
+	qa.ResourceFixture{
+		Resource:    DataSourceServicePrincipal(),
+		HCL:         ``,
+		Read:        true,
+		NonWritable: true,
+		ID:          "_",
+	}.ExpectError(t, "please specify either application_id or display_name")
 }

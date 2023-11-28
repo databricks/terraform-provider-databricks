@@ -61,6 +61,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_clusters":                clusters.DataSourceClusters(),
 			"databricks_cluster_policy":          policies.DataSourceClusterPolicy(),
 			"databricks_catalogs":                catalog.DataSourceCatalogs(),
+			"databricks_current_config":          mws.DataSourceCurrentConfiguration(),
 			"databricks_current_user":            scim.DataSourceCurrentUser(),
 			"databricks_dbfs_file":               storage.DataSourceDbfsFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDbfsFilePaths(),

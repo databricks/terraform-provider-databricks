@@ -177,18 +177,16 @@ type JobTaskSettings struct {
 	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
 	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 
-	NotebookTask    *NotebookTask    `json:"notebook_task,omitempty" tf:"group:task_type"`
-	SparkJarTask    *SparkJarTask    `json:"spark_jar_task,omitempty" tf:"group:task_type"`
-	SparkPythonTask *SparkPythonTask `json:"spark_python_task,omitempty" tf:"group:task_type"`
-	SparkSubmitTask *SparkSubmitTask `json:"spark_submit_task,omitempty" tf:"group:task_type"`
-	PipelineTask    *PipelineTask    `json:"pipeline_task,omitempty" tf:"group:task_type"`
-	PythonWheelTask *PythonWheelTask `json:"python_wheel_task,omitempty" tf:"group:task_type"`
-	SqlTask         *SqlTask         `json:"sql_task,omitempty" tf:"group:task_type"`
-	DbtTask         *DbtTask         `json:"dbt_task,omitempty" tf:"group:task_type"`
-	RunJobTask      *RunJobTask      `json:"run_job_task,omitempty" tf:"group:task_type"`
-
-	// ConditionTask is in private preview
-	ConditionTask *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
+	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
 
 	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`

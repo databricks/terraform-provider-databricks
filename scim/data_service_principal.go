@@ -37,7 +37,11 @@ func DataSourceServicePrincipal() *schema.Resource {
 			return err
 		}
 		if len(spList) == 0 {
-			return fmt.Errorf("cannot find SP with ID %s", response.ApplicationID)
+			if response.ApplicationID != "" {
+				return fmt.Errorf("cannot find SP with ID %s", response.ApplicationID)
+			} else {
+				return fmt.Errorf("cannot find SP with name %s", response.DisplayName)
+			}
 		} else if len(spList) > 1 {
 			return fmt.Errorf("there are more than 1 service principal with name %s", response.DisplayName)
 		}

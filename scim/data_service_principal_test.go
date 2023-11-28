@@ -51,7 +51,7 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 	})
 }
 
-func TestDataServicePrincipalReadNotFound(t *testing.T) {
+func TestDataServicePrincipalReadByIdNotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -66,6 +66,23 @@ func TestDataServicePrincipalReadNotFound(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.ExpectError(t, "cannot find SP with ID abc")
+}
+
+func TestDataServicePrincipalReadByNameNotFound(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=displayName%20eq%20%27abc%27",
+				Response: UserList{},
+			},
+		},
+		Resource:    DataSourceServicePrincipal(),
+		HCL:         `display_name = "abc"`,
+		Read:        true,
+		NonWritable: true,
+		ID:          "_",
+	}.ExpectError(t, "cannot find SP with name abc")
 }
 
 func TestDataServicePrincipalReadError(t *testing.T) {

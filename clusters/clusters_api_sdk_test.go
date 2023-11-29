@@ -76,7 +76,11 @@ func TestStartClusterAndGetInfo_Terminating(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	clusterInfo, err := StartClusterAndGetInfo(ctx, client, "abc")
+	w, err := client.WorkspaceClient()
+	if err != nil {
+		panic(err)
+	}
+	clusterInfo, err := StartClusterAndGetInfo(ctx, w), "abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -111,7 +115,11 @@ func TestStartClusterAndGetInfo_Error(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	clusterInfo, err := StartClusterAndGetInfo(ctx, client, "abc")
+	w, err := client.WorkspaceClient()
+	if err != nil {
+		panic(err)
+	}
+	clusterInfo, err := StartClusterAndGetInfo(ctx, w, "abc")
 	require.NoError(t, err)
 	assert.Equal(t, ClusterStateRunning, string(clusterInfo.State))
 }
@@ -142,7 +150,11 @@ func TestStartClusterAndGetInfo_StartingError(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	_, err = StartClusterAndGetInfo(ctx, client, "abc")
+	w, err := client.WorkspaceClient()
+	if err != nil {
+		panic(err)m
+	}
+	_, err = StartClusterAndGetInfo(ctx, w, "abc")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "I am a teapot")
 }

@@ -82,7 +82,7 @@ func ResourceLibrary() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = StartClusterAndGetInfo(ctx, w, clusterID)
+			_, err m= StartClusterAndGetInfo(ctx, w, clusterID)
 			if err != nil {
 				return err
 			}

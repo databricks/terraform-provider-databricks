@@ -35,11 +35,7 @@ func (m AzureADLSGen2Mount) ValidateAndApplyDefaults(d *schema.ResourceData, cli
 
 // Config returns mount configurations
 func (m AzureADLSGen2Mount) Config(client *common.DatabricksClient) map[string]string {
-	env, err := client.Config.GetAzureEnvironment()
-	if err != nil {
-		panic(err) // TODO: change interface
-	}
-	aadEndpoint := env.ActiveDirectoryEndpoint
+	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",

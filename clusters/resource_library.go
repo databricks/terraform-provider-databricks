@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -77,12 +78,15 @@ func ResourceLibrary() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
-			err := NewClustersAPI(ctx, c).Start(clusterID)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			librariesAPI := libraries.NewLibrariesAPI(ctx, c)
-			cll, err := librariesAPI.ClusterStatus(clusterID)
+			_, err = StartClusterAndGetInfo(ctx, w, clusterID)
+			if err != nil {
+				return err
+			}
+			cll, err := w.Libraries.ClusterStatusByClusterId(ctx, clusterID)
 			if err != nil {
 				return err
 			}
@@ -90,9 +94,9 @@ func ResourceLibrary() *schema.Resource {
 				if v.Library.String() != libraryRep {
 					continue
 				}
-				return librariesAPI.Uninstall(libraries.ClusterLibraryList{
-					ClusterID: clusterID,
-					Libraries: []libraries.Library{*v.Library},
+				return w.Libraries.Uninstall(ctx, compute.UninstallLibraries{
+					ClusterId: clusterID,
+					Libraries: []compute.Library{*v.Library},
 				})
 			}
 			return apierr.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))

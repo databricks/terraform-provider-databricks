@@ -3,9 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_customer_managed_keys Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
-
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 This resource to configure KMS keys for new workspaces within AWS or GCP. This is to support the following features:
 

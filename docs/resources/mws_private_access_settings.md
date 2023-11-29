@@ -3,15 +3,15 @@ subcategory: "Deployment"
 ---
 # databricks_mws_private_access_settings Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
-
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
-
 Allows you to create a [Private Access Setting]that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or [GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html)
 
 It is strongly recommended that customers read the [Enable AWS Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) [Enable GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) documentation before trying to leverage this resource.
 
 ## Example Usage
+
+## Databricks on AWS usage
+
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 ```hcl
 resource "databricks_mws_private_access_settings" "pas" {
@@ -40,7 +40,11 @@ resource "databricks_mws_workspaces" "this" {
   depends_on                 = [databricks_mws_networks.this]
 }
 ```
-or 
+
+## Databricks on GCP usage
+
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.gcp.databricks.com"` and use `provider = databricks.mws`
+
 ```hcl
 resource "databricks_mws_workspaces" "this" {
   provider       = databricks.mws

@@ -5,22 +5,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/compute"
-	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// Start a terminated Spark cluster given its ID and wait till it's running
-func StartCluster(ctx context.Context, c *common.DatabricksClient, clusterID string) error {
-	_, err := StartClusterAndGetInfo(ctx, c, clusterID)
-	return err
-}
-
 // StartAndGetInfo starts cluster and returns info
-func StartClusterAndGetInfo(ctx context.Context, c *common.DatabricksClient, clusterID string) (*compute.ClusterDetails, error) {
-	w, err := c.WorkspaceClient()
-	if err != nil {
-		return nil, err
-	}
+func StartClusterAndGetInfo(ctx context.Context, w *databricks.WorkspaceClient, clusterID string) (*compute.ClusterDetails, error) {
 	cluster, err := w.Clusters.GetByClusterId(ctx, clusterID)
 	if err != nil {
 		return cluster, err

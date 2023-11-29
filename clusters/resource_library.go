@@ -78,11 +78,11 @@ func ResourceLibrary() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
-			err := StartCluster(ctx, c, clusterID)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			w, err := c.WorkspaceClient()
+			_, err = StartClusterAndGetInfo(ctx, w, clusterID)
 			if err != nil {
 				return err
 			}

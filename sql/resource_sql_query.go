@@ -126,8 +126,8 @@ type QueryParameterDateRangeLike struct {
 
 // QueryParameterAllowMultiple ...
 type QueryParameterAllowMultiple struct {
-	Prefix    string `json:"prefix"`
-	Suffix    string `json:"suffix"`
+	Prefix    string `json:"prefix,omitempty"`
+	Suffix    string `json:"suffix,omitempty"`
 	Separator string `json:"separator"`
 }
 
@@ -290,10 +290,7 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 	}
 
 	if q.RunAsRole != "" {
-		if aq.Options == nil {
-			aq.Options = &api.QueryOptions{}
-		}
-		aq.Options.RunAsRole = q.RunAsRole
+		aq.RunAsRole = q.RunAsRole
 	}
 
 	return &aq, nil
@@ -449,7 +446,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 			q.Parameter = append(q.Parameter, p)
 		}
 
-		q.RunAsRole = aq.Options.RunAsRole
+		q.RunAsRole = aq.RunAsRole
 	}
 
 	// Transform to ResourceData.

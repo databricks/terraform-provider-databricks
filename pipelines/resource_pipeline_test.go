@@ -698,3 +698,180 @@ func TestResourcePipelineCreateServerless(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "serverless", d.Id())
 }
+
+func TestZeroWorkers(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
+				ExpectedRequest: PipelineSpec{
+					Name:    "test-pipeline",
+					Channel: "CURRENT",
+					Edition: "ADVANCED",
+					Clusters: []pipelineCluster{
+						{
+							Label:      "default",
+							NumWorkers: 0,
+							SparkConf: map[string]string{
+								"spark.databricks.cluster.profile": "singleNode",
+							},
+							ForceSendFields: []string{"NumWorkers"},
+						},
+					},
+				},
+				Response: createPipelineResponse{
+					PipelineID: "abcd",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: map[string]any{
+					"id":    "abcd",
+					"name":  "test-pipeline",
+					"state": "RUNNING",
+					"spec":  basicPipelineSpec,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: map[string]any{
+					"id":    "abcd",
+					"name":  "test-pipeline",
+					"state": "RUNNING",
+					"spec":  basicPipelineSpec,
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline"
+		cluster {
+		  label = "default"
+		  num_workers = 0
+		  spark_conf = {
+			spark.databricks.cluster.profile = "singleNode"	
+		  }
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abcd", d.Id())
+}
+
+func TestAutoscaling(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
+				ExpectedRequest: PipelineSpec{
+					Name:    "test-pipeline",
+					Channel: "CURRENT",
+					Edition: "ADVANCED",
+					Clusters: []pipelineCluster{
+						{
+							Label: "default",
+
+							Autoscale: &dltAutoScale{
+								MinWorkers: 2,
+								MaxWorkers: 10,
+							},
+						},
+					},
+				},
+				Response: createPipelineResponse{
+					PipelineID: "abcd",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: map[string]any{
+					"id":    "abcd",
+					"name":  "test-pipeline",
+					"state": "RUNNING",
+					"spec":  basicPipelineSpec,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: map[string]any{
+					"id":    "abcd",
+					"name":  "test-pipeline",
+					"state": "RUNNING",
+					"spec":  basicPipelineSpec,
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline"
+		cluster {
+		  label = "default"
+		  autoscale {
+			min_workers = 2
+			max_workers = 10
+		  }
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abcd", d.Id())
+}
+
+func TestDefault(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/pipelines",
+				ExpectedRequest: PipelineSpec{
+					Name:    "test-pipeline",
+					Channel: "CURRENT",
+					Edition: "ADVANCED",
+					Clusters: []pipelineCluster{
+						{
+							Label: "default",
+						},
+					},
+				},
+				Response: createPipelineResponse{
+					PipelineID: "abcd",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: map[string]any{
+					"id":    "abcd",
+					"name":  "test-pipeline",
+					"state": "RUNNING",
+					"spec":  basicPipelineSpec,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/pipelines/abcd",
+				Response: map[string]any{
+					"id":    "abcd",
+					"name":  "test-pipeline",
+					"state": "RUNNING",
+					"spec":  basicPipelineSpec,
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline"
+		cluster {
+		  label = "default"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abcd", d.Id())
+}

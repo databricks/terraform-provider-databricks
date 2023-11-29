@@ -58,6 +58,7 @@ func TestResourceJobCreate(t *testing.T) {
 						Kind:             "BUNDLE",
 						MetadataFilePath: "/a/b/c",
 					},
+					EditMode: "UI_LOCKED",
 				},
 				Response: Job{
 					JobID: 789,
@@ -102,6 +103,7 @@ func TestResourceJobCreate(t *testing.T) {
 							Kind:             "BUNDLE",
 							MetadataFilePath: "/a/b/c",
 						},
+						EditMode: "UI_LOCKED",
 					},
 				},
 			},
@@ -137,7 +139,8 @@ func TestResourceJobCreate(t *testing.T) {
 		deployment {
 			kind = "BUNDLE"
 			metadata_file_path = "/a/b/c"
-		}`,
+		}
+		edit_mode = "UI_LOCKED"`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
@@ -1250,10 +1253,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						},
 					},
 					Name: "Featurizer",
-					WebhookNotifications: &WebhookNotifications{
-						OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
-						OnSuccess: []Webhook{{ID: "id2"}},
-						OnFailure: []Webhook{{ID: "id3"}},
+					WebhookNotifications: &jobs.WebhookNotifications{
+						OnStart:   []jobs.Webhook{{Id: "id1"}, {Id: "id2"}, {Id: "id3"}},
+						OnSuccess: []jobs.Webhook{{Id: "id2"}},
+						OnFailure: []jobs.Webhook{{Id: "id3"}},
 					},
 					NotificationSettings: &jobs.JobNotificationSettings{
 						NoAlertForSkippedRuns:  true,
@@ -1281,10 +1284,10 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 							},
 						},
 						Name: "Featurizer",
-						WebhookNotifications: &WebhookNotifications{
-							OnStart:   []Webhook{{ID: "id1"}, {ID: "id2"}, {ID: "id3"}},
-							OnSuccess: []Webhook{{ID: "id2"}},
-							OnFailure: []Webhook{{ID: "id3"}},
+						WebhookNotifications: &jobs.WebhookNotifications{
+							OnStart:   []jobs.Webhook{{Id: "id1"}, {Id: "id2"}, {Id: "id3"}},
+							OnSuccess: []jobs.Webhook{{Id: "id2"}},
+							OnFailure: []jobs.Webhook{{Id: "id3"}},
 						},
 						NotificationSettings: &jobs.JobNotificationSettings{
 							NoAlertForSkippedRuns:  true,
@@ -2214,7 +2217,7 @@ func TestResourceJobDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/jobs/delete",
+				Resource: "/api/2.1/jobs/delete",
 				ExpectedRequest: map[string]int{
 					"job_id": 789,
 				},

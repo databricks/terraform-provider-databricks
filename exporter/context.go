@@ -17,6 +17,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
+
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -67,6 +69,9 @@ type importContext struct {
 	variables         map[string]string
 	workspaceConfKeys map[string]any
 
+	workspaceClient *databricks.WorkspaceClient
+	accountClient   *databricks.AccountClient
+
 	channels map[string]resourceChannel
 
 	// mutable resources
@@ -108,12 +113,14 @@ type importContext struct {
 	groupsMutex sync.Mutex
 
 	//
-	allUsers   map[string]scim.User
-	usersMutex sync.RWMutex
+	allUsers        map[string]scim.User
+	allUsersMapping map[string]string // maps user_name -> internal ID
+	usersMutex      sync.RWMutex
 
 	//
-	allSps   map[string]scim.User
-	spsMutex sync.RWMutex
+	allSps        map[string]scim.User
+	allSpsMapping map[string]string // maps application_id -> internal ID
+	spsMutex      sync.RWMutex
 
 	//
 	importing      map[string]bool
@@ -138,8 +145,6 @@ type mount struct {
 var nameFixes = []regexFix{
 	{regexp.MustCompile(`[0-9a-f]{8}[_-][0-9a-f]{4}[_-][0-9a-f]{4}` +
 		`[_-][0-9a-f]{4}[_-][0-9a-f]{12}[_-]`), ""},
-	//	{regexp.MustCompile(`[_-][0-9]+[\._-][0-9]+[\._-].*\.([a-z0-9]{1,4})`), "_$1"},
-	// {regexp.MustCompile(`@.*$`), ""},
 	{regexp.MustCompile(`[-\s\.\|]`), "_"},
 	{regexp.MustCompile(`\W+`), "_"},
 	{regexp.MustCompile(`[_]{2,}`), "_"},
@@ -287,16 +292,20 @@ func (ic *importContext) Run() error {
 	} else if !info.IsDir() {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
-	w, err := ic.Client.WorkspaceClient()
-	if err != nil {
-		return err
-	}
 
 	ic.accountLevel = ic.Client.Config.IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
+		ic.accountClient, err = ic.Client.AccountClient()
+		if err != nil {
+			return err
+		}
 	} else {
-		me, err := w.CurrentUser.Me(ic.Context)
+		ic.workspaceClient, err = ic.Client.WorkspaceClient()
+		if err != nil {
+			return err
+		}
+		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context)
 		if err != nil {
 			return err
 		}
@@ -326,7 +335,11 @@ func (ic *importContext) Run() error {
 			continue
 		}
 		if ic.accountLevel && !ir.AccountLevel {
-			log.Printf("[DEBUG] %s (%s service) is not account level", resourceName, ir.Service)
+			log.Printf("[DEBUG] %s (%s service) is not a account level resource", resourceName, ir.Service)
+			continue
+		}
+		if !ic.accountLevel && !ir.WorkspaceLevel {
+			log.Printf("[DEBUG] %s (%s service) is not a workspace level resource", resourceName, ir.Service)
 			continue
 		}
 		ic.waitGroup.Add(1)
@@ -648,6 +661,8 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 				continue
 			}
 			matchValue = res[1]
+		} else if ref.MatchType == MatchCaseInsensitive {
+			matchValue = strings.ToLower(r.Value) // performance optimization to avoid doing it in the loop
 		}
 		for _, i := range sr.Instances {
 			v := i.Attributes[r.Attribute]
@@ -661,6 +676,8 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			switch ref.MatchType {
 			case MatchExact, MatchDefault:
 				matched = (strValue == r.Value)
+			case MatchCaseInsensitive:
+				matched = (strings.ToLower(strValue) == matchValue)
 			case MatchPrefix:
 				matched = strings.HasPrefix(r.Value, strValue)
 			case MatchRegexp:
@@ -848,7 +865,7 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 		return nil
 	}
 	switch matchType {
-	case MatchExact, MatchDefault:
+	case MatchExact, MatchDefault, MatchCaseInsensitive:
 		return hclwrite.TokensForTraversal(traversal)
 	case MatchPrefix:
 		rest := value[len(attrValue):]
@@ -880,7 +897,7 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
-func (ic *importContext) reference(i importable, path []string, value string) hclwrite.Tokens {
+func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value) hclwrite.Tokens {
 	match := dependsRe.ReplaceAllString(strings.Join(path, "."), "")
 	for _, d := range i.Depends {
 		if d.Path != match {
@@ -902,7 +919,7 @@ func (ic *importContext) reference(i importable, path []string, value string) hc
 			return tokens
 		}
 	}
-	return hclwrite.TokensForValue(cty.StringVal(value))
+	return hclwrite.TokensForValue(ctyValue)
 }
 
 func (ic *importContext) variable(name, desc string) hclwrite.Tokens {
@@ -955,18 +972,22 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		}
 		switch as.Type {
 		case schema.TypeString:
-			body.SetAttributeRaw(a, ic.reference(i, append(path, a), raw.(string)))
+			value := raw.(string)
+			body.SetAttributeRaw(a, ic.reference(i, append(path, a), value, cty.StringVal(value)))
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))
 		case schema.TypeInt:
+			var num int64
 			switch iv := raw.(type) {
 			case int:
-				body.SetAttributeValue(a, cty.NumberIntVal(int64(iv)))
+				num = int64(iv)
 			case int32:
-				body.SetAttributeValue(a, cty.NumberIntVal(int64(iv)))
+				num = int64(iv)
 			case int64:
-				body.SetAttributeValue(a, cty.NumberIntVal(iv))
+				num = iv
 			}
+			body.SetAttributeRaw(a, ic.reference(i, append(path, a),
+				strconv.FormatInt(num, 10), cty.NumberIntVal(num)))
 		case schema.TypeFloat:
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
@@ -1037,7 +1058,8 @@ func (ic *importContext) readListFromData(i importable, path []string, d *schema
 			}
 			switch x := raw.(type) {
 			case string:
-				toks = append(toks, ic.reference(i, path, x)...)
+				value := raw.(string)
+				toks = append(toks, ic.reference(i, path, value, cty.StringVal(value))...)
 			case int:
 				// probably we don't even use integer lists?...
 				toks = append(toks, hclwrite.TokensForValue(

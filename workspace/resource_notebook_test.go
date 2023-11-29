@@ -101,7 +101,7 @@ func TestResourceNotebookRead_Error(t *testing.T) {
 	assert.Equal(t, "/test/path", d.Id(), "Id should not be empty for error reads")
 }
 
-func TestResourceNotebookCreate(t *testing.T) {
+func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -150,6 +150,116 @@ func TestResourceNotebookCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "/foo/path.py", d.Id())
+}
+
+func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/foo",
+				},
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: map[string]string{
+					"error_code": "RESOURCE_DOES_NOT_EXIST",
+					"message":    "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
+				Response: ExportPath{
+					Content: "YWJjCg==",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: "NOTEBOOK",
+					Path:       "/foo/path.py",
+					Language:   "PYTHON",
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]any{
+			"content_base64": "YWJjCg==",
+			"language":       "PYTHON",
+			"path":           "/foo/path.py",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "/foo/path.py", d.Id())
+}
+
+func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/foo",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: map[string]string{
+					"error_code": "RESOURCE_DOES_NOT_EXIST",
+					"message":    "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]any{
+			"content_base64": "YWJjCg==",
+			"language":       "PYTHON",
+			"path":           "/foo/path.py",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.Error(t, err, "Internal error happened")
 }
 
 func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {

@@ -1,6 +1,7 @@
 package mlflow
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/ml"
@@ -205,6 +206,7 @@ func TestModelReadGetError(t *testing.T) {
 func TestModelUpdate(t *testing.T) {
 	pm := m()
 	pm.Description = "thedescription"
+	newDescription := "updatedddescription"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -218,7 +220,7 @@ func TestModelUpdate(t *testing.T) {
 				Response: ml.GetModelResponse{
 					RegisteredModelDatabricks: &ml.ModelDatabricks{
 						Name:        "xyz",
-						Description: "updatedddescription",
+						Description: newDescription,
 					},
 				},
 			},
@@ -230,15 +232,15 @@ func TestModelUpdate(t *testing.T) {
 		State: map[string]any{
 			"name": "xyz",
 		},
-		HCL: `
+		HCL: fmt.Sprintf(`
 		name = "xyz"
-		description = "updateddescription"
-		`,
+		description = "%s"
+		`, newDescription),
 	}.Apply(t)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
-	assert.Equal(t, "updateddescription", d.Get("description"), "Description should be updated")
+	assert.Equal(t, newDescription, d.Get("description"), "Description should be updated")
 }
 
 func TestModelUpdatePatchError(t *testing.T) {

@@ -20,9 +20,7 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
-					Options: &api.QueryOptions{
-						RunAsRole: "viewer",
-					},
+					RunAsRole:    "viewer",
 				},
 				Response: api.Query{
 					ID:           "foo",
@@ -30,9 +28,7 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
-					Options: &api.QueryOptions{
-						RunAsRole: "viewer",
-					},
+					RunAsRole:    "viewer",
 				},
 			},
 			{
@@ -44,9 +40,7 @@ func TestQueryCreate(t *testing.T) {
 					Name:         "Query name",
 					Description:  "Query description",
 					Query:        "SELECT 1",
-					Options: &api.QueryOptions{
-						RunAsRole: "viewer",
-					},
+					RunAsRole:    "viewer",
 				},
 			},
 		},

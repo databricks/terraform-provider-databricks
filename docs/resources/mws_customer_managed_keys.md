@@ -236,7 +236,7 @@ The following arguments are required:
 ### aws_key_info Configuration Block
 
 * `key_arn` - The AWS KMS key's Amazon Resource Name (ARN).
-* `key_alias` - The AWS KMS key alias.
+* `key_alias` - (Optional) The AWS KMS key alias.
 * `key_region` - (Optional) (Computed) The AWS region in which KMS key is deployed to. This is not required.
 
 ### gcp_key_info Configuration Block

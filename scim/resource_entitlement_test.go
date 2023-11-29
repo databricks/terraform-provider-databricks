@@ -571,7 +571,7 @@ func TestResourceEntitlementsSPNCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Response: newUser,
 			},
 		},
@@ -596,7 +596,7 @@ func TestResourceEntitlementsSPNRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Response: User{
 					ID:            "abc",
 					ApplicationID: "bcd",
@@ -626,7 +626,7 @@ func TestResourceEntitlementsSPNRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Status:   404,
 			},
 		},
@@ -644,7 +644,7 @@ func TestResourceEntitlementsSPNRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Status:   400,
 				Response: apierr.APIErrorBody{
 					ScimDetail: "Something",
@@ -673,7 +673,7 @@ func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Response: newUser,
 			},
 		},
@@ -703,7 +703,7 @@ func TestResourceEntitlementsSPNDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Response: oldUser,
 			},
 			{

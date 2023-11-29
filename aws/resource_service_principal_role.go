@@ -18,7 +18,7 @@ func ResourceServicePrincipalRole() *schema.Resource {
 			return scim.NewServicePrincipalsAPI(ctx, c).Patch(servicePrincipalID, scim.PatchRequest("add", "roles", role))
 		},
 		ReadContext: func(ctx context.Context, servicePrincipalID, roleARN string, c *common.DatabricksClient) error {
-			servicePrincipal, err := scim.NewServicePrincipalsAPI(ctx, c).Read(servicePrincipalID)
+			servicePrincipal, err := scim.NewServicePrincipalsAPI(ctx, c).Read(servicePrincipalID, "roles")
 			hasRole := scim.ComplexValues(servicePrincipal.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
 				return apierr.NotFound("Service Principal has no role")

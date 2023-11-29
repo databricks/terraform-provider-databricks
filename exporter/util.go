@@ -22,6 +22,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+
+	"github.com/databricks/databricks-sdk-go/service/iam"
+
 	"golang.org/x/exp/slices"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -92,6 +95,18 @@ func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
 	}
 }
 
+func (ic *importContext) emitListOfUsers(users []string) {
+	for _, user := range users {
+		if user != "" {
+			ic.Emit(&resource{
+				Resource:  "databricks_user",
+				Attribute: "user_name",
+				Value:     user,
+			})
+		}
+	}
+}
+
 func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	if userOrSPName == "" {
 		return
@@ -102,7 +117,7 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 		ic.Emit(&resource{
 			Resource:  "databricks_user",
 			Attribute: "user_name",
-			Value:     userOrSPName,
+			Value:     strings.ToLower(userOrSPName),
 		})
 	} else if common.StringIsUUID(userOrSPName) {
 		ic.Emit(&resource{
@@ -197,10 +212,10 @@ func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 	return ic.allWorkspaceObjects
 }
 
-func (ic *importContext) emitGroups(u scim.User, principal string) {
+func (ic *importContext) emitGroups(u scim.User) {
 	for _, g := range u.Groups {
 		if g.Type != "direct" {
-			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, principal)
+			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, u.DisplayName)
 			continue
 		}
 		ic.Emit(&resource{
@@ -210,7 +225,7 @@ func (ic *importContext) emitGroups(u scim.User, principal string) {
 		ic.Emit(&resource{
 			Resource: "databricks_group_member",
 			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-			Name:     fmt.Sprintf("%s_%s_%s", g.Display, g.Value, principal),
+			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
 		})
 	}
 }
@@ -269,12 +284,34 @@ func (ic *importContext) cacheGroups() error {
 	defer ic.groupsMutex.Unlock()
 	if ic.allGroups == nil {
 		log.Printf("[INFO] Caching groups in memory ...")
-		groupsAPI := scim.NewGroupsAPI(ic.Context, ic.Client)
-		g, err := groupsAPI.Filter("")
+		var groups []iam.Group
+		var err error
+		if ic.accountLevel {
+			groups, err = ic.accountClient.Groups.ListAll(ic.Context, iam.ListAccountGroupsRequest{
+				Attributes: "id",
+			})
+		} else {
+			groups, err = ic.workspaceClient.Groups.ListAll(ic.Context, iam.ListGroupsRequest{
+				Attributes: "id",
+			})
+		}
 		if err != nil {
+			log.Printf("[ERROR] can't fetch list of groups")
 			return err
 		}
-		ic.allGroups = g.Resources
+		api := scim.NewGroupsAPI(ic.Context, ic.Client)
+		ic.allGroups = make([]scim.Group, 0, len(groups))
+		for i, g := range groups {
+			group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members")
+			if err != nil {
+				log.Printf("[ERROR] Error reading group with ID %s", g.Id)
+				continue
+			}
+			ic.allGroups = append(ic.allGroups, group)
+			if (i+1)%10 == 0 {
+				log.Printf("[DEBUG] Read %d out of %d groups", i+1, len(groups))
+			}
+		}
 		log.Printf("[INFO] Cached %d groups", len(ic.allGroups))
 	}
 	return nil
@@ -284,6 +321,33 @@ const (
 	nonExistingUserOrSp = "__USER_OR_SPN_DOES_NOT_EXIST__"
 )
 
+func (ic *importContext) getUsersMapping() {
+	ic.usersMutex.Lock()
+	defer ic.usersMutex.Unlock()
+	if ic.allUsersMapping == nil {
+		ic.allUsersMapping = make(map[string]string)
+		var users []iam.User
+		var err error
+		if ic.accountLevel {
+			users, err = ic.accountClient.Users.ListAll(ic.Context, iam.ListAccountUsersRequest{
+				Attributes: "userName,id",
+			})
+		} else {
+			users, err = ic.workspaceClient.Users.ListAll(ic.Context, iam.ListUsersRequest{
+				Attributes: "userName,id",
+			})
+		}
+		if err != nil {
+			log.Printf("[ERROR] can't fetch list of users")
+			return
+		}
+		for _, user := range users {
+			// log.Printf("[DEBUG] adding user %v into the map. %d out of %d", user, i+1, len(users))
+			ic.allUsersMapping[user.UserName] = user.Id
+		}
+	}
+}
+
 func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	log.Printf("[DEBUG] Looking for user %s", name)
 	ic.usersMutex.RLocker().Lock()
@@ -292,28 +356,59 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 	if exists {
 		if user.UserName == nonExistingUserOrSp {
 			log.Printf("[DEBUG] non-existing user %s is found in the cache", name)
-			err = fmt.Errorf("user %s not found", name)
+			err = fmt.Errorf("user %s is not found", name)
 		} else {
 			log.Printf("[DEBUG] existing user %s is found in the cache", name)
 			u = user
 		}
 		return
 	}
-	a := scim.NewUsersAPI(ic.Context, ic.Client)
-	users, err := a.Filter(fmt.Sprintf("userName eq '%s'", name), false)
-	if err != nil {
-		return
-	}
-	if len(users) == 0 {
-		err = fmt.Errorf("user %s not found", name)
+	ic.getUsersMapping()
+	ic.usersMutex.RLocker().Lock()
+	userId, exists := ic.allUsersMapping[name]
+	ic.usersMutex.RLocker().Unlock()
+	if !exists {
+		err = fmt.Errorf("there is no user '%s'", name)
 		u = scim.User{UserName: nonExistingUserOrSp}
 	} else {
-		u = users[0]
+		a := scim.NewUsersAPI(ic.Context, ic.Client)
+		u, err = a.Read(userId, "id,userName,displayName,active,externalId,entitlements,groups,roles")
+		if err != nil {
+			log.Printf("[WARN] error reading user with name '%s', user ID: %s", name, userId)
+			u = scim.User{UserName: nonExistingUserOrSp}
+		}
 	}
 	ic.usersMutex.Lock()
+	defer ic.usersMutex.Unlock()
 	ic.allUsers[name] = u
-	ic.usersMutex.Unlock()
 	return
+}
+
+func (ic *importContext) getSpsMapping() {
+	ic.spsMutex.Lock()
+	defer ic.spsMutex.Unlock()
+	if ic.allSpsMapping == nil {
+		ic.allSpsMapping = make(map[string]string)
+		var sps []iam.ServicePrincipal
+		var err error
+		// Reimplement it myself
+		if ic.accountLevel {
+			sps, err = ic.accountClient.ServicePrincipals.ListAll(ic.Context, iam.ListAccountServicePrincipalsRequest{
+				Attributes: "id,userName",
+			})
+		} else {
+			sps, err = ic.workspaceClient.ServicePrincipals.ListAll(ic.Context, iam.ListServicePrincipalsRequest{
+				Attributes: "id,userName",
+			})
+		}
+		if err != nil {
+			log.Printf("[ERROR] can't fetch list of service principals")
+			return
+		}
+		for _, sp := range sps {
+			ic.allSpsMapping[sp.ApplicationId] = sp.Id
+		}
+	}
 }
 
 func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
@@ -324,27 +419,31 @@ func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err 
 	if exists {
 		if sp.ApplicationID == nonExistingUserOrSp {
 			log.Printf("[DEBUG] non-existing SP %s is found in the cache", applicationID)
-			err = fmt.Errorf("user %s not found", applicationID)
+			err = fmt.Errorf("service principal %s is not found", applicationID)
 		} else {
 			log.Printf("[DEBUG] existing SP %s is found in the cache", applicationID)
 			u = sp
 		}
 		return
 	}
-	a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
-	users, err := a.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(applicationID, "'", "")), false)
-	if err != nil {
-		return
-	}
-	if len(users) == 0 {
-		err = fmt.Errorf("service principal %s not found", applicationID)
+	ic.getSpsMapping()
+	ic.spsMutex.RLocker().Lock()
+	spId, exists := ic.allSpsMapping[applicationID]
+	ic.spsMutex.RLocker().Unlock()
+	if !exists {
+		err = fmt.Errorf("there is no service principal '%s'", applicationID)
 		u = scim.User{ApplicationID: nonExistingUserOrSp}
 	} else {
-		u = users[0]
+		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
+		u, err = a.Read(spId, "userName,displayName,active,externalId,entitlements,groups,roles")
+		if err != nil {
+			log.Printf("[WARN] error reading service principal with AppID '%s', SP ID: %s", applicationID, spId)
+			u = scim.User{ApplicationID: nonExistingUserOrSp}
+		}
 	}
-	ic.usersMutex.Lock()
+	ic.spsMutex.Lock()
+	defer ic.spsMutex.Unlock()
 	ic.allSps[applicationID] = u
-	ic.usersMutex.Unlock()
 
 	return
 }
@@ -627,6 +726,10 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 			return workerInstPoolID != ""
 		case prefix + "enable_local_disk_encryption":
 			return false
+		case prefix + "spark_conf":
+			return fmt.Sprintf("%v", d.Get(prefix+"spark_conf")) == "map[spark.databricks.delta.preview.enabled:true]"
+		case prefix + "spark_env_vars":
+			return fmt.Sprintf("%v", d.Get(prefix+"spark_env_vars")) == "map[PYSPARK_PYTHON:/databricks/python3/bin/python3]"
 		}
 
 		return defaultShouldOmitFieldFunc(ic, pathString, as, d)

@@ -7,6 +7,8 @@ A metastore is the top-level container of objects in Unity Catalog. It stores da
 
 Unity Catalog offers a new metastore with built in security and auditing. This is distinct to the metastore used in previous versions of Databricks (based on the Hive Metastore).
 
+A Unity Catalog metastore can be created without a root location & credential to maintain strict separation of storage across catalogs or environments.
+
 ## Example Usage
 
 For AWS
@@ -45,12 +47,29 @@ resource "databricks_metastore_assignment" "this" {
 }
 ```
 
+For GCP
+
+```hcl
+resource "databricks_metastore" "this" {
+  name          = "primary"
+  storage_root  = "gs://${google_storage_bucket.unity_metastore.name}"
+  owner         = "uc admins"
+  region        = us-east1
+  force_destroy = true
+}
+
+resource "databricks_metastore_assignment" "this" {
+  metastore_id = databricks_metastore.this.id
+  workspace_id = local.workspace_id
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `name` - Name of metastore.
-* `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource.
+* `storage_root` - (Optional) Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource. If no `storage_root` is defined for the metastore, each catalog must have a `storage_root` defined.
 * `region` - (Mandatory for account-level) The region of the metastore
 * `owner` - (Optional) Username/groupname/sp application_id of the metastore owner.
 * `delta_sharing_scope` - (Optional) Required along with `delta_sharing_recipient_token_lifetime_in_seconds`. Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
@@ -63,6 +82,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - system-generated ID of this Unity Catalog Metastore.
+
 ## Import
 
 This resource can be imported by ID:

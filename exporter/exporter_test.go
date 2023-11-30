@@ -359,6 +359,23 @@ var emptyGlobalSQLConfig = qa.HTTPFixture{
 }
 
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
+	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
+		{
+			Id:            "345",
+			ApplicationId: "spn",
+		},
+	})
+	listUserFixtures := qa.ListUsersFixtures([]iam.User{
+		{
+			Id:       "123",
+			UserName: "test@test.com",
+		},
+	})
+	listGroupFixtures := qa.ListGroupsFixtures([]iam.Group{
+		{Id: "a"},
+		{Id: "b"},
+		{Id: "c"},
+	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
@@ -379,18 +396,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			allKnownWorkspaceConfs,
 			dummyWorkspaceConf,
 			emptyGlobalSQLConfig,
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
-				Response: iam.ListServicePrincipalResponse{
-					Resources: []iam.ServicePrincipal{
-						{
-							Id:            "345",
-							ApplicationId: "spn",
-						},
-					},
-				},
-			},
+			listSpFixtures[0],
+			listSpFixtures[1],
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/345?attributes=userName,displayName,active,externalId,entitlements",
@@ -409,29 +416,10 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				},
 				ReuseRequest: true,
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
-
-				Response: iam.ListUsersResponse{
-					Resources: []iam.User{
-						{
-							Id:       "123",
-							UserName: "test@test.com",
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?attributes=id",
-				Response: scim.GroupList{
-					Resources: []scim.Group{
-						{ID: "a"},
-						{ID: "b"},
-						{ID: "c"},
-					}},
-			},
+			listUserFixtures[0],
+			listUserFixtures[1],
+			listGroupFixtures[0],
+			listGroupFixtures[1],
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a",
@@ -626,7 +614,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			dummyWorkspaceConf,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?attributes=id",
+				Resource: "/api/2.0/preview/scim/v2/Groups?attributes=id&count=100&startIndex=1",
 				Response: scim.GroupList{Resources: []scim.Group{}},
 			},
 			emptyGitCredentials,
@@ -1470,8 +1458,9 @@ func TestImportingUser(t *testing.T) {
 		[]qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=1",
 				Response: iam.ListUsersResponse{
+					StartIndex: 1,
 					Resources: []iam.User{
 						{
 							Id:       "123",
@@ -1832,8 +1821,9 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=1",
 				Response: iam.ListUsersResponse{
+					StartIndex: 1,
 					Resources: []iam.User{
 						{Id: "123", UserName: "user@domain.com"},
 					},

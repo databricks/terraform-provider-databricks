@@ -423,7 +423,7 @@ func TestGroupCacheError(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id",
+			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id&count=100&startIndex=1",
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
@@ -479,7 +479,7 @@ func TestUserSearchFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=1",
 
 			Response: map[string]any{},
 		},
@@ -504,7 +504,7 @@ func TestSpnSearchFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
 
 			Response: map[string]any{},
 		},
@@ -529,8 +529,9 @@ func TestSpnSearchSuccess(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
 			Response: iam.ListServicePrincipalResponse{
+				StartIndex: 1,
 				Resources: []iam.ServicePrincipal{
 					{
 						Id: "321", DisplayName: "spn", ApplicationId: "dbc",
@@ -540,7 +541,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&startIndex=1",
+			Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=2",
 			Response: iam.ListServicePrincipalResponse{
 				Resources: []iam.ServicePrincipal{},
 			},
@@ -622,8 +623,9 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=1",
 			Response: iam.ListUsersResponse{
+				StartIndex: 1,
 				Resources: []iam.User{
 					{
 						UserName: "dbc",
@@ -634,7 +636,7 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=2",
 			Response: iam.ListUsersResponse{},
 		},
 		{

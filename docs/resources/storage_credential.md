@@ -74,11 +74,14 @@ The following arguments are required:
 - `name` - Name of Storage Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
 - `metastore_id` - (Required for account-level) Unique identifier of the parent Metastore
 - `owner` - (Optional) Username/groupname/sp application_id of the storage credential owner.
+- `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
 - `force_destroy` - (Optional) Delete storage credential regardless of its dependencies.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
 - `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
+- `external_id` (output only) - The external ID used in role assumption to prevent confused deputy problem.
+- `unity_catalog_iam_arn` (output only) - The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks. This is the identity that is going to assume the AWS IAM role.
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
 
@@ -89,8 +92,6 @@ The following arguments are required:
 `databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
 
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
-
-- `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
 
 `azure_service_principal` optional configuration block to use service principal as credential details for Azure (Legacy):
 

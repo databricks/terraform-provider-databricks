@@ -476,13 +476,9 @@ func TestGroupSearchNoMatch(t *testing.T) {
 }
 
 func TestUserSearchFails(t *testing.T) {
+	userFixture := qa.ListUsersFixtures([]iam.User{})
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=1",
-
-			Response: map[string]any{},
-		},
+		userFixture[0],
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceUser().TestResourceData()
@@ -620,25 +616,15 @@ func TestShouldOmitFoRepos(t *testing.T) {
 }
 
 func TestUserImportSkipNonDirectGroups(t *testing.T) {
+	userFixture := qa.ListUsersFixtures([]iam.User{
+		{
+			UserName: "dbc",
+			Id:       "321",
+		},
+	})
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=1",
-			Response: iam.ListUsersResponse{
-				StartIndex: 1,
-				Resources: []iam.User{
-					{
-						UserName: "dbc",
-						Id:       "321",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=2",
-			Response: iam.ListUsersResponse{},
-		},
+		userFixture[0],
+		userFixture[1],
 		{
 			ReuseRequest: true,
 			Method:       "GET",

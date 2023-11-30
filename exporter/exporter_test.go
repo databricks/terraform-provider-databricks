@@ -1480,26 +1480,16 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 }
 
 func TestImportingUser(t *testing.T) {
+	userFixture := qa.ListUsersFixtures([]iam.User{
+		{
+			Id:       "123",
+			UserName: "me",
+		},
+	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=1",
-				Response: iam.ListUsersResponse{
-					StartIndex: 1,
-					Resources: []iam.User{
-						{
-							Id:       "123",
-							UserName: "me",
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
-				Response: iam.ListUsersResponse{},
-			},
+			userFixture[0],
+			userFixture[1],
 			{
 				Method:       "GET",
 				ReuseRequest: true,
@@ -1794,6 +1784,9 @@ func TestImportingSqlObjects(t *testing.T) {
 }
 
 func TestImportingDLTPipelines(t *testing.T) {
+	userFixture := qa.ListUsersFixtures([]iam.User{
+		{Id: "123", UserName: "user@domain.com"},
+	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
@@ -1845,21 +1838,8 @@ func TestImportingDLTPipelines(t *testing.T) {
 				},
 				ReuseRequest: true,
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&count=100&startIndex=1",
-				Response: iam.ListUsersResponse{
-					StartIndex: 1,
-					Resources: []iam.User{
-						{Id: "123", UserName: "user@domain.com"},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid&startIndex=1",
-				Response: iam.ListUsersResponse{},
-			},
+			userFixture[0],
+			userFixture[1],
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalId,entitlements",

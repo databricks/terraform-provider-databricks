@@ -12,7 +12,7 @@ func ListUsersFixtures(users []iam.User) []HTTPFixture {
 			StartIndex: 1,
 			Resources:  users,
 		},
-	}, "/api/2.0/preview/scim/v2/Users?attributes=id%%2CuserName")
+	}, "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName")
 }
 
 func ListGroupsFixtures(groups []iam.Group) []HTTPFixture {
@@ -30,7 +30,7 @@ func ListServicePrincipalsFixtures(sps []iam.ServicePrincipal) []HTTPFixture {
 			StartIndex: 1,
 			Resources:  sps,
 		},
-	}, "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%%2CuserName")
+	}, "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName")
 }
 
 type scimResponse interface {

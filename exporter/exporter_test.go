@@ -423,10 +423,10 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a",
-				Response: scim.Group{
+				Response: iam.Group{
 					// TODO: add another user for which there is no filter resut
-					ID: "a", DisplayName: "admins",
-					Members: []scim.ComplexValue{
+					Id: "a", DisplayName: "admins",
+					Members: []iam.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
 						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
@@ -436,22 +436,22 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/b",
-				Response: scim.Group{
-					ID: "b", DisplayName: "users",
+				Response: iam.Group{
+					Id: "b", DisplayName: "users",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/c",
-				Response: scim.Group{
-					ID: "b", DisplayName: "test",
+				Response: iam.Group{
+					Id: "b", DisplayName: "test",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn?attributes=userName,displayName,active,externalId,entitlements",
-				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
-					Groups: []scim.ComplexValue{
+				Response: iam.ServicePrincipal{Id: "321", DisplayName: "spn", ApplicationId: "spn",
+					Groups: []iam.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
 					}},
 				ReuseRequest: true,
@@ -467,8 +467,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=members",
-				Response: scim.Group{ID: "a", DisplayName: "admins",
-					Members: []scim.ComplexValue{
+				Response: iam.Group{Id: "a", DisplayName: "admins",
+					Members: []iam.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
 						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
@@ -478,9 +478,35 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Response: iam.Group{Id: "a", DisplayName: "admins",
+					Members: []iam.ComplexValue{
+						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+						{Display: "Test group", Value: "f", Ref: "Groups/f"},
+						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
+					},
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/b?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Response: iam.Group{Id: "b", DisplayName: "users"},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/c?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Response: iam.Group{Id: "c", DisplayName: "test",
+					Groups: []iam.ComplexValue{
+						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
+					},
+				},
+			},
+			{
+				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=displayName,externalId,entitlements",
-				Response: scim.Group{ID: "a", DisplayName: "admins",
-					Members: []scim.ComplexValue{
+				Response: iam.Group{Id: "a", DisplayName: "admins",
+					Members: []iam.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
 						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
@@ -491,13 +517,13 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/b?attributes=displayName,externalId,entitlements",
-				Response: scim.Group{ID: "b", DisplayName: "users"},
+				Response: iam.Group{Id: "b", DisplayName: "users"},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/c?attributes=displayName,externalId,entitlements",
-				Response: scim.Group{ID: "c", DisplayName: "test",
-					Groups: []scim.ComplexValue{
+				Response: iam.Group{Id: "c", DisplayName: "test",
+					Groups: []iam.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
 					},
 				},
@@ -505,18 +531,18 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/f?attributes=displayName,externalId,entitlements",
-				Response: scim.Group{ID: "f", DisplayName: "nested"},
+				Response: iam.Group{Id: "f", DisplayName: "nested"},
 			},
 			// TODO: add groups to the output
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalId,entitlements",
-				Response: scim.User{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+				Response: iam.User{Id: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=id,userName,displayName,active,externalId,entitlements,groups,roles",
-				Response: scim.User{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+				Response: iam.User{Id: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 			},
 			{
 				Method:   "GET",

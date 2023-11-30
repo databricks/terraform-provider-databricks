@@ -330,11 +330,11 @@ func (ic *importContext) getUsersMapping() {
 		var err error
 		if ic.accountLevel {
 			users, err = ic.accountClient.Users.ListAll(ic.Context, iam.ListAccountUsersRequest{
-				Attributes: "userName,id",
+				Attributes: "id,userName",
 			})
 		} else {
 			users, err = ic.workspaceClient.Users.ListAll(ic.Context, iam.ListUsersRequest{
-				Attributes: "userName,id",
+				Attributes: "id,userName",
 			})
 		}
 		if err != nil {

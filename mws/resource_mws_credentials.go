@@ -31,7 +31,7 @@ func (a CredentialsAPI) List(mwsAcctID string) ([]Credentials, error) {
 
 type CredentialInfo struct {
 	// The human-readable name of the credential configuration object.
-	AccountId string `json:"account_id,omitempty"`
+	AccountId string `json:"account_id,omitempty" tf:"force_new,suppress_diff"`
 	// The human-readable name of the credential configuration object.
 	CredentialsName string `json:"credentials_name" tf:"force_new"`
 	// The Amazon Resource Name (ARN) of the cross account role.
@@ -68,10 +68,7 @@ func ResourceMwsCredentials() *schema.Resource {
 				return err
 			}
 			d.Set("credentials_id", credentials.CredentialsId)
-			_, hasAccountId := d.GetOk("account_id")
-			if !hasAccountId {
-				d.Set("account_id", c.Config.AccountID)
-			}
+			d.Set("account_id", c.Config.AccountID)
 			p.Pack(d)
 			return nil
 		},
@@ -92,6 +89,10 @@ func ResourceMwsCredentials() *schema.Resource {
 			d.Set("role_arn", credentials.AwsCredentials.StsRole.RoleArn)
 			d.Set("creation_time", credentials.CreationTime)
 			return d.Set("external_id", credentials.AwsCredentials.StsRole.ExternalId)
+		},
+		// this resource cannot be updated, add this to prevent "doesn't support update" error from TF
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			acc, err := c.AccountClient()

@@ -135,7 +135,7 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
 	if strings.HasPrefix(path, prefix) {
 		parts := strings.SplitN(path, "/", 4)
-		if len(parts) >= 3 {
+		if len(parts) >= 3 && parts[2] != "" {
 			ic.emitUserOrServicePrincipal(parts[2])
 		}
 	}
@@ -146,7 +146,7 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 		return false
 	}
 	parts := strings.SplitN(path, "/", 4)
-	if len(parts) == 3 || (len(parts) == 4 && parts[3] == "") {
+	if (len(parts) == 3 || (len(parts) == 4 && parts[3] == "")) && parts[2] != "" {
 		userOrSPName := parts[2]
 		var err error
 		if common.StringIsUUID(userOrSPName) {

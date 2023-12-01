@@ -11,7 +11,7 @@ import (
 )
 
 func TestResourceCredentialsCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -50,13 +50,14 @@ func TestResourceCredentialsCreate(t *testing.T) {
 		},
 		Create:    true,
 		AccountID: "abc",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/cid", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":       "abc/cid",
+		"role_arn": "arn:aws:iam::098765:role/cross-account",
+	})
 }
 
 func TestResourceCredentialsCreateWithoutAccId(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -94,9 +95,10 @@ func TestResourceCredentialsCreateWithoutAccId(t *testing.T) {
 		},
 		Create:    true,
 		AccountID: "abc",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/cid", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":       "abc/cid",
+		"role_arn": "arn:aws:iam::098765:role/cross-account",
+	})
 }
 
 func TestResourceCredentialsCreate_Error(t *testing.T) {
@@ -126,7 +128,7 @@ func TestResourceCredentialsCreate_Error(t *testing.T) {
 }
 
 func TestResourceCredentialsRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -146,14 +148,13 @@ func TestResourceCredentialsRead(t *testing.T) {
 		Read:      true,
 		ID:        "abc/cid",
 		AccountID: "abc",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/cid", d.Id(), "Id should not be empty")
-	assert.Equal(t, 0, d.Get("creation_time"))
-	assert.Equal(t, "cid", d.Get("credentials_id"))
-	assert.Equal(t, "Cross-account ARN", d.Get("credentials_name"))
-	assert.Equal(t, "", d.Get("external_id"))
-	assert.Equal(t, "arn:aws:iam::098765:role/cross-account", d.Get("role_arn"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":               "abc/cid",
+		"role_arn":         "arn:aws:iam::098765:role/cross-account",
+		"creation_time":    0,
+		"credentials_name": "Cross-account ARN",
+		"external_id":      "",
+	})
 }
 
 func TestResourceCredentialsRead_NotFound(t *testing.T) {

@@ -4,26 +4,31 @@
     "job_id": 15,
     "settings": {
         "email_notifications": {},
-        "libraries": [
-            {
-                "jar": "dbfs:/FileStore/jars/test.jar"
-            }
-        ],
         "max_concurrent_runs": 1,
         "max_retries": 1,
         "min_retry_interval_millis": 0,
         "name": "Scala Project",
-        "new_cluster": {
-            "instance_pool_id": "pool1",
-            "num_workers": 2,
-            "spark_version": "6.4.x-scala2.11"
-        },
         "retry_on_timeout": false,
-        "spark_jar_task": {
-            "jar_uri": "dbfs:/FileStore/jars/test.jar",
-            "main_class_name": "com.databricks.examples.ProjectDriver",
-            "run_as_repl": true
-        },
+        "tasks": [
+            {
+                "task_key": "test",
+                "libraries": [
+                    {
+                        "jar": "dbfs:/FileStore/jars/test.jar"
+                    }
+                ],
+                "new_cluster": {
+                    "instance_pool_id": "pool1",
+                    "num_workers": 2,
+                    "spark_version": "6.4.x-scala2.11"
+                },
+                "spark_jar_task": {
+                    "jar_uri": "dbfs:/FileStore/jars/test.jar",
+                    "main_class_name": "com.databricks.examples.ProjectDriver",
+                    "run_as_repl": true
+                }
+            }
+        ],
         "timeout_seconds": 3600
     }
 }

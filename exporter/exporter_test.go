@@ -38,22 +38,28 @@ import (
 
 // nolint
 func getJSONObject(filename string) any {
-	data, _ := os.ReadFile(filename)
 	var obj map[string]any
-	err := json.Unmarshal(data, &obj)
+	data, err := os.ReadFile(filename)
 	if err != nil {
-		fmt.Printf("[ERROR] error! err=%v\n", err)
+		panic(err)
+	}
+	err = json.Unmarshal(data, &obj)
+	if err != nil {
+		fmt.Printf("[ERROR] error! file=%s err=%v\n", filename, err)
 		fmt.Printf("[ERROR] data=%s\n", string(data))
 	}
 	return obj
 }
 
 func getJSONArray(filename string) any {
-	data, _ := os.ReadFile(filename)
-	var obj []any
-	err := json.Unmarshal(data, &obj)
+	data, err := os.ReadFile(filename)
 	if err != nil {
-		fmt.Printf("[ERROR] error! err=%v\n", err)
+		panic(err)
+	}
+	var obj []any
+	err = json.Unmarshal(data, &obj)
+	if err != nil {
+		fmt.Printf("[ERROR] error! file=%s err=%v\n", filename, err)
 		fmt.Printf("[ERROR] data=%s\n", string(data))
 	}
 	return obj
@@ -327,7 +333,7 @@ var emptySqlQueries = qa.HTTPFixture{
 var emptySqlAlerts = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/preview/sql/alerts",
-	Response:     map[string]any{},
+	Response:     []sql.AlertEntity{},
 	ReuseRequest: true,
 }
 
@@ -817,7 +823,7 @@ func TestImportingClusters(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/permissions/instance-pools/pool1",
 				ReuseRequest: true,
-				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
 			{
 				Method:       "GET",
@@ -902,7 +908,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/permissions/jobs/14",
-				Response: getJSONObject("test-data/get-job-14-permissions.json"),
+				Response: getJSONObject("test-data/get-job-permissions-14.json"),
 			},
 			{
 				Method:       "GET",
@@ -926,7 +932,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/permissions/instance-pools/pool1",
 				ReuseRequest: true,
-				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
 			{
 				Method:   "GET",
@@ -1025,7 +1031,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/permissions/instance-pools/pool1",
 				ReuseRequest: true,
-				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
 			{
 				Method:   "GET",
@@ -1110,9 +1116,10 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/permissions/jobs/14",
-				Response: getJSONObject("test-data/get-job-14-permissions.json"),
+				Method:       "GET",
+				Resource:     "/api/2.0/permissions/jobs/14",
+				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
+				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
@@ -1136,7 +1143,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/permissions/instance-pools/pool1",
 				ReuseRequest: true,
-				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
 			{
 				Method:   "GET",
@@ -1275,7 +1282,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/permissions/instance-pools/pool1",
 				ReuseRequest: true,
-				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
+				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
 			{
 				Method:   "GET",

@@ -43,6 +43,7 @@ func importContextForTest() *importContext {
 		allUsers:    map[string]scim.User{},
 		allSps:      map[string]scim.User{},
 		channels:    makeResourcesChannels(p),
+		exportDeletedUsersAssets: false,
 	}
 }
 

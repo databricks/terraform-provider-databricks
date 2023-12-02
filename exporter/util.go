@@ -155,6 +155,7 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 			_, err = ic.findUserByName(strings.ToLower(userOrSPName))
 		}
 		return err == nil
+
 	}
 	return false
 }
@@ -800,7 +801,7 @@ func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
 }
 
 func (ic *importContext) shouldEmitForPath(path string) bool {
-	if strings.HasPrefix(path, "/Users/") {
+	if !ic.exportDeletedUsersAssets && strings.HasPrefix(path, "/Users/") {
 		userDir := userDirRegex.ReplaceAllString(path, "$1")
 		return ic.IsUserOrServicePrincipalDirectory(userDir, "/Users")
 	}

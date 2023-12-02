@@ -34,15 +34,15 @@ import (
 func importContextForTest() *importContext {
 	p := provider.DatabricksProvider()
 	return &importContext{
-		Importables: resourcesMap,
-		Resources:   p.ResourcesMap,
-		Files:       map[string]*hclwrite.File{},
-		testEmits:   map[string]bool{},
-		nameFixes:   nameFixes,
-		waitGroup:   &sync.WaitGroup{},
-		allUsers:    map[string]scim.User{},
-		allSps:      map[string]scim.User{},
-		channels:    makeResourcesChannels(p),
+		Importables:              resourcesMap,
+		Resources:                p.ResourcesMap,
+		Files:                    map[string]*hclwrite.File{},
+		testEmits:                map[string]bool{},
+		nameFixes:                nameFixes,
+		waitGroup:                &sync.WaitGroup{},
+		allUsers:                 map[string]scim.User{},
+		allSps:                   map[string]scim.User{},
+		channels:                 makeResourcesChannels(p),
 		exportDeletedUsersAssets: false,
 	}
 }

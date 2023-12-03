@@ -53,7 +53,7 @@ All arguments are optional, and they tune what code is being generated.
 
 ## Services
 
-Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.  
+Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.
 
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
@@ -112,7 +112,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_instance_profile](../resources/instance_profile.md) | Yes | No |
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes |
 | [databricks_job](../resources/job.md) | Yes | No |
-| [databricks_library](../resources/library.md) | Yes | No |
+| [databricks_library](../resources/library.md) | Yes\* | No |
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No |
 | [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes |
@@ -141,3 +141,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_user_role](../resources/user_role.md) | Yes | No |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No |
 | [databricks_workspace_file](../resources/workspace_file.md) | Yes | Yes |
+
+Notes:
+
+- \* - libraries are exported as blocks inside the cluster definition instead of generating `databricks_library` resources.  This is done to decrease the number of generated resources.

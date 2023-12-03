@@ -259,6 +259,8 @@ func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*s
 	var cll libraries.ClusterLibraryList
 	common.DataToStructPointer(d, s, &cll)
 	for _, lib := range cll.Libraries {
+		// Emit workspace file libraries if necessary
+		// Emit Volume libraries when resource is available
 		ic.emitIfDbfsFile(lib.Whl)
 		ic.emitIfDbfsFile(lib.Jar)
 		ic.emitIfDbfsFile(lib.Egg)
@@ -271,16 +273,12 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 	if err != nil {
 		return err
 	}
-	if cll.LibraryStatuses != nil {
-		for _, lib := range cll.LibraryStatuses {
-			ic.Emit(&resource{
-				Resource: "databricks_library",
-				ID:       lib.Library.GetID(d.Id()),
-			})
-			ic.emitIfDbfsFile(lib.Library.Egg)
-			ic.emitIfDbfsFile(lib.Library.Jar)
-			ic.emitIfDbfsFile(lib.Library.Whl)
-		}
+	for _, lib := range cll.LibraryStatuses {
+		// Emit workspace file libraries if necessary
+		// Emit Volume libraries when resource is available
+		ic.emitIfDbfsFile(lib.Library.Egg)
+		ic.emitIfDbfsFile(lib.Library.Jar)
+		ic.emitIfDbfsFile(lib.Library.Whl)
 	}
 	return nil
 }

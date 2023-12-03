@@ -872,6 +872,22 @@ func TestImportingClusters(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/secret-scopes-response.json"),
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
+				Response: libraries.ClusterLibraryStatuses{
+					ClusterID: "test2",
+					LibraryStatuses: []libraries.LibraryStatus{
+						{
+							Library: &libraries.Library{
+								Pypi: &libraries.PyPi{
+									Package: "chispa",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			os.Setenv("EXPORTER_PARALLELISM_databricks_cluster", "1")

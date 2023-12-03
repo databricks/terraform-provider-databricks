@@ -255,20 +255,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "role", Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
 		},
 	},
-	"databricks_library": {
-		WorkspaceLevel: true,
-		Service:        "compute",
-		Depends: []reference{
-			{Path: "cluster_id", Resource: "databricks_cluster"},
-			{Path: "jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-		},
-		Name: func(ic *importContext, d *schema.ResourceData) string {
-			id := d.Id()
-			return "lib_" + id + fmt.Sprintf("_%x", md5.Sum([]byte(id)))[:9]
-		},
-	},
 	"databricks_cluster": {
 		WorkspaceLevel: true,
 		Service:        "compute",

@@ -199,7 +199,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	d.Set("url", c.FormatURL("#setting/clusters/", d.Id(), "/configuration"))
-	if d.Get("library.#").(int) == 0 {
+	var isExporter bool
+	p, ok := ctx.Value(common.Provider).(*schema.Provider)
+	if !ok {
+		isExporter = false
+	} else {
+		isExporter = p.TerraformVersion == "exporter"
+	}
+	if d.Get("library.#").(int) == 0 && !isExporter {
 		// don't add externally added libraries, if config has no `library {}` blocks
 		// TODO: check if it still works fine with importing. Perhaps os.Setenv will do the trick
 		return nil

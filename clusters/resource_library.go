@@ -20,6 +20,13 @@ func ResourceLibrary() *schema.Resource {
 		}
 		return m
 	})
+	libraySdkSchema := common.StructToSchema(compute.Library{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["cluster_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		}
+		return m
+	})
 	parseId := func(id string) (string, string) {
 		split := strings.SplitN(id, "/", 2)
 		if len(split) != 2 {
@@ -58,18 +65,21 @@ func ResourceLibrary() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
-			cll, err := libraries.NewLibrariesAPI(ctx, c).WaitForLibrariesInstalled(libraries.Wait{
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			cll, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 				ClusterID: clusterID,
-				Timeout:   d.Timeout(schema.TimeoutRead),
 				IsRefresh: true,
-			})
+			}, d.Timeout(schema.TimeoutRead))
 			if err != nil {
 				return err
 			}
 			for _, v := range cll.LibraryStatuses {
 				thisRep := v.Library.String()
 				if thisRep == libraryRep {
-					common.StructToData(v.Library, s, d)
+					common.StructToData(v.Library, libraySdkSchema, d)
 					d.Set("cluster_id", clusterID)
 					return nil
 				}

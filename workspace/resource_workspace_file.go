@@ -24,6 +24,10 @@ func ResourceWorkspaceFile() *schema.Resource {
 			Optional: true,
 			Computed: true,
 		},
+		"workspace_path": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 	})
 	return common.Resource{
 		Schema:        s,
@@ -73,6 +77,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 				return err
 			}
 			d.Set("url", c.FormatURL("#workspace", d.Id()))
+			d.Set("workspace_path", "/Workspace"+objectStatus.Path)
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

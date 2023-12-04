@@ -7,6 +7,9 @@ page_title: "Unity Catalog set up on Google Cloud"
 **Note**
 If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you.
 
+**Note**
+Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
 
 This guide creates a metastore without a storage root location or credential to maintain strict separation of storage across catalogs or environments.

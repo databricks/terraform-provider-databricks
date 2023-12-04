@@ -15,6 +15,7 @@ To work with Databricks in GCP in an automated way, please create a service acco
 The very first step is VPC creation with the necessary resources. Please consult [main documentation page](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. A GCP VPC is registered as [databricks_mws_networks](../resources/mws_networks.md) resource.
 
 To enable [back-end Private Service Connect (data plane to control plane)](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html#two-private-service-connect-options), configure the network with the two back-end VPC endpoints:
+
 - Back-end VPC endpoint for [Secure cluster connectivity](https://docs.gcp.databricks.com/security/secure-cluster-connectivity.html) relay
 - Back-end VPC endpoint for REST APIs
 
@@ -98,7 +99,7 @@ resource "databricks_mws_networks" "this" {
 
 ## Creating a Databricks Workspace
 
-Once [the VPC](#creating-a-vpc) is set up, you can create Databricks workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
+Once [the VPC](#creating-a-vpc-network) is set up, you can create Databricks workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
 For a workspace to support any of the Private Service Connect connectivity scenarios, the workspace must be created with an attached [databricks_mws_private_access_settings](../resources/mws_private_access_settings.md) resource.
 
@@ -126,7 +127,7 @@ resource "databricks_mws_workspaces" "this" {
     }
   }
 
-  private_service_connect_id = databricks_mws_private_access_settings.pas.private_access_settings_id
+  private_access_settings_id = databricks_mws_private_access_settings.pas.private_access_settings_id
   network_id                 = databricks_mws_networks.this.network_id
   gke_config {
     connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"

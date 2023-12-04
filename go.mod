@@ -3,7 +3,7 @@ module github.com/databricks/terraform-provider-databricks
 go 1.20
 
 require (
-	github.com/databricks/databricks-sdk-go v0.26.1-0.20231129171429-379b6e95d012
+	github.com/databricks/databricks-sdk-go v0.26.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/hcl v1.0.0
@@ -74,5 +74,3 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/databricks/databricks-sdk-go => /Users/hector.castejon/databricks-sdk-go

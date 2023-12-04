@@ -23,8 +23,8 @@ github.com/cloudflare/circl v1.3.6 h1:/xbKIqSHbZXHwkhbrhrt2YOHIwYJlXH94E3tI/gDlU
 github.com/cloudflare/circl v1.3.6/go.mod h1:5XYMA4rFBvNIrhs50XuiBJ15vF2pZn4nnUKZrLbUZFA=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cyphar/filepath-securejoin v0.2.4 h1:Ugdm7cg7i6ZK6x3xDF1oEu1nfkyfH53EtKeQYTC3kyg=
-github.com/databricks/databricks-sdk-go v0.26.1-0.20231129171429-379b6e95d012 h1:TcyLvMp1G+pq6OPCQgmmtu/Bk2xjipUyogEp3kveFdc=
-github.com/databricks/databricks-sdk-go v0.26.1-0.20231129171429-379b6e95d012/go.mod h1:cyFYsqaDiIdaKPdNAuh+YsMUL1k9Lt02JB/72+zgCxg=
+github.com/databricks/databricks-sdk-go v0.26.1 h1:Wumg1H1K7Y3bNSRWERLE+9+BbCGljZAEwv/xc+xhT6s=
+github.com/databricks/databricks-sdk-go v0.26.1/go.mod h1:cyFYsqaDiIdaKPdNAuh+YsMUL1k9Lt02JB/72+zgCxg=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

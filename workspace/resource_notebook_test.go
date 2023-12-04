@@ -116,7 +116,7 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ImportPath{
 					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Path:      "/foo/path",
 					Language:  "PYTHON",
 					Overwrite: true,
 					Format:    "SOURCE",
@@ -124,18 +124,18 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath",
 				Response: ExportPath{
 					Content: "YWJjCg==",
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath",
 				Response: ObjectStatus{
 					ObjectID:   4567,
 					ObjectType: "NOTEBOOK",
-					Path:       "/foo/path.py",
+					Path:       "/foo/path",
 					Language:   "PYTHON",
 				},
 			},
@@ -144,12 +144,12 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"language":       "PYTHON",
-			"path":           "/foo/path.py",
+			"path":           "/foo/path",
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "/foo/path.py", d.Id())
+	assert.Equal(t, "/foo/path", d.Id())
 }
 
 func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
@@ -167,7 +167,7 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ImportPath{
 					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Path:      "/foo/path",
 					Language:  "PYTHON",
 					Overwrite: true,
 					Format:    "SOURCE",
@@ -183,7 +183,7 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ImportPath{
 					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Path:      "/foo/path",
 					Language:  "PYTHON",
 					Overwrite: true,
 					Format:    "SOURCE",
@@ -191,18 +191,18 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath",
 				Response: ExportPath{
 					Content: "YWJjCg==",
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath",
 				Response: ObjectStatus{
 					ObjectID:   4567,
 					ObjectType: "NOTEBOOK",
-					Path:       "/foo/path.py",
+					Path:       "/foo/path",
 					Language:   "PYTHON",
 				},
 			},
@@ -211,12 +211,12 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"language":       "PYTHON",
-			"path":           "/foo/path.py",
+			"path":           "/foo/path",
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "/foo/path.py", d.Id())
+	assert.Equal(t, "/foo/path", d.Id())
 }
 
 func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
@@ -239,7 +239,7 @@ func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ImportPath{
 					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Path:      "/foo/path",
 					Language:  "PYTHON",
 					Overwrite: true,
 					Format:    "SOURCE",
@@ -255,7 +255,7 @@ func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
 		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"language":       "PYTHON",
-			"path":           "/foo/path.py",
+			"path":           "/foo/path",
 		},
 		Create: true,
 	}.Apply(t)

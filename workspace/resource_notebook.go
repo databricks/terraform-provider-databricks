@@ -368,11 +368,13 @@ func ResourceNotebook() *schema.Resource {
 			}
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			path := d.Get("path").(string)
+			pathNoExtension := path[0 : len(path)-len(filepath.Ext(path))]
+
 			createNotebook := ImportPath{
 				Content:   base64.StdEncoding.EncodeToString(content),
 				Language:  d.Get("language").(string),
 				Format:    d.Get("format").(string),
-				Path:      path,
+				Path:      pathNoExtension,
 				Overwrite: true,
 			}
 			if createNotebook.Language == "" {
@@ -400,7 +402,7 @@ func ResourceNotebook() *schema.Resource {
 					return err
 				}
 			}
-			d.SetId(path)
+			d.SetId(pathNoExtension)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

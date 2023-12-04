@@ -686,6 +686,8 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
+		s["max_retries"].Deprecated = "max_retries should be set at task level, not at job level"
+		s["retry_on_timeout"].Deprecated = "retry_on_timeout should be set at task level, not at job level"
 
 		// we need to have only one of user name vs service principal in the run_as block
 		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}

@@ -169,6 +169,27 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
 }
 
+func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
+	if f.Azure || f.AzureSPN {
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+			Cloud:              config.CloudAzure,
+			DnsZone:            host,
+			AzureApplicationID: "azure-login-application-id",
+			AzureEnvironment:   &config.AzurePublicCloud,
+		}
+	} else if f.Gcp {
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+			Cloud:   config.CloudGCP,
+			DnsZone: host,
+		}
+	} else {
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+			Cloud:   config.CloudAWS,
+			DnsZone: host,
+		}
+	}
+}
+
 // Apply runs tests from fixture
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	token := "..."
@@ -198,6 +219,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.AccountID != "" {
 		client.Config.AccountID = f.AccountID
 	}
+	f.setDatabricksEnvironmentForTest(client, server.URL)
 	if len(f.HCL) > 0 {
 		var out any
 		// TODO: update to HCLv2 somehow, so that importer and this use the same stuff

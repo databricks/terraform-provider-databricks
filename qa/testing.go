@@ -171,27 +171,21 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
 	if f.Azure || f.AzureSPN {
-		client.Config.DatabricksEnvironments = []config.DatabricksEnvironment{
-			{
-				Cloud:              config.CloudAzure,
-				DnsZone:            host,
-				AzureApplicationID: "azure-login-application-id",
-				AzureEnvironment:   &config.PublicCloud,
-			},
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+			Cloud:              config.CloudAzure,
+			DnsZone:            host,
+			AzureApplicationID: "azure-login-application-id",
+			AzureEnvironment:   &config.AzurePublicCloud,
 		}
 	} else if f.Gcp {
-		client.Config.DatabricksEnvironments = []config.DatabricksEnvironment{
-			{
-				Cloud:   config.CloudGCP,
-				DnsZone: host,
-			},
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+			Cloud:   config.CloudGCP,
+			DnsZone: host,
 		}
 	} else {
-		client.Config.DatabricksEnvironments = []config.DatabricksEnvironment{
-			{
-				Cloud:   config.CloudAWS,
-				DnsZone: host,
-			},
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+			Cloud:   config.CloudAWS,
+			DnsZone: host,
 		}
 	}
 }

@@ -75,4 +75,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/databricks/databricks-sdk-go => /Users/miles/databricks-sdk-go
+replace github.com/databricks/databricks-sdk-go => /Users/hector.castejon/databricks-sdk-go

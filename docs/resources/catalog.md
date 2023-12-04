@@ -41,6 +41,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this catalog - same as the `name`.
+* `metastore_id` - ID of the metastore.
 
 ## Import
 
@@ -54,6 +55,6 @@ terraform import databricks_catalog.this <name>
 
 The following resources are used in the same context:
 
-* [databricks_table](../data-sources/tables.md) data to list tables within Unity Catalog.
-* [databricks_schema](../data-sources/schemas.md) data to list schemas within Unity Catalog.
-* [databricks_catalog](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.
+* [databricks_tables](../data-sources/tables.md) data to list tables within Unity Catalog.
+* [databricks_schemas](../data-sources/schemas.md) data to list schemas within Unity Catalog.
+* [databricks_catalogs](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.

@@ -8,22 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func contains[T comparable](s []T, e T) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
 func updateFunctionFactory(pathPrefix string, updatable []string) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
 	return func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		patch := map[string]any{}
 		for _, field := range updatable {
 
 			// these fields cannot be set during creation
-			if d.IsNewResource() && !contains([]string{
+			if d.IsNewResource() && !common.Contains([]string{
 				"owner",
 				"delta_sharing_scope",
 				"delta_sharing_recipient_token_lifetime_in_seconds",

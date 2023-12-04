@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// clusterID string, timeout time.Duration, isActive bool, refresh bool
 func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceClient, wait compute.Wait, timeout time.Duration) (result *compute.ClusterLibraryStatuses, err error) {
 	err = resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		libsClusterStatus, err := w.Libraries.ClusterStatusByClusterId(ctx, wait.ClusterID)
@@ -31,8 +30,8 @@ func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceCl
 		}
 		if !wait.IsRunning {
 			log.Printf("[INFO] Cluster %s is currently not running, so just returning list of %d libraries",
-				wait.ClusterID, len(libsClusterStatus.LibraryStatuses)) // Check pointers
-			result = libsClusterStatus // Might not work, need to check
+				wait.ClusterID, len(libsClusterStatus.LibraryStatuses))
+			result = libsClusterStatus
 			return nil
 		}
 		retry, err := libsClusterStatus.IsRetryNeeded(wait)

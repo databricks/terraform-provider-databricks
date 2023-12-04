@@ -152,6 +152,43 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 	assert.Equal(t, "/foo/path", d.Id())
 }
 
+func TestResourceNotebookCreate_TrimExtension(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: "NOTEBOOK",
+					Path:       "/foo/path",
+					Language:   "PYTHON",
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]any{
+			"content_base64": "YWJjCg==",
+			"language":       "PYTHON",
+			"path":           "/foo/path.py",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "/foo/path", d.Id())
+}
+
 func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

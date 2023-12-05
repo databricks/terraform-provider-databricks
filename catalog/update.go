@@ -6,16 +6,8 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"golang.org/x/exp/slices"
 )
-
-func contains[T comparable](s []T, e T) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
 
 func updateFunctionFactory(pathPrefix string, updatable []string) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
 	return func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -23,7 +15,7 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 		for _, field := range updatable {
 
 			// these fields cannot be set during creation
-			if d.IsNewResource() && !contains([]string{
+			if d.IsNewResource() && !slices.Contains([]string{
 				"owner",
 				"delta_sharing_scope",
 				"delta_sharing_recipient_token_lifetime_in_seconds",

@@ -253,6 +253,15 @@ var emptyClusterPolicies = qa.HTTPFixture{
 	Response:     compute.ListPoliciesResponse{},
 }
 
+var emptyPolicyFamilies = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/policy-families?",
+	Response: compute.ListPolicyFamiliesResponse{
+		PolicyFamilies: []compute.PolicyFamily{},
+	},
+	ReuseRequest: true,
+}
+
 var emptyMlflowWebhooks = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -392,6 +401,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlAlerts,
 			emptyPipelines,
 			emptyClusterPolicies,
+			emptyPolicyFamilies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfs,
 			dummyWorkspaceConf,
@@ -649,6 +659,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptySqlDashboards,
 			emptySqlAlerts,
 			emptyPipelines,
+			emptyPolicyFamilies,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",

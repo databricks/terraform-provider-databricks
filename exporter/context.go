@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -134,6 +135,9 @@ type importContext struct {
 	allDirectories      []workspace.ObjectStatus
 	allWorkspaceObjects []workspace.ObjectStatus
 	wsObjectsMutex      sync.RWMutex
+
+	builtInPolicies      map[string]compute.PolicyFamily
+	builtInPoliciesMutex sync.Mutex
 }
 
 type mount struct {

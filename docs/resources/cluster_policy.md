@@ -100,6 +100,38 @@ module "engineering_compute_policy" {
 }
 ```
 
+### Overriding the built-in cluster policies
+
+You can override built-in cluster policies by creating a `databricks_cluster_policy` resource with following attributes:
+
+* `name` - the name of the built-in cluster policy.
+* `policy_family_id` - the ID of the cluster policy family used for built-in cluster policy.
+* `policy_family_definition_overrides` - settings to override in the built-in cluster policy.
+
+You can obtain the list of defined cluster policies families using the `databricks policy-families list` command of the new [Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/index.html), or via [list policy families](https://docs.databricks.com/api/workspace/policyfamilies/list) REST API.
+
+```hcl
+locals {
+  personal_vm_override = {
+    "autotermination_minutes" : {
+      "type" : "fixed",
+      "value" : 220,
+      "hidden" : true
+    },
+    "custom_tags.Team" : {
+      "type" : "fixed",
+      "value" : var.team
+    }
+  }
+}
+
+resource "databricks_cluster_policy" "personal_vm" {
+  policy_family_id                   = "personal-vm"
+  policy_family_definition_overrides = jsonencode(personal_vm_override)
+  name                               = "Personal Compute"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

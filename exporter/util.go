@@ -23,6 +23,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 
 	"golang.org/x/exp/slices"
@@ -409,6 +410,32 @@ func (ic *importContext) getSpsMapping() {
 			ic.allSpsMapping[sp.ApplicationId] = sp.Id
 		}
 	}
+}
+
+func (ic *importContext) getBuiltinPolicyFamilies() map[string]compute.PolicyFamily {
+	ic.builtInPoliciesMutex.Lock()
+	defer ic.builtInPoliciesMutex.Unlock()
+	if ic.builtInPolicies == nil {
+		if !ic.accountLevel {
+			log.Printf("[DEBUG] Going to initialize ic.builtInPolicies. Getting policy families...")
+			families, err := ic.workspaceClient.PolicyFamilies.ListAll(ic.Context, compute.ListPolicyFamiliesRequest{})
+			log.Printf("[DEBUG] Going to initialize ic.builtInPolicies. Getting policy families...")
+			if err == nil {
+				ic.builtInPolicies = make(map[string]compute.PolicyFamily, len(families))
+				for _, f := range families {
+					f2 := f
+					ic.builtInPolicies[f2.PolicyFamilyId] = f2
+				}
+			} else {
+				log.Printf("[ERROR] Can't fetch cluster policy families: %v", err)
+				ic.builtInPolicies = map[string]compute.PolicyFamily{}
+			}
+		} else {
+			log.Print("[WARN] Can't list cluster policy families on account level")
+			ic.builtInPolicies = map[string]compute.PolicyFamily{}
+		}
+	}
+	return ic.builtInPolicies
 }
 
 func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {

@@ -1,5 +1,46 @@
 # Version changelog
 
+## 1.31.0
+
+New Features and Improvements:
+ * Add `webhooks_notifications` on task levels in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2953](https://github.com/databricks/terraform-provider-databricks/pull/2953)).
+ * Add edit_mode to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2918](https://github.com/databricks/terraform-provider-databricks/pull/2918)).
+ * Added [databricks_instance_profiles](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/instance_profiles) data source ([#2891](https://github.com/databricks/terraform-provider-databricks/pull/2891)).
+ * Allow to override built-in [databricks_cluster_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster_policy) resources ([#2941](https://github.com/databricks/terraform-provider-databricks/pull/2941)).
+ * Add [databricks_current_config](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/current_config) data source ([#2890](https://github.com/databricks/terraform-provider-databricks/pull/2890)).
+
+Bugfixes:
+ * Do not persist state from failed updates in  databricks_workspace_conf  ([#2914](https://github.com/databricks/terraform-provider-databricks/pull/2914)).
+ * Fix `force_destroy` behaviour for [databricks_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/schema) ([#2907](https://github.com/databricks/terraform-provider-databricks/pull/2907)).
+ * Fix databricks_workspace_conf nightly race ([#2952](https://github.com/databricks/terraform-provider-databricks/pull/2952)).
+ * Force sending the `content` field when creating empty [databricks_workspace_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file) resources ([#2931](https://github.com/databricks/terraform-provider-databricks/pull/2931)).
+ * Generate correct `url` field for [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group) resource on account level ([#2911](https://github.com/databricks/terraform-provider-databricks/pull/2911)).
+ * Make default_namespace_setting resource name singular ([#2925](https://github.com/databricks/terraform-provider-databricks/pull/2925)).
+ * Fix: resolved issue with run_as_role not being applied on databricks_sql_query resource ([#2940](https://github.com/databricks/terraform-provider-databricks/pull/2940)).
+ * Remove diff suppression for a job's `run_as` block ([#2943](https://github.com/databricks/terraform-provider-databricks/pull/2943)).
+
+Exporter:
+ * Fix generation of `branch` & `tag` attributes in [databricks_repo](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/repo) ([#2929](https://github.com/databricks/terraform-provider-databricks/pull/2929)).
+ * Generate correct code for inherited [databricks_cluster_policies](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster_policies) ([#2936](https://github.com/databricks/terraform-provider-databricks/pull/2936)).
+ * Generate references also for integer attributes ([#2946](https://github.com/databricks/terraform-provider-databricks/pull/2946)).
+
+Documentation changes:
+ * Add documentation for `condition_task` in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2955](https://github.com/databricks/terraform-provider-databricks/pull/2955)).
+ * Clarify that any_file also works for reading ([#2937](https://github.com/databricks/terraform-provider-databricks/pull/2937)).
+ * Documented use of libraries in the [databricks_cluster_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster_policy) resource ([#2934](https://github.com/databricks/terraform-provider-databricks/pull/2934)).
+ * Small databricks_catalog_workspace_binding docs change ([#2923](https://github.com/databricks/terraform-provider-databricks/pull/2923)).
+ * [DOC] Refresh Unity Catalog guides with the latest updates ([#2917](https://github.com/databricks/terraform-provider-databricks/pull/2917)).
+ * [JOBS-13079] Add description to job settings ([#2932](https://github.com/databricks/terraform-provider-databricks/pull/2932)).
+ * doc fixes ([#2987](https://github.com/databricks/terraform-provider-databricks/pull/2987)).
+ * removing outdated note from doc ([#2969](https://github.com/databricks/terraform-provider-databricks/pull/2969)).
+  
+Internal Changes:
+ * Add integration test coverage for delta sharing parameters ([#2991](https://github.com/databricks/terraform-provider-databricks/pull/2991)).
+ * Bump Go SDK to v0.26.1 ([#2968](https://github.com/databricks/terraform-provider-databricks/pull/2968)).
+ * Fixed unit tests for the upcoming Go SDK release ([#2956](https://github.com/databricks/terraform-provider-databricks/pull/2956)).
+ * Migrate delete to use go-sdk for library resource ([#2960](https://github.com/databricks/terraform-provider-databricks/pull/2960)).
+ * Migrate jobs delete to go-sdk ([#2948](https://github.com/databricks/terraform-provider-databricks/pull/2948)).
+
 ## 1.30.0
 
 New Features and Improvements:

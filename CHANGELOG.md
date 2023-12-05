@@ -4,7 +4,7 @@
 
 New Features and Improvements:
  * Add `webhooks_notifications` on task levels in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2953](https://github.com/databricks/terraform-provider-databricks/pull/2953)).
- * Add edit_mode to resource_job ([#2918](https://github.com/databricks/terraform-provider-databricks/pull/2918)).
+ * Add edit_mode to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2918](https://github.com/databricks/terraform-provider-databricks/pull/2918)).
  * Added [databricks_instance_profiles](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/instance_profiles) data source ([#2891](https://github.com/databricks/terraform-provider-databricks/pull/2891)).
  * Allow to override built-in [databricks_cluster_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster_policy) resources ([#2941](https://github.com/databricks/terraform-provider-databricks/pull/2941)).
  * Add [databricks_current_config](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/current_config) data source ([#2890](https://github.com/databricks/terraform-provider-databricks/pull/2890)).

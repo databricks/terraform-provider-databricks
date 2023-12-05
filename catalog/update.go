@@ -6,6 +6,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"golang.org/x/exp/slices"
 )
 
 func updateFunctionFactory(pathPrefix string, updatable []string) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
@@ -14,7 +15,7 @@ func updateFunctionFactory(pathPrefix string, updatable []string) func(context.C
 		for _, field := range updatable {
 
 			// these fields cannot be set during creation
-			if d.IsNewResource() && !common.Contains([]string{
+			if d.IsNewResource() && !slices.Contains([]string{
 				"owner",
 				"delta_sharing_scope",
 				"delta_sharing_recipient_token_lifetime_in_seconds",

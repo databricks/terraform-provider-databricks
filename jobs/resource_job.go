@@ -24,6 +24,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 )
 
+const TopLevelTaskAttributesDeprecationWarning = "should be used inside a task block and not inside a job block"
+
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
@@ -686,8 +688,19 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
-		s["max_retries"].Deprecated = "max_retries should be set at task level, not at job level"
-		s["retry_on_timeout"].Deprecated = "retry_on_timeout should be set at task level, not at job level"
+
+		// Deprecated Job API 2.0 attributes
+		s["max_retries"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["min_retry_interval_millis"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["retry_on_timeout"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["notebook_task"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["spark_jar_task"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["spark_python_task"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["spark_submit_task"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["pipeline_task"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["python_wheel_task"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["dbt_task"].Deprecated = TopLevelTaskAttributesDeprecationWarning
+		s["run_job_task"].Deprecated = TopLevelTaskAttributesDeprecationWarning
 
 		// we need to have only one of user name vs service principal in the run_as block
 		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}

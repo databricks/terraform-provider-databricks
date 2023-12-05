@@ -356,7 +356,13 @@ func ResourceNotebook() *schema.Resource {
 			Optional: true,
 			Computed: true,
 		},
+		"trim_export_extension": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 	})
+
 	s["content_base64"].RequiredWith = []string{"language"}
 	return common.Resource{
 		Schema:        s,
@@ -367,14 +373,18 @@ func ResourceNotebook() *schema.Resource {
 				return err
 			}
 			notebooksAPI := NewNotebooksAPI(ctx, c)
+
 			path := d.Get("path").(string)
-			pathNoExtension := path[0 : len(path)-len(filepath.Ext(path))]
+
+			if d.Get("trim_export_extension").(bool) {
+				path = path[0 : len(path)-len(filepath.Ext(path))] //trim path on create to prevent .py.py when exporting from GUI
+			}
 
 			createNotebook := ImportPath{
 				Content:   base64.StdEncoding.EncodeToString(content),
 				Language:  d.Get("language").(string),
 				Format:    d.Get("format").(string),
-				Path:      pathNoExtension,
+				Path:      path,
 				Overwrite: true,
 			}
 			if createNotebook.Language == "" {
@@ -402,7 +412,7 @@ func ResourceNotebook() *schema.Resource {
 					return err
 				}
 			}
-			d.SetId(pathNoExtension)
+			d.SetId(path)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

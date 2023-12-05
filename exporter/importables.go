@@ -12,8 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
@@ -37,18 +35,16 @@ import (
 )
 
 var (
-	adlsGen2Regex              = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	adlsGen1Regex              = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
-	wasbsRegex                 = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	s3Regex                    = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
-	gsRegex                    = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
-	globalWorkspaceConfName    = "global_workspace_conf"
-	nameNormalizationRegex     = regexp.MustCompile(`\W+`)
-	fileNameNormalizationRegex = regexp.MustCompile(`[^-_\w/.@]`)
-	jobClustersRegex           = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
-	dltClusterRegex            = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
-	predefinedClusterPolicies  = []string{"personal-vm", "shared-data-science", "shared-compute",
-		"power-user", "job-cluster"}
+	adlsGen2Regex                = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen1Regex                = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
+	wasbsRegex                   = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	s3Regex                      = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
+	gsRegex                      = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
+	globalWorkspaceConfName      = "global_workspace_conf"
+	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
+	fileNameNormalizationRegex   = regexp.MustCompile(`[^-_\w/.@]`)
+	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
+	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
 	dltDefaultStorageRegex       = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
@@ -631,14 +627,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			policies, err := w.ClusterPolicies.ListAll(ic.Context, compute.ListClusterPoliciesRequest{})
+			policiesList, err := w.ClusterPolicies.ListAll(ic.Context, compute.ListClusterPoliciesRequest{})
 			if err != nil {
 				return err
 			}
-			for offset, policy := range policies {
+
+			builtInClusterPolicies := ic.getBuiltinPolicyFamilies()
+			for offset, policy := range policiesList {
 				log.Printf("[TRACE] Scanning %d:  %v", offset+1, policy)
-				if policy.PolicyFamilyId != "" && slices.Contains(predefinedClusterPolicies, policy.PolicyFamilyId) &&
+				family, isBuiltin := builtInClusterPolicies[policy.PolicyFamilyId]
+				if policy.PolicyFamilyId != "" && isBuiltin && family.Name == policy.Name &&
 					policy.PolicyFamilyDefinitionOverrides == "" {
+					log.Printf("[DEBUG] Skipping builtin cluster policy '%s' without overrides", policy.Name)
 					continue
 				}
 				if !ic.MatchesName(policy.Name) {
@@ -650,7 +650,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       policy.PolicyId,
 				})
 				if offset%10 == 0 {
-					log.Printf("[INFO] Scanned %d of %d cluster policies", offset+1, len(policies))
+					log.Printf("[INFO] Scanned %d of %d cluster policies", offset+1, len(policiesList))
 				}
 			}
 			return nil
@@ -718,7 +718,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				// we need to set definition to empty value because otherwise it will be put into
 				// generated HCL code for data source, and it only supports the `name` attribute
 				r.Data.Set("definition", "")
-				if slices.Contains(predefinedClusterPolicies, policyFamilyId) && policyOverrides == "" {
+				builtInClusterPolicies := ic.getBuiltinPolicyFamilies()
+				_, isBuiltin := builtInClusterPolicies[policyFamilyId]
+				if isBuiltin && policyOverrides == "" {
 					r.Mode = "data"
 				}
 			}

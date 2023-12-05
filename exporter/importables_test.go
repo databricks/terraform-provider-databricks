@@ -117,6 +117,9 @@ func TestPredefinedClusterPolicy(t *testing.T) {
 	policy, _ := json.Marshal(map[string]map[string]string{})
 	d.Set("definition", string(policy))
 	ic := importContextForTest()
+	ic.builtInPolicies = map[string]compute.PolicyFamily{
+		"job-cluster": {Name: "Job Compute"},
+	}
 	r := resource{ID: "abc", Data: d}
 	err := ic.Importables["databricks_cluster_policy"].Import(ic, &r)
 	assert.NoError(t, err)
@@ -683,10 +686,20 @@ func TestPoliciesListing(t *testing.T) {
 				},
 			},
 		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policy-families?",
+			Response: compute.ListPolicyFamiliesResponse{
+				PolicyFamilies: []compute.PolicyFamily{
+					{
+						Name:           "Personal Compute",
+						PolicyFamilyId: "personal-vm",
+					},
+				},
+			},
+		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_cluster_policy"].List(ic)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(ic.testEmits))
@@ -709,10 +722,9 @@ func TestPoliciesListNoNameMatch(t *testing.T) {
 				},
 			},
 		},
+		emptyPolicyFamilies,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		ic.match = "bcd"
 		err := resourcesMap["databricks_cluster_policy"].List(ic)
 		assert.NoError(t, err)

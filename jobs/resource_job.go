@@ -702,8 +702,8 @@ var jobSchema = common.StructToSchema(JobSettings{},
 			"run_job_task",
 		}
 
-		for _, attribute := range topLevelDeprecatedAttr {
-			s[attribute].Deprecated = "should be used inside a task block and not inside a job block"
+		for _, attr := range topLevelDeprecatedAttr {
+			s[attr].Deprecated = "should be used inside a task block and not inside a job block"
 		}
 
 		// we need to have only one of user name vs service principal in the run_as block

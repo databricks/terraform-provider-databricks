@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+// Given a compute.Wait struct, returns library statuses based on the input parameter.
+// If wait.IsRunning is set to true, this function will wait until all of the libraries are installed to return. Otherwise, it will directly return the list of libraries.
 func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceClient, wait compute.Wait, timeout time.Duration) (result *compute.ClusterLibraryStatuses, err error) {
 	err = resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		libsClusterStatus, err := w.Libraries.ClusterStatusByClusterId(ctx, wait.ClusterID)
@@ -29,8 +31,8 @@ func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceCl
 			return resource.NonRetryableError(apiErr)
 		}
 		if !wait.IsRunning {
-			log.Printf("[INFO] Cluster %s is currently not running, so just returning list of %d libraries",
-				wait.ClusterID, len(libsClusterStatus.LibraryStatuses))
+			log.Printf("[INFO] We don't have to wait until the libraries are installed, so just returning list of %d libraries",
+				len(libsClusterStatus.LibraryStatuses))
 			result = libsClusterStatus
 			return nil
 		}

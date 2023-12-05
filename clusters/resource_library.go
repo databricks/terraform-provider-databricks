@@ -35,7 +35,7 @@ func ResourceLibrary() *schema.Resource {
 		return split[0], split[1]
 	}
 	return common.Resource{
-		Schema: s,
+		Schema: libraySdkSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID := d.Get("cluster_id").(string)
 			err := NewClustersAPI(ctx, c).Start(clusterID)

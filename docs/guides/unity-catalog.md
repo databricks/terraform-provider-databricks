@@ -79,7 +79,6 @@ variable "databricks_client_id" {}
 variable "databricks_client_secret" {}
 variable "databricks_account_id" {}
 variable "databricks_workspace_url" {}
-variable "aws_account_id" {}
 
 variable "tags" {
   default = {}
@@ -196,7 +195,31 @@ Unity Catalog introduces two new objects to access and work with external cloud 
 - [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
 - [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
-First, create the required objects in AWS.
+First, we need to create the storage credential in Databricks before creating the IAM role in AWS. This is because the external ID of the Databricks storage credential is required in the IAM role trust policy.
+
+```hcl
+data "aws_caller_identity" "current" {}
+
+resource "databricks_storage_credential" "external" {
+  provider = databricks.workspace
+  name     = "${local.prefix}-external-access"
+  aws_iam_role {
+    role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access" //cannot reference aws_iam_role directly, as it will create circular dependency
+  }
+  comment = "Managed by TF"
+}
+
+resource "databricks_grants" "external_creds" {
+  provider           = databricks.workspace
+  storage_credential = databricks_storage_credential.external.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_TABLE"]
+  }
+}
+```
+
+Then we can create the required objects in AWS
 
 ```hcl
 resource "aws_s3_bucket" "external" {
@@ -220,6 +243,36 @@ resource "aws_s3_bucket_public_access_block" "external" {
   bucket             = aws_s3_bucket.external.id
   ignore_public_acls = true
   depends_on         = [aws_s3_bucket.external]
+}
+
+data "aws_iam_policy_document" "passrole_for_uc" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = [databricks_storage_credential.external.aws_iam_role.unity_catalog_iam_arn]
+      type        = "AWS"
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalId"
+      values   = [databricks_storage_credential.external.aws_iam_role.external_id]
+    }
+  }
+  statement {
+    sid     = "ExplicitSelfRoleAssumption"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access"]
+    }
+  }
 }
 
 resource "aws_iam_policy" "external_data_access" {
@@ -262,26 +315,9 @@ resource "aws_iam_role" "external_data_access" {
 }
 ```
 
-Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
+Then we can create the [databricks_external_location](../resources/external_location.md) in Unity Catalog.
 
 ```hcl
-resource "databricks_storage_credential" "external" {
-  provider = databricks.workspace
-  name     = aws_iam_role.external_data_access.name
-  aws_iam_role {
-    role_arn = aws_iam_role.external_data_access.arn
-  }
-  comment = "Managed by TF"
-}
-
-resource "databricks_grants" "external_creds" {
-  provider           = databricks.workspace
-  storage_credential = databricks_storage_credential.external.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
-  }
-}
 
 resource "databricks_external_location" "some" {
   provider        = databricks.workspace

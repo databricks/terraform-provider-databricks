@@ -34,7 +34,8 @@ func TestCreateStorageCredentials(t *testing.T) {
 				Response: catalog.StorageCredentialInfo{
 					Name: "a",
 					AwsIamRole: &catalog.AwsIamRole{
-						RoleArn: "def",
+						RoleArn:    "def",
+						ExternalId: "123",
 					},
 					MetastoreId: "d",
 				},
@@ -49,7 +50,11 @@ func TestCreateStorageCredentials(t *testing.T) {
 		}
 		comment = "c"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"aws_iam_role.0.external_id": "123",
+		"aws_iam_role.0.role_arn":    "def",
+		"name":                       "a",
+	})
 }
 
 func TestCreateStorageCredentialWithOwner(t *testing.T) {

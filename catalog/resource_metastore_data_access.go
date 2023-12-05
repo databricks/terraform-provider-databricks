@@ -12,10 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type AwsIamRole struct {
-	RoleARN string `json:"role_arn"`
-}
-
 type GcpServiceAccountKey struct {
 	Email        string `json:"email"`
 	PrivateKeyId string `json:"private_key_id"`
@@ -41,6 +37,8 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 	// suppress changes for private_key
 	m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
 
+	common.MustSchemaPath(m, "aws_iam_role", "external_id").Computed = true
+	common.MustSchemaPath(m, "aws_iam_role", "unity_catalog_iam_arn").Computed = true
 	common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
 	common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
 	common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
@@ -55,10 +53,6 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 
 var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["metastore_id"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		}
 		m["is_default"] = &schema.Schema{
 			// having more than one default DAC per metastore will lead
 			// to Terraform re-assigning default_data_access_config_id

@@ -11,35 +11,41 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	dummyWorkspaceFilePath    = "/foo/path.py"
+	dummyWorkspaceFilePathUrl = "path=%2Ffoo%2Fpath.py"
+	dummyWorkspaceFilePayload = "YWJjCg=="
+)
+
 func TestResourceWorkspaceFileRead(t *testing.T) {
-	path := "/test/path.py"
 	objectID := 12345
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
 				Response: ObjectStatus{
 					ObjectID:   int64(objectID),
 					ObjectType: File,
-					Path:       path,
+					Path:       dummyWorkspaceFilePath,
 				},
 			},
 		},
 		Resource: ResourceWorkspaceFile(),
 		Read:     true,
 		New:      true,
-		ID:       path,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
-	assert.Equal(t, path, d.Get("path"))
-	assert.Equal(t, objectID, d.Get("object_id"))
+		ID:       dummyWorkspaceFilePath,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             dummyWorkspaceFilePath,
+		"path":           dummyWorkspaceFilePath,
+		"workspace_path": "/Workspace" + dummyWorkspaceFilePath,
+		"object_id":      objectID,
+	})
 }
 
 func TestResourceWorkspaceFileDelete(t *testing.T) {
 	path := "/test/path.py"
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          http.MethodPost,
@@ -51,9 +57,9 @@ func TestResourceWorkspaceFileDelete(t *testing.T) {
 		Resource: ResourceWorkspaceFile(),
 		Delete:   true,
 		ID:       path,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": path,
+	})
 }
 
 func TestResourceWorkspaceFileRead_NotFound(t *testing.T) {
@@ -98,7 +104,7 @@ func TestResourceWorkspaceFileRead_Error(t *testing.T) {
 }
 
 func TestResourceWorkspaceFileCreate_DirectoryExist(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -111,38 +117,38 @@ func TestResourceWorkspaceFileCreate_DirectoryExist(t *testing.T) {
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ws_api.Import{
-					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Content:   dummyWorkspaceFilePayload,
+					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
 					Format:    "AUTO",
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&" + dummyWorkspaceFilePathUrl,
 				Response: ExportPath{
-					Content: "YWJjCg==",
+					Content: dummyWorkspaceFilePayload,
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
 				Response: ObjectStatus{
 					ObjectID:   4567,
 					ObjectType: File,
-					Path:       "/foo/path.py",
+					Path:       dummyWorkspaceFilePath,
 				},
 			},
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": "YWJjCg==",
-			"path":           "/foo/path.py",
+			"content_base64": dummyWorkspaceFilePayload,
+			"path":           dummyWorkspaceFilePath,
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "/foo/path.py", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": dummyWorkspaceFilePath,
+	})
 }
 
 func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
@@ -159,8 +165,8 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ws_api.Import{
-					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Content:   dummyWorkspaceFilePayload,
+					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
 					Format:    "AUTO",
 				},
@@ -174,38 +180,38 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ws_api.Import{
-					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Content:   dummyWorkspaceFilePayload,
+					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
 					Format:    "AUTO",
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&" + dummyWorkspaceFilePathUrl,
 				Response: ExportPath{
-					Content: "YWJjCg==",
+					Content: dummyWorkspaceFilePayload,
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
 				Response: ObjectStatus{
 					ObjectID:   4567,
 					ObjectType: File,
-					Path:       "/foo/path.py",
+					Path:       dummyWorkspaceFilePath,
 				},
 			},
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": "YWJjCg==",
-			"path":           "/foo/path.py",
+			"content_base64": dummyWorkspaceFilePayload,
+			"path":           dummyWorkspaceFilePath,
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "/foo/path.py", d.Id())
+	assert.Equal(t, dummyWorkspaceFilePath, d.Id())
 }
 
 func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
@@ -227,8 +233,8 @@ func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ws_api.Import{
-					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Content:   dummyWorkspaceFilePayload,
+					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
 					Format:    "AUTO",
 				},
@@ -241,8 +247,8 @@ func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": "YWJjCg==",
-			"path":           "/foo/path.py",
+			"content_base64": dummyWorkspaceFilePayload,
+			"path":           dummyWorkspaceFilePath,
 		},
 		Create: true,
 	}.Apply(t)
@@ -327,7 +333,7 @@ func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: map[string]interface{}{
-					"content":   "YWJjCg==",
+					"content":   dummyWorkspaceFilePayload,
 					"format":    "AUTO",
 					"overwrite": true,
 					"path":      "/path.py",
@@ -341,7 +347,7 @@ func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": "YWJjCg==",
+			"content_base64": dummyWorkspaceFilePayload,
 			"path":           "/path.py",
 		},
 		Create: true,
@@ -380,7 +386,7 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 				ExpectedRequest: ws_api.Import{
 					Format:    "AUTO",
 					Overwrite: true,
-					Content:   "YWJjCg==",
+					Content:   dummyWorkspaceFilePayload,
 					Path:      "abc",
 				},
 			},
@@ -396,7 +402,7 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": "YWJjCg==",
+			"content_base64": dummyWorkspaceFilePayload,
 			"path":           "/path.py",
 		},
 		ID:          "abc",

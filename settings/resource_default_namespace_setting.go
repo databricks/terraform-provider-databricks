@@ -134,8 +134,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 			return s
 		})
 
-	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		var setting T
+	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, setting T) error {
 		common.DataToStructPointer(d, resourceSchema, &setting)
 		var res string
 		switch defn := defn.(type) {
@@ -166,7 +165,10 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 
 	return common.Resource{
 		Schema: resourceSchema,
-		Create: createOrUpdate,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var setting T
+			return createOrUpdate(ctx, d, c, setting)
+		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var res *T
 			switch defn := defn.(type) {
@@ -202,7 +204,11 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 			d.SetId(defn.GetETag(res))
 			return nil
 		},
-		Update: createOrUpdate,
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var setting T
+			defn.SetETag(&setting, d.Id())
+			return createOrUpdate(ctx, d, c, setting)
+		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var etag string
 			switch defn := defn.(type) {

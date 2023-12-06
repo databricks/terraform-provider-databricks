@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -13,28 +12,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// NewDefaultNamespaceSettingsAPI creates a DefaultNamespaceSettingsAPI instance
-func NewDefaultNamespaceSettingsAPI(ctx context.Context, m any) DefaultNamespaceSettingsAPI {
-	client := m.(*common.DatabricksClient)
-	return DefaultNamespaceSettingsAPI{client, ctx}
-}
-
-// DefaultNamespaceSettingsAPI exposes the Default Namespace Settings API
-type DefaultNamespaceSettingsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-func (a DefaultNamespaceSettingsAPI) isEtagVersionError(err error) bool {
-	var aerr *apierr.APIError
-	if !errors.As(err, &aerr) {
-		return false
+func retryOnEtagError[Req, Resp any](f func(req Req) (Resp, error), firstReq Req, updateReq func(req *Req, newEtag string)) (Resp, error) {
+	req := firstReq
+	// Retry once on etag error.
+	res, err := f(req)
+	if err == nil {
+		return res, nil
 	}
-	return aerr.StatusCode == http.StatusNotFound || (aerr.StatusCode == http.StatusConflict && aerr.ErrorCode == "RESOURCE_CONFLICT")
+	etag, err := getEtagFromError(err)
+	if err != nil {
+		return res, err
+	}
+	updateReq(&req, etag)
+	return f(req)
 }
 
-func (a DefaultNamespaceSettingsAPI) getEtagFromError(err error) (string, error) {
-	if !a.isEtagVersionError(err) {
+func isEtagVersionError(err error) bool {
+	return errors.Is(err, databricks.ErrResourceConflict) || errors.Is(err, databricks.ErrNotFound)
+}
+
+func getEtagFromError(err error) (string, error) {
+	if !isEtagVersionError(err) {
 		return "", err
 	}
 	errorInfos := apierr.GetErrorInfo(err)
@@ -47,73 +45,39 @@ func (a DefaultNamespaceSettingsAPI) getEtagFromError(err error) (string, error)
 	return "", fmt.Errorf("error fetching the default workspace namespace settings: %w", err)
 }
 
-func (a DefaultNamespaceSettingsAPI) DeleteWithRetry(etag string) (string, error) {
-	etag, err := a.executeDelete(etag)
-	if err == nil {
-		return etag, nil
-	}
-	etag, err = a.getEtagFromError(err)
-	if err != nil {
-		return "", err
-	}
-	return a.executeDelete(etag)
-}
-
-func (a DefaultNamespaceSettingsAPI) executeDelete(etag string) (string, error) {
-	var response settings.DefaultNamespaceSetting
-	err := a.client.DeleteWithResponse(a.context, "/settings/types/default_namespace_ws/names/default", map[string]string{
-		"etag": etag,
-	}, &response)
-	if err != nil {
-		return "", err
-	}
-	return response.Etag, nil
-}
-
-func (a DefaultNamespaceSettingsAPI) UpdateWithRetry(request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
-	etag, err := a.executeUpdate(request)
-	if err == nil {
-		return etag, nil
-	}
-	etag, err = a.getEtagFromError(err)
-	if err != nil {
-		return "", err
-	}
-	request.Setting.Etag = etag
-	return a.executeUpdate(request)
-}
-
-func (a DefaultNamespaceSettingsAPI) executeUpdate(request settings.UpdateDefaultWorkspaceNamespaceRequest) (string, error) {
-	var response settings.DefaultNamespaceSetting
-	err := a.client.PatchWithResponse(a.context, "/settings/types/default_namespace_ws/names/default", request, &response)
-	if err != nil {
-		return "", err
-	}
-	return response.Etag, nil
-}
-
-func (a DefaultNamespaceSettingsAPI) Read(etag string) (settings.DefaultNamespaceSetting, error) {
-	var setting settings.DefaultNamespaceSetting
-	err := a.client.Get(a.context, "/settings/types/default_namespace_ws/names/default", map[string]string{
-		"etag": etag,
-	}, &setting)
-	return setting, err
-}
-
 type genericSettingDefinition[T, U any] interface {
+	// Returns the struct corresponding to the setting. The schema of the Terraform resource will be generated from this struct.
 	SettingStruct() T
-	Read(ctx context.Context, c U, id string) (*T, error)
+
+	// Read the setting from the server. The etag is provided as the third argument.
+	Read(ctx context.Context, c U, etag string) (*T, error)
+
+	// Update the setting to the value specified by t, and return the new etag.
 	Update(ctx context.Context, c U, t T) (string, error)
-	Delete(ctx context.Context, c U, id string) (string, error)
+
+	// Delete the setting with the given etag, and return the new etag.
+	Delete(ctx context.Context, c U, etag string) (string, error)
+
+	// Get the etag from the setting.
 	GetETag(t *T) string
+
+	// Update the etag in the setting.
+	SetETag(t *T, newEtag string)
 }
 
 type workspaceSettingDefinition[T any] genericSettingDefinition[T, *databricks.WorkspaceClient]
 type accountSettingDefinition[T any] genericSettingDefinition[T, *databricks.AccountClient]
 
-// Candidates for code generation: begin
+// Instructions for adding a new setting:
+//
+//  1. Add a new setting name constant. The resulting Terraform resource name will be "databricks_<your settings_name>_setting".
+//  2. Create a struct corresponding to your setting, and implement either the workspaceSettingDefinition or accountSettingDefinition interface.
+//     Add an assertion to ensure that your type implements said interface. If the setting name is user-settable, it will be provided in the
+//     third argument to the Update method. If not, you must set the SettingName field appropriately. You must also set AllowMissing: true
+//     and the field mask to the field to update.
+//  3. Add a new entry to the AllSettingsResources map below.
 const (
-	defaultNamespaceSettingName string = "databricks_default_namespace_setting"
+	defaultNamespaceSettingName string = "default_namespace"
 )
 
 // Default Namespace Setting
@@ -122,9 +86,9 @@ type defaultNamespaceSetting struct{}
 func (defaultNamespaceSetting) SettingStruct() settings.DefaultNamespaceSetting {
 	return settings.DefaultNamespaceSetting{}
 }
-func (defaultNamespaceSetting) Read(ctx context.Context, w *databricks.WorkspaceClient, id string) (*settings.DefaultNamespaceSetting, error) {
+func (defaultNamespaceSetting) Read(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.DefaultNamespaceSetting, error) {
 	return w.Settings.ReadDefaultWorkspaceNamespace(ctx, settings.ReadDefaultWorkspaceNamespaceRequest{
-		Etag: id,
+		Etag: etag,
 	})
 }
 func (defaultNamespaceSetting) Update(ctx context.Context, w *databricks.WorkspaceClient, t settings.DefaultNamespaceSetting) (string, error) {
@@ -136,15 +100,20 @@ func (defaultNamespaceSetting) Update(ctx context.Context, w *databricks.Workspa
 	})
 	return res.Etag, err
 }
-func (defaultNamespaceSetting) Delete(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
+func (defaultNamespaceSetting) Delete(ctx context.Context, w *databricks.WorkspaceClient, etag string) (string, error) {
 	res, err := w.Settings.DeleteDefaultWorkspaceNamespace(ctx, settings.DeleteDefaultWorkspaceNamespaceRequest{
-		Etag: id,
+		Etag: etag,
 	})
 	return res.Etag, err
 }
 func (defaultNamespaceSetting) GetETag(t *settings.DefaultNamespaceSetting) string {
 	return t.Etag
 }
+func (defaultNamespaceSetting) SetETag(t *settings.DefaultNamespaceSetting, newEtag string) {
+	t.Etag = newEtag
+}
+
+var _ workspaceSettingDefinition[settings.DefaultNamespaceSetting] = defaultNamespaceSetting{}
 
 func AllSettingsResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
@@ -158,6 +127,9 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 	resourceSchema := common.StructToSchema(defn.SettingStruct,
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["etag"].Computed = true
+			// Note: this may not always be computed, but it is for the default namespace setting. If other settings
+			// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
+			// definition.
 			s["setting_name"].Computed = true
 			return s
 		})
@@ -172,7 +144,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 			if err != nil {
 				return err
 			}
-			res, err = defn.Update(ctx, w, setting)
+			res, err = retryOnEtagError[T, string](func(setting T) (string, error) { return defn.Update(ctx, w, setting) }, setting, defn.SetETag)
 			if err != nil {
 				return err
 			}
@@ -181,7 +153,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 			if err != nil {
 				return err
 			}
-			res, err = defn.Update(ctx, a, setting)
+			res, err = retryOnEtagError(func(setting T) (string, error) { return defn.Update(ctx, a, setting) }, setting, defn.SetETag)
 			if err != nil {
 				return err
 			}
@@ -203,7 +175,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 				if err != nil {
 					return err
 				}
-				res, err = defn.Read(ctx, w, d.Id())
+				res, err = retryOnEtagError(func(etag string) (*T, error) { return defn.Read(ctx, w, etag) }, d.Id(), func(req *string, newEtag string) { *req = newEtag })
 				if err != nil {
 					return err
 				}
@@ -212,7 +184,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 				if err != nil {
 					return err
 				}
-				res, err = defn.Read(ctx, a, d.Id())
+				res, err = retryOnEtagError(func(etag string) (*T, error) { return defn.Read(ctx, a, etag) }, d.Id(), func(req *string, newEtag string) { *req = newEtag })
 				if err != nil {
 					return err
 				}
@@ -239,7 +211,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 				if err != nil {
 					return err
 				}
-				etag, err = defn.Delete(ctx, w, d.Id())
+				etag, err = retryOnEtagError(func(etag string) (string, error) { return defn.Delete(ctx, w, etag) }, d.Id(), func(req *string, newEtag string) { *req = newEtag })
 				if err != nil {
 					return err
 				}
@@ -248,7 +220,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 				if err != nil {
 					return err
 				}
-				etag, err = defn.Delete(ctx, a, d.Id())
+				etag, err = retryOnEtagError(func(etag string) (string, error) { return defn.Delete(ctx, a, etag) }, d.Id(), func(req *string, newEtag string) { *req = newEtag })
 				if err != nil {
 					return err
 				}

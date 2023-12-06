@@ -178,7 +178,7 @@ func DatabricksProvider() *schema.Provider {
 		Schema: providerSchema(),
 	}
 	for name, resource := range settings.AllSettingsResources() {
-		p.ResourcesMap[name] = resource
+		p.ResourcesMap[fmt.Sprintf("databricks_%s_setting", name)] = resource
 	}
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		if p.TerraformVersion != "" {

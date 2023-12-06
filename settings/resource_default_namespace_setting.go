@@ -124,7 +124,7 @@ func AllSettingsResources() map[string]*schema.Resource {
 // Candidates for code generation: end
 
 func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.Resource {
-	resourceSchema := common.StructToSchema(defn.SettingStruct,
+	resourceSchema := common.StructToSchema(defn.SettingStruct(),
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["etag"].Computed = true
 			// Note: this may not always be computed, but it is for the default namespace setting. If other settings

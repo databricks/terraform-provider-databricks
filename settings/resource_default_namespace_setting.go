@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -99,63 +100,126 @@ func (a DefaultNamespaceSettingsAPI) Read(etag string) (settings.DefaultNamespac
 	return setting, err
 }
 
-var resourceSchema = common.StructToSchema(settings.DefaultNamespaceSetting{},
-	func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["etag"].Computed = true
-		s["setting_name"].Computed = true
+type genericSettingDefinition[T, U any] interface {
+	SettingStruct() T
+	Read(ctx context.Context, c U, id string) (*T, error)
+	Update(ctx context.Context, c U, t T) (string, error)
+	Delete(ctx context.Context, c U, id string) (string, error)
+	GetETag(t *T) string
+}
 
-		return s
+type workspaceSettingDefinition[T any] genericSettingDefinition[T, *databricks.WorkspaceClient]
+type accountSettingDefinition[T any] genericSettingDefinition[T, *databricks.AccountClient]
+
+// Candidates for code generation: begin
+const (
+	defaultNamespaceSettingName string = "databricks_default_namespace_setting"
+)
+
+// Default Namespace Setting
+type defaultNamespaceSetting struct{}
+
+func (defaultNamespaceSetting) SettingStruct() settings.DefaultNamespaceSetting {
+	return settings.DefaultNamespaceSetting{}
+}
+func (defaultNamespaceSetting) Read(ctx context.Context, w *databricks.WorkspaceClient, id string) (*settings.DefaultNamespaceSetting, error) {
+	return w.Settings.ReadDefaultWorkspaceNamespace(ctx, settings.ReadDefaultWorkspaceNamespaceRequest{
+		Etag: id,
 	})
+}
+func (defaultNamespaceSetting) Update(ctx context.Context, w *databricks.WorkspaceClient, t settings.DefaultNamespaceSetting) (string, error) {
+	t.SettingName = "default"
+	res, err := w.Settings.UpdateDefaultWorkspaceNamespace(ctx, settings.UpdateDefaultWorkspaceNamespaceRequest{
+		AllowMissing: true,
+		Setting:      &t,
+		FieldMask:    "namespace.value",
+	})
+	return res.Etag, err
+}
+func (defaultNamespaceSetting) Delete(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
+	res, err := w.Settings.DeleteDefaultWorkspaceNamespace(ctx, settings.DeleteDefaultWorkspaceNamespaceRequest{
+		Etag: id,
+	})
+	return res.Etag, err
+}
+func (defaultNamespaceSetting) GetETag(t *settings.DefaultNamespaceSetting) string {
+	return t.Etag
+}
 
-func ResourceDefaultNamespaceSetting() *schema.Resource {
+func AllSettingsResources() map[string]*schema.Resource {
+	return map[string]*schema.Resource{
+		defaultNamespaceSettingName: makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting{}),
+	}
+}
+
+// Candidates for code generation: end
+
+func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.Resource {
+	resourceSchema := common.StructToSchema(defn.SettingStruct,
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			s["etag"].Computed = true
+			s["setting_name"].Computed = true
+			return s
+		})
+
+	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		var setting T
+		common.DataToStructPointer(d, resourceSchema, &setting)
+		var res string
+		switch defn := defn.(type) {
+		case workspaceSettingDefinition[T]:
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			res, err = defn.Update(ctx, w, setting)
+			if err != nil {
+				return err
+			}
+		case accountSettingDefinition[T]:
+			a, err := c.AccountClient()
+			if err != nil {
+				return err
+			}
+			res, err = defn.Update(ctx, a, setting)
+			if err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unexpected setting type: %T", defn)
+		}
+		d.SetId(res)
+		return nil
+	}
+
 	return common.Resource{
 		Schema: resourceSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var setting settings.DefaultNamespaceSetting
-			common.DataToStructPointer(d, resourceSchema, &setting)
-			setting.SettingName = "default"
-			request := settings.UpdateDefaultWorkspaceNamespaceRequest{
-				AllowMissing: true,
-				Setting:      &setting,
-				FieldMask:    "namespace.value",
-			}
-			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
-			etag, err := settingAPI.UpdateWithRetry(request)
-			if err != nil {
-				return err
-			}
-			d.SetId(etag)
-			return nil
-		},
+		Create: createOrUpdate,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
-			res, err := settingAPI.Read(d.Id())
-			if err != nil {
-				return err
+			var res *T
+			switch defn := defn.(type) {
+			case workspaceSettingDefinition[T]:
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				res, err = defn.Read(ctx, w, d.Id())
+				if err != nil {
+					return err
+				}
+			case accountSettingDefinition[T]:
+				a, err := c.AccountClient()
+				if err != nil {
+					return err
+				}
+				res, err = defn.Read(ctx, a, d.Id())
+				if err != nil {
+					return err
+				}
+			default:
+				return fmt.Errorf("unexpected setting type: %T", defn)
 			}
-			err = common.StructToData(res, resourceSchema, d)
-			if err != nil {
-				return err
-			}
-			// Update the etag. The server will accept any etag and respond
-			// with a response which is at least as recent as the etag.
-			// Updating, while not always necessary, ensures that the
-			// server responds with an updated response.
-			d.SetId(res.Etag)
-			return nil
-		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var setting settings.DefaultNamespaceSetting
-			common.DataToStructPointer(d, resourceSchema, &setting)
-			setting.SettingName = "default"
-			setting.Etag = d.Id()
-			request := settings.UpdateDefaultWorkspaceNamespaceRequest{
-				AllowMissing: true,
-				Setting:      &setting,
-				FieldMask:    "namespace.value",
-			}
-			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
-			etag, err := settingAPI.UpdateWithRetry(request)
+			err := common.StructToData(res, resourceSchema, d)
 			if err != nil {
 				return err
 			}
@@ -163,13 +227,33 @@ func ResourceDefaultNamespaceSetting() *schema.Resource {
 			// with a response which is at least as recent as the etag.
 			// Updating, while not always necessary, ensures that the
 			// server responds with an updated response.
-			d.SetId(etag)
+			d.SetId(defn.GetETag(res))
 			return nil
 		},
+		Update: createOrUpdate,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			etag, err := NewDefaultNamespaceSettingsAPI(ctx, c).DeleteWithRetry(d.Id())
-			if err != nil {
-				return err
+			var etag string
+			switch defn := defn.(type) {
+			case workspaceSettingDefinition[T]:
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				etag, err = defn.Delete(ctx, w, d.Id())
+				if err != nil {
+					return err
+				}
+			case accountSettingDefinition[T]:
+				a, err := c.AccountClient()
+				if err != nil {
+					return err
+				}
+				etag, err = defn.Delete(ctx, a, d.Id())
+				if err != nil {
+					return err
+				}
+			default:
+				return fmt.Errorf("unexpected setting type: %T", defn)
 			}
 			d.SetId(etag)
 			return nil

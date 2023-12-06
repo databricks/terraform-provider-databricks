@@ -74,7 +74,7 @@ func TestQueryCreateDefaultNameSetting(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDefaultNamespaceSetting(),
+		Resource: AllSettingsResources()[defaultNamespaceSettingName],
 		Create:   true,
 		HCL: `
 			namespace {
@@ -106,7 +106,7 @@ func TestQueryReadDefaultNameSetting(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDefaultNamespaceSetting(),
+		Resource: AllSettingsResources()[defaultNamespaceSettingName],
 		Read:     true,
 		HCL: `
 			namespace {
@@ -162,7 +162,7 @@ func TestQueryUpdateDefaultNameSetting(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDefaultNamespaceSetting(),
+		Resource: AllSettingsResources()[defaultNamespaceSettingName],
 		Update:   true,
 		HCL: `
 			namespace {
@@ -244,7 +244,7 @@ func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDefaultNamespaceSetting(),
+		Resource: AllSettingsResources()[defaultNamespaceSettingName],
 		Update:   true,
 		HCL: `
 			namespace {
@@ -273,7 +273,7 @@ func TestQueryDeleteDefaultNameSetting(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDefaultNamespaceSetting(),
+		Resource: AllSettingsResources()[defaultNamespaceSettingName],
 		Delete:   true,
 		ID:       "etag1",
 	}.Apply(t)
@@ -309,7 +309,7 @@ func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceDefaultNamespaceSetting(),
+		Resource: AllSettingsResources()[defaultNamespaceSettingName],
 		Delete:   true,
 		ID:       "etag1",
 	}.Apply(t)

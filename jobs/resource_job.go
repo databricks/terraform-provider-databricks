@@ -282,7 +282,17 @@ func (js *JobSettings) isMultiTask() bool {
 	return js.Format == "MULTI_TASK" || len(js.Tasks) > 0
 }
 
+func (js *JobSettings) sortTaskDependencies() {
+	for i := range js.Tasks {
+		sort.Slice(js.Tasks[i].DependsOn, func(a, b int) bool {
+			return js.Tasks[i].DependsOn[a].TaskKey < js.Tasks[i].DependsOn[b].TaskKey
+		})
+	}
+}
+
 func (js *JobSettings) sortTasksByKey() {
+	js.sortTaskDependencies()
+
 	sort.Slice(js.Tasks, func(i, j int) bool {
 		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
 	})

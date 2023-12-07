@@ -1,5 +1,18 @@
 # Version changelog
 
+## 1.31.1
+
+New Features and Improvements:
+ * Added `workspace_path` attribute to [databricks_workspace_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file) resource ([#2984](https://github.com/databricks/terraform-provider-databricks/pull/2984)).
+
+Exporter:
+ * Exporter: fix suppression of empty `webhook_notifications` blocks in tasks ([#2954](https://github.com/databricks/terraform-provider-databricks/pull/2954)).
+
+Internal Changes:
+ * Migrated library read to use go-sdk ([#2985](https://github.com/databricks/terraform-provider-databricks/pull/2985)).
+ * Migrated [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials) to Go SDK ([#2962](https://github.com/databricks/terraform-provider-databricks/pull/2962)).
+
+
 ## 1.31.0
 
 New Features and Improvements:

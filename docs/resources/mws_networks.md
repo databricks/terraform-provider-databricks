@@ -39,7 +39,7 @@ Please follow this [complete runnable example](../guides/gcp-workspace.md) with 
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 data "aws_availability_zones" "available" {}
@@ -104,7 +104,7 @@ resource "databricks_mws_networks" "this" {
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "google_compute_network" "dbx_private_vpc" {
@@ -190,7 +190,7 @@ Due to specifics of platform APIs, changing any attribute of network configurati
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `network_name` - name under which this network is registered
 * `vpc_id` - (AWS only) [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) id
 * `subnet_ids` - (AWS only) ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)

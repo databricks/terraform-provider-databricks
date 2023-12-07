@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 )
@@ -27,7 +28,11 @@ func ResourceCluster() *schema.Resource {
 		Update: resourceClusterUpdate,
 		Delete: func(ctx context.Context,
 			d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewClustersAPI(ctx, c).PermanentDelete(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.Clusters.PermanentDelete(ctx, compute.PermanentDeleteCluster{ClusterId: d.Id()})
 		},
 		Schema:        clusterSchema,
 		SchemaVersion: 2,

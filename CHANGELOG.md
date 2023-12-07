@@ -14,7 +14,7 @@ Exporter:
 Internal Changes:
  * Migrated library read to use go-sdk ([#2985](https://github.com/databricks/terraform-provider-databricks/pull/2985)).
  * Migrated [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials) to Go SDK ([#2962](https://github.com/databricks/terraform-provider-databricks/pull/2962)).
- * Update GO SDK to v0.26.2
+ * Update Go SDK to v0.26.2
 
 
 ## 1.31.0

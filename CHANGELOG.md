@@ -5,6 +5,9 @@
 New Features and Improvements:
  * Added `workspace_path` attribute to [databricks_workspace_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file) resource ([#2984](https://github.com/databricks/terraform-provider-databricks/pull/2984)).
 
+Bugfixes:
+ * Bugfix for azure authentication  
+
 Exporter:
  * Exporter: fix suppression of empty `webhook_notifications` blocks in tasks ([#2954](https://github.com/databricks/terraform-provider-databricks/pull/2954)).
 

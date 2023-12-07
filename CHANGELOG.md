@@ -6,7 +6,7 @@ New Features and Improvements:
  * Added `workspace_path` attribute to [databricks_workspace_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file) resource ([#2984](https://github.com/databricks/terraform-provider-databricks/pull/2984)).
 
 Bugfixes:
- * Bugfix for azure authentication  
+ * Bugfix for azure authentication ([#732](https://github.com/databricks/databricks-sdk-go/pull/732))
 
 Exporter:
  * Exporter: fix suppression of empty `webhook_notifications` blocks in tasks ([#2954](https://github.com/databricks/terraform-provider-databricks/pull/2954)).
@@ -14,6 +14,7 @@ Exporter:
 Internal Changes:
  * Migrated library read to use go-sdk ([#2985](https://github.com/databricks/terraform-provider-databricks/pull/2985)).
  * Migrated [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials) to Go SDK ([#2962](https://github.com/databricks/terraform-provider-databricks/pull/2962)).
+ * Update GO SDK to v0.26.2
 
 
 ## 1.31.0

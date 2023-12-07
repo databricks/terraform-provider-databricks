@@ -30,7 +30,7 @@ func (a CredentialsAPI) List(mwsAcctID string) ([]Credentials, error) {
 }
 
 type CredentialInfo struct {
-	// The human-readable name of the credential configuration object.
+	// The account id - this is for backwards compatiblity
 	AccountId string `json:"account_id,omitempty" tf:"force_new,suppress_diff"`
 	// The human-readable name of the credential configuration object.
 	CredentialsName string `json:"credentials_name" tf:"force_new"`

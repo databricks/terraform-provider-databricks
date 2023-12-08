@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"testing"
+	"time"
 )
 
 func TestAccIPACLListsResourceFullLifecycle(t *testing.T) {
@@ -40,6 +41,7 @@ func TestMwsAccIPACLListsResourceFullLifecycle(t *testing.T) {
 			]
 		}`,
 	}, step{
+		PreConfig: func() { time.Sleep(1 * time.Second) },
 		Template: `
 			resource "databricks_ip_access_list" "this" {
 				label = "tf-{var.RANDOM}"

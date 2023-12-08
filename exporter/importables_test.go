@@ -10,6 +10,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -43,6 +44,18 @@ func importContextForTest() *importContext {
 		allSps:      map[string]scim.User{},
 		channels:    makeResourcesChannels(p),
 	}
+}
+
+func importContextForTestWithClient(ctx context.Context, client *common.DatabricksClient) *importContext {
+	ic := importContextForTest()
+	ic.Client = client
+	ic.Context = ctx
+	if client.Config.IsAccountClient() {
+		ic.accountClient, _ = client.AccountClient()
+	} else {
+		ic.workspaceClient, _ = client.WorkspaceClient()
+	}
+	return ic
 }
 
 func TestInstancePool(t *testing.T) {
@@ -100,10 +113,13 @@ func TestClusterPolicy(t *testing.T) {
 
 func TestPredefinedClusterPolicy(t *testing.T) {
 	d := policies.ResourceClusterPolicy().TestResourceData()
-	d.Set("name", "Job Compute")
+	d.Set("policy_family_id", "job-cluster")
 	policy, _ := json.Marshal(map[string]map[string]string{})
 	d.Set("definition", string(policy))
 	ic := importContextForTest()
+	ic.builtInPolicies = map[string]compute.PolicyFamily{
+		"job-cluster": {Name: "Job Compute"},
+	}
 	r := resource{ID: "abc", Data: d}
 	err := ic.Importables["databricks_cluster_policy"].Import(ic, &r)
 	assert.NoError(t, err)
@@ -222,11 +238,33 @@ func TestClusterNameFromID(t *testing.T) {
 	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(ic, d))
 }
 
+func TestRepoName(t *testing.T) {
+	ic := importContextForTest()
+	d := repos.ResourceRepo().TestResourceData()
+	d.SetId("12345")
+	// Repo without path
+	assert.Equal(t, "repo_12345", resourcesMap["databricks_repo"].Name(ic, d))
+	// Repo with path
+	d.Set("path", "/Repos/user/test")
+	assert.Equal(t, "user_test_12345", resourcesMap["databricks_repo"].Name(ic, d))
+}
+
+func TestJobName(t *testing.T) {
+	ic := importContextForTest()
+	d := jobs.ResourceJob().TestResourceData()
+	d.SetId("12345")
+	// job without name
+	assert.Equal(t, "job_12345", resourcesMap["databricks_job"].Name(ic, d))
+	// job with name
+	d.Set("name", "test@1pm")
+	assert.Equal(t, "test_1pm_12345", resourcesMap["databricks_job"].Name(ic, d))
+}
+
 func TestClusterLibrary(t *testing.T) {
 	ic := importContextForTest()
 	d := clusters.ResourceLibrary().TestResourceData()
 	d.SetId("a-b-c")
-	assert.Equal(t, "a-b-c", resourcesMap["databricks_library"].Name(ic, d))
+	assert.Equal(t, "lib_a-b-c_7b193b3d", resourcesMap["databricks_library"].Name(ic, d))
 }
 
 func TestImportClusterLibraries(t *testing.T) {
@@ -248,9 +286,7 @@ func TestImportClusterLibraries(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		d := clusters.ResourceCluster().TestResourceData()
 		d.SetId("abc")
 		err := resourcesMap["databricks_cluster"].Import(ic, &resource{
@@ -271,9 +307,7 @@ func TestImportClusterLibrariesFails(t *testing.T) {
 			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		d := clusters.ResourceCluster().TestResourceData()
 		d.SetId("abc")
 		err := resourcesMap["databricks_cluster"].Import(ic, &resource{
@@ -293,9 +327,7 @@ func TestClusterListFails(t *testing.T) {
 			Response: apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_cluster"].List(ic)
 		assert.EqualError(t, err, "nope")
 	})
@@ -315,9 +347,7 @@ func TestClusterList_NoNameMatch(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		ic.match = "bcd"
 		err := resourcesMap["databricks_cluster"].List(ic)
 		assert.NoError(t, err)
@@ -344,9 +374,7 @@ func TestInstnacePoolsListWithMatch(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		ic.match = "bcd"
 		err := resourcesMap["databricks_instance_pool"].List(ic)
 		assert.NoError(t, err)
@@ -398,14 +426,12 @@ func TestGroupCacheError(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Groups?",
+			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id&count=100&startIndex=1",
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_group"].List(ic)
 		assert.EqualError(t, err, "nope")
 
@@ -453,19 +479,11 @@ func TestGroupSearchNoMatch(t *testing.T) {
 }
 
 func TestUserSearchFails(t *testing.T) {
+	userFixture := qa.ListUsersFixtures([]iam.User{})
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			ReuseRequest: true,
-			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27dbc%27",
-			Status:       404,
-			Response:     apierr.NotFound("nope"),
-		},
+		userFixture[0],
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-
+		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceUser().TestResourceData()
 		d.Set("user_name", "dbc")
 		r := &resource{
@@ -474,27 +492,18 @@ func TestUserSearchFails(t *testing.T) {
 			Data:      d,
 		}
 		err := resourcesMap["databricks_user"].Search(ic, r)
-		assert.EqualError(t, err, "nope")
+		assert.EqualError(t, err, "there is no user 'dbc'")
 
 		err = resourcesMap["databricks_user"].Import(ic, r)
-		assert.EqualError(t, err, "nope")
+		assert.EqualError(t, err, "user dbc is not found")
 	})
 }
 
 func TestSpnSearchFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			ReuseRequest: true,
-			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27dbc%27",
-			Status:       404,
-			Response:     apierr.NotFound("nope"),
-		},
+		qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{})[0],
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-
+		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceServicePrincipal().TestResourceData()
 		d.Set("application_id", "dbc")
 		r := &resource{
@@ -503,34 +512,30 @@ func TestSpnSearchFails(t *testing.T) {
 			Data:      d,
 		}
 		err := resourcesMap["databricks_service_principal"].Search(ic, r)
-		assert.EqualError(t, err, "nope")
+		assert.EqualError(t, err, "there is no service principal 'dbc'")
 
 		err = resourcesMap["databricks_service_principal"].Import(ic, r)
-		assert.EqualError(t, err, "nope")
+		assert.EqualError(t, err, "service principal dbc is not found")
 	})
 }
 
 func TestSpnSearchSuccess(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+	spFixture := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
 		{
-			ReuseRequest: true,
-			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27dbc%27",
-			Response: scim.UserList{Resources: []scim.User{
-				{ID: "321", DisplayName: "spn", ApplicationID: "dbc"},
-			}},
+			Id: "321", DisplayName: "spn", ApplicationId: "dbc",
 		},
+	})
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		spFixture[0],
+		spFixture[1],
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/dbc",
+			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/321?attributes=userName,displayName,active,externalId,entitlements,groups,roles",
 			Response:     scim.User{ID: "321", DisplayName: "spn", ApplicationID: "dbc"},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-
+		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceServicePrincipal().TestResourceData()
 		d.Set("application_id", "dbc")
 		d.Set("display_name", "dbc")
@@ -564,12 +569,53 @@ func TestSpnSearchSuccess(t *testing.T) {
 	})
 }
 
+func TestShouldOmitForUsers(t *testing.T) {
+	d := scim.ResourceUser().TestResourceData()
+	d.SetId("user1")
+	d.Set("user_name", "user@domain.com")
+	d.Set("display_name", "")
+	assert.True(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
+		scim.ResourceUser().Schema["application_id"], d))
+	d.Set("display_name", "user@domain.com")
+	assert.True(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
+		scim.ResourceUser().Schema["application_id"], d))
+	d.Set("display_name", "Some user")
+	assert.False(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
+		scim.ResourceUser().Schema["application_id"], d))
+}
+
+func TestShouldOmitFoRepos(t *testing.T) {
+	d := repos.ResourceRepo().TestResourceData()
+	d.SetId("1234")
+	d.Set("path", "/Repos/Test/repo")
+	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "path",
+		repos.ResourceRepo().Schema["path"], d))
+	assert.True(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "branch",
+		repos.ResourceRepo().Schema["branch"], d))
+	assert.True(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "tag",
+		repos.ResourceRepo().Schema["tag"], d))
+	d.Set("branch", "test")
+	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "branch",
+		repos.ResourceRepo().Schema["branch"], d))
+	d.Set("tag", "v123")
+	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "tag",
+		repos.ResourceRepo().Schema["tag"], d))
+}
+
 func TestUserImportSkipNonDirectGroups(t *testing.T) {
+	userFixture := qa.ListUsersFixtures([]iam.User{
+		{
+			UserName: "dbc",
+			Id:       "321",
+		},
+	})
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		userFixture[0],
+		userFixture[1],
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27dbc%27",
+			Resource:     "/api/2.0/preview/scim/v2/Users/321?attributes=id,userName,displayName,active,externalId,entitlements,groups,roles",
 			Response: scim.UserList{
 				Resources: []scim.User{
 					{
@@ -584,10 +630,7 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
-
+		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceUser().TestResourceData()
 		d.Set("user_name", "dbc")
 		r := &resource{
@@ -616,11 +659,74 @@ func TestSecretScopeListNoNameMatch(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		ic.match = "bcd"
 		err := resourcesMap["databricks_secret_scope"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
+func TestPoliciesListing(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policies/clusters/list?",
+			Response: compute.ListPoliciesResponse{
+				Policies: []compute.Policy{
+					{
+						Name:           "Personal Compute",
+						PolicyFamilyId: "personal-vm",
+						PolicyId:       "123",
+					},
+					{
+						Name:     "abcd",
+						PolicyId: "456",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policy-families?",
+			Response: compute.ListPolicyFamiliesResponse{
+				PolicyFamilies: []compute.PolicyFamily{
+					{
+						Name:           "Personal Compute",
+						PolicyFamilyId: "personal-vm",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_cluster_policy"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(ic.testEmits))
+	})
+}
+
+func TestPoliciesListNoNameMatch(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/policies/clusters/list?",
+			Response: compute.ListPoliciesResponse{
+				Policies: []compute.Policy{
+					{
+						Name: "Personal Compute",
+					},
+					{
+						Name: "abcd",
+					},
+				},
+			},
+		},
+		emptyPolicyFamilies,
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.match = "bcd"
+		err := resourcesMap["databricks_cluster_policy"].List(ic)
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(ic.testEmits))
 	})
@@ -662,9 +768,7 @@ func TestGlobalInitScriptsErrors(t *testing.T) {
 			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_global_init_script"].List(ic)
 		assert.EqualError(t, err, "nope")
 
@@ -694,9 +798,7 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_global_init_script"].Import(ic, &resource{
 			ID: "sad-emoji",
 		})
@@ -709,13 +811,6 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 	})
 }
 
-func TestRepoIdForName(t *testing.T) {
-	d := repos.ResourceRepo().TestResourceData()
-	d.SetId("x")
-	ic := importContextForTest()
-	assert.Equal(t, "x", resourcesMap["databricks_repo"].Name(ic, d))
-}
-
 func TestRepoListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -725,22 +820,19 @@ func TestRepoListFails(t *testing.T) {
 			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_repo"].List(ic)
 		assert.EqualError(t, err, "nope")
 	})
 }
 
-func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, cb func(*importContext)) {
+func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAdmin bool, cb func(*importContext)) {
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
+		ic := importContextForTestWithClient(ctx, client)
 		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(ic.Directory)
-		ic.Client = client
-		ic.Context = ctx
 		ic.testEmits = nil
+		ic.meAdmin = asAdmin
 		ic.importing = map[string]bool{}
 		ic.variables = map[string]string{}
 		ic.services = services
@@ -784,7 +876,7 @@ func TestNotebookGeneration(t *testing.T) {
 				Content: "YWJj",
 			},
 		},
-	}, "notebooks", func(ic *importContext) {
+	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
@@ -793,7 +885,7 @@ func TestNotebookGeneration(t *testing.T) {
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
-		  source = "${path.module}/notebooks/First/Second.py"
+		  source = "${path.module}/notebooks/First/Second_123.py"
 		  path   = "/First/Second"
 		}`), string(ic.Files["notebooks"].Bytes()))
 	})
@@ -834,7 +926,7 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 				Content: "YWJj",
 			},
 		},
-	}, "notebooks", func(ic *importContext) {
+	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "JUPYTER"
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
@@ -843,10 +935,70 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 		ic.generateHclForResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
-		  source   = "${path.module}/notebooks/First/Second.ipynb"
+		  source   = "${path.module}/notebooks/First/Second_123.ipynb"
 		  path     = "/First/Second"
 		  language = "PYTHON"
 		  format   = "JUPYTER"
+		}`), string(ic.Files["notebooks"].Bytes()))
+	})
+}
+
+func TestNotebookGenerationBadCharacters(t *testing.T) {
+	testGenerate(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						Path:       "/Repos/Foo/Bar",
+						ObjectType: "NOTEBOOK",
+					},
+					{
+						Path:       "/Fir\"st\\/Second",
+						ObjectType: "NOTEBOOK",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FFir%22st%5C",
+
+			Response: workspace.ObjectStatus{
+				ObjectID:   124,
+				ObjectType: "DIRECTORY",
+				Path:       "/Fir\"st\\",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FFir%22st%5C%2FSecond",
+			Response: workspace.ObjectStatus{
+				ObjectID:   123,
+				ObjectType: "NOTEBOOK",
+				Path:       "/Fir\"st\\/Second",
+				Language:   "PYTHON",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FFir%22st%5C%2FSecond",
+			Response: workspace.ExportPath{
+				Content: "YWJj",
+			},
+		},
+	}, "notebooks,directories", true, func(ic *importContext) {
+		ic.notebooksFormat = "SOURCE"
+		err := resourcesMap["databricks_notebook"].List(ic)
+		assert.NoError(t, err)
+		ic.waitGroup.Wait()
+		ic.closeImportChannels()
+		ic.generateHclForResources(nil)
+		assert.Equal(t, commands.TrimLeadingWhitespace(`
+		resource "databricks_notebook" "fir_st_second_123" {
+		  source = "${path.module}/notebooks/Fir_st_/Second_123.py"
+		  path   = "/Fir\"st\\/Second"
 		}`), string(ic.Files["notebooks"].Bytes()))
 	})
 }
@@ -884,7 +1036,7 @@ func TestDirectoryGeneration(t *testing.T) {
 				Path:       "/first",
 			},
 		},
-	}, "directories", func(ic *importContext) {
+	}, "directories", false, func(ic *importContext) {
 		err := resourcesMap["databricks_directory"].List(ic)
 		assert.NoError(t, err)
 
@@ -910,7 +1062,7 @@ func TestGlobalInitScriptGen(t *testing.T) {
 				ContentBase64: "YWJj",
 			},
 		},
-	}, "workspace", func(ic *importContext) {
+	}, "workspace", false, func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_global_init_script",
 			ID:       "a",
@@ -942,7 +1094,7 @@ func TestSecretGen(t *testing.T) {
 				},
 			},
 		},
-	}, "secrets", func(ic *importContext) {
+	}, "secrets", false, func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_secret",
 			ID:       "a|||b",
@@ -977,7 +1129,7 @@ func TestDbfsFileGen(t *testing.T) {
 				BytesRead: 3,
 			},
 		},
-	}, "storage", func(ic *importContext) {
+	}, "storage", false, func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_dbfs_file",
 			ID:       "a",
@@ -1009,9 +1161,7 @@ func TestSqlListObjects(t *testing.T) {
 				Results: []map[string]any{{"key2": "value2"}}},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		answer, err := dbsqlListObjects(ic, "/preview/sql/queries")
 		assert.NoError(t, err)
 		assert.Len(t, answer, 2)
@@ -1055,9 +1205,7 @@ func TestIncrementalListDLT(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTest()
-		ic.Client = client
-		ic.Context = ctx
+		ic := importContextForTestWithClient(ctx, client)
 		ic.incremental = true
 		ic.updatedSinceStr = "2023-07-24T00:00:00Z"
 		ic.updatedSinceMs = 1690156700000

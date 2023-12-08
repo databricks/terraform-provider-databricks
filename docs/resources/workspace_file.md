@@ -49,6 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` -  Path of workspace file
 * `url` - Routable URL of the workspace file
 * `object_id` -  Unique identifier for a workspace file
+* `workspace_path` - path on Workspace File System (WSFS) in form of `/Workspace` + `path`
 
 ## Access Control
 

@@ -1,10 +1,14 @@
 package acceptance
 
 import (
+	"os"
 	"testing"
 )
 
 func TestUcAccResourceSqlTable_Managed(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -63,7 +67,6 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_External(t *testing.T) {
-	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_storage_credential" "external" {
@@ -75,10 +78,11 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 		}
 		
 		resource "databricks_external_location" "some" {
-			name            = "external"
+			name            = "external-{var.RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
+			force_destroy   = true
 		}
 				
 		resource "databricks_schema" "this" {
@@ -99,6 +103,9 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_View(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -141,6 +148,119 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 				name      = "name"
 				comment   = "view column comment"
 			}			
+		}`,
+	})
+}
+
+func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_sql_endpoint" "this" {
+			name = "tf-{var.RANDOM}"
+			cluster_size = "2X-Small"
+			max_num_clusters = 1
+		}
+
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			warehouse_id       = databricks_sql_endpoint.this.id
+			properties         = {
+				them      = "that"
+				something = "else"
+			}
+			options         = {
+				this      = "blue"
+				that      = "green"
+			}			
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			partitions = ["id"]
+			comment = "this table is managed by terraform"
+		}`,
+	})
+}
+func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				them      = "that"
+				something = "else"
+			}
+			options         = {
+				this      = "blue"
+				that      = "green"
+			}			
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "varchar(64)"
+			}
+			cluster_keys = ["id"]
+			comment = "this table is managed by terraform"
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				them      = "that"
+				something = "else"
+			}
+			options         = {
+				this      = "blue"
+				that      = "green"
+			}
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			cluster_keys = ["id", "name"]			
+			comment = "this table is managed by terraform..."
 		}`,
 	})
 }

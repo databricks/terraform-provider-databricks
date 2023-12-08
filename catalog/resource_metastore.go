@@ -10,11 +10,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/exp/slices"
 )
 
 type MetastoreInfo struct {
 	Name                                        string `json:"name"`
-	StorageRoot                                 string `json:"storage_root" tf:"force_new"`
+	StorageRoot                                 string `json:"storage_root,omitempty" tf:"force_new"`
 	DefaultDacID                                string `json:"default_data_access_config_id,omitempty" tf:"suppress_diff"`
 	StorageRootCredentialId                     string `json:"storage_root_credential_id,omitempty" tf:"suppress_diff"`
 	Owner                                       string `json:"owner,omitempty" tf:"computed"`
@@ -29,6 +30,12 @@ type MetastoreInfo struct {
 	DeltaSharingScope                           string `json:"delta_sharing_scope,omitempty" tf:"suppress_diff"`
 	DeltaSharingRecipientTokenLifetimeInSeconds int64  `json:"delta_sharing_recipient_token_lifetime_in_seconds,omitempty"`
 	DeltaSharingOrganizationName                string `json:"delta_sharing_organization_name,omitempty"`
+}
+
+func updateForceSendFields(req *catalog.UpdateMetastore) {
+	if req.DeltaSharingScope != "" && !slices.Contains(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds") {
+		req.ForceSendFields = append(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds")
+	}
 }
 
 func ResourceMetastore() *schema.Resource {
@@ -58,6 +65,7 @@ func ResourceMetastore() *schema.Resource {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &create)
 			common.DataToStructPointer(d, s, &update)
+			updateForceSendFields(&update)
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				mi, err := acc.Metastores.Create(ctx,
 					catalog.AccountsCreateMetastore{
@@ -107,6 +115,7 @@ func ResourceMetastore() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
+			updateForceSendFields(&update)
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{

@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
+	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
@@ -64,6 +66,16 @@ func workspaceConfKeysToURL() string {
 	}
 	sort.Strings(keys)
 	return strings.Join(keys, "%2C")
+}
+
+func (ic *importContext) setClientsForTests() {
+	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	if ic.accountLevel {
+		ic.meAdmin = true
+		ic.accountClient, _ = ic.Client.AccountClient()
+	} else {
+		ic.workspaceClient, _ = ic.Client.WorkspaceClient()
+	}
 }
 
 func TestImportingMounts(t *testing.T) {
@@ -197,6 +209,7 @@ func TestImportingMounts(t *testing.T) {
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.setClientsForTests()
 			ic.services = "mounts"
 			ic.listing = "mounts"
 			ic.mounts = true
@@ -231,6 +244,22 @@ var emptyPipelines = qa.HTTPFixture{
 	ReuseRequest: true,
 	Resource:     "/api/2.0/pipelines?max_results=50",
 	Response:     pipelines.PipelineListResponse{},
+}
+
+var emptyClusterPolicies = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/policies/clusters/list?",
+	Response:     compute.ListPoliciesResponse{},
+}
+
+var emptyPolicyFamilies = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/policy-families?",
+	Response: compute.ListPolicyFamiliesResponse{
+		PolicyFamilies: []compute.PolicyFamily{},
+	},
+	ReuseRequest: true,
 }
 
 var emptyMlflowWebhooks = qa.HTTPFixture{
@@ -339,6 +368,23 @@ var emptyGlobalSQLConfig = qa.HTTPFixture{
 }
 
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
+	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
+		{
+			Id:            "345",
+			ApplicationId: "spn",
+		},
+	})
+	listUserFixtures := qa.ListUsersFixtures([]iam.User{
+		{
+			Id:       "123",
+			UserName: "test@test.com",
+		},
+	})
+	listGroupFixtures := qa.ListGroupsFixtures([]iam.Group{
+		{Id: "a"},
+		{Id: "b"},
+		{Id: "c"},
+	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
@@ -354,40 +400,66 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlQueries,
 			emptySqlAlerts,
 			emptyPipelines,
+			emptyClusterPolicies,
+			emptyPolicyFamilies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfs,
 			dummyWorkspaceConf,
 			emptyGlobalSQLConfig,
+			listSpFixtures[0],
+			listSpFixtures[1],
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?",
-				Response: scim.GroupList{
-					Resources: []scim.Group{
-						// TODO: add another user for which there is no filter resut
-						{ID: "a", DisplayName: "admins",
-							Members: []scim.ComplexValue{
-								{Display: "test@test.com", Value: "123", Ref: "Users/123"},
-								{Display: "Test group", Value: "f", Ref: "Groups/f"},
-								{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
-							},
-						},
-						{ID: "b", DisplayName: "users"},
-						{ID: "c", DisplayName: "test"},
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/345?attributes=userName,displayName,active,externalId,entitlements",
+				Response: iam.ServicePrincipal{
+					Id:            "345",
+					ApplicationId: "spn",
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/345?attributes=userName,displayName,active,externalId,entitlements,groups,roles",
+				Response: iam.ServicePrincipal{
+					Id:            "345",
+					ApplicationId: "spn",
+				},
+				ReuseRequest: true,
+			},
+			listUserFixtures[0],
+			listUserFixtures[1],
+			listGroupFixtures[0],
+			listGroupFixtures[1],
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/a",
+				Response: scim.Group{
+					// TODO: add another user for which there is no filter resut
+					ID: "a", DisplayName: "admins",
+					Members: []scim.ComplexValue{
+						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+						{Display: "Test group", Value: "f", Ref: "Groups/f"},
+						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn",
-				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
-					Groups: []scim.ComplexValue{
-						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
-					}},
-				ReuseRequest: true,
+				Resource: "/api/2.0/preview/scim/v2/Groups/b",
+				Response: scim.Group{
+					ID: "b", DisplayName: "users",
+				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?filter=applicationId%20eq%20%27spn%27",
+				Resource: "/api/2.0/preview/scim/v2/Groups/c",
+				Response: scim.Group{
+					ID: "b", DisplayName: "test",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn?attributes=userName,displayName,active,externalId,entitlements",
 				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
@@ -413,6 +485,34 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					},
 				},
 				ReuseRequest: true,
+			},
+			// Get requests appear to be made with two different sets of parameters. The first set is defined in `util.go`, the second
+			// in the groups resource definition itself.
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Response: scim.Group{ID: "a", DisplayName: "admins",
+					Members: []scim.ComplexValue{
+						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
+						{Display: "Test group", Value: "f", Ref: "Groups/f"},
+						{Display: "spn", Value: "spn", Ref: "ServicePrincipals/spn"},
+					},
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/b?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Response: scim.Group{ID: "b", DisplayName: "users"},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/c?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Response: scim.Group{ID: "c", DisplayName: "test",
+					Groups: []scim.ComplexValue{
+						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
+					},
+				},
 			},
 			{
 				Method:   "GET",
@@ -453,19 +553,12 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27test%40test.com%27",
-				Response: scim.UserList{
-					Resources: []scim.User{
-						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
-					},
-					StartIndex:   1,
-					TotalResults: 1,
-					ItemsPerPage: 1,
-				},
+				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=id,userName,displayName,active,externalId,entitlements,groups,roles",
+				Response: scim.User{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -555,12 +648,9 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,
 			emptyInstancePools,
+			emptyClusterPolicies,
 			dummyWorkspaceConf,
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?",
-				Response: scim.GroupList{Resources: []scim.Group{}},
-			},
+			qa.ListGroupsFixtures([]iam.Group{})[0],
 			emptyGitCredentials,
 			emptyIpAccessLIst,
 			emptyWorkspace,
@@ -569,6 +659,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptySqlDashboards,
 			emptySqlAlerts,
 			emptyPipelines,
+			emptyPolicyFamilies,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -579,7 +670,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -623,7 +714,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -751,6 +842,30 @@ func TestImportingClusters(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-14-permissions.json"),
 			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/list?scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-list-scope-acls-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/acls/get?principal=test%40test.com&scope=some-kv-scope",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/secrets/scopes/list",
+				ReuseRequest: true,
+				Response:     getJSONObject("test-data/secret-scopes-response.json"),
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			os.Setenv("EXPORTER_PARALLELISM_databricks_cluster", "1")
@@ -783,7 +898,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{
 					Jobs: []jobs.Job{
 						{
@@ -846,6 +961,9 @@ func TestImportingJobs_JobList(t *testing.T) {
 						RunAs: &jobs.JobRunAs{
 							UserName:             "user@domain.com",
 							ServicePrincipalName: "0000-1111-2222-3333-4444-5555",
+						},
+						EmailNotifications: &sdk_jobs.JobEmailNotifications{
+							OnFailure: []string{"user@domain.com"},
 						},
 						Libraries: []libraries.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
@@ -1002,7 +1120,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{
 					Jobs: []jobs.Job{
 						{
@@ -1257,7 +1375,7 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
 				Response: jobs.JobListResponse{},
 			},
 			{
@@ -1315,7 +1433,12 @@ func TestResourceName(t *testing.T) {
 	norm = ic.ResourceName(&resource{
 		Name: "9721431b_bcd3_4526_b90f_f5de2befec8c|8737798193",
 	})
-	assert.Equal(t, "r7322b058678", norm)
+	assert.Equal(t, "r56cde0f5eda", norm)
+
+	assert.NotEqual(t, ic.ResourceName(&resource{
+		Name: "0A"}), ic.ResourceName(&resource{
+		Name: "0a",
+	}))
 
 	norm = ic.ResourceName(&resource{
 		Name: "General Policy - All Users",
@@ -1366,29 +1489,34 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 }
 
 func TestImportingUser(t *testing.T) {
+	userFixture := qa.ListUsersFixtures([]iam.User{
+		{
+			Id:       "123",
+			UserName: "me",
+		},
+	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
+			userFixture[0],
+			userFixture[1],
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27me%27",
-				Response: scim.UserList{
-					Resources: []scim.User{
+				Resource:     "/api/2.0/preview/scim/v2/Users/123?attributes=id,userName,displayName,active,externalId,entitlements,groups,roles",
+				Response: scim.User{
+					ID:       "123",
+					UserName: "me",
+					Groups: []scim.ComplexValue{
 						{
-							ID:       "123",
-							UserName: "me",
-							Groups: []scim.ComplexValue{
-								{
-									Value: "abc",
-									Type:  "direct",
-								},
-							},
+							Value: "abc",
+							Type:  "direct",
 						},
 					},
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.setClientsForTests()
 			err := resourcesMap["databricks_user"].Search(ic, &resource{
 				Resource: "databricks_user",
 				Value:    "me",
@@ -1665,6 +1793,9 @@ func TestImportingSqlObjects(t *testing.T) {
 }
 
 func TestImportingDLTPipelines(t *testing.T) {
+	userFixture := qa.ListUsersFixtures([]iam.User{
+		{Id: "123", UserName: "user@domain.com"},
+	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
@@ -1716,23 +1847,19 @@ func TestImportingDLTPipelines(t *testing.T) {
 				},
 				ReuseRequest: true,
 			},
+			userFixture[0],
+			userFixture[1],
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?filter=userName%20eq%20%27user%40domain.com%27",
-				Response: scim.UserList{
-					Resources: []scim.User{
-						{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
-					},
-					StartIndex:   1,
-					TotalResults: 1,
-					ItemsPerPage: 1,
-				},
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalId,entitlements",
+				Response:     scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
 				ReuseRequest: true,
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/123?attributes=userName,displayName,active,externalId,entitlements",
-				Response: scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users/123?attributes=id,userName,displayName,active,externalId,entitlements,groups,roles",
+				Response:     scim.User{ID: "123", DisplayName: "user@domain.com", UserName: "user@domain.com"},
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -2230,5 +2357,54 @@ resource "databricks_pipeline" "def" {
 			contentStr = string(content)
 			assert.True(t, strings.Contains(contentStr, `variable "var1"`))
 			assert.True(t, strings.Contains(contentStr, `variable "job_spec_webhook_def"`))
+		})
+}
+
+func TestImportingRunJobTask(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			emptyRepos,
+			emptyIpAccessLIst,
+			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
+				Response: map[string]any{
+					"jobs": []any{
+						getJSONObject("test-data/run-job-main.json"),
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=1047501313827425",
+				Response: getJSONObject("test-data/run-job-main.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=932035899730845",
+				Response: getJSONObject("test-data/run-job-child.json"),
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.listing = "jobs"
+			ic.services = "jobs"
+			ic.match = "runjobtask"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/jobs.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `job_id = databricks_job.jartask_932035899730845.id`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "runjobtask_1047501313827425"`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "jartask_932035899730845"`))
 		})
 }

@@ -6,13 +6,14 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func ResourceLibrary() *schema.Resource {
-	s := common.StructToSchema(libraries.Library{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+	libraySdkSchema := common.StructToSchema(compute.Library{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
@@ -27,28 +28,30 @@ func ResourceLibrary() *schema.Resource {
 		return split[0], split[1]
 	}
 	return common.Resource{
-		Schema: s,
+		Schema: libraySdkSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			clusterID := d.Get("cluster_id").(string)
-			err := NewClustersAPI(ctx, c).Start(clusterID)
+			_, err = StartClusterAndGetInfo(ctx, w, clusterID)
 			if err != nil {
 				return err
 			}
-			var lib libraries.Library
-			common.DataToStructPointer(d, s, &lib)
-			librariesAPI := libraries.NewLibrariesAPI(ctx, c)
-			err = librariesAPI.Install(libraries.ClusterLibraryList{
-				ClusterID: clusterID,
-				Libraries: []libraries.Library{lib},
+			var lib compute.Library
+			common.DataToStructPointer(d, libraySdkSchema, &lib)
+			err = w.Libraries.Install(ctx, compute.InstallLibraries{
+				ClusterId: clusterID,
+				Libraries: []compute.Library{lib},
 			})
 			if err != nil {
 				return err
 			}
-			_, err = librariesAPI.WaitForLibrariesInstalled(libraries.Wait{
+			_, err = libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 				ClusterID: clusterID,
-				Timeout:   d.Timeout(schema.TimeoutCreate),
 				IsRunning: true,
-			})
+			}, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return err
 			}
@@ -57,18 +60,21 @@ func ResourceLibrary() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
-			cll, err := libraries.NewLibrariesAPI(ctx, c).WaitForLibrariesInstalled(libraries.Wait{
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			cll, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 				ClusterID: clusterID,
-				Timeout:   d.Timeout(schema.TimeoutRead),
 				IsRefresh: true,
-			})
+			}, d.Timeout(schema.TimeoutRead))
 			if err != nil {
 				return err
 			}
 			for _, v := range cll.LibraryStatuses {
 				thisRep := v.Library.String()
 				if thisRep == libraryRep {
-					common.StructToData(v.Library, s, d)
+					common.StructToData(v.Library, libraySdkSchema, d)
 					d.Set("cluster_id", clusterID)
 					return nil
 				}
@@ -77,12 +83,15 @@ func ResourceLibrary() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
-			err := NewClustersAPI(ctx, c).Start(clusterID)
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			librariesAPI := libraries.NewLibrariesAPI(ctx, c)
-			cll, err := librariesAPI.ClusterStatus(clusterID)
+			_, err = StartClusterAndGetInfo(ctx, w, clusterID)
+			if err != nil {
+				return err
+			}
+			cll, err := w.Libraries.ClusterStatusByClusterId(ctx, clusterID)
 			if err != nil {
 				return err
 			}
@@ -90,9 +99,9 @@ func ResourceLibrary() *schema.Resource {
 				if v.Library.String() != libraryRep {
 					continue
 				}
-				return librariesAPI.Uninstall(libraries.ClusterLibraryList{
-					ClusterID: clusterID,
-					Libraries: []libraries.Library{*v.Library},
+				return w.Libraries.Uninstall(ctx, compute.UninstallLibraries{
+					ClusterId: clusterID,
+					Libraries: []compute.Library{*v.Library},
 				})
 			}
 			return apierr.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))

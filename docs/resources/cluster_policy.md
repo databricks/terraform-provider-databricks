@@ -54,6 +54,13 @@ locals {
 resource "databricks_cluster_policy" "fair_use" {
   name       = "${var.team} cluster policy"
   definition = jsonencode(merge(local.default_policy, var.policy_overrides))
+
+  library {
+    pypi {
+      package = "databricks-sdk==0.12.0"
+      // repo can also be specified here
+    }
+  }
 }
 
 resource "databricks_permissions" "can_use_cluster_policyinstance_profile" {
@@ -93,9 +100,41 @@ module "engineering_compute_policy" {
 }
 ```
 
+### Overriding the built-in cluster policies
+
+You can override built-in cluster policies by creating a `databricks_cluster_policy` resource with following attributes:
+
+* `name` - the name of the built-in cluster policy.
+* `policy_family_id` - the ID of the cluster policy family used for built-in cluster policy.
+* `policy_family_definition_overrides` - settings to override in the built-in cluster policy.
+
+You can obtain the list of defined cluster policies families using the `databricks policy-families list` command of the new [Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/index.html), or via [list policy families](https://docs.databricks.com/api/workspace/policyfamilies/list) REST API.
+
+```hcl
+locals {
+  personal_vm_override = {
+    "autotermination_minutes" : {
+      "type" : "fixed",
+      "value" : 220,
+      "hidden" : true
+    },
+    "custom_tags.Team" : {
+      "type" : "fixed",
+      "value" : var.team
+    }
+  }
+}
+
+resource "databricks_cluster_policy" "personal_vm" {
+  policy_family_id                   = "personal-vm"
+  policy_family_definition_overrides = jsonencode(personal_vm_override)
+  name                               = "Personal Compute"
+}
+```
+
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
 * `name` - (Required) Cluster policy name. This must be unique. Length must be between 1 and 100 characters.
 * `description` - (Optional) Additional human-readable description of the cluster policy.
@@ -103,6 +142,7 @@ The following arguments are required:
 * `max_clusters_per_user` - (Optional, integer) Maximum number of clusters allowed per user. When omitted, there is no limit. If specified, value must be greater than zero.
 * `policy_family_definition_overrides`(Optional) Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition inherited from the policy family. Policy rules specified here are merged into the inherited policy definition.
 * `policy_family_id` (Optional) ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition. Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy definition.
+* `libraries` (Optional) blocks defining individual libraries that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
 
 ## Attribute Reference
 

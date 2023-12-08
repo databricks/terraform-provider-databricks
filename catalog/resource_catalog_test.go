@@ -518,14 +518,24 @@ func TestCatalogCreateIsolated(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/workspace-bindings/catalogs/a",
-				ExpectedRequest: catalog.UpdateWorkspaceBindings{
-					Name:             "a",
-					AssignWorkspaces: []int64{123456789101112},
+				Resource: "/api/2.1/unity-catalog/bindings/catalog/a",
+				ExpectedRequest: catalog.UpdateWorkspaceBindingsParameters{
+					SecurableName: "a",
+					SecurableType: "catalog",
+					Add: []catalog.WorkspaceBinding{
+						{
+							WorkspaceId: int64(123456789101112),
+							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+						},
+					},
 				},
-
-				Response: catalog.CurrentWorkspaceBindings{
-					Workspaces: []int64{123456789101112},
+				Response: catalog.WorkspaceBindingsResponse{
+					Bindings: []catalog.WorkspaceBinding{
+						{
+							WorkspaceId: int64(123456789101112),
+							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+						},
+					},
 				},
 			},
 			{

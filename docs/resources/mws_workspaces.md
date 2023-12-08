@@ -3,9 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_workspaces resource
 
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
-
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
 
 ```hcl
 provider "databricks" {
@@ -95,7 +93,7 @@ By default, Databricks creates a VPC in your AWS account for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "random_string" "naming" {
@@ -212,7 +210,7 @@ To get workspace running, you have to configure a network object:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 variable "databricks_google_service_account" {}
 variable "google_project" {}
@@ -273,7 +271,7 @@ By default, Databricks creates a VPC in your GCP project for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 data "google_client_openid_userinfo" "me" {
@@ -314,7 +312,7 @@ output "databricks_token" {
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
 * `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).

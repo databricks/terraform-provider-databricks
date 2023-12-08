@@ -9,9 +9,9 @@ import (
 )
 
 func commonFixtures(name string) []qa.HTTPFixture {
-	resource := "/api/2.1/jobs/list?expand_tasks=false&limit=25&offset=0"
+	resource := "/api/2.1/jobs/list?expand_tasks=false&limit=25"
 	if name != "" {
-		resource = fmt.Sprintf("/api/2.1/jobs/list?expand_tasks=true&limit=25&name=%s&offset=0", name)
+		resource = fmt.Sprintf("/api/2.1/jobs/list?expand_tasks=true&limit=25&name=%s", name)
 	}
 	return []qa.HTTPFixture{
 		{
@@ -138,10 +138,10 @@ func TestDataSourceQueryableJobRunAsSameUser(t *testing.T) {
 		HCL:         `job_id = "234"`,
 		ID:          "234",
 	}.ApplyAndExpectData(t, map[string]any{
-		"job_id":                             "234",
-		"id":                                 "234",
-		"job_settings.0.settings.0.name":     "Second",
-		"job_settings.0.settings.0.run_as.0": map[string]any{},
+		"job_id":                         "234",
+		"id":                             "234",
+		"job_settings.0.settings.0.name": "Second",
+		"job_settings.0.settings.0.run_as.0.user_name": "user@domain.com",
 	})
 }
 
@@ -195,7 +195,7 @@ func TestDataSourceQueryableJobNoMatchName(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=true&limit=25&name=Third&offset=0",
+				Resource: "/api/2.1/jobs/list?expand_tasks=true&limit=25&name=Third",
 				Response: JobListResponse{
 					Jobs: []Job{},
 				},

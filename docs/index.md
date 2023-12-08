@@ -139,7 +139,7 @@ There are currently a number of supported methods to [authenticate](https://docs
 
 ### Authenticating with Databricks CLI credentials
 
-No configuration options given to your provider will look up configured credentials in `~/.databrickscfg` file. It is created by the `databricks configure --token` command. Check [this page](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication)
+If no configuration option is given, the provider will look up configured credentials in `~/.databrickscfg` file. It is created by the `databricks configure --token` command. Check [this page](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication)
 for more details. The provider uses config file credentials only when `host`/`token` or `azure_auth` options are not specified.
 It is the recommended way to use Databricks Terraform provider, in case you're already using the same approach with
 [AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file)
@@ -205,7 +205,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/username/password/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`.
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to
 `DEFAULT`.
-* `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
+* `account_id` - (optional) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
 * `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `oauth-m2m`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-credentials`, and `google-id`.
 
 ## Special configurations for AWS
@@ -257,7 +257,7 @@ resource "databricks_group" "cluster_admin" {
 
 ## Special configurations for Azure
 
-The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_use_msi`, `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
+The below Azure authentication options are supported at both the account and workspace levels. The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios, managed identity or service principal auth is recommended (and specification of `azure_use_msi`, `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
 
 ### Authenticating with Azure MSI
 
@@ -349,7 +349,7 @@ The provider works with [Google Cloud CLI authentication](https://cloud.google.c
 
 Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
 
-If you are configuring a new Databricks account for the first time, please create at least one workspace and with an identity (user or service principal) that you intend to use for Unity Catalog rollout. You can then configure the provider using that identity and workspace to provision the required Unity Catalog resources.
+If you are configuring a new Databricks account for the first time, please create at least one workspace with an identity (user or service principal) that you intend to use for Unity Catalog rollout. You can then configure the provider using that identity and workspace to provision the required Unity Catalog resources.
 
 ## Miscellaneous configuration parameters
 

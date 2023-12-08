@@ -2,11 +2,15 @@ package provider
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
+	"net/http"
 	"reflect"
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -32,6 +36,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	"github.com/databricks/terraform-provider-databricks/serving"
+	"github.com/databricks/terraform-provider-databricks/settings"
+	"github.com/databricks/terraform-provider-databricks/sharing"
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/tokens"
@@ -55,16 +61,19 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_clusters":                clusters.DataSourceClusters(),
 			"databricks_cluster_policy":          policies.DataSourceClusterPolicy(),
 			"databricks_catalogs":                catalog.DataSourceCatalogs(),
+			"databricks_current_config":          mws.DataSourceCurrentConfiguration(),
 			"databricks_current_user":            scim.DataSourceCurrentUser(),
 			"databricks_dbfs_file":               storage.DataSourceDbfsFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDbfsFilePaths(),
 			"databricks_directory":               workspace.DataSourceDirectory(),
 			"databricks_group":                   scim.DataSourceGroup(),
 			"databricks_instance_pool":           pools.DataSourceInstancePool(),
+			"databricks_instance_profiles":       aws.DataSourceInstanceProfiles(),
 			"databricks_jobs":                    jobs.DataSourceJobs(),
 			"databricks_job":                     jobs.DataSourceJob(),
 			"databricks_metastore":               catalog.DataSourceMetastore(),
 			"databricks_metastores":              catalog.DataSourceMetastores(),
+			"databricks_mlflow_model":            mlflow.DataSourceModel(),
 			"databricks_mws_credentials":         mws.DataSourceMwsCredentials(),
 			"databricks_mws_workspaces":          mws.DataSourceMwsWorkspaces(),
 			"databricks_node_type":               clusters.DataSourceNodeType(),
@@ -86,6 +95,7 @@ func DatabricksProvider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
 			"databricks_access_control_rule_set":     permissions.ResourceAccessControlRuleSet(),
+			"databricks_artifact_allowlist":          catalog.ResourceArtifactAllowlist(),
 			"databricks_aws_s3_mount":                storage.ResourceAWSS3Mount(),
 			"databricks_azure_adls_gen1_mount":       storage.ResourceAzureAdlsGen1Mount(),
 			"databricks_azure_adls_gen2_mount":       storage.ResourceAzureAdlsGen2Mount(),
@@ -96,6 +106,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster":                     clusters.ResourceCluster(),
 			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
 			"databricks_dbfs_file":                   storage.ResourceDbfsFile(),
+			"databricks_default_namespace_setting":   settings.ResourceDefaultNamespaceSetting(),
 			"databricks_directory":                   workspace.ResourceDirectory(),
 			"databricks_entitlements":                scim.ResourceEntitlements(),
 			"databricks_external_location":           catalog.ResourceExternalLocation(),
@@ -134,7 +145,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_permissions":                 permissions.ResourcePermissions(),
 			"databricks_pipeline":                    pipelines.ResourcePipeline(),
 			"databricks_provider":                    catalog.ResourceProvider(),
-			"databricks_recipient":                   catalog.ResourceRecipient(),
+			"databricks_recipient":                   sharing.ResourceRecipient(),
 			"databricks_registered_model":            catalog.ResourceRegisteredModel(),
 			"databricks_repo":                        repos.ResourceRepo(),
 			"databricks_schema":                      catalog.ResourceSchema(),
@@ -222,7 +233,7 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 		}
 	}
 	sort.Strings(attrsUsed)
-	log.Printf("[INFO] Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", "))
+	tflog.Info(ctx, fmt.Sprintf("Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", ")))
 	if cfg.AuthType != "" {
 		// mapping from previous Google authentication types
 		// and current authentication types from Databricks Go SDK
@@ -236,6 +247,24 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
 			cfg.AuthType = newer
 		}
+	}
+	// The OAuth2 library used by the SDK caches the context, so for long-lived applications
+	// where tokens may need to be refreshed, we need to use a context with no timeout.
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	err = cfg.Authenticate(r)
+	// When a user creates a workspace and then configures the Databricks provider in the same
+	// module for that workspace, the workspace does not exist at planning time, so computed
+	// attributes like the host are not included in the ConfigureProvider call. In this case,
+	// authentication will fail, but it is safe to continue: the client will not be used, as
+	// no resources yet exist in the as-yet-nonexisting workspace, so Terraform will not attempt
+	// to fetch any resources.
+	if errors.Is(err, config.ErrCannotConfigureAuth) {
+		tflog.Debug(ctx, "default authentication failed, continuing. During planning, this is expected when the configured workspace does not yet exist.")
+	} else if err != nil {
+		return nil, diag.FromErr(err)
 	}
 	client, err := client.New(cfg)
 	if err != nil {

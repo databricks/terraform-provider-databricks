@@ -3,11 +3,9 @@ subcategory: "Log Delivery"
 ---
 # databricks_mws_log_delivery Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
-
-Make sure you have authenticated with [username and password for Accounts Console](../guides/aws-workspace.md). This resource configures the delivery of the two supported log types from Databricks workspaces: [billable usage logs](https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html) and [audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html).
+This resource configures the delivery of the two supported log types from Databricks workspaces: [billable usage logs](https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html) and [audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html).
 
 You cannot delete a log delivery configuration, but you can disable it when you no longer need it. This fact is important because there is a limit to the number of enabled log delivery configurations that you can create for an account. You can create a maximum of two enabled configurations that use the account level (no workspace filter) and two enabled configurations for every specific workspace (a workspaceId can occur in the workspace filter for two configurations). You can re-enable a disabled configuration, but the request fails if it violates the limits previously described.
 
@@ -17,7 +15,7 @@ End-to-end example of usage and audit log delivery:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "aws_s3_bucket" "logdelivery" {
@@ -132,7 +130,7 @@ resource "databricks_mws_log_delivery" "audit_logs" {
 
 ## Argument reference
 
-* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `config_name` - The optional human-readable name of the log delivery configuration. Defaults to empty.
 * `log_type` - The type of log delivery. `BILLABLE_USAGE` and `AUDIT_LOGS` are supported.
 * `output_format` - The file type of log delivery. Currently `CSV` (for `BILLABLE_USAGE`) and `JSON` (for `AUDIT_LOGS`) are supported.

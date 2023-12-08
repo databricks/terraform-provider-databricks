@@ -25,7 +25,7 @@ resource "databricks_catalog" "sandbox" {
 The following arguments are required:
 
 * `name` - Name of Catalog relative to parent metastore.
-* `storage_root` - (Optional) Managed location of the catalog. Location in cloud storage where data for managed tables will be stored. If not specified, the location will default to the metastore root location. Change forces creation of a new resource.
+* `storage_root` - (Optional if `storage_root` is specified for the metastore) Managed location of the catalog. Location in cloud storage where data for managed tables will be stored. If not specified, the location will default to the metastore root location. Change forces creation of a new resource.
 * `provider_name` - (Optional) For Delta Sharing Catalogs: the name of the delta sharing provider. Change forces creation of a new resource.
 * `share_name` - (Optional) For Delta Sharing Catalogs: the name of the share under the share provider. Change forces creation of a new resource.
 * `connection_name` - (Optional) For Foreign Catalogs: the name of the connection to an external data source. Changes forces creation of a new resource.
@@ -41,6 +41,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this catalog - same as the `name`.
+* `metastore_id` - ID of the metastore.
 
 ## Import
 
@@ -54,6 +55,6 @@ terraform import databricks_catalog.this <name>
 
 The following resources are used in the same context:
 
-* [databricks_table](../data-sources/tables.md) data to list tables within Unity Catalog.
-* [databricks_schema](../data-sources/schemas.md) data to list schemas within Unity Catalog.
-* [databricks_catalog](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.
+* [databricks_tables](../data-sources/tables.md) data to list tables within Unity Catalog.
+* [databricks_schemas](../data-sources/schemas.md) data to list schemas within Unity Catalog.
+* [databricks_catalogs](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.

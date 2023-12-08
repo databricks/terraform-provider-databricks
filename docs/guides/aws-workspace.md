@@ -10,7 +10,7 @@ You can provision multiple Databricks workspaces with Terraform.
 
 ## Provider initialization for E2 workspaces
 
-This guide assumes you have the `client_id`, which is the `application_id` of the [Service Principal](resources/service_principal.md), `client_secret`, which is its secret and `databricks_account_id` which can be found in the bottom left corner of the [Account Console](https://accounts.cloud.databricks.com). (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)). This guide is provided as is and assumes you will use it as the basis for your setup.
+This guide assumes you have the `client_id`, which is the `application_id` of the [Service Principal](resources/service_principal.md), `client_secret`, which is its secret, and `databricks_account_id`, which can be found in the top right corner of the [Account Console](https://accounts.cloud.databricks.com). (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)). This guide is provided as is and assumes you will use it as the basis for your setup.
 
 ```hcl
 variable "client_id" {}
@@ -48,7 +48,7 @@ Before [managing workspace](workspace-management.md), you have to create:
 - [Databricks E2 workspace](#databricks-e2-workspace)
 - [Host and Token outputs](#provider-configuration)
 
-> Initialize provider with `alias = "mws"` and use `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well.
+> Initialize provider with `alias = "mws"` and use `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within a dedicated terraform module of your environment. Usually, this module creates VPC and IAM roles as well.
 
 ```hcl
 terraform {
@@ -71,6 +71,7 @@ provider "aws" {
 provider "databricks" {
   alias         = "mws"
   host          = "https://accounts.cloud.databricks.com"
+  account_id    = var.databricks_account_id
   client_id     = var.client_id
   client_secret = var.client_secret
 }
@@ -111,7 +112,7 @@ resource "databricks_mws_credentials" "this" {
 
 ## VPC
 
-The very first step is VPC creation with necessary firewall rules. Please consult [main documentation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPS is registered as [databricks_mws_networks](../resources/mws_networks.md) resource. For STS, S3 and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network, for more direct connections and reduced cost compared to AWS global endpoints. For more information, see [Regional endpoints](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#regional-endpoints-1).
+The very first step is VPC creation with necessary firewall rules. Please consult [main documentation page](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. AWS VPS is registered as [databricks_mws_networks](../resources/mws_networks.md) resource. For STS, S3, and Kinesis, you can create VPC gateway or interface endpoints such that the relevant in-region traffic from clusters could transit over the secure AWS backbone rather than the public network for more direct connections and reduced cost compared to AWS global endpoints. For more information, see [Regional endpoints](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html#regional-endpoints-1).
 
 ```hcl
 data "aws_availability_zones" "available" {}
@@ -198,7 +199,7 @@ resource "databricks_mws_networks" "this" {
 
 ## Root bucket
 
-Once [VPC](#vpc) is ready, create AWS S3 bucket for DBFS workspace storage, which is commonly referred to as **root bucket**. This provider has [databricks_aws_bucket_policy](../data-sources/aws_bucket_policy.md) with the necessary IAM policy template. The AWS S3 bucket has to be registered through [databricks_mws_storage_configurations](../resources/mws_storage_configurations.md).
+Once [VPC](#vpc) is ready, create an AWS S3 bucket for DBFS workspace storage, commonly called **root bucket**. This provider has [databricks_aws_bucket_policy](../data-sources/aws_bucket_policy.md) with the necessary IAM policy template. The AWS S3 bucket has to be registered through [databricks_mws_storage_configurations](../resources/mws_storage_configurations.md).
 
 ```hcl
 resource "aws_s3_bucket" "root_storage_bucket" {
@@ -258,9 +259,9 @@ resource "databricks_mws_storage_configurations" "this" {
 
 Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are set up, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
-Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, which have to be used in the latter modules.
+Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. We specify `databricks_host` and `databricks_token` outputs, which must be used in the latter modules.
 
--> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](../index.md#environment-variables) don't [conflict with other](../index.md#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, that should indicate authentication attributes used. The other common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article.
+-> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](../index.md#environment-variables) don't [conflict with other](../index.md#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, which should indicate authentication attributes used. The other common reason for technical difficulties might be related to missing `alias` attribute in `provider "databricks" {}` blocks or `provider` attribute in `resource "databricks_..." {}` blocks. Please make sure to read [`alias`: Multiple Provider Configurations](https://www.terraform.io/docs/language/providers/configuration.html#alias-multiple-provider-configurations) documentation article.
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
@@ -290,7 +291,7 @@ output "databricks_token" {
 
 ### Data resources and Authentication is not configured errors
 
-*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `default auth: cannot configure default credentials` error is raised. To work around this issue and guarantee a proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier, if your usage involves data resources.
+*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `default auth: cannot configure default credentials` error is raised. To work around this issue and guarantee proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if a workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier if your usage involves data resources.
 
 ```hcl
 data "databricks_current_user" "me" {
@@ -309,18 +310,18 @@ provider "databricks" {
 }
 ```
 
-We assume that you have a terraform module in your project that creats a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token during workspace creation to authenticate to the created workspace.
+We assume that you have a terraform module in your project that creates a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
 
 ### Credentials validation checks errors
 
-Due to a bug in the Terraform AWS provider (spotted in v3.28) the Databricks AWS cross-account policy creation and attachment to the IAM role takes longer than the AWS request confirmation to Terraform. As Terraform continues creating the Workspace, validation checks for the credentials are failing, as the policy doesn't get applied quick enough. Showing the error:
+Due to a bug in the Terraform AWS provider (spotted in v3.28) the Databricks AWS cross-account policy creation and attachment to the IAM role takes longer than the AWS request confirmation to Terraform. As Terraform continues creating the Workspace, validation checks for the credentials fail, as the policy isn’t applied more quickly. Showing the error:
 
 ```sh
 Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellation, Create Placement Group, Delete Tags, Describe Availability Zones, Describe instances, Describe Instance Status, Describe Placement Group, Describe Route Tables, Describe Security Groups, Describe Spot Instances, Describe Spot Price History, Describe Subnets, Describe Volumes, Describe Vpcs, Request Spot Instances
 (400 on /api/2.0/accounts/{UUID}/workspaces)
 ```
 
-As a workaround give the `aws_iam_role` more time to be created with a `time_sleep` resource, which you need to add as a dependency to the `databricks_mws_workspaces` resource.
+As a workaround, give the `aws_iam_role` more time to be created with a `time_sleep` resource, which you need to add as a dependency to the `databricks_mws_workspaces` resource.
 
 ```hcl
 resource "time_sleep" "wait" {
@@ -332,7 +333,7 @@ resource "time_sleep" "wait" {
 
 #### IAM policy error
 
-If you notice below error:
+If you notice the below error:
 
 ```sh
 Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellation, Create Placement Group, Delete Tags, Describe Availability Zones, Describe instances, Describe Instance Status, Describe Placement Group, Describe Route Tables, Describe Security Groups, Describe Spot Instances, Describe Spot Price History, Describe Subnets, Describe Volumes, Describe Vpcs, Request Spot Instances
@@ -342,6 +343,6 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 
 ![create_workspace_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png)
 
-- Verify if the role and policy exists (assume role should allow external id)
+- Verify if the role and policy exist (assume role should allow external ID)
 
 ![iam_role_trust_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png)

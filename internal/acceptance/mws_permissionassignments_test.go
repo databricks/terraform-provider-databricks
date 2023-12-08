@@ -11,7 +11,7 @@ func TestUcAccAssignGroupToWorkspace(t *testing.T) {
 			display_name = "TF {var.RANDOM}"
 		}
 		resource "databricks_mws_permission_assignment" "this" {
-			workspace_id = {env.TEST_WORKSPACE_ID}
+			workspace_id = {env.DUMMY_WORKSPACE_ID}
 			principal_id = databricks_group.this.id
 			permissions  = ["USER"]
 		}`,
@@ -21,7 +21,7 @@ func TestUcAccAssignGroupToWorkspace(t *testing.T) {
 			display_name = "TF {var.RANDOM}"
 		}
 		resource "databricks_mws_permission_assignment" "this" {
-			workspace_id = {env.TEST_WORKSPACE_ID}
+			workspace_id = {env.DUMMY_WORKSPACE_ID}
 			principal_id = databricks_group.this.id
 			permissions  = ["ADMIN"]
 		}`,
@@ -31,7 +31,7 @@ func TestUcAccAssignGroupToWorkspace(t *testing.T) {
 			display_name = "TF {var.RANDOM}"
 		}
 		resource "databricks_mws_permission_assignment" "this" {
-			workspace_id = {env.TEST_WORKSPACE_ID}
+			workspace_id = {env.DUMMY_WORKSPACE_ID}
 			principal_id = databricks_group.this.id
 			permissions  = ["USER"]
 		}`,
@@ -45,7 +45,7 @@ func TestAccAssignSpnToWorkspace(t *testing.T) {
 			display_name = "TF {var.RANDOM}"
 		}
 		resource "databricks_mws_permission_assignment" "this" {
-			workspace_id = {env.TEST_WORKSPACE_ID}
+			workspace_id = {env.DUMMY_WORKSPACE_ID}
 			principal_id = databricks_service_principal.this.id
 			permissions  = ["USER"]
 		}`,

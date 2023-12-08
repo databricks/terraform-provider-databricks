@@ -4,7 +4,7 @@ page_title: "Dynamic Passthrough Clusters for a Group"
 
 # Dynamic Passthrough Clusters
 
-This example addresses a pretty common use-case: data science team, which is managed as a group through SCIM provisioning, needs a collection of individual passthrough [databricks_cluster](../resources/cluster.md), which they should be able to restart. It could simply be achieved by [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group. Terraform's `for_each` meta-attribute helps to do this easily.
+This example addresses a pretty common use-case: data science team, which is managed as a group through SCIM provisioning, needs a collection of individual passthrough [databricks_cluster](../resources/cluster.md), which they should be able to restart. It could be achieved by using [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data sources to get the list of user names Terraform's `for_each` meta-attribute helps to do this easily.
 
 ```hcl
 data "databricks_group" "dev" {
@@ -17,7 +17,7 @@ data "databricks_user" "dev" {
 }
 ```
 
-Once we have a specific list of user resources, we could proceed creating clusters and permissions with `for_each = data.databricks_user.dev` to ensure it's done for each user:
+Once we have a specific list of user resources, we could proceed with creating clusters and permissions with `for_each = data.databricks_user.dev` to ensure it's done for each user:
 
 ```hcl
 data "databricks_spark_version" "latest" {}

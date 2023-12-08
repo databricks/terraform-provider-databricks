@@ -3,9 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_customer_managed_keys Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
-
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 This resource to configure KMS keys for new workspaces within AWS or GCP. This is to support the following features:
 
@@ -26,7 +24,7 @@ You must configure this during workspace creation
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 data "aws_caller_identity" "current" {}
@@ -82,7 +80,7 @@ resource "databricks_mws_customer_managed_keys" "managed_services" {
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.gcp.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.gcp.databricks.com/"
 }
 
 variable "cmek_resource_id" {
@@ -105,7 +103,7 @@ resource "databricks_mws_customer_managed_keys" "managed_services" {
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 variable "databricks_cross_account_role" {
@@ -205,7 +203,7 @@ resource "databricks_mws_customer_managed_keys" "storage" {
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.gcp.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.gcp.databricks.com/"
 }
 
 variable "cmek_resource_id" {
@@ -228,7 +226,7 @@ The following arguments are required:
 
 * `aws_key_info` - This field is a block and is documented below. This conflicts with `gcp_key_info`
 * `gcp_key_info` - This field is a block and is documented below. This conflicts with `aws_key_info`
-* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `use_cases` - *(since v0.3.4)* List of use cases for which this key will be used. *If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the previous behaviour.* Possible values are:
   * `MANAGED_SERVICES` - for encryption of the workspace objects (notebooks, secrets) that are stored in the control plane
   * `STORAGE` - for encryption of the DBFS Storage & Cluster EBS Volumes
@@ -236,7 +234,7 @@ The following arguments are required:
 ### aws_key_info Configuration Block
 
 * `key_arn` - The AWS KMS key's Amazon Resource Name (ARN).
-* `key_alias` - The AWS KMS key alias.
+* `key_alias` - (Optional) The AWS KMS key alias.
 * `key_region` - (Optional) (Computed) The AWS region in which KMS key is deployed to. This is not required.
 
 ### gcp_key_info Configuration Block

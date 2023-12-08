@@ -11,49 +11,55 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	dummyWorkspaceFilePath    = "/foo/path.py"
+	dummyWorkspaceFilePathUrl = "path=%2Ffoo%2Fpath.py"
+	dummyWorkspaceFilePayload = "YWJjCg=="
+)
+
 func TestResourceWorkspaceFileRead(t *testing.T) {
-	path := "/test/path.py"
 	objectID := 12345
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
 				Response: ObjectStatus{
 					ObjectID:   int64(objectID),
 					ObjectType: File,
-					Path:       path,
+					Path:       dummyWorkspaceFilePath,
 				},
 			},
 		},
 		Resource: ResourceWorkspaceFile(),
 		Read:     true,
 		New:      true,
-		ID:       path,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
-	assert.Equal(t, path, d.Get("path"))
-	assert.Equal(t, objectID, d.Get("object_id"))
+		ID:       dummyWorkspaceFilePath,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             dummyWorkspaceFilePath,
+		"path":           dummyWorkspaceFilePath,
+		"workspace_path": "/Workspace" + dummyWorkspaceFilePath,
+		"object_id":      objectID,
+	})
 }
 
 func TestResourceWorkspaceFileDelete(t *testing.T) {
 	path := "/test/path.py"
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          http.MethodPost,
 				Resource:        "/api/2.0/workspace/delete",
 				Status:          http.StatusOK,
-				ExpectedRequest: DeletePath{Path: path, Recursive: true},
+				ExpectedRequest: DeletePath{Path: path, Recursive: false},
 			},
 		},
 		Resource: ResourceWorkspaceFile(),
 		Delete:   true,
 		ID:       path,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": path,
+	})
 }
 
 func TestResourceWorkspaceFileRead_NotFound(t *testing.T) {
@@ -97,7 +103,55 @@ func TestResourceWorkspaceFileRead_Error(t *testing.T) {
 	assert.Equal(t, "/test/path", d.Id(), "Id should not be empty for error reads")
 }
 
-func TestResourceWorkspaceFileCreate(t *testing.T) {
+func TestResourceWorkspaceFileCreate_DirectoryExist(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/foo",
+				},
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ws_api.Import{
+					Content:   dummyWorkspaceFilePayload,
+					Path:      dummyWorkspaceFilePath,
+					Overwrite: true,
+					Format:    "AUTO",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/export?format=SOURCE&" + dummyWorkspaceFilePathUrl,
+				Response: ExportPath{
+					Content: dummyWorkspaceFilePayload,
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: File,
+					Path:       dummyWorkspaceFilePath,
+				},
+			},
+		},
+		Resource: ResourceWorkspaceFile(),
+		State: map[string]any{
+			"content_base64": dummyWorkspaceFilePayload,
+			"path":           dummyWorkspaceFilePath,
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": dummyWorkspaceFilePath,
+	})
+}
+
+func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -111,38 +165,94 @@ func TestResourceWorkspaceFileCreate(t *testing.T) {
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ws_api.Import{
-					Content:   "YWJjCg==",
-					Path:      "/foo/path.py",
+					Content:   dummyWorkspaceFilePayload,
+					Path:      dummyWorkspaceFilePath,
+					Overwrite: true,
+					Format:    "AUTO",
+				},
+				Response: map[string]string{
+					"error_code": "RESOURCE_DOES_NOT_EXIST",
+					"message":    "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ws_api.Import{
+					Content:   dummyWorkspaceFilePayload,
+					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
 					Format:    "AUTO",
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&" + dummyWorkspaceFilePathUrl,
 				Response: ExportPath{
-					Content: "YWJjCg==",
+					Content: dummyWorkspaceFilePayload,
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
+				Resource: "/api/2.0/workspace/get-status?" + dummyWorkspaceFilePathUrl,
 				Response: ObjectStatus{
 					ObjectID:   4567,
 					ObjectType: File,
-					Path:       "/foo/path.py",
+					Path:       dummyWorkspaceFilePath,
 				},
 			},
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": "YWJjCg==",
-			"path":           "/foo/path.py",
+			"content_base64": dummyWorkspaceFilePayload,
+			"path":           dummyWorkspaceFilePath,
 		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "/foo/path.py", d.Id())
+	assert.Equal(t, dummyWorkspaceFilePath, d.Id())
+}
+
+func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/foo",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ws_api.Import{
+					Content:   dummyWorkspaceFilePayload,
+					Path:      dummyWorkspaceFilePath,
+					Overwrite: true,
+					Format:    "AUTO",
+				},
+				Response: map[string]string{
+					"error_code": "RESOURCE_DOES_NOT_EXIST",
+					"message":    "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourceWorkspaceFile(),
+		State: map[string]any{
+			"content_base64": dummyWorkspaceFilePayload,
+			"path":           dummyWorkspaceFilePath,
+		},
+		Create: true,
+	}.Apply(t)
+	assert.Error(t, err, "Internal error happened")
 }
 
 func TestResourceWorkspaceFileCreateSource(t *testing.T) {
@@ -181,12 +291,53 @@ func TestResourceWorkspaceFileCreateSource(t *testing.T) {
 	assert.Equal(t, "/Dashboard", d.Id())
 }
 
+func TestResourceWorkspaceFileCreateEmptyFileSource(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ws_api.Import{
+					Content:         "",
+					Path:            "/__init__.py",
+					Overwrite:       true,
+					Format:          "AUTO",
+					ForceSendFields: []string{"Content"},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2F__init__.py",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: File,
+					Path:       "/__init__.py",
+				},
+			},
+		},
+		Resource: ResourceWorkspaceFile(),
+		State: map[string]any{
+			"source": "acceptance/testdata/empty_file",
+			"path":   "/__init__.py",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "/__init__.py", d.Id())
+}
+
 func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: map[string]interface{}{
+					"content":   dummyWorkspaceFilePayload,
+					"format":    "AUTO",
+					"overwrite": true,
+					"path":      "/path.py",
+				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -196,7 +347,7 @@ func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": "YWJjCg==",
+			"content_base64": dummyWorkspaceFilePayload,
 			"path":           "/path.py",
 		},
 		Create: true,
@@ -235,7 +386,7 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 				ExpectedRequest: ws_api.Import{
 					Format:    "AUTO",
 					Overwrite: true,
-					Content:   "YWJjCg==",
+					Content:   dummyWorkspaceFilePayload,
 					Path:      "abc",
 				},
 			},
@@ -251,7 +402,7 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 		},
 		Resource: ResourceWorkspaceFile(),
 		State: map[string]any{
-			"content_base64": "YWJjCg==",
+			"content_base64": dummyWorkspaceFilePayload,
 			"path":           "/path.py",
 		},
 		ID:          "abc",

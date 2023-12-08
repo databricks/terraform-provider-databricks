@@ -4,13 +4,21 @@ page_title: "Unity Catalog set up on AWS"
 
 # Deploying pre-requisite resources and enabling Unity Catalog
 
+**Note**
+If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you.
+
+**Note**
+Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+
 Databricks Unity Catalog brings fine-grained governance and security to Lakehouse data using a familiar, open interface. You can use Terraform to deploy the underlying cloud resources and Unity Catalog objects automatically, using a programmatic approach.
+
+This guide creates a metastore without a storage root location or credential to maintain strict separation of storage across catalogs or environments.
 
 This guide uses the following variables in configurations:
 
 - `databricks_client_id`: The `client_id` is the `application_id` of a [Service Principal](../resources/service_principal.md) that has account-level admin permission on [https://accounts.cloud.databricks.com](https://accounts.cloud.databricks.com).
 - `databricks_client_secret`: The secret of the above service principal.
-- `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the bottom left corner of the [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net).
+- `databricks_account_id`: The numeric ID for your Databricks account. When you are logged in, it appears in the top right corner of the [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net).
 - `databricks_workspace_url`: Value of `workspace_url` attribute from [databricks_mws_workspaces](../resources/mws_workspaces.md#attribute-reference) resource.
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
@@ -19,11 +27,10 @@ To get started with Unity Catalog, this guide takes you throw the following high
 
 - [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)
-  - [Configure AWS objects](#configure-aws-objects)
   - [Create users and groups](#create-users-and-groups)
   - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore-and-link-it-to-workspaces)
-  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)
-  - [Configure external tables and credentials](#configure-external-tables-and-credentials)
+  - [Configure external locations and credentials](#configure-external-locations-and-credentials)
+  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)  
   - [Configure Unity Catalog clusters](#configure-unity-catalog-clusters)
 
 ## Provider initialization
@@ -72,7 +79,6 @@ variable "databricks_client_id" {}
 variable "databricks_client_secret" {}
 variable "databricks_account_id" {}
 variable "databricks_workspace_url" {}
-variable "aws_account_id" {}
 
 variable "tags" {
   default = {}
@@ -126,147 +132,6 @@ locals {
 }
 ```
 
-## Configure AWS objects
-
-The first step is to create the required AWS objects:
-
-- An S3 bucket, which is the default storage location for managed tables in Unity Catalog. Please use a dedicated bucket for each metastore.
-- An IAM policy that provides Unity Catalog permissions to access and manage data in the bucket. Note that `<KMS_KEY>` is *optional*. If encryption is enabled, provide the name of the KMS key that encrypts the S3 bucket contents. *If encryption is disabled, remove the entire KMS section of the IAM policy.*
-- An IAM role that is associated with the IAM policy and will be assumed by Unity Catalog.
-
-```hcl
-resource "aws_s3_bucket" "metastore" {
-  bucket        = "${local.prefix}-metastore"
-  acl           = "private"
-  force_destroy = true
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-metastore"
-  })
-}
-
-resource "aws_s3_bucket_public_access_block" "metastore" {
-  bucket                  = aws_s3_bucket.metastore.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-  depends_on              = [aws_s3_bucket.metastore]
-}
-
-resource "aws_s3_bucket_versioning" "metastore_versioning" {
-  bucket = aws_s3_bucket.metastore.id
-  versioning_configuration {
-    status = "Disabled"
-  }
-}
-
-data "aws_iam_policy_document" "passrole_for_uc" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      identifiers = ["arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL"]
-      type        = "AWS"
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "sts:ExternalId"
-      values   = [var.databricks_account_id]
-    }
-  }
-  statement {
-    sid     = "ExplicitSelfRoleAssumption"
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${var.aws_account_id}:root"]
-    }
-    condition {
-      test     = "ArnLike"
-      variable = "aws:PrincipalArn"
-      values   = ["arn:aws:iam::${var.aws_account_id}:role/${local.prefix}-uc-access"]
-    }
-  }
-}
-
-resource "aws_iam_policy" "unity_metastore" {
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Action" : [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:PutObject",
-          "s3:PutObjectAcl",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:GetBucketLocation",
-          "s3:GetLifecycleConfiguration",
-          "s3:PutLifecycleConfiguration"
-        ],
-        "Resource" : [
-          aws_s3_bucket.metastore.arn,
-          "${aws_s3_bucket.metastore.arn}/*"
-        ],
-        "Effect" : "Allow"
-      },
-      {
-        "Action" : [
-          "kms:Decrypt",
-          "kms:Encrypt",
-          "kms:GenerateDataKey*"
-        ],
-        "Resource" : [
-          "arn:aws:kms:<KMS_KEY>"
-        ],
-        "Effect" : "Allow"
-      }
-    ]
-  })
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-unity-catalog IAM policy"
-  })
-}
-
-// Required, in case https://docs.databricks.com/data/databricks-datasets.html are needed
-resource "aws_iam_policy" "sample_data" {
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = "${local.prefix}-databricks-sample-data"
-    Statement = [
-      {
-        "Action" : [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:ListBucket",
-          "s3:GetBucketLocation"
-        ],
-        "Resource" : [
-          "arn:aws:s3:::databricks-datasets-oregon/*",
-          "arn:aws:s3:::databricks-datasets-oregon"
-
-        ],
-        "Effect" : "Allow"
-      }
-    ]
-  })
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-unity-catalog IAM policy"
-  })
-}
-
-resource "aws_iam_role" "metastore_data_access" {
-  name                = "${local.prefix}-uc-access"
-  assume_role_policy  = data.aws_iam_policy_document.passrole_for_uc.json
-  managed_policy_arns = [aws_iam_policy.unity_metastore.arn, aws_iam_policy.sample_data.arn]
-  tags = merge(local.tags, {
-    Name = "${local.prefix}-unity-catalog IAM role"
-  })
-}
-```
-
 ## Create users and groups
 
 A Unity Catalog [databricks_metastore](../resources/metastore.md) can be shared across multiple Databricks workspaces. To enable this, Databricks must have a consistent view of users and groups across all workspaces, and has introduced features within the account console to manage this. Users and groups that wish to use Unity Catalog must be created as account level identities and as workspace-level identities. All users are added to the `account users` group by default.
@@ -309,20 +174,9 @@ A [databricks_metastore](../resources/metastore.md) is the top level container f
 resource "databricks_metastore" "this" {
   provider      = databricks.mws
   name          = "primary"
-  storage_root  = "s3://${aws_s3_bucket.metastore.id}/metastore"
   owner         = var.unity_admin_group
   region        = var.region
   force_destroy = true
-}
-
-resource "databricks_metastore_data_access" "this" {
-  provider     = databricks.mws
-  metastore_id = databricks_metastore.this.id
-  name         = aws_iam_role.metastore_data_access.name
-  aws_iam_role {
-    role_arn = aws_iam_role.metastore_data_access.arn
-  }
-  is_default = true
 }
 
 resource "databricks_metastore_assignment" "default_metastore" {
@@ -334,63 +188,38 @@ resource "databricks_metastore_assignment" "default_metastore" {
 }
 ```
 
-## Create Unity Catalog objects in the metastore
+## Configure external locations and credentials
 
-Each metastore exposes a 3-level namespace (catalog-schema-table) by which data can be organized.
-
-```hcl
-resource "databricks_catalog" "sandbox" {
-  provider     = databricks.workspace
-  metastore_id = databricks_metastore.this.id
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
-  properties = {
-    purpose = "testing"
-  }
-  depends_on = [databricks_metastore_assignment.default_metastore]
-}
-
-resource "databricks_grants" "sandbox" {
-  provider = databricks.workspace
-  catalog  = databricks_catalog.sandbox.name
-  grant {
-    principal  = "Data Scientists"
-    privileges = ["USE_CATALOG", "CREATE"]
-  }
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["USE_CATALOG"]
-  }
-}
-
-resource "databricks_schema" "things" {
-  provider     = databricks.workspace
-  catalog_name = databricks_catalog.sandbox.id
-  name         = "things"
-  comment      = "this database is managed by terraform"
-  properties = {
-    kind = "various"
-  }
-}
-
-resource "databricks_grants" "things" {
-  provider = databricks.workspace
-  schema   = databricks_schema.things.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["USE_SCHEMA"]
-  }
-}
-```
-
-## Configure external tables and credentials
-
-To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
+Unity Catalog introduces two new objects to access and work with external cloud storage:
 
 - [databricks_storage_credential](../resources/storage_credential.md) represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
 - [databricks_external_location](../resources/external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
-First, create the required objects in AWS.
+First, we need to create the storage credential in Databricks before creating the IAM role in AWS. This is because the external ID of the Databricks storage credential is required in the IAM role trust policy.
+
+```hcl
+data "aws_caller_identity" "current" {}
+
+resource "databricks_storage_credential" "external" {
+  provider = databricks.workspace
+  name     = "${local.prefix}-external-access"
+  aws_iam_role {
+    role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access" //cannot reference aws_iam_role directly, as it will create circular dependency
+  }
+  comment = "Managed by TF"
+}
+
+resource "databricks_grants" "external_creds" {
+  provider           = databricks.workspace
+  storage_credential = databricks_storage_credential.external.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_TABLE"]
+  }
+}
+```
+
+Then we can create the required objects in AWS
 
 ```hcl
 resource "aws_s3_bucket" "external" {
@@ -414,6 +243,36 @@ resource "aws_s3_bucket_public_access_block" "external" {
   bucket             = aws_s3_bucket.external.id
   ignore_public_acls = true
   depends_on         = [aws_s3_bucket.external]
+}
+
+data "aws_iam_policy_document" "passrole_for_uc" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = [databricks_storage_credential.external.aws_iam_role.unity_catalog_iam_arn]
+      type        = "AWS"
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalId"
+      values   = [databricks_storage_credential.external.aws_iam_role.external_id]
+    }
+  }
+  statement {
+    sid     = "ExplicitSelfRoleAssumption"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access"]
+    }
+  }
 }
 
 resource "aws_iam_policy" "external_data_access" {
@@ -456,26 +315,9 @@ resource "aws_iam_role" "external_data_access" {
 }
 ```
 
-Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
+Then we can create the [databricks_external_location](../resources/external_location.md) in Unity Catalog.
 
 ```hcl
-resource "databricks_storage_credential" "external" {
-  provider = databricks.workspace
-  name     = aws_iam_role.external_data_access.name
-  aws_iam_role {
-    role_arn = aws_iam_role.external_data_access.arn
-  }
-  comment = "Managed by TF"
-}
-
-resource "databricks_grants" "external_creds" {
-  provider           = databricks.workspace
-  storage_credential = databricks_storage_credential.external.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
-  }
-}
 
 resource "databricks_external_location" "some" {
   provider        = databricks.workspace
@@ -490,7 +332,57 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE", "READ_FILES"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
+  }
+}
+```
+
+## Create Unity Catalog objects in the metastore
+
+Each metastore exposes a 3-level namespace (catalog-schema-table) by which data can be organized.
+
+```hcl
+resource "databricks_catalog" "sandbox" {
+  provider     = databricks.workspace
+  storage_root = "s3://${aws_s3_bucket.external.id}/some"
+  metastore_id = databricks_metastore.this.id
+  name         = "sandbox"
+  comment      = "this catalog is managed by terraform"
+  properties = {
+    purpose = "testing"
+  }
+  depends_on = [databricks_metastore_assignment.default_metastore]
+}
+
+resource "databricks_grants" "sandbox" {
+  provider = databricks.workspace
+  catalog  = databricks_catalog.sandbox.name
+  grant {
+    principal  = "Data Scientists"
+    privileges = ["USE_CATALOG", "CREATE"]
+  }
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["USE_CATALOG"]
+  }
+}
+
+resource "databricks_schema" "things" {
+  provider     = databricks.workspace
+  catalog_name = databricks_catalog.sandbox.id
+  name         = "things"
+  comment      = "this database is managed by terraform"
+  properties = {
+    kind = "various"
+  }
+}
+
+resource "databricks_grants" "things" {
+  provider = databricks.workspace
+  schema   = databricks_schema.things.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["USE_SCHEMA"]
   }
 }
 ```
@@ -499,7 +391,7 @@ resource "databricks_grants" "some" {
 
 To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a  ‘Security Mode’ set to either **User Isolation** or **Single User**.
 
-- **User Isolation** clusters can be shared by multiple users, but only Python (using DBR>=11.1) and SQL languages are allowed. Some advanced cluster features such as library installation, init scripts and the DBFS Fuse mount are also disabled in this mode to ensure security isolation among cluster users.
+- **User Isolation** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
 
 ```hcl
 data "databricks_spark_version" "latest" {
@@ -510,9 +402,9 @@ data "databricks_node_type" "smallest" {
   local_disk = true
 }
 
-resource "databricks_cluster" "unity_sql" {
+resource "databricks_cluster" "unity_shared" {
   provider                = databricks.workspace
-  cluster_name            = "Unity SQL"
+  cluster_name            = "Shared clusters"
   spark_version           = data.databricks_spark_version.latest.id
   node_type_id            = data.databricks_node_type.smallest.id
   autotermination_minutes = 60
@@ -522,10 +414,13 @@ resource "databricks_cluster" "unity_sql" {
     availability = "SPOT"
   }
   data_security_mode = "USER_ISOLATION"
+  depends_on = [
+    databricks_metastore_assignment.this
+  ]
 }
 ```
 
-- To use those advanced cluster features or languages like Machine Learning Runtime, Streaming, Scala and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
+- To use those advanced cluster features or languages like Machine Learning Runtime and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
 The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
 First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group.
@@ -560,6 +455,9 @@ resource "databricks_cluster" "dev" {
   }
   data_security_mode = "SINGLE_USER"
   single_user_name   = each.value.user_name
+  depends_on = [
+    databricks_metastore_assignment.this
+  ]
 }
 
 resource "databricks_permissions" "dev_restart" {

@@ -13,13 +13,6 @@ import (
 )
 
 func ResourceLibrary() *schema.Resource {
-	s := common.StructToSchema(libraries.Library{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["cluster_id"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		}
-		return m
-	})
 	libraySdkSchema := common.StructToSchema(compute.Library{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["cluster_id"] = &schema.Schema{
 			Type:     schema.TypeString,
@@ -37,26 +30,28 @@ func ResourceLibrary() *schema.Resource {
 	return common.Resource{
 		Schema: libraySdkSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			clusterID := d.Get("cluster_id").(string)
-			err := NewClustersAPI(ctx, c).Start(clusterID)
+			_, err = StartClusterAndGetInfo(ctx, w, clusterID)
 			if err != nil {
 				return err
 			}
-			var lib libraries.Library
-			common.DataToStructPointer(d, s, &lib)
-			librariesAPI := libraries.NewLibrariesAPI(ctx, c)
-			err = librariesAPI.Install(libraries.ClusterLibraryList{
-				ClusterID: clusterID,
-				Libraries: []libraries.Library{lib},
+			var lib compute.Library
+			common.DataToStructPointer(d, libraySdkSchema, &lib)
+			err = w.Libraries.Install(ctx, compute.InstallLibraries{
+				ClusterId: clusterID,
+				Libraries: []compute.Library{lib},
 			})
 			if err != nil {
 				return err
 			}
-			_, err = librariesAPI.WaitForLibrariesInstalled(libraries.Wait{
+			_, err = libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 				ClusterID: clusterID,
-				Timeout:   d.Timeout(schema.TimeoutCreate),
 				IsRunning: true,
-			})
+			}, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return err
 			}

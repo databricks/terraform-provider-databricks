@@ -181,6 +181,10 @@ func ResourceRepo() *schema.Resource {
 			ConflictsWith: []string{"branch"},
 			ValidateFunc:  validation.StringIsNotWhiteSpace,
 		}
+		s["workspace_path"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 
 		delete(s, "id")
 		return s
@@ -217,7 +221,12 @@ func ResourceRepo() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(resp, s, d)
+			err = common.StructToData(resp, s, d)
+			if err != nil {
+				return err
+			}
+			d.Set("workspace_path", "/Workspace"+resp.Path)
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var repo ReposInformation

@@ -138,7 +138,7 @@ func TestIPACLUpdate(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/ip-access-lists/" + TestingId,
-				ExpectedRequest: ipAccessListUpdateRequest{
+				ExpectedRequest: settings.UpdateIpAccessList{
 					Label:       TestingLabel,
 					ListType:    TestingListType,
 					IpAddresses: TestingIpAddresses,
@@ -184,7 +184,7 @@ func TestIPACLUpdate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/ip-access-lists/" + TestingId,
-				ExpectedRequest: ipAccessListUpdateRequest{
+				ExpectedRequest: settings.UpdateIpAccessList{
 					Enabled: TestingEnabled,
 				},
 				Response: apierr.APIErrorBody{
@@ -367,7 +367,7 @@ func TestAccIPACLCreate(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId,
-				ExpectedRequest: ipAccessListUpdateRequest{
+				ExpectedRequest: settings.UpdateIpAccessList{
 					Label:       TestingLabel,
 					ListType:    TestingListType,
 					IpAddresses: TestingIpAddresses,
@@ -444,7 +444,7 @@ func TestAccIPACLUpdate(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: fmt.Sprintf("/api/2.0/accounts/100/ip-access-lists/%s", TestingId),
-				ExpectedRequest: ipAccessListUpdateRequest{
+				ExpectedRequest: settings.UpdateIpAccessList{
 					Label:       TestingLabel,
 					ListType:    TestingListType,
 					IpAddresses: TestingIpAddresses,
@@ -495,7 +495,7 @@ func TestAccIPACLUpdate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId,
-				ExpectedRequest: ipAccessListUpdateRequest{
+				ExpectedRequest: settings.UpdateIpAccessList{
 					Enabled: TestingEnabled,
 				},
 				Response: apierr.APIErrorBody{

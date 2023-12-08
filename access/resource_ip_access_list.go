@@ -11,17 +11,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type ipAccessListUpdateRequest struct {
-	Label       string            `json:"label"`
-	ListType    settings.ListType `json:"list_type"`
-	IpAddresses []string          `json:"ip_addresses"`
-	Enabled     bool              `json:"enabled,omitempty" tf:"default:true"`
-}
-
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() *schema.Resource {
-	s := common.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(settings.CreateIpAccessList{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
+		s["enabled"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
+		}
 		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
 		s["ip_addresses"].Elem = &schema.Schema{
 			Type:         schema.TypeString,

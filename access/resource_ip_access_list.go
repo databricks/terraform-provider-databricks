@@ -62,21 +62,11 @@ func ResourceIPAccessList() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
+				status, err := acc.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
 				if err != nil {
 					return err
 				}
-				// GetByIpAccessListId returns a blank response
-				ipAccessLists, err := acc.IpAccessLists.ListAll(ctx)
-				if err != nil {
-					return err
-				}
-				for _, ipAccessList := range ipAccessLists {
-					if ipAccessList.ListId == d.Id() {
-						common.StructToData(ipAccessList, s, d)
-						return nil
-					}
-				}
+				common.StructToData(status.IpAccessList, s, d)
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
 				status, err := w.IpAccessLists.GetByIpAccessListId(ctx, d.Id())

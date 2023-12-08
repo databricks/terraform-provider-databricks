@@ -377,25 +377,18 @@ func TestAccIPACLCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId + "?",
-				Response: settings.GetIpAccessListResponse{},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/accounts/100/ip-access-lists",
-				Response: settings.GetIpAccessListsResponse{
-					IpAccessLists: []settings.IpAccessListInfo{
-						{
-							ListId:       TestingId,
-							Label:        TestingLabel,
-							ListType:     TestingListType,
-							IpAddresses:  TestingIpAddresses,
-							AddressCount: 2,
-							CreatedAt:    87939234,
-							CreatedBy:    1234556,
-							UpdatedAt:    87939234,
-							UpdatedBy:    1234556,
-							Enabled:      TestingEnabled,
-						},
+				Response: settings.GetIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:       TestingId,
+						Label:        TestingLabel,
+						ListType:     TestingListType,
+						IpAddresses:  TestingIpAddresses,
+						AddressCount: 2,
+						CreatedAt:    87939234,
+						CreatedBy:    1234556,
+						UpdatedAt:    87939234,
+						UpdatedBy:    1234556,
+						Enabled:      TestingEnabled,
 					},
 				},
 			},
@@ -450,7 +443,7 @@ func TestAccIPACLUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPatch,
-				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId,
+				Resource: fmt.Sprintf("/api/2.0/accounts/100/ip-access-lists/%s", TestingId),
 				ExpectedRequest: ipAccessListUpdateRequest{
 					Label:       TestingLabel,
 					ListType:    TestingListType,
@@ -460,26 +453,19 @@ func TestAccIPACLUpdate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId + "?",
-				Response: settings.GetIpAccessListResponse{},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/accounts/100/ip-access-lists",
-				Response: settings.GetIpAccessListsResponse{
-					IpAccessLists: []settings.IpAccessListInfo{
-						{
-							ListId:       TestingId,
-							Label:        TestingLabel,
-							ListType:     TestingListType,
-							IpAddresses:  TestingIpAddresses,
-							AddressCount: 2,
-							CreatedAt:    87939234,
-							CreatedBy:    1234556,
-							UpdatedAt:    87939234,
-							UpdatedBy:    1234556,
-							Enabled:      TestingEnabled,
-						},
+				Resource: fmt.Sprintf("/api/2.0/accounts/100/ip-access-lists/%s?", TestingId),
+				Response: settings.GetIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:       TestingId,
+						Label:        TestingLabel,
+						ListType:     TestingListType,
+						IpAddresses:  TestingIpAddresses,
+						AddressCount: 2,
+						CreatedAt:    87939234,
+						CreatedBy:    1234556,
+						UpdatedAt:    87939234,
+						UpdatedBy:    1234556,
+						Enabled:      TestingEnabled,
 					},
 				},
 			},
@@ -533,25 +519,18 @@ func TestAccIPACLRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/accounts/100/ip-access-lists/" + TestingId + "?",
-				Response: settings.GetIpAccessListResponse{},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/accounts/100/ip-access-lists",
-				Response: settings.GetIpAccessListsResponse{
-					IpAccessLists: []settings.IpAccessListInfo{
-						{
-							ListId:       TestingId,
-							Label:        TestingLabel,
-							ListType:     TestingListType,
-							IpAddresses:  TestingIpAddresses,
-							AddressCount: 2,
-							CreatedAt:    87939234,
-							CreatedBy:    1234556,
-							UpdatedAt:    87939234,
-							UpdatedBy:    1234556,
-							Enabled:      TestingEnabled,
-						},
+				Response: settings.GetIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:       TestingId,
+						Label:        TestingLabel,
+						ListType:     TestingListType,
+						IpAddresses:  TestingIpAddresses,
+						AddressCount: 2,
+						CreatedAt:    87939234,
+						CreatedBy:    1234556,
+						UpdatedAt:    87939234,
+						UpdatedBy:    1234556,
+						Enabled:      TestingEnabled,
 					},
 				},
 			},

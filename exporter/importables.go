@@ -272,8 +272,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "library.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "single_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "single_user_name", Resource: "databricks_service_principal", Match: "application_id"},
@@ -344,8 +347,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "task.library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "task.library.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "task.library.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "task.library.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -452,11 +458,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_cluster",
 					ID:       task.ExistingClusterID,
 				})
-				for _, lib := range task.Libraries {
-					ic.emitIfDbfsFile(lib.Whl)
-					ic.emitIfDbfsFile(lib.Jar)
-					ic.emitIfDbfsFile(lib.Egg)
-				}
+				ic.emitLibraries(task.Libraries)
 			}
 			for _, jc := range job.JobClusters {
 				ic.importCluster(jc.NewCluster)
@@ -596,9 +598,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
-			definitionString := r.Data.Get("definition").(string)
+			var clusterPolicy compute.Policy
+			s := ic.Resources["databricks_cluster_policy"].Schema
+			common.DataToStructPointer(r.Data, s, &clusterPolicy)
+
 			var definition map[string]map[string]any
-			err := json.Unmarshal([]byte(definitionString), &definition)
+			err := json.Unmarshal([]byte(clusterPolicy.Definition), &definition)
 			if err != nil {
 				return err
 			}
@@ -641,20 +646,37 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 				}
 			}
-			policyFamilyId := r.Data.Get("policy_family_id").(string)
-			if policyFamilyId != "" && definitionString != "" {
-				policyOverrides := r.Data.Get("policy_family_definition_overrides").(string)
+
+			for _, lib := range clusterPolicy.Libraries {
+				ic.emitIfDbfsFile(lib.Whl)
+				ic.emitIfDbfsFile(lib.Jar)
+				ic.emitIfDbfsFile(lib.Egg)
+				ic.emitIfWsfsFile(lib.Whl)
+				ic.emitIfWsfsFile(lib.Jar)
+				ic.emitIfWsfsFile(lib.Egg)
+			}
+
+			policyFamilyId := clusterPolicy.PolicyFamilyId
+			if policyFamilyId != "" && clusterPolicy.Definition != "" {
 				// we need to set definition to empty value because otherwise it will be put into
 				// generated HCL code for data source, and it only supports the `name` attribute
 				r.Data.Set("definition", "")
 				builtInClusterPolicies := ic.getBuiltinPolicyFamilies()
 				_, isBuiltin := builtInClusterPolicies[policyFamilyId]
-				if isBuiltin && policyOverrides == "" {
+				if isBuiltin && clusterPolicy.PolicyFamilyDefinitionOverrides == "" {
 					r.Mode = "data"
 				}
 			}
 
 			return nil
+		},
+		Depends: []reference{
+			{Path: "libraries.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "libraries.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "libraries.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "libraries.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "libraries.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "libraries.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		},
 		// TODO: special formatting required, where JSON is written line by line
 		// so that we're able to do the references

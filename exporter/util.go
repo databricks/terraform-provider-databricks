@@ -255,16 +255,24 @@ func (ic *importContext) emitRoles(objType string, id string, roles []scim.Compl
 	}
 }
 
-func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll libraries.ClusterLibraryList
-	common.DataToStructPointer(d, s, &cll)
-	for _, lib := range cll.Libraries {
-		// Emit workspace file libraries if necessary
-		// Emit Volume libraries when resource is available
+func (ic *importContext) emitLibraries(libs []libraries.Library) {
+	for _, lib := range libs {
+		// Files on DBFS
 		ic.emitIfDbfsFile(lib.Whl)
 		ic.emitIfDbfsFile(lib.Jar)
 		ic.emitIfDbfsFile(lib.Egg)
+		// Files on WSFS
+		ic.emitIfWsfsFile(lib.Whl)
+		ic.emitIfWsfsFile(lib.Jar)
+		ic.emitIfWsfsFile(lib.Egg)
 	}
+
+}
+
+func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
+	var cll libraries.ClusterLibraryList
+	common.DataToStructPointer(d, s, &cll)
+	ic.emitLibraries(cll.Libraries)
 	return nil
 }
 
@@ -483,6 +491,15 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 		ic.Emit(&resource{
 			Resource: "databricks_dbfs_file",
 			ID:       path,
+		})
+	}
+}
+
+func (ic *importContext) emitIfWsfsFile(path string) {
+	if strings.HasPrefix(path, "/Workspace/") {
+		ic.Emit(&resource{
+			Resource: "databricks_workspace_file",
+			ID:       strings.TrimPrefix(path, "/Workspace"),
 		})
 	}
 }

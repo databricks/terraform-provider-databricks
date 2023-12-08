@@ -41,7 +41,7 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 			})
 		}
 		if is.Workspace != nil {
-			ic.maybeEmitWorkspaceObject("", is.Workspace.Destination)
+			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 	}
 
@@ -160,13 +160,29 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 	return false
 }
 
+func (ic *importContext) emitRepoByPath(path string) {
+	ic.Emit(&resource{
+		Resource:  "databricks_repo",
+		Attribute: "path",
+		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
+	})
+}
+
+// TODO: workspace init scripts also could be from Repos, so we need to handle them correctly...
+func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
+	if strings.HasPrefix(path, "/Repos") {
+		ic.emitRepoByPath(path)
+	} else {
+		ic.Emit(&resource{
+			Resource: "databricks_workspace_file",
+			ID:       path,
+		})
+	}
+}
+
 func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
-		ic.Emit(&resource{
-			Resource:  "databricks_repo",
-			Attribute: "path",
-			Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-		})
+		ic.emitRepoByPath(path)
 	} else {
 		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
@@ -497,10 +513,8 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 
 func (ic *importContext) emitIfWsfsFile(path string) {
 	if strings.HasPrefix(path, "/Workspace/") {
-		ic.Emit(&resource{
-			Resource: "databricks_workspace_file",
-			ID:       strings.TrimPrefix(path, "/Workspace"),
-		})
+		normalPath := strings.TrimPrefix(path, "/Workspace")
+		ic.emitWorkspaceFileOrRepo(normalPath)
 	}
 }
 

@@ -168,7 +168,6 @@ func (ic *importContext) emitRepoByPath(path string) {
 	})
 }
 
-// TODO: workspace init scripts also could be from Repos, so we need to handle them correctly...
 func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)

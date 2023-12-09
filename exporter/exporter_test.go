@@ -897,8 +897,7 @@ func TestImportingClusters(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "compute"
-			services, _ := ic.allServicesAndListing()
-			ic.services = services
+			ic.services = "access,users,policies,compute,secrets,groups,storage"
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -989,6 +988,8 @@ func TestImportingJobs_JobList(t *testing.T) {
 						},
 						Libraries: []libraries.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
+							{Whl: "/Workspace/Repos/user@domain.com/repo/test.whl"},
+							{Whl: "/Workspace/Users/user@domain.com/libs/test.whl"},
 						},
 						Name: "Dummy",
 						NewCluster: &clusters.Cluster{

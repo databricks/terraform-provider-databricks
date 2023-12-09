@@ -80,7 +80,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 }
 ```
 
-## Fixed size or autoscaling cluster
+### Fixed size or autoscaling cluster
 
 When you [create a Databricks cluster](https://docs.databricks.com/clusters/configure.html#cluster-size-and-autoscaling), you can either provide a `num_workers` for the fixed-size cluster or provide `min_workers` and/or `max_workers` for the cluster within the `autoscale` group. When you give a fixed-sized cluster, Databricks ensures that your cluster has a specified number of workers. When you provide a range for the number of workers, Databricks chooses the appropriate number of workers required to run your job - also known as "autoscaling." With autoscaling, Databricks dynamically reallocates workers to account for the characteristics of your job. Certain parts of your pipeline may be more computationally demanding than others, and Databricks automatically adds additional workers during these phases of your job (and removes them when they’re no longer needed).
 
@@ -221,7 +221,7 @@ library {
 }
 ```
 
-## cluster_log_conf
+### cluster_log_conf
 
 Example of pushing all cluster logs to DBFS:
 
@@ -254,7 +254,7 @@ There are a few more advanced attributes for S3 log delivery:
 * `kms_key` - (Optional) KMS key used if encryption is enabled and encryption type is set to `sse-kms`.
 * `canned_acl` - (Optional) Set canned access control list, e.g. `bucket-owner-full-control`. If `canned_cal` is set, the cluster instance profile must have `s3:PutObjectAcl` permission on the destination bucket and prefix. The full list of possible canned ACLs can be found [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl). By default, only the object owner gets full control. If you are using a cross-account role for writing data, you may want to set `bucket-owner-full-control` to make bucket owners able to read the logs.
 
-## init_scripts
+### init_scripts
 
 To run a particular init script on all clusters within the same workspace, both automated/job and interactive/all-purpose cluster types, please consider the [databricks_global_init_script](global_init_script.md) resource.
 
@@ -333,7 +333,7 @@ init_scripts {
 }
 ```
 
-## aws_attributes
+### aws_attributes
 
 `aws_attributes` optional configuration block contains attributes related to [clusters running on Amazon Web Services](https://docs.databricks.com/clusters/configure.html#aws-configurations).
 
@@ -373,7 +373,7 @@ The following options are available:
 * `ebs_volume_count` - (Optional) The number of volumes launched for each instance. You can choose up to 10 volumes. This feature is only enabled for supported node types. Legacy node types cannot specify custom EBS volumes. For node types with no instance store, at least one EBS volume needs to be specified; otherwise, cluster creation will fail. These EBS volumes will be mounted at /ebs0, /ebs1, and etc. Instance store volumes will be mounted at /local_disk0, /local_disk1, and etc. If EBS volumes are attached, Databricks will configure Spark to use only the EBS volumes for scratch storage because heterogeneously sized scratch devices can lead to inefficient disk utilization. If no EBS volumes are attached, Databricks will configure Spark to use instance store volumes. If EBS volumes are specified, then the Spark configuration spark.local.dir will be overridden.
 * `ebs_volume_size` - (Optional) The size of each EBS volume (in GiB) launched for each instance. For general purpose SSD, this value must be within the range 100 - 4096. For throughput optimized HDD, this value must be within the range 500 - 4096. Custom EBS volumes cannot be specified for the legacy node types (memory-optimized and compute-optimized).
 
-## azure_attributes
+### azure_attributes
 
 `azure_attributes` optional configuration block contains attributes related to [clusters running on Azure](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes).
 
@@ -407,7 +407,7 @@ The following options are [available](https://docs.microsoft.com/en-us/azure/dat
 * `first_on_demand` - (Optional) The first `first_on_demand` nodes of the cluster will be placed on on-demand instances. If this value is greater than 0, the cluster driver node will be placed on an on-demand instance. If this value is greater than or equal to the current cluster size, all nodes will be placed on on-demand instances. If this value is less than the current cluster size, `first_on_demand` nodes will be placed on on-demand instances, and the remainder will be placed on availability instances. This value does not affect cluster size and cannot be mutated over the lifetime of a cluster.
 * `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify the lowest price.
 
-## gcp_attributes
+### gcp_attributes
 
 `gcp_attributes` optional configuration block contains attributes related to [clusters running on GCP](https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#clustergcpattributes).
 
@@ -442,7 +442,7 @@ The following options are available:
   * `AUTO`: Databricks picks an availability zone to schedule the cluster on.
   * name of a GCP availability zone: pick one of the available zones from the [list of available availability zones](https://cloud.google.com/compute/docs/regions-zones#available).
 
-## docker_image
+### docker_image
 
 [Databricks Container Services](https://docs.databricks.com/clusters/custom-containers.html) lets you specify a Docker image when you create a cluster. You need to enable Container Services in *Admin Console /  Advanced* page in the user interface. By enabling this feature, you acknowledge and agree that your usage of this feature is subject to the [applicable additional terms](http://www.databricks.com/product-specific-terms).
 
@@ -473,7 +473,7 @@ resource "databricks_cluster" "this" {
 }
 ```
 
-## cluster_mount_info blocks (experimental)
+### cluster_mount_info blocks (experimental)
 
 -> **Note** The underlying API is experimental and may change in the future.
 
@@ -506,7 +506,7 @@ resource "databricks_cluster" "with_nfs" {
 }
 ```
 
-## workload_type block
+### workload_type block
 
 It's possible to restrict which workloads may run on the given cluster - notebooks and/or jobs. It's done by defining a `workload_type` block that consists of a single block `clients` with following attributes:
 

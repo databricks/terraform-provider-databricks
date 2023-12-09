@@ -405,7 +405,7 @@ resource "databricks_job" "sql_aggregation_job" {
 }
 ```
 
-### Exported attributes
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

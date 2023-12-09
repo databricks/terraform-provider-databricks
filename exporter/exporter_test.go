@@ -1560,6 +1560,7 @@ func TestImportingRepos(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			userListIdUsernameFixture,
+			userListIdUsernameFixture2,
 			userListFixture,
 			userReadFixture,
 			{
@@ -1987,6 +1988,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			emptyRepos,
 			emptyIpAccessLIst,
 			userListIdUsernameFixture,
+			userListIdUsernameFixture2,
 			userListFixture,
 			userReadFixture,
 			{

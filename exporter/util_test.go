@@ -42,7 +42,7 @@ func TestAddAwsMounts(t *testing.T) {
 var (
 	userListIdUsernameFixture = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
 		Response: iam.ListUsersResponse{
 			Resources: []iam.User{
 				{
@@ -50,7 +50,20 @@ var (
 					UserName: "user@domain.com",
 				},
 			},
+			TotalResults: 1,
+			StartIndex:   1,
 		},
+		ReuseRequest: true,
+	}
+	userListIdUsernameFixture2 = qa.HTTPFixture{
+		Method:   "GET",
+		Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=2",
+		Response: iam.ListUsersResponse{
+			Resources:    []iam.User{},
+			TotalResults: 1,
+			StartIndex:   2,
+		},
+		ReuseRequest: true,
 	}
 	userListFixture = qa.HTTPFixture{
 		Method:   "GET",
@@ -70,7 +83,7 @@ var (
 	}
 	spListIdUsernameFixture = qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName",
+		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
 		Response: iam.ListServicePrincipalResponse{
 			Resources: []iam.ServicePrincipal{
 				{
@@ -78,6 +91,17 @@ var (
 					ApplicationId: "21aab5a7-ee70-4385-34d4-a77278be5cb6",
 				},
 			},
+			TotalResults: 1,
+			StartIndex:   1,
+		},
+	}
+	spListIdUsernameFixture2 = qa.HTTPFixture{
+		Method:   "GET",
+		Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=2",
+		Response: iam.ListServicePrincipalResponse{
+			Resources:    []iam.ServicePrincipal{},
+			TotalResults: 1,
+			StartIndex:   2,
 		},
 	}
 	spListFixture = qa.HTTPFixture{
@@ -105,6 +129,7 @@ var (
 func TestEmitUser(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		userListIdUsernameFixture,
+		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -119,6 +144,7 @@ func TestEmitUser(t *testing.T) {
 func TestEmitServicePrincipal(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		spListIdUsernameFixture,
+		spListIdUsernameFixture2,
 		spListFixture,
 		spReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -133,7 +159,7 @@ func TestEmitUserError(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
 			Response: iam.ListUsersResponse{
 				Resources: []iam.User{},
 			},
@@ -148,6 +174,7 @@ func TestEmitUserError(t *testing.T) {
 func TestEmitUserOrServicePrincipalForPath(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		userListIdUsernameFixture,
+		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -172,6 +199,7 @@ func TestEmitUserOrServicePrincipalForPath_NoEmit(t *testing.T) {
 func TestEmitNotebookOrRepo(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		userListIdUsernameFixture,
+		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -197,6 +225,7 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		userListIdUsernameFixture,
+		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -219,6 +248,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		userListIdUsernameFixture,
+		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -229,6 +259,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		userListIdUsernameFixture,
+		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -239,6 +270,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		spListIdUsernameFixture,
+		spListIdUsernameFixture2,
 		spListFixture,
 		spReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {

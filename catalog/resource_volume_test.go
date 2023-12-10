@@ -30,26 +30,28 @@ func TestVolumesCreateWithoutInitialOwner(t *testing.T) {
 					Comment:     "This is a test comment.",
 				},
 				Response: catalog.VolumeInfo{
-					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
-					Owner:       "InitialOwner",
+					Name:            "testName",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a test comment.",
+					FullName:        "testCatalogName.testSchemaName.testName",
+					Owner:           "InitialOwner",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
-					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
-					Owner:       "InitialOwner",
+					Name:            "testName",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a test comment.",
+					FullName:        "testCatalogName.testSchemaName.testName",
+					Owner:           "InitialOwner",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 		},
@@ -70,6 +72,7 @@ func TestVolumesCreateWithoutInitialOwner(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
+	assert.Equal(t, "testStorageLocation", d.Get("storage_location"))
 }
 
 func TestVolumesCreateWithInitialOwner(t *testing.T) {
@@ -86,26 +89,28 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 					Comment:     "This is a test comment.",
 				},
 				Response: catalog.VolumeInfo{
-					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
-					Owner:       "initialOwner",
+					Name:            "testName",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a test comment.",
+					FullName:        "testCatalogName.testSchemaName.testName",
+					Owner:           "initialOwner",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
-					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
-					Owner:       "testOwner",
+					Name:            "testName",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a test comment.",
+					FullName:        "testCatalogName.testSchemaName.testName",
+					Owner:           "testOwner",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 			{
@@ -117,13 +122,14 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 					Owner:   "testOwner",
 				},
 				Response: catalog.VolumeInfo{
-					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
-					Owner:       "testOwner",
+					Name:            "testName",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a test comment.",
+					FullName:        "testCatalogName.testSchemaName.testName",
+					Owner:           "testOwner",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 		},
@@ -145,6 +151,7 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
+	assert.Equal(t, "testStorageLocation", d.Get("storage_location"))
 }
 
 func TestVolumesCreateWithoutInitialOwner_Error(t *testing.T) {
@@ -243,12 +250,13 @@ func TestVolumesRead(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
-					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
+					Name:            "testName",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a test comment.",
+					FullName:        "testCatalogName.testSchemaName.testName",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 		},
@@ -269,6 +277,7 @@ func TestVolumesRead(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
+	assert.Equal(t, "testStorageLocation", d.Get("storage_location"))
 }
 
 func TestResourceVolumeRead_Error(t *testing.T) {
@@ -299,13 +308,14 @@ func TestVolumesUpdate(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
-					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a new test comment.",
-					FullName:    "testCatalogName.testSchemaName.testNameNew",
-					Owner:       "testOwnerNew",
+					Name:            "testNameNew",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a new test comment.",
+					FullName:        "testCatalogName.testSchemaName.testNameNew",
+					Owner:           "testOwnerNew",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 			{
@@ -317,13 +327,14 @@ func TestVolumesUpdate(t *testing.T) {
 					Owner:   "testOwnerNew",
 				},
 				Response: catalog.VolumeInfo{
-					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a new test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
-					Owner:       "testOwnerNew",
+					Name:            "testNameNew",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a new test comment.",
+					FullName:        "testCatalogName.testSchemaName.testName",
+					Owner:           "testOwnerNew",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 		},
@@ -350,6 +361,7 @@ func TestVolumesUpdate(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+	assert.Equal(t, "testStorageLocation", d.Get("storage_location"))
 }
 
 func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
@@ -359,13 +371,14 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogNameNew.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
-					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogNameNew",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a new test comment.",
-					FullName:    "testCatalogName.testSchemaName.testNameNew",
-					Owner:       "testOwnerNew",
+					Name:            "testNameNew",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogNameNew",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a new test comment.",
+					FullName:        "testCatalogName.testSchemaName.testNameNew",
+					Owner:           "testOwnerNew",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 			{
@@ -377,13 +390,14 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 					Owner:   "testOwnerNew",
 				},
 				Response: catalog.VolumeInfo{
-					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogNameNew",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a new test comment.",
-					FullName:    "testCatalogNameNew.testSchemaName.testName",
-					Owner:       "testOwnerNew",
+					Name:            "testNameNew",
+					VolumeType:      catalog.VolumeType("testVolumeType"),
+					CatalogName:     "testCatalogNameNew",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a new test comment.",
+					FullName:        "testCatalogNameNew.testSchemaName.testName",
+					Owner:           "testOwnerNew",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 		},
@@ -406,6 +420,7 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 	assert.Equal(t, "testCatalogNameNew", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+	assert.Equal(t, "testStorageLocation", d.Get("storage_location"))
 }
 
 func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
@@ -415,13 +430,14 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
-					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeTypeNew"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a new test comment.",
-					FullName:    "testCatalogName.testSchemaName.testNameNew",
-					Owner:       "testOwnerNew",
+					Name:            "testNameNew",
+					VolumeType:      catalog.VolumeType("testVolumeTypeNew"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a new test comment.",
+					FullName:        "testCatalogName.testSchemaName.testNameNew",
+					Owner:           "testOwnerNew",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 			{
@@ -433,13 +449,14 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 					Owner:   "testOwnerNew",
 				},
 				Response: catalog.VolumeInfo{
-					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeTypeNew"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a new test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
-					Owner:       "testOwnerNew",
+					Name:            "testNameNew",
+					VolumeType:      catalog.VolumeType("testVolumeTypeNew"),
+					CatalogName:     "testCatalogName",
+					SchemaName:      "testSchemaName",
+					Comment:         "This is a new test comment.",
+					FullName:        "testCatalogName.testSchemaName.testName",
+					Owner:           "testOwnerNew",
+					StorageLocation: "testStorageLocation",
 				},
 			},
 		},
@@ -467,6 +484,7 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+	assert.Equal(t, "testStorageLocation", d.Get("storage_location"))
 }
 
 func TestVolumeUpdate_Error(t *testing.T) {

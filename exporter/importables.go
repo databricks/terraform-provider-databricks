@@ -356,22 +356,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
-			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "new_cluster.init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
-			{Path: "new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
-			{Path: "new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
-			{Path: "new_cluster.policy_id", Resource: "databricks_cluster_policy"},
-			{Path: "existing_cluster_id", Resource: "databricks_cluster"},
-			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "notebook_task.notebook_path", Resource: "databricks_notebook"},
-			{Path: "notebook_task.notebook_path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
-			{Path: "pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -417,45 +401,6 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_permissions",
 					ID:       fmt.Sprintf("/jobs/%s", r.ID),
 					Name:     "job_" + ic.Importables["databricks_job"].Name(ic, r.Data),
-				})
-			}
-			if job.SparkPythonTask != nil {
-				ic.emitIfDbfsFile(job.SparkPythonTask.PythonFile)
-				for _, p := range job.SparkPythonTask.Parameters {
-					ic.emitIfDbfsFile(p)
-				}
-			}
-			if job.SparkJarTask != nil {
-				jarURI := job.SparkJarTask.JarURI
-				if jarURI != "" {
-					if libs, ok := r.Data.Get("library").(*schema.Set); ok {
-						// nolint remove legacy jar uri support
-						r.Data.Set("spark_jar_task", []any{
-							map[string]any{
-								"main_class_name": job.SparkJarTask.MainClassName,
-								"parameters":      job.SparkJarTask.Parameters,
-							},
-						})
-						// if variable doesn't contain a sad face, it's a job jar
-						if !strings.Contains(jarURI, ":/") {
-							jarURI = fmt.Sprintf("dbfs:/FileStore/job-jars/%s", jarURI)
-						}
-						ic.emitIfDbfsFile(jarURI)
-						libs.Add(map[string]any{
-							"jar": jarURI,
-						})
-						// nolint
-						r.Data.Set("library", libs)
-					}
-				}
-			}
-			if job.NotebookTask != nil {
-				ic.emitNotebookOrRepo(job.NotebookTask.NotebookPath)
-			}
-			if job.PipelineTask != nil {
-				ic.Emit(&resource{
-					Resource: "databricks_pipeline",
-					ID:       job.PipelineTask.PipelineID,
 				})
 			}
 			// Support for multitask jobs

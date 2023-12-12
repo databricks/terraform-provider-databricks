@@ -133,14 +133,14 @@ func (a PermissionsAPI) replacePermissions(securable, name string, list Permissi
 	if err != nil {
 		return err
 	}
-	return a.waitForClusterStatus(securable, name, list)
+	return a.waitForStatus(securable, name, list)
 }
 
 func (a PermissionsAPI) defaultTimeout() time.Duration {
 	return 1 * time.Minute
 }
 
-func (a PermissionsAPI) waitForClusterStatus(securable, name string, desired PermissionsList) (err error) {
+func (a PermissionsAPI) waitForStatus(securable, name string, desired PermissionsList) (err error) {
 	return resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
 		permissions, err := a.getPermissions(securable, name)
 		if err != nil {

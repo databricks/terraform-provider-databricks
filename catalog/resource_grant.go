@@ -65,7 +65,7 @@ func diffPermissionsForPrincipal(principal string, pl permissions.UnityCatalogPe
 }
 
 // replacePermissionsForPrincipal merges removal diff of existing permissions on the platform
-func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable, name, principal string, list permissions.UnityCatalogPermissionsList) error {
+func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable string, name string, principal string, list permissions.UnityCatalogPermissionsList) error {
 	existing, err := a.GetPermissions(securable, name)
 	if err != nil {
 		return err

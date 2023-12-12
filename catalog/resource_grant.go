@@ -6,16 +6,15 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/databricks/terraform-provider-databricks/catalog/util"
-
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/catalog/permissions"
+	"github.com/databricks/terraform-provider-databricks/catalog/util"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// diff returns permissionsDiff of this permissions list with `diff` privileges removed
-func diffPermissions(principal string, pl permissions.UnityCatalogPermissionsList, existing permissions.UnityCatalogPermissionsList) (diff permissions.UnityCatalogPermissionsDiff) {
+// diffPermissionsForPrincipal returns UnityCatalogPermissionsDiff of this permissions list with `diff` privileges removed
+func diffPermissionsForPrincipal(principal string, pl permissions.UnityCatalogPermissionsList, existing permissions.UnityCatalogPermissionsList) (diff permissions.UnityCatalogPermissionsDiff) {
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
 	for _, v := range pl.Assignments {
@@ -65,13 +64,13 @@ func diffPermissions(principal string, pl permissions.UnityCatalogPermissionsLis
 	return diff
 }
 
-// replacePermissions merges removal diff of existing permissions on the platform
-func replacePermissions(securable, name string, principal string, a permissions.UnityCatalogPermissionsAPI, list permissions.UnityCatalogPermissionsList) error {
+// replacePermissionsForPrincipal merges removal diff of existing permissions on the platform
+func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable, name, principal string, list permissions.UnityCatalogPermissionsList) error {
 	existing, err := a.GetPermissions(securable, name)
 	if err != nil {
 		return err
 	}
-	return a.UpdatePermissions(securable, name, diffPermissions(principal, list, existing))
+	return a.UpdatePermissions(securable, name, diffPermissionsForPrincipal(principal, list, existing))
 }
 
 func filterPermissionsForPrincipal(in permissions.UnityCatalogPermissionsList, principal string) (out permissions.UnityCatalogPermissionsList) {
@@ -137,7 +136,7 @@ func ResourceGrant() *schema.Resource {
 			}
 			securable, name := permissions.Mappings.KeyValue(d)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			err := replacePermissions(securable, name, principal, unityCatalogPermissionsAPI, grants)
+			err := replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 			if err != nil {
 				return err
 			}
@@ -173,7 +172,7 @@ func ResourceGrant() *schema.Resource {
 			}
 			securable, name := permissions.Mappings.KeyValue(d)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replacePermissions(securable, name, principal, unityCatalogPermissionsAPI, grants)
+			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
@@ -182,7 +181,7 @@ func ResourceGrant() *schema.Resource {
 				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replacePermissions(split[0], split[1], principal, unityCatalogPermissionsAPI, permissions.UnityCatalogPermissionsList{})
+			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, split[0], split[1], principal, permissions.UnityCatalogPermissionsList{})
 		},
 	}.ToResource()
 }

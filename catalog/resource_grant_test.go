@@ -231,7 +231,7 @@ func TestResourceGrantInvalidPrivilege(t *testing.T) {
 }
 
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
-	diff := diffPermissions(
+	diff := diffPermissionsForPrincipal(
 		"a",
 		permissions.UnityCatalogPermissionsList{ // config
 			Assignments: []permissions.UnityCatalogPrivilegeAssignment{
@@ -262,7 +262,7 @@ func TestResourceGrantPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T
 }
 
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
-	diff := diffPermissions(
+	diff := diffPermissionsForPrincipal(
 		"a",
 		permissions.UnityCatalogPermissionsList{ // config
 			Assignments: []permissions.UnityCatalogPrivilegeAssignment{
@@ -288,7 +288,7 @@ func TestResourceGrantPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 }
 
 func TestResourceGrantPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
-	diff := diffPermissions(
+	diff := diffPermissionsForPrincipal(
 		"a",
 		permissions.UnityCatalogPermissionsList{ // config
 			Assignments: []permissions.UnityCatalogPrivilegeAssignment{

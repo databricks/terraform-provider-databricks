@@ -59,6 +59,108 @@ func TestGrantCreate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"MODIFY"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		table = "foo.bar.baz"
+
+		grant {
+			principal = "me"
+			privileges = ["MODIFY"]
+		}`,
+	}.ApplyNoError(t)
+}
+
+func TestWaitUntilReady(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: permissionsDiff{
+					Changes: []permissionsChange{
+						{
+							Principal: "me",
+							Add:       []string{"MODIFY"},
+							Remove:    []string{"SELECT"},
+						},
+						{
+							Principal: "someone-else",
+							Remove:    []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			// This one is still the first one, to simulate a delay on updating the permissions
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"MODIFY"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"MODIFY"},
+						},
+					},
+				},
+			},
 		},
 		Resource: ResourceGrants(),
 		Create:   true,
@@ -90,6 +192,18 @@ func TestGrantUpdate(t *testing.T) {
 						{
 							Principal: "me",
 							Add:       []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -275,6 +389,18 @@ func TestShareGrantCreate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"SELECT"},
+						},
+					},
+				},
+			},
 		},
 		Resource: ResourceGrants(),
 		Create:   true,
@@ -315,6 +441,18 @@ func TestShareGrantUpdate(t *testing.T) {
 						{
 							Principal: "you",
 							Add:       []string{"SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "you",
+							Privileges: []string{"SELECT"},
 						},
 					},
 				},
@@ -390,6 +528,18 @@ func TestConnectionGrantCreate(t *testing.T) {
 						{
 							Principal: "me",
 							Add:       []string{"USE_CONNECTION"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn",
+				Response: PermissionsList{
+					Assignments: []PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"USE_CONNECTION"},
 						},
 					},
 				},

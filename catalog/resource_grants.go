@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// permissionsDiff is the inner structure of updatePermissions RPC
 // diff returns permissionsDiff of this permissions list with `diff` privileges removed
 func diffPermissions(pl permissions.UnityCatalogPermissionsList, existing permissions.UnityCatalogPermissionsList) (diff permissions.UnityCatalogPermissionsDiff) {
 	// diffs change sets

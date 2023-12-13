@@ -2,8 +2,6 @@ package catalog
 
 import (
 	"context"
-	"reflect"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -50,6 +48,7 @@ func ResourceExternalLocation() *schema.Resource {
 			}
 			var createExternalLocationRequest catalog.CreateExternalLocation
 			common.DataToStructPointer(d, s, &createExternalLocationRequest)
+			createExternalLocationRequest.Name = d.Get("name").(string)
 			el, err := w.ExternalLocations.Create(ctx, createExternalLocationRequest)
 			if err != nil {
 				return err
@@ -88,39 +87,34 @@ func ResourceExternalLocation() *schema.Resource {
 			}
 			var updateExternalLocationRequest catalog.UpdateExternalLocation
 			common.DataToStructPointer(d, s, &updateExternalLocationRequest)
+			updateExternalLocationRequest.Name = d.Id()
 			updateExternalLocationRequest.Force = force
 
-			ownerInRequest := updateExternalLocationRequest.Owner
+			if d.HasChange("owner") {
+				_, err = w.ExternalLocations.Update(ctx, catalog.UpdateExternalLocation{
+					Name:  updateExternalLocationRequest.Name,
+					Owner: updateExternalLocationRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
 			updateExternalLocationRequest.Owner = ""
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
 			if err != nil {
-				return err
-			}
-			if ownerInRequest != "" && d.HasChange("owner") {
-				var updateOwnerExternalLocationRequest catalog.UpdateExternalLocation
-				updateOwnerExternalLocationRequest.Owner = ownerInRequest
-				updateOwnerExternalLocationRequest.Name = updateExternalLocationRequest.Name
-				updateOwnerExternalLocationRequest.Force = updateExternalLocationRequest.Force
-				_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
-				if err != nil {
-					// roll back the previous changes
-					var updateRollbackExternalLocationRequest catalog.UpdateExternalLocation
-					values := reflect.ValueOf(updateRollbackExternalLocationRequest)
-					for i := 0; i < values.NumField(); i++ {
-						field := values.Type().Field(i)
-						jsonFull := field.Tag.Get("json")
-						jsonName := strings.Split(jsonFull, ",")[0]
-						if jsonName == "owner" {
-							continue
-						}
-						if d.HasChange(jsonName) {
-							old, _ := d.GetChange(jsonName)
-							fieldValue := values.Elem().FieldByName(field.Type.String())
-							fieldValue.Set(reflect.ValueOf(old))
-						}
+				if d.HasChange("owner") {
+					// Rollback
+					old, _ := d.GetChange("owner")
+					_, err = w.ExternalLocations.Update(ctx, catalog.UpdateExternalLocation{
+						Name:  updateExternalLocationRequest.Name,
+						Owner: old.(string),
+					})
+					if err != nil {
+						return err
 					}
-					return err
 				}
+				return err
 			}
 			return nil
 		},

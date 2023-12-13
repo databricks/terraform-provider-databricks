@@ -2,8 +2,6 @@ package sharing
 
 import (
 	"context"
-	"reflect"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -50,6 +48,7 @@ func ResourceRecipient() *schema.Resource {
 			}
 			var createRecipientRequest sharing.CreateRecipient
 			common.DataToStructPointer(d, recipientSchema, &createRecipientRequest)
+			createRecipientRequest.Name = d.Get("name").(string)
 			ri, err := w.Recipients.Create(ctx, createRecipientRequest)
 			if err != nil {
 				return err
@@ -75,36 +74,33 @@ func ResourceRecipient() *schema.Resource {
 			}
 			var updateRecipientRequest sharing.UpdateRecipient
 			common.DataToStructPointer(d, recipientSchema, &updateRecipientRequest)
-			ownerInRequest := updateRecipientRequest.Owner
+			updateRecipientRequest.Name = d.Id()
+
+			if d.HasChange("owner") {
+				err = w.Recipients.Update(ctx, sharing.UpdateRecipient{
+					Name:  updateRecipientRequest.Name,
+					Owner: updateRecipientRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
 			updateRecipientRequest.Owner = ""
 			err = w.Recipients.Update(ctx, updateRecipientRequest)
 			if err != nil {
-				return err
-			}
-			if ownerInRequest != "" && d.HasChange("owner") {
-				var updateOwnerRecipientRequest sharing.UpdateRecipient
-				updateOwnerRecipientRequest.Owner = ownerInRequest
-				updateOwnerRecipientRequest.Name = updateRecipientRequest.Name
-				err = w.Recipients.Update(ctx, updateOwnerRecipientRequest)
-				if err != nil {
-					// roll back the previous changes
-					var updateRollbackRecipientRequest sharing.UpdateRecipient
-					values := reflect.ValueOf(updateRollbackRecipientRequest)
-					for i := 0; i < values.NumField(); i++ {
-						field := values.Type().Field(i)
-						jsonFull := field.Tag.Get("json")
-						jsonName := strings.Split(jsonFull, ",")[0]
-						if jsonName == "owner" {
-							continue
-						}
-						if d.HasChange(jsonName) {
-							old, _ := d.GetChange(jsonName)
-							fieldValue := values.Elem().FieldByName(field.Type.String())
-							fieldValue.Set(reflect.ValueOf(old))
-						}
+				if d.HasChange("owner") {
+					// Rollback
+					old, _ := d.GetChange("owner")
+					err = w.Recipients.Update(ctx, sharing.UpdateRecipient{
+						Name:  updateRecipientRequest.Name,
+						Owner: old.(string),
+					})
+					if err != nil {
+						return err
 					}
-					return err
 				}
+				return err
 			}
 			return nil
 		},

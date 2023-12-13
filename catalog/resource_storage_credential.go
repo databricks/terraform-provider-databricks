@@ -117,23 +117,50 @@ func ResourceStorageCredential() *schema.Resource {
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var update catalog.UpdateStorageCredential
-			common.DataToStructPointer(d, storageCredentialSchema, &update)
-
+			var updateStorageCredentialRequest catalog.UpdateStorageCredential
+			common.DataToStructPointer(d, storageCredentialSchema, &updateStorageCredentialRequest)
+			ownerInRequest := updateStorageCredentialRequest.Owner
+			updateStorageCredentialRequest.Owner = ""
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-					CredentialInfo:        &update,
+					CredentialInfo:        &updateStorageCredentialRequest,
 					MetastoreId:           d.Get("metastore_id").(string),
 					StorageCredentialName: d.Id(),
 				})
 				if err != nil {
 					return err
 				}
+				if ownerInRequest != "" && d.HasChange("owner") {
+					var updateOwnerStorageCredentialRequest catalog.UpdateStorageCredential
+					updateOwnerStorageCredentialRequest.Owner = ownerInRequest
+					updateOwnerStorageCredentialRequest.Name = updateStorageCredentialRequest.Name
+					_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
+						CredentialInfo:        &updateOwnerStorageCredentialRequest,
+						MetastoreId:           d.Get("metastore_id").(string),
+						StorageCredentialName: d.Id(),
+					})
+					if err != nil {
+						// roll back the previous changes
+
+						return err
+					}
+				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				_, err := w.StorageCredentials.Update(ctx, update)
+				_, err := w.StorageCredentials.Update(ctx, updateStorageCredentialRequest)
 				if err != nil {
 					return err
+				}
+				if ownerInRequest != "" && d.HasChange("owner") {
+					var updateOwnerStorageCredentialRequest catalog.UpdateStorageCredential
+					updateOwnerStorageCredentialRequest.Owner = ownerInRequest
+					updateOwnerStorageCredentialRequest.Name = updateStorageCredentialRequest.Name
+					_, err := w.StorageCredentials.Update(ctx, updateOwnerStorageCredentialRequest)
+					if err != nil {
+						// roll back the previous changes
+
+						return err
+					}
 				}
 				return nil
 			})

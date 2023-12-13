@@ -87,9 +87,24 @@ func ResourceExternalLocation() *schema.Resource {
 			var updateExternalLocationRequest catalog.UpdateExternalLocation
 			common.DataToStructPointer(d, s, &updateExternalLocationRequest)
 			updateExternalLocationRequest.Force = force
+
+			ownerInRequest := updateExternalLocationRequest.Owner
+			updateExternalLocationRequest.Owner = ""
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
 			if err != nil {
 				return err
+			}
+			if ownerInRequest != "" && d.HasChange("owner") {
+				var updateOwnerExternalLocationRequest catalog.UpdateExternalLocation
+				updateOwnerExternalLocationRequest.Owner = ownerInRequest
+				updateOwnerExternalLocationRequest.Name = updateExternalLocationRequest.Name
+				updateOwnerExternalLocationRequest.Force = updateExternalLocationRequest.Force
+				_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
+				if err != nil {
+					// roll back the previous changes
+
+					return err
+				}
 			}
 			return nil
 		},

@@ -124,9 +124,22 @@ func ResourceCatalog() *schema.Resource {
 			}
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
+			ownerInRequest := updateCatalogRequest.Owner
+			updateCatalogRequest.Owner = ""
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
 			if err != nil {
 				return err
+			}
+			if ownerInRequest != "" && d.HasChange("owner") {
+				var updateOwnerCatalogRequest catalog.UpdateCatalog
+				updateOwnerCatalogRequest.Owner = ownerInRequest
+				updateOwnerCatalogRequest.Name = updateCatalogRequest.Name
+				ci, err = w.Catalogs.Update(ctx, updateOwnerCatalogRequest)
+				if err != nil {
+					// roll back the previous changes
+
+					return err
+				}
 			}
 
 			// We need to update the resource data because Name is updatable

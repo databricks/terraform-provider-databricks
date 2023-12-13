@@ -140,14 +140,14 @@ func ResourceGrant() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.SetId(permissions.Mappings.Id(d))
+			d.SetId(fmt.Sprintf("%s/%s", permissions.Mappings.Id(d), principal))
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
-			split := strings.SplitN(d.Id(), "/", 2)
-			if len(split) != 2 {
-				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
+			split := strings.SplitN(d.Id(), "/", 3)
+			if len(split) != 3 {
+				return fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
 			}
 			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, c).GetPermissions(split[0], split[1])
 			grantsForPrincipal := filterPermissionsForPrincipal(grants, principal)
@@ -176,9 +176,9 @@ func ResourceGrant() *schema.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
-			split := strings.SplitN(d.Id(), "/", 2)
-			if len(split) != 2 {
-				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
+			split := strings.SplitN(d.Id(), "/", 3)
+			if len(split) != 3 {
+				return fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, split[0], split[1], principal, permissions.UnityCatalogPermissionsList{})

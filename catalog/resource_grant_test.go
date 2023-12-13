@@ -9,7 +9,7 @@ import (
 )
 
 func TestGrantPermissionsCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceGrant(), qa.CornerCaseID("schema/sandbox"))
+	qa.ResourceCornerCases(t, ResourceGrant(), qa.CornerCaseID("schema/sandbox/me"))
 }
 
 func TestResourceGrantCreate(t *testing.T) {
@@ -118,7 +118,7 @@ func TestResourceGrantUpdate(t *testing.T) {
 		},
 		Resource: ResourceGrant(),
 		Update:   true,
-		ID:       "table/foo.bar.baz",
+		ID:       "table/foo.bar.baz/me",
 		InstanceState: map[string]string{
 			"table":     "foo.bar.baz",
 			"principal": "me",
@@ -178,7 +178,7 @@ func TestResourceGrantDelete(t *testing.T) {
 		},
 		Resource: ResourceGrant(),
 		Delete:   true,
-		ID:       "table/foo.bar.baz",
+		ID:       "table/foo.bar.baz/me",
 		InstanceState: map[string]string{
 			"table":     "foo.bar.baz",
 			"principal": "me",
@@ -202,7 +202,7 @@ func TestResourceGrantReadMalformedId(t *testing.T) {
 		principal = "me"
 		privileges = ["MODIFY", "SELECT"]
 		`,
-	}.ExpectError(t, "ID must be two elements split by `/`: foo.bar")
+	}.ExpectError(t, "ID must be three elements split by `/`: foo.bar")
 }
 
 type grantData map[string]string
@@ -406,7 +406,7 @@ func TestResourceGrantShareGrantUpdate(t *testing.T) {
 		},
 		Resource: ResourceGrant(),
 		Update:   true,
-		ID:       "share/myshare",
+		ID:       "share/myshare/you",
 		InstanceState: map[string]string{
 			"share":     "myshare",
 			"principal": "you",

@@ -220,10 +220,26 @@ func ResourceShare() *schema.Resource {
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
 			changes := beforeSi.Diff(afterSi)
-			return NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-				Owner:   afterSi.Owner,
+
+			ownerInRequest := afterSi.Owner
+			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
+				Owner:   "",
 				Updates: changes,
 			})
+			if err != nil {
+				return err
+			}
+			if ownerInRequest != "" {
+				err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
+					Owner:   ownerInRequest,
+					Updates: nil,
+				})
+				if err != nil {
+					// rollback
+					return err
+				}
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

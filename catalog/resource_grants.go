@@ -151,7 +151,7 @@ func (a PermissionsAPI) waitForStatus(securable, name string, desired Permission
 			return nil
 		}
 		return resource.RetryableError(
-			fmt.Errorf("Permissions for %s-%s are %v, but have to be %v",
+			fmt.Errorf("permissions for %s-%s are %v, but have to be %v",
 				securable, name, permissions, desired))
 	})
 }

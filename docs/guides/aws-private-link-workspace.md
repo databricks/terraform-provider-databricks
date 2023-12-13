@@ -12,7 +12,7 @@ This guide uses the following variables in configurations:
 
 - `client_id`: `application_id` of the service principal, see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)
 - `client_secret`: the secret of the service principal.
-- `databricks_account_id`: The numeric ID for your Databricks account. When logged in, it appears in the top right corner of the page.
+- `databricks_account_id`: The numeric ID for your Databricks account. When logged in, it appears in the bottom left corner of the page.
 - `vpc_id` - The ID for the AWS VPC.
 - `region` - AWS region.
 - `security_group_id` - Security groups set up for the existing VPC.

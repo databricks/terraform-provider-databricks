@@ -15,7 +15,7 @@ End-to-end example of usage and audit log delivery:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "aws_s3_bucket" "logdelivery" {
@@ -130,7 +130,7 @@ resource "databricks_mws_log_delivery" "audit_logs" {
 
 ## Argument reference
 
-* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `config_name` - The optional human-readable name of the log delivery configuration. Defaults to empty.
 * `log_type` - The type of log delivery. `BILLABLE_USAGE` and `AUDIT_LOGS` are supported.
 * `output_format` - The file type of log delivery. Currently `CSV` (for `BILLABLE_USAGE`) and `JSON` (for `AUDIT_LOGS`) are supported.

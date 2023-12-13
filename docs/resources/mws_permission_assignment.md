@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_mws_permission_assignment Resource
 
-These resources are invoked in the account context. Permission Assignment Account API endpoints are restricted to account admins. Provider must have `account_id` attribute configured. Account Id that could be found in the top right corner of Accounts Console
+These resources are invoked in the account context. Permission Assignment Account API endpoints are restricted to account admins. Provider must have `account_id` attribute configured. Account Id that could be found in the bottom left corner of Accounts Console
 
 ## Example Usage
 

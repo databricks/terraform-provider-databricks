@@ -49,3 +49,71 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 		}`,
 	})
 }
+
+func TestUcAccCatalogUpdateWithoutOwner(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_catalog" "sandbox" {
+			name           = "sandbox{var.STICKY_RANDOM}"
+			comment        = "this catalog is managed by terraform"
+			properties     = {
+				purpose = "testing"
+			}
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_catalog" "sandbox" {
+			name           = "sandbox{var.STICKY_RANDOM}"
+			comment        = "this catalog is managed by terraform - Updated comment"
+			properties     = {
+				purpose = "testing"
+			}
+		}`,
+	})
+}
+
+func TestUcAccCatalogUpdateOnlyOwner(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_catalog" "sandbox" {
+			name           = "sandbox{var.STICKY_RANDOM}"
+			comment        = "this catalog is managed by terraform"
+			properties     = {
+				purpose = "testing"
+			}
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_catalog" "sandbox" {
+			name           = "sandbox{var.STICKY_RANDOM}"
+			comment        = "this catalog is managed by terraform"
+			properties     = {
+				purpose = "testing"
+			}
+			owner = "account users"
+		}`,
+	})
+}
+
+func TestUcAccCatalogUpdate(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_catalog" "sandbox" {
+			name           = "sandbox{var.STICKY_RANDOM}"
+			comment        = "this catalog is managed by terraform"
+			properties     = {
+				purpose = "testing"
+			}
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_catalog" "sandbox" {
+			name           = "sandbox{var.STICKY_RANDOM}"
+			comment        = "this catalog is managed by terraform - Updated comment"
+			properties     = {
+				purpose = "testing"
+			}
+			owner = "account users"
+		}`,
+	})
+}

@@ -2,6 +2,8 @@ package catalog
 
 import (
 	"context"
+	"reflect"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -102,7 +104,21 @@ func ResourceExternalLocation() *schema.Resource {
 				_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
 				if err != nil {
 					// roll back the previous changes
-
+					var updateRollbackExternalLocationRequest catalog.UpdateExternalLocation
+					values := reflect.ValueOf(updateRollbackExternalLocationRequest)
+					for i := 0; i < values.NumField(); i++ {
+						field := values.Type().Field(i)
+						jsonFull := field.Tag.Get("json")
+						jsonName := strings.Split(jsonFull, ",")[0]
+						if jsonName == "owner" {
+							continue
+						}
+						if d.HasChange(jsonName) {
+							old, _ := d.GetChange(jsonName)
+							fieldValue := values.Elem().FieldByName(field.Type.String())
+							fieldValue.Set(reflect.ValueOf(old))
+						}
+					}
 					return err
 				}
 			}

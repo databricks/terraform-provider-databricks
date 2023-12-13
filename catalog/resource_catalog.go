@@ -61,6 +61,7 @@ func ResourceCatalog() *schema.Resource {
 
 			var createCatalogRequest catalog.CreateCatalog
 			common.DataToStructPointer(d, catalogSchema, &createCatalogRequest)
+			createCatalogRequest.Name = d.Get("name").(string)
 			ci, err := w.Catalogs.Create(ctx, createCatalogRequest)
 			if err != nil {
 				return err
@@ -124,22 +125,33 @@ func ResourceCatalog() *schema.Resource {
 			}
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
-			ownerInRequest := updateCatalogRequest.Owner
-			updateCatalogRequest.Owner = ""
-			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
-			if err != nil {
-				return err
-			}
-			if ownerInRequest != "" && d.HasChange("owner") {
-				var updateOwnerCatalogRequest catalog.UpdateCatalog
-				updateOwnerCatalogRequest.Owner = ownerInRequest
-				updateOwnerCatalogRequest.Name = updateCatalogRequest.Name
-				ci, err = w.Catalogs.Update(ctx, updateOwnerCatalogRequest)
+			updateCatalogRequest.Name = d.Id()
+			if d.HasChange("owner") {
+				_, err = w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+					Name:  updateCatalogRequest.Name,
+					Owner: updateCatalogRequest.Owner,
+				})
 				if err != nil {
-					// roll back the previous changes
-
 					return err
 				}
+			}
+
+			updateCatalogRequest.Owner = ""
+			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
+
+			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, _ := d.GetChange("owner")
+					_, err = w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+						Name:  updateCatalogRequest.Name,
+						Owner: old.(string),
+					})
+					if err != nil {
+						return err
+					}
+				}
+				return err
 			}
 
 			// We need to update the resource data because Name is updatable

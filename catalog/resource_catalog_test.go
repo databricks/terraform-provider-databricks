@@ -239,7 +239,7 @@ func TestUpdateCatalog(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:  "a",
+					Name:  "a", // To Check -- this works even when Name is removed from expected request
 					Owner: "administrators",
 				},
 				Response: catalog.CatalogInfo{
@@ -291,27 +291,12 @@ func TestUpdateCatalog(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestUpdateCatalogUpdateOwner(t *testing.T) {
+func TestUpdateCatalogOwnerOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
-					Comment: "c",
-					Owner:   "",
-				},
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "administrators",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
 					Name:  "a",
 					Owner: "updatedOwner",
@@ -324,13 +309,17 @@ func TestUpdateCatalogUpdateOwner(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Name:    "a",
+					Comment: "c",
+				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",
 					MetastoreId: "d",
 					Comment:     "c",
-					Owner:       "administrators",
+					Owner:       "updatedOwner",
 				},
 			},
 			{
@@ -366,25 +355,24 @@ func TestUpdateCatalogUpdateRollback(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
-					Comment: "c",
-					Owner:   "",
+					// Name:  "a",
+					Owner: "updatedOwner",
 				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",
 					MetastoreId: "d",
 					Comment:     "c",
-					Owner:       "administrators",
+					Owner:       "updatedOwner",
 				},
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:  "a",
-					Owner: "updatedOwner",
+					Name:    "a",
+					Comment: "e",
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
@@ -394,11 +382,10 @@ func TestUpdateCatalogUpdateRollback(t *testing.T) {
 			},
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
-					Comment: "c",
-					Owner:   "administrators",
+					Name:  "a",
+					Owner: "administrators",
 				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",

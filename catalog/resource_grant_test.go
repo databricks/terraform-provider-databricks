@@ -272,31 +272,6 @@ func TestResourceGrantCreatePrivilegesRequired(t *testing.T) {
 	}.ExpectError(t, "invalid config supplied. [privileges] Missing required argument")
 }
 
-type grantData map[string]string
-
-func (a grantData) Get(k string) any {
-	return a[k]
-}
-
-func TestResourceGrantMappingUnsupported(t *testing.T) {
-	d := grantData{"nothing": "here"}
-	err := permissions.Mappings.Validate(d, permissions.UnityCatalogPermissionsList{})
-	assert.EqualError(t, err, "unknown is not fully supported yet")
-}
-
-func TestResourceGrantInvalidPrivilege(t *testing.T) {
-	d := grantData{"table": "me"}
-	err := permissions.Mappings.Validate(d, permissions.UnityCatalogPermissionsList{
-		Assignments: []permissions.UnityCatalogPrivilegeAssignment{
-			{
-				Principal:  "me",
-				Privileges: []string{"EVERYTHING"},
-			},
-		},
-	})
-	assert.EqualError(t, err, "EVERYTHING is not allowed on table")
-}
-
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",
@@ -485,30 +460,6 @@ func TestResourceGrantShareGrantUpdate(t *testing.T) {
 		privileges = ["SELECT"]
 		`,
 	}.ApplyNoError(t)
-}
-
-func TestResourceGrantPrivilegeWithSpace(t *testing.T) {
-	d := grantData{"table": "me"}
-	err := permissions.Mappings.Validate(d, permissions.UnityCatalogPermissionsList{
-		Assignments: []permissions.UnityCatalogPrivilegeAssignment{
-			{
-				Principal:  "me",
-				Privileges: []string{"ALL PRIVILEGES"},
-			},
-		},
-	})
-	assert.EqualError(t, err, "ALL PRIVILEGES is not allowed on table. Did you mean ALL_PRIVILEGES?")
-
-	d = grantData{"external_location": "me"}
-	err = permissions.Mappings.Validate(d, permissions.UnityCatalogPermissionsList{
-		Assignments: []permissions.UnityCatalogPrivilegeAssignment{
-			{
-				Principal:  "me",
-				Privileges: []string{"CREATE TABLE"},
-			},
-		},
-	})
-	assert.EqualError(t, err, "CREATE TABLE is not allowed on external_location. Did you mean CREATE_TABLE?")
 }
 
 func TestResourceGrantConnectionGrantCreate(t *testing.T) {

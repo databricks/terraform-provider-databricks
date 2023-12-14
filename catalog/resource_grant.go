@@ -107,15 +107,6 @@ func ResourceGrant() *schema.Resource {
 
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			if d.Id() == "" {
-				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
-				return nil
-			}
-			var grants permissions.UnityCatalogPermissionsList
-			common.DiffToStructPointer(d, s, &grants)
-			return permissions.Mappings.Validate(d, grants)
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
 			privileges := util.ToStringSlice(d.Get("privileges").(*schema.Set).List())

@@ -135,51 +135,9 @@ func TestResourceGrantUpdate(t *testing.T) {
 
 func TestResourceGrantUpdateWithChangedPrincipalForcesNewResource(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
-						{
-							Principal:  "someone-else",
-							Privileges: []string{"MODIFY", "SELECT"},
-						},
-					},
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				ExpectedRequest: permissions.UnityCatalogPermissionsDiff{
-					Changes: []permissions.UnityCatalogPermissionsChange{
-						{
-							Principal: "me",
-							Add:       []string{"MODIFY", "SELECT"},
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
-						{
-							Principal:  "me",
-							Privileges: []string{"MODIFY", "SELECT"},
-						},
-						{
-							Principal:  "someone-else",
-							Privileges: []string{"MODIFY", "SELECT"},
-						},
-					},
-				},
-			},
-		},
 		Resource:    ResourceGrant(),
 		Update:      true,
-		RequiresNew: true,
+		RequiresNew: false, // test the negative as the positive is not covered by qa.ResourceFixture
 		ID:          "table/foo.bar.baz/me",
 		InstanceState: map[string]string{
 			"table":     "foo.bar.baz",
@@ -191,7 +149,7 @@ func TestResourceGrantUpdateWithChangedPrincipalForcesNewResource(t *testing.T) 
 		principal = "me"
 		privileges = ["MODIFY", "SELECT"]
 		`,
-	}.ApplyNoError(t)
+	}.ExpectError(t, "changes require new: principal")
 }
 
 func TestResourceGrantDelete(t *testing.T) {

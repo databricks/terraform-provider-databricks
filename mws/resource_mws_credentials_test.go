@@ -56,6 +56,109 @@ func TestResourceCredentialsCreate(t *testing.T) {
 	})
 }
 
+func TestAccountIdOnlyInState(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/credentials",
+				ExpectedRequest: Credentials{
+					CredentialsName: "Cross-account ARN",
+					AwsCredentials: &AwsCredentials{
+						StsRole: &StsRole{
+							RoleArn: "arn:aws:iam::098765:role/cross-account",
+						},
+					},
+				},
+				Response: Credentials{
+					CredentialsID: "cid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/credentials/cid?",
+				Response: Credentials{
+					CredentialsID:   "cid",
+					CredentialsName: "Cross-account ARN",
+					AwsCredentials: &AwsCredentials{
+						StsRole: &StsRole{
+							RoleArn: "arn:aws:iam::098765:role/cross-account",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsCredentials(),
+		State: map[string]any{
+			"account_id":       "abc",
+			"credentials_name": "Cross-account ARN",
+			"role_arn":         "arn:aws:iam::098765:role/cross-account",
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":       "abc/cid",
+		"role_arn": "arn:aws:iam::098765:role/cross-account",
+	})
+}
+
+func TestAccountIdOnlyInConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/credentials",
+				ExpectedRequest: Credentials{
+					CredentialsName: "Cross-account ARN",
+					AwsCredentials: &AwsCredentials{
+						StsRole: &StsRole{
+							RoleArn: "arn:aws:iam::098765:role/cross-account",
+						},
+					},
+				},
+				Response: Credentials{
+					CredentialsID: "cid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/credentials/cid?",
+				Response: Credentials{
+					CredentialsID:   "cid",
+					CredentialsName: "Cross-account ARN",
+					AwsCredentials: &AwsCredentials{
+						StsRole: &StsRole{
+							RoleArn: "arn:aws:iam::098765:role/cross-account",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceMwsCredentials(),
+		State: map[string]any{
+			"credentials_name": "Cross-account ARN",
+			"role_arn":         "arn:aws:iam::098765:role/cross-account",
+		},
+		Create:    true,
+		AccountID: "abc",
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":       "abc/cid",
+		"role_arn": "arn:aws:iam::098765:role/cross-account",
+	})
+}
+
+func TestFailIfDifferentAccountIds(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsCredentials(),
+		State: map[string]any{
+			"account_id":       "another",
+			"credentials_name": "Cross-account ARN",
+			"role_arn":         "arn:aws:iam::098765:role/cross-account",
+		},
+		Create:    true,
+		AccountID: "abc",
+	}.ExpectError(t, "account ID is already set to abc")
+}
+
 func TestResourceCredentialsCreateWithoutAccId(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

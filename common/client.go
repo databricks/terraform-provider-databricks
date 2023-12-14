@@ -67,6 +67,20 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	return w, nil
 }
 
+func (c *DatabricksClient) SetAccountId(accountId string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if accountId == "" {
+		return nil
+	}
+	oldAccountID := c.DatabricksClient.Config.AccountID
+	if oldAccountID != "" && oldAccountID != accountId {
+		return fmt.Errorf("account ID is already set to %s", oldAccountID)
+	}
+	c.DatabricksClient.Config.AccountID = accountId
+	return nil
+}
+
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()

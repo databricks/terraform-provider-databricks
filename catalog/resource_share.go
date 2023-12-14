@@ -4,7 +4,6 @@ import (
 	"context"
 	"reflect"
 	"sort"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -187,6 +186,7 @@ func ResourceShare() *schema.Resource {
 
 			var createRequest sharing.CreateShare
 			common.DataToStructPointer(d, shareSchema, &createRequest)
+			createRequest.Name = d.Get("name").(string)
 			if _, err := w.Shares.Create(ctx, createRequest); err != nil {
 				return err
 			}
@@ -220,40 +220,38 @@ func ResourceShare() *schema.Resource {
 			}
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
-			changes := beforeSi.Diff(afterSi)
+			beforeSi.Name = d.Id() // check
+			afterSi.Name = d.Id()
 
-			ownerInRequest := afterSi.Owner
-			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-				Owner:   "",
-				Updates: changes,
-			})
-			if err != nil {
-				return err
-			}
-			if ownerInRequest != "" {
+			changes := beforeSi.Diff(afterSi) // diff doesn't have owner check so it contains owner as well?
+
+			if d.HasChange("owner") {
 				err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-					Owner:   ownerInRequest,
+					Owner:   afterSi.Owner,
 					Updates: nil,
 				})
 				if err != nil {
-					// rollback to previous changes
-					var updateRollbackShareRequest ShareInfo
-					values := reflect.ValueOf(updateRollbackShareRequest)
-					for i := 0; i < values.NumField(); i++ {
-						field := values.Type().Field(i)
-						jsonFull := field.Tag.Get("json")
-						jsonName := strings.Split(jsonFull, ",")[0]
-						if jsonName == "owner" {
-							continue
-						}
-						if d.HasChange(jsonName) {
-							old, _ := d.GetChange(jsonName)
-							fieldValue := values.Elem().FieldByName(field.Type.String())
-							fieldValue.Set(reflect.ValueOf(old))
-						}
-					}
 					return err
 				}
+			}
+
+			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
+				Owner:   "", // empty owner?
+				Updates: changes,
+			})
+			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, _ := d.GetChange("owner")
+					err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
+						Owner:   old.(string),
+						Updates: nil,
+					})
+					if err != nil {
+						return err
+					}
+				}
+				return err
 			}
 			return nil
 		},

@@ -151,7 +151,6 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",
@@ -239,7 +238,6 @@ func TestUpdateCatalog(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:  "a", // To Check -- this works even when Name is removed from expected request
 					Owner: "administrators",
 				},
 				Response: catalog.CatalogInfo{
@@ -253,7 +251,6 @@ func TestUpdateCatalog(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
 					Comment: "c",
 					Owner:   "",
 				},
@@ -298,7 +295,6 @@ func TestUpdateCatalogOwnerOnly(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:  "a",
 					Owner: "updatedOwner",
 				},
 				Response: catalog.CatalogInfo{
@@ -312,7 +308,6 @@ func TestUpdateCatalogOwnerOnly(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
 					Comment: "c",
 				},
 				Response: catalog.CatalogInfo{
@@ -350,14 +345,13 @@ func TestUpdateCatalogOwnerOnly(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestUpdateCatalogUpdateRollback(t *testing.T) {
+func TestUpdateCatalogOwnerAndOtherFields(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					// Name:  "a",
 					Owner: "updatedOwner",
 				},
 				Response: catalog.CatalogInfo{
@@ -371,7 +365,63 @@ func TestUpdateCatalogUpdateRollback(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
+					Comment: "e",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "e",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "e",
+					Owner:       "updatedOwner",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"comment":      "c",
+			"owner":        "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "e"
+		owner = "updatedOwner"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateCatalogUpdateRollback(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "updatedOwner",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
 					Comment: "e",
 				},
 				Response: apierr.APIErrorBody{
@@ -384,7 +434,6 @@ func TestUpdateCatalogUpdateRollback(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:  "a",
 					Owner: "administrators",
 				},
 				Response: catalog.CatalogInfo{
@@ -634,7 +683,6 @@ func TestCatalogCreateIsolated(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/",
 				ExpectedRequest: catalog.CatalogInfo{
-					// Name:    "a", why?
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",

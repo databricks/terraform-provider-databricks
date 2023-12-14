@@ -3,7 +3,7 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/catalog/permissions"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,16 +17,16 @@ func TestResourceGrantCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"SELECT"},
+							Privileges: []catalog.Privilege{"SELECT"},
 						},
 						{
 							Principal:  "someone-else",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -34,28 +34,28 @@ func TestResourceGrantCreate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				ExpectedRequest: permissions.UnityCatalogPermissionsDiff{
-					Changes: []permissions.UnityCatalogPermissionsChange{
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []string{"MODIFY"},
-							Remove:    []string{"SELECT"},
+							Add:       []catalog.Privilege{"MODIFY"},
+							Remove:    []catalog.Privilege{"SELECT"},
 						},
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"MODIFY"},
+							Privileges: []catalog.Privilege{"MODIFY"},
 						},
 						{
 							Principal:  "someone-else",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -77,12 +77,12 @@ func TestResourceGrantUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "someone-else",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -90,27 +90,27 @@ func TestResourceGrantUpdate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				ExpectedRequest: permissions.UnityCatalogPermissionsDiff{
-					Changes: []permissions.UnityCatalogPermissionsChange{
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []string{"MODIFY", "SELECT"},
+							Add:       []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 						{
 							Principal:  "someone-else",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -157,16 +157,16 @@ func TestResourceGrantDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 						{
 							Principal:  "someone-else",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -174,23 +174,23 @@ func TestResourceGrantDelete(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				ExpectedRequest: permissions.UnityCatalogPermissionsDiff{
-					Changes: []permissions.UnityCatalogPermissionsChange{
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Remove:    []string{"MODIFY", "SELECT"},
+							Remove:    []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "someone-else",
-							Privileges: []string{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -233,7 +233,7 @@ func TestResourceGrantCreateNoSecurable(t *testing.T) {
 		principal = "me"
 		privileges = ["MODIFY", "SELECT"]
 		`,
-	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [materialized_view] Missing required argument. [metastore] Missing required argument. [model] Missing required argument. [schema] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [view] Missing required argument. [volume] Missing required argument")
+	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [metastore] Missing required argument. [pipeline] Missing required argument. [recipient] Missing required argument. [schema] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [volume] Missing required argument")
 }
 
 func TestResourceGrantCreateOneSecurableOnly(t *testing.T) {
@@ -275,85 +275,85 @@ func TestResourceGrantCreatePrivilegesRequired(t *testing.T) {
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",
-		permissions.UnityCatalogPermissionsList{ // config
-			Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
 				{
 					Principal:  "a",
-					Privileges: []string{"a"},
+					Privileges: []catalog.Privilege{"a"},
 				},
 				{
 					Principal:  "c",
-					Privileges: []string{"a"},
+					Privileges: []catalog.Privilege{"a"},
 				},
 			},
 		},
-		permissions.UnityCatalogPermissionsList{
-			Assignments: []permissions.UnityCatalogPrivilegeAssignment{ // platform
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
 				{
 					Principal:  "a",
-					Privileges: []string{"a"},
+					Privileges: []catalog.Privilege{"a"},
 				},
 				{
 					Principal:  "b",
-					Privileges: []string{"a"},
+					Privileges: []catalog.Privilege{"a"},
 				},
 			},
 		},
 	)
-	assert.Len(t, diff.Changes, 0)
+	assert.Len(t, diff, 0)
 }
 
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",
-		permissions.UnityCatalogPermissionsList{ // config
-			Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
 				{
 					Principal:  "a",
-					Privileges: []string{"a"},
+					Privileges: []catalog.Privilege{"a"},
 				},
 			},
 		},
-		permissions.UnityCatalogPermissionsList{
-			Assignments: []permissions.UnityCatalogPrivilegeAssignment{ // platform
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
 				{
 					Principal:  "a",
-					Privileges: []string{"a", "b"},
+					Privileges: []catalog.Privilege{"a", "b"},
 				},
 			},
 		},
 	)
-	assert.Len(t, diff.Changes, 1)
-	assert.Len(t, diff.Changes[0].Add, 0)
-	assert.Len(t, diff.Changes[0].Remove, 1)
-	assert.Equal(t, "b", diff.Changes[0].Remove[0])
+	assert.Len(t, diff, 1)
+	assert.Len(t, diff[0].Add, 0)
+	assert.Len(t, diff[0].Remove, 1)
+	assert.Equal(t, catalog.Privilege("b"), diff[0].Remove[0])
 }
 
 func TestResourceGrantPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",
-		permissions.UnityCatalogPermissionsList{ // config
-			Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
 				{
 					Principal:  "a",
-					Privileges: []string{"a", "b"},
+					Privileges: []catalog.Privilege{"a", "b"},
 				},
 			},
 		},
-		permissions.UnityCatalogPermissionsList{
-			Assignments: []permissions.UnityCatalogPrivilegeAssignment{ // platform
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
 				{
 					Principal:  "a",
-					Privileges: []string{"b", "c"},
+					Privileges: []catalog.Privilege{"b", "c"},
 				},
 			},
 		},
 	)
-	assert.Len(t, diff.Changes, 1)
-	assert.Len(t, diff.Changes[0].Add, 1)
-	assert.Len(t, diff.Changes[0].Remove, 1)
-	assert.Equal(t, "a", diff.Changes[0].Add[0])
-	assert.Equal(t, "c", diff.Changes[0].Remove[0])
+	assert.Len(t, diff, 1)
+	assert.Len(t, diff[0].Add, 1)
+	assert.Len(t, diff[0].Remove, 1)
+	assert.Equal(t, catalog.Privilege("a"), diff[0].Add[0])
+	assert.Equal(t, catalog.Privilege("c"), diff[0].Remove[0])
 }
 
 func TestResourceGrantShareGrantCreate(t *testing.T) {
@@ -361,31 +361,31 @@ func TestResourceGrantShareGrantCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{},
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
 				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
-				ExpectedRequest: permissions.UnityCatalogPermissionsDiff{
-					Changes: []permissions.UnityCatalogPermissionsChange{
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []string{"SELECT"},
+							Add:       []catalog.Privilege{"SELECT"},
 						},
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"SELECT"},
+							Privileges: []catalog.Privilege{"SELECT"},
 						},
 					},
 				},
@@ -407,12 +407,12 @@ func TestResourceGrantShareGrantUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"SELECT"},
+							Privileges: []catalog.Privilege{"SELECT"},
 						},
 					},
 				},
@@ -420,27 +420,27 @@ func TestResourceGrantShareGrantUpdate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
-				ExpectedRequest: permissions.UnityCatalogPermissionsDiff{
-					Changes: []permissions.UnityCatalogPermissionsChange{
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "you",
-							Add:       []string{"SELECT"},
+							Add:       []catalog.Privilege{"SELECT"},
 						},
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"SELECT"},
+							Privileges: []catalog.Privilege{"SELECT"},
 						},
 						{
 							Principal:  "you",
-							Privileges: []string{"SELECT"},
+							Privileges: []catalog.Privilege{"SELECT"},
 						},
 					},
 				},
@@ -467,31 +467,31 @@ func TestResourceGrantConnectionGrantCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{},
+				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
 				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn",
-				ExpectedRequest: permissions.UnityCatalogPermissionsDiff{
-					Changes: []permissions.UnityCatalogPermissionsChange{
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []string{"USE_CONNECTION"},
+							Add:       []catalog.Privilege{"USE_CONNECTION"},
 						},
 					},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn",
-				Response: permissions.UnityCatalogPermissionsList{
-					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []string{"USE_CONNECTION"},
+							Privileges: []catalog.Privilege{"USE_CONNECTION"},
 						},
 					},
 				},

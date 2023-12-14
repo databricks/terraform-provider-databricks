@@ -7,40 +7,40 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/catalog/permissions"
-	"github.com/databricks/terraform-provider-databricks/catalog/util"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // diffPermissionsForPrincipal returns UnityCatalogPermissionsDiff of this permissions list with `diff` privileges removed
-func diffPermissionsForPrincipal(principal string, pl permissions.UnityCatalogPermissionsList, existing permissions.UnityCatalogPermissionsList) (diff permissions.UnityCatalogPermissionsDiff) {
+func diffPermissionsForPrincipal(principal string, pl catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
-	for _, v := range pl.Assignments {
+	for _, v := range pl.PrivilegeAssignments {
 		if v.Principal == principal {
-			configured[v.Principal] = util.SliceToSet(v.Privileges)
+			configured[v.Principal] = permissions.SliceToSet(v.Privileges)
 		}
 	}
 	// existing permissions that needs removal for principal
 	remote := map[string]*schema.Set{}
-	for _, v := range existing.Assignments {
+	for _, v := range existing.PrivilegeAssignments {
 		if v.Principal == principal {
-			remote[v.Principal] = util.SliceToSet(v.Privileges)
+			remote[v.Principal] = permissions.SliceToSet(v.Privileges)
 		}
 	}
 	// STEP 1: detect overlaps
 	for principal, confPrivs := range configured {
 		remotePrivs, ok := remote[principal]
 		if !ok {
-			remotePrivs = util.SliceToSet([]string{})
+			remotePrivs = permissions.SliceToSet([]catalog.Privilege{})
 		}
-		add := util.SetToSlice(confPrivs.Difference(remotePrivs))
-		remove := util.SetToSlice(remotePrivs.Difference(confPrivs))
+		add := permissions.SetToSlice(confPrivs.Difference(remotePrivs))
+		remove := permissions.SetToSlice(remotePrivs.Difference(confPrivs))
 		if len(add) == 0 && len(remove) == 0 {
 			continue
 		}
-		diff.Changes = append(diff.Changes, permissions.UnityCatalogPermissionsChange{
+		diff = append(diff, catalog.PermissionsChange{
 			Principal: principal,
 			Add:       add,
 			Remove:    remove,
@@ -52,32 +52,32 @@ func diffPermissionsForPrincipal(principal string, pl permissions.UnityCatalogPe
 		if ok { // already handled in STEP 1
 			continue
 		}
-		diff.Changes = append(diff.Changes, permissions.UnityCatalogPermissionsChange{
+		diff = append(diff, catalog.PermissionsChange{
 			Principal: principal,
-			Remove:    util.SetToSlice(remove),
+			Remove:    permissions.SetToSlice(remove),
 		})
 	}
 	// so that we can deterministic tests
-	sort.Slice(diff.Changes, func(i, j int) bool {
-		return diff.Changes[i].Principal < diff.Changes[j].Principal
+	sort.Slice(diff, func(i, j int) bool {
+		return diff[i].Principal < diff[j].Principal
 	})
 	return diff
 }
 
 // replacePermissionsForPrincipal merges removal diff of existing permissions on the platform
-func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable string, name string, principal string, list permissions.UnityCatalogPermissionsList) error {
+func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable string, name string, principal string, list catalog.PermissionsList) error {
 	existing, err := a.GetPermissions(securable, name)
 	if err != nil {
 		return err
 	}
-	return a.UpdatePermissions(securable, name, diffPermissionsForPrincipal(principal, list, existing))
+	return a.UpdatePermissions(securable, name, diffPermissionsForPrincipal(principal, list, *existing))
 }
 
-func filterPermissionsForPrincipal(in permissions.UnityCatalogPermissionsList, principal string) (out permissions.UnityCatalogPermissionsList) {
+func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string) (out catalog.PermissionsList) {
 
-	for _, v := range in.Assignments {
+	for _, v := range in.PrivilegeAssignments {
 		if v.Principal == principal {
-			out.Assignments = append(out.Assignments, v)
+			out.PrivilegeAssignments = append(out.PrivilegeAssignments, v)
 		}
 	}
 	return
@@ -99,7 +99,7 @@ func ResourceGrant() *schema.Resource {
 					Optional:      true,
 					ForceNew:      true,
 					AtLeastOneOf:  allFields,
-					ConflictsWith: util.SliceWithoutString(allFields, field),
+					ConflictsWith: permissions.SliceWithoutString(allFields, field),
 				}
 			}
 			return m
@@ -109,9 +109,9 @@ func ResourceGrant() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
-			privileges := util.ToStringSlice(d.Get("privileges").(*schema.Set).List())
-			var grants = permissions.UnityCatalogPermissionsList{
-				Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+			privileges := permissions.ToPrivilegeSlice(d.Get("privileges").(*schema.Set).List())
+			var grants = catalog.PermissionsList{
+				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
 						Principal:  principal,
 						Privileges: privileges,
@@ -134,20 +134,20 @@ func ResourceGrant() *schema.Resource {
 				return fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
 			}
 			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, c).GetPermissions(split[0], split[1])
-			grantsForPrincipal := filterPermissionsForPrincipal(grants, principal)
+			grantsForPrincipal := filterPermissionsForPrincipal(*grants, principal)
 			if err != nil {
 				return err
 			}
-			if len(grantsForPrincipal.Assignments) == 0 {
+			if len(grantsForPrincipal.PrivilegeAssignments) == 0 {
 				return apierr.NotFound("got empty permissions list")
 			}
 			return common.StructToData(grantsForPrincipal, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
-			privileges := util.ToStringSlice(d.Get("privileges").(*schema.Set).List())
-			var grants = permissions.UnityCatalogPermissionsList{
-				Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+			privileges := permissions.ToPrivilegeSlice(d.Get("privileges").(*schema.Set).List())
+			var grants = catalog.PermissionsList{
+				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
 						Principal:  principal,
 						Privileges: privileges,
@@ -165,7 +165,7 @@ func ResourceGrant() *schema.Resource {
 				return fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, split[0], split[1], principal, permissions.UnityCatalogPermissionsList{})
+			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, split[0], split[1], principal, catalog.PermissionsList{})
 		},
 	}.ToResource()
 }

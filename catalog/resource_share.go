@@ -245,9 +245,10 @@ func ResourceShare() *schema.Resource {
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback
+					old, _ := d.GetChange("owner")
 					_, err = w.Shares.Update(ctx, sharing.UpdateShare{
 						Name:  beforeSi.Name,
-						Owner: beforeSi.Owner,
+						Owner: old.(string),
 					})
 					if err != nil {
 						return err

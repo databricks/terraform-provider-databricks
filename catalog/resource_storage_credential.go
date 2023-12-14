@@ -47,7 +47,9 @@ func ResourceStorageCredential() *schema.Resource {
 			var create catalog.CreateStorageCredential
 			var update catalog.UpdateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
+			create.Name = d.Get("name").(string)
 			common.DataToStructPointer(d, tmpSchema, &update)
+			update.Name = d.Get("name").(string)
 
 			//manually add empty struct back for databricks_gcp_service_account
 			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
@@ -69,6 +71,7 @@ func ResourceStorageCredential() *schema.Resource {
 				if d.Get("owner") == "" {
 					return nil
 				}
+				// check - update has everything including owner, does this work already??
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
 					MetastoreId:           metastoreId,
@@ -90,6 +93,7 @@ func ResourceStorageCredential() *schema.Resource {
 					return nil
 				}
 
+				// check - update has everything including owner, does this work already??
 				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {
 					return err
@@ -117,50 +121,75 @@ func ResourceStorageCredential() *schema.Resource {
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var updateStorageCredentialRequest catalog.UpdateStorageCredential
-			common.DataToStructPointer(d, storageCredentialSchema, &updateStorageCredentialRequest)
-			ownerInRequest := updateStorageCredentialRequest.Owner
-			updateStorageCredentialRequest.Owner = ""
+			var update catalog.UpdateStorageCredential
+			common.DataToStructPointer(d, storageCredentialSchema, &update)
+			update.Name = d.Id()
+
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-					CredentialInfo:        &updateStorageCredentialRequest,
-					MetastoreId:           d.Get("metastore_id").(string),
-					StorageCredentialName: d.Id(),
-				})
-				if err != nil {
-					return err
-				}
-				if ownerInRequest != "" && d.HasChange("owner") {
-					var updateOwnerStorageCredentialRequest catalog.UpdateStorageCredential
-					updateOwnerStorageCredentialRequest.Owner = ownerInRequest
-					updateOwnerStorageCredentialRequest.Name = updateStorageCredentialRequest.Name
+				if d.HasChange("owner") {
 					_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-						CredentialInfo:        &updateOwnerStorageCredentialRequest,
+						CredentialInfo: &catalog.UpdateStorageCredential{
+							Name:  update.Name,
+							Owner: update.Owner,
+						},
 						MetastoreId:           d.Get("metastore_id").(string),
 						StorageCredentialName: d.Id(),
 					})
 					if err != nil {
-						// roll back the previous changes
-
 						return err
 					}
+				}
+				update.Owner = ""
+				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
+					CredentialInfo:        &update,
+					MetastoreId:           d.Get("metastore_id").(string),
+					StorageCredentialName: d.Id(),
+				})
+				if err != nil {
+					if d.HasChange("owner") {
+						// Rollback
+						old, _ := d.GetChange("owner")
+						_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
+							CredentialInfo: &catalog.UpdateStorageCredential{
+								Name:  update.Name,
+								Owner: old.(string),
+							},
+							MetastoreId:           d.Get("metastore_id").(string),
+							StorageCredentialName: d.Id(),
+						})
+						if err != nil {
+							return err
+						}
+					}
+					return err
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				_, err := w.StorageCredentials.Update(ctx, updateStorageCredentialRequest)
-				if err != nil {
-					return err
-				}
-				if ownerInRequest != "" && d.HasChange("owner") {
-					var updateOwnerStorageCredentialRequest catalog.UpdateStorageCredential
-					updateOwnerStorageCredentialRequest.Owner = ownerInRequest
-					updateOwnerStorageCredentialRequest.Name = updateStorageCredentialRequest.Name
-					_, err := w.StorageCredentials.Update(ctx, updateOwnerStorageCredentialRequest)
+				if d.HasChange("owner") {
+					_, err := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
+						Name:  update.Name,
+						Owner: update.Owner,
+					})
 					if err != nil {
-						// roll back the previous changes
-
 						return err
 					}
+				}
+				update.Owner = ""
+				_, err := w.StorageCredentials.Update(ctx, update)
+				if err != nil {
+					// Rollback
+					if d.HasChange("owner") {
+						// Rollback
+						old, _ := d.GetChange("owner")
+						_, err := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
+							Name:  update.Name,
+							Owner: old.(string),
+						})
+						if err != nil {
+							return err
+						}
+					}
+					return err
 				}
 				return nil
 			})

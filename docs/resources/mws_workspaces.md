@@ -93,7 +93,7 @@ By default, Databricks creates a VPC in your AWS account for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "random_string" "naming" {
@@ -210,7 +210,7 @@ To get workspace running, you have to configure a network object:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 variable "databricks_google_service_account" {}
 variable "google_project" {}
@@ -271,7 +271,7 @@ By default, Databricks creates a VPC in your GCP project for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 data "google_client_openid_userinfo" "me" {
@@ -312,7 +312,7 @@ output "databricks_token" {
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
 * `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).
@@ -358,10 +358,6 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
 
-## Import
-
--> **Note** Importing this resource is not currently supported.
-
 ## Timeouts
 
 The `timeouts` block allows you to specify `create`, `read` and `update` timeouts. It usually takes 5-7 minutes to provision Databricks E2 Workspace and another couple of minutes for your local DNS caches to resolve. Please launch `TF_LOG=DEBUG terraform apply` whenever you observe timeout issues.
@@ -381,6 +377,10 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 * Mac OS X Yosemite - `sudo discoveryutil udnsflushcaches`
 * Mac OS X Snow Leopard - `sudo dscacheutil -flushcache`
 * Mac OS X Leopard and below - `sudo lookupd -flushcache`
+
+## Import
+
+-> **Note** Importing this resource is not currently supported.
 
 ## Related Resources
 

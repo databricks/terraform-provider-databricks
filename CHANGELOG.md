@@ -1,9 +1,27 @@
 # Version changelog
 
+## 1.31.1
+
+New Features and Improvements:
+ * Added `workspace_path` attribute to [databricks_workspace_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file) resource ([#2984](https://github.com/databricks/terraform-provider-databricks/pull/2984)).
+
+Bugfixes:
+ * Bugfix for azure authentication ([#732](https://github.com/databricks/databricks-sdk-go/pull/732))
+
+Exporter:
+ * Exporter: fix suppression of empty `webhook_notifications` blocks in tasks ([#2954](https://github.com/databricks/terraform-provider-databricks/pull/2954)).
+
+Internal Changes:
+ * Migrated library read to use Go SDK ([#2985](https://github.com/databricks/terraform-provider-databricks/pull/2985)).
+ * Migrated [databricks_mws_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_credentials) to Go SDK ([#2962](https://github.com/databricks/terraform-provider-databricks/pull/2962)).
+ * Update Go SDK to v0.26.2
+
+
 ## 1.31.0
 
 New Features and Improvements:
  * Add `webhooks_notifications` on task levels in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) resource ([#2953](https://github.com/databricks/terraform-provider-databricks/pull/2953)).
+ * Add delegation support for [databricks_storage_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/storage_credential) ([#2973](https://github.com/databricks/terraform-provider-databricks/pull/2973)).
  * Add edit_mode to [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#2918](https://github.com/databricks/terraform-provider-databricks/pull/2918)).
  * Added [databricks_instance_profiles](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/instance_profiles) data source ([#2891](https://github.com/databricks/terraform-provider-databricks/pull/2891)).
  * Allow to override built-in [databricks_cluster_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster_policy) resources ([#2941](https://github.com/databricks/terraform-provider-databricks/pull/2941)).
@@ -40,6 +58,7 @@ Internal Changes:
  * Fixed unit tests for the upcoming Go SDK release ([#2956](https://github.com/databricks/terraform-provider-databricks/pull/2956)).
  * Migrate delete to use go-sdk for library resource ([#2960](https://github.com/databricks/terraform-provider-databricks/pull/2960)).
  * Migrate jobs delete to go-sdk ([#2948](https://github.com/databricks/terraform-provider-databricks/pull/2948)).
+ * Moved `contains` function to common package ([#2990](https://github.com/databricks/terraform-provider-databricks/pull/2990)).
 
 ## 1.30.0
 

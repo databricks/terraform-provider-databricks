@@ -1,6 +1,6 @@
 {
   "object_id": "/files/789",
-  "object_type": "files",
+  "object_type": "file",
   "access_control_list": [
     {
       "user_name": "jsmith@example.com",
@@ -8,7 +8,9 @@
         {
           "permission_level": "CAN_RUN",
           "inherited": true,
-          "inherited_from_object": "/directories/"
+          "inherited_from_object": [
+              "/directories/"
+          ]
         }
       ]
     }

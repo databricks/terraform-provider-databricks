@@ -3,11 +3,14 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -126,7 +129,31 @@ func (a PermissionsAPI) replacePermissions(securable, name string, list Permissi
 	if err != nil {
 		return err
 	}
-	return a.updatePermissions(securable, name, list.diff(existing))
+	err = a.updatePermissions(securable, name, list.diff(existing))
+	if err != nil {
+		return err
+	}
+	return a.waitForStatus(securable, name, list)
+}
+
+func (a PermissionsAPI) defaultTimeout() time.Duration {
+	return 1 * time.Minute
+}
+
+func (a PermissionsAPI) waitForStatus(securable, name string, desired PermissionsList) (err error) {
+	return resource.RetryContext(a.context, a.defaultTimeout(), func() *resource.RetryError {
+		permissions, err := a.getPermissions(securable, name)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		log.Printf("[DEBUG] Permissions for %s-%s are: %v", securable, name, permissions)
+		if permissions.diff(desired).Changes == nil {
+			return nil
+		}
+		return resource.RetryableError(
+			fmt.Errorf("permissions for %s-%s are %v, but have to be %v",
+				securable, name, permissions, desired))
+	})
 }
 
 type securableMapping map[string]map[string]bool

@@ -220,15 +220,18 @@ func ResourceShare() *schema.Resource {
 			}
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
-			beforeSi.Name = d.Id() // check
-			afterSi.Name = d.Id()
 
-			changes := beforeSi.Diff(afterSi) // diff doesn't have owner check so it contains owner as well?
+			changes := beforeSi.Diff(afterSi)
+
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 
 			if d.HasChange("owner") {
-				err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-					Owner:   afterSi.Owner,
-					Updates: nil,
+				_, err = w.Shares.Update(ctx, sharing.UpdateShare{
+					Name:  afterSi.Name,
+					Owner: afterSi.Owner,
 				})
 				if err != nil {
 					return err
@@ -236,16 +239,15 @@ func ResourceShare() *schema.Resource {
 			}
 
 			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-				Owner:   "", // empty owner?
+				Owner:   "",
 				Updates: changes,
 			})
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback
-					old, _ := d.GetChange("owner")
-					err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-						Owner:   old.(string),
-						Updates: nil,
+					_, err = w.Shares.Update(ctx, sharing.UpdateShare{
+						Name:  beforeSi.Name,
+						Owner: beforeSi.Owner,
 					})
 					if err != nil {
 						return err

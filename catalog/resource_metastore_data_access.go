@@ -48,6 +48,11 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 		Optional: true,
 	}
 
+	m["force_update"] = &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+	}
+
 	return m
 }
 

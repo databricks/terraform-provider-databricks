@@ -44,7 +44,7 @@ func TestUcAccCreateRecipientDb2DbAws(t *testing.T) {
 	})
 }
 
-func TestUcAccUpdatedRecipientDb2Open(t *testing.T) {
+func TestUcAccUpdateRecipientDb2Open(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_recipient" "db2open" {
@@ -87,7 +87,7 @@ func TestUcAccUpdatedRecipientDb2Open(t *testing.T) {
 		resource "databricks_recipient" "db2open" {
 			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
 			comment = "made by terraform -- Updated Comment 2"
-			owner = "account users" ?
+			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}" 
 			authentication_type = "TOKEN"
 			sharing_code = "{var.STICKY_RANDOM}"
 			ip_access_list {

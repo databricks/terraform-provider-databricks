@@ -81,6 +81,7 @@ func ResourceCatalog() *schema.Resource {
 			}
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
+			updateCatalogRequest.Name = d.Id()
 			_, err = w.Catalogs.Update(ctx, updateCatalogRequest)
 			if err != nil {
 				return err

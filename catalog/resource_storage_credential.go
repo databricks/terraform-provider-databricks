@@ -122,9 +122,12 @@ func ResourceStorageCredential() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateStorageCredential
+			force := d.Get("force_update").(bool)
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Id()
-
+			update.AwsIamRole.UnityCatalogIamArn = ""
+			update.AwsIamRole.ExternalId = ""
+			update.Force = force
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				if d.HasChange("owner") {
 					_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
@@ -177,7 +180,6 @@ func ResourceStorageCredential() *schema.Resource {
 				update.Owner = ""
 				_, err := w.StorageCredentials.Update(ctx, update)
 				if err != nil {
-					// Rollback
 					if d.HasChange("owner") {
 						// Rollback
 						old, _ := d.GetChange("owner")

@@ -66,11 +66,12 @@ func diffPermissionsForPrincipal(principal string, pl catalog.PermissionsList, e
 
 // replacePermissionsForPrincipal merges removal diff of existing permissions on the platform
 func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable string, name string, principal string, list catalog.PermissionsList) error {
-	existing, err := a.GetPermissions(securable, name)
+	securableType := permissions.Mappings.GetSecurableType(securable)
+	existing, err := a.GetPermissions(securableType, name)
 	if err != nil {
 		return err
 	}
-	return a.UpdatePermissions(securable, name, diffPermissionsForPrincipal(principal, list, *existing))
+	return a.UpdatePermissions(securableType, name, diffPermissionsForPrincipal(principal, list, *existing))
 }
 
 func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string) (out catalog.PermissionsList) {
@@ -133,7 +134,7 @@ func ResourceGrant() *schema.Resource {
 			if len(split) != 3 {
 				return fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
 			}
-			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, c).GetPermissions(split[0], split[1])
+			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, c).GetPermissions(permissions.Mappings.GetSecurableType(split[0]), split[1])
 			grantsForPrincipal := filterPermissionsForPrincipal(*grants, principal)
 			if err != nil {
 				return err

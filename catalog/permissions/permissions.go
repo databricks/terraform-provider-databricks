@@ -17,17 +17,17 @@ func NewUnityCatalogPermissionsAPI(ctx context.Context, m any) UnityCatalogPermi
 	return UnityCatalogPermissionsAPI{client, ctx}
 }
 
-func (a UnityCatalogPermissionsAPI) GetPermissions(securable string, name string) (list *catalog.PermissionsList, err error) {
-	if securable == "share" {
+func (a UnityCatalogPermissionsAPI) GetPermissions(securable catalog.SecurableType, name string) (list *catalog.PermissionsList, err error) {
+	if securable.String() == "share" {
 		list, err = a.client.Shares.SharePermissions(a.context, sharing.SharePermissionsRequest{name})
 		return
 	}
-	list, err = a.client.Grants.GetBySecurableTypeAndFullName(a.context, Mappings.GetSecurableType(securable), name)
+	list, err = a.client.Grants.GetBySecurableTypeAndFullName(a.context, securable, name)
 	return
 }
 
-func (a UnityCatalogPermissionsAPI) UpdatePermissions(securable, name string, diff []catalog.PermissionsChange) error {
-	if securable == "share" {
+func (a UnityCatalogPermissionsAPI) UpdatePermissions(securable catalog.SecurableType, name string, diff []catalog.PermissionsChange) error {
+	if securable.String() == "share" {
 		return a.client.Shares.UpdatePermissions(a.context, sharing.UpdateSharePermissions{
 			Changes: diff,
 			Name:    name,
@@ -35,7 +35,7 @@ func (a UnityCatalogPermissionsAPI) UpdatePermissions(securable, name string, di
 	}
 	_, err := a.client.Grants.Update(a.context, catalog.UpdatePermissions{
 		Changes:       diff,
-		SecurableType: Mappings.GetSecurableType(securable),
+		SecurableType: securable,
 		FullName:      name,
 	})
 	return err

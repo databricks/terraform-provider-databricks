@@ -43,3 +43,57 @@ func TestUcAccCreateRecipientDb2DbAws(t *testing.T) {
 		}`,
 	})
 }
+
+func TestUcAccUpdatedRecipientDb2Open(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: `
+		resource "databricks_recipient" "db2open" {
+			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
+			comment = "made by terraform"
+			authentication_type = "TOKEN"
+			sharing_code = "{var.STICKY_RANDOM}"
+			ip_access_list {
+			// using private ip for acc testing
+			allowed_ip_addresses = ["10.0.0.0/16"]
+			}
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_recipient" "db2open" {
+			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
+			comment = "made by terraform -- Updated Comment"
+			authentication_type = "TOKEN"
+			sharing_code = "{var.STICKY_RANDOM}"
+			ip_access_list {
+			// using private ip for acc testing
+			allowed_ip_addresses = ["10.0.0.0/16"]
+			}
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_recipient" "db2open" {
+			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
+			comment = "made by terraform -- Updated Comment"
+			owner = "account users"
+			authentication_type = "TOKEN"
+			sharing_code = "{var.STICKY_RANDOM}"
+			ip_access_list {
+			// using private ip for acc testing
+			allowed_ip_addresses = ["10.0.0.0/16"]
+			}
+		}`,
+	}, step{
+		Template: `
+		resource "databricks_recipient" "db2open" {
+			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
+			comment = "made by terraform -- Updated Comment 2"
+			owner = "account users" ?
+			authentication_type = "TOKEN"
+			sharing_code = "{var.STICKY_RANDOM}"
+			ip_access_list {
+			// using private ip for acc testing
+			allowed_ip_addresses = ["10.0.0.0/16"]
+			}
+		}`,
+	})
+}

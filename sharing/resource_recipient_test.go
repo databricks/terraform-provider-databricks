@@ -126,6 +126,263 @@ func TestReadRecipient(t *testing.T) {
 	assert.Equal(t, "b", d.Get("comment"))
 }
 
+func TestUpdateRecipientOwnerAndOtherFields(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				ExpectedRequest: sharing.UpdateRecipient{
+					Owner: "updatedOwner",
+				},
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "b",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "updatedOwner",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				ExpectedRequest: sharing.UpdateRecipient{
+					Comment: "e",
+				},
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "e",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "updatedOwner",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/recipients/a?",
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "e",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "updatedOwner",
+				},
+			},
+		},
+		Resource: ResourceRecipient(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":                "a",
+			"comment":             "b",
+			"authentication_type": "TOKEN",
+			"owner":               "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "e"
+		authentication_type = "TOKEN"
+		owner = "updatedOwner"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "a", d.Get("name"))
+	assert.Equal(t, "e", d.Get("comment"))
+	assert.Equal(t, "updatedOwner", d.Get("owner"))
+}
+
+func TestUpdateRecipientFieldsOtherThanOwner(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				ExpectedRequest: sharing.UpdateRecipient{
+					Comment: "e",
+				},
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "e",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "administrators",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/recipients/a?",
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "e",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "administrators",
+				},
+			},
+		},
+		Resource: ResourceRecipient(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":                "a",
+			"comment":             "b",
+			"authentication_type": "TOKEN",
+			"owner":               "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "e"
+		authentication_type = "TOKEN"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "a", d.Get("name"))
+	assert.Equal(t, "e", d.Get("comment"))
+	assert.Equal(t, "administrators", d.Get("owner"))
+}
+
+func TestUpdateRecipientOnlyOwner(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				ExpectedRequest: sharing.UpdateRecipient{
+					Owner: "updatedOwner",
+				},
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "b",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "updatedOwner",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				ExpectedRequest: sharing.UpdateRecipient{
+					Comment: "b",
+				},
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "b",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "updatedOwner",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/recipients/a?",
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "b",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "updatedOwner",
+				},
+			},
+		},
+		Resource: ResourceRecipient(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":                "a",
+			"comment":             "b",
+			"authentication_type": "TOKEN",
+			"owner":               "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "b"
+		authentication_type = "TOKEN"
+		owner = "updatedOwner"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "a", d.Get("name"))
+	assert.Equal(t, "b", d.Get("comment"))
+	assert.Equal(t, "updatedOwner", d.Get("owner"))
+}
+
+func TestUpdateRecipientRollback(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				ExpectedRequest: sharing.UpdateRecipient{
+					Owner: "updatedOwner",
+				},
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "b",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "updatedOwner",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				ExpectedRequest: sharing.UpdateRecipient{
+					Comment: "e",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/recipients/a",
+				ExpectedRequest: sharing.UpdateRecipient{
+					Owner: "administrators",
+				},
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "b",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "administrators",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/recipients/a?",
+				Response: sharing.RecipientInfo{
+					Name:               "a",
+					Comment:            "b",
+					SharingCode:        "c",
+					AuthenticationType: "TOKEN",
+					Owner:              "administrators",
+				},
+			},
+		},
+		Resource: ResourceRecipient(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":                "a",
+			"comment":             "b",
+			"authentication_type": "TOKEN",
+			"owner":               "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "e"
+		authentication_type = "TOKEN"
+		owner = "updatedOwner"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "a", d.Get("name"))
+	assert.Equal(t, "b", d.Get("comment"))
+	assert.Equal(t, "administrators", d.Get("owner"))
+}
+
 func TestDeleteRecipient(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

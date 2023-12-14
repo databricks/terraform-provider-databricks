@@ -80,7 +80,7 @@ func ResourceProvider() *schema.Resource {
 			return common.StructToData(ri, providerSchemaForRead, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ri ProviderInfo // doesn't have Owner
+			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)
 			return NewProvidersAPI(ctx, c).updateProvider(&ri)
 		},

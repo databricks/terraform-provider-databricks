@@ -3,6 +3,7 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
@@ -106,7 +107,18 @@ func TestUpdateSchema(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{
-					Owner:   "administrators",
+					Owner: "administrators",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
 					Name:    "a",
 					Comment: "c",
 				},
@@ -146,6 +158,136 @@ func TestUpdateSchema(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateSchemaOwnerWithOtherFields(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Owner: "administrators",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Name:    "a",
+					Comment: "d",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "d",
+					Owner:    "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
+				Response: catalog.SchemaInfo{
+					Name:        "a",
+					CatalogName: "b",
+					MetastoreId: "d",
+					Comment:     "d",
+					Owner:       "administrators",
+				},
+			},
+		},
+		Resource: ResourceSchema(),
+		Update:   true,
+		ID:       "b.a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"catalog_name": "b",
+			"comment":      "c",
+			"owner":        "testOwner",
+		},
+		HCL: `
+		name = "a"
+		catalog_name = "b"
+		comment = "d"
+		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateSchemaRollback(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Owner: "administrators",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Name:    "a",
+					Comment: "d",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Owner: "testOwner",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "testOwner",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a?",
+				Response: catalog.SchemaInfo{
+					Name:        "a",
+					CatalogName: "b",
+					MetastoreId: "d",
+					Comment:     "d",
+					Owner:       "testOwner",
+				},
+			},
+		},
+		Resource: ResourceSchema(),
+		Update:   true,
+		ID:       "b.a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"catalog_name": "b",
+			"comment":      "c",
+			"owner":        "testOwner",
+		},
+		HCL: `
+		name = "a"
+		catalog_name = "b"
+		comment = "d"
+		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateSchemaForceNew(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -153,7 +295,18 @@ func TestUpdateSchemaForceNew(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{
-					Owner:   "administrators",
+					Owner: "administrators",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
 					Name:    "a",
 					Comment: "c",
 				},

@@ -41,6 +41,8 @@ func ResourceSchema() *schema.Resource {
 			}
 			var createSchemaRequest catalog.CreateSchema
 			common.DataToStructPointer(d, s, &createSchemaRequest)
+			createSchemaRequest.Name = d.Get("name").(string)
+
 			schema, err := w.Schemas.Create(ctx, createSchemaRequest)
 			if err != nil {
 				return err
@@ -80,8 +82,31 @@ func ResourceSchema() *schema.Resource {
 			var updateSchemaRequest catalog.UpdateSchema
 			common.DataToStructPointer(d, s, &updateSchemaRequest)
 			updateSchemaRequest.FullName = d.Id()
+
+			if d.HasChange("owner") {
+				_, err := w.Schemas.Update(ctx, catalog.UpdateSchema{
+					FullName: updateSchemaRequest.FullName,
+					Owner:    updateSchemaRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateSchemaRequest.Owner = ""
 			schema, err := w.Schemas.Update(ctx, updateSchemaRequest)
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, _ := d.GetChange("owner")
+					_, err = w.Schemas.Update(ctx, catalog.UpdateSchema{
+						FullName: updateSchemaRequest.FullName,
+						Owner:    old.(string),
+					})
+					if err != nil {
+						return err
+					}
+				}
 				return err
 			}
 			// We need to update the resource Id because Name is updatable and FullName consists of Name,

@@ -152,3 +152,5 @@ resource "databricks_grants" "catalog_grants" {
   }
 }
 ```
+
+See `databricks_grant` for managing grants for a single principal.

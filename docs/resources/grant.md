@@ -1,10 +1,7 @@
 ---
 subcategory: "Unity Catalog"
 ---
-# databricks_grants Resource
-
--> **Note**
-  It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention. See [databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant) for managing grants for a single principal.
+# databricks_grant Resource
 
 -> **Note**
   This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
@@ -16,7 +13,7 @@ In Unity Catalog all users initially have no access to data. Only Metastore Admi
 
 Securable objects are hierarchical and privileges are inherited downward. The highest level object that privileges are inherited from is the catalog. This means that granting a privilege on a catalog or schema automatically grants the privilege to all current and future objects within the catalog or schema. Privileges that are granted on a metastore are not inherited.
 
-Every `databricks_grants` resource must have exactly one securable identifier and one or more `grant` blocks with the following arguments:
+Every `databricks_grant` resource must have exactly one securable identifier and the following arguments:
 
 - `principal` - User name, group name or service principal application ID.
 - `privileges` - One or more privileges that are specific to a securable type.
@@ -32,16 +29,18 @@ Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/s
 You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `CREATE_STORAGE_CREDENTIAL`, `MANAGE_ALLOWLIST`, `SET_SHARE_PERMISSION`, `USE_MARKETPLACE_ASSETS`, `USE_CONNECTION`, `USE_PROVIDER`, `USE_RECIPIENT` and `USE_SHARE` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
 
 ```hcl
-resource "databricks_grants" "sandbox" {
+resource "databricks_grant" "sandbox_data_engineers" {
   metastore = databricks_metastore.this.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
-  }
-  grant {
-    principal  = "Data Sharer"
-    privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
-  }
+
+  principal  = "Data Engineers"
+  privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
+}
+
+resource "databricks_grant" "sandbox_data_sharer" {
+  metastore = databricks_metastore.this.id
+
+  principal  = "Data Sharer"
+  privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
 }
 ```
 
@@ -59,20 +58,25 @@ resource "databricks_catalog" "sandbox" {
   }
 }
 
-resource "databricks_grants" "sandbox" {
+resource "databricks_grant" "sandbox_data_scientists" {
   catalog = databricks_catalog.sandbox.name
-  grant {
-    principal  = "Data Scientists"
-    privileges = ["USE_CATALOG", "USE_SCHEMA", "CREATE_TABLE", "SELECT"]
-  }
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["USE_CATALOG", "USE_SCHEMA", "CREATE_SCHEMA", "CREATE_TABLE", "MODIFY"]
-  }
-  grant {
-    principal  = "Data Analyst"
-    privileges = ["USE_CATALOG", "USE_SCHEMA", "SELECT"]
-  }
+
+  principal  = "Data Scientists"
+  privileges = ["USE_CATALOG", "USE_SCHEMA", "CREATE_TABLE", "SELECT"]
+}
+
+resource "databricks_grant" "sandbox_data_engineers" {
+  catalog = databricks_catalog.sandbox.name
+
+  principal  = "Data Engineers"
+  privileges = ["USE_CATALOG", "USE_SCHEMA", "CREATE_SCHEMA", "CREATE_TABLE", "MODIFY"]
+}
+
+resource "databricks_grant" "sandbox_data_analyst" {
+  catalog = databricks_catalog.sandbox.name
+
+  principal  = "Data Analyst"
+  privileges = ["USE_CATALOG", "USE_SCHEMA", "SELECT"]
 }
 ```
 
@@ -90,12 +94,11 @@ resource "databricks_schema" "things" {
   }
 }
 
-resource "databricks_grants" "things" {
+resource "databricks_grant" "things" {
   schema = databricks_schema.things.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["USE_SCHEMA", "MODIFY"]
-  }
+
+  principal  = "Data Engineers"
+  privileges = ["USE_SCHEMA", "MODIFY"]
 }
 ```
 
@@ -104,16 +107,18 @@ resource "databricks_grants" "things" {
 You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `SELECT` and `MODIFY` privileges to [_`catalog.schema.table`_](tables.md) specified in the `table` attribute.
 
 ```hcl
-resource "databricks_grants" "customers" {
+resource "databricks_grant" "customers_data_engineers" {
   table = "main.reporting.customers"
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["MODIFY", "SELECT"]
-  }
-  grant {
-    principal  = "Data Analysts"
-    privileges = ["SELECT"]
-  }
+
+  principal  = "Data Engineers"
+  privileges = ["MODIFY", "SELECT"]
+}
+
+resource "databricks_grant" "customers_data_analysts" {
+  table = "main.reporting.customers"
+
+  principal  = "Data Analysts"
+  privileges = ["SELECT"]
 }
 ```
 
@@ -125,15 +130,13 @@ data "databricks_tables" "things" {
   schema_name  = "things"
 }
 
-resource "databricks_grants" "things" {
+resource "databricks_grant" "things" {
   for_each = data.databricks_tables.things.ids
 
   table = each.value
 
-  grant {
-    principal  = "sensitive"
-    privileges = ["SELECT", "MODIFY"]
-  }
+  principal  = "sensitive"
+  privileges = ["SELECT", "MODIFY"]
 }
 ```
 
@@ -142,12 +145,11 @@ resource "databricks_grants" "things" {
 You can grant `ALL_PRIVILEGES`, `APPLY_TAG` and `SELECT` privileges to [_`catalog.schema.view`_](views.md) specified in `table` attribute.
 
 ```hcl
-resource "databricks_grants" "customer360" {
+resource "databricks_grant" "customer360" {
   table = "main.reporting.customer360"
-  grant {
-    principal  = "Data Analysts"
-    privileges = ["SELECT"]
-  }
+
+  principal  = "Data Analysts"
+  privileges = ["SELECT"]
 }
 ```
 
@@ -159,15 +161,13 @@ data "databricks_views" "customers" {
   schema_name  = "customers"
 }
 
-resource "databricks_grants" "customers" {
+resource "databricks_grant" "customers" {
   for_each = data.databricks_views.customers.ids
 
   table = each.value
 
-  grant {
-    principal  = "sensitive"
-    privileges = ["SELECT", "MODIFY"]
-  }
+  principal  = "sensitive"
+  privileges = ["SELECT", "MODIFY"]
 }
 ```
 
@@ -185,12 +185,11 @@ resource "databricks_volume" "this" {
   comment          = "this volume is managed by terraform"
 }
 
-resource "databricks_grants" "volume" {
+resource "databricks_grant" "volume" {
   volume = databricks_volume.this.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["WRITE_VOLUME"]
-  }
+
+  principal  = "Data Engineers"
+  privileges = ["WRITE_VOLUME"]
 }
 ```
 
@@ -199,16 +198,18 @@ resource "databricks_grants" "volume" {
 You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, and `EXECUTE` privileges to [_`catalog.schema.model`_](registered_model.md) specified in the `model` attribute.
 
 ```hcl
-resource "databricks_grants" "customers" {
+resource "databricks_grant" "customers_data_engineers" {
   model = "main.reporting.customer_model"
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["APPLY_TAG", "EXECUTE"]
-  }
-  grant {
-    principal  = "Data Analysts"
-    privileges = ["EXECUTE"]
-  }
+
+  principal  = "Data Engineers"
+  privileges = ["APPLY_TAG", "EXECUTE"]
+}
+
+resource "databricks_grant" "customers_data_analysts" {
+  model = "main.reporting.customer_model"
+
+  principal  = "Data Analysts"
+  privileges = ["EXECUTE"]
 }
 ```
 
@@ -225,12 +226,11 @@ resource "databricks_storage_credential" "external" {
   comment = "Managed by TF"
 }
 
-resource "databricks_grants" "external_creds" {
+resource "databricks_grant" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["CREATE_EXTERNAL_TABLE"]
-  }
+
+  principal  = "Data Engineers"
+  privileges = ["CREATE_EXTERNAL_TABLE"]
 }
 ```
 
@@ -246,24 +246,32 @@ resource "databricks_external_location" "some" {
   comment         = "Managed by TF"
 }
 
-resource "databricks_grants" "some" {
+resource "databricks_grant" "some_data_engineers" {
   external_location = databricks_external_location.some.id
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
-  }
-  grant {
-    principal  = databricks_service_principal.my_sp.application_id
-    privileges = ["USE_SCHEMA", "MODIFY"]
-  }
-  grant {
-    principal  = databricks_group.my_group.display_name
-    privileges = ["USE_SCHEMA", "MODIFY"]
-  }
-  grant {
-    principal  = databricks_group.my_user.user_name
-    privileges = ["USE_SCHEMA", "MODIFY"]
-  }
+
+  principal  = "Data Engineers"
+  privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
+}
+
+resource "databricks_grant" "some_service_principal" {
+  external_location = databricks_external_location.some.id
+
+  principal  = databricks_service_principal.my_sp.application_id
+  privileges = ["USE_SCHEMA", "MODIFY"]
+}
+
+resource "databricks_grant" "some_group" {
+  external_location = databricks_external_location.some.id
+
+  principal  = databricks_group.my_group.display_name
+  privileges = ["USE_SCHEMA", "MODIFY"]
+}
+
+resource "databricks_grant" "some_user" {
+  external_location = databricks_external_location.some.id
+
+  principal  = databricks_group.my_user.user_name
+  privileges = ["USE_SCHEMA", "MODIFY"]
 }
 ```
 
@@ -287,12 +295,11 @@ resource "databricks_connection" "mysql" {
   }
 }
 
-resource "databricks_grants" "some" {
+resource "databricks_grant" "some" {
   foreign_connection = databricks_connection.mysql.name
-  grant {
-    principal  = "Data Engineers"
-    privileges = ["CREATE_FOREIGN_CATALOG", "USE_CONNECTION"]
-  }
+
+  principal  = "Data Engineers"
+  privileges = ["CREATE_FOREIGN_CATALOG", "USE_CONNECTION"]
 }
 ```
 
@@ -309,12 +316,11 @@ resource "databricks_recipient" "some" {
   name = "my_recipient"
 }
 
-resource "databricks_grants" "some" {
+resource "databricks_grant" "some" {
   share = databricks_share.some.name
-  grant {
-    principal  = databricks_recipient.some.name
-    privileges = ["SELECT"]
-  }
+
+  principal  = databricks_recipient.some.name
+  privileges = ["SELECT"]
 }
 ```
 

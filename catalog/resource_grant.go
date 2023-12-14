@@ -84,33 +84,26 @@ func filterPermissionsForPrincipal(in permissions.UnityCatalogPermissionsList, p
 }
 
 func ResourceGrant() *schema.Resource {
-	s := map[string]*schema.Schema{
-		"principal": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		"privileges": {
-			Type:     schema.TypeSet,
-			Required: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
-		},
-	}
-	// Handle all of the securable resource types
-	allFields := []string{}
-	for field := range permissions.Mappings {
-		allFields = append(allFields, field)
-	}
+	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 
-	for _, field := range allFields {
-		s[field] = &schema.Schema{
-			Type:          schema.TypeString,
-			Optional:      true,
-			ForceNew:      true,
-			ConflictsWith: util.SliceWithoutString(allFields, field),
-		}
-	}
+			m["principal"].ForceNew = true
+
+			allFields := []string{}
+			for field := range permissions.Mappings {
+				allFields = append(allFields, field)
+			}
+			for field := range permissions.Mappings {
+				m[field] = &schema.Schema{
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					AtLeastOneOf:  allFields,
+					ConflictsWith: util.SliceWithoutString(allFields, field),
+				}
+			}
+			return m
+		})
 
 	return common.Resource{
 		Schema: s,

@@ -116,12 +116,74 @@ func TestResourceGrantUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceGrant(),
-		Update:   true,
-		ID:       "table/foo.bar.baz/me",
+		Resource:    ResourceGrant(),
+		Update:      true,
+		RequiresNew: false,
+		ID:          "table/foo.bar.baz/me",
 		InstanceState: map[string]string{
 			"table":     "foo.bar.baz",
 			"principal": "me",
+		},
+		HCL: `
+		table = "foo.bar.baz"
+
+		principal = "me"
+		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGrantUpdateWithChangedPrincipalForcesNewResource(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				Response: permissions.UnityCatalogPermissionsList{
+					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+						{
+							Principal:  "someone-else",
+							Privileges: []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: permissions.UnityCatalogPermissionsDiff{
+					Changes: []permissions.UnityCatalogPermissionsChange{
+						{
+							Principal: "me",
+							Add:       []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				Response: permissions.UnityCatalogPermissionsList{
+					Assignments: []permissions.UnityCatalogPrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []string{"MODIFY", "SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []string{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource:    ResourceGrant(),
+		Update:      true,
+		RequiresNew: true,
+		ID:          "table/foo.bar.baz/me",
+		InstanceState: map[string]string{
+			"table":     "foo.bar.baz",
+			"principal": "someone-else",
 		},
 		HCL: `
 		table = "foo.bar.baz"
@@ -203,6 +265,53 @@ func TestResourceGrantReadMalformedId(t *testing.T) {
 		privileges = ["MODIFY", "SELECT"]
 		`,
 	}.ExpectError(t, "ID must be three elements split by `/`: foo.bar")
+}
+
+func TestResourceGrantCreateNoSecurable(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceGrant(),
+		Create:   true,
+		HCL: `
+		principal = "me"
+		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [materialized_view] Missing required argument. [metastore] Missing required argument. [model] Missing required argument. [schema] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [view] Missing required argument. [volume] Missing required argument")
+}
+
+func TestResourceGrantCreateOneSecurableOnly(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceGrant(),
+		Create:   true,
+		HCL: `
+		catalog = "foo"
+		schema = "bar"
+		table = "baz"
+		principal = "me"
+		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ExpectError(t, "invalid config supplied. [catalog] Conflicting configuration arguments. [schema] Conflicting configuration arguments. [table] Conflicting configuration arguments")
+}
+
+func TestResourceGrantCreatePrincipalRequired(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceGrant(),
+		Create:   true,
+		HCL: `
+		table = "foo.bar.baz"
+		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ExpectError(t, "invalid config supplied. [principal] Missing required argument")
+}
+
+func TestResourceGrantCreatePrivilegesRequired(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceGrant(),
+		Create:   true,
+		HCL: `
+		table = "foo.bar.baz"
+		principal = "me"
+		`,
+	}.ExpectError(t, "invalid config supplied. [privileges] Missing required argument")
 }
 
 type grantData map[string]string

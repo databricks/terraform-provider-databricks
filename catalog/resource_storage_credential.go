@@ -71,7 +71,6 @@ func ResourceStorageCredential() *schema.Resource {
 				if d.Get("owner") == "" {
 					return nil
 				}
-				// check - update has everything including owner, does this work already??
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
 					MetastoreId:           metastoreId,
@@ -93,7 +92,6 @@ func ResourceStorageCredential() *schema.Resource {
 					return nil
 				}
 
-				// check - update has everything including owner, does this work already??
 				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {
 					return err
@@ -125,9 +123,15 @@ func ResourceStorageCredential() *schema.Resource {
 			force := d.Get("force_update").(bool)
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Id()
-			update.AwsIamRole.UnityCatalogIamArn = ""
-			update.AwsIamRole.ExternalId = ""
 			update.Force = force
+			// We need to set them to empty since these fields are computed
+			if _, ok := d.GetOk("aws_iam_role"); ok {
+				update.AwsIamRole.UnityCatalogIamArn = ""
+				update.AwsIamRole.ExternalId = ""
+			}
+			if _, ok := d.GetOk("azure_managed_identity"); ok {
+				update.AzureManagedIdentity.CredentialId = ""
+			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				if d.HasChange("owner") {
 					_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
@@ -183,7 +187,7 @@ func ResourceStorageCredential() *schema.Resource {
 					if d.HasChange("owner") {
 						// Rollback
 						old, _ := d.GetChange("owner")
-						_, err := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
+						_, err = w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
 							Name:  update.Name,
 							Owner: old.(string),
 						})

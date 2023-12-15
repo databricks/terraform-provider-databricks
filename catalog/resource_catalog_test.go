@@ -310,7 +310,7 @@ func TestFailIfMetastoreIdIsWrong(t *testing.T) {
 		owner = "administrators"
 		`,
 	}.ExpectError(t, "metastore_id must be empty or equal to the metastore id assigned to the workspace: old_id. "+
-		"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set.")
+		"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set")
 }
 
 func TestUpdateCatalogIfMetastoreIdChanges(t *testing.T) {

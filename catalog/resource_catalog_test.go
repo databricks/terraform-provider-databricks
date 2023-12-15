@@ -295,7 +295,6 @@ func TestUpdateCatalog(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-<<<<<<< HEAD
 func TestUpdateCatalogOwnerOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -333,7 +332,25 @@ func TestUpdateCatalogOwnerOnly(t *testing.T) {
 					MetastoreId: "d",
 					Comment:     "c",
 					Owner:       "updatedOwner",
-=======
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+			"owner":   "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "c"
+		owner = "updatedOwner"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestFailIfMetastoreIdIsWrong(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -342,7 +359,6 @@ func TestFailIfMetastoreIdIsWrong(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
 				Response: catalog.MetastoreAssignment{
 					MetastoreId: "old_id",
->>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 				},
 			},
 		},
@@ -350,12 +366,6 @@ func TestFailIfMetastoreIdIsWrong(t *testing.T) {
 		Update:   true,
 		ID:       "a",
 		InstanceState: map[string]string{
-<<<<<<< HEAD
-			"metastore_id": "d",
-			"name":         "a",
-			"comment":      "c",
-			"owner":        "administrators",
-=======
 			"metastore_id": "old_id",
 			"name":         "a",
 			"comment":      "c",
@@ -384,9 +394,15 @@ func TestUpdateCatalogIfMetastoreIdChanges(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
 					Name:    "a",
 					Comment: "c",
-					Owner:   "administrators",
 				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",
@@ -441,9 +457,15 @@ func TestUpdateCatalogIfMetastoreIdNotExplicitelySet(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
 					Name:    "a",
 					Comment: "c",
-					Owner:   "administrators",
 				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",
@@ -470,21 +492,16 @@ func TestUpdateCatalogIfMetastoreIdNotExplicitelySet(t *testing.T) {
 			"metastore_id": "correct_id",
 			"name":         "a",
 			"comment":      "c",
->>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 		},
 		HCL: `
 		name = "a"
 		comment = "c"
-<<<<<<< HEAD
 		owner = "updatedOwner"
-=======
 		owner = "administrators"
->>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 		`,
 	}.ApplyNoError(t)
 }
 
-<<<<<<< HEAD
 func TestUpdateCatalogOwnerAndOtherFields(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -529,10 +546,9 @@ func TestUpdateCatalogOwnerAndOtherFields(t *testing.T) {
 		Update:   true,
 		ID:       "a",
 		InstanceState: map[string]string{
-			"metastore_id": "d",
-			"name":         "a",
-			"comment":      "c",
-			"owner":        "administrators",
+			"name":    "a",
+			"comment": "c",
+			"owner":   "administrators",
 		},
 		HCL: `
 		name = "a"
@@ -598,10 +614,9 @@ func TestUpdateCatalogUpdateRollback(t *testing.T) {
 		Update:   true,
 		ID:       "a",
 		InstanceState: map[string]string{
-			"metastore_id": "d",
-			"name":         "a",
-			"comment":      "c",
-			"owner":        "administrators",
+			"name":    "a",
+			"comment": "c",
+			"owner":   "administrators",
 		},
 		HCL: `
 		name = "a"
@@ -656,10 +671,9 @@ func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
 		Update:   true,
 		ID:       "a",
 		InstanceState: map[string]string{
-			"metastore_id": "d",
-			"name":         "a",
-			"comment":      "c",
-			"owner":        "administrators",
+			"name":    "a",
+			"comment": "c",
+			"owner":   "administrators",
 		},
 		HCL: `
 		name = "a"
@@ -670,8 +684,6 @@ func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 }
 
-=======
->>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 func TestForceDeleteCatalog(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

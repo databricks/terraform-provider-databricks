@@ -175,7 +175,10 @@ func ResourceStorageCredential() *schema.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-<<<<<<< HEAD
+				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				if err != nil {
+					return err
+				}
 				if d.HasChange("owner") {
 					_, err := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
 						Name:  update.Name,
@@ -186,14 +189,7 @@ func ResourceStorageCredential() *schema.Resource {
 					}
 				}
 				update.Owner = ""
-				_, err := w.StorageCredentials.Update(ctx, update)
-=======
-				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
-				if err != nil {
-					return err
-				}
 				_, err = w.StorageCredentials.Update(ctx, update)
->>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 				if err != nil {
 					if d.HasChange("owner") {
 						// Rollback

@@ -619,6 +619,76 @@ func TestVolumesUpdateRollback(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Something unexpected")
 }
 
+func TestVolumesUpdateRollback_Error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Owner: "testOwnerNew",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Name:    "testName",
+					Comment: "This is a new test comment.",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Owner: "testOwnerOld",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
+				Response: catalog.VolumeInfo{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a new test comment.",
+					FullName:    "testCatalogName.testSchemaName.testNameNew",
+					Owner:       "testOwnerOld",
+				},
+			},
+		},
+		Resource: ResourceVolume(),
+		Update:   true,
+		ID:       "testCatalogName.testSchemaName.testName",
+		InstanceState: map[string]string{
+			"catalog_name": "testCatalogName",
+			"schema_name":  "testSchemaName",
+			"volume_type":  "testVolumeType",
+			"owner":        "testOwnerOld",
+		},
+		HCL: `
+		name = "testName"
+		volume_type = "testVolumeType"
+		catalog_name = "testCatalogName"
+		schema_name = "testSchemaName"
+		comment = "This is a new test comment."
+		owner = "testOwnerNew"
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+}
+
 func TestVolumeUpdate_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

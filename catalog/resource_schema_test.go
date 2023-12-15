@@ -288,6 +288,67 @@ func TestUpdateSchemaRollback(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateSchemaRollback_Error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Owner: "administrators",
+				},
+				Response: catalog.SchemaInfo{
+					FullName: "b.a",
+					Comment:  "c",
+					Owner:    "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Name:    "a",
+					Comment: "d",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/schemas/b.a",
+				ExpectedRequest: catalog.UpdateSchema{
+					Owner: "testOwner",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceSchema(),
+		Update:   true,
+		ID:       "b.a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"catalog_name": "b",
+			"comment":      "c",
+			"owner":        "testOwner",
+		},
+		HCL: `
+		name = "a"
+		catalog_name = "b"
+		comment = "d"
+		owner = "administrators"
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+}
+
 func TestUpdateSchemaForceNew(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

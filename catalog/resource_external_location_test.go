@@ -416,6 +416,62 @@ func TestUpdateExternalLocationRollback(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateExternalLocationRollbackError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				ExpectedRequest: catalog.UpdateExternalLocation{
+					Owner: "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				ExpectedRequest: catalog.UpdateExternalLocation{
+					Url:            "s3://foo/bar",
+					CredentialName: "xyz",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				ExpectedRequest: catalog.UpdateExternalLocation{
+					Owner: "administrators",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":            "abc",
+			"url":             "s3://foo/bar",
+			"credential_name": "abc",
+			"comment":         "def",
+			"owner":           "administrators",
+		},
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar",
+		owner = "updatedOwner"
+		credential_name = "xyz",
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+}
+
 func TestUpdateExternalLocationForce(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

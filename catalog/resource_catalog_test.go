@@ -471,6 +471,65 @@ func TestUpdateCatalogUpdateRollback(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "updatedOwner",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Comment: "e",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "administrators",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"comment":      "c",
+			"owner":        "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "e"
+		owner = "updatedOwner"
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+}
+
 func TestForceDeleteCatalog(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

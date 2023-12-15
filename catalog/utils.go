@@ -17,7 +17,7 @@ func validateMetastoreId(ctx context.Context, w *databricks.WorkspaceClient, met
 	}
 	if cat.MetastoreId != metastoreId {
 		return fmt.Errorf("metastore_id must be empty or equal to the metastore id assigned to the workspace: %s. "+
-			"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set.", cat.MetastoreId)
+			"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set", cat.MetastoreId)
 	}
 	return nil
 }

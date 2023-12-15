@@ -2,13 +2,10 @@ package permissions
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -1455,20 +1452,6 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		err := p.Delete("/pipelines/123")
 		assert.NoError(t, err)
 	})
-}
-
-func TestPathPermissionsResourceIDFields(t *testing.T) {
-	var m permissionsIDFieldMapping
-	for _, x := range permissionsResourceIDFields() {
-		if x.field == "notebook_path" {
-			m = x
-		}
-	}
-	_, err := m.idRetriever(context.Background(), databricks.Must(databricks.NewWorkspaceClient(
-		(*databricks.Config)(config.NewMockConfig(func(r *http.Request) error {
-			return fmt.Errorf("nope")
-		})))), "x")
-	assert.EqualError(t, err, "cannot load path x: nope")
 }
 
 func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {

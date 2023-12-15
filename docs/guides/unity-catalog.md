@@ -345,7 +345,6 @@ Each metastore exposes a 3-level namespace (catalog-schema-table) by which data 
 resource "databricks_catalog" "sandbox" {
   provider     = databricks.workspace
   storage_root = "s3://${aws_s3_bucket.external.id}/some"
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {

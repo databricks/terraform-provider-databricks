@@ -235,6 +235,13 @@ func TestUpdateCatalog(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "d",
+				},
+			},
+			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
@@ -288,6 +295,7 @@ func TestUpdateCatalog(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+<<<<<<< HEAD
 func TestUpdateCatalogOwnerOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -325,6 +333,16 @@ func TestUpdateCatalogOwnerOnly(t *testing.T) {
 					MetastoreId: "d",
 					Comment:     "c",
 					Owner:       "updatedOwner",
+=======
+func TestFailIfMetastoreIdIsWrong(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "old_id",
+>>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 				},
 			},
 		},
@@ -332,19 +350,141 @@ func TestUpdateCatalogOwnerOnly(t *testing.T) {
 		Update:   true,
 		ID:       "a",
 		InstanceState: map[string]string{
+<<<<<<< HEAD
 			"metastore_id": "d",
 			"name":         "a",
 			"comment":      "c",
 			"owner":        "administrators",
+=======
+			"metastore_id": "old_id",
+			"name":         "a",
+			"comment":      "c",
+		},
+		HCL: `
+		metastore_id = "new_id"
+		name = "a"
+		comment = "c"
+		owner = "administrators"
+		`,
+	}.ExpectError(t, "metastore_id must be empty or equal to the metastore id assigned to the workspace: old_id. "+
+		"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set")
+}
+
+func TestUpdateCatalogIfMetastoreIdChanges(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "correct_id",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Name:    "a",
+					Comment: "c",
+					Owner:   "administrators",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "correct_id",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "correct_id",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id": "wrong_id",
+			"name":         "a",
+			"comment":      "c",
+		},
+		HCL: `
+		metastore_id = "correct_id"
+		name = "a"
+		comment = "c"
+		owner = "administrators"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"metastore_id": "correct_id",
+		"name":         "a",
+		"comment":      "c",
+	})
+}
+
+func TestUpdateCatalogIfMetastoreIdNotExplicitelySet(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "correct_id",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Name:    "a",
+					Comment: "c",
+					Owner:   "administrators",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "correct_id",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "correct_id",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id": "correct_id",
+			"name":         "a",
+			"comment":      "c",
+>>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 		},
 		HCL: `
 		name = "a"
 		comment = "c"
+<<<<<<< HEAD
 		owner = "updatedOwner"
+=======
+		owner = "administrators"
+>>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 		`,
 	}.ApplyNoError(t)
 }
 
+<<<<<<< HEAD
 func TestUpdateCatalogOwnerAndOtherFields(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -530,6 +670,8 @@ func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 }
 
+=======
+>>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 func TestForceDeleteCatalog(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

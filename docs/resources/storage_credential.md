@@ -72,7 +72,7 @@ resource "databricks_grants" "external_creds" {
 The following arguments are required:
 
 - `name` - Name of Storage Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
-- `metastore_id` - (Required for account-level) Unique identifier of the parent Metastore
+- `metastore_id` - (Required for account-level) Unique identifier of the parent Metastore. If set for workspace-level, it must match the ID of the metastore assigned to the worspace. When changing the metastore assigned to a workspace, this field becomes required.
 - `owner` - (Optional) Username/groupname/sp application_id of the storage credential owner.
 - `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
 - `force_destroy` - (Optional) Delete storage credential regardless of its dependencies.

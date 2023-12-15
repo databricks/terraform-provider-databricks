@@ -39,6 +39,10 @@ func ResourceSchema() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var createSchemaRequest catalog.CreateSchema
 			common.DataToStructPointer(d, s, &createSchemaRequest)
 			schema, err := w.Schemas.Create(ctx, createSchemaRequest)
@@ -74,6 +78,10 @@ func ResourceSchema() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
 			if err != nil {
 				return err
 			}
@@ -116,6 +124,10 @@ func ResourceSchema() *schema.Resource {
 			force := d.Get("force_destroy").(bool)
 			name := d.Id()
 			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
 			if err != nil {
 				return err
 			}

@@ -46,6 +46,10 @@ func ResourceExternalLocation() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var createExternalLocationRequest catalog.CreateExternalLocation
 			common.DataToStructPointer(d, s, &createExternalLocationRequest)
 			el, err := w.ExternalLocations.Create(ctx, createExternalLocationRequest)
@@ -85,6 +89,10 @@ func ResourceExternalLocation() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var updateExternalLocationRequest catalog.UpdateExternalLocation
 			common.DataToStructPointer(d, s, &updateExternalLocationRequest)
 			updateExternalLocationRequest.Name = d.Id()
@@ -121,6 +129,10 @@ func ResourceExternalLocation() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
 			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
 			if err != nil {
 				return err
 			}

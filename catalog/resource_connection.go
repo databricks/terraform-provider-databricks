@@ -54,6 +54,10 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var createConnectionRequest catalog.CreateConnection
 			common.DataToStructPointer(d, s, &createConnectionRequest)
 			conn, err := w.Connections.Create(ctx, createConnectionRequest)
@@ -92,6 +96,10 @@ func ResourceConnection() *schema.Resource {
 				tflog.Warn(context.Background(), "owner field not currently supported. Support will be enabled in a future update.")
 			}
 			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
 			if err != nil {
 				return err
 			}

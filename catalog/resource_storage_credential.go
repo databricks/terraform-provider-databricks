@@ -80,6 +80,10 @@ func ResourceStorageCredential() *schema.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
+				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				if err != nil {
+					return err
+				}
 				storageCredential, err := w.StorageCredentials.Create(ctx, create)
 				if err != nil {
 					return err
@@ -171,6 +175,7 @@ func ResourceStorageCredential() *schema.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
+<<<<<<< HEAD
 				if d.HasChange("owner") {
 					_, err := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
 						Name:  update.Name,
@@ -182,6 +187,13 @@ func ResourceStorageCredential() *schema.Resource {
 				}
 				update.Owner = ""
 				_, err := w.StorageCredentials.Update(ctx, update)
+=======
+				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				if err != nil {
+					return err
+				}
+				_, err = w.StorageCredentials.Update(ctx, update)
+>>>>>>> 2359eb00070ada931299f43ab590b927f97b9af9
 				if err != nil {
 					if d.HasChange("owner") {
 						// Rollback
@@ -208,6 +220,10 @@ func ResourceStorageCredential() *schema.Resource {
 					MetastoreId:           d.Get("metastore_id").(string),
 				})
 			}, func(w *databricks.WorkspaceClient) error {
+				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				if err != nil {
+					return err
+				}
 				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
 					Force: force,
 					Name:  d.Id(),

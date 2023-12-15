@@ -104,6 +104,13 @@ func TestUpdateSchema(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "d",
+				},
+			},
+			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{

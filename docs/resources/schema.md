@@ -11,7 +11,6 @@ A `databricks_schema` is contained within [databricks_catalog](catalog.md) and c
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {

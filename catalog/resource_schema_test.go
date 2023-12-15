@@ -209,7 +209,6 @@ func TestUpdateSchemaOwnerWithOtherFields(t *testing.T) {
 		Update:   true,
 		ID:       "b.a",
 		InstanceState: map[string]string{
-			"metastore_id": "d",
 			"name":         "a",
 			"catalog_name": "b",
 			"comment":      "c",
@@ -280,7 +279,6 @@ func TestUpdateSchemaRollback(t *testing.T) {
 		Update:   true,
 		ID:       "b.a",
 		InstanceState: map[string]string{
-			"metastore_id": "d",
 			"name":         "a",
 			"catalog_name": "b",
 			"comment":      "c",
@@ -340,7 +338,6 @@ func TestUpdateSchemaRollback_Error(t *testing.T) {
 		Update:   true,
 		ID:       "b.a",
 		InstanceState: map[string]string{
-			"metastore_id": "d",
 			"name":         "a",
 			"catalog_name": "b",
 			"comment":      "c",

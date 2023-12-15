@@ -296,6 +296,30 @@ func TestVolumesUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Owner: "testOwnerNew",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Name:    "testNameNew",
+					Comment: "This is a new test comment.",
+				},
+				Response: catalog.VolumeInfo{
+					Name:        "testNameNew",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a new test comment.",
+					FullName:    "testCatalogName.testSchemaName.testName",
+					Owner:       "testOwnerNew",
+				},
+			},
+			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
@@ -305,24 +329,6 @@ func TestVolumesUpdate(t *testing.T) {
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
 					FullName:    "testCatalogName.testSchemaName.testNameNew",
-					Owner:       "testOwnerNew",
-				},
-			},
-			{
-				Method:   http.MethodPatch,
-				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
-				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testNameNew",
-					Comment: "This is a new test comment.",
-					Owner:   "testOwnerNew",
-				},
-				Response: catalog.VolumeInfo{
-					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
-					CatalogName: "testCatalogName",
-					SchemaName:  "testSchemaName",
-					Comment:     "This is a new test comment.",
-					FullName:    "testCatalogName.testSchemaName.testName",
 					Owner:       "testOwnerNew",
 				},
 			},
@@ -372,9 +378,15 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Owner: "testOwnerNew",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
 					Name:    "testNameNew",
 					Comment: "This is a new test comment.",
-					Owner:   "testOwnerNew",
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
@@ -428,9 +440,15 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Owner: "testOwnerNew",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
 					Name:    "testName",
 					Comment: "This is a new test comment.",
-					Owner:   "testOwnerNew",
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
@@ -469,6 +487,138 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
 }
 
+func TestVolumesUpdateWithOwner(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
+				Response: catalog.VolumeInfo{
+					Name:        "testNameNew",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a new test comment.",
+					FullName:    "testCatalogName.testSchemaName.testNameNew",
+					Owner:       "testOwnerNew",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Owner: "testOwnerNew",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Name:    "testName",
+					Comment: "This is a new test comment.",
+				},
+				Response: catalog.VolumeInfo{
+					Name:        "testNameNew",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a new test comment.",
+					FullName:    "testCatalogName.testSchemaName.testName",
+					Owner:       "testOwnerNew",
+				},
+			},
+		},
+		Resource: ResourceVolume(),
+		Update:   true,
+		ID:       "testCatalogName.testSchemaName.testName",
+		InstanceState: map[string]string{
+			"catalog_name": "testCatalogName",
+			"schema_name":  "testSchemaName",
+			"volume_type":  "testVolumeType",
+			"owner":        "testOwnerOld",
+		},
+		HCL: `
+		name = "testName"
+		volume_type = "testVolumeType"
+		catalog_name = "testCatalogName"
+		schema_name = "testSchemaName"
+		comment = "This is a new test comment."
+		owner = "testOwnerNew"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "testNameNew", d.Get("name"))
+	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
+	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
+	assert.Equal(t, "testOwnerNew", d.Get("owner"))
+	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+}
+
+func TestVolumesUpdateRollback(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Owner: "testOwnerNew",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Name:    "testName",
+					Comment: "This is a new test comment.",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Owner: "testOwnerOld",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
+				Response: catalog.VolumeInfo{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a new test comment.",
+					FullName:    "testCatalogName.testSchemaName.testNameNew",
+					Owner:       "testOwnerOld",
+				},
+			},
+		},
+		Resource: ResourceVolume(),
+		Update:   true,
+		ID:       "testCatalogName.testSchemaName.testName",
+		InstanceState: map[string]string{
+			"catalog_name": "testCatalogName",
+			"schema_name":  "testSchemaName",
+			"volume_type":  "testVolumeType",
+			"owner":        "testOwnerOld",
+		},
+		HCL: `
+		name = "testName"
+		volume_type = "testVolumeType"
+		catalog_name = "testCatalogName"
+		schema_name = "testSchemaName"
+		comment = "This is a new test comment."
+		owner = "testOwnerNew"
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected")
+}
+
 func TestVolumeUpdate_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -476,9 +626,7 @@ func TestVolumeUpdate_Error(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testNameNew",
-					Comment: "This is a new test comment.",
-					Owner:   "testOwnerNew",
+					Owner: "testOwnerNew",
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",

@@ -11,7 +11,6 @@ A `databricks_catalog` is contained within [databricks_metastore](metastore.md) 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {
@@ -25,7 +24,6 @@ resource "databricks_catalog" "sandbox" {
 The following arguments are required:
 
 * `name` - Name of Catalog relative to parent metastore.
-* `metastore_id` - (Optional) If set, it must match the ID of the metastore assigned to the worspace. If not set, the current ID is exported.
 * `storage_root` - (Optional if `storage_root` is specified for the metastore) Managed location of the catalog. Location in cloud storage where data for managed tables will be stored. If not specified, the location will default to the metastore root location. Change forces creation of a new resource.
 * `provider_name` - (Optional) For Delta Sharing Catalogs: the name of the delta sharing provider. Change forces creation of a new resource.
 * `share_name` - (Optional) For Delta Sharing Catalogs: the name of the share under the share provider. Change forces creation of a new resource.
@@ -41,6 +39,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `metastore_id` - ID of the parent metastore.
 * `id` - ID of this catalog - same as the `name`.
 
 ## Import

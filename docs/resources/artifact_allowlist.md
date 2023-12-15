@@ -28,7 +28,6 @@ resource "databricks_artifact_allowlist" "init_scripts" {
 The following arguments are required:
 
 * `artifact_type` - The artifact type of the allowlist. Can be `INIT_SCRIPT`, `LIBRARY_JAR` or `LIBRARY_MAVEN`. Change forces creation of a new resource.
-* `metastore_id` - (Optional) If set, it must match the ID of the metastore assigned to the worspace. If not set, the current ID is exported.
 
 One or more `artifact_matcher` blocks with the following arguments:
 
@@ -39,6 +38,7 @@ One or more `artifact_matcher` blocks with the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `metastore_id` - ID of the parent metastore.
 * `created_at` -  Time at which this artifact allowlist was set.
 * `created_by` -  Identity that set the artifact allowlist.
 

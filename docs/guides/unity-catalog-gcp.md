@@ -195,7 +195,6 @@ Each metastore exposes a 3-level namespace (catalog-schema-table) by which data 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   storage_root = "gs://${google_storage_bucket.ext_bucket.name}"
   comment      = "this catalog is managed by terraform"

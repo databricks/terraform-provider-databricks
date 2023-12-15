@@ -363,7 +363,11 @@ func TestUpdateCatalogIfMetastoreIdChanges(t *testing.T) {
 		comment = "c"
 		owner = "administrators"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"metastore_id": "correct_id",
+		"name":         "a",
+		"comment":      "c",
+	})
 }
 
 func TestUpdateCatalogIfMetastoreIdNotExplicitelySet(t *testing.T) {

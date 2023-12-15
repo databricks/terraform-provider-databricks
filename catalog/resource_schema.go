@@ -41,7 +41,6 @@ func ResourceSchema() *schema.Resource {
 			}
 			var createSchemaRequest catalog.CreateSchema
 			common.DataToStructPointer(d, s, &createSchemaRequest)
-
 			schema, err := w.Schemas.Create(ctx, createSchemaRequest)
 			if err != nil {
 				return err

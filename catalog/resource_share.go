@@ -219,7 +219,6 @@ func ResourceShare() *schema.Resource {
 			}
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
-
 			changes := beforeSi.Diff(afterSi)
 
 			w, err := c.WorkspaceClient()

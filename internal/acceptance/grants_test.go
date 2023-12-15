@@ -58,7 +58,7 @@ resource "databricks_grants" "metastore" {
 	metastore = "{env.TEST_METASTORE_ID}"
 	grant {
 		principal  = "%s"
-		privileges = ["CREATE STORAGE CREDENTIAL"]
+		privileges = ["CREATE_STORAGE_CREDENTIAL"]
 	}
 }
 
@@ -66,7 +66,7 @@ resource "databricks_grants" "catalog" {
 	catalog = databricks_catalog.sandbox.id
 	grant {
 		principal  = "%s"
-		privileges = ["ALL PRIVILEGES"]
+		privileges = ["ALL_PRIVILEGES"]
 	}
 }
 
@@ -74,7 +74,7 @@ resource "databricks_grants" "schema" {
 	schema = databricks_schema.things.id
 	grant {
 		principal  = "%s"
-		privileges = ["ALL PRIVILEGES"]
+		privileges = ["ALL_PRIVILEGES"]
 	}
 }
 
@@ -82,7 +82,7 @@ resource "databricks_grants" "table" {
 	table = databricks_table.mytable.id
 	grant {
 		principal  = "%s"
-		privileges = ["ALL PRIVILEGES"]
+		privileges = ["ALL_PRIVILEGES"]
 	}
 }
 
@@ -90,7 +90,7 @@ resource "databricks_grants" "cred" {
 	storage_credential = databricks_storage_credential.external.id
 	grant {
 		principal  = "%s"
-		privileges = ["ALL PRIVILEGES"]
+		privileges = ["ALL_PRIVILEGES"]
 	}
 }
 
@@ -98,7 +98,7 @@ resource "databricks_grants" "some" {
 	external_location = databricks_external_location.some.id
 	grant {
 		principal  = "%s"
-		privileges = ["ALL PRIVILEGES"]
+		privileges = ["ALL_PRIVILEGES"]
 	}
 }`
 

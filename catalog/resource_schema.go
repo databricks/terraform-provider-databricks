@@ -39,6 +39,10 @@ func ResourceSchema() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var createSchemaRequest catalog.CreateSchema
 			common.DataToStructPointer(d, s, &createSchemaRequest)
 			schema, err := w.Schemas.Create(ctx, createSchemaRequest)
@@ -77,6 +81,10 @@ func ResourceSchema() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var updateSchemaRequest catalog.UpdateSchema
 			common.DataToStructPointer(d, s, &updateSchemaRequest)
 			updateSchemaRequest.FullName = d.Id()
@@ -93,6 +101,10 @@ func ResourceSchema() *schema.Resource {
 			force := d.Get("force_destroy").(bool)
 			name := d.Id()
 			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
 			if err != nil {
 				return err
 			}

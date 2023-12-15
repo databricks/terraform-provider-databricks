@@ -47,7 +47,6 @@ func ResourceStorageCredential() *schema.Resource {
 			var create catalog.CreateStorageCredential
 			var update catalog.UpdateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
-			create.Name = d.Get("name").(string)
 			common.DataToStructPointer(d, tmpSchema, &update)
 			update.Name = d.Get("name").(string)
 

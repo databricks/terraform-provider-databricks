@@ -48,7 +48,6 @@ func ResourceRecipient() *schema.Resource {
 			}
 			var createRecipientRequest sharing.CreateRecipient
 			common.DataToStructPointer(d, recipientSchema, &createRecipientRequest)
-			createRecipientRequest.Name = d.Get("name").(string)
 			ri, err := w.Recipients.Create(ctx, createRecipientRequest)
 			if err != nil {
 				return err

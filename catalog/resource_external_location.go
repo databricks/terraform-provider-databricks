@@ -48,7 +48,6 @@ func ResourceExternalLocation() *schema.Resource {
 			}
 			var createExternalLocationRequest catalog.CreateExternalLocation
 			common.DataToStructPointer(d, s, &createExternalLocationRequest)
-			createExternalLocationRequest.Name = d.Get("name").(string)
 			el, err := w.ExternalLocations.Create(ctx, createExternalLocationRequest)
 			if err != nil {
 				return err

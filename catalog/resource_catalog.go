@@ -61,7 +61,6 @@ func ResourceCatalog() *schema.Resource {
 
 			var createCatalogRequest catalog.CreateCatalog
 			common.DataToStructPointer(d, catalogSchema, &createCatalogRequest)
-			createCatalogRequest.Name = d.Get("name").(string)
 			ci, err := w.Catalogs.Create(ctx, createCatalogRequest)
 			if err != nil {
 				return err

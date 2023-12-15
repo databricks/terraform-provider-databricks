@@ -186,7 +186,6 @@ func ResourceShare() *schema.Resource {
 
 			var createRequest sharing.CreateShare
 			common.DataToStructPointer(d, shareSchema, &createRequest)
-			createRequest.Name = d.Get("name").(string)
 			if _, err := w.Shares.Create(ctx, createRequest); err != nil {
 				return err
 			}

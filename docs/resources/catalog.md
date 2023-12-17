@@ -11,7 +11,6 @@ A `databricks_catalog` is contained within [databricks_metastore](metastore.md) 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {
@@ -40,8 +39,8 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `metastore_id` - ID of the parent metastore.
 * `id` - ID of this catalog - same as the `name`.
-* `metastore_id` - ID of the metastore.
 
 ## Import
 

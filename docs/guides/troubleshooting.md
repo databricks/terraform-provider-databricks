@@ -154,3 +154,14 @@ resource "databricks_grants" "catalog_grants" {
 ```
 
 See `databricks_grant` for managing grants for a single principal.
+
+### Error updating UC catalog resources after a metastore_id change
+
+After changing the metastore assigned to a workspace, some resources may fail to update with the following error:
+
+```
+metastore_id must be empty or equal to the metastore id assigned to the workspace: <metastore_id>. 
+If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set
+```
+
+To solve this error, the new Metastore ID must be set in the field `metastore_id` of the failing resources.

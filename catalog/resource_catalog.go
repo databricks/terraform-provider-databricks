@@ -59,6 +59,11 @@ func ResourceCatalog() *schema.Resource {
 				return err
 			}
 
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			var createCatalogRequest catalog.CreateCatalog
 			common.DataToStructPointer(d, catalogSchema, &createCatalogRequest)
 			ci, err := w.Catalogs.Create(ctx, createCatalogRequest)
@@ -122,6 +127,12 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
+
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
@@ -158,6 +169,12 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
+
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			force := d.Get("force_destroy").(bool)
 			// If the workspace has isolation mode ISOLATED, we need to add the current workspace to its
 			// bindings before deleting.

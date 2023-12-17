@@ -79,6 +79,10 @@ func ResourceStorageCredential() *schema.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
+				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				if err != nil {
+					return err
+				}
 				storageCredential, err := w.StorageCredentials.Create(ctx, create)
 				if err != nil {
 					return err
@@ -131,7 +135,11 @@ func ResourceStorageCredential() *schema.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				_, err := w.StorageCredentials.Update(ctx, update)
+				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				if err != nil {
+					return err
+				}
+				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {
 					return err
 				}
@@ -147,6 +155,10 @@ func ResourceStorageCredential() *schema.Resource {
 					MetastoreId:           d.Get("metastore_id").(string),
 				})
 			}, func(w *databricks.WorkspaceClient) error {
+				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+				if err != nil {
+					return err
+				}
 				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
 					Force: force,
 					Name:  d.Id(),

@@ -56,7 +56,7 @@ func TestResourceCredentialsCreate(t *testing.T) {
 	})
 }
 
-func TestAccountIdOnlyInState(t *testing.T) {
+func TestCredentialsAccountIdOnlyInState(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -101,7 +101,7 @@ func TestAccountIdOnlyInState(t *testing.T) {
 	})
 }
 
-func TestAccountIdOnlyInConfig(t *testing.T) {
+func TestCredentialsAccountIdOnlyInConfig(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

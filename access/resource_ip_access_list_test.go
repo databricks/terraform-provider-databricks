@@ -176,31 +176,28 @@ func TestIPACLUpdate(t *testing.T) {
 	assert.Equal(t, 2, d.Get("ip_addresses.#"))
 }
 
-// func TestIPACLUpdate_Error(t *testing.T) {
-// 	_, err := qa.ResourceFixture{
-// 		Fixtures: []qa.HTTPFixture{
-// 			{
-// 				Method:   http.MethodPatch,
-// 				Resource: "/api/2.0/ip-access-lists/" + TestingId,
-// 				ExpectedRequest: ipAccessListUpdateRequest{
-// 					Enabled:     TestingEnabled,
-// 					Label:       TestingLabel,
-// 					ListType:    TestingListType,
-// 					IpAddresses: TestingIpAddresses,
-// 				},
-// 				Response: apierr.APIErrorBody{
-// 					ErrorCode: "SERVER_ERROR",
-// 					Message:   "Something unexpected happened",
-// 				},
-// 				Status: 500,
-// 			},
-// 		},
-// 		Resource: ResourceIPAccessList(),
-// 		Update:   true,
-// 		ID:       TestingId,
-// 	}.Apply(t)
-// 	qa.AssertErrorStartsWith(t, err, "Something unexpected")
-// }
+func TestIPACLUpdate_Error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/ip-access-lists/" + TestingId,
+				ExpectedRequest: settings.UpdateIpAccessList{
+					Enabled: TestingEnabled,
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+		},
+		Resource: ResourceIPAccessList(),
+		Update:   true,
+		ID:       TestingId,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected")
+}
 
 func TestIPACLRead(t *testing.T) {
 	d, err := qa.ResourceFixture{

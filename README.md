@@ -24,6 +24,7 @@
 | [databricks_external_location](docs/resources/external_location.md)
 | [databricks_git_credential](docs/resources/git_credential.md)
 | [databricks_global_init_script](docs/resources/global_init_script.md)
+| [databricks_grant](docs/resources/grant.md)
 | [databricks_grants](docs/resources/grants.md)
 | [databricks_group](docs/resources/group.md)
 | [databricks_group](docs/data-sources/group.md) data

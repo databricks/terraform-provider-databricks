@@ -2,10 +2,10 @@ package catalog
 
 import (
 	"context"
-		
+
+	"fmt"
 	"reflect"
 	"sort"
-	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"

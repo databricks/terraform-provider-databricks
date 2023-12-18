@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 	"fmt"
+
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

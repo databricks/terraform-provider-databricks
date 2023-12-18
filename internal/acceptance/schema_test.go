@@ -64,7 +64,7 @@ func TestUcAccSchema(t *testing.T) {
 		}
 
 		resource "databricks_grant" "stuff_test_eng_group" {
-			schema = databricks_schema.things.id
+			schema = databricks_schema.stuff.id
 			principal  = "{env.TEST_DATA_ENG_GROUP}"
 			privileges = ["USE_SCHEMA"]
 		}`,

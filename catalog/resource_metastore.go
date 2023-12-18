@@ -119,14 +119,42 @@ func ResourceMetastore() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
+			update.Id = d.Id()
 			updateForceSendFields(&update)
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				if d.HasChange("owner") {
+					_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+						MetastoreId: d.Id(),
+						MetastoreInfo: &catalog.UpdateMetastore{
+							Id:    update.Id,
+							Owner: update.Owner,
+						},
+					})
+					if err != nil {
+						return err
+					}
+				}
+				update.Owner = ""
 				_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   d.Id(),
 					MetastoreInfo: &update,
 				})
 				if err != nil {
+					if d.HasChange("owner") {
+						// Rollback
+						old, _ := d.GetChange("owner")
+						_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+							MetastoreId: d.Id(),
+							MetastoreInfo: &catalog.UpdateMetastore{
+								Id:    update.Id,
+								Owner: old.(string),
+							},
+						})
+						if err != nil {
+							return err
+						}
+					}
 					return err
 				}
 				return nil
@@ -135,9 +163,29 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
-				update.Id = d.Id()
+				if d.HasChange("owner") {
+					_, err := w.Metastores.Update(ctx, catalog.UpdateMetastore{
+						Id:    update.Id,
+						Owner: update.Owner,
+					})
+					if err != nil {
+						return err
+					}
+				}
+				update.Owner = ""
 				_, err = w.Metastores.Update(ctx, update)
 				if err != nil {
+					if d.HasChange("owner") {
+						// Rollback
+						old, _ := d.GetChange("owner")
+						_, err := w.Metastores.Update(ctx, catalog.UpdateMetastore{
+							Id:    update.Id,
+							Owner: old.(string),
+						})
+						if err != nil {
+							return err
+						}
+					}
 					return err
 				}
 				return nil

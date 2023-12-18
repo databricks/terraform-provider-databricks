@@ -195,7 +195,6 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: catalog.UpdateMetastore{
 					Name:              "abc",
-					Owner:             "admin",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				},
@@ -222,6 +221,117 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateMetastore_OwnerChanges(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc?",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: catalog.UpdateMetastore{
+					Owner: "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: catalog.UpdateMetastore{
+					Name:              "abc",
+					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				},
+			},
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "updatedOwner"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateMetastore_Rollback(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/metastores/abc?",
+				Response: MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: catalog.UpdateMetastore{
+					Owner: "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: catalog.UpdateMetastore{
+					Name:              "abc",
+					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: catalog.UpdateMetastore{
+					Owner: "admin",
+				},
+			},
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "updatedOwner"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected")
+}
+
 func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -230,7 +340,6 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: catalog.UpdateMetastore{
 					Name:              "abc",
-					Owner:             "admin",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				},
@@ -459,7 +568,6 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreInfo: &catalog.UpdateMetastore{
 						Name:              "abc",
-						Owner:             "admin",
 						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 						DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 					},
@@ -488,6 +596,133 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateAccountMetastore_OwnerChanges(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc?",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRoot: "s3://b/abc",
+						Name:        "a",
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/metastores/abc",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Owner: "updatedOwner",
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/metastores/abc",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Name:              "abc",
+						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+						DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+					},
+				},
+			},
+		},
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "updatedOwner"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateAccountMetastore_Rollback(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/100/metastores/abc?",
+				Response: catalog.AccountsMetastoreInfo{
+					MetastoreInfo: &catalog.MetastoreInfo{
+						StorageRoot: "s3://b/abc",
+						Name:        "a",
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/metastores/abc",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Owner: "updatedOwner",
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/metastores/abc",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Name:              "abc",
+						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+						DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+					},
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/100/metastores/abc",
+				ExpectedRequest: catalog.AccountsUpdateMetastore{
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Owner: "admin",
+					},
+				},
+			},
+		},
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "updatedOwner"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected")
+}
+
 func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -497,7 +732,6 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreInfo: &catalog.UpdateMetastore{
 						Name:              "abc",
-						Owner:             "admin",
 						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 						DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 					},

@@ -46,7 +46,7 @@ Data source allows you to pick groups by the following attributes
 * `min_gpus` - (Optional) Minimum number of GPU's attached to instance. Defaults to *0*.
 * `local_disk` - (Optional) Pick only nodes with local storage. Defaults to *false*.
 * `local_disk_min_size` - (Optional) Pick only nodes that have size local storage greater or equal to given value. Defaults to *0*.
-* `category` - (Optional, case insensitive string) Node category, which can be one of (depending on the cloud environment, could be checked with `databricks clusters list-node-types|jq '.node_types[]|.category'|sort |uniq`):
+* `category` - (Optional, case insensitive string) Node category, which can be one of (depending on the cloud environment, could be checked with `databricks clusters list-node-types -o json|jq '.node_types[]|.category'|sort |uniq`):
   * `General Purpose` (all clouds)
   * `General Purpose (HDD)` (Azure)
   * `Compute Optimized` (all clouds)

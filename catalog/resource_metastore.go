@@ -85,10 +85,6 @@ func ResourceMetastore() *schema.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
-				if err != nil {
-					return err
-				}
 				mi, err := w.Metastores.Create(ctx, create)
 				if err != nil {
 					return err
@@ -160,10 +156,6 @@ func ResourceMetastore() *schema.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
-				if err != nil {
-					return err
-				}
 				if d.HasChange("owner") {
 					_, err := w.Metastores.Update(ctx, catalog.UpdateMetastore{
 						Id:    update.Id,
@@ -174,7 +166,7 @@ func ResourceMetastore() *schema.Resource {
 					}
 				}
 				update.Owner = ""
-				_, err = w.Metastores.Update(ctx, update)
+				_, err := w.Metastores.Update(ctx, update)
 				if err != nil {
 					if d.HasChange("owner") {
 						// Rollback
@@ -197,10 +189,6 @@ func ResourceMetastore() *schema.Resource {
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.Metastores.Delete(ctx, catalog.DeleteAccountMetastoreRequest{Force: force, MetastoreId: d.Id()})
 			}, func(w *databricks.WorkspaceClient) error {
-				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
-				if err != nil {
-					return err
-				}
 				return w.Metastores.Delete(ctx, catalog.DeleteMetastoreRequest{Force: force, Id: d.Id()})
 			})
 		},

@@ -2,9 +2,10 @@ package catalog
 
 import (
 	"context"
-	"fmt"
+		
 	"reflect"
 	"sort"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -238,7 +239,6 @@ func ResourceShare() *schema.Resource {
 			}
 
 			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-				Owner:   "",
 				Updates: changes,
 			})
 			if err != nil {

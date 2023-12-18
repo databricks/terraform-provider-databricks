@@ -64,16 +64,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
-			comment        = "this catalog is managed by terraform - Updated comment"
-			properties     = {
-				purpose = "testing"
-			}
-		}`,
-	}, step{
-		Template: `
-		resource "databricks_catalog" "sandbox" {
-			name           = "sandbox{var.STICKY_RANDOM}"
-			comment        = "this catalog is managed by terraform - Updated comment"
+			comment        = "this catalog is managed by terraform"
 			properties     = {
 				purpose = "testing"
 			}
@@ -83,7 +74,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
-			comment        = "this catalog is managed by terraform - Updated comment 2"
+			comment        = "this catalog is managed by terraform - updated comment"
 			properties     = {
 				purpose = "testing"
 			}

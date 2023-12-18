@@ -109,17 +109,6 @@ func TestUcAccCreateShare(t *testing.T) {
 func TestUcAccUpdateShare(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: preTestTemplate + `
-		` + preTestTemplateUpdate + `
-		resource "databricks_share" "myshare" {
-			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
-			object {
-				name = databricks_table.mytable.id
-				comment = "c"
-				data_object_type = "TABLE"
-			}							
-		}`,
-	}, step{
-		Template: preTestTemplate + `
 		` + preTestTemplateUpdate + `	
 		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"

@@ -259,7 +259,6 @@ func TestUpdateCatalog(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
 					Comment: "c",
-					Owner:   "",
 				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",
@@ -627,6 +626,8 @@ func TestUpdateCatalogUpdateRollback(t *testing.T) {
 }
 
 func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
+	serverErrMessage := "Something unexpected happened"
+	rollbackErrMessage := "Internal error happened"
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -650,7 +651,7 @@ func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
-					Message:   "Something unexpected happened",
+					Message:   serverErrMessage,
 				},
 				Status: 500,
 			},
@@ -662,7 +663,7 @@ func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
+					Message:   rollbackErrMessage,
 				},
 				Status: 400,
 			},
@@ -681,7 +682,8 @@ func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
 		owner = "updatedOwner"
 		`,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	errOccurred := fmt.Sprintf("%s. Owner rollback also failed: %s", serverErrMessage, rollbackErrMessage)
+	qa.AssertErrorStartsWith(t, err, errOccurred)
 }
 
 func TestForceDeleteCatalog(t *testing.T) {

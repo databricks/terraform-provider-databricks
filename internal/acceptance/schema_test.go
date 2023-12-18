@@ -87,25 +87,7 @@ func TestUcAccSchemaUpdate(t *testing.T) {
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
 			name         = "things{var.STICKY_RANDOM}"
-			comment      = "this database is managed by terraform -- Updated Comment"
-			properties = {
-				kind = "various"
-			}
-		}`,
-	}, step{
-		Template: `
-		resource "databricks_catalog" "sandbox" {
-			name         = "sandbox{var.STICKY_RANDOM}"
-			comment      = "this catalog is managed by terraform"
-			properties = {
-				purpose = "testing"
-			}
-		}
-		
-		resource "databricks_schema" "things" {
-			catalog_name = databricks_catalog.sandbox.id
-			name         = "things{var.STICKY_RANDOM}"
-			comment      = "this database is managed by terraform -- Updated Comment"
+			comment      = "this database is managed by terraform"
 			properties = {
 				kind = "various"
 			}
@@ -124,7 +106,7 @@ func TestUcAccSchemaUpdate(t *testing.T) {
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
 			name         = "things{var.STICKY_RANDOM}"
-			comment      = "this database is managed by terraform -- Updated Comment 2"
+			comment      = "this database is managed by terraform -- updated comment"
 			properties = {
 				kind = "various"
 			}

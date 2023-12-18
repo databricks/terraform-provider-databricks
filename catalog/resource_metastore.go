@@ -140,7 +140,7 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					if d.HasChange("owner") {
 						// Rollback
-						old, _ := d.GetChange("owner")
+						old, new := d.GetChange("owner")
 						_, rollbackErr := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 							MetastoreId: d.Id(),
 							MetastoreInfo: &catalog.UpdateMetastore{

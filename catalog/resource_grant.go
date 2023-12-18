@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -71,7 +72,13 @@ func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, se
 	if err != nil {
 		return err
 	}
-	return a.UpdatePermissions(securableType, name, diffPermissionsForPrincipal(principal, list, *existing))
+	err = a.UpdatePermissions(securableType, name, diffPermissionsForPrincipal(principal, list, *existing))
+	if err != nil {
+		return err
+	}
+	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.PermissionsList, desired catalog.PermissionsList) []catalog.PermissionsChange {
+		return diffPermissionsForPrincipal(principal, desired, *current)
+	})
 }
 
 func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string) (out catalog.PermissionsList) {

@@ -3,15 +3,23 @@ package permissions
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // API
+type UnityCatalogPermissionsAPI struct {
+	client  *databricks.WorkspaceClient
+	context context.Context
+}
+
 func NewUnityCatalogPermissionsAPI(ctx context.Context, m any) UnityCatalogPermissionsAPI {
 	client, _ := m.(*common.DatabricksClient).WorkspaceClient()
 	return UnityCatalogPermissionsAPI{client, ctx}
@@ -41,15 +49,26 @@ func (a UnityCatalogPermissionsAPI) UpdatePermissions(securable catalog.Securabl
 	return err
 }
 
+func (a UnityCatalogPermissionsAPI) WaitForUpdate(timeout time.Duration, securable catalog.SecurableType, name string, desired catalog.PermissionsList, diff func(*catalog.PermissionsList, catalog.PermissionsList) []catalog.PermissionsChange) error {
+	return retry.RetryContext(a.context, timeout, func() *retry.RetryError {
+		current, err := a.GetPermissions(securable, name)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+		log.Printf("[DEBUG] Permissions for %s-%s are: %v", securable.String(), name, current)
+		if diff(current, desired) == nil {
+			return nil
+		}
+		return retry.RetryableError(
+			fmt.Errorf("permissions for %s-%s are %v, but have to be %v", securable.String(), name, current, desired),
+		)
+	})
+}
+
 // Terraform Schema
 type UnityCatalogPrivilegeAssignment struct {
 	Principal  string   `json:"principal"`
 	Privileges []string `json:"privileges" tf:"slice_set"`
-}
-
-type UnityCatalogPermissionsAPI struct {
-	client  *databricks.WorkspaceClient
-	context context.Context
 }
 
 // Permission Mappings

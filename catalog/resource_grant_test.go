@@ -60,6 +60,115 @@ func TestResourceGrantCreate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Create:   true,
+		HCL: `
+		table = "foo.bar.baz"
+
+		principal = "me"
+		privileges = ["MODIFY"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGrantWaitUntilReady(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"MODIFY"},
+							Remove:    []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			// This one is still the first one, to simulate a delay on updating the permissions
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
 		},
 		Resource: ResourceGrant(),
 		Create:   true,
@@ -95,6 +204,22 @@ func TestResourceGrantUpdate(t *testing.T) {
 						{
 							Principal: "me",
 							Add:       []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
 						},
 					},
 				},
@@ -390,6 +515,18 @@ func TestResourceGrantShareGrantCreate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
 		},
 		Resource: ResourceGrant(),
 		Create:   true,
@@ -445,6 +582,22 @@ func TestResourceGrantShareGrantUpdate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+						{
+							Principal:  "you",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
 		},
 		Resource: ResourceGrant(),
 		Update:   true,
@@ -480,6 +633,18 @@ func TestResourceGrantConnectionGrantCreate(t *testing.T) {
 						{
 							Principal: "me",
 							Add:       []catalog.Privilege{"USE_CONNECTION"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/connection/myconn?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"USE_CONNECTION"},
 						},
 					},
 				},

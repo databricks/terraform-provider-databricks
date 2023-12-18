@@ -92,12 +92,12 @@ func ResourceRecipient() *schema.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, _ := d.GetChange("owner")
-					secondErr := w.Recipients.Update(ctx, sharing.UpdateRecipient{
+					rollbackErr := w.Recipients.Update(ctx, sharing.UpdateRecipient{
 						Name:  updateRecipientRequest.Name,
 						Owner: old.(string),
 					})
-					if secondErr != nil {
-						return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
+					if rollbackErr != nil {
+						return fmt.Errorf("%w. Owner rollback also failed: %w", err, rollbackErr)
 					}
 				}
 				return err

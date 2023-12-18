@@ -170,13 +170,14 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					if d.HasChange("owner") {
 						// Rollback
-						old, _ := d.GetChange("owner")
-						_, secondErr := w.Metastores.Update(ctx, catalog.UpdateMetastore{
+						old, new := d.GetChange("owner")
+						_, rollbackErr := w.Metastores.Update(ctx, catalog.UpdateMetastore{
 							Id:    update.Id,
 							Owner: old.(string),
 						})
-						if secondErr != nil {
-							return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
+						if rollbackErr != nil {
+							log.Printf("[WARN] Owner of this resource was updated but other fields couldn't be updated and owner couldn't be rolled back. \n As a result, the owner of this resource is updated to %s but other attributes aren't. To revert the owner change, please manually change the owner through UI to %s. \n\n You can also use the databricks cli (https://docs.databricks.com/en/dev-tools/cli/install.html) to update the owner. Please note that you must be a metastore admin to update the owner field. \n\n\t $ databricks metastores update <metastore-id> --owner <owner-name>", new.(string), old.(string))
+							return fmt.Errorf("%w. Owner rollback also failed: %w", err, rollbackErr)
 						}
 					}
 					return err

@@ -100,12 +100,12 @@ func ResourceVolume() *schema.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, _ := d.GetChange("owner")
-					_, secondErr := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+					_, rollbackErr := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
 						FullNameArg: updateVolumeRequestContent.FullNameArg,
 						Owner:       old.(string),
 					})
-					if secondErr != nil {
-						return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
+					if rollbackErr != nil {
+						return fmt.Errorf("%w. Owner rollback also failed: %w", err, rollbackErr)
 					}
 				}
 				return err

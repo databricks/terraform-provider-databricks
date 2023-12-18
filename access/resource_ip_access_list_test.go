@@ -182,7 +182,7 @@ func TestIPACLUpdate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/ip-access-lists/" + TestingId,
-				ExpectedRequest: ipAccessListUpdateRequest{
+				ExpectedRequest: settings.UpdateIpAccessList{
 					Enabled: TestingEnabled,
 				},
 				Response: apierr.APIErrorBody{

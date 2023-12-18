@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const grantsTemplate = `
+const grantsTemplateForExternalLocation = `
 	resource "databricks_grants" "some" {
 		external_location = databricks_external_location.some.id
 		grant {
@@ -86,14 +86,14 @@ func TestUcAccExternalLocationUpdate(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: storageCredentialTemplateWithOwner("Managed by TF", "account users") +
 			externalLocationTemplateWithOwner("Managed by TF", "account users") +
-			grantsTemplate,
+			grantsTemplateForExternalLocation,
 	}, step{
 		Template: storageCredentialTemplateWithOwner("Managed by TF -- Updated Comment", "account users") +
 			externalLocationTemplateWithOwner("Managed by TF -- Updated Comment", "account users") +
-			grantsTemplate,
+			grantsTemplateForExternalLocation,
 	}, step{
 		Template: storageCredentialTemplateWithOwner("Managed by TF -- Updated Comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}") +
 			externalLocationTemplateWithOwner("Managed by TF -- Updated Comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}") +
-			grantsTemplate,
+			grantsTemplateForExternalLocation,
 	})
 }

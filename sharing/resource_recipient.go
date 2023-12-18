@@ -2,7 +2,7 @@ package sharing
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -91,12 +91,12 @@ func ResourceRecipient() *schema.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, _ := d.GetChange("owner")
-					err = w.Recipients.Update(ctx, sharing.UpdateRecipient{
+					secondErr := w.Recipients.Update(ctx, sharing.UpdateRecipient{
 						Name:  updateRecipientRequest.Name,
 						Owner: old.(string),
 					})
-					if err != nil {
-						return err
+					if secondErr != nil {
+						return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
 					}
 				}
 				return err

@@ -2,7 +2,7 @@ package catalog
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -99,12 +99,12 @@ func ResourceVolume() *schema.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, _ := d.GetChange("owner")
-					_, err := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+					_, secondErr := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
 						FullNameArg: updateVolumeRequestContent.FullNameArg,
 						Owner:       old.(string),
 					})
-					if err != nil {
-						return err
+					if secondErr != nil {
+						return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
 					}
 				}
 				return err

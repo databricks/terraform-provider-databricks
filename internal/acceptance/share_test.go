@@ -106,7 +106,7 @@ func TestUcAccCreateShare(t *testing.T) {
 	})
 }
 
-func TestUcAccCreateUpdate(t *testing.T) {
+func TestUcAccUpdateShare(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: preTestTemplate + `
 		` + preTestTemplateUpdate + `

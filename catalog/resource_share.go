@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sort"
 
@@ -244,12 +245,12 @@ func ResourceShare() *schema.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, _ := d.GetChange("owner")
-					_, err = w.Shares.Update(ctx, sharing.UpdateShare{
+					_, secondErr := w.Shares.Update(ctx, sharing.UpdateShare{
 						Name:  beforeSi.Name,
 						Owner: old.(string),
 					})
-					if err != nil {
-						return err
+					if secondErr != nil {
+						return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
 					}
 				}
 				return err

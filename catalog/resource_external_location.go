@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -114,12 +115,12 @@ func ResourceExternalLocation() *schema.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, _ := d.GetChange("owner")
-					_, err = w.ExternalLocations.Update(ctx, catalog.UpdateExternalLocation{
+					_, rollbackErr := w.ExternalLocations.Update(ctx, catalog.UpdateExternalLocation{
 						Name:  updateExternalLocationRequest.Name,
 						Owner: old.(string),
 					})
-					if err != nil {
-						return err
+					if rollbackErr != nil {
+						return fmt.Errorf("%w. Owner rollback also failed: %w", err, rollbackErr)
 					}
 				}
 				return err

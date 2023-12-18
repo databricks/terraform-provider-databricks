@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -178,12 +179,12 @@ func ResourceMetastore() *schema.Resource {
 					if d.HasChange("owner") {
 						// Rollback
 						old, _ := d.GetChange("owner")
-						_, err := w.Metastores.Update(ctx, catalog.UpdateMetastore{
+						_, secondErr := w.Metastores.Update(ctx, catalog.UpdateMetastore{
 							Id:    update.Id,
 							Owner: old.(string),
 						})
-						if err != nil {
-							return err
+						if secondErr != nil {
+							return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
 						}
 					}
 					return err

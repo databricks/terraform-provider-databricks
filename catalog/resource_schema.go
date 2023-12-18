@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -105,12 +106,12 @@ func ResourceSchema() *schema.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, _ := d.GetChange("owner")
-					_, err = w.Schemas.Update(ctx, catalog.UpdateSchema{
+					_, secondErr := w.Schemas.Update(ctx, catalog.UpdateSchema{
 						FullName: updateSchemaRequest.FullName,
 						Owner:    old.(string),
 					})
-					if err != nil {
-						return err
+					if secondErr != nil {
+						return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
 					}
 				}
 				return err

@@ -2,7 +2,7 @@ package catalog
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -159,7 +159,7 @@ func ResourceStorageCredential() *schema.Resource {
 					if d.HasChange("owner") {
 						// Rollback
 						old, _ := d.GetChange("owner")
-						_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
+						_, secondErr := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 							CredentialInfo: &catalog.UpdateStorageCredential{
 								Name:  update.Name,
 								Owner: old.(string),
@@ -167,8 +167,8 @@ func ResourceStorageCredential() *schema.Resource {
 							MetastoreId:           d.Get("metastore_id").(string),
 							StorageCredentialName: d.Id(),
 						})
-						if err != nil {
-							return err
+						if secondErr != nil {
+							return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
 						}
 					}
 					return err
@@ -194,12 +194,12 @@ func ResourceStorageCredential() *schema.Resource {
 					if d.HasChange("owner") {
 						// Rollback
 						old, _ := d.GetChange("owner")
-						_, err = w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
+						_, secondErr := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
 							Name:  update.Name,
 							Owner: old.(string),
 						})
-						if err != nil {
-							return err
+						if secondErr != nil {
+							return fmt.Errorf("%w. Owner rollback also failed: %w", err, secondErr)
 						}
 					}
 					return err

@@ -155,12 +155,12 @@ func ResourceCatalog() *schema.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, _ := d.GetChange("owner")
-					_, err = w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+					_, rollbackErr := w.Catalogs.Update(ctx, catalog.UpdateCatalog{
 						Name:  updateCatalogRequest.Name,
 						Owner: old.(string),
 					})
-					if err != nil {
-						return err
+					if rollbackErr != nil {
+						return fmt.Errorf("%w. Owner rollback also failed: %w", err, rollbackErr)
 					}
 				}
 				return err

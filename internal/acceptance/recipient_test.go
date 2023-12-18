@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -46,42 +47,26 @@ func TestUcAccCreateRecipientDb2DbAws(t *testing.T) {
 
 func TestUcAccUpdateRecipientDb2Open(t *testing.T) {
 	unityWorkspaceLevel(t, step{
-		Template: `
-		resource "databricks_recipient" "db2open" {
-			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
-			comment = "made by terraform"
-			authentication_type = "TOKEN"
-			sharing_code = "{var.STICKY_RANDOM}"
-			ip_access_list {
-			// using private ip for acc testing
-			allowed_ip_addresses = ["10.0.0.0/16"]
-			}
-		}`,
+		Template: recipientTemplateWithOwner("made by terraform", "account users"),
 	}, step{
-		Template: `
-		resource "databricks_recipient" "db2open" {
-			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
-			comment = "made by terraform"
-			owner = "account users"
-			authentication_type = "TOKEN"
-			sharing_code = "{var.STICKY_RANDOM}"
-			ip_access_list {
-			// using private ip for acc testing
-			allowed_ip_addresses = ["10.0.0.0/16"]
-			}
-		}`,
+		Template: recipientTemplateWithOwner("made by terraform -- updated comment", "account users"),
 	}, step{
-		Template: `
-		resource "databricks_recipient" "db2open" {
-			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
-			comment = "made by terraform -- updated comment"
-			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}" 
-			authentication_type = "TOKEN"
-			sharing_code = "{var.STICKY_RANDOM}"
-			ip_access_list {
-			// using private ip for acc testing
-			allowed_ip_addresses = ["10.0.0.0/16"]
-			}
-		}`,
+		Template: recipientTemplateWithOwner("made by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
+}
+
+func recipientTemplateWithOwner(comment string, owner string) string {
+	return fmt.Sprintf(`
+		resource "databricks_recipient" "db2open" {
+			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
+			comment = "%s"
+			owner = "%s" 
+			authentication_type = "TOKEN"
+			sharing_code = "{var.STICKY_RANDOM}"
+			ip_access_list {
+			// using private ip for acc testing
+			allowed_ip_addresses = ["10.0.0.0/16"]
+			}
+		}
+	`, comment, owner)
 }

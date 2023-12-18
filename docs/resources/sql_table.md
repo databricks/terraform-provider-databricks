@@ -13,7 +13,6 @@ This resource creates and updates the Unity Catalog table/view by executing the 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {

@@ -51,7 +51,6 @@ You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `CREATE_CONNECTION`, `CREATE_SCHEMA
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {

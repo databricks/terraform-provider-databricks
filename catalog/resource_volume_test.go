@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -607,6 +608,8 @@ func TestVolumesUpdateRollback(t *testing.T) {
 }
 
 func TestVolumesUpdateRollback_Error(t *testing.T) {
+	serverErrMessage := "Something unexpected happened"
+	rollbackErrMessage := "Internal error happened"
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -625,7 +628,7 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
-					Message:   "Something unexpected happened",
+					Message:   serverErrMessage,
 				},
 				Status: 500,
 			},
@@ -637,7 +640,7 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
+					Message:   rollbackErrMessage,
 				},
 				Status: 400,
 			},
@@ -660,7 +663,8 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 		owner = "testOwnerNew"
 		`,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	errOccurred := fmt.Sprintf("%s. Owner rollback also failed: %s", serverErrMessage, rollbackErrMessage)
+	qa.AssertErrorStartsWith(t, err, errOccurred)
 }
 
 func TestVolumeUpdate_Error(t *testing.T) {

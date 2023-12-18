@@ -325,7 +325,7 @@ func TestUpdateStorageCredentialsWithOwnerAndOtherFields(t *testing.T) {
 }
 
 func TestUpdateStorageCredentialsRollback(t *testing.T) {
-	qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -388,7 +388,8 @@ func TestUpdateStorageCredentialsRollback(t *testing.T) {
 		}
 		owner = "updatedOwner"
 		`,
-	}.ApplyNoError(t)
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
 }
 
 func TestCreateStorageCredentialWithAzMI(t *testing.T) {

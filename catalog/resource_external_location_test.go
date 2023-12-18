@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -356,7 +357,7 @@ func TestUpdateExternalLocationOwnerAndOtherFields(t *testing.T) {
 }
 
 func TestUpdateExternalLocationRollback(t *testing.T) {
-	qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -413,10 +414,13 @@ func TestUpdateExternalLocationRollback(t *testing.T) {
 		owner = "updatedOwner"
 		credential_name = "xyz",
 		`,
-	}.ApplyNoError(t)
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
 }
 
 func TestUpdateExternalLocationRollbackError(t *testing.T) {
+	serverErrMessage := "Something unexpected happened"
+	rollbackErrMessage := "Internal error happened"
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -469,7 +473,8 @@ func TestUpdateExternalLocationRollbackError(t *testing.T) {
 		credential_name = "xyz",
 		`,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	errOccurred := fmt.Sprintf("%s. Owner rollback also failed: %s", serverErrMessage, rollbackErrMessage)
+	qa.AssertErrorStartsWith(t, err, errOccurred)
 }
 
 func TestUpdateExternalLocationForce(t *testing.T) {

@@ -307,7 +307,7 @@ func TestUpdateRecipientOnlyOwner(t *testing.T) {
 }
 
 func TestUpdateRecipientRollback(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPatch,
@@ -377,10 +377,7 @@ func TestUpdateRecipientRollback(t *testing.T) {
 		owner = "updatedOwner"
 		`,
 	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "a", d.Get("name"))
-	assert.Equal(t, "b", d.Get("comment"))
-	assert.Equal(t, "administrators", d.Get("owner"))
+	qa.AssertErrorStartsWith(t, err, "Something unexpected")
 }
 
 func TestDeleteRecipient(t *testing.T) {

@@ -369,7 +369,7 @@ func TestUpdateShare(t *testing.T) {
 }
 
 func TestUpdateShareRollback(t *testing.T) {
-	qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -488,7 +488,8 @@ func TestUpdateShareRollback(t *testing.T) {
 			}
 		`,
 		Resource: ResourceShare(),
-	}.ApplyNoError(t)
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
 }
 
 func TestUpdateShare_NoChanges(t *testing.T) {

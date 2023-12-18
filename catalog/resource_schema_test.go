@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -224,7 +225,7 @@ func TestUpdateSchemaOwnerWithOtherFields(t *testing.T) {
 }
 
 func TestUpdateSchemaRollback(t *testing.T) {
-	qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -290,10 +291,13 @@ func TestUpdateSchemaRollback(t *testing.T) {
 		comment = "d"
 		owner = "administrators"
 		`,
-	}.ApplyNoError(t)
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
 }
 
 func TestUpdateSchemaRollback_Error(t *testing.T) {
+	serverErrMessage := "Something unexpected happened"
+	rollbackErrMessage := "Internal error happened"
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -317,7 +321,7 @@ func TestUpdateSchemaRollback_Error(t *testing.T) {
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
-					Message:   "Something unexpected happened",
+					Message:   serverErrMessage,
 				},
 				Status: 500,
 			},
@@ -329,7 +333,7 @@ func TestUpdateSchemaRollback_Error(t *testing.T) {
 				},
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
+					Message:   rollbackErrMessage,
 				},
 				Status: 400,
 			},
@@ -350,7 +354,8 @@ func TestUpdateSchemaRollback_Error(t *testing.T) {
 		owner = "administrators"
 		`,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	errOccurred := fmt.Sprintf("%s. Owner rollback also failed: %s", serverErrMessage, rollbackErrMessage)
+	qa.AssertErrorStartsWith(t, err, errOccurred)
 }
 
 func TestUpdateSchemaForceNew(t *testing.T) {

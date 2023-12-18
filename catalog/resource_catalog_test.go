@@ -558,7 +558,7 @@ func TestUpdateCatalogOwnerAndOtherFields(t *testing.T) {
 }
 
 func TestUpdateCatalogUpdateRollback(t *testing.T) {
-	qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
@@ -622,7 +622,8 @@ func TestUpdateCatalogUpdateRollback(t *testing.T) {
 		comment = "e"
 		owner = "updatedOwner"
 		`,
-	}.ApplyNoError(t)
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
 }
 
 func TestUpdateCatalogUpdateRollbackError(t *testing.T) {

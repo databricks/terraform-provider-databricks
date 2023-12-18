@@ -329,7 +329,7 @@ func TestUpdateMetastore_Rollback(t *testing.T) {
 		delta_sharing_recipient_token_lifetime_in_seconds = 1002
 		`,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Something unexpected")
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
 }
 
 func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
@@ -720,7 +720,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 		delta_sharing_recipient_token_lifetime_in_seconds = 1002
 		`,
 	}.Apply(t)
-	qa.AssertErrorStartsWith(t, err, "Something unexpected")
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
 }
 
 func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {

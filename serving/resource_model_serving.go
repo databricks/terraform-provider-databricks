@@ -12,9 +12,38 @@ import (
 
 const DefaultProvisionTimeout = 45 * time.Minute
 
+type CreateServingEndpoint struct {
+	// The core config of the serving endpoint.
+	Config EndpointCoreConfigInput `json:"config"`
+	// The name of the serving endpoint. This field is required and must be
+	// unique across a Databricks workspace. An endpoint name can consist of
+	// alphanumeric characters, dashes, and underscores.
+	Name string `json:"name"`
+	// Rate limits to be applied to the serving endpoint. NOTE: only external
+	// and foundation model endpoints are supported as of now.
+	RateLimits []serving.RateLimit `json:"rate_limits,omitempty"`
+	// Tags to be attached to the serving endpoint and automatically propagated
+	// to billing logs.
+	Tags []serving.EndpointTag `json:"tags,omitempty"`
+}
+
+type EndpointCoreConfigInput struct {
+	// Configuration for Inference Tables which automatically logs requests and
+	// responses to Unity Catalog.
+	AutoCaptureConfig *serving.AutoCaptureConfigInput `json:"auto_capture_config,omitempty"`
+	// The name of the serving endpoint to update. This field is required.
+	Name string `json:"-" url:"-"`
+	// A list of served models for the endpoint to serve.
+	// A serving endpoint can have up to 10 served models.
+	ServedModels []serving.ServedModelInput `json:"served_models,omitempty"`
+	// The traffic config defining how invocations to the serving endpoint
+	// should be routed.
+	TrafficConfig *serving.TrafficConfig `json:"traffic_config,omitempty"`
+}
+
 func ResourceModelServing() *schema.Resource {
 	s := common.StructToSchema(
-		serving.CreateServingEndpoint{},
+		CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].ForceNew = true
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false

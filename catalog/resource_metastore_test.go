@@ -27,9 +27,11 @@ func TestCreateMetastore(t *testing.T) {
 				},
 			},
 			{
-				Method:          "PATCH",
-				Resource:        "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{},
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: catalog.UpdateMetastore{
+					Name: "a",
+				},
 			},
 			{
 				Method:   "GET",
@@ -67,6 +69,7 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: catalog.UpdateMetastore{
+					Name:  "a",
 					Owner: "administrators",
 				},
 			},
@@ -116,6 +119,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: catalog.UpdateMetastore{
+					Name:              "a",
 					Owner:             "administrators",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 0,
@@ -330,6 +334,7 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreInfo: &catalog.UpdateMetastore{
+						Name:  "a",
 						Owner: "administrators",
 					},
 				},
@@ -340,7 +345,6 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 				Response: catalog.AccountsMetastoreInfo{
 					MetastoreInfo: &catalog.MetastoreInfo{
 						StorageRoot: "s3://b/abc",
-						Name:        "a",
 						Owner:       "administrators",
 					},
 				},

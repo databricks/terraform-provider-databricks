@@ -346,6 +346,7 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
 				Response: catalog.AccountsMetastoreInfo{
 					MetastoreInfo: &catalog.MetastoreInfo{
+						Name:        "a",
 						StorageRoot: "s3://b/abc",
 						Owner:       "administrators",
 					},

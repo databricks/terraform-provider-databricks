@@ -69,6 +69,7 @@ func ResourceStorageCredential() *schema.Resource {
 				if d.Get("owner") == "" {
 					return nil
 				}
+				update.Name = d.Id()
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
 					MetastoreId:           metastoreId,
@@ -94,6 +95,7 @@ func ResourceStorageCredential() *schema.Resource {
 					return nil
 				}
 
+				update.Name = d.Id()
 				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {
 					return err
@@ -123,6 +125,7 @@ func ResourceStorageCredential() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateStorageCredential
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
+			update.Name = d.Id()
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{

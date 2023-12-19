@@ -20,7 +20,7 @@ Every `databricks_grant` resource must have exactly one securable identifier and
 
 For the latest list of privilege types that apply to each securable object in Unity Catalog, please refer to the [official documentation](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/privileges.html#privilege-types-by-securable-object-in-unity-catalog)
 
-Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
+Terraform will handle any configuration drift for the specified principal on every `terraform apply` run, even when grants are changed outside of Terraform state.
 
 Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/sql-ref-privileges.html#privilege-types), all privileges to be written with underscore instead of space, e.g. `CREATE_TABLE` and not `CREATE TABLE`. Below summarizes which privilege types apply to each securable object in the catalog:
 

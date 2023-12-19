@@ -27,11 +27,9 @@ func TestCreateMetastore(t *testing.T) {
 				},
 			},
 			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Name: "a",
-				},
+				Method:          "PATCH",
+				Resource:        "/api/2.1/unity-catalog/metastores/abc",
+				ExpectedRequest: catalog.UpdateMetastore{},
 			},
 			{
 				Method:   "GET",
@@ -69,7 +67,6 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: catalog.UpdateMetastore{
-					Name:  "a",
 					Owner: "administrators",
 				},
 			},
@@ -119,7 +116,6 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/metastores/abc",
 				ExpectedRequest: catalog.UpdateMetastore{
-					Name:              "a",
 					Owner:             "administrators",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 0,
@@ -287,9 +283,7 @@ func TestCreateAccountMetastore(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
-					MetastoreInfo: &catalog.UpdateMetastore{
-						Name: "a",
-					},
+					MetastoreInfo: &catalog.UpdateMetastore{},
 				},
 			},
 			{
@@ -336,7 +330,6 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreInfo: &catalog.UpdateMetastore{
-						Name:  "a",
 						Owner: "administrators",
 					},
 				},
@@ -397,7 +390,6 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreInfo: &catalog.UpdateMetastore{
-						Name:              "a",
 						Owner:             "administrators",
 						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 						DeltaSharingRecipientTokenLifetimeInSeconds: 0,

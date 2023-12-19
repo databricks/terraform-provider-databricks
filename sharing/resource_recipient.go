@@ -73,6 +73,7 @@ func ResourceRecipient() *schema.Resource {
 			}
 			var updateRecipientRequest sharing.UpdateRecipient
 			common.DataToStructPointer(d, recipientSchema, &updateRecipientRequest)
+			updateRecipientRequest.Name = d.Id()
 			return w.Recipients.Update(ctx, updateRecipientRequest)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

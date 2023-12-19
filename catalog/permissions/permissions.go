@@ -108,6 +108,7 @@ var Mappings = SecurableMapping{
 	"external_location":  catalog.SecurableType("external_location"),
 	"function":           catalog.SecurableType("function"),
 	"metastore":          catalog.SecurableType("metastore"),
+	"model":              catalog.SecurableType("function"),
 	"pipeline":           catalog.SecurableType("pipeline"),
 	"recipient":          catalog.SecurableType("recipient"),
 	"schema":             catalog.SecurableType("schema"),

@@ -358,7 +358,7 @@ func TestResourceGrantCreateNoSecurable(t *testing.T) {
 		principal = "me"
 		privileges = ["MODIFY", "SELECT"]
 		`,
-	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [metastore] Missing required argument. [pipeline] Missing required argument. [recipient] Missing required argument. [schema] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [volume] Missing required argument")
+	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [metastore] Missing required argument. [model] Missing required argument. [pipeline] Missing required argument. [recipient] Missing required argument. [schema] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [volume] Missing required argument")
 }
 
 func TestResourceGrantCreateOneSecurableOnly(t *testing.T) {
@@ -669,6 +669,64 @@ func TestResourceGrantConnectionGrantCreate(t *testing.T) {
 
 		principal = "me"
 		privileges = ["USE_CONNECTION"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGrantModelGrantCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/function/mymodel?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/function/mymodel",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"EXECUTE"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/function/mymodel?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"EXECUTE"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/function/mymodel?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"EXECUTE"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Create:   true,
+		HCL: `
+		model = "mymodel"
+
+		principal = "me"
+		privileges = ["EXECUTE"]
 		`,
 	}.ApplyNoError(t)
 }

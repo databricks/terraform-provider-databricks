@@ -287,7 +287,9 @@ func TestCreateAccountMetastore(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
-					MetastoreInfo: &catalog.UpdateMetastore{},
+					MetastoreInfo: &catalog.UpdateMetastore{
+						Name: "a",
+					},
 				},
 			},
 			{

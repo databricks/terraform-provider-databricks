@@ -57,7 +57,7 @@ func TestUcAccExternalLocation(t *testing.T) {
 			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
-		}` + grantsTemplate,
+		}` + grantsTemplateForExternalLocation,
 	})
 }
 
@@ -78,7 +78,7 @@ func TestUcAccExternalLocationForceDestroy(t *testing.T) {
 			credential_name = databricks_storage_credential.external.id
 			comment         = "Managed by TF"
 			force_destroy   = true
-		}` + grantsTemplate,
+		}` + grantsTemplateForExternalLocation,
 	})
 }
 

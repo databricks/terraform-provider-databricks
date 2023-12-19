@@ -77,7 +77,7 @@ func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema 
 // StructToSchema makes schema from a struct type & applies customizations from callback given
 func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, rv.Type(), []string{})
+	scm := typeToSchema(rv, []string{})
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -145,6 +145,15 @@ func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	}
 }
 
+func SetSuppressDiff(v *schema.Schema) {
+	v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+}
+
+func SetDefault(v *schema.Schema, value any) {
+	v.Default = value
+	v.Optional = true
+}
+
 func getAlias(typeField reflect.StructField) string {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
@@ -179,22 +188,43 @@ func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData
 	}
 }
 
+type field struct {
+	sf reflect.StructField
+	v  reflect.Value
+}
+
+func listAllFields(v reflect.Value) []field {
+	t := v.Type()
+	fields := make([]field, 0)
+	for i := 0; i < v.NumField(); i++ {
+		f := t.Field(i)
+		if f.Anonymous {
+			fields = append(fields, listAllFields(v.Field(i))...)
+		} else {
+			fields = append(fields, field{
+				sf: f,
+				v:  v.Field(i),
+			})
+		}
+	}
+	return fields
+}
+
 // typeToSchema converts struct into terraform schema. `path` is used for block suppressions
 // special path element `"0"` is used to denote either arrays or sets of elements
-func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
 		v = v.Elem()
-		t = v.Type()
 		rk = v.Kind()
 	}
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
-	for i := 0; i < v.NumField(); i++ {
-		typeField := t.Field(i)
-
+	fields := listAllFields(v)
+	for _, field := range fields {
+		typeField := field.sf
 		tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldName(typeField)
@@ -260,7 +290,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			nestedSchema := typeToSchema(sv, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
@@ -279,7 +309,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			nestedSchema := typeToSchema(sv, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
@@ -310,7 +340,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, elem, append(path, fieldName, "0")),
+					Schema: typeToSchema(sv, append(path, fieldName, "0")),
 				}
 			}
 		default:
@@ -330,8 +360,9 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
 	}
 	isGoSDK := strings.Contains(rv.Type().PkgPath(), "databricks-sdk-go")
-	for i := 0; i < rv.NumField(); i++ {
-		typeField := rv.Type().Field(i)
+	fields := listAllFields(rv)
+	for _, field := range fields {
+		typeField := field.sf
 		fieldName := chooseFieldName(typeField)
 		if fieldName == "-" {
 			continue
@@ -349,7 +380,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
-		valueField := rv.Field(i)
+		valueField := field.v
 		err := cb(fieldSchema, append(path, fieldName), &valueField)
 		if err != nil {
 			return fmt.Errorf("%s: %s", fieldName, err)

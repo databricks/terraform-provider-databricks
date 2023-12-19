@@ -444,7 +444,7 @@ func TestTypeToSchemaNoStruct(t *testing.T) {
 			fmt.Sprintf("%s", p))
 	}()
 	v := reflect.ValueOf(1)
-	typeToSchema(v, v.Type(), []string{})
+	typeToSchema(v, []string{})
 }
 
 func TestTypeToSchemaUnsupported(t *testing.T) {
@@ -457,7 +457,7 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 		New chan int `json:"new"`
 	}
 	v := reflect.ValueOf(nonsense{})
-	typeToSchema(v, v.Type(), []string{})
+	typeToSchema(v, []string{})
 }
 
 type data map[string]any

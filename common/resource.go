@@ -256,7 +256,15 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //		...
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
-	return genericDatabricksData(func(c *DatabricksClient) (*databricks.WorkspaceClient, error) {
+	return genericDatabricksData[T, struct{}, *databricks.WorkspaceClient](func(c *DatabricksClient) (*databricks.WorkspaceClient, error) {
+		return c.WorkspaceClient()
+	}, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
+		return read(ctx, t, wc)
+	})
+}
+
+func WorkspaceData2[SdkType, OtherType any](read func(context.Context, OtherType, *SdkType, *databricks.WorkspaceClient) error) *schema.Resource {
+	return genericDatabricksData[SdkType, OtherType, *databricks.WorkspaceClient](func(c *DatabricksClient) (*databricks.WorkspaceClient, error) {
 		return c.WorkspaceClient()
 	}, read)
 }
@@ -273,15 +281,25 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 //		...
 //	})
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) *schema.Resource {
-	return genericDatabricksData(func(c *DatabricksClient) (*databricks.AccountClient, error) {
+	return genericDatabricksData[T, struct{}, *databricks.AccountClient](func(c *DatabricksClient) (*databricks.AccountClient, error) {
 		return c.AccountClient()
-	}, read)
+	}, func(ctx context.Context, s struct{}, t *T, ac *databricks.AccountClient) error {
+		return read(ctx, t, ac)
+	})
 }
 
 // genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients
-func genericDatabricksData[T any, C any](getClient func(*DatabricksClient) (C, error), read func(context.Context, *T, C) error) *schema.Resource {
-	var dummy T
+func genericDatabricksData[SdkType, OtherFields any, C any](getClient func(*DatabricksClient) (C, error), read func(context.Context, OtherFields, *SdkType, C) error) *schema.Resource {
+	var dummy SdkType
+	var other OtherFields
+	otherFields := StructToSchema(other, NoCustomize)
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		for k := range m {
+			m[k].Computed = true
+		}
+		for k, v := range otherFields {
+			m[k] = v
+		}
 		// `id` attribute must be marked as computed, otherwise it's not set!
 		if v, ok := m["id"]; ok {
 			v.Computed = true
@@ -298,20 +316,22 @@ func genericDatabricksData[T any, C any](getClient func(*DatabricksClient) (C, e
 					diags = diag.Errorf("panic: %v", panic)
 				}
 			}()
-			ptr := reflect.New(reflect.ValueOf(dummy).Type())
-			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
+			var dummy SdkType
+			var other OtherFields
+			DataToStructPointer(d, s, &other)
+			DataToStructPointer(d, s, &dummy)
 			client := m.(*DatabricksClient)
 			c, err := getClient(client)
 			if err != nil {
-				err = nicerError(ctx, err, "read data")
+				err = nicerError(ctx, err, "get client")
 				return diag.FromErr(err)
 			}
-			err = read(ctx, ptr.Interface().(*T), c)
+			err = read(ctx, other, &dummy, c)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 				diags = diag.FromErr(err)
 			}
-			StructToData(ptr.Elem().Interface(), s, d)
+			StructToData(&dummy, s, d)
 			// check if the resource schema has the `id` attribute (marked with `json:"id"` in the provided structure).
 			// and if yes, then use it as resource ID. If not, then use default value for resource ID (`_`)
 			if _, ok := s["id"]; ok {

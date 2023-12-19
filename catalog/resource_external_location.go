@@ -65,6 +65,7 @@ func ResourceExternalLocation() *schema.Resource {
 
 			var updateExternalLocationRequest catalog.UpdateExternalLocation
 			common.DataToStructPointer(d, s, &updateExternalLocationRequest)
+			updateExternalLocationRequest.Name = d.Id()
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
 			if err != nil {
 				return err
@@ -95,6 +96,7 @@ func ResourceExternalLocation() *schema.Resource {
 			var updateExternalLocationRequest catalog.UpdateExternalLocation
 			common.DataToStructPointer(d, s, &updateExternalLocationRequest)
 			updateExternalLocationRequest.Force = force
+			updateExternalLocationRequest.Name = d.Id()
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
 			if err != nil {
 				return err

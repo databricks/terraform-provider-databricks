@@ -74,7 +74,6 @@ func TestCreateExternalLocationWithOwner(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				ExpectedRequest: catalog.UpdateExternalLocation{
-					Name:           "abc",
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
 					Comment:        "def",
@@ -212,7 +211,6 @@ func TestUpdateExternalLocation(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				ExpectedRequest: catalog.UpdateExternalLocation{
-					Name:           "abc",
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
 					Comment:        "def",
@@ -254,7 +252,6 @@ func TestUpdateExternalLocationForce(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/external-locations/abc",
 				ExpectedRequest: catalog.UpdateExternalLocation{
-					Name:           "abc",
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
 					Comment:        "def",

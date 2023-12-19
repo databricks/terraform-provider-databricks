@@ -2,13 +2,11 @@ package permissions
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -1464,11 +1462,10 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 			m = x
 		}
 	}
-	_, err := m.idRetriever(context.Background(), databricks.Must(databricks.NewWorkspaceClient(
-		(*databricks.Config)(config.NewMockConfig(func(r *http.Request) error {
-			return fmt.Errorf("nope")
-		})))), "x")
-	assert.EqualError(t, err, "cannot load path x: nope")
+	w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+	require.NoError(t, err)
+	_, err = m.idRetriever(context.Background(), w, "x")
+	assert.ErrorContains(t, err, "cannot load path x")
 }
 
 func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {

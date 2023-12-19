@@ -74,7 +74,14 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
+				emptyRequest, err := common.IsRequestEmpty(update)
+				if err != nil {
+					return err
+				}
 				d.SetId(mi.MetastoreInfo.MetastoreId)
+				if emptyRequest {
+					return nil
+				}
 				_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   mi.MetastoreInfo.MetastoreId,
 					MetastoreInfo: &update,

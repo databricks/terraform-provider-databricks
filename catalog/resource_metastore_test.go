@@ -394,6 +394,7 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreInfo: &catalog.UpdateMetastore{
+						Name:              "a",
 						Owner:             "administrators",
 						DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 						DeltaSharingRecipientTokenLifetimeInSeconds: 0,

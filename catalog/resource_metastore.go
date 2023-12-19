@@ -122,7 +122,6 @@ func ResourceMetastore() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
-			update.Name = d.Id()
 			updateForceSendFields(&update)
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
@@ -135,7 +134,7 @@ func ResourceMetastore() *schema.Resource {
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				// update.Id = d.Id()
+				update.Id = d.Id()
 				_, err := w.Metastores.Update(ctx, update)
 				if err != nil {
 					return err

@@ -157,6 +157,7 @@ func SetDefault(v *schema.Schema, value any) {
 func SetReadOnly(v *schema.Schema) {
 	v.Optional = false
 	v.Required = false
+	v.MaxItems = 0
 	v.Computed = true
 }
 
@@ -377,6 +378,20 @@ func IsRequestEmpty(v any) (bool, error) {
 	return !isNotEmpty, err
 }
 
+// isGoSdk returns true if the struct is from databricks-sdk-go or embeds a struct from databricks-sdk-go.
+func isGoSdk(v reflect.Value) bool {
+	if strings.Contains(v.Type().PkgPath(), "databricks-sdk-go") {
+		return true
+	}
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Type().Field(i)
+		if f.Anonymous && isGoSdk(v.Field(i)) {
+			return true
+		}
+	}
+	return false
+}
+
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
 	rk := rv.Kind()
@@ -386,7 +401,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	if !rv.IsValid() {
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
 	}
-	isGoSDK := strings.Contains(rv.Type().PkgPath(), "databricks-sdk-go")
+	isGoSDK := isGoSdk(rv)
 	fields := listAllFields(rv)
 	for _, field := range fields {
 		typeField := field.sf

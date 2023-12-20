@@ -11,13 +11,13 @@ checkout_branch() {
 
 # Function to generate provider schema
 generate_schema() {
-  local schema_name=$1
+  local TMPDIR=$1
   make install
   version=$(./terraform-provider-databricks version)
 
   echo "Generating provider schema for $branch..."
   set -ex
-  cd /tmp
+  pushd $TMPDIR
   cat > main.tf <<EOF
 terraform {
   required_providers {
@@ -29,8 +29,8 @@ terraform {
 }
 EOF
   terraform init
-  terraform providers schema -json > $schema_name.json
-  cd - # Go back to the original directory
+  terraform providers schema -json > schema.json
+  popd
 }
 
 if [ -n "$(git status --porcelain)" ]; then
@@ -39,9 +39,11 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-generate_schema "schema-new"
+NEW_TMP=$(mktemp -d -t schema-new)
+generate_schema "$NEW_TMP"
 checkout_branch $BASE_BRANCH
-generate_schema "schema-current"
+CURRENT_TMP=$(mktemp -d -t schema-current)
+generate_schema "$CURRENT_TMP"
 checkout_branch $CURRENT_BRANCH
 
-jd -color /tmp/schema-current.json /tmp/schema-new.json
+jd -color "$CURRENT_TMP/schema.json" "$NEW_TMP/schema.json"

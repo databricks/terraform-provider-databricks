@@ -112,7 +112,7 @@ func ResourceSchema() *schema.Resource {
 						Owner:    old.(string),
 					})
 					if rollbackErr != nil {
-						log.Printf("[WARN] Owner of this resource was updated but other fields couldn't be updated and owner couldn't be rolled back. \n As a result, the owner of this resource is updated to %s but other attributes aren't. To revert the owner change, please manually change the owner to %s. \n\n You can also use the databricks cli (https://docs.databricks.com/en/dev-tools/cli/install.html) to update the owner. Please note that you must be an owner of schema or metastore admin to update the owner field. \n\n\t $ databricks schemas update <schema-full-name> --owner <owner-name>", new.(string), old.(string))
+						log.Printf("[WARN] %s", common.OwnerRollbackError(old.(string), new.(string)))
 						return fmt.Errorf("%w. Owner rollback also failed: %w", err, rollbackErr)
 					}
 				}

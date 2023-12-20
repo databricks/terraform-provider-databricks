@@ -137,7 +137,6 @@ func ResourceCatalog() *schema.Resource {
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
-
 			ci, err := common.UpdateWithOwnerInSeparateRequest(ctx, d, w.Catalogs.Update, updateCatalogRequest)
 
 			// We need to update the resource data because Name is updatable

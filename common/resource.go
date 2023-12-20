@@ -296,6 +296,7 @@ func genericDatabricksData[SdkType, OtherFields any, C any](getClient func(*Data
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		for k := range m {
 			m[k].Computed = true
+			m[k].Required = false
 		}
 		for k, v := range otherFields {
 			m[k] = v

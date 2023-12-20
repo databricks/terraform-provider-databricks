@@ -81,4 +81,7 @@ test-preview: install
 docker-it:
 	docker build -t databricks-terrafrom/test -f scripts/Dockerfile .
 
+diff-schema:
+	@/bin/bash scripts/diff-schema.sh
+
 .PHONY: build fmt python-setup docs vendor build fmt coverage test lint

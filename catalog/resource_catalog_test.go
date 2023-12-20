@@ -151,7 +151,6 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",
@@ -246,9 +245,20 @@ func TestUpdateCatalog(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
-					Name:    "a",
+					Owner: "administrators",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
 					Comment: "c",
-					Owner:   "administrators",
 				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",
@@ -280,6 +290,62 @@ func TestUpdateCatalog(t *testing.T) {
 		name = "a"
 		comment = "c"
 		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateCatalogOwnerOnly(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "updatedOwner",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Comment: "c",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+			"owner":   "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "c"
+		owner = "updatedOwner"
 		`,
 	}.ApplyNoError(t)
 }
@@ -327,9 +393,15 @@ func TestUpdateCatalogIfMetastoreIdChanges(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
 					Name:    "a",
 					Comment: "c",
-					Owner:   "administrators",
 				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",
@@ -384,9 +456,15 @@ func TestUpdateCatalogIfMetastoreIdNotExplicitelySet(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "administrators",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
 					Name:    "a",
 					Comment: "c",
-					Owner:   "administrators",
 				},
 				Response: catalog.CatalogInfo{
 					Name:        "a",
@@ -417,9 +495,196 @@ func TestUpdateCatalogIfMetastoreIdNotExplicitelySet(t *testing.T) {
 		HCL: `
 		name = "a"
 		comment = "c"
+		owner = "updatedOwner"
 		owner = "administrators"
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestUpdateCatalogOwnerAndOtherFields(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "updatedOwner",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Comment: "e",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "e",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "e",
+					Owner:       "updatedOwner",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+			"owner":   "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "e"
+		owner = "updatedOwner"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateCatalogUpdateRollback(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "updatedOwner",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Comment: "e",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "administrators",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/catalogs/a?",
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "administrators",
+				},
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+			"owner":   "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "e"
+		owner = "updatedOwner"
+		`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
+}
+
+func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
+	serverErrMessage := "Something unexpected happened"
+	rollbackErrMessage := "Internal error happened"
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "updatedOwner",
+				},
+				Response: catalog.CatalogInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Comment: "e",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   serverErrMessage,
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/catalogs/a",
+				ExpectedRequest: catalog.UpdateCatalog{
+					Owner: "administrators",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   rollbackErrMessage,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+			"owner":   "administrators",
+		},
+		HCL: `
+		name = "a"
+		comment = "e"
+		owner = "updatedOwner"
+		`,
+	}.Apply(t)
+	errOccurred := fmt.Sprintf("%s. Owner rollback also failed: %s", serverErrMessage, rollbackErrMessage)
+	qa.AssertErrorStartsWith(t, err, errOccurred)
 }
 
 func TestForceDeleteCatalog(t *testing.T) {

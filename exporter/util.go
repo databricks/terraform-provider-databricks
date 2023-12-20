@@ -40,10 +40,7 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 			})
 		}
 		if is.Workspace != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_workspace_file",
-				ID:       is.Workspace.Destination,
-			})
+			ic.maybeEmitWorkspaceObject("", is.Workspace.Destination)
 		}
 	}
 
@@ -111,27 +108,33 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	if userOrSPName == "" {
 		return
 	}
-	// TODO: think about another way of checking for a user. ideally we need to check against the
-	// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
-	if strings.Contains(userOrSPName, "@") {
-		ic.Emit(&resource{
-			Resource:  "databricks_user",
-			Attribute: "user_name",
-			Value:     strings.ToLower(userOrSPName),
-		})
-	} else if common.StringIsUUID(userOrSPName) {
-		ic.Emit(&resource{
-			Resource:  "databricks_service_principal",
-			Attribute: "application_id",
-			Value:     userOrSPName,
-		})
+	if common.StringIsUUID(userOrSPName) {
+		user, err := ic.findSpnByAppID(userOrSPName)
+		if err != nil {
+			log.Printf("[ERROR] Can't find SP with application ID %s", userOrSPName)
+		} else {
+			ic.Emit(&resource{
+				Resource: "databricks_service_principal",
+				ID:       user.ID,
+			})
+		}
+	} else {
+		user, err := ic.findUserByName(strings.ToLower(userOrSPName))
+		if err != nil {
+			log.Printf("[ERROR] Can't find user with name %s", userOrSPName)
+		} else {
+			ic.Emit(&resource{
+				Resource: "databricks_user",
+				ID:       user.ID,
+			})
+		}
 	}
 }
 
 func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
 	if strings.HasPrefix(path, prefix) {
 		parts := strings.SplitN(path, "/", 4)
-		if len(parts) >= 3 {
+		if len(parts) >= 3 && parts[2] != "" {
 			ic.emitUserOrServicePrincipal(parts[2])
 		}
 	}
@@ -142,11 +145,16 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 		return false
 	}
 	parts := strings.SplitN(path, "/", 4)
-	if len(parts) == 3 || (len(parts) == 4 && parts[3] == "") {
-		// TODO: think about another way of checking for a user. ideally we need to check against the
-		// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
+	if (len(parts) == 3 || (len(parts) == 4 && parts[3] == "")) && parts[2] != "" {
 		userOrSPName := parts[2]
-		return strings.Contains(userOrSPName, "@") || common.StringIsUUID(userOrSPName)
+		var err error
+		if common.StringIsUUID(userOrSPName) {
+			_, err = ic.findSpnByAppID(userOrSPName)
+		} else {
+			_, err = ic.findUserByName(strings.ToLower(userOrSPName))
+		}
+		return err == nil
+
 	}
 	return false
 }
@@ -159,10 +167,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 			Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
 		})
 	} else {
-		ic.Emit(&resource{
-			Resource: "databricks_notebook",
-			ID:       path,
-		})
+		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
 }
 
@@ -793,6 +798,26 @@ func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
 	return obs.ModifiedAt
 }
 
+func (ic *importContext) shouldEmitForPath(path string) bool {
+	if !ic.exportDeletedUsersAssets && strings.HasPrefix(path, "/Users/") {
+		userDir := userDirRegex.ReplaceAllString(path, "$1")
+		return ic.IsUserOrServicePrincipalDirectory(userDir, "/Users")
+	}
+	return true
+}
+
+func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
+	if ic.shouldEmitForPath(path) {
+		ic.Emit(&resource{
+			Resource:    resourceType,
+			ID:          path,
+			Incremental: ic.incremental,
+		})
+	} else {
+		log.Printf("[DEBUG] Not emitting a workspace object %s for deleted user", path)
+	}
+}
+
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
 		// TODO: can we pass a visitor here, that will emit corresponding object earlier?
@@ -814,11 +839,7 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 			if !ic.MatchesName(object.Path) {
 				continue
 			}
-			ic.Emit(&resource{
-				Resource:    resourceType,
-				ID:          object.Path,
-				Incremental: ic.incremental,
-			})
+			ic.maybeEmitWorkspaceObject(resourceType, object.Path)
 
 			if offset%50 == 0 {
 				log.Printf("[INFO] Scanned %d of %d %ss", offset+1, len(objectsList), objName)

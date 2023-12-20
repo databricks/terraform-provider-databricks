@@ -1559,6 +1559,10 @@ func TestImportingRepos(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			userListIdUsernameFixture,
+			userListIdUsernameFixture2,
+			userListFixture,
+			userReadFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/repos?",
@@ -1902,6 +1906,18 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users?attributes=userName%2Cid",
+				Response: scim.UserList{
+					Resources: []scim.User{
+						{
+							ID:       "id",
+							UserName: "id",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
 				Resource: "/api/2.0/instance-profiles/list",
 				Response: getJSONObject("test-data/list-instance-profiles.json"),
 			},
@@ -1971,10 +1987,13 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			meAdminFixture,
 			emptyRepos,
 			emptyIpAccessLIst,
+			userListIdUsernameFixture,
+			userListIdUsernameFixture2,
+			userListFixture,
+			userReadFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=50",
-
 				Response: pipelines.PipelineListResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{

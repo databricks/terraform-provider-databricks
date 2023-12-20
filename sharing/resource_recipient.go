@@ -74,7 +74,34 @@ func ResourceRecipient() *schema.Resource {
 			var updateRecipientRequest sharing.UpdateRecipient
 			common.DataToStructPointer(d, recipientSchema, &updateRecipientRequest)
 			updateRecipientRequest.Name = d.Id()
-			return w.Recipients.Update(ctx, updateRecipientRequest)
+
+			if d.HasChange("owner") {
+				err = w.Recipients.Update(ctx, sharing.UpdateRecipient{
+					Name:  updateRecipientRequest.Name,
+					Owner: updateRecipientRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateRecipientRequest.Owner = ""
+			err = w.Recipients.Update(ctx, updateRecipientRequest)
+			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					rollbackErr := w.Recipients.Update(ctx, sharing.UpdateRecipient{
+						Name:  updateRecipientRequest.Name,
+						Owner: old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
+				return err
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

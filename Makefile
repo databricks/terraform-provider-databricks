@@ -81,6 +81,9 @@ test-preview: install
 docker-it:
 	docker build -t databricks-terrafrom/test -f scripts/Dockerfile .
 
+schema:
+	@/bin/bash scripts/print-schema.sh
+
 diff-schema:
 	@/bin/bash scripts/diff-schema.sh
 

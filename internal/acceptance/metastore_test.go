@@ -72,18 +72,49 @@ func TestUcAccMetastoreDeltaSharingInfiniteLifetime(t *testing.T) {
 	})
 }
 
-func runMetastoreTest(t *testing.T, extraAttributes map[string]any) {
+func TestUcAccMetastoreWithOwnerUpdates(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	runMetastoreTestWithOwnerUpdates(t, map[string]any{
+		"storage_root": getStorageRoot(os.Getenv("CLOUD_ENV")),
+		"region":       getRegion(os.Getenv("CLOUD_ENV")),
+	})
+}
+
+func getTemplateFromExtraAttributes(t *testing.T, extraAttributes map[string]any) string {
 	params := make([]string, len(extraAttributes))
 	for k, v := range extraAttributes {
 		jsonValue, err := json.Marshal(v)
 		require.NoError(t, err)
 		params = append(params, k+" = "+string(jsonValue))
 	}
-	template := strings.Join(params, "\n\t\t\t")
+	return strings.Join(params, "\n\t\t\t")
+}
+
+func runMetastoreTest(t *testing.T, extraAttributes map[string]any) {
+	template := getTemplateFromExtraAttributes(t, extraAttributes)
 	unityAccountLevel(t, step{
 		Template: fmt.Sprintf(`resource "databricks_metastore" "this" {
 			name = "{var.RANDOM}"
 			force_destroy = true
+			%s
+		}`, template),
+	})
+}
+
+func runMetastoreTestWithOwnerUpdates(t *testing.T, extraAttributes map[string]any) {
+	template := getTemplateFromExtraAttributes(t, extraAttributes)
+	unityAccountLevel(t, step{
+		Template: fmt.Sprintf(`resource "databricks_metastore" "this" {
+			name = "{var.STICKY_RANDOM}"
+			force_destroy = true
+			owner = "account users"
+			%s
+		}`, template),
+	}, step{
+		Template: fmt.Sprintf(`resource "databricks_metastore" "this" {
+			name = "{var.STICKY_RANDOM}-updated"
+			force_destroy = true
+			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
 			%s
 		}`, template),
 	})

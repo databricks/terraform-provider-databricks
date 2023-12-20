@@ -3,13 +3,11 @@ package sql
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -87,14 +85,6 @@ func ResourceSqlEndpoint() *schema.Resource {
 			validation.StringInSlice([]string{"PRO", "CLASSIC"}, false))
 		return m
 	})
-	f, err := os.Create("new.txt")
-	if err != nil {
-		panic(err)
-	}
-	spew.Config.DisablePointerAddresses = true
-	spew.Config.DisableCapacities = true
-	spew.Config.SortKeys = true
-	spew.Fdump(f, s)
 	return common.Resource{
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),

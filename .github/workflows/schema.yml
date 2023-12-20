@@ -16,17 +16,13 @@ on:
         required: true
 
 jobs:
-  compute_current:
-    name: "Generate current"
+  compute_diff:
     runs-on: ubuntu-latest
 
     steps:
       - if: github.event_name == 'pull_request'
         name: Checkout
         uses: actions/checkout@v4
-        with:
-          # Checkout main branch to generate schema for current release
-          ref: master
 
       - if: github.event_name == 'workflow_dispatch'
         name: Checkout

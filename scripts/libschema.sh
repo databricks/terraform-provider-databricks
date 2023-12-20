@@ -7,7 +7,7 @@ generate_schema() {
 
   local TMPDIR=$(mktemp -d)
   >&2 echo "Generating provider schema in $TMPDIR..."
-  pushd $TMPDIR
+  >&2 pushd $TMPDIR
   cat > main.tf <<EOF
 terraform {
   required_providers {
@@ -18,9 +18,9 @@ terraform {
   }
 }
 EOF
-  terraform init
+  >&2 terraform init
   terraform providers schema -json > schema.json
-  popd
+  >&2 popd
   >&2 echo "Provider schema available in $TMPDIR/schema.json"
   echo "$TMPDIR/schema.json"
 } 

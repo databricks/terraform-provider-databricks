@@ -21,4 +21,10 @@ checkout_branch $BASE_BRANCH
 CURRENT_SCHEMA=$(generate_schema)
 checkout_branch $CURRENT_BRANCH
 
+set +e
 jd -color "$CURRENT_SCHEMA" "$NEW_SCHEMA"
+RES=$?
+set -e
+if [ $RES -eq 0 ]; then
+    echo "No schema changes detected."
+fi

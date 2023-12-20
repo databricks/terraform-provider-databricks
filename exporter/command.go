@@ -100,6 +100,8 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.includeUserDomains, "includeUserDomains", false, "Include domain portion in `databricks_user` resource name")
 	flags.BoolVar(&ic.importAllUsers, "importAllUsers", false,
 		"Import all users and service principals, even if they aren't referenced in any resource")
+	flags.BoolVar(&ic.exportDeletedUsersAssets, "exportDeletedUsersAssets", false,
+		"Export assets (notebooks, etc.) of deleted users & service principals")
 	flags.StringVar(&ic.Directory, "directory", cwd,
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,

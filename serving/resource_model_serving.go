@@ -28,7 +28,6 @@ func ResourceModelServing() *schema.Resource {
 			common.MustSchemaPath(m, "config", "served_models", "workload_type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old == "" && new == "CPU"
 			}
-			common.MustSchemaPath(m, "config", "served_models").Deprecated = "Use `config.served_entities` instead."
 
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
 

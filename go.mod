@@ -3,7 +3,11 @@ module github.com/databricks/terraform-provider-databricks
 go 1.20
 
 require (
+<<<<<<< HEAD
 	github.com/databricks/databricks-sdk-go v0.28.0
+=======
+	github.com/databricks/databricks-sdk-go v0.28.1
+>>>>>>> 0d6281c129a5f0bb7d45405e0276d8799dfcc99e
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/hcl v1.0.0
@@ -67,7 +71,11 @@ require (
 	go.opentelemetry.io/otel v1.21.0 // indirect
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/crypto v0.16.0 // indirect
+=======
+	golang.org/x/crypto v0.17.0 // indirect
+>>>>>>> 0d6281c129a5f0bb7d45405e0276d8799dfcc99e
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
@@ -75,8 +83,8 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/api v0.154.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231127180814-3a041ad873d4 // indirect
-	google.golang.org/grpc v1.60.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
+	google.golang.org/grpc v1.60.1 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

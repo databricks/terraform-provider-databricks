@@ -445,13 +445,14 @@ func collectionToMaps(v any, s *schema.Schema) ([]any, error) {
 		return nil, fmt.Errorf("not resource")
 	}
 	var allItems []reflect.Value
-	if s.MaxItems == 1 {
-		allItems = append(allItems, reflect.ValueOf(v))
-	} else {
-		vs := reflect.ValueOf(v)
-		for i := 0; i < vs.Len(); i++ {
-			allItems = append(allItems, vs.Index(i))
+	rv := reflect.ValueOf(v)
+	isArray := rv.Type().Kind() == reflect.Array
+	if isArray {
+		for i := 0; i < rv.Len(); i++ {
+			allItems = append(allItems, rv.Index(i))
 		}
+	} else {
+		allItems = append(allItems, rv)
 	}
 	for _, v := range allItems {
 		data := map[string]any{}

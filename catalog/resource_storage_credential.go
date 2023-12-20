@@ -130,7 +130,6 @@ func ResourceStorageCredential() *schema.Resource {
 			force := d.Get("force_update").(bool)
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Id()
-<<<<<<< HEAD
 			update.Force = force
 			// We need to set them to empty since these fields are computed
 			if _, ok := d.GetOk("aws_iam_role"); ok {
@@ -140,9 +139,6 @@ func ResourceStorageCredential() *schema.Resource {
 			if _, ok := d.GetOk("azure_managed_identity"); ok {
 				update.AzureManagedIdentity.CredentialId = ""
 			}
-=======
-
->>>>>>> 0d6281c129a5f0bb7d45405e0276d8799dfcc99e
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				if d.HasChange("owner") {
 					_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{

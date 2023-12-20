@@ -3,11 +3,7 @@ module github.com/databricks/terraform-provider-databricks
 go 1.20
 
 require (
-<<<<<<< HEAD
-	github.com/databricks/databricks-sdk-go v0.28.0
-=======
 	github.com/databricks/databricks-sdk-go v0.28.1
->>>>>>> 0d6281c129a5f0bb7d45405e0276d8799dfcc99e
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/hcl v1.0.0
@@ -71,11 +67,7 @@ require (
 	go.opentelemetry.io/otel v1.21.0 // indirect
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
-<<<<<<< HEAD
-	golang.org/x/crypto v0.16.0 // indirect
-=======
 	golang.org/x/crypto v0.17.0 // indirect
->>>>>>> 0d6281c129a5f0bb7d45405e0276d8799dfcc99e
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect

@@ -45,4 +45,3 @@ jobs:
           terraform_wrapper: false
 
       - run: make diff-schema
-        continue-on-error: true

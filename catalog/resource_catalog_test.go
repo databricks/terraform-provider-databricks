@@ -634,7 +634,6 @@ func TestCatalogCreateIsolated(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/catalogs/a",
 				ExpectedRequest: catalog.CatalogInfo{
-					Name:    "a",
 					Comment: "b",
 					Properties: map[string]string{
 						"c": "d",

@@ -1,5 +1,27 @@
 # Version changelog
 
+## 1.32.0
+New Features and Improvements:
+ * Improved debugging of errors ([#744](https://github.com/databricks/databricks-sdk-go/pull/744))
+ * Removed requirement to provide accountId in mws_credentials resource ([#3028](https://github.com/databricks/terraform-provider-databricks/pull/3028)).
+ * Validated metastore_id field in worspace UC resources except metastore resource ([#3035](https://github.com/databricks/terraform-provider-databricks/pull/3035)), ([#3039](https://github.com/databricks/terraform-provider-databricks/pull/3039)).
+ * Wait for resource to be updated during grants resource modification ([#3026](https://github.com/databricks/terraform-provider-databricks/pull/3026)).
+ * Deprecated top level task attributes ([#2993](https://github.com/databricks/terraform-provider-databricks/pull/2993)).
+
+Documentation Changes:
+ * Added BQ example for [databricks_connection](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/connection) ([#3040](https://github.com/databricks/terraform-provider-databricks/pull/3040)).
+ * Consistent header levels and same doc structure ([#3007](https://github.com/databricks/terraform-provider-databricks/pull/3007)).
+ * Fixed two minor docs typos in node_type and cluster_policy ([#3038](https://github.com/databricks/terraform-provider-databricks/pull/3038)).
+
+Exporter:
+ * Removed dead code that reflects old Jobs API 2.0 structures ([#2981](https://github.com/databricks/terraform-provider-databricks/pull/2981)).
+
+ Internal Changes:
+ * Bumped Go SDK to 0.28.1 ([#3043](https://github.com/databricks/terraform-provider-databricks/pull/3043)).
+ * Bumped github.com/hashicorp/terraform-plugin-sdk/v2 from 2.30.0 to 2.31.0 ([#3033](https://github.com/databricks/terraform-provider-databricks/pull/3033)).
+ * Added acceptance tests for [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) ([#3034](https://github.com/databricks/terraform-provider-databricks/pull/3034)).
+ * Migrated library create to use go-sdk ([#2998](https://github.com/databricks/terraform-provider-databricks/pull/2998)).
+
 ## 1.31.1
 
 New Features and Improvements:

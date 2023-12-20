@@ -137,8 +137,32 @@ func ResourceCatalog() *schema.Resource {
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
+
+			if d.HasChange("owner") {
+				_, err = w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+					Name:  updateCatalogRequest.Name,
+					Owner: updateCatalogRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateCatalogRequest.Owner = ""
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
+
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+						Name:  updateCatalogRequest.Name,
+						Owner: old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
 

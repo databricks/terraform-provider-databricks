@@ -2,9 +2,7 @@ package catalog
 
 import (
 	"context"
-	"log"
 
-	"fmt"
 	"reflect"
 	"sort"
 
@@ -251,8 +249,7 @@ func ResourceShare() *schema.Resource {
 						Owner: old.(string),
 					})
 					if rollbackErr != nil {
-						log.Printf("[WARN] %s", common.OwnerRollbackError(old.(string), new.(string)))
-						return fmt.Errorf("%w. Owner rollback also failed: %w", err, rollbackErr)
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
 					}
 				}
 				return err

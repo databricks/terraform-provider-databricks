@@ -2,8 +2,6 @@ package catalog
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -112,8 +110,7 @@ func ResourceSchema() *schema.Resource {
 						Owner:    old.(string),
 					})
 					if rollbackErr != nil {
-						log.Printf("[WARN] %s", common.OwnerRollbackError(old.(string), new.(string)))
-						return fmt.Errorf("%w. Owner rollback also failed: %w", err, rollbackErr)
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
 					}
 				}
 				return err

@@ -154,6 +154,12 @@ func SetDefault(v *schema.Schema, value any) {
 	v.Optional = true
 }
 
+func SetReadOnly(v *schema.Schema) {
+	v.Optional = false
+	v.Required = false
+	v.Computed = true
+}
+
 func getAlias(typeField reflect.StructField) string {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {

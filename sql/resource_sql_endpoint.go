@@ -58,19 +58,21 @@ func ResourceSqlEndpoint() *schema.Resource {
 		common.SetDefault(m["auto_stop_mins"], 120)
 		common.SetSuppressDiff(m["channel"])
 		common.MustSchemaPath(m, "channel", "name").Default = "CHANNEL_NAME_CURRENT"
+		common.SetReadOnly(m["creator_name"])
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
 		common.SetDefault(m["enable_photon"], true)
 		common.SetSuppressDiff(m["enable_serverless_compute"])
-		m["jdbc_url"].Computed = true
+		common.SetReadOnly(m["health"])
+		common.SetReadOnly(m["jdbc_url"])
 		common.SetDefault(m["max_num_clusters"], 1)
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
 		common.SetSuppressDiff(m["min_num_clusters"])
 		common.SetSuppressDiff(m["num_clusters"])
-		m["odbc_params"].Computed = true
+		common.SetReadOnly(m["odbc_params"])
 		common.SetDefault(m["spot_instance_policy"], "COST_OPTIMIZED")
-		m["state"].Computed = true
+		common.SetReadOnly(m["state"])
 		common.SetSuppressDiff(m["tags"])
 		common.SetSuppressDiff(m["warehouse_type"])
 		m["warehouse_type"].ValidateDiagFunc = validation.ToDiagFunc(

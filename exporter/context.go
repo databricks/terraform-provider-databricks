@@ -80,25 +80,26 @@ type importContext struct {
 	Scope importedResources
 
 	// command-line resources (immutable, or set by the single thread)
-	includeUserDomains  bool
-	importAllUsers      bool
-	debug               bool
-	incremental         bool
-	mounts              bool
-	noFormat            bool
-	services            string
-	listing             string
-	match               string
-	lastActiveDays      int64
-	lastActiveMs        int64
-	generateDeclaration bool
-	meAdmin             bool
-	prefix              string
-	accountLevel        bool
-	shImports           map[string]bool
-	notebooksFormat     string
-	updatedSinceStr     string
-	updatedSinceMs      int64
+	includeUserDomains       bool
+	importAllUsers           bool
+	exportDeletedUsersAssets bool
+	debug                    bool
+	incremental              bool
+	mounts                   bool
+	noFormat                 bool
+	services                 string
+	listing                  string
+	match                    string
+	lastActiveDays           int64
+	lastActiveMs             int64
+	generateDeclaration      bool
+	meAdmin                  bool
+	prefix                   string
+	accountLevel             bool
+	shImports                map[string]bool
+	notebooksFormat          string
+	updatedSinceStr          string
+	updatedSinceMs           int64
 
 	waitGroup *sync.WaitGroup
 

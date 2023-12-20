@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+
 	"reflect"
 	"sort"
 
@@ -220,10 +221,40 @@ func ResourceShare() *schema.Resource {
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
 			changes := beforeSi.Diff(afterSi)
-			return NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-				Owner:   afterSi.Owner,
+
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+
+			if d.HasChange("owner") {
+				_, err = w.Shares.Update(ctx, sharing.UpdateShare{
+					Name:  afterSi.Name,
+					Owner: afterSi.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
 				Updates: changes,
 			})
+			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
+						Name:  beforeSi.Name,
+						Owner: old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
+				return err
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

@@ -82,10 +82,34 @@ func ResourceVolume() *schema.Resource {
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
 			updateVolumeRequestContent.FullNameArg = d.Id()
+
+			if d.HasChange("owner") {
+				_, err := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+					FullNameArg: updateVolumeRequestContent.FullNameArg,
+					Owner:       updateVolumeRequestContent.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateVolumeRequestContent.Owner = ""
 			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+						FullNameArg: updateVolumeRequestContent.FullNameArg,
+						Owner:       old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
+
 			// We need to update the resource Id because Name is updatable and FullName consists of Name,
 			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
 			d.SetId(v.FullName)

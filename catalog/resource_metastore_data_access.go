@@ -48,6 +48,11 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 		Optional: true,
 	}
 
+	m["force_update"] = &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+	}
+
 	return m
 }
 
@@ -82,7 +87,6 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 			tmpSchema := removeGcpSaField(dacSchema)
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, tmpSchema, &create)
-
 			//manually add empty struct back for databricks_gcp_service_account
 			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
 				create.DatabricksGcpServiceAccount = struct{}{}

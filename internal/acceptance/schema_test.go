@@ -1,20 +1,23 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
+const catalogTemplate = `
+	resource "databricks_catalog" "sandbox" {
+		name         = "sandbox{var.STICKY_RANDOM}"
+		comment      = "this catalog is managed by terraform"
+		properties = {
+			purpose = "testing"
+		}
+	}
+`
+
 func TestUcAccSchema(t *testing.T) {
 	unityWorkspaceLevel(t, step{
-		Template: `
-		resource "databricks_catalog" "sandbox" {
-			name         = "sandbox{var.RANDOM}"
-			comment      = "this catalog is managed by terraform"
-			properties = {
-				purpose = "testing"
-			}
-		}
-
+		Template: catalogTemplate + `
 		data "databricks_catalogs" "all" {
 			depends_on = [databricks_catalog.sandbox]
 		}
@@ -68,5 +71,28 @@ func TestUcAccSchema(t *testing.T) {
 			principal  = "{env.TEST_DATA_ENG_GROUP}"
 			privileges = ["USE_SCHEMA"]
 		}`,
+	})
+}
+
+func schemaTemplateWithOwner(comment string, owner string) string {
+	return fmt.Sprintf(`
+		resource "databricks_schema" "things" {
+			catalog_name = databricks_catalog.sandbox.id
+			name         = "things{var.STICKY_RANDOM}"
+			comment      = "%s"
+			properties = {
+				kind = "various"
+			}
+			owner = "%s"
+		}`, comment, owner)
+}
+
+func TestUcAccSchemaUpdate(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform", "account users"),
+	}, step{
+		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment", "account users"),
+	}, step{
+		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

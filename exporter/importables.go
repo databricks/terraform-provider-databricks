@@ -45,6 +45,7 @@ var (
 	fileNameNormalizationRegex   = regexp.MustCompile(`[^-_\w/.@]`)
 	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
+	userDirRegex                 = regexp.MustCompile(`^(/Users/[^/]+)(/.*)?$`)
 	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
 	dltDefaultStorageRegex       = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
@@ -642,10 +643,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 				if typ == "fixed" && strings.HasPrefix(k, "init_scripts.") &&
 					strings.HasSuffix(k, ".workspace.destination") {
-					ic.Emit(&resource{
-						Resource: "databricks_workspace_file",
-						ID:       eitherString(value, defaultValue),
-					})
+					ic.maybeEmitWorkspaceObject("databricks_workspace_file", eitherString(value, defaultValue))
 				}
 				if typ == "fixed" && (strings.HasPrefix(k, "spark_conf.") || strings.HasPrefix(k, "spark_env_vars.")) {
 					either := eitherString(value, defaultValue)
@@ -1941,14 +1939,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				if res := ignoreIdeFolderRegex.FindStringSubmatch(directory.Path); res != nil {
 					continue
 				}
-				// TODO: don't emit directories for deleted users/SPs (how to identify them?)
-				ic.Emit(&resource{
-					Resource: "databricks_directory",
-					ID:       directory.Path,
-				})
+				ic.maybeEmitWorkspaceObject("databricks_directory", directory.Path)
+
 				if offset%50 == 0 {
-					log.Printf("[INFO] Scanned %d of %d directories",
-						offset+1, len(directoryList))
+					log.Printf("[INFO] Scanned %d of %d directories", offset+1, len(directoryList))
 				}
 			}
 			return nil

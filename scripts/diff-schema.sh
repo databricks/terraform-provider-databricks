@@ -8,10 +8,12 @@ checkout_branch() {
     git checkout $branch
 }
 
+
 # Function to generate provider schema
 generate_schema() {
   local schema_name=$1
   make install
+  version=$(./terraform-provider-databricks version)
 
   echo "Generating provider schema for $branch..."
   set -ex
@@ -21,6 +23,7 @@ terraform {
   required_providers {
     databricks = {
       source = "databricks/databricks"
+      version = "$version"
     }
   }
 }

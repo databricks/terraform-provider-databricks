@@ -1,5 +1,12 @@
 # Version changelog
 
+## 1.33.0
+New Features and Improvements:
+ * Added support for ownership changes for unity catalog resources ([#3029](https://github.com/databricks/terraform-provider-databricks/pull/3029)).
+
+Exporter:
+ * Ignore workspace assets of deleted users and service principals ([#2980](https://github.com/databricks/terraform-provider-databricks/pull/2980)).
+
 ## 1.32.0
 New Features and Improvements:
  * Improved debugging of errors ([#744](https://github.com/databricks/databricks-sdk-go/pull/744))

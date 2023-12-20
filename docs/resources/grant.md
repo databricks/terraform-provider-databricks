@@ -22,7 +22,9 @@ For the latest list of privilege types that apply to each securable object in Un
 
 Terraform will handle any configuration drift for the specified principal on every `terraform apply` run, even when grants are changed outside of Terraform state.
 
-Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/sql-ref-privileges.html#privilege-types), all privileges to be written with underscore instead of space, e.g. `CREATE_TABLE` and not `CREATE TABLE`. Below summarizes which privilege types apply to each securable object in the catalog:
+See [databricks_grants](grants.md) for the list of privilege types that apply to each securable object.
+
+## Examples
 
 ## Metastore grants
 

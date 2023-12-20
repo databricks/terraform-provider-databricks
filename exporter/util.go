@@ -19,7 +19,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/scim"
-	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
@@ -525,14 +524,13 @@ func (ic *importContext) getSqlDataSources() (map[string]string, error) {
 	ic.sqlDatasourcesMutex.Lock()
 	defer ic.sqlDatasourcesMutex.Unlock()
 	if ic.sqlDatasources == nil {
-		var dss []sql.DataSource
-		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
+		dss, err := ic.workspaceClient.DataSources.List(ic.Context)
 		if err != nil {
 			return nil, err
 		}
 		ic.sqlDatasources = make(map[string]string, len(dss))
 		for _, ds := range dss {
-			ic.sqlDatasources[ds.ID] = ds.EndpointID
+			ic.sqlDatasources[ds.Id] = ds.WarehouseId
 		}
 	}
 	return ic.sqlDatasources, nil

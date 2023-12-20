@@ -17,6 +17,7 @@ import (
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
@@ -24,7 +25,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/secrets"
-	"github.com/databricks/terraform-provider-databricks/sql"
+	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
@@ -1481,7 +1482,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var query sql.QueryEntity
+			var query tfsql.QueryEntity
 			s := ic.Resources["databricks_sql_query"].Schema
 			common.DataToStructPointer(r.Data, s, &query)
 			sqlEndpointID, err := ic.getSqlEndpoint(query.DataSourceID)
@@ -1539,19 +1540,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		List: func(ic *importContext) error {
-			endpointsList, err := sql.NewSQLEndpointsAPI(ic.Context, ic.Client).List()
+			endpointsList, err := ic.workspaceClient.Warehouses.ListAll(ic.Context, sql.ListWarehousesRequest{})
 			if err != nil {
 				return err
 			}
-			for i, q := range endpointsList.Endpoints {
+			for i, q := range endpointsList {
 				if !ic.MatchesName(q.Name) {
 					continue
 				}
 				ic.Emit(&resource{
 					Resource: "databricks_sql_endpoint",
-					ID:       q.ID,
+					ID:       q.Id,
 				})
-				log.Printf("[INFO] Imported %d of %d SQL endpoints", i+1, len(endpointsList.Endpoints))
+				log.Printf("[INFO] Imported %d of %d SQL endpoints", i+1, len(endpointsList))
 			}
 			return nil
 		},
@@ -1564,7 +1565,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 				ic.Emit(&resource{
 					Resource: "databricks_sql_global_config",
-					ID:       sql.GlobalSqlConfigResourceID,
+					ID:       tfsql.GlobalSqlConfigResourceID,
 				})
 			}
 			return nil
@@ -1580,7 +1581,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_sql_global_config",
-					ID:       sql.GlobalSqlConfigResourceID,
+					ID:       tfsql.GlobalSqlConfigResourceID,
 				})
 			}
 			return nil
@@ -1642,7 +1643,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			dashboardID := r.ID
-			dashboardAPI := sql.NewDashboardAPI(ic.Context, ic.Client)
+			dashboardAPI := tfsql.NewDashboardAPI(ic.Context, ic.Client)
 			dashboard, err := dashboardAPI.Read(dashboardID)
 			if err != nil {
 				return err
@@ -1770,7 +1771,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var alert sql.AlertEntity
+			var alert tfsql.AlertEntity
 			s := ic.Resources["databricks_sql_alert"].Schema
 			common.DataToStructPointer(r.Data, s, &alert)
 			if alert.QueryId != "" {

@@ -350,6 +350,27 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 	return scm
 }
 
+func IsRequestEmpty(v any) (bool, error) {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	if rv.Kind() != reflect.Struct {
+		return false, fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rv.Kind()), rv)
+	}
+	var isNotEmpty bool
+	err := iterFields(rv, []string{}, StructToSchema(v, nil), func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+		if isNotEmpty {
+			return nil
+		}
+		if !valueField.IsZero() {
+			isNotEmpty = true
+		}
+		return nil
+	})
+	return !isNotEmpty, err
+}
+
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
 	rk := rv.Kind()

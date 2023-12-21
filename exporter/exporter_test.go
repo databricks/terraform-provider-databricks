@@ -314,7 +314,7 @@ var emptyWorkspace = qa.HTTPFixture{
 
 var emptySqlEndpoints = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/sql/warehouses",
+	Resource:     "/api/2.0/sql/warehouses?",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
@@ -1715,7 +1715,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
+				Resource: "/api/2.0/sql/warehouses?",
 				Response: getJSONObject("test-data/get-sql-endpoints.json"),
 			},
 			{
@@ -2045,7 +2045,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 			meAdminFixture,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
+				Resource: "/api/2.0/sql/warehouses?",
 				Response: sql.ListWarehousesResponse{},
 			},
 			{

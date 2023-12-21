@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -81,14 +82,28 @@ func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, se
 	})
 }
 
-func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string) (out catalog.PermissionsList) {
-
+// filterPermissionsForPrincipal extracts permissions for the given principal and transforms to permissions.UnityCatalogPrivilegeAssignment to match Schema
+func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string) (*permissions.UnityCatalogPrivilegeAssignment, error) {
+	grantsForPrincipal := []permissions.UnityCatalogPrivilegeAssignment{}
 	for _, v := range in.PrivilegeAssignments {
+		privileges := []string{}
 		if v.Principal == principal {
-			out.PrivilegeAssignments = append(out.PrivilegeAssignments, v)
+			for _, p := range v.Privileges {
+				privileges = append(privileges, p.String())
+			}
+			grantsForPrincipal = append(grantsForPrincipal, permissions.UnityCatalogPrivilegeAssignment{
+				Principal:  v.Principal,
+				Privileges: privileges,
+			})
 		}
 	}
-	return
+	if len(grantsForPrincipal) == 0 {
+		return nil, apierr.NotFound("got empty permissions list")
+	}
+	if len(grantsForPrincipal) > 1 {
+		return nil, errors.New("got more than one principal in permissions list")
+	}
+	return &grantsForPrincipal[0], nil
 }
 
 func ResourceGrant() *schema.Resource {
@@ -142,14 +157,14 @@ func ResourceGrant() *schema.Resource {
 				return fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
 			}
 			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, c).GetPermissions(permissions.Mappings.GetSecurableType(split[0]), split[1])
-			grantsForPrincipal := filterPermissionsForPrincipal(*grants, principal)
 			if err != nil {
 				return err
 			}
-			if len(grantsForPrincipal.PrivilegeAssignments) == 0 {
-				return apierr.NotFound("got empty permissions list")
+			grantsForPrincipal, err := filterPermissionsForPrincipal(*grants, principal)
+			if err != nil {
+				return err
 			}
-			return common.StructToData(grantsForPrincipal, s, d)
+			return common.StructToData(*grantsForPrincipal, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)

@@ -3,6 +3,7 @@ package acceptance
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -95,6 +96,10 @@ func TestAccUserHomeDelete(t *testing.T) {
 }
 
 func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	if os.Getenv("CLOUD_ENV") == "gcp" {
+		skipf(t)("Skipping test for GCP because home folders are not created synchronously")
+	}
 	username := qa.RandomEmail()
 	workspaceLevel(t, step{
 		Template: `

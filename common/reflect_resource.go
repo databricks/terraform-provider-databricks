@@ -446,8 +446,9 @@ func collectionToMaps(v any, s *schema.Schema) ([]any, error) {
 	}
 	var allItems []reflect.Value
 	rv := reflect.ValueOf(v)
-	isArray := rv.Type().Kind() == reflect.Array
-	if isArray {
+	rvType := rv.Type().Kind()
+	isList := rvType == reflect.Array || rvType == reflect.Slice
+	if isList {
 		for i := 0; i < rv.Len(); i++ {
 			allItems = append(allItems, rv.Index(i))
 		}

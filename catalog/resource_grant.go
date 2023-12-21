@@ -117,7 +117,7 @@ func ResourceGrant() *schema.Resource {
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
-			privileges := permissions.ToPrivilegeSlice(d.Get("privileges").(*schema.Set).List())
+			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
 			var grants = catalog.PermissionsList{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
@@ -153,7 +153,7 @@ func ResourceGrant() *schema.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
-			privileges := permissions.ToPrivilegeSlice(d.Get("privileges").(*schema.Set).List())
+			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
 			var grants = catalog.PermissionsList{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{

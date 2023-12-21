@@ -134,13 +134,6 @@ func SetToSlice(set *schema.Set) (ss []catalog.Privilege) {
 	return
 }
 
-func ToPrivilegeSlice(in []interface{}) (out []catalog.Privilege) {
-	for _, v := range in {
-		out = append(out, catalog.Privilege(v.(string)))
-	}
-	return
-}
-
 func SliceWithoutString(in []string, without string) (out []string) {
 	for _, v := range in {
 		if v == without {

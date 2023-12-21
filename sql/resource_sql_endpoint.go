@@ -70,7 +70,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			validation.IntBetween(1, MaxNumClusters))
 		common.SetSuppressDiff(m["min_num_clusters"])
 		common.SetReadOnly(m["num_active_sessions"])
-		common.SetSuppressDiff(m["num_clusters"])
+		common.SetReadOnly(m["num_clusters"])
 		common.SetReadOnly(m["odbc_params"])
 		common.SetDefault(m["spot_instance_policy"], "COST_OPTIMIZED")
 		common.SetReadOnly(m["state"])

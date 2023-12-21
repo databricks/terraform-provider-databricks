@@ -191,6 +191,11 @@ func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData
 			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
 			return true
 		}
+		if strings.HasSuffix(".#", k) && new == "0" && old != "0" {
+			field := strings.TrimSuffix(k, ".#")
+			log.Printf("[DEBUG] Suppressing diff for list or set %v: no value configured but platform returned some value (likely {})", field)
+			return true
+		}
 		return false
 	}
 }

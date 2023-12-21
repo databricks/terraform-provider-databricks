@@ -51,11 +51,6 @@ func resolveDataSourceID(ctx context.Context, w *databricks.WorkspaceClient, war
 	return "", fmt.Errorf("no data source found for endpoint %s", warehouseId)
 }
 
-func setRequired(s *schema.Schema) {
-	s.Optional = false
-	s.Required = true
-}
-
 func ResourceSqlEndpoint() *schema.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {

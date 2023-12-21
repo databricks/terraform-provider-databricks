@@ -3,11 +3,12 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 
@@ -96,10 +97,6 @@ func TestAccUserHomeDelete(t *testing.T) {
 }
 
 func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if os.Getenv("CLOUD_ENV") == "gcp" {
-		skipf(t)("Skipping test for GCP because home folders are not created synchronously")
-	}
 	username := qa.RandomEmail()
 	workspaceLevel(t, step{
 		Template: `
@@ -107,6 +104,22 @@ func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 				user_name = "` + username + `"
 			}`,
 		Check: func(s *terraform.State) error {
+			client, err := client.New(&config.Config{})
+			if err != nil {
+				return err
+			}
+			ctx := context.Background()
+			// Force creation of the home folder in case it is lazy
+			userId := s.Modules[0].Resources["databricks_user.a"].Primary.ID
+			err = client.Do(ctx, "PUT", fmt.Sprintf("/api/2.0/workspace/user/%s/homefolder", userId), nil, map[string]any{
+				"user": map[string]any{
+					"user_id":  userId,
+					"username": username,
+				},
+			}, nil)
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 	}, step{

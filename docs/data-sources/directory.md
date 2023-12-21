@@ -24,3 +24,4 @@ data "databricks_directory" "prod" {
 This data source exports the following attributes:
 
 * `object_id` - directory object ID
+* `workspace_path` - path on Workspace File System (WSFS) in form of `/Workspace` + `path`

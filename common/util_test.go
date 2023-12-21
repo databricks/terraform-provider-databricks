@@ -21,4 +21,7 @@ func TestGetTerraformVersionFromContext(t *testing.T) {
 	p.TerraformVersion = "exporter"
 	ctx := context.WithValue(context.Background(), Provider, p)
 	assert.Equal(t, "exporter", GetTerraformVersionFromContext(ctx))
+
+	//
+	assert.True(t, IsExporter(ctx))
 }

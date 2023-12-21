@@ -23,3 +23,7 @@ func GetTerraformVersionFromContext(ctx context.Context) string {
 	}
 	return tfVersion
 }
+
+func IsExporter(ctx context.Context) bool {
+	return GetTerraformVersionFromContext(ctx) == "exporter"
+}

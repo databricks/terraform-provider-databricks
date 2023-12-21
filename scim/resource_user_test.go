@@ -592,6 +592,33 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
 }
 
+func TestResourceUserDelete_ForceDeleteHomeDir(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Status: 200,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+			force_delete_home_dir = true
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {
 	d := ResourceUser().TestResourceData()
 	d.Set("force", true)

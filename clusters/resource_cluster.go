@@ -199,7 +199,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	d.Set("url", c.FormatURL("#setting/clusters/", d.Id(), "/configuration"))
-	shouldSkipLibrariesRead := common.IsExporter(ctx)
+	shouldSkipLibrariesRead := !common.IsExporter(ctx)
 	if d.Get("library.#").(int) == 0 && shouldSkipLibrariesRead {
 		// don't add externally added libraries, if config has no `library {}` blocks
 		// TODO: check if it still works fine with importing. Perhaps os.Setenv will do the trick

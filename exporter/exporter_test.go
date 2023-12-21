@@ -1720,7 +1720,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses/f562046bc1272886",
+				Resource: "/api/2.0/sql/warehouses/f562046bc1272886?",
 				Response: getJSONObject("test-data/get-sql-endpoint.json"),
 			},
 			{

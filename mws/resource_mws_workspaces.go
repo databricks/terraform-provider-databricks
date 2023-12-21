@@ -100,6 +100,7 @@ type Workspace struct {
 	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
+	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -257,7 +258,7 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id", "custom_tags"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
@@ -531,6 +532,9 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			}
 			if err := requireFields(c.IsGcp(), d, "location"); err != nil {
 				return err
+			}
+			if !c.IsAws() && workspace.CustomTags != nil {
+				return errors.New("custom_tags are only allowed for AWS workspaces")
 			}
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
@@ -858,6 +862,11 @@ func workspaceSchemaV2() cty.Type {
 						},
 					},
 				},
+			},
+			"custom_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}).CoreConfigSchema().ImpliedType()

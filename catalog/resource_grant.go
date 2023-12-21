@@ -106,6 +106,19 @@ func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string)
 	return &grantsForPrincipal[0], nil
 }
 
+func toSecurableId(d *schema.ResourceData) string {
+	principal := d.Get("principal").(string)
+	return fmt.Sprintf("%s/%s", permissions.Mappings.Id(d), principal)
+}
+
+func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
+	split := strings.SplitN(d.Id(), "/", 3)
+	if len(split) != 3 {
+		return "", "", "", fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
+	}
+	return split[0], split[1], split[2], nil
+}
+
 func ResourceGrant() *schema.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -147,16 +160,15 @@ func ResourceGrant() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			d.SetId(fmt.Sprintf("%s/%s", permissions.Mappings.Id(d), principal))
+			d.SetId(toSecurableId(d))
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			principal := d.Get("principal").(string)
-			split := strings.SplitN(d.Id(), "/", 3)
-			if len(split) != 3 {
-				return fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
+			securable, name, principal, err := parseSecurableId(d)
+			if err != nil {
+				return err
 			}
-			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, c).GetPermissions(permissions.Mappings.GetSecurableType(split[0]), split[1])
+			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, c).GetPermissions(permissions.Mappings.GetSecurableType(securable), name)
 			if err != nil {
 				return err
 			}
@@ -167,7 +179,10 @@ func ResourceGrant() *schema.Resource {
 			return common.StructToData(*grantsForPrincipal, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			principal := d.Get("principal").(string)
+			securable, name, principal, err := parseSecurableId(d)
+			if err != nil {
+				return err
+			}
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
 			var grants = catalog.PermissionsList{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
@@ -177,18 +192,16 @@ func ResourceGrant() *schema.Resource {
 					},
 				},
 			}
-			securable, name := permissions.Mappings.KeyValue(d)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			principal := d.Get("principal").(string)
-			split := strings.SplitN(d.Id(), "/", 3)
-			if len(split) != 3 {
-				return fmt.Errorf("ID must be three elements split by `/`: %s", d.Id())
+			securable, name, principal, err := parseSecurableId(d)
+			if err != nil {
+				return err
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, split[0], split[1], principal, catalog.PermissionsList{})
+			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
 		},
 	}.ToResource()
 }

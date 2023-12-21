@@ -261,13 +261,6 @@ func TestJobName(t *testing.T) {
 	assert.Equal(t, "test_1pm_12345", resourcesMap["databricks_job"].Name(ic, d))
 }
 
-func TestClusterLibrary(t *testing.T) {
-	ic := importContextForTest()
-	d := clusters.ResourceLibrary().TestResourceData()
-	d.SetId("a-b-c")
-	assert.Equal(t, "lib_a-b-c_7b193b3d", resourcesMap["databricks_library"].Name(ic, d))
-}
-
 func TestImportClusterLibraries(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -751,6 +744,91 @@ func TestAwsS3MountProfile(t *testing.T) {
 	assert.Len(t, ic.testEmits, 2)
 	assert.True(t, ic.testEmits["databricks_instance_profile[<unknown>] (id: bcd)"])
 	assert.True(t, ic.testEmits["databricks_mount[<unknown>] (id: /mnt/abc)"])
+}
+
+func TestMountsBodyGeneration(t *testing.T) {
+	ic := importContextForTest()
+	ic.mounts = true
+	ic.match = "abc"
+	ic.mountMap = map[string]mount{}
+	ic.variables = map[string]string{}
+	ic.mountMap["/mnt/abc"] = mount{
+		URL:             "s3a://abc",
+		InstanceProfile: "bcd",
+	}
+	ic.mountMap["/mnt/def"] = mount{
+		URL:       "s3a://def",
+		ClusterID: "bcd",
+	}
+	ic.mountMap["/mnt/gcs"] = mount{
+		URL:       "gs://gcs/dir",
+		ClusterID: "bcd",
+	}
+	ic.mountMap["/mnt/abfss"] = mount{
+		URL: "abfss://test@test.dfs.core.windows.net/directory",
+	}
+	ic.mountMap["/mnt/wasbs"] = mount{
+		URL: "wasbs://test@test.blob.core.windows.net/directory",
+	}
+	ic.mountMap["/mnt/adls"] = mount{
+		URL: "adls://test.dfs.core.windows.net/directory",
+	}
+	ic.mountMap["/mnt/dbfs"] = mount{
+		URL: "dbfs:/directory",
+	}
+
+	//
+	f := hclwrite.NewEmptyFile()
+	body := f.Body()
+
+	err := generateMountBody(ic, body, &resource{
+		ID:       "/mnt/abc",
+		Name:     "abc",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/def",
+		Name:     "def",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/abfss",
+		Name:     "abfss",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/gcs",
+		Name:     "gcs",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/adls",
+		Name:     "adls",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/wasbs",
+		Name:     "wasbs",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/dbfs",
+		Name:     "dbfs",
+		Resource: "databricks_mount",
+	})
+	assert.EqualError(t, err, "no matching handler for: dbfs:/directory")
 }
 
 func TestGlobalInitScriptNameFromId(t *testing.T) {

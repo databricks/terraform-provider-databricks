@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// diffPermissionsForPrincipal returns UnityCatalogPermissionsDiff of this permissions list with `diff` privileges removed
-func diffPermissionsForPrincipal(principal string, pl catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
+// diffPermissionsForPrincipal returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
+func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
-	for _, v := range pl.PrivilegeAssignments {
+	for _, v := range desired.PrivilegeAssignments {
 		if v.Principal == principal {
 			configured[v.Principal] = permissions.SliceToSet(v.Privileges)
 		}

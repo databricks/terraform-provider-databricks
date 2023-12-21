@@ -41,7 +41,7 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 			})
 		}
 		if is.Workspace != nil {
-			ic.maybeEmitWorkspaceObject("", is.Workspace.Destination)
+			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 	}
 
@@ -160,13 +160,28 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 	return false
 }
 
+func (ic *importContext) emitRepoByPath(path string) {
+	ic.Emit(&resource{
+		Resource:  "databricks_repo",
+		Attribute: "path",
+		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
+	})
+}
+
+func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
+	if strings.HasPrefix(path, "/Repos") {
+		ic.emitRepoByPath(path)
+	} else {
+		ic.Emit(&resource{
+			Resource: "databricks_workspace_file",
+			ID:       path,
+		})
+	}
+}
+
 func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
-		ic.Emit(&resource{
-			Resource:  "databricks_repo",
-			Attribute: "path",
-			Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-		})
+		ic.emitRepoByPath(path)
 	} else {
 		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
@@ -255,16 +270,24 @@ func (ic *importContext) emitRoles(objType string, id string, roles []scim.Compl
 	}
 }
 
-func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll libraries.ClusterLibraryList
-	common.DataToStructPointer(d, s, &cll)
-	for _, lib := range cll.Libraries {
-		// Emit workspace file libraries if necessary
-		// Emit Volume libraries when resource is available
+func (ic *importContext) emitLibraries(libs []libraries.Library) {
+	for _, lib := range libs {
+		// Files on DBFS
 		ic.emitIfDbfsFile(lib.Whl)
 		ic.emitIfDbfsFile(lib.Jar)
 		ic.emitIfDbfsFile(lib.Egg)
+		// Files on WSFS
+		ic.emitIfWsfsFile(lib.Whl)
+		ic.emitIfWsfsFile(lib.Jar)
+		ic.emitIfWsfsFile(lib.Egg)
 	}
+
+}
+
+func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
+	var cll libraries.ClusterLibraryList
+	common.DataToStructPointer(d, s, &cll)
+	ic.emitLibraries(cll.Libraries)
 	return nil
 }
 
@@ -484,6 +507,13 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 			Resource: "databricks_dbfs_file",
 			ID:       path,
 		})
+	}
+}
+
+func (ic *importContext) emitIfWsfsFile(path string) {
+	if strings.HasPrefix(path, "/Workspace/") {
+		normalPath := strings.TrimPrefix(path, "/Workspace")
+		ic.emitWorkspaceFileOrRepo(normalPath)
 	}
 }
 

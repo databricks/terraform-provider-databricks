@@ -84,6 +84,25 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 	return scm
 }
 
+// SetSuppressDiff adds diff suppression to a schema. This is necessary for non-computed
+// fields for which the platform returns a value, but the user has not configured any value.
+// For example: the REST API returns `{"tags": {}}` for a resource with no tags.
+func SetSuppressDiff(v *schema.Schema) {
+	v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+}
+
+func SetDefault(v *schema.Schema, value any) {
+	v.Default = value
+	v.Optional = true
+}
+
+func SetReadOnly(v *schema.Schema) {
+	v.Optional = false
+	v.Required = false
+	v.MaxItems = 0
+	v.Computed = true
+}
+
 func isOptional(typeField reflect.StructField) bool {
 	if strings.Contains(typeField.Tag.Get("json"), "omitempty") {
 		return true
@@ -143,22 +162,6 @@ func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 			break
 		}
 	}
-}
-
-func SetSuppressDiff(v *schema.Schema) {
-	v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
-}
-
-func SetDefault(v *schema.Schema, value any) {
-	v.Default = value
-	v.Optional = true
-}
-
-func SetReadOnly(v *schema.Schema) {
-	v.Optional = false
-	v.Required = false
-	v.MaxItems = 0
-	v.Computed = true
 }
 
 func getAlias(typeField reflect.StructField) string {

@@ -16,7 +16,7 @@ type SqlWarehouseDataParams struct {
 }
 
 func DataSourceWarehouse() *schema.Resource {
-	return common.WorkspaceData2[SqlWarehouse, SqlWarehouseDataParams](func(ctx context.Context, data SqlWarehouseDataParams, warehouse *SqlWarehouse, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithCustomAttrs(func(ctx context.Context, data SqlWarehouseDataParams, warehouse *SqlWarehouse, w *databricks.WorkspaceClient) error {
 		if data.Id == "" && data.Name == "" {
 			return fmt.Errorf("either 'id' or 'name' should be provided")
 		}

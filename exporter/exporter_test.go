@@ -873,6 +873,22 @@ func TestImportingClusters(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/secret-scopes-response.json"),
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
+				Response: libraries.ClusterLibraryStatuses{
+					ClusterID: "test2",
+					LibraryStatuses: []libraries.LibraryStatus{
+						{
+							Library: &libraries.Library{
+								Pypi: &libraries.PyPi{
+									Package: "chispa",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			os.Setenv("EXPORTER_PARALLELISM_databricks_cluster", "1")
@@ -882,8 +898,7 @@ func TestImportingClusters(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "compute"
-			services, _ := ic.allServicesAndListing()
-			ic.services = services
+			ic.services = "access,users,policies,compute,secrets,groups,storage"
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -974,6 +989,8 @@ func TestImportingJobs_JobList(t *testing.T) {
 						},
 						Libraries: []libraries.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
+							{Whl: "/Workspace/Repos/user@domain.com/repo/test.whl"},
+							{Whl: "/Workspace/Users/user@domain.com/libs/test.whl"},
 						},
 						Name: "Dummy",
 						NewCluster: &clusters.Cluster{

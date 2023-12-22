@@ -91,11 +91,16 @@ func SetSuppressDiff(v *schema.Schema) {
 	v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
 }
 
+// SetDefault sets the default value for a schema.
 func SetDefault(v *schema.Schema, value any) {
 	v.Default = value
 	v.Optional = true
+	v.Required = false
 }
 
+// SetReadOnly sets the schema to be read-only (i.e. computed, non-optional).
+// This should be used for fields that are not user-configurable but are returned
+// by the platform.
 func SetReadOnly(v *schema.Schema) {
 	v.Optional = false
 	v.Required = false

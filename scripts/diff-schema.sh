@@ -2,7 +2,7 @@
 
 source scripts/libschema.sh
 
-BASE_BRANCH="master"
+BASE_BRANCH=$(git merge-base master HEAD)
 
 checkout_branch() {
     local branch=$1

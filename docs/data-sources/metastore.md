@@ -40,7 +40,7 @@ This data source exports the following attributes:
 
 * `metastore_info` - MetastoreInfo object for a [databricks_metastore](../resources/metastore.md). This contains the following attributes:
   * `name` - Name of metastore.
-  * `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored. Change forces creation of a new resource.
+  * `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored.
   * `owner` - Username/groupname/sp application_id of the metastore owner.
   * `delta_sharing_scope` - Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
   * `delta_sharing_recipient_token_lifetime_in_seconds` - Used to set expiration duration in seconds on recipient data access tokens.

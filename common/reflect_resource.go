@@ -108,6 +108,13 @@ func SetReadOnly(v *schema.Schema) {
 	v.Computed = true
 }
 
+// SetRequired sets the schema to be required.
+func SetRequired(v *schema.Schema) {
+	v.Optional = false
+	v.Required = true
+	v.Computed = false
+}
+
 func isOptional(typeField reflect.StructField) bool {
 	if strings.Contains(typeField.Tag.Get("json"), "omitempty") {
 		return true

@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       base:
-        description: 'Base ref'
-        default: 'master'
+        description: Base ref
+        default: master
         required: true
       head:
-        description: 'Head ref'
-        default: 'master'
+        description: Head ref
+        default: master
         required: true
 
 jobs:
@@ -30,17 +30,20 @@ jobs:
         with:
           ref: ${{ github.event.inputs.base }}
 
-      - name: 'Setup Go'
+      - name: Fetch master
+        run: git fetch origin master --depth 1
+
+      - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: 1.21.x
 
-      - name: 'Setup Terraform'
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_wrapper: false
 
-      - name: 'Install jd'
+      - name: Install jd
         run: go install github.com/josephburnett/jd@latest
 
       - run: make diff-schema

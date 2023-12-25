@@ -46,6 +46,7 @@ func importContextForTest() *importContext {
 		allSps:                   map[string]scim.User{},
 		channels:                 makeResourcesChannels(p),
 		exportDeletedUsersAssets: false,
+		ignoredResources:         map[string]struct{}{},
 	}
 }
 

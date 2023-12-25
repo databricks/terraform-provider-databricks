@@ -1247,6 +1247,9 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_repo",
 						ID:       fmt.Sprintf("%d", repo.ID),
 					})
+				} else {
+					log.Printf("[WARN] ignoring databricks_repo without Git provider. Path: %s", repo.Path)
+					ic.addIgnoredResource(fmt.Sprintf("databricks_repo. path=%s", repo.Path))
 				}
 				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(objList))
 			}
@@ -1273,6 +1276,15 @@ var resourcesMap map[string]importable = map[string]importable{
 				return d.Get("tag").(string) == ""
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			shouldIgnore := r.Data.Get("url").(string) == ""
+			if shouldIgnore {
+				path := r.Data.Get("path").(string)
+				log.Printf("[WARN] ignoring databricks_repo without Git provider. Path: %s", path)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_repo. path=%s", r.Data.Get("path").(string)))
+			}
+			return shouldIgnore
 		},
 
 		Depends: []reference{
@@ -2148,7 +2160,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			var rule iam.RuleSetResponse
 			s := ic.Resources["databricks_access_control_rule_set"].Schema
 			common.DataToStructPointer(r.Data, s, &rule)
-			return len(rule.GrantRules) == 0
+			shouldIgnore := len(rule.GrantRules) == 0
+			if shouldIgnore {
+				log.Printf("[WARN] ignoring databricks_access_control_rule_set without grant rules. ID: %s", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_access_control_rule_set. ID=%s", r.ID))
+			}
+			return shouldIgnore
 		},
 	},
 	"databricks_system_schema": {

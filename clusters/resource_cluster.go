@@ -17,7 +17,7 @@ const DefaultProvisionTimeout = 30 * time.Minute
 
 const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
 
-var clusterSchema = resourceClusterSchema()
+var clusterSchema = resourceClusterSchemaProvider()
 
 // ResourceCluster - returns Cluster resource description
 func ResourceCluster() *schema.Resource {
@@ -55,6 +55,87 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 		return true
 	}
 	return false
+}
+
+type ClusterResourceProvider struct{}
+
+func (ClusterResourceProvider) UnderlyingType() Cluster {
+	return Cluster{} // Just to test things out, will change this into compute.ClusterDetails{} later.
+}
+
+func (ClusterResourceProvider) Aliases() map[string]string {
+	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
+}
+
+func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
+	return map[string]*schema.Schema{}
+}
+
+func resourceClusterSchemaProvider() map[string]*schema.Schema {
+	return common.ResourceProviderStructToSchema[Cluster](ClusterResourceProvider{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc
+		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = ZoneDiffSuppress
+		common.MustSchemaPath(s, "gcp_attributes", "use_preemptible_executors").Deprecated = "Please use 'availability' instead."
+
+		common.MustSchemaPath(s, "init_scripts", "dbfs").Deprecated = DbfsDeprecationWarning
+
+		// adds `library` configuration block
+		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
+			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+				ss["library"].Set = func(i any) int {
+					lib := libraries.NewLibraryFromInstanceState(i)
+					return schema.HashString(lib.String())
+				}
+				return ss
+			})["library"]
+
+		s["autotermination_minutes"].Default = 60
+		s["cluster_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		}
+		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
+		s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
+		s["gcp_attributes"].ConflictsWith = []string{"aws_attributes", "azure_attributes"}
+		s["instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
+		s["driver_instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
+		s["driver_node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
+		s["node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
+
+		s["runtime_engine"].ValidateFunc = validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false)
+
+		s["is_pinned"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" && new == "false" {
+					return true
+				}
+				return old == new
+			},
+		}
+		s["state"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
+		s["default_tags"] = &schema.Schema{
+			Type:     schema.TypeMap,
+			Computed: true,
+		}
+		s["num_workers"] = &schema.Schema{
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          0,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+		}
+		s["url"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
+		return s
+	})
 }
 
 func resourceClusterSchema() map[string]*schema.Schema {

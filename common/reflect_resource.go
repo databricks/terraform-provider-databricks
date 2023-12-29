@@ -84,6 +84,165 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 	return scm
 }
 
+type ResourceProviderStruct[T any] interface {
+	UnderlyingType() T
+	TfOverlay() map[string]*schema.Schema
+	Aliases() map[string]string
+}
+
+func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T], customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
+	underlyingType := v.UnderlyingType()
+	rv := reflect.ValueOf(underlyingType)
+	scm := resourceProviderTypeToSchema(rv, rv.Type(), []string{}, "", v.Aliases())
+	if customize != nil {
+		scm = customize(scm)
+	}
+	return scm
+}
+
+// typeToSchema converts struct into terraform schema. `path` is used for block suppressions
+// special path element `"0"` is used to denote either arrays or sets of elements
+func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string, fieldNamePath string, aliases map[string]string) map[string]*schema.Schema {
+	scm := map[string]*schema.Schema{}
+	rk := v.Kind()
+	if rk == reflect.Ptr {
+		v = v.Elem()
+		t = v.Type()
+		rk = v.Kind()
+	}
+	if rk != reflect.Struct {
+		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
+	}
+	for i := 0; i < v.NumField(); i++ {
+		typeField := t.Field(i)
+
+		tfTag := typeField.Tag.Get("tf")
+
+		fieldName := chooseFieldNameWithAliases(typeField, fieldNamePath, aliases)
+
+		if fieldName == "-" {
+			continue
+		}
+		scm[fieldName] = &schema.Schema{}
+
+		for _, token := range strings.Split(tfTag, ",") {
+			colonSplit := strings.Split(token, ":")
+			if len(colonSplit) == 2 {
+				tfKey := colonSplit[0]
+				tfValue := colonSplit[1]
+				switch tfKey {
+				case "default":
+					scm[fieldName].Default = tfValue
+				case "max_items":
+					maxItems, err := strconv.Atoi(tfValue)
+					if err != nil {
+						continue
+					}
+					scm[fieldName].MaxItems = maxItems
+				case "min_items":
+					minItems, err := strconv.Atoi(tfValue)
+					if err != nil {
+						continue
+					}
+					scm[fieldName].MinItems = minItems
+				}
+			}
+		}
+		handleOptional(typeField, scm[fieldName])
+		handleComputed(typeField, scm[fieldName])
+		handleForceNew(typeField, scm[fieldName])
+		handleSensitive(typeField, scm[fieldName])
+		switch typeField.Type.Kind() {
+		case reflect.Int, reflect.Int32, reflect.Int64:
+			scm[fieldName].Type = schema.TypeInt
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, scm[fieldName])
+		case reflect.Float64:
+			scm[fieldName].Type = schema.TypeFloat
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, scm[fieldName])
+		case reflect.Bool:
+			scm[fieldName].Type = schema.TypeBool
+		case reflect.String:
+			scm[fieldName].Type = schema.TypeString
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, scm[fieldName])
+		case reflect.Map:
+			scm[fieldName].Type = schema.TypeMap
+			elem := typeField.Type.Elem()
+			switch elem.Kind() {
+			case reflect.String:
+				scm[fieldName].Elem = schema.TypeString
+			case reflect.Int64:
+				scm[fieldName].Elem = schema.TypeInt
+			default:
+				panic(fmt.Errorf("unsupported map value for %s: %s", fieldName, reflectKind(elem.Kind())))
+			}
+		case reflect.Ptr:
+			scm[fieldName].MaxItems = 1
+			scm[fieldName].Type = schema.TypeList
+			elem := typeField.Type.Elem()
+			sv := reflect.New(elem).Elem()
+			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			if strings.Contains(tfTag, "suppress_diff") {
+				blockCount := strings.Join(append(path, fieldName, "#"), ".")
+				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				for _, v := range nestedSchema {
+					// to those relatively new to GoLang: we must explicitly pass down v by copy
+					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+				}
+			}
+			scm[fieldName].Elem = &schema.Resource{
+				Schema: nestedSchema,
+			}
+		case reflect.Struct:
+			scm[fieldName].MaxItems = 1
+			scm[fieldName].Type = schema.TypeList
+
+			elem := typeField.Type  // changed from ptr
+			sv := reflect.New(elem) // changed from ptr
+
+			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			if strings.Contains(tfTag, "suppress_diff") {
+				blockCount := strings.Join(append(path, fieldName, "#"), ".")
+				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				for _, v := range nestedSchema {
+					// to those relatively new to GoLang: we must explicitly pass down v by copy
+					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+				}
+			}
+			scm[fieldName].Elem = &schema.Resource{
+				Schema: nestedSchema,
+			}
+		case reflect.Slice:
+			ft := schema.TypeList
+			// if strings.Contains(tfTag, "slice_set") {
+			// 	ft = schema.TypeSet
+			// }
+			scm[fieldName].Type = ft
+			elem := typeField.Type.Elem()
+			switch elem.Kind() {
+			case reflect.Int, reflect.Int32, reflect.Int64:
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeInt}
+			case reflect.Float64:
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeFloat}
+			case reflect.Bool:
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeBool}
+			case reflect.String:
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
+			case reflect.Struct:
+				sv := reflect.New(elem).Elem()
+				scm[fieldName].Elem = &schema.Resource{
+					Schema: typeToSchema(sv, elem, append(path, fieldName, "0")),
+				}
+			}
+		default:
+			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
+		}
+	}
+	return scm
+}
+
 func isOptional(typeField reflect.StructField) bool {
 	if strings.Contains(typeField.Tag.Get("json"), "omitempty") {
 		return true
@@ -160,6 +319,26 @@ func chooseFieldName(typeField reflect.StructField) string {
 	if alias != "" {
 		return alias
 	}
+	return getJsonFieldName(typeField)
+}
+
+func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath string, aliases map[string]string) string {
+	jsonFieldName := getJsonFieldName(typeField)
+
+	aliasKey := fieldNamePath + "." + jsonFieldName
+
+	var fieldName string
+
+	if value, ok := aliases[aliasKey]; ok {
+		fieldName = value
+	} else {
+		fieldName = jsonFieldName
+	}
+
+	return fieldName
+}
+
+func getJsonFieldName(typeField reflect.StructField) string {
 	jsonTag := typeField.Tag.Get("json")
 	// fields without JSON tags would be treated as if ignored,
 	// but keeping linters happy

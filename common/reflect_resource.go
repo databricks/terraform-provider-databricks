@@ -183,7 +183,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases)
 			if strings.Contains(tfTag, "suppress_diff") {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
@@ -202,7 +202,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases)
 			if strings.Contains(tfTag, "suppress_diff") {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
@@ -233,7 +233,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, elem, append(path, fieldName, "0")),
+					Schema: resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases),
 				}
 			}
 		default:

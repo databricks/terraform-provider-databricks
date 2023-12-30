@@ -71,8 +71,12 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 	return map[string]*schema.Schema{}
 }
 
-func (ClusterResourceProvider) SuppressDiffs() []string {
-	return []string{"aws_attributes", "azure_attributes", "gcp_attributes", "data_security_mode"}
+func (ClusterResourceProvider) SuppressDiffs() map[string]bool {
+	return map[string]bool{
+		"aws_attributes":     true,
+		"azure_attributes":   true,
+		"gcp_attributes":     true,
+		"data_security_mode": true}
 }
 
 func resourceClusterSchemaProvider() map[string]*schema.Schema {

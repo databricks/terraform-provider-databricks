@@ -88,12 +88,13 @@ type ResourceProviderStruct[T any] interface {
 	UnderlyingType() T
 	TfOverlay() map[string]*schema.Schema
 	Aliases() map[string]string
+	SuppressDiffs() map[string]bool
 }
 
 func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T], customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	underlyingType := v.UnderlyingType()
 	rv := reflect.ValueOf(underlyingType)
-	scm := resourceProviderTypeToSchema(rv, rv.Type(), []string{}, "", v.Aliases())
+	scm := resourceProviderTypeToSchema(rv, rv.Type(), []string{}, "", v.Aliases(), v.SuppressDiffs())
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -102,7 +103,7 @@ func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T], customiz
 
 // typeToSchema converts struct into terraform schema. `path` is used for block suppressions
 // special path element `"0"` is used to denote either arrays or sets of elements
-func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string, fieldNamePath string, aliases map[string]string) map[string]*schema.Schema {
+func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string, fieldNamePath string, aliases map[string]string, suppressDiffs map[string]bool) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -156,17 +157,17 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
 			// diff suppression needs type for zero value
-			handleSuppressDiff(typeField, scm[fieldName])
+			handleSuppressDiffWithPath(typeField, scm[fieldName], fieldNamePath, suppressDiffs)
 		case reflect.Float64:
 			scm[fieldName].Type = schema.TypeFloat
 			// diff suppression needs type for zero value
-			handleSuppressDiff(typeField, scm[fieldName])
+			handleSuppressDiffWithPath(typeField, scm[fieldName], fieldNamePath, suppressDiffs)
 		case reflect.Bool:
 			scm[fieldName].Type = schema.TypeBool
 		case reflect.String:
 			scm[fieldName].Type = schema.TypeString
 			// diff suppression needs type for zero value
-			handleSuppressDiff(typeField, scm[fieldName])
+			handleSuppressDiffWithPath(typeField, scm[fieldName], fieldNamePath, suppressDiffs)
 		case reflect.Map:
 			scm[fieldName].Type = schema.TypeMap
 			elem := typeField.Type.Elem()
@@ -183,8 +184,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases)
-			if strings.Contains(tfTag, "suppress_diff") {
+			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs)
+			if shouldSuppressDiff(typeField, fieldNamePath, suppressDiffs) {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
 				for _, v := range nestedSchema {
@@ -202,8 +203,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases)
-			if strings.Contains(tfTag, "suppress_diff") {
+			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs)
+			if shouldSuppressDiff(typeField, fieldNamePath, suppressDiffs) {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
 				for _, v := range nestedSchema {
@@ -216,9 +217,9 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			}
 		case reflect.Slice:
 			ft := schema.TypeList
-			// if strings.Contains(tfTag, "slice_set") {
-			// 	ft = schema.TypeSet
-			// }
+			if strings.Contains(tfTag, "slice_set") {
+				ft = schema.TypeSet
+			}
 			scm[fieldName].Type = ft
 			elem := typeField.Type.Elem()
 			switch elem.Kind() {
@@ -233,7 +234,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases),
+					Schema: resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs),
 				}
 			}
 		default:
@@ -304,6 +305,12 @@ func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	}
 }
 
+func handleSuppressDiffWithPath(typefield reflect.StructField, v *schema.Schema, fieldNamePath string, suppressDiffs map[string]bool) {
+	if shouldSuppressDiff(typefield, fieldNamePath, suppressDiffs) {
+		v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+	}
+}
+
 func getAlias(typeField reflect.StructField) string {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
@@ -336,6 +343,18 @@ func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath str
 	}
 
 	return fieldName
+}
+
+func shouldSuppressDiff(typeField reflect.StructField, fieldNamePath string, suppressDiffs map[string]bool) bool {
+	jsonFieldName := getJsonFieldName(typeField)
+
+	supressDiffsKey := fieldNamePath + "." + jsonFieldName
+
+	if value, ok := suppressDiffs[supressDiffsKey]; ok {
+		return value
+	} else {
+		return false
+	}
 }
 
 func getJsonFieldName(typeField reflect.StructField) string {

@@ -71,6 +71,10 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 	return map[string]*schema.Schema{}
 }
 
+func (ClusterResourceProvider) SuppressDiffs() []string {
+	return []string{"aws_attributes", "azure_attributes", "gcp_attributes", "data_security_mode"}
+}
+
 func resourceClusterSchemaProvider() map[string]*schema.Schema {
 	return common.ResourceProviderStructToSchema[Cluster](ClusterResourceProvider{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc

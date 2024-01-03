@@ -289,55 +289,55 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 	}
 }
 
-func handleSensitiveOverlay(overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.Sensitive {
-		schema.Sensitive = true
-	}
-}
+// func handleSensitiveOverlay(overlay *schema.Schema, schema *schema.Schema) {
+// 	if overlay.Sensitive {
+// 		schema.Sensitive = true
+// 	}
+// }
 
-func handleForceNewOverlay(overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.ForceNew {
-		schema.ForceNew = true
-	}
-}
+// func handleForceNewOverlay(overlay *schema.Schema, schema *schema.Schema) {
+// 	if overlay.ForceNew {
+// 		schema.ForceNew = true
+// 	}
+// }
 
-func handleOptionalOverlay(typeField reflect.StructField, overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.Optional || strings.Contains(typeField.Tag.Get("json"), "omitempty") {
-		schema.Optional = true
-	} else {
-		schema.Required = true
-	}
-}
+// func handleOptionalOverlay(typeField reflect.StructField, overlay *schema.Schema, schema *schema.Schema) {
+// 	if overlay.Optional || strings.Contains(typeField.Tag.Get("json"), "omitempty") {
+// 		schema.Optional = true
+// 	} else {
+// 		schema.Required = true
+// 	}
+// }
 
-func handleComputedOverlay(overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.Computed {
-		schema.Computed = true
-	}
-}
+// func handleComputedOverlay(overlay *schema.Schema, schema *schema.Schema) {
+// 	if overlay.Computed {
+// 		schema.Computed = true
+// 	}
+// }
 
-func handleDefaultOverlay(overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.Default != nil {
-		schema.Default = overlay.Default
-	}
-}
+// func handleDefaultOverlay(overlay *schema.Schema, schema *schema.Schema) {
+// 	if overlay.Default != nil {
+// 		schema.Default = overlay.Default
+// 	}
+// }
 
-func handleMaxItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.MaxItems != 0 {
-		schema.MaxItems = overlay.MaxItems
-	}
-}
+// func handleMaxItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
+// 	if overlay.MaxItems != 0 {
+// 		schema.MaxItems = overlay.MaxItems
+// 	}
+// }
 
-func handleMinItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.MinItems != 0 {
-		schema.MinItems = overlay.MinItems
-	}
-}
+// func handleMinItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
+// 	if overlay.MinItems != 0 {
+// 		schema.MinItems = overlay.MinItems
+// 	}
+// }
 
-func handleSliceSetOverlay(overlay *schema.Schema, fieldSchema *schema.Schema) {
-	if overlay.Type == schema.TypeSet {
-		fieldSchema.Type = schema.TypeSet
-	}
-}
+// func handleSliceSetOverlay(overlay *schema.Schema, fieldSchema *schema.Schema) {
+// 	if overlay.Type == schema.TypeSet {
+// 		fieldSchema.Type = schema.TypeSet
+// 	}
+// }
 
 func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")

@@ -144,12 +144,12 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		// handleDefaultOverlay(tfOverlaySchema, scm[fieldName])
 		// handleMaxItemsOverlay(tfOverlaySchema, scm[fieldName])
 		// handleMinItemsOverlay(tfOverlaySchema, scm[fieldName])
-		// handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		// handleComputedOverlay(tfOverlaySchema, scm[fieldName])
 		// handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
 		// handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
 		// handleSliceSetOverlay(tfOverlaySchema, scm[fieldName])
 		mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+		handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
@@ -301,13 +301,13 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 // 	}
 // }
 
-// func handleOptionalOverlay(typeField reflect.StructField, overlay *schema.Schema, schema *schema.Schema) {
-// 	if overlay.Optional || strings.Contains(typeField.Tag.Get("json"), "omitempty") {
-// 		schema.Optional = true
-// 	} else {
-// 		schema.Required = true
-// 	}
-// }
+func handleOptionalOverlay(typeField reflect.StructField, overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.Optional || strings.Contains(typeField.Tag.Get("json"), "omitempty") {
+		schema.Optional = true
+	} else {
+		schema.Required = true
+	}
+}
 
 // func handleComputedOverlay(overlay *schema.Schema, schema *schema.Schema) {
 // 	if overlay.Computed {

@@ -167,8 +167,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		}
 		handleOptional(typeField, scm[fieldName])
 		handleComputed(typeField, scm[fieldName])
-		// handleForceNew(typeField, scm[fieldName])
-		// handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
+		handleOptionalOverlay(tfOverlaySchema, scm[fieldName])
+		handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
 		handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
@@ -318,11 +318,17 @@ func handleSensitiveOverlay(overlay *schema.Schema, schema *schema.Schema) {
 	}
 }
 
-// func handleForceNewOverlay(overlay *schema.Schema, schema *schema.Schema) {
-// 	if overlay.ForceNew {
-// 		schema.ForceNew = true
-// 	}
-// }
+func handleForceNewOverlay(overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.ForceNew {
+		schema.ForceNew = true
+	}
+}
+
+func handleOptionalOverlay(overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.Optional {
+		schema.Optional = true
+	}
+}
 
 func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")

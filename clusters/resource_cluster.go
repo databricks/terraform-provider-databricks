@@ -69,6 +69,24 @@ func (ClusterResourceProvider) Aliases() map[string]string {
 
 func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"workload_type": {
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"clients": {
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"notebooks": {
+									Optional: true,
+								},
+								"jobs": {
+									Optional: true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"idempotency_token": {
 			ForceNew: true,
 		},

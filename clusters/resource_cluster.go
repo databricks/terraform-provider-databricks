@@ -89,6 +89,13 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 		},
 		"init_scripts": {
 			MaxItems: 10,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"dbfs": {
+						Deprecated: DbfsDeprecationWarning,
+					},
+				},
+			},
 		},
 		"workload_type": {
 			Elem: &schema.Resource{
@@ -128,6 +135,27 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 				},
 			},
 		},
+		"spark_conf": {
+			DiffSuppressFunc: SparkConfDiffSuppressFunc,
+		},
+		"aws_attributes": {
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"zone_id": {
+						DiffSuppressFunc: ZoneDiffSuppress,
+					},
+				},
+			},
+		},
+		"gcp_attributes": {
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"use_preemptible_executors": {
+						Deprecated: "Please use 'availability' instead.",
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -142,11 +170,11 @@ func (ClusterResourceProvider) SuppressDiffs() map[string]bool {
 
 func resourceClusterSchemaProvider() map[string]*schema.Schema {
 	return common.ResourceProviderStructToSchema[Cluster](ClusterResourceProvider{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc
-		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = ZoneDiffSuppress
-		common.MustSchemaPath(s, "gcp_attributes", "use_preemptible_executors").Deprecated = "Please use 'availability' instead."
+		// s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc
+		// common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = ZoneDiffSuppress
+		// common.MustSchemaPath(s, "gcp_attributes", "use_preemptible_executors").Deprecated = "Please use 'availability' instead."
 
-		common.MustSchemaPath(s, "init_scripts", "dbfs").Deprecated = DbfsDeprecationWarning
+		// common.MustSchemaPath(s, "init_scripts", "dbfs").Deprecated = DbfsDeprecationWarning
 
 		// adds `library` configuration block
 		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},

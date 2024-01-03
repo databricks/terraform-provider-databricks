@@ -117,7 +117,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 	for i := 0; i < v.NumField(); i++ {
 		typeField := t.Field(i)
 
-		tfTag := typeField.Tag.Get("tf")
+		// tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldNameWithAliases(typeField, fieldNamePath, aliases)
 
@@ -141,37 +141,15 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			continue
 		}
 		scm[fieldName] = &schema.Schema{}
-
-		// for _, token := range strings.Split(tfTag, ",") {
-		// 	colonSplit := strings.Split(token, ":")
-		// 	if len(colonSplit) == 2 {
-		// 		tfKey := colonSplit[0]
-		// 		tfValue := colonSplit[1]
-		// 		switch tfKey {
-		// 		// case "default":
-		// 		// 	scm[fieldName].Default = tfValue
-		// 		// case "max_items":
-		// 		// 	maxItems, err := strconv.Atoi(tfValue)
-		// 		// 	if err != nil {
-		// 		// 		continue
-		// 		// 	}
-		// 		// 	scm[fieldName].MaxItems = maxItems
-		// 		// case "min_items":
-		// 		// 	minItems, err := strconv.Atoi(tfValue)
-		// 		// 	if err != nil {
-		// 		// 		continue
-		// 		// 	}
-		// 		// 	scm[fieldName].MinItems = minItems
-		// 		// }
-		// 	}
-		// }
-		handleDefaultOverlay(tfOverlaySchema, scm[fieldName])
-		handleMaxItemsOverlay(tfOverlaySchema, scm[fieldName])
-		handleMinItemsOverlay(tfOverlaySchema, scm[fieldName])
-		handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
-		handleComputedOverlay(tfOverlaySchema, scm[fieldName])
-		handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
-		handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
+		// handleDefaultOverlay(tfOverlaySchema, scm[fieldName])
+		// handleMaxItemsOverlay(tfOverlaySchema, scm[fieldName])
+		// handleMinItemsOverlay(tfOverlaySchema, scm[fieldName])
+		// handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
+		// handleComputedOverlay(tfOverlaySchema, scm[fieldName])
+		// handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
+		// handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
+		// handleSliceSetOverlay(tfOverlaySchema, scm[fieldName])
+		mergeTfOverlay(scm[fieldName], tfOverlaySchema)
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
@@ -236,9 +214,6 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			}
 		case reflect.Slice:
 			ft := schema.TypeList
-			if strings.Contains(tfTag, "slice_set") {
-				ft = schema.TypeSet
-			}
 			scm[fieldName].Type = ft
 			elem := typeField.Type.Elem()
 			switch elem.Kind() {
@@ -358,6 +333,12 @@ func handleMinItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
 	}
 }
 
+func handleSliceSetOverlay(overlay *schema.Schema, fieldSchema *schema.Schema) {
+	if overlay.Type == schema.TypeSet {
+		fieldSchema.Type = schema.TypeSet
+	}
+}
+
 func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
@@ -366,6 +347,42 @@ func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 			break
 		}
 	}
+}
+
+func mergeTfOverlay(base, overlay *schema.Schema) *schema.Schema {
+	baseVal := reflect.ValueOf(base)
+	overlayVal := reflect.ValueOf(overlay)
+
+	if baseVal.Kind() != reflect.Ptr || baseVal.Elem().Kind() != reflect.Struct || overlayVal.Kind() != reflect.Ptr || overlayVal.Elem().Kind() != reflect.Struct {
+		fmt.Println("Please pass pointers to the struct type")
+		return nil
+	}
+
+	baseVal = baseVal.Elem()
+	overlayVal = overlayVal.Elem()
+	result := reflect.New(baseVal.Type()).Elem()
+
+	for i := 0; i < baseVal.NumField(); i++ {
+		// Get the field's metadata
+		fieldInfo := baseVal.Type().Field(i)
+
+		// Skip if the field name is "Elem"
+		if fieldInfo.Name == "Elem" {
+			continue
+		}
+
+		baseField := baseVal.Field(i)
+		overlayField := overlayVal.Field(i)
+
+		// Merge logic, preferring the overlay's field if it's not set to zero value
+		if !reflect.DeepEqual(overlayField.Interface(), reflect.Zero(overlayField.Type()).Interface()) {
+			result.Field(i).Set(overlayField)
+		} else {
+			result.Field(i).Set(baseField)
+		}
+	}
+
+	return result.Addr().Interface().(*schema.Schema)
 }
 
 func handleSuppressDiffWithPath(typefield reflect.StructField, v *schema.Schema, fieldNamePath string, suppressDiffs map[string]bool) {

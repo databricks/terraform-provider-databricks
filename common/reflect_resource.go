@@ -150,22 +150,24 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 				switch tfKey {
 				// case "default":
 				// 	scm[fieldName].Default = tfValue
-				case "max_items":
-					maxItems, err := strconv.Atoi(tfValue)
-					if err != nil {
-						continue
-					}
-					scm[fieldName].MaxItems = maxItems
-				case "min_items":
-					minItems, err := strconv.Atoi(tfValue)
-					if err != nil {
-						continue
-					}
-					scm[fieldName].MinItems = minItems
-				}
+				// case "max_items":
+				// 	maxItems, err := strconv.Atoi(tfValue)
+				// 	if err != nil {
+				// 		continue
+				// 	}
+				// 	scm[fieldName].MaxItems = maxItems
+				// case "min_items":
+				// 	minItems, err := strconv.Atoi(tfValue)
+				// 	if err != nil {
+				// 		continue
+				// 	}
+				// 	scm[fieldName].MinItems = minItems
+				// }
 			}
 		}
-		// handleDefaultOverlay(tfOverlaySchema, scm[fieldName])
+		handleDefaultOverlay(tfOverlaySchema, scm[fieldName])
+		handleMaxItemsOverlay(tfOverlaySchema, scm[fieldName])
+		handleMinItemsOverlay(tfOverlaySchema, scm[fieldName])
 		handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		handleComputedOverlay(tfOverlaySchema, scm[fieldName])
 		handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
@@ -338,11 +340,23 @@ func handleComputedOverlay(overlay *schema.Schema, schema *schema.Schema) {
 	}
 }
 
-// func handleDefaultOverlay(overlay *schema.Schema, schema *schema.Schema) {
-// 	if overlay.Default != nil {
-// 		schema.Default = overlay.Default
-// 	}
-// }
+func handleDefaultOverlay(overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.Default != nil {
+		schema.Default = overlay.Default
+	}
+}
+
+func handleMaxItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.MaxItems != 0 {
+		schema.MaxItems = overlay.MaxItems
+	}
+}
+
+func handleMinItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.MinItems != 0 {
+		schema.MinItems = overlay.MinItems
+	}
+}
 
 func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")

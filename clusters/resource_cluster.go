@@ -84,6 +84,12 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 		"driver_instance_pool_id": {
 			Computed: true,
 		},
+		"ssh_public_keys": {
+			MaxItems: 10,
+		},
+		"init_scripts": {
+			MaxItems: 10,
+		},
 		"workload_type": {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{

@@ -81,8 +81,7 @@ func ResourcePermissionAssignment() *schema.Resource {
 		PrincipalId int64    `json:"principal_id"`
 		Permissions []string `json:"permissions" tf:"slice_as_set"`
 	}
-	s := common.StructToSchema(entity{},
-		common.NoCustomize)
+	s := common.StructToSchema(entity{}, common.NoCustomize)
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -101,11 +100,15 @@ func ResourcePermissionAssignment() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			permissions, err := list.ForPrincipal(mustInt64(d.Id()))
+			data := entity{
+				PrincipalId: mustInt64(d.Id()),
+			}
+			permissions, err := list.ForPrincipal(data.PrincipalId)
 			if err != nil {
 				return err
 			}
-			return common.StructToData(permissions, s, d)
+			data.Permissions = permissions.Permissions
+			return common.StructToData(data, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewPermissionAssignmentAPI(ctx, c).Remove(d.Id())

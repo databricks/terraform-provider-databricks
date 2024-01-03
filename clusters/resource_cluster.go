@@ -64,8 +64,7 @@ func (ClusterResourceProvider) UnderlyingType() Cluster {
 }
 
 func (ClusterResourceProvider) Aliases() map[string]string {
-	return map[string]string{}
-	// return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
+	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
 }
 
 func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {

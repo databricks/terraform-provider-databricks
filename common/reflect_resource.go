@@ -327,6 +327,8 @@ func handleForceNewOverlay(overlay *schema.Schema, schema *schema.Schema) {
 func handleOptionalOverlay(overlay *schema.Schema, schema *schema.Schema) {
 	if overlay.Optional {
 		schema.Optional = true
+	} else {
+		schema.Required = true
 	}
 }
 

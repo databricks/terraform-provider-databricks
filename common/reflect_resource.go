@@ -142,29 +142,29 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		}
 		scm[fieldName] = &schema.Schema{}
 
-		for _, token := range strings.Split(tfTag, ",") {
-			colonSplit := strings.Split(token, ":")
-			if len(colonSplit) == 2 {
-				tfKey := colonSplit[0]
-				tfValue := colonSplit[1]
-				switch tfKey {
-				// case "default":
-				// 	scm[fieldName].Default = tfValue
-				// case "max_items":
-				// 	maxItems, err := strconv.Atoi(tfValue)
-				// 	if err != nil {
-				// 		continue
-				// 	}
-				// 	scm[fieldName].MaxItems = maxItems
-				// case "min_items":
-				// 	minItems, err := strconv.Atoi(tfValue)
-				// 	if err != nil {
-				// 		continue
-				// 	}
-				// 	scm[fieldName].MinItems = minItems
-				// }
-			}
-		}
+		// for _, token := range strings.Split(tfTag, ",") {
+		// 	colonSplit := strings.Split(token, ":")
+		// 	if len(colonSplit) == 2 {
+		// 		tfKey := colonSplit[0]
+		// 		tfValue := colonSplit[1]
+		// 		switch tfKey {
+		// 		// case "default":
+		// 		// 	scm[fieldName].Default = tfValue
+		// 		// case "max_items":
+		// 		// 	maxItems, err := strconv.Atoi(tfValue)
+		// 		// 	if err != nil {
+		// 		// 		continue
+		// 		// 	}
+		// 		// 	scm[fieldName].MaxItems = maxItems
+		// 		// case "min_items":
+		// 		// 	minItems, err := strconv.Atoi(tfValue)
+		// 		// 	if err != nil {
+		// 		// 		continue
+		// 		// 	}
+		// 		// 	scm[fieldName].MinItems = minItems
+		// 		// }
+		// 	}
+		// }
 		handleDefaultOverlay(tfOverlaySchema, scm[fieldName])
 		handleMaxItemsOverlay(tfOverlaySchema, scm[fieldName])
 		handleMinItemsOverlay(tfOverlaySchema, scm[fieldName])

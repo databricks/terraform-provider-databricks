@@ -92,9 +92,11 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 							Schema: map[string]*schema.Schema{
 								"notebooks": {
 									Optional: true,
+									Default:  true,
 								},
 								"jobs": {
 									Optional: true,
+									Default:  true,
 								},
 							},
 						},

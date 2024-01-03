@@ -148,8 +148,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 				tfKey := colonSplit[0]
 				tfValue := colonSplit[1]
 				switch tfKey {
-				case "default":
-					scm[fieldName].Default = tfValue
+				// case "default":
+				// 	scm[fieldName].Default = tfValue
 				case "max_items":
 					maxItems, err := strconv.Atoi(tfValue)
 					if err != nil {
@@ -165,6 +165,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 				}
 			}
 		}
+		handleDefaultOverlay(tfOverlaySchema, scm[fieldName])
 		handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		handleComputedOverlay(tfOverlaySchema, scm[fieldName])
 		handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
@@ -334,6 +335,12 @@ func handleOptionalOverlay(typeField reflect.StructField, overlay *schema.Schema
 func handleComputedOverlay(overlay *schema.Schema, schema *schema.Schema) {
 	if overlay.Computed {
 		schema.Computed = true
+	}
+}
+
+func handleDefaultOverlay(overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.Default != nil {
+		schema.Default = overlay.Default
 	}
 }
 

@@ -94,7 +94,7 @@ type ResourceProviderStruct[T any] interface {
 func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T], customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	underlyingType := v.UnderlyingType()
 	rv := reflect.ValueOf(underlyingType)
-	scm := resourceProviderTypeToSchema(rv, rv.Type(), []string{}, "", v.Aliases(), v.SuppressDiffs())
+	scm := resourceProviderTypeToSchema(rv, rv.Type(), []string{}, "", v.Aliases(), v.SuppressDiffs(), v.TfOverlay())
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -103,7 +103,7 @@ func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T], customiz
 
 // typeToSchema converts struct into terraform schema. `path` is used for block suppressions
 // special path element `"0"` is used to denote either arrays or sets of elements
-func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string, fieldNamePath string, aliases map[string]string, suppressDiffs map[string]bool) map[string]*schema.Schema {
+func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string, fieldNamePath string, aliases map[string]string, suppressDiffs map[string]bool, tfOverlay map[string]*schema.Schema) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -120,6 +120,22 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldNameWithAliases(typeField, fieldNamePath, aliases)
+
+		var tfOverlaySchema *schema.Schema
+
+		if value, ok := tfOverlay[fieldName]; ok {
+			tfOverlaySchema = value
+		} else {
+			tfOverlaySchema = &schema.Schema{}
+		}
+
+		var nextLevelTfOverlay map[string]*schema.Schema
+
+		if resource, ok := tfOverlaySchema.Elem.(*schema.Resource); ok {
+			nextLevelTfOverlay = resource.Schema
+		} else {
+			nextLevelTfOverlay = map[string]*schema.Schema{}
+		}
 
 		if fieldName == "-" {
 			continue
@@ -153,6 +169,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		handleComputed(typeField, scm[fieldName])
 		handleForceNew(typeField, scm[fieldName])
 		handleSensitive(typeField, scm[fieldName])
+		handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
@@ -184,7 +201,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs)
+			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs, nextLevelTfOverlay)
 			if shouldSuppressDiff(typeField, fieldNamePath, suppressDiffs) {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
@@ -203,7 +220,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs)
+			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs, nextLevelTfOverlay)
 			if shouldSuppressDiff(typeField, fieldNamePath, suppressDiffs) {
 				blockCount := strings.Join(append(path, fieldName, "#"), ".")
 				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
@@ -234,7 +251,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs),
+					Schema: resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs, nextLevelTfOverlay),
 				}
 			}
 		default:
@@ -292,6 +309,12 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 			schema.Sensitive = true
 			break
 		}
+	}
+}
+
+func handleSensitiveOverlay(overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.Sensitive {
+		schema.Sensitive = true
 	}
 }
 

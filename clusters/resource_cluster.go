@@ -68,7 +68,23 @@ func (ClusterResourceProvider) Aliases() map[string]string {
 }
 
 func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
-	return map[string]*schema.Schema{}
+	return map[string]*schema.Schema{
+		"docker_image": {
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"basic_auth": {
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"password": {
+									Sensitive: true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func (ClusterResourceProvider) SuppressDiffs() map[string]bool {
@@ -76,7 +92,8 @@ func (ClusterResourceProvider) SuppressDiffs() map[string]bool {
 		"aws_attributes":     true,
 		"azure_attributes":   true,
 		"gcp_attributes":     true,
-		"data_security_mode": true}
+		"data_security_mode": true,
+	}
 }
 
 func resourceClusterSchemaProvider() map[string]*schema.Schema {

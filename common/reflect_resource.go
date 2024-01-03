@@ -165,8 +165,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 				}
 			}
 		}
-		// handleOptional(typeField, scm[fieldName])
-		// handleComputed(typeField, scm[fieldName])
+		handleOptional(typeField, scm[fieldName])
+		handleComputed(typeField, scm[fieldName])
 		// handleForceNew(typeField, scm[fieldName])
 		// handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
 		handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])

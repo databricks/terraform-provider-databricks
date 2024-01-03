@@ -76,13 +76,16 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"node_type_id": {
-			Computed: true,
+			ConflictsWith: []string{"driver_instance_pool_id", "instance_pool_id"},
+			Computed:      true,
 		},
 		"driver_node_type_id": {
-			Computed: true,
+			ConflictsWith: []string{"driver_instance_pool_id", "instance_pool_id"},
+			Computed:      true,
 		},
 		"driver_instance_pool_id": {
-			Computed: true,
+			ConflictsWith: []string{"driver_node_type_id", "node_type_id"},
+			Computed:      true,
 		},
 		"ssh_public_keys": {
 			MaxItems: 10,
@@ -139,6 +142,7 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			DiffSuppressFunc: SparkConfDiffSuppressFunc,
 		},
 		"aws_attributes": {
+			ConflictsWith: []string{"azure_attributes", "gcp_attributes"},
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"zone_id": {
@@ -147,7 +151,11 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 				},
 			},
 		},
+		"azure_attributes": {
+			ConflictsWith: []string{"aws_attributes", "gcp_attributes"},
+		},
 		"gcp_attributes": {
+			ConflictsWith: []string{"azure_attributes", "gcp_attributes"},
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"use_preemptible_executors": {
@@ -155,6 +163,57 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 					},
 				},
 			},
+		},
+		"library": common.StructToSchema(libraries.ClusterLibraryList{},
+			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+				ss["library"].Set = func(i any) int {
+					lib := libraries.NewLibraryFromInstanceState(i)
+					return schema.HashString(lib.String())
+				}
+				return ss
+			})["library"],
+		"autotermination_minutes": {
+			Default: 60,
+		},
+		"cluster_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"instance_pool_id": {
+			ConflictsWith: []string{"driver_node_type_id", "node_type_id"},
+		},
+		"runtime_engine": {
+			ValidateFunc: validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false),
+		},
+		"is_pinned": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" && new == "false" {
+					return true
+				}
+				return old == new
+			},
+		},
+		"state": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"default_tags": {
+			Type:     schema.TypeMap,
+			Computed: true,
+		},
+		"num_workers": {
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          0,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+		},
+		"url": {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
 	}
 }
@@ -177,60 +236,60 @@ func resourceClusterSchemaProvider() map[string]*schema.Schema {
 		// common.MustSchemaPath(s, "init_scripts", "dbfs").Deprecated = DbfsDeprecationWarning
 
 		// adds `library` configuration block
-		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
-			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-				ss["library"].Set = func(i any) int {
-					lib := libraries.NewLibraryFromInstanceState(i)
-					return schema.HashString(lib.String())
-				}
-				return ss
-			})["library"]
+		// s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
+		// 	func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+		// 		ss["library"].Set = func(i any) int {
+		// 			lib := libraries.NewLibraryFromInstanceState(i)
+		// 			return schema.HashString(lib.String())
+		// 		}
+		// 		return ss
+		// 	})["library"]
 
-		s["autotermination_minutes"].Default = 60
-		s["cluster_id"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		}
-		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
-		s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
-		s["gcp_attributes"].ConflictsWith = []string{"aws_attributes", "azure_attributes"}
-		s["instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
-		s["driver_instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
-		s["driver_node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
-		s["node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
+		// s["autotermination_minutes"].Default = 60
+		// s["cluster_id"] = &schema.Schema{
+		// 	Type:     schema.TypeString,
+		// 	Optional: true,
+		// 	Computed: true,
+		// }
+		// s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
+		// s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
+		// s["gcp_attributes"].ConflictsWith = []string{"aws_attributes", "azure_attributes"}
+		// s["instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
+		// s["driver_instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
+		// s["driver_node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
+		// s["node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
 
-		s["runtime_engine"].ValidateFunc = validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false)
+		// s["runtime_engine"].ValidateFunc = validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false)
 
-		s["is_pinned"] = &schema.Schema{
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				if old == "" && new == "false" {
-					return true
-				}
-				return old == new
-			},
-		}
-		s["state"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		}
-		s["default_tags"] = &schema.Schema{
-			Type:     schema.TypeMap,
-			Computed: true,
-		}
-		s["num_workers"] = &schema.Schema{
-			Type:             schema.TypeInt,
-			Optional:         true,
-			Default:          0,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-		}
-		s["url"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		}
+		// s["is_pinned"] = &schema.Schema{
+		// 	Type:     schema.TypeBool,
+		// 	Optional: true,
+		// 	Default:  false,
+		// 	DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+		// 		if old == "" && new == "false" {
+		// 			return true
+		// 		}
+		// 		return old == new
+		// 	},
+		// }
+		// s["state"] = &schema.Schema{
+		// 	Type:     schema.TypeString,
+		// 	Computed: true,
+		// }
+		// s["default_tags"] = &schema.Schema{
+		// 	Type:     schema.TypeMap,
+		// 	Computed: true,
+		// }
+		// s["num_workers"] = &schema.Schema{
+		// 	Type:             schema.TypeInt,
+		// 	Optional:         true,
+		// 	Default:          0,
+		// 	ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+		// }
+		// s["url"] = &schema.Schema{
+		// 	Type:     schema.TypeString,
+		// 	Computed: true,
+		// }
 		return s
 	})
 }

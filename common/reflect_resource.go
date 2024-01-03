@@ -148,23 +148,31 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		// handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
 		// handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
 		// handleSliceSetOverlay(tfOverlaySchema, scm[fieldName])
-		mergeTfOverlay(scm[fieldName], tfOverlaySchema)
-		handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
+		// mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+		// handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
 			// diff suppression needs type for zero value
 			handleSuppressDiffWithPath(typeField, scm[fieldName], fieldNamePath, suppressDiffs)
+			mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+			handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		case reflect.Float64:
 			scm[fieldName].Type = schema.TypeFloat
 			// diff suppression needs type for zero value
 			handleSuppressDiffWithPath(typeField, scm[fieldName], fieldNamePath, suppressDiffs)
+			mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+			handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		case reflect.Bool:
 			scm[fieldName].Type = schema.TypeBool
+			mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+			handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		case reflect.String:
 			scm[fieldName].Type = schema.TypeString
 			// diff suppression needs type for zero value
 			handleSuppressDiffWithPath(typeField, scm[fieldName], fieldNamePath, suppressDiffs)
+			mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+			handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		case reflect.Map:
 			scm[fieldName].Type = schema.TypeMap
 			elem := typeField.Type.Elem()
@@ -176,6 +184,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			default:
 				panic(fmt.Errorf("unsupported map value for %s: %s", fieldName, reflectKind(elem.Kind())))
 			}
+			mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+			handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		case reflect.Ptr:
 			scm[fieldName].MaxItems = 1
 			scm[fieldName].Type = schema.TypeList
@@ -193,6 +203,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}
+			mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+			handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		case reflect.Struct:
 			scm[fieldName].MaxItems = 1
 			scm[fieldName].Type = schema.TypeList
@@ -212,6 +224,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}
+			mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+			handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		case reflect.Slice:
 			ft := schema.TypeList
 			scm[fieldName].Type = ft
@@ -231,6 +245,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 					Schema: resourceProviderTypeToSchema(sv, elem, append(path, fieldName, "0"), fieldNamePath+fieldName, aliases, suppressDiffs, nextLevelTfOverlay),
 				}
 			}
+			mergeTfOverlay(scm[fieldName], tfOverlaySchema)
+			handleOptionalOverlay(typeField, tfOverlaySchema, scm[fieldName])
 		default:
 			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
 		}

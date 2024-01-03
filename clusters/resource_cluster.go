@@ -69,6 +69,21 @@ func (ClusterResourceProvider) Aliases() map[string]string {
 
 func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"enable_elastic_disk": {
+			Computed: true,
+		},
+		"enable_local_disk_encryption": {
+			Computed: true,
+		},
+		"node_type_id": {
+			Computed: true,
+		},
+		"driver_node_type_id": {
+			Computed: true,
+		},
+		"driver_instance_pool_id": {
+			Computed: true,
+		},
 		"workload_type": {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{

@@ -166,8 +166,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			}
 		}
 		// handleOptional(typeField, scm[fieldName])
-		handleComputed(typeField, scm[fieldName])
 		handleOptionalOverlay(tfOverlaySchema, scm[fieldName])
+		handleComputed(typeField, scm[fieldName])
 		handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
 		handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
 		switch typeField.Type.Kind() {
@@ -324,8 +324,8 @@ func handleForceNewOverlay(overlay *schema.Schema, schema *schema.Schema) {
 	}
 }
 
-func handleOptionalOverlay(overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.Optional {
+func handleOptionalOverlay(typeField reflect.StructField, overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.Optional || strings.Contains(typeField.Tag.Get("json"), "omitempty") {
 		schema.Optional = true
 	} else {
 		schema.Required = true

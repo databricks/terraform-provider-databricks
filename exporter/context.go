@@ -722,6 +722,7 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			if !matched {
 				continue
 			}
+			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			if sr.Mode == "data" {
 				return strValue, hcl.Traversal{
 					hcl.TraverseRoot{Name: "data"},

@@ -267,6 +267,26 @@ func TestRepoIgnore(t *testing.T) {
 	assert.False(t, resourcesMap["databricks_repo"].Ignore(ic, r))
 }
 
+func TestDLTIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := pipelines.ResourcePipeline().TestResourceData()
+	d.SetId("12345")
+	r := &resource{ID: "12345", Data: d}
+	// job without libraries
+	assert.True(t, resourcesMap["databricks_pipeline"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
+func TestJobsIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := jobs.ResourceJob().TestResourceData()
+	d.SetId("12345")
+	r := &resource{ID: "12345", Data: d}
+	// job without tasks
+	assert.True(t, resourcesMap["databricks_job"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
 func TestJobName(t *testing.T) {
 	ic := importContextForTest()
 	d := jobs.ResourceJob().TestResourceData()

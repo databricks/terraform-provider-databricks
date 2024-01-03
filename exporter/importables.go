@@ -575,6 +575,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			numTasks := r.Data.Get("task.#").(int)
+			if numTasks == 0 {
+				log.Printf("[WARN] Ignoring job with ID %s", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_job. id=%s", r.ID))
+			}
+			return numTasks == 0
+		},
 	},
 	"databricks_cluster_policy": {
 		WorkspaceLevel: true,
@@ -1921,6 +1929,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return dltDefaultStorageRegex.FindStringSubmatch(d.Get("storage").(string)) != nil
 			}
 			return pathString == "creator_user_name" || defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			numLibraries := r.Data.Get("library.#").(int)
+			if numLibraries == 0 {
+				log.Printf("[WARN] Ignoring DLT Pipeline with ID %s", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_pipeline. id=%s", r.ID))
+			}
+			return numLibraries == 0
 		},
 		Depends: []reference{
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},

@@ -69,6 +69,9 @@ func (ClusterResourceProvider) Aliases() map[string]string {
 
 func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"idempotency_token": {
+			ForceNew: true,
+		},
 		"docker_image": {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{

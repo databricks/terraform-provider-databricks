@@ -167,8 +167,8 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		}
 		handleOptional(typeField, scm[fieldName])
 		handleComputed(typeField, scm[fieldName])
-		handleForceNew(typeField, scm[fieldName])
-		handleSensitive(typeField, scm[fieldName])
+		// handleForceNew(typeField, scm[fieldName])
+		handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
 		handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
@@ -315,6 +315,12 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 func handleSensitiveOverlay(overlay *schema.Schema, schema *schema.Schema) {
 	if overlay.Sensitive {
 		schema.Sensitive = true
+	}
+}
+
+func handleForceNewOverlay(overlay *schema.Schema, schema *schema.Schema) {
+	if overlay.ForceNew {
+		schema.ForceNew = true
 	}
 }
 

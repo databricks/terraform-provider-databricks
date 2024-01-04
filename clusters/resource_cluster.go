@@ -3,6 +3,7 @@ package clusters
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,6 +68,26 @@ func (ClusterResourceProvider) Aliases() map[string]string {
 	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
 }
 
+func makeEmptyBlockSuppressFunc() func(k, old, new string, d *schema.ResourceData) bool {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		if strings.HasSuffix(k, ".#") && old == "1" && new == "0" {
+			log.Printf("[DEBUG] Suppressing diff for k=%#v platform=%#v config=%#v", k, old, new)
+			return true
+		}
+		return false
+	}
+}
+
+func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData) bool {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		if new == zero && old != zero {
+			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
+			return true
+		}
+		return false
+	}
+}
+
 func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"enable_elastic_disk": {
@@ -123,6 +144,9 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 		"idempotency_token": {
 			ForceNew: true,
 		},
+		"data_security_mode": {
+			DiffSuppressFunc: diffSuppressor(""),
+		},
 		"docker_image": {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
@@ -142,7 +166,8 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			DiffSuppressFunc: SparkConfDiffSuppressFunc,
 		},
 		"aws_attributes": {
-			ConflictsWith: []string{"azure_attributes", "gcp_attributes"},
+			DiffSuppressFunc: makeEmptyBlockSuppressFunc(),
+			ConflictsWith:    []string{"azure_attributes", "gcp_attributes"},
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"zone_id": {
@@ -152,10 +177,12 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			},
 		},
 		"azure_attributes": {
-			ConflictsWith: []string{"aws_attributes", "gcp_attributes"},
+			DiffSuppressFunc: makeEmptyBlockSuppressFunc(),
+			ConflictsWith:    []string{"aws_attributes", "gcp_attributes"},
 		},
 		"gcp_attributes": {
-			ConflictsWith: []string{"azure_attributes", "aws_attributes"},
+			DiffSuppressFunc: makeEmptyBlockSuppressFunc(),
+			ConflictsWith:    []string{"azure_attributes", "aws_attributes"},
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"use_preemptible_executors": {
@@ -215,15 +242,6 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-	}
-}
-
-func (ClusterResourceProvider) SuppressDiffs() map[string]bool {
-	return map[string]bool{
-		"aws_attributes":     true,
-		"azure_attributes":   true,
-		"gcp_attributes":     true,
-		"data_security_mode": true,
 	}
 }
 

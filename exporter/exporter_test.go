@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
@@ -373,6 +374,14 @@ var emptyGlobalSQLConfig = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var noCurrentMetastoreAttached = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/unity-catalog/metastore_summary",
+	Status:       404,
+	Response:     apierr.NotFound("nope"),
+	ReuseRequest: true,
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
 		{
@@ -393,6 +402,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
+			noCurrentMetastoreAttached,
 			meAdminFixture,
 			emptyRepos,
 			emptyGitCredentials,
@@ -649,6 +659,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 					Groups: []scim.ComplexValue{},
 				},
 			},
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyModelServing,
 			emptyMlflowWebhooks,

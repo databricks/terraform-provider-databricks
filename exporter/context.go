@@ -987,7 +987,6 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		case schema.TypeString:
 			value := raw.(string)
 			tokens := ic.reference(i, append(path, a), value, cty.StringVal(value))
-			log.Printf("[DEBUG] path=%s, raw='%v' tokens='%v'", pathString, raw, tokens)
 			body.SetAttributeRaw(a, tokens)
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))

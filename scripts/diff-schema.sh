@@ -7,10 +7,10 @@ BASE=${BASE_COMMIT:-"master"}
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 HEAD=${HEAD_COMMIT:-$CURRENT_BRANCH}
 
-checkout_branch() {
-    local branch=$1
-    echo "Checking out branch: $branch"
-    git checkout $branch
+checkout() {
+    local ref=$1
+    echo "Checking out ref: $ref"
+    git checkout $ref
 }
 
 if [ -n "$(git status --porcelain)" ]; then
@@ -18,10 +18,11 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
+checkout $HEAD
 NEW_SCHEMA=$(generate_schema)
-checkout_branch $BASE
+checkout $BASE
 CURRENT_SCHEMA=$(generate_schema)
-checkout_branch $HEAD
+checkout $CURRENT_BRANCH
 
 set +e
 jd -color "$CURRENT_SCHEMA" "$NEW_SCHEMA"

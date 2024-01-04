@@ -208,6 +208,21 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 		"autotermination_minutes": {
 			Default: 60,
 		},
+		"autoscale": {
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"max_workers": {
+						Optional: true,
+					},
+					"min_workers": {
+						Optional: true,
+					},
+				},
+			},
+		},
+		"spark_version": {
+			Optional: true,
+		},
 		"cluster_id": {
 			Type:     schema.TypeString,
 			Optional: true,

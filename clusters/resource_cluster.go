@@ -221,7 +221,7 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			},
 		},
 		"spark_version": {
-			Optional: true,
+			Required: true,
 		},
 		"cluster_id": {
 			Type:     schema.TypeString,

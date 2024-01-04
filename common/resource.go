@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -191,11 +192,11 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 }
 
-// func MustCompileKeyRE(name string) *regexp.Regexp {
-// 	regexFromName := strings.ReplaceAll(name, ".", "\\.")
-// 	regexFromName = strings.ReplaceAll(regexFromName, ".0", ".\\d+")
-// 	return regexp.MustCompile(regexFromName)
-// }
+func MustCompileKeyRE(name string) *regexp.Regexp {
+	regexFromName := strings.ReplaceAll(name, ".", "\\.")
+	regexFromName = strings.ReplaceAll(regexFromName, ".0", ".\\d+")
+	return regexp.MustCompile(regexFromName)
+}
 
 func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
 	// re := MustCompileKeyRE(name)

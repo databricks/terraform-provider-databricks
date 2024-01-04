@@ -319,6 +319,15 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"cluster_mount_info": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: common.StructToSchema(MountInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+					return ss
+				}),
+			},
+		},
 	}
 }
 

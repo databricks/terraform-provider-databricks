@@ -155,7 +155,7 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			ConflictsWith: []string{"aws_attributes", "gcp_attributes"},
 		},
 		"gcp_attributes": {
-			ConflictsWith: []string{"azure_attributes", "gcp_attributes"},
+			ConflictsWith: []string{"azure_attributes", "aws_attributes"},
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"use_preemptible_executors": {

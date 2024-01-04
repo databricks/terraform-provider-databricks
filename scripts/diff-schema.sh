@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+set -eo pipefail
 
 source scripts/libschema.sh
 
 BASE=${BASE_COMMIT:-"master"}
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref $HEAD)
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 HEAD=${HEAD_COMMIT:-$CURRENT_BRANCH}
 
 checkout_branch() {

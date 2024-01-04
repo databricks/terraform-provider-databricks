@@ -313,7 +313,7 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 // }
 
 func handleOptionalOverlay(typeField reflect.StructField, overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.Optional || strings.Contains(typeField.Tag.Get("json"), "omitempty") {
+	if !overlay.Required && (overlay.Optional || strings.Contains(typeField.Tag.Get("json"), "omitempty")) {
 		schema.Optional = true
 	} else {
 		schema.Required = true

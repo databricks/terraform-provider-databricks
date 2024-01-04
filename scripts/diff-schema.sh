@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 source scripts/libschema.sh
 
 BASE_BRANCH="master"

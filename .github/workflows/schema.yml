@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       base:
-        description: 'Base ref'
-        default: 'master'
+        description: "Base ref"
+        default: "master"
         required: true
       head:
-        description: 'Head ref'
-        default: 'master'
+        description: "Head ref"
+        default: "master"
         required: true
 
 jobs:
@@ -21,26 +21,39 @@ jobs:
 
     steps:
       - if: github.event_name == 'pull_request'
-        name: Checkout
+        name: Checkout PR base commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+      - if: github.event_name == 'pull_request'
+        name: Checkout PR merge commit
         uses: actions/checkout@v4
 
       - if: github.event_name == 'workflow_dispatch'
-        name: Checkout
+        name: Checkout base commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.base }}
+      - if: github.event_name == 'workflow_dispatch'
+        name: Checkout head commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.head }}
 
-      - name: 'Setup Go'
+      - name: "Setup Go"
         uses: actions/setup-go@v4
         with:
           go-version: 1.21.x
 
-      - name: 'Setup Terraform'
+      - name: "Setup Terraform"
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_wrapper: false
 
-      - name: 'Install jd'
+      - name: "Install jd"
         run: go install github.com/josephburnett/jd@latest
 
       - run: make diff-schema
+        env:
+          BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}
+          HEAD_COMMIT: ${{ github.event_name == 'pull_request' && github.head_ref || github.event.inputs.head }}

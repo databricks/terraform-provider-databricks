@@ -90,6 +90,7 @@ func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData
 }
 
 func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
+	// return map[string]*schema.Schema{}
 	return map[string]*schema.Schema{
 		"enable_elastic_disk": {
 			Computed: true,
@@ -143,6 +144,8 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			},
 		},
 		"idempotency_token": {
+			Type:     schema.TypeString,
+			Optional: true,
 			ForceNew: true,
 		},
 		"data_security_mode": {
@@ -187,6 +190,8 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"use_preemptible_executors": {
+						Type:       schema.TypeBool,
+						Optional:   true,
 						Deprecated: "Please use 'availability' instead.",
 					},
 				},

@@ -90,7 +90,6 @@ func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData
 }
 
 func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
-	// return map[string]*schema.Schema{}
 	return map[string]*schema.Schema{
 		"enable_elastic_disk": {
 			Computed: true,
@@ -119,6 +118,23 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 				Schema: map[string]*schema.Schema{
 					"dbfs": {
 						Deprecated: DbfsDeprecationWarning,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"destination": {
+									Required: true,
+								},
+							},
+						},
+					},
+					"s3": {
+						Deprecated: DbfsDeprecationWarning,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"destination": {
+									Required: true,
+								},
+							},
+						},
 					},
 				},
 			},
@@ -127,6 +143,7 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"clients": {
+						MinItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"notebooks": {
@@ -154,11 +171,18 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 		"docker_image": {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"url": {
+						Required: true,
+					},
 					"basic_auth": {
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"password": {
 									Sensitive: true,
+									Required:  true,
+								},
+								"username": {
+									Required: true,
 								},
 							},
 						},
@@ -193,6 +217,10 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 						Type:       schema.TypeBool,
 						Optional:   true,
 						Deprecated: "Please use 'availability' instead.",
+					},
+					"zone_id": {
+						Type:     schema.TypeString,
+						Optional: true,
 					},
 				},
 			},

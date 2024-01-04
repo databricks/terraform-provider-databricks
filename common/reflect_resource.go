@@ -371,18 +371,12 @@ func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	}
 }
 
-func mergeTfOverlay(base, overlay *schema.Schema) *schema.Schema {
+func mergeTfOverlay(base, overlay *schema.Schema) {
 	baseVal := reflect.ValueOf(base)
 	overlayVal := reflect.ValueOf(overlay)
 
-	if baseVal.Kind() != reflect.Ptr || baseVal.Elem().Kind() != reflect.Struct || overlayVal.Kind() != reflect.Ptr || overlayVal.Elem().Kind() != reflect.Struct {
-		fmt.Println("Please pass pointers to the struct type")
-		return nil
-	}
-
 	baseVal = baseVal.Elem()
 	overlayVal = overlayVal.Elem()
-	result := reflect.New(baseVal.Type()).Elem()
 
 	for i := 0; i < baseVal.NumField(); i++ {
 		// Get the field's metadata
@@ -398,13 +392,9 @@ func mergeTfOverlay(base, overlay *schema.Schema) *schema.Schema {
 
 		// Merge logic, preferring the overlay's field if it's not set to zero value
 		if !reflect.DeepEqual(overlayField.Interface(), reflect.Zero(overlayField.Type()).Interface()) {
-			result.Field(i).Set(overlayField)
-		} else {
-			result.Field(i).Set(baseField)
+			baseField.Set(overlayField)
 		}
 	}
-
-	return result.Addr().Interface().(*schema.Schema)
 }
 
 func handleSuppressDiffWithPath(typefield reflect.StructField, v *schema.Schema, fieldNamePath string, suppressDiffs map[string]bool) {

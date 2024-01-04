@@ -251,6 +251,12 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
 		}
 	}
+	for key, value := range tfOverlay {
+		_, exists := scm[key]
+		if !exists {
+			scm[key] = value
+		}
+	}
 	return scm
 }
 

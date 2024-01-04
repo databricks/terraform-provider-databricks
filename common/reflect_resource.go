@@ -432,18 +432,6 @@ func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath str
 	return fieldName
 }
 
-// func shouldSuppressDiff(typeField reflect.StructField, fieldNamePath string, suppressDiffs map[string]bool) bool {
-// 	jsonFieldName := getJsonFieldName(typeField)
-
-// 	supressDiffsKey := fieldNamePath + "." + jsonFieldName
-
-// 	if value, ok := suppressDiffs[supressDiffsKey]; ok {
-// 		return value
-// 	} else {
-// 		return false
-// 	}
-// }
-
 func getJsonFieldName(typeField reflect.StructField) string {
 	jsonTag := typeField.Tag.Get("json")
 	// fields without JSON tags would be treated as if ignored,

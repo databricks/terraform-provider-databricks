@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 )
@@ -60,8 +61,8 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 type ClusterResourceProvider struct{}
 
-func (ClusterResourceProvider) UnderlyingType() Cluster {
-	return Cluster{} // Just to test things out, will change this into compute.ClusterDetails{} later.
+func (ClusterResourceProvider) UnderlyingType() compute.ClusterDetails {
+	return compute.ClusterDetails{}
 }
 
 func (ClusterResourceProvider) Aliases() map[string]string {
@@ -246,7 +247,7 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 }
 
 func resourceClusterSchemaProvider() map[string]*schema.Schema {
-	return common.ResourceProviderStructToSchema[Cluster](ClusterResourceProvider{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	return common.ResourceProviderStructToSchema[compute.ClusterDetails](ClusterResourceProvider{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		return s
 	})
 }

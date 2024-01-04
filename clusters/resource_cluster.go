@@ -220,6 +220,34 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 				},
 			},
 		},
+		"apply_policy_default_values": {
+			Optional: true,
+			Type:     schema.TypeBool,
+		},
+		"cluster_log_conf": {
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"dbfs": {
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"destination": {
+									Required: true,
+								},
+							},
+						},
+					},
+					"s3": {
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"destination": {
+									Required: true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"spark_version": {
 			Required: true,
 		},

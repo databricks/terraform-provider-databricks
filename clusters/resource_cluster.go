@@ -143,7 +143,6 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"clients": {
-						MinItems: 5,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"notebooks": {
@@ -156,6 +155,7 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 								},
 							},
 						},
+						MinItems: 1,
 					},
 				},
 			},

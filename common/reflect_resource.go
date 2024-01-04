@@ -386,11 +386,11 @@ func mergeTfOverlay(base, overlay *schema.Schema) {
 	}
 }
 
-func handleSuppressDiffWithPath(typefield reflect.StructField, v *schema.Schema, fieldNamePath string, suppressDiffs map[string]bool) {
-	if shouldSuppressDiff(typefield, fieldNamePath, suppressDiffs) {
-		v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
-	}
-}
+// func handleSuppressDiffWithPath(typefield reflect.StructField, v *schema.Schema, fieldNamePath string, suppressDiffs map[string]bool) {
+// 	if shouldSuppressDiff(typefield, fieldNamePath, suppressDiffs) {
+// 		v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+// 	}
+// }
 
 func getAlias(typeField reflect.StructField) string {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
@@ -432,17 +432,17 @@ func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath str
 	return fieldName
 }
 
-func shouldSuppressDiff(typeField reflect.StructField, fieldNamePath string, suppressDiffs map[string]bool) bool {
-	jsonFieldName := getJsonFieldName(typeField)
+// func shouldSuppressDiff(typeField reflect.StructField, fieldNamePath string, suppressDiffs map[string]bool) bool {
+// 	jsonFieldName := getJsonFieldName(typeField)
 
-	supressDiffsKey := fieldNamePath + "." + jsonFieldName
+// 	supressDiffsKey := fieldNamePath + "." + jsonFieldName
 
-	if value, ok := suppressDiffs[supressDiffsKey]; ok {
-		return value
-	} else {
-		return false
-	}
-}
+// 	if value, ok := suppressDiffs[supressDiffsKey]; ok {
+// 		return value
+// 	} else {
+// 		return false
+// 	}
+// }
 
 func getJsonFieldName(typeField reflect.StructField) string {
 	jsonTag := typeField.Tag.Get("json")

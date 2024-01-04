@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Check out the base commit first and the head commit second. diff-schema
+      # uses the current commit as the head commit.
       - if: github.event_name == 'pull_request'
         name: Checkout PR base commit
         uses: actions/checkout@v4
@@ -56,4 +58,3 @@ jobs:
       - run: make diff-schema
         env:
           BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}
-          HEAD_COMMIT: ${{ github.event_name == 'pull_request' && github.head_ref || github.event.inputs.head }}

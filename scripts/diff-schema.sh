@@ -3,7 +3,8 @@
 source scripts/libschema.sh
 
 BASE=${BASE_COMMIT:-"master"}
-HEAD=${HEAD_COMMIT:-"HEAD"}
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref $HEAD)
+HEAD=${HEAD_COMMIT:-$CURRENT_BRANCH}
 
 checkout_branch() {
     local branch=$1
@@ -16,7 +17,6 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref $HEAD)
 NEW_SCHEMA=$(generate_schema)
 checkout_branch $BASE
 CURRENT_SCHEMA=$(generate_schema)

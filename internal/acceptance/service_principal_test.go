@@ -60,7 +60,8 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 }
 
 func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
-	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	// GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	var appId string
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_service_principal" "a" {
@@ -68,9 +69,8 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 				force_delete_home_dir = false 
 			}`,
 		Check: func(s *terraform.State) error {
-			appId := s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
-			os.Setenv("application_id_a", appId)
-			return nil
+			appId = s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
+			return provisionHomeFolder(context.Background(), s, "databricks_service_principal.a", appId)
 		},
 	}, step{
 		Template: `
@@ -84,9 +84,7 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 				return err
 			}
 			ctx := context.Background()
-			appId := os.Getenv("application_id_a")
 			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", appId))
-			os.Remove("application_id_a")
 			return err
 		},
 	})

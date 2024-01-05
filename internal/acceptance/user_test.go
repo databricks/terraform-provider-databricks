@@ -96,6 +96,20 @@ func TestAccUserHomeDelete(t *testing.T) {
 	})
 }
 
+func provisionHomeFolder(ctx context.Context, s *terraform.State, tfAttribute, username string) error {
+	client, err := client.New(&config.Config{})
+	if err != nil {
+		return err
+	}
+	userId := s.Modules[0].Resources[tfAttribute].Primary.ID
+	return client.Do(ctx, "PUT", fmt.Sprintf("/api/2.0/workspace/user/%s/homefolder", userId), nil, map[string]any{
+		"user": map[string]any{
+			"user_id":  userId,
+			"username": username,
+		},
+	}, nil)
+}
+
 func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	username := qa.RandomEmail()
 	workspaceLevel(t, step{
@@ -104,23 +118,7 @@ func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 				user_name = "` + username + `"
 			}`,
 		Check: func(s *terraform.State) error {
-			client, err := client.New(&config.Config{})
-			if err != nil {
-				return err
-			}
-			ctx := context.Background()
-			// Force creation of the home folder in case it is lazy
-			userId := s.Modules[0].Resources["databricks_user.a"].Primary.ID
-			err = client.Do(ctx, "PUT", fmt.Sprintf("/api/2.0/workspace/user/%s/homefolder", userId), nil, map[string]any{
-				"user": map[string]any{
-					"user_id":  userId,
-					"username": username,
-				},
-			}, nil)
-			if err != nil {
-				return err
-			}
-			return nil
+			return provisionHomeFolder(context.Background(), s, "databricks_user.a", username)
 		},
 	}, step{
 		Template: `

@@ -145,27 +145,27 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 				},
 			},
 		},
-		// "workload_type": {
-		// 	Elem: &schema.Resource{
-		// 		Schema: map[string]*schema.Schema{
-		// 			"clients": {
-		// 				Elem: &schema.Resource{
-		// 					Schema: map[string]*schema.Schema{
-		// 						"notebooks": {
-		// 							Optional: true,
-		// 							Default:  true,
-		// 						},
-		// 						"jobs": {
-		// 							Optional: true,
-		// 							Default:  true,
-		// 						},
-		// 					},
-		// 				},
-		// 				MinItems: 1,
-		// 			},
-		// 		},
-		// 	},
-		// },
+		"workload_type": {
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"clients": {
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"notebooks": {
+									Required: true,
+									Default:  true,
+								},
+								"jobs": {
+									Required: true,
+									Default:  true,
+								},
+							},
+						},
+						MinItems: 1,
+					},
+				},
+			},
+		},
 		"idempotency_token": {
 			Type:     schema.TypeString,
 			Optional: true,

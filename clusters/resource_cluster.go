@@ -114,6 +114,7 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 		},
 		"init_scripts": {
 			MaxItems: 10,
+			MinItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"dbfs": {

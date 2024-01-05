@@ -152,16 +152,17 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"notebooks": {
-									Required: true,
+									Optional: true,
 									Default:  true,
 								},
 								"jobs": {
-									Required: true,
+									Optional: true,
 									Default:  true,
 								},
 							},
 						},
 						MinItems: 1,
+						Required: true,
 					},
 				},
 			},

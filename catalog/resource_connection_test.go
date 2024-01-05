@@ -64,6 +64,49 @@ func TestConnectionsCreate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
+				ExpectedRequest: catalog.UpdateConnection{
+					Name: "testConnectionName",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Owner: "InitialOwner",
+				},
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					Comment:        "This is a test comment.",
+					FullName:       "testConnectionName",
+					MetastoreId:    "abc",
+					Owner:          "InitialOwner",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Properties: map[string]string{
+						"purpose": "testing",
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					Comment:        "This is a test comment.",
+					FullName:       "testConnectionName",
+					Owner:          "InitialOwner",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Properties: map[string]string{
+						"purpose": "testing",
+					},
+				},
+			},
 		},
 		Resource: ResourceConnection(),
 		Create:   true,

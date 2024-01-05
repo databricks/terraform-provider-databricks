@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_registered_model Resource
 
+-> **Note** This resource could be used with account or workspace-level provider.
+
 This resource allows you to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
 
 ## Example Usage

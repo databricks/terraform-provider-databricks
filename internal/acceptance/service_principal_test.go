@@ -60,7 +60,7 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 }
 
 func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
-	// GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
 	var appId string
 	workspaceLevel(t, step{
 		Template: `

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
@@ -2095,9 +2096,6 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_access_control_rule_set": {
 		AccountLevel: true,
 		Service:      "access",
-		// Name: func(ic *importContext, d *schema.ResourceData) string {
-		// 	return "webhook_" + d.Id()
-		// },
 		List: func(ic *importContext) error {
 			accountId := ic.Client.Config.AccountID
 			// emit default ruleset
@@ -2161,6 +2159,44 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := ic.Resources["databricks_access_control_rule_set"].Schema
 			common.DataToStructPointer(r.Data, s, &rule)
 			return len(rule.GrantRules) == 0
+		},
+	},
+	"databricks_system_schema": {
+		WorkspaceLevel: true,
+		Service:        "uc-system-schemas",
+		List: func(ic *importContext) error {
+			summary, err := ic.workspaceClient.Metastores.Summary(ic.Context)
+			if err != nil {
+				return err
+			}
+			currentMetastore := summary.MetastoreId
+			systemSchemas, err := ic.workspaceClient.SystemSchemas.ListAll(ic.Context,
+				catalog.ListSystemSchemasRequest{MetastoreId: currentMetastore})
+			if err != nil {
+				return err
+			}
+			for _, v := range systemSchemas {
+				if v.State == catalog.SystemSchemaInfoStateEnableCompleted || v.State == catalog.SystemSchemaInfoStateEnableInitialized {
+					id := fmt.Sprintf("%s|%s", currentMetastore, v.Schema)
+					data := ic.Resources["databricks_system_schema"].Data(
+						&terraform.InstanceState{
+							ID: id,
+							Attributes: map[string]string{
+								"metastore_id": currentMetastore,
+								"schema":       v.Schema,
+							},
+						})
+					ic.Emit(&resource{
+						Resource: "databricks_system_schema",
+						ID:       id,
+						Data:     data,
+						Name:     nameNormalizationRegex.ReplaceAllString(id, "_"),
+					})
+				} else {
+					log.Printf("[DEBUG] Skipping system schema %s with state %s", v.Schema, v.State)
+				}
+			}
+			return nil
 		},
 	},
 }

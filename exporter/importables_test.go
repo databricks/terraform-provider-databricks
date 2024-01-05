@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -1293,5 +1294,67 @@ func TestIncrementalListDLT(t *testing.T) {
 		ic.closeImportChannels()
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(ic.testEmits))
+	})
+}
+
+var currentMetastoreSuccess = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.1/unity-catalog/metastore_summary",
+	Response: catalog.GetMetastoreSummaryResponse{
+		MetastoreId: "1234",
+	},
+	ReuseRequest: true,
+}
+
+func TestListSystemSchemasSuccess(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		currentMetastoreSuccess,
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/metastores/1234/systemschemas?",
+			Response: catalog.ListSystemSchemasResponse{
+				Schemas: []catalog.SystemSchemaInfo{
+					{
+						Schema: "access",
+						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+					},
+					{
+						Schema: "marketplace",
+						State:  catalog.SystemSchemaInfoStateAvailable,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_system_schema"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, len(ic.testEmits), 1)
+	})
+}
+
+func TestListSystemSchemasErrorGetMetastore(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		noCurrentMetastoreAttached,
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_system_schema"].List(ic)
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestListSystemSchemasErrorListing(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		currentMetastoreSuccess,
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/metastores/1234/systemschemas?",
+			Status:   404,
+			Response: apierr.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_system_schema"].List(ic)
+		assert.EqualError(t, err, "nope")
 	})
 }

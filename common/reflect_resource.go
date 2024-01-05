@@ -142,7 +142,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, path []string
 		scm[fieldName] = &schema.Schema{}
 		// handleDefaultOverlay(tfOverlaySchema, scm[fieldName])
 		// handleMaxItemsOverlay(tfOverlaySchema, scm[fieldName])
-		handleMinItemsOverlay(tfOverlaySchema, scm[fieldName])
+		// handleMinItemsOverlay(tfOverlaySchema, scm[fieldName])
 		// handleComputedOverlay(tfOverlaySchema, scm[fieldName])
 		// handleForceNewOverlay(tfOverlaySchema, scm[fieldName])
 		// handleSensitiveOverlay(tfOverlaySchema, scm[fieldName])
@@ -338,11 +338,11 @@ func handleOptionalOverlay(typeField reflect.StructField, overlay *schema.Schema
 // 	}
 // }
 
-func handleMinItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
-	if overlay.MinItems != 0 {
-		schema.MinItems = overlay.MinItems
-	}
-}
+// func handleMinItemsOverlay(overlay *schema.Schema, schema *schema.Schema) {
+// 	if overlay.MinItems != 0 {
+// 		schema.MinItems = overlay.MinItems
+// 	}
+// }
 
 // func handleSliceSetOverlay(overlay *schema.Schema, fieldSchema *schema.Schema) {
 // 	if overlay.Type == schema.TypeSet {

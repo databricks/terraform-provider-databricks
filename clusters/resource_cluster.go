@@ -161,7 +161,6 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 								},
 							},
 						},
-						MinItems: 1,
 						Required: true,
 					},
 				},

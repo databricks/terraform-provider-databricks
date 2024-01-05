@@ -54,13 +54,6 @@ resource "databricks_external_location" "some" {
 	comment         = "Managed by TF"
 }
 
-resource "databricks_grant" "metastore" {
-	metastore = "{env.TEST_METASTORE_ID}"
-
-	principal  = "%s"
-	privileges = ["CREATE_STORAGE_CREDENTIAL"]
-}
-
 resource "databricks_grant" "catalog" {
 	catalog = databricks_catalog.sandbox.id
 

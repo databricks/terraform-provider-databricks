@@ -136,6 +136,12 @@ func (ClusterResourceProvider) TfOverlay() map[string]*schema.Schema {
 							},
 						},
 					},
+					"abfss": common.StructToSchema(InitScriptStorageInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+						return ss
+					})["abfss"],
+					"gcs": common.StructToSchema(InitScriptStorageInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+						return ss
+					})["gcs"],
 				},
 			},
 		},

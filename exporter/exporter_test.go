@@ -1796,14 +1796,22 @@ func TestImportingSqlObjects(t *testing.T) {
 				ReuseRequest: true,
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9?",
-				Response: getJSONObject("test-data/get-sql-alert.json"),
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9?",
+				Response:     getJSONObject("test-data/get-sql-alert.json"),
+				ReuseRequest: true,
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/permissions/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9",
-				Response: getJSONObject("test-data/get-sql-alert-permissions.json"),
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9",
+				Response:     getJSONObject("test-data/get-sql-alert.json"),
+				ReuseRequest: true,
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/sql/permissions/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9",
+				Response:     getJSONObject("test-data/get-sql-alert-permissions.json"),
+				ReuseRequest: true,
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {

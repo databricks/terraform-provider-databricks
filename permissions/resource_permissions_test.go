@@ -30,6 +30,23 @@ var (
 			UserName: TestingAdminUser,
 		},
 	}
+	userPayload = map[string]any{
+		"user": map[string]any{
+			"email": TestingAdminUser,
+		},
+	}
+	sqlDashbardFixture = qa.HTTPFixture{
+		ReuseRequest: true,
+		Method:       "GET",
+		Resource:     "/api/2.0/preview/sql/dashboards/abc",
+		Response:     userPayload,
+	}
+	sqlQueryFixture = qa.HTTPFixture{
+		ReuseRequest: true,
+		Method:       "GET",
+		Resource:     "/api/2.0/preview/sql/queries/id111",
+		Response:     userPayload,
+	}
 )
 
 func TestEntityAccessControlChangeString(t *testing.T) {
@@ -286,7 +303,7 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 }
 
 func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
 			{
@@ -323,15 +340,14 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 		Resource: ResourcePermissions(),
 		Delete:   true,
 		ID:       "/registered-models/fakeuuid123",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "/registered-models/fakeuuid123", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{"id": "/registered-models/fakeuuid123"})
 }
 
 func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
+			sqlDashbardFixture,
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
@@ -754,6 +770,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
+			sqlDashbardFixture,
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
@@ -807,6 +824,94 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_RUN", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_SQLA_AssetWithServicePrincipalOwner(t *testing.T) {
+	spId := "c1b3a35b-8dc4-481a-a0fb-9518be621956"
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/dashboards/abc",
+				Response: map[string]any{
+					"user": map[string]any{
+						"email": TestingAdminUser,
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/sql/permissions/dashboard/abc/transfer",
+				ExpectedRequest: map[string]any{
+					"new_owner": spId,
+				},
+				Response: map[string]any{
+					"message": "Success",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/sql/dashboards/abc",
+				Response: map[string]any{
+					"user": map[string]any{
+						"email": spId,
+					},
+				},
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        spId,
+							PermissionLevel: "CAN_MANAGE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
+				Response: ObjectACL{
+					ObjectID:   "/sql/dashboards/abc",
+					ObjectType: "dashboard",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        spId,
+							PermissionLevel: "CAN_MANAGE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"sql_dashboard_id": "abc",
+			"access_control": []any{
+				map[string]any{
+					"service_principal_name": spId,
+					"permission_level":       "IS_OWNER",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, spId, firstElem["service_principal_name"])
+	assert.Equal(t, "IS_OWNER", firstElem["permission_level"])
 }
 
 func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
@@ -1593,6 +1698,7 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
+			sqlQueryFixture,
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
@@ -1653,6 +1759,7 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			me,
+			sqlQueryFixture,
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
@@ -1898,4 +2005,49 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
+func TestGetCurrentSqlObjectOwnerError1(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/sql/dashboards/abc",
+			Response: apierr.APIErrorBody{
+				ErrorCode: "INVALID_REQUEST",
+				Message:   "Internal error happened",
+			},
+			Status: 400,
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		_, err := getCurrentSqlObjectOwner(client, ctx, "/sql/dashboards/abc")
+		assert.Equal(t, "Internal error happened", err.Error())
+	})
+}
+
+func TestGetCurrentSqlObjectOwnerError2(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/sql/dashboards/abc",
+			Response: map[string]any{},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		_, err := getCurrentSqlObjectOwner(client, ctx, "/sql/dashboards/abc")
+		assert.Equal(t, "no user object in /sql/dashboards/abc", err.Error())
+	})
+}
+
+func TestGetCurrentSqlObjectOwnerError3(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/sql/dashboards/abc",
+			Response: map[string]any{
+				"user": map[string]any{},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		_, err := getCurrentSqlObjectOwner(client, ctx, "/sql/dashboards/abc")
+		assert.Equal(t, "no email in user object in /sql/dashboards/abc", err.Error())
+	})
 }

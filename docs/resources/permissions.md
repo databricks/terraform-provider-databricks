@@ -660,7 +660,11 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Dashboard usage
 
-[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
+[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have four possible permissions: `CAN_VIEW`, `CAN_RUN`, `CAN_MANAGE` and `IS_OWNER`:
+
+- The creator of a SQL Dashboard has implicit `IS_OWNER` permission.
+- A SQL Dashboard must have exactly one owner.  A SQL Dashboard cannot have a group as an owner.
+- If `IS_OWNER` was set explicitly, it won't be reverted back when resource is destroyed because information about creator isn't persisted.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -688,7 +692,11 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Query usage
 
-[SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
+[SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have four possible permissions: `CAN_VIEW`, `CAN_RUN`, `CAN_MANAGE` and `IS_OWNER`:
+
+- The creator of a SQL Query has implicit `IS_OWNER` permission.
+- A SQL Query must have exactly one owner.  A SQL Query cannot have a group as an owner.
+- If `IS_OWNER` was set explicitly, it won't be reverted back when resource is destroyed because information about creator isn't persisted.
 
 -> **Note** If you do not define an `access_control` block granting `CAN_MANAGE` explictly for the user calling this provider, Databricks Terraform Provider will add `CAN_MANAGE` permission for the caller. This is a failsafe to prevent situations where the caller is locked out from making changes to the targeted `databricks_sql_query` resource when backend API do not apply permission inheritance correctly.
 
@@ -718,7 +726,11 @@ resource "databricks_permissions" "endpoint_usage" {
 
 ## SQL Alert usage
 
-[SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
+[SQL alerts](https://docs.databricks.com/sql/user/security/access-control/alert-acl.html) have four possible permissions: `CAN_VIEW`, `CAN_RUN`, `CAN_MANAGE` and `IS_OWNER`:
+
+- The creator of a SQL Alert has implicit `IS_OWNER` permission.
+- A SQL Alert must have exactly one owner.  A SQL Alert cannot have a group as an owner.
+- If `IS_OWNER` was set explicitly, it won't be reverted back when resource is destroyed because information about creator isn't persisted.
 
 ```hcl
 resource "databricks_group" "auto" {

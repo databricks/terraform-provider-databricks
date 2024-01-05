@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -124,7 +125,8 @@ func urlPathForObjectID(objectID string) string {
 // permissions when POSTing permissions changes through the REST API, to avoid accidentally
 // revoking the calling user's ability to manage the current object.
 func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
-	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/instance-pools/", "/serving-endpoints/", "/queries/", "/sql/warehouses"} {
+	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/instance-pools/",
+		"/serving-endpoints/", "/queries/", "/sql/warehouses"} {
 		if strings.HasPrefix(objectID, prefix) {
 			return true
 		}
@@ -151,6 +153,30 @@ func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, object
 	return objectACL, nil
 }
 
+func isSqlObjectWithOwnerTransfer(objectID string) bool {
+	return strings.HasPrefix(objectID, "/sql/dashboards/") ||
+		strings.HasPrefix(objectID, "/sql/queries/") ||
+		strings.HasPrefix(objectID, "/sql/alerts/")
+}
+
+func getCurrentSqlObjectOwner(client *common.DatabricksClient, ctx context.Context, objectID string) (string, error) {
+	data := map[string]any{}
+	err := client.Get(ctx, "/preview"+objectID, nil, &data)
+	if err != nil {
+		log.Printf("[ERROR] error getting %s: %v", objectID, err)
+		return "", err
+	}
+	userMap, ok := data["user"].(map[string]any)
+	if !ok {
+		return "", fmt.Errorf("no user object in %s", objectID)
+	}
+	email, ok := userMap["email"].(string)
+	if !ok {
+		return "", fmt.Errorf("no email in user object in %s", objectID)
+	}
+	return email, nil
+}
+
 // Helper function for applying permissions changes. Ensures that
 // we select the correct HTTP method based on the object type and preserve the calling
 // user's ability to manage the specified object when applying permissions changes.
@@ -160,8 +186,63 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 		return err
 	}
 	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
+		// handling IS_OWNER for SQL Queries/Alerts/Dashboards
+		newACL := objectACL
+		newOwner := ""
+		if isSqlObjectWithOwnerTransfer(objectID) {
+			newACL.AccessControlList = make([]AccessControlChange, 0, len(objectACL.AccessControlList))
+			for _, v := range objectACL.AccessControlList {
+				v := v
+				if v.PermissionLevel == "IS_OWNER" {
+					if v.UserName != "" {
+						newOwner = v.UserName
+					} else if v.ServicePrincipalName != "" {
+						newOwner = v.ServicePrincipalName
+					} else {
+						return fmt.Errorf("can't set IS_OWNER for %s to group '%s'", objectID, v.GroupName)
+					}
+					v.PermissionLevel = "CAN_MANAGE"
+				}
+				// SQL APIs use user_name to specify SP ID
+				if v.ServicePrincipalName != "" {
+					v.UserName = v.ServicePrincipalName
+					v.ServicePrincipalName = ""
+				}
+				newACL.AccessControlList = append(newACL.AccessControlList, v)
+			}
+			// TODO: should we make current user the owner if it's not explicitly set?
+		}
 		// SQLA entities use POST for permission updates.
-		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
+		err = a.client.Post(a.context, urlPathForObjectID(objectID), newACL, nil)
+		if err != nil {
+			return err
+		}
+		// transfer ownership to SQL objects
+		if newOwner != "" {
+			// TODO: add a check if the user/SP is already an owner of the object
+			currentOwner, err := getCurrentSqlObjectOwner(a.client, a.context, objectID)
+			if err != nil {
+				return err
+			}
+			if currentOwner == newOwner {
+				log.Printf("[DEBUG] %s already has %s as the owner", objectID, newOwner)
+				return nil
+			}
+			parts := strings.Split(objectID, "/")
+			mapping := map[string]string{
+				"alerts":     "alert",
+				"queries":    "query",
+				"dashboards": "dashboard",
+			}
+			objectType, exist := mapping[parts[2]]
+			if !exist {
+				return fmt.Errorf("unknown object type %s in %s", parts[2], objectID)
+			}
+			return a.client.Post(a.context,
+				fmt.Sprintf("/preview/sql/permissions/%s/%s/transfer", objectType, parts[3]),
+				map[string]string{"new_owner": newOwner}, nil)
+		}
+		return nil
 	}
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
 }
@@ -262,6 +343,56 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 		err = apiErr
 		return
 	}
+	// handle IS_OWNER for SQL objects
+	if isSqlObjectWithOwnerTransfer(objectID) {
+		w, err2 := a.client.WorkspaceClient()
+		if err2 != nil {
+			err = err2
+			return
+		}
+		me, err2 := w.CurrentUser.Me(a.context)
+		if err2 != nil {
+			err = err2
+			return
+		}
+		currentOwner, err2 := getCurrentSqlObjectOwner(a.client, a.context, objectID)
+		if err2 != nil {
+			err = err2
+			return
+		}
+		// Fix for SQL permissions because they only return user_name, even for service principals
+		for i, v := range objectACL.AccessControlList {
+			if common.StringIsUUID(v.UserName) {
+				objectACL.AccessControlList[i].ServicePrincipalName = v.UserName
+				objectACL.AccessControlList[i].UserName = ""
+			}
+		}
+		// TODO: should we always add IS_OWNER or not?
+		if me.UserName != currentOwner {
+			log.Printf("[DEBUG] currentOwner = %s", currentOwner)
+			for i, v := range objectACL.AccessControlList {
+				if v.ServicePrincipalName != "" && v.ServicePrincipalName == currentOwner {
+					objectACL.AccessControlList[i].PermissionLevel = "IS_OWNER"
+					return
+				} else if v.UserName != "" && v.UserName == currentOwner {
+					objectACL.AccessControlList[i].PermissionLevel = "IS_OWNER"
+					return
+				}
+			}
+			// Adding it if it's not in the list
+			if common.StringIsUUID(currentOwner) {
+				objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControl{
+					ServicePrincipalName: currentOwner,
+					PermissionLevel:      "IS_OWNER",
+				})
+			} else {
+				objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControl{
+					UserName:        currentOwner,
+					PermissionLevel: "IS_OWNER",
+				})
+			}
+		}
+	}
 	return
 }
 
@@ -303,9 +434,12 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE", "IS_OWNER"}, SIMPLE},
-		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
-		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
-		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
+		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{
+			"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW", "IS_OWNER"}, SIMPLE},
+		{"sql_alert_id", "alert", "sql/alerts", []string{
+			"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW", "IS_OWNER"}, SIMPLE},
+		{"sql_query_id", "query", "sql/queries", []string{
+			"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW", "IS_OWNER"}, SIMPLE},
 		{"experiment_id", "mlflowExperiment", "experiments", []string{"CAN_READ", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"registered_model_id", "registered-model", "registered-models", []string{
 			"CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE"}, SIMPLE},

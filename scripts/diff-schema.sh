@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
+set -eo pipefail
 
 source scripts/libschema.sh
 
-BASE_BRANCH=$(git merge-base master HEAD)
+BASE=${BASE_COMMIT:-"master"}
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-checkout_branch() {
-    local branch=$1
-    echo "Checking out branch: $branch"
-    git checkout $branch
+checkout() {
+    local ref=$1
+    echo "Checking out ref: $ref"
+    git checkout $ref
 }
 
 if [ -n "$(git status --porcelain)" ]; then
@@ -15,11 +17,10 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 NEW_SCHEMA=$(generate_schema)
-checkout_branch $BASE_BRANCH
+checkout $BASE
 CURRENT_SCHEMA=$(generate_schema)
-checkout_branch $CURRENT_BRANCH
+checkout $CURRENT_BRANCH
 
 set +e
 jd -color "$CURRENT_SCHEMA" "$NEW_SCHEMA"

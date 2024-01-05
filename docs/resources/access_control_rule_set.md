@@ -4,6 +4,8 @@ subcategory: "Security"
 
 # databricks_access_control_rule_set Resource
 
+-> **Note** This resource could be used with account or workspace-level provider.
+
 This resource allows you to manage access rules on Databricks account level resources. For convenience we allow accessing this resource through the Databricks account and workspace.
 
 -> **Note** Currently, we only support managing access rules on service principal, group and account resources through `databricks_access_control_rule_set`.

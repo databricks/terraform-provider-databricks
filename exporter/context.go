@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -954,7 +955,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 	for _, tuple := range ss {
 		a, as := tuple.Field, tuple.Schema
 		pathString := strings.Join(append(path, a), ".")
-		raw, ok := d.GetOk(pathString)
+		raw, nonZero := d.GetOk(pathString)
 		// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
 		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
 			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
@@ -969,16 +970,25 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 				// sensitive fields are moved to variable depends, variable name is normalized
 				// TODO: handle a case when we have multiple blocks, so names won't be unique
 				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
-				ok = true
+				nonZero = true
 			}
 		}
-		if !ok {
+		shouldSkip := !nonZero
+		if as.Required { // for required fields we must produce a value, even empty...
+			shouldSkip = false
+		} else if as.Default != nil && !reflect.DeepEqual(raw, as.Default) {
+			// In case when have zero value, but there is non-zero default, we also need to produce it
+			shouldSkip = false
+		}
+		if shouldSkip {
 			continue
 		}
 		switch as.Type {
 		case schema.TypeString:
 			value := raw.(string)
-			body.SetAttributeRaw(a, ic.reference(i, append(path, a), value, cty.StringVal(value)))
+			tokens := ic.reference(i, append(path, a), value, cty.StringVal(value))
+			log.Printf("[DEBUG] path=%s, raw='%v' tokens='%v'", pathString, raw, tokens)
+			body.SetAttributeRaw(a, tokens)
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))
 		case schema.TypeInt:

@@ -179,6 +179,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			r.Data.Set("source", fileName)
 			return nil
 		},
+		ShouldOmitField: shouldOmitMd5Field,
 		Depends: []reference{
 			{Path: "source", File: true},
 		},
@@ -1190,6 +1191,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return r.Data.Set("source", fileName)
 		},
+		ShouldOmitField: shouldOmitMd5Field,
 		Depends: []reference{
 			{Path: "source", File: true},
 		},
@@ -1401,6 +1403,7 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			return r.Data.Set("source", fileName)
 		},
+		ShouldOmitField: shouldOmitMd5Field,
 		Depends: []reference{
 			{Path: "source", File: true},
 			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},
@@ -1457,6 +1460,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			log.Printf("Creating %s for %s", fileName, r)
 			return r.Data.Set("source", fileName)
 		},
+		ShouldOmitField: shouldOmitMd5Field,
 		Depends: []reference{
 			{Path: "source", File: true},
 			{Path: "path", Resource: "databricks_user", Match: "home", MatchType: MatchPrefix},

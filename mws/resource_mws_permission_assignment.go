@@ -29,7 +29,7 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(workspaceId, principalId int64, 
 		return errors.New("must have `account_id` on provider")
 	}
 	path := fmt.Sprintf(
-		"/preview/accounts/%s/workspaces/%d/permissionassignments/principals/%d",
+		"/accounts/%s/workspaces/%d/permissionassignments/principals/%d",
 		a.client.Config.AccountID, workspaceId, principalId)
 	return a.client.Put(a.context, path, r)
 }
@@ -39,7 +39,7 @@ func (a PermissionAssignmentAPI) Remove(workspaceId, principalId string) error {
 		return errors.New("must have `account_id` on provider")
 	}
 	path := fmt.Sprintf(
-		"/preview/accounts/%s/workspaces/%s/permissionassignments/principals/%s",
+		"/accounts/%s/workspaces/%s/permissionassignments/principals/%s",
 		a.client.Config.AccountID, workspaceId, principalId)
 	return a.client.Delete(a.context, path, nil)
 }
@@ -75,7 +75,7 @@ func (a PermissionAssignmentAPI) List(workspaceId int64) (list PermissionAssignm
 	if a.client.Config.AccountID == "" {
 		return list, errors.New("must have `account_id` on provider")
 	}
-	path := fmt.Sprintf("/preview/accounts/%s/workspaces/%d/permissionassignments",
+	path := fmt.Sprintf("/accounts/%s/workspaces/%d/permissionassignments",
 		a.client.Config.AccountID, workspaceId)
 	err = a.client.Get(a.context, path, nil, &list)
 	return

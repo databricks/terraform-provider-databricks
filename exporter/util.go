@@ -808,6 +808,13 @@ func generateUniqueID(v string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
 }
 
+func shouldOmitMd5Field(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "md5" { // `md5` is kind of computed, but not declared as it...
+		return true
+	}
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
 func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) string {
 	name := d.Get("path").(string)
 	if name == "" {

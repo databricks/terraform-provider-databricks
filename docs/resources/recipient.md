@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_recipient Resource
 
+-> **Note** This resource could be only used with workspace-level provider!
+
 Within a metastore, Unity Catalog provides the ability to create a recipient to attach delta shares to.
 
 A `databricks_recipient` is contained within [databricks_metastore](metastore.md) and can have permissions to `SELECT` from a list of shares.

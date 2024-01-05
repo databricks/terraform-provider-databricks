@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_catalog_workspace_binding Resource
 
+-> **Note** This resource could be only used with workspace-level provider!
+
 If you use workspaces to isolate user data access, you may want to limit catalog access to specific workspaces in your account, also known as workspace-catalog binding
 
 By default, Databricks assigns the catalog to all workspaces attached to the current metastore. By using `databricks_catalog_workspace_binding`, the catalog will be unassigned from all workspaces and only assigned explicitly using this resource.

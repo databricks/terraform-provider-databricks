@@ -2165,11 +2165,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-system-schemas",
 		List: func(ic *importContext) error {
-			summary, err := ic.workspaceClient.Metastores.Summary(ic.Context)
-			if err != nil {
-				return err
+			if ic.currentMetastore == nil {
+				return fmt.Errorf("there is no UC metastore information")
 			}
-			currentMetastore := summary.MetastoreId
+			currentMetastore := ic.currentMetastore.MetastoreId
 			systemSchemas, err := ic.workspaceClient.SystemSchemas.ListAll(ic.Context,
 				catalog.ListSystemSchemasRequest{MetastoreId: currentMetastore})
 			if err != nil {
@@ -2198,5 +2197,26 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+	},
+	"databricks_artifact_allowlist": {
+		WorkspaceLevel: true,
+		Service:        "uc-artifact-allowlist",
+		List: func(ic *importContext) error {
+			if ic.currentMetastore == nil {
+				return fmt.Errorf("there is no UC metastore information")
+			}
+			artifactTypes := []string{"INIT_SCRIPT", "LIBRARY_JAR", "LIBRARY_MAVEN"}
+			for _, v := range artifactTypes {
+				id := fmt.Sprintf("%s|%s", ic.currentMetastore.MetastoreId, v)
+				name := fmt.Sprintf("%s_%s_%s", v, ic.currentMetastore.Name, ic.currentMetastore.MetastoreId[:8])
+				ic.Emit(&resource{
+					Resource: "databricks_artifact_allowlist",
+					ID:       id,
+					Name:     nameNormalizationRegex.ReplaceAllString(name, "_"),
+				})
+			}
+			return nil
+		},
+		// TODO: add Depends & Import to emit corresponding UC Volumes when support for them is added
 	},
 }

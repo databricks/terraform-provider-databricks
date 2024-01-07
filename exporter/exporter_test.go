@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
@@ -382,6 +383,18 @@ var noCurrentMetastoreAttached = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var currentMetastoreResponse = &catalog.GetMetastoreSummaryResponse{
+	MetastoreId: "12345678-1234",
+	Name:        "test",
+}
+
+var currentMetastoreSuccess = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/unity-catalog/metastore_summary",
+	Response:     currentMetastoreResponse,
+	ReuseRequest: true,
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
 		{
@@ -723,6 +736,7 @@ func TestImportingClusters(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			{
 				Method:   "GET",
@@ -1402,6 +1416,7 @@ func TestImportingSecrets(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			{
 				Method:   "GET",
@@ -1485,6 +1500,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyWorkspaceConf,
 			dummyWorkspaceConf,
@@ -1587,6 +1603,7 @@ func TestImportingRepos(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			userListIdUsernameFixture,
 			userListIdUsernameFixture2,
 			userListFixture,
@@ -1641,6 +1658,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyWorkspaceConf,
 			dummyWorkspaceConf,
@@ -1700,6 +1718,7 @@ func TestImportingSqlObjects(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyGlobalSQLConfig,
@@ -1838,6 +1857,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyWorkspace,
 			emptyIpAccessLIst,
@@ -2013,6 +2033,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			userListIdUsernameFixture,
@@ -2070,6 +2091,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/warehouses",
@@ -2113,6 +2135,7 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			{
@@ -2165,6 +2188,7 @@ func TestImportingModelServing(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,
@@ -2215,6 +2239,7 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,
@@ -2308,6 +2333,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,
@@ -2418,6 +2444,7 @@ func TestImportingRunJobTask(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,

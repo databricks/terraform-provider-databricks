@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_storage_credential Resource
 
+-> **Note** This resource could be used with account or workspace-level provider.
+
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
 
 - `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal/managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.

@@ -5,8 +5,7 @@ subcategory: "Unity Catalog"
 
 -> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
--> **Notes**
-  Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+-> **Note** This resource could be only used with workspace-level provider!
 
 Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account’s operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
 

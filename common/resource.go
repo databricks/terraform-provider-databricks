@@ -268,7 +268,7 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 // The first type parameter is the type of the resource. This can be a type directly from the SDK, or a custom
 // type defined in the provider that embeds the SDK type.
 //
-// The second type parameter is the type of the extra attributes that should be provided to the data source. These
+// The second type parameter is the type representing parameters that a user may provide to the data source. These
 // are the attributes that the user can specify in the data source configuration, but are not part of the resource
 // type. If there are no extra attributes, this should be `struct{}`. If there are any fields with the same JSON
 // name as fields in the resource type, these fields will override the values from the resource type.
@@ -279,21 +279,21 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 //
 // Example usage:
 //
-//	  type SqlWarehouse struct { ... }
+//	 type SqlWarehouse struct { ... }
 //
-//	  type SqlWarehouseDataParams struct {
+//	 type SqlWarehouseDataParams struct {
 //		     Id   string `json:"id" tf:"computed,optional"`
 //		     Name string `json:"name" tf:"computed,optional"`
-//	  }
+//	 }
 //
-//	  WorkspaceDataWithParams(
-//	      func(ctx context.Context, data SqlWarehouseDataParams, w *databricks.WorkspaceClient) (*Warehouse, error) {
-//	          // User-provided attributes are present in the `data` parameter.
-//	          // The resource should be returned.
-//	          ...
-//	      })
-func WorkspaceDataWithParams[SdkType, Params any](read func(context.Context, Params, *databricks.WorkspaceClient) (*SdkType, error)) *schema.Resource {
-	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, o Params, s *SdkType, w *databricks.WorkspaceClient) error {
+//	 WorkspaceDataWithParams(
+//	     func(ctx context.Context, data SqlWarehouseDataParams, w *databricks.WorkspaceClient) (*Warehouse, error) {
+//	         // User-provided attributes are present in the `data` parameter.
+//	         // The resource should be returned.
+//	         ...
+//	     })
+func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks.WorkspaceClient) (*T, error)) *schema.Resource {
+	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, o P, s *T, w *databricks.WorkspaceClient) error {
 		res, err := read(ctx, o, w)
 		if err != nil {
 			return err
@@ -320,7 +320,7 @@ func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient
 	}, false)
 }
 
-// AccountDataWithCustomAttrs defines a data source that can be used to read data from the workspace API.
+// AccountDataWithParams defines a data source that can be used to read data from the workspace API.
 // It differs from AccountData in that it allows extra attributes to be provided as a separate argument,
 // so the original type used to define the resource can also be used to define the data source.
 //
@@ -332,27 +332,27 @@ func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient
 // type. If there are no extra attributes, this should be `struct{}`. If there are any fields with the same JSON
 // name as fields in the resource type, these fields will override the values from the resource type.
 //
-// The single argument is a function that will be called to read the data from the workspace API, setting the resulting
-// values in the resource type. The function should return an error if the data cannot be read or the resource cannot
-// be found.
+// The single argument is a function that will be called to read the data from the workspace API, returning the
+// requested resource. The function should return an error if the data cannot be read or the resource cannot be
+// found.
 //
 // Example usage:
 //
-//	  type MwsWorkspace struct { ... }
+//	 type MwsWorkspace struct { ... }
 //
-//	  type MwsWorkspaceDataParams struct {
+//	 type MwsWorkspaceDataParams struct {
 //		     Id   string `json:"id" tf:"computed,optional"`
 //		     Name string `json:"name" tf:"computed,optional"`
-//	  }
+//	 }
 //
-//	  AccountDataWithCustomAttrs(
-//	      func(ctx context.Context, data MwsWorkspaceDataParams, workspace *MwsWorkspace, a *databricks.AccountClient) error {
-//	          // User-provided attributes are present in the `data` parameter.
-//	          // The resource should be populated in the `workspace` parameter.
-//	          ...
+//	 AccountDataWithParams(
+//	     func(ctx context.Context, data MwsWorkspaceDataParams, a *databricks.AccountClient) (*MwsWorkspace, error) {
+//	         // User-provided attributes are present in the `data` parameter.
+//	         // The resource should be populated in the `workspace` parameter.
+//	         ...
 //		  })
-func AccountDataWithCustomAttrs[SdkType, OtherType any](read func(context.Context, OtherType, *databricks.AccountClient) (*SdkType, error)) *schema.Resource {
-	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, o OtherType, s *SdkType, a *databricks.AccountClient) error {
+func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.AccountClient) (*T, error)) *schema.Resource {
+	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, o P, s *T, a *databricks.AccountClient) error {
 		res, err := read(ctx, o, a)
 		if err != nil {
 			return err
@@ -364,21 +364,22 @@ func AccountDataWithCustomAttrs[SdkType, OtherType any](read func(context.Contex
 
 // genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients.
 //
-// If hasOther is true, all of the fields of SdkType will be marked as computed/optional in the final schema, and the fields
-// from OtherFields will be overlaid on top of the schema generated by SdkType. Otherwise, the schema generated by SdkType
-// will be used directly.
-func genericDatabricksData[SdkType, OtherFields any, C any](
+// If hasOther is true, all of the fields of SdkType will be marked as computed in the final schema, and the fields
+// from OtherFields will be overlaid on top of the schema generated by SdkType. Otherwise, the schema generated by
+// SdkType will be used directly.
+func genericDatabricksData[T, P, C any](
 	getClient func(*DatabricksClient) (C, error),
-	read func(context.Context, OtherFields, *SdkType, C) error,
+	read func(context.Context, P, *T, C) error,
 	hasOther bool) *schema.Resource {
-	var dummy SdkType
-	var other OtherFields
+	var dummy T
+	var other P
 	otherFields := StructToSchema(other, NoCustomize)
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		// For WorkspaceData and AccountData, a single data type is used to represent all of the fields of
-		// the resource, so its configuration is correct. For *WithCustomAttrs, the SdkType parameter is copied
-		// directly from the resource definition, which means that all fields from that type are computed and
-		// optional, and the fields from OtherFields are overlaid on top of the schema generated by SdkType.
+		// the resource, so its configuration is correct. For the *WithParams methods, the SdkType parameter
+		// is copied directly from the resource definition, which means that all fields from that type are
+		// computed and optional, and the fields from OtherFields are overlaid on top of the schema generated
+		// by SdkType.
 		if hasOther {
 			for k := range m {
 				m[k].Computed = true
@@ -405,8 +406,8 @@ func genericDatabricksData[SdkType, OtherFields any, C any](
 					diags = diag.Errorf("panic: %v", panic)
 				}
 			}()
-			var dummy SdkType
-			var other OtherFields
+			var dummy T
+			var other P
 			DataToStructPointer(d, s, &other)
 			DataToStructPointer(d, s, &dummy)
 			client := m.(*DatabricksClient)

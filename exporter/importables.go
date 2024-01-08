@@ -356,9 +356,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.library.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "task.library.whl", Resource: "databricks_repo", Match: "workspace_path", MatchType: MatchPrefix},
 			{Path: "task.library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "task.spark_python_task.python_file", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "task.spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.notebook_task.notebook_path", Resource: "databricks_notebook"},
@@ -409,7 +412,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			// Support for multitask jobs
 			for _, task := range job.Tasks {
 				if task.NotebookTask != nil {
-					ic.emitNotebookOrRepo(task.NotebookTask.NotebookPath)
+					if task.NotebookTask.Source != "GIT" {
+						ic.emitNotebookOrRepo(task.NotebookTask.NotebookPath)
+					}
 				}
 				if task.PipelineTask != nil {
 					ic.Emit(&resource{
@@ -418,9 +423,19 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 				}
 				if task.SparkPythonTask != nil {
-					ic.emitIfDbfsFile(task.SparkPythonTask.PythonFile)
+					if task.SparkPythonTask.Source != "GIT" {
+						if strings.HasPrefix(task.SparkPythonTask.PythonFile, "dbfs:") {
+							ic.Emit(&resource{
+								Resource: "databricks_dbfs_file",
+								ID:       task.SparkPythonTask.PythonFile,
+							})
+						} else {
+							ic.emitWorkspaceFileOrRepo(task.SparkPythonTask.PythonFile)
+						}
+					}
 					for _, p := range task.SparkPythonTask.Parameters {
 						ic.emitIfDbfsFile(p)
+						ic.emitIfWsfsFile(p)
 					}
 				}
 				if task.SqlTask != nil {

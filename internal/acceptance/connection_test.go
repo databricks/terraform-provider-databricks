@@ -12,12 +12,12 @@ func connectionTemplateWithOwner(host string, owner string) string {
 		connection_type = "MYSQL"
 		comment         = "this is a connection to mysql db"
 		options         = {
-			host     = %s
+			host     = "%s"
 			port     = "3306"
 			user     = "user"
 			password = "password"
 		}
-		owner = %s
+		owner = "%s"
 	}
 	`, host, owner)
 }

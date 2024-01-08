@@ -29,7 +29,7 @@ resource "databricks_group_member" "my_member_a" {
 
 ## Argument Reference
 
-Data source allows you to pick service principals by one of the following attributes:
+Data source allows you to pick service principals by one of the following attributes (only one of them):
 
 - `application_id` - (Required if `display_name` isn't used) ID of the service principal. The service principal must exist before this resource can be retrieved.
 - `display_name` - (Required if `application_id` isn't used) Exact display name of the service principal. The service principal must exist before this resource can be retrieved.  In case if there are several service principals with the same name, an error is thrown.

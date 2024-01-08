@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDataServicePrincipalReadByAppId(t *testing.T) {
@@ -86,7 +87,7 @@ func TestDataServicePrincipalReadByNameNotFound(t *testing.T) {
 }
 
 func TestDataServicePrincipalReadError(t *testing.T) {
-	qa.ResourceFixture{
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -99,7 +100,8 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "Response from server (500 Internal Server Error) : unexpected end of JSON input")
+	}.Apply(t)
+	assert.ErrorContains(t, err, "unexpected error handling request: unexpected end of JSON input")
 }
 
 func TestDataServicePrincipalReadByNameDuplicates(t *testing.T) {
@@ -142,4 +144,15 @@ func TestDataServicePrincipalReadNoParams(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.ExpectError(t, "please specify either application_id or display_name")
+}
+
+func TestDataServicePrincipalReadBothParams(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: DataSourceServicePrincipal(),
+		HCL: `display_name = "abc"
+		application_id = "abc"`,
+		Read:        true,
+		NonWritable: true,
+		ID:          "_",
+	}.ExpectError(t, "please specify only one of application_id or display_name")
 }

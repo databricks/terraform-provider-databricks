@@ -26,6 +26,9 @@ func DataSourceServicePrincipal() *schema.Resource {
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
 		var spList []User
 		var err error
+		if response.ApplicationID != "" && response.DisplayName != "" {
+			return fmt.Errorf("please specify only one of application_id or display_name")
+		}
 		if response.ApplicationID != "" {
 			spList, err = spnAPI.Filter(fmt.Sprintf("applicationId eq '%s'", response.ApplicationID), true)
 		} else if response.DisplayName != "" {

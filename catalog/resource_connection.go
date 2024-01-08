@@ -26,7 +26,7 @@ type ConnectionInfo struct {
 	// A map of key-value properties attached to the securable.
 	Options map[string]string `json:"options" tf:"sensitive"`
 	// Username of current owner of the connection.
-	Owner string `json:"owner,omitempty" tf:"force_new,suppress_diff"`
+	Owner string `json:"owner,omitempty" tf:"computed"`
 	// An object containing map of key-value properties attached to the
 	// connection.
 	Properties map[string]string `json:"properties,omitempty" tf:"force_new"`
@@ -110,17 +110,39 @@ func ResourceConnection() *schema.Resource {
 			var updateConnectionRequest catalog.UpdateConnection
 			common.DataToStructPointer(d, s, &updateConnectionRequest)
 			_, connName, err := pi.Unpack(d)
+			if err != nil {
+				return err
+			}
 			updateConnectionRequest.NameArg = connName
+
+			if d.HasChange("owner") {
+				_, err = w.Connections.Update(ctx, catalog.UpdateConnection{
+					Name:    updateConnectionRequest.Name,
+					NameArg: updateConnectionRequest.Name,
+					Owner:   updateConnectionRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateConnectionRequest.Owner = ""
+			_, err = w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Connections.Update(ctx, catalog.UpdateConnection{
+						Name:    updateConnectionRequest.Name,
+						NameArg: updateConnectionRequest.Name,
+						Owner:   old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
-			conn, err := w.Connections.Update(ctx, updateConnectionRequest)
-			if err != nil {
-				return err
-			}
-			// We need to repack the Id as the name may have changed
-			d.Set("name", conn.Name)
-			pi.Pack(d)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -27,15 +27,15 @@ type SqlWarehouse struct {
 	DataSourceId string `json:"data_source_id,omitempty" tf:"computed"`
 }
 
-func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id string) (SqlWarehouse, error) {
+func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id string) (*SqlWarehouse, error) {
 	se, err := w.Warehouses.GetById(ctx, id)
 	if err != nil {
-		return SqlWarehouse{}, err
+		return nil, err
 	}
 	warehouse := SqlWarehouse{
 		GetWarehouseResponse: *se,
 	}
-	return warehouse, nil
+	return &warehouse, nil
 }
 
 func resolveDataSourceID(ctx context.Context, w *databricks.WorkspaceClient, warehouseId string) (string, error) {

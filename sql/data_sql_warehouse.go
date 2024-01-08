@@ -10,20 +10,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type SqlWarehouseDataParams struct {
+// Note that these fields are both marked as computed/optional because users can specify either the name or the ID
+// of the warehouse to retrieve.
+type sqlWarehouseDataParams struct {
 	Id   string `json:"id" tf:"computed,optional"`
 	Name string `json:"name" tf:"computed,optional"`
 }
 
 func DataSourceWarehouse() *schema.Resource {
-	return common.WorkspaceDataWithCustomAttrs(func(ctx context.Context, data SqlWarehouseDataParams, warehouse *SqlWarehouse, w *databricks.WorkspaceClient) error {
+	return common.WorkspaceDataWithParams(func(ctx context.Context, data sqlWarehouseDataParams, w *databricks.WorkspaceClient) (*SqlWarehouse, error) {
 		if data.Id == "" && data.Name == "" {
-			return fmt.Errorf("either 'id' or 'name' should be provided")
+			return nil, fmt.Errorf("either 'id' or 'name' should be provided")
 		}
 		selected := []sql.DataSource{}
 		dataSources, err := w.DataSources.List(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		for _, source := range dataSources {
 			if data.Name != "" && source.Name == data.Name {
@@ -35,23 +37,23 @@ func DataSourceWarehouse() *schema.Resource {
 		}
 		if len(selected) == 0 {
 			if data.Name != "" {
-				return fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
+				return nil, fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
 			} else {
-				return fmt.Errorf("can't find SQL warehouse with the ID '%s'", data.Id)
+				return nil, fmt.Errorf("can't find SQL warehouse with the ID '%s'", data.Id)
 			}
 		}
 		if len(selected) > 1 {
 			if data.Name != "" {
-				return fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
+				return nil, fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
 			} else {
-				return fmt.Errorf("there are multiple SQL warehouses with the ID '%s'", data.Id)
+				return nil, fmt.Errorf("there are multiple SQL warehouses with the ID '%s'", data.Id)
 			}
 		}
-		*warehouse, err = getSqlWarehouse(ctx, w, selected[0].WarehouseId)
-		warehouse.DataSourceId = selected[0].Id
+		warehouse, err := getSqlWarehouse(ctx, w, selected[0].WarehouseId)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		return nil
+		warehouse.DataSourceId = selected[0].Id
+		return warehouse, nil
 	})
 }

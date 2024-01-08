@@ -261,9 +261,9 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 	}, false)
 }
 
-// WorkspaceDataWithCustomAttrs defines a data source that can be used to read data from the workspace API.
-// It differs from WorkspaceData in that it allows extra attributes to be provided as a separate argument,
-// so the original type used to define the resource can also be used to define the data source.
+// WorkspaceDataWithParams defines a data source that can be used to read data from the workspace API.
+// It differs from WorkspaceData in that it separates the definition of the computed fields (the resource type)
+// from the definition of the user-supplied parameters.
 //
 // The first type parameter is the type of the resource. This can be a type directly from the SDK, or a custom
 // type defined in the provider that embeds the SDK type.
@@ -273,8 +273,8 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 // type. If there are no extra attributes, this should be `struct{}`. If there are any fields with the same JSON
 // name as fields in the resource type, these fields will override the values from the resource type.
 //
-// The single argument is a function that will be called to read the data from the workspace API, setting the resulting
-// values in the resource type. The function should return an error if the data cannot be read or the resource cannot
+// The single argument is a function that will be called to read the data from the workspace API, returning the
+// value of the resource type. The function should return an error if the data cannot be read or the resource cannot
 // be found.
 //
 // Example usage:
@@ -286,14 +286,21 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 //		     Name string `json:"name" tf:"computed,optional"`
 //	  }
 //
-//	  WorkspaceDataWithCustomAttrs(
-//	      func(ctx context.Context, data SqlWarehouseDataParams, warehouse *SqlWarehouse, w *databricks.WorkspaceClient) error {
+//	  WorkspaceDataWithParams(
+//	      func(ctx context.Context, data SqlWarehouseDataParams, w *databricks.WorkspaceClient) (*Warehouse, error) {
 //	          // User-provided attributes are present in the `data` parameter.
-//	          // The resource should be populated in the `warehouse` parameter.
+//	          // The resource should be returned.
 //	          ...
 //	      })
-func WorkspaceDataWithCustomAttrs[SdkType, OtherType any](read func(context.Context, OtherType, *SdkType, *databricks.WorkspaceClient) error) *schema.Resource {
-	return genericDatabricksData((*DatabricksClient).WorkspaceClient, read, true)
+func WorkspaceDataWithParams[SdkType, Params any](read func(context.Context, Params, *databricks.WorkspaceClient) (*SdkType, error)) *schema.Resource {
+	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, o Params, s *SdkType, w *databricks.WorkspaceClient) error {
+		res, err := read(ctx, o, w)
+		if err != nil {
+			return err
+		}
+		*s = *res
+		return nil
+	}, true)
 }
 
 // AccountData is a generic way to define account data resources in Terraform provider.
@@ -344,8 +351,15 @@ func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient
 //	          // The resource should be populated in the `workspace` parameter.
 //	          ...
 //		  })
-func AccountDataWithCustomAttrs[SdkType, OtherType any](read func(context.Context, OtherType, *SdkType, *databricks.AccountClient) error) *schema.Resource {
-	return genericDatabricksData((*DatabricksClient).AccountClient, read, true)
+func AccountDataWithCustomAttrs[SdkType, OtherType any](read func(context.Context, OtherType, *databricks.AccountClient) (*SdkType, error)) *schema.Resource {
+	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, o OtherType, s *SdkType, a *databricks.AccountClient) error {
+		res, err := read(ctx, o, a)
+		if err != nil {
+			return err
+		}
+		*s = *res
+		return nil
+	}, true)
 }
 
 // genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients.

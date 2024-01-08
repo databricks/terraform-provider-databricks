@@ -14,7 +14,7 @@ It is possible to create [a Databricks job](https://docs.databricks.com/data-eng
 
 ```hcl
 resource "databricks_job" "this" {
-  name = "Job with multiple tasks"
+  name        = "Job with multiple tasks"
   description = "This job executes multiple tasks on a shared job cluster, which will be provisioned as part of execution, and terminated once all tasks are finished."
 
   job_cluster {

@@ -113,6 +113,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_external_location":           catalog.ResourceExternalLocation(),
 			"databricks_git_credential":              repos.ResourceGitCredential(),
 			"databricks_global_init_script":          workspace.ResourceGlobalInitScript(),
+			"databricks_grant":                       catalog.ResourceGrant(),
 			"databricks_grants":                      catalog.ResourceGrants(),
 			"databricks_group":                       scim.ResourceGroup(),
 			"databricks_group_instance_profile":      aws.ResourceGroupInstanceProfile(),

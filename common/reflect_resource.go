@@ -222,7 +222,7 @@ type field struct {
 
 func listAllFields(v reflect.Value) []field {
 	t := v.Type()
-	fields := make([]field, 0)
+	fields := make([]field, 0, v.NumField())
 	for i := 0; i < v.NumField(); i++ {
 		f := t.Field(i)
 		if f.Anonymous {

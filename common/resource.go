@@ -287,7 +287,7 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 //	 }
 //
 //	 WorkspaceDataWithParams(
-//	     func(ctx context.Context, data SqlWarehouseDataParams, w *databricks.WorkspaceClient) (*Warehouse, error) {
+//	     func(ctx context.Context, data SqlWarehouseDataParams, w *databricks.WorkspaceClient) (*SqlWarehouse, error) {
 //	         // User-provided attributes are present in the `data` parameter.
 //	         // The resource should be returned.
 //	         ...

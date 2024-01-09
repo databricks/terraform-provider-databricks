@@ -134,7 +134,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - ID of this external location - same as `name`.
+- `id` - ID of this external location - same as `name`.
 
 ## Import
 

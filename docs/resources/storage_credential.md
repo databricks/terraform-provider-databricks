@@ -77,6 +77,7 @@ The following arguments are required:
 - `metastore_id` - (Required for account-level) Unique identifier of the parent Metastore. If set for workspace-level, it must match the ID of the metastore assigned to the worspace. When changing the metastore assigned to a workspace, this field becomes required.
 - `owner` - (Optional) Username/groupname/sp application_id of the storage credential owner.
 - `read_only` - (Optional) Indicates whether the storage credential is only usable for read operations.
+- `skip_validation` - (Optional) Suppress validation errors if any & force save the storage credential.
 - `force_destroy` - (Optional) Delete storage credential regardless of its dependencies.
 
 `aws_iam_role` optional configuration block for credential details for AWS:

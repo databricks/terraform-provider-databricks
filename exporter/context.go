@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -140,6 +141,9 @@ type importContext struct {
 
 	builtInPolicies      map[string]compute.PolicyFamily
 	builtInPoliciesMutex sync.Mutex
+
+	// Workspace-level UC Metastore information
+	currentMetastore *catalog.GetMetastoreSummaryResponse
 }
 
 type mount struct {
@@ -320,6 +324,12 @@ func (ic *importContext) Run() error {
 				ic.meAdmin = true
 				break
 			}
+		}
+		currentMetastore, err := ic.workspaceClient.Metastores.Summary(ic.Context)
+		if err == nil {
+			ic.currentMetastore = currentMetastore
+		} else {
+			log.Printf("[WARN] can't get current UC metastore: %v", err)
 		}
 	}
 	// Concurrent execution part
@@ -987,7 +997,6 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		case schema.TypeString:
 			value := raw.(string)
 			tokens := ic.reference(i, append(path, a), value, cty.StringVal(value))
-			log.Printf("[DEBUG] path=%s, raw='%v' tokens='%v'", pathString, raw, tokens)
 			body.SetAttributeRaw(a, tokens)
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))

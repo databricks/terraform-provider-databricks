@@ -20,6 +20,10 @@ func DataSourceDirectory() *schema.Resource {
 			Optional: true,
 			Computed: true,
 		},
+		"workspace_path": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 	}
 	return &schema.Resource{
 		Schema: s,
@@ -36,6 +40,7 @@ func DataSourceDirectory() *schema.Resource {
 			d.SetId(data.Path)
 			d.Set("object_id", data.ObjectID)
 			d.Set("path", path)
+			d.Set("workspace_path", "/Workspace"+data.Path)
 			return nil
 		},
 	}

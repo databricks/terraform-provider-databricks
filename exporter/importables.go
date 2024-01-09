@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
@@ -356,9 +357,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.library.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "task.library.whl", Resource: "databricks_repo", Match: "workspace_path", MatchType: MatchPrefix},
 			{Path: "task.library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "task.spark_python_task.python_file", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "task.spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.notebook_task.notebook_path", Resource: "databricks_notebook"},
@@ -409,7 +413,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			// Support for multitask jobs
 			for _, task := range job.Tasks {
 				if task.NotebookTask != nil {
-					ic.emitNotebookOrRepo(task.NotebookTask.NotebookPath)
+					if task.NotebookTask.Source != "GIT" {
+						ic.emitNotebookOrRepo(task.NotebookTask.NotebookPath)
+					}
 				}
 				if task.PipelineTask != nil {
 					ic.Emit(&resource{
@@ -418,9 +424,19 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 				}
 				if task.SparkPythonTask != nil {
-					ic.emitIfDbfsFile(task.SparkPythonTask.PythonFile)
+					if task.SparkPythonTask.Source != "GIT" {
+						if strings.HasPrefix(task.SparkPythonTask.PythonFile, "dbfs:") {
+							ic.Emit(&resource{
+								Resource: "databricks_dbfs_file",
+								ID:       task.SparkPythonTask.PythonFile,
+							})
+						} else {
+							ic.emitWorkspaceFileOrRepo(task.SparkPythonTask.PythonFile)
+						}
+					}
 					for _, p := range task.SparkPythonTask.Parameters {
 						ic.emitIfDbfsFile(p)
+						ic.emitIfWsfsFile(p)
 					}
 				}
 				if task.SqlTask != nil {
@@ -2096,9 +2112,6 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_access_control_rule_set": {
 		AccountLevel: true,
 		Service:      "access",
-		// Name: func(ic *importContext, d *schema.ResourceData) string {
-		// 	return "webhook_" + d.Id()
-		// },
 		List: func(ic *importContext) error {
 			accountId := ic.Client.Config.AccountID
 			// emit default ruleset
@@ -2163,5 +2176,63 @@ var resourcesMap map[string]importable = map[string]importable{
 			common.DataToStructPointer(r.Data, s, &rule)
 			return len(rule.GrantRules) == 0
 		},
+	},
+	"databricks_system_schema": {
+		WorkspaceLevel: true,
+		Service:        "uc-system-schemas",
+		List: func(ic *importContext) error {
+			if ic.currentMetastore == nil {
+				return fmt.Errorf("there is no UC metastore information")
+			}
+			currentMetastore := ic.currentMetastore.MetastoreId
+			systemSchemas, err := ic.workspaceClient.SystemSchemas.ListAll(ic.Context,
+				catalog.ListSystemSchemasRequest{MetastoreId: currentMetastore})
+			if err != nil {
+				return err
+			}
+			for _, v := range systemSchemas {
+				if v.State == catalog.SystemSchemaInfoStateEnableCompleted || v.State == catalog.SystemSchemaInfoStateEnableInitialized {
+					id := fmt.Sprintf("%s|%s", currentMetastore, v.Schema)
+					data := ic.Resources["databricks_system_schema"].Data(
+						&terraform.InstanceState{
+							ID: id,
+							Attributes: map[string]string{
+								"metastore_id": currentMetastore,
+								"schema":       v.Schema,
+							},
+						})
+					ic.Emit(&resource{
+						Resource: "databricks_system_schema",
+						ID:       id,
+						Data:     data,
+						Name:     nameNormalizationRegex.ReplaceAllString(id, "_"),
+					})
+				} else {
+					log.Printf("[DEBUG] Skipping system schema %s with state %s", v.Schema, v.State)
+				}
+			}
+			return nil
+		},
+	},
+	"databricks_artifact_allowlist": {
+		WorkspaceLevel: true,
+		Service:        "uc-artifact-allowlist",
+		List: func(ic *importContext) error {
+			if ic.currentMetastore == nil {
+				return fmt.Errorf("there is no UC metastore information")
+			}
+			artifactTypes := []string{"INIT_SCRIPT", "LIBRARY_JAR", "LIBRARY_MAVEN"}
+			for _, v := range artifactTypes {
+				id := fmt.Sprintf("%s|%s", ic.currentMetastore.MetastoreId, v)
+				name := fmt.Sprintf("%s_%s_%s", v, ic.currentMetastore.Name, ic.currentMetastore.MetastoreId[:8])
+				ic.Emit(&resource{
+					Resource: "databricks_artifact_allowlist",
+					ID:       id,
+					Name:     nameNormalizationRegex.ReplaceAllString(name, "_"),
+				})
+			}
+			return nil
+		},
+		// TODO: add Depends & Import to emit corresponding UC Volumes when support for them is added
 	},
 }

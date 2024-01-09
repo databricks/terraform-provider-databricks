@@ -77,6 +77,8 @@ Services are just logical groups of resources used for filtering and organizatio
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
 * `sql-queries` - **listing** [databricks_sql_query](../resources/sql_query.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
+* `uc-artifact-allowlist` - exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
+* `uc-system-schemas` - exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
 * `workspace` - [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
 
@@ -100,6 +102,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | Resource | Generated code | Incremental |
 | --- | --- | --- |
 | [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No |
+| [databricks_artifact_allowlist](../resources/artifact_allowlist.md) | Yes | No |
 | [databricks_cluster](../resources/cluster.md) | Yes | No |
 | [databricks_cluster_policy](../resources/cluster_policy.md) | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No |
@@ -135,6 +138,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_query](../resources/sql_query.md) | Yes | Yes |
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes | Yes |
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes |
+| [databricks_system_schema](../resources/system_schema.md) | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No |
 | [databricks_user](../resources/user.md) | Yes | No |
 | [databricks_user_instance_profile](../resources/user_instance_profile.md) | No (Deprecated) | No |

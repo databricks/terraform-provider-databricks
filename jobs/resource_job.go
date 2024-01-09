@@ -291,6 +291,9 @@ func (js *JobSettings) sortTasksByKey() {
 func (js *JobSettings) adjustTasks() {
 	js.sortTasksByKey()
 	for _, task := range js.Tasks {
+		sort.Slice(task.DependsOn, func(i, j int) bool {
+			return task.DependsOn[i].TaskKey < task.DependsOn[j].TaskKey
+		})
 		sortWebhookNotifications(task.WebhookNotifications)
 	}
 }

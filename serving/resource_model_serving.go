@@ -17,7 +17,6 @@ func ResourceModelServing() *schema.Resource {
 		serving.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].ForceNew = true
-			delete(common.MustSchemaPath(m, "config").Elem.(*schema.Resource).Schema, "served_entities")
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
@@ -29,6 +28,16 @@ func ResourceModelServing() *schema.Resource {
 				return old == "" && new == "CPU"
 			}
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
+			common.MustSchemaPath(m, "config", "served_models").Deprecated = "Please use 'config.served_entities' instead of 'config.served_models'."
+
+			common.MustSchemaPath(m, "config", "served_entities", "name").Computed = true
+			common.MustSchemaPath(m, "config", "served_entities", "workload_type").Default = "CPU"
+			common.MustSchemaPath(m, "config", "served_entities", "workload_type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				return old == "" && new == "CPU"
+			}
+			common.MustSchemaPath(m, "config", "auto_capture_config", "catalog_name").ForceNew = true
+			common.MustSchemaPath(m, "config", "auto_capture_config", "schema_name").ForceNew = true
+			common.MustSchemaPath(m, "config", "auto_capture_config", "table_name_prefix").ForceNew = true
 
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,

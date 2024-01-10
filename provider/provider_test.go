@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -93,6 +94,12 @@ func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
 }
 
 func TestConfig_NoParams(t *testing.T) {
+	if f, err := os.Stat("~/.databrickscfg"); err == nil && !f.IsDir() {
+		// the provider should fail to configure if no configuration options are available,
+		// either through environment or config file. However, many developers have a
+		// ~/.databrickscfg file, so we skip this test if that file exists.
+		t.Skip("Skipping no-params auth test because ~/.databrickscfg exists")
+	}
 	providerFixture{
 		assertError: common.NoAuth,
 	}.apply(t)
@@ -239,7 +246,7 @@ func TestConfig_ConflictingEnvs_AuthType(t *testing.T) {
 func TestConfig_ConfigFile(t *testing.T) {
 	providerFixture{
 		env: map[string]string{
-			"CONFIG_FILE": "x",
+			"DATABRICKS_CONFIG_FILE": "x",
 		},
 		assertError: common.NoAuth,
 	}.apply(t)

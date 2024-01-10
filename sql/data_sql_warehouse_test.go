@@ -3,6 +3,7 @@ package sql
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,12 +14,12 @@ func TestWarehouseData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc?",
 				ReuseRequest: true,
-				Response: SQLEndpoint{
+				Response: sql.GetWarehouseResponse{
 					Name:        "foo",
 					ClusterSize: "Small",
-					ID:          "abc",
+					Id:          "abc",
 					State:       "RUNNING",
 				},
 			},
@@ -64,16 +65,16 @@ func TestWarehouseDataByName_NotFoundError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/data_sources",
-				Response: []DataSource{
+				Response: []sql.DataSource{
 					{
-						ID:         "d7c9d05c-7496-4c69-b089-48823edad401",
-						EndpointID: "def",
-						Name:       "test",
+						Id:          "d7c9d05c-7496-4c69-b089-48823edad401",
+						WarehouseId: "def",
+						Name:        "test",
 					},
 					{
-						ID:         "d7c9d05c-7496-4c69-b089-48823edad40c",
-						EndpointID: "abc",
-						Name:       "abc2",
+						Id:          "d7c9d05c-7496-4c69-b089-48823edad40c",
+						WarehouseId: "abc",
+						Name:        "abc2",
 					},
 				},
 			},
@@ -92,16 +93,16 @@ func TestWarehouseDataByName_DuplicatesError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/data_sources",
-				Response: []DataSource{
+				Response: []sql.DataSource{
 					{
-						ID:         "d7c9d05c-7496-4c69-b089-48823edad401",
-						EndpointID: "def",
-						Name:       "abc",
+						Id:          "d7c9d05c-7496-4c69-b089-48823edad401",
+						WarehouseId: "def",
+						Name:        "abc",
 					},
 					{
-						ID:         "d7c9d05c-7496-4c69-b089-48823edad40c",
-						EndpointID: "abc",
-						Name:       "abc",
+						Id:          "d7c9d05c-7496-4c69-b089-48823edad40c",
+						WarehouseId: "abc",
+						Name:        "abc",
 					},
 				},
 			},
@@ -120,27 +121,27 @@ func TestWarehouseDataByName(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/data_sources",
-				Response: []DataSource{
+				Response: []sql.DataSource{
 					{
-						ID:         "d7c9d05c-7496-4c69-b089-48823edad401",
-						EndpointID: "def",
-						Name:       "abc",
+						Id:          "d7c9d05c-7496-4c69-b089-48823edad401",
+						WarehouseId: "def",
+						Name:        "abc",
 					},
 					{
-						ID:         "d7c9d05c-7496-4c69-b089-48823edad40c",
-						EndpointID: "abc",
-						Name:       "test",
+						Id:          "d7c9d05c-7496-4c69-b089-48823edad40c",
+						WarehouseId: "abc",
+						Name:        "test",
 					},
 				},
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc?",
 				ReuseRequest: true,
-				Response: SQLEndpoint{
+				Response: sql.GetWarehouseResponse{
 					Name:        "test",
 					ClusterSize: "Small",
-					ID:          "abc",
+					Id:          "abc",
 					State:       "RUNNING",
 				},
 			},

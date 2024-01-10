@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
@@ -24,11 +24,11 @@ var dataSourceListHTTPFixture = qa.HTTPFixture{
 		[
 			{
 				"id": "2f47f0f9-b4b7-40e2-b130-43103151864c",
-				"endpoint_id": "def"
+				"warehouse_id": "def"
 			},
 			{
 				"id": "d7c9d05c-7496-4c69-b089-48823edad40c",
-				"endpoint_id": "abc"
+				"warehouse_id": "abc"
 			}
 		]
 	`),
@@ -40,28 +40,28 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/sql/warehouses",
-				ExpectedRequest: SQLEndpoint{
+				ExpectedRequest: sql.CreateWarehouseRequest{
 					Name:               "foo",
 					ClusterSize:        "Small",
 					MaxNumClusters:     1,
-					AutoStopMinutes:    120,
+					AutoStopMins:       120,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
-				Response: SQLEndpoint{
-					ID: "abc",
+				Response: sql.CreateWarehouseResponse{
+					Id: "abc",
 				},
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc?",
 				ReuseRequest: true,
-				Response: SQLEndpoint{
+				Response: sql.GetWarehouseResponse{
 					Name:           "foo",
 					ClusterSize:    "Small",
-					ID:             "abc",
+					Id:             "abc",
 					State:          "RUNNING",
-					Tags:           &Tags{},
+					Tags:           &sql.EndpointTags{},
 					MaxNumClusters: 1,
 					NumClusters:    1,
 				},
@@ -86,28 +86,28 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/sql/warehouses",
-				ExpectedRequest: SQLEndpoint{
+				ExpectedRequest: sql.CreateWarehouseRequest{
 					Name:               "foo",
 					ClusterSize:        "Small",
 					MaxNumClusters:     1,
-					AutoStopMinutes:    0,
+					AutoStopMins:       0,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
 				},
-				Response: SQLEndpoint{
-					ID: "abc",
+				Response: sql.CreateWarehouseResponse{
+					Id: "abc",
 				},
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc?",
 				ReuseRequest: true,
-				Response: SQLEndpoint{
+				Response: sql.GetWarehouseResponse{
 					Name:           "foo",
 					ClusterSize:    "Small",
-					ID:             "abc",
+					Id:             "abc",
 					State:          "RUNNING",
-					Tags:           &Tags{},
+					Tags:           &sql.EndpointTags{},
 					MaxNumClusters: 1,
 					NumClusters:    1,
 				},
@@ -146,7 +146,7 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 		name = "foo"
   		cluster_size = "Small"
 		`,
-	}.ExpectError(t, "Databricks SQL is not supported")
+	}.ExpectError(t, "failed creating warehouse: Databricks SQL is not supported")
 }
 
 func TestResourceSQLEndpointRead(t *testing.T) {
@@ -154,12 +154,12 @@ func TestResourceSQLEndpointRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc?",
 				ReuseRequest: true,
-				Response: SQLEndpoint{
+				Response: sql.GetWarehouseResponse{
 					Name:        "foo",
 					ClusterSize: "Small",
-					ID:          "abc",
+					Id:          "abc",
 					State:       "RUNNING",
 				},
 			},
@@ -184,11 +184,11 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/sql/warehouses/abc/edit",
-				ExpectedRequest: SQLEndpoint{
-					ID:                 "abc",
+				ExpectedRequest: sql.EditWarehouseRequest{
+					Id:                 "abc",
 					Name:               "foo",
 					ClusterSize:        "Small",
-					AutoStopMinutes:    120,
+					AutoStopMins:       120,
 					MaxNumClusters:     1,
 					EnablePhoton:       true,
 					SpotInstancePolicy: "COST_OPTIMIZED",
@@ -196,12 +196,12 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc",
+				Resource:     "/api/2.0/sql/warehouses/abc?",
 				ReuseRequest: true,
-				Response: SQLEndpoint{
+				Response: sql.GetWarehouseResponse{
 					Name:        "foo",
 					ClusterSize: "Small",
-					ID:          "abc",
+					Id:          "abc",
 					State:       "RUNNING",
 					NumClusters: 1,
 				},
@@ -241,76 +241,6 @@ func TestResourceSQLEndpoint_CornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceSqlEndpoint())
 }
 
-func TestSQLEnpointAPI(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/sql/warehouses",
-			Response: map[string]any{
-				"warehouses": []SQLEndpoint{
-					{
-						ID:   "foo",
-						Name: "bar",
-					},
-				},
-			},
-		},
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/sql/warehouses/failstart/start",
-			Status:   404,
-			Response: apierr.NotFound("nope"),
-		},
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/sql/warehouses/deleting/start",
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/sql/warehouses/deleting",
-			Response: SQLEndpoint{
-				State: "STARTING",
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/sql/warehouses/deleting",
-			Response: SQLEndpoint{
-				State: "DELETED",
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/sql/warehouses/cantwait",
-			Status:   500,
-			Response: apierr.APIError{
-				Message: "does not compute",
-			},
-		},
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/sql/warehouses/stopping/stop",
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		a := NewSQLEndpointsAPI(ctx, client)
-		list, err := a.List()
-		require.NoError(t, err)
-		assert.Len(t, list.Endpoints, 1)
-
-		err = a.Start("failstart", 5*time.Minute)
-		assert.EqualError(t, err, "nope")
-
-		err = a.Start("deleting", 5*time.Minute)
-		assert.EqualError(t, err, "endpoint got deleted during creation")
-
-		err = a.waitForRunning("cantwait", 5*time.Minute)
-		assert.EqualError(t, err, "does not compute")
-
-		err = a.Stop("stopping")
-		require.NoError(t, err)
-	})
-}
-
 func TestResolveDataSourceIDError(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -320,7 +250,9 @@ func TestResolveDataSourceIDError(t *testing.T) {
 			Status:   404,
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")
+		w, err := client.WorkspaceClient()
+		require.NoError(t, err)
+		_, err = resolveDataSourceID(ctx, w, "any")
 		require.Error(t, err)
 	})
 }
@@ -333,7 +265,9 @@ func TestResolveDataSourceIDNotFound(t *testing.T) {
 			Response: []any{},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")
+		w, err := client.WorkspaceClient()
+		require.NoError(t, err)
+		_, err = resolveDataSourceID(ctx, w, "any")
 		require.Error(t, err)
 	})
 }

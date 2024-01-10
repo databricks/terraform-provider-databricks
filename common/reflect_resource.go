@@ -319,8 +319,7 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 			sv := reflect.New(elem).Elem()
 			nestedSchema := typeToSchema(sv, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
-				blockCount := strings.Join(append(path, fieldName, "#"), ".")
-				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", scm[fieldName].Type.Zero()))
 				for _, v := range nestedSchema {
 					// to those relatively new to GoLang: we must explicitly pass down v by copy
 					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
@@ -338,8 +337,7 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 
 			nestedSchema := typeToSchema(sv, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
-				blockCount := strings.Join(append(path, fieldName, "#"), ".")
-				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", scm[fieldName].Type.Zero()))
 				for _, v := range nestedSchema {
 					// to those relatively new to GoLang: we must explicitly pass down v by copy
 					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))

@@ -88,7 +88,7 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 // fields for which the platform returns a value, but the user has not configured any value.
 // For example: the REST API returns `{"tags": {}}` for a resource with no tags.
 func SetSuppressDiff(v *schema.Schema) {
-	v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+	v.DiffSuppressFunc = diffSuppressor(v)
 }
 
 // SetDefault sets the default value for a schema.
@@ -170,7 +170,7 @@ func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
 		if tag == "suppress_diff" {
-			v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+			v.DiffSuppressFunc = diffSuppressor(v)
 			break
 		}
 	}
@@ -200,7 +200,8 @@ func chooseFieldName(typeField reflect.StructField) string {
 	return strings.Split(jsonTag, ",")[0]
 }
 
-func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData) bool {
+func diffSuppressor(v *schema.Schema) func(k, old, new string, d *schema.ResourceData) bool {
+	zero := fmt.Sprintf("%v", v.Type.Zero())
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		if new == zero && old != zero {
 			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
@@ -319,11 +320,10 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 			sv := reflect.New(elem).Elem()
 			nestedSchema := typeToSchema(sv, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
-				blockCount := strings.Join(append(path, fieldName, "#"), ".")
-				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
 					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+					v.DiffSuppressFunc = diffSuppressor(v)
 				}
 			}
 			scm[fieldName].Elem = &schema.Resource{
@@ -338,11 +338,10 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 
 			nestedSchema := typeToSchema(sv, append(path, fieldName, "0"))
 			if strings.Contains(tfTag, "suppress_diff") {
-				blockCount := strings.Join(append(path, fieldName, "#"), ".")
-				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
 					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+					v.DiffSuppressFunc = diffSuppressor(v)
 				}
 			}
 			scm[fieldName].Elem = &schema.Resource{

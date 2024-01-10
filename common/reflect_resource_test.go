@@ -424,7 +424,10 @@ func TestStructToData(t *testing.T) {
 }
 
 func TestDiffSuppressor(t *testing.T) {
-	dsf := diffSuppressor("")
+	stringSchema := &schema.Schema{
+		Type: schema.TypeString,
+	}
+	dsf := diffSuppressor(stringSchema)
 	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
 		"foo": {
 			Type:     schema.TypeBool,

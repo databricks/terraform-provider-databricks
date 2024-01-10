@@ -198,17 +198,6 @@ func MustCompileKeyRE(name string) *regexp.Regexp {
 	return regexp.MustCompile(regexFromName)
 }
 
-func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.ResourceData) bool {
-	re := MustCompileKeyRE(name)
-	return func(k, old, new string, d *schema.ResourceData) bool {
-		if re.Match([]byte(name)) && old == "1" && new == "0" {
-			log.Printf("[DEBUG] Suppressing diff for name=%s k=%#v platform=%#v config=%#v", name, k, old, new)
-			return true
-		}
-		return false
-	}
-}
-
 // Deprecated: migrate to WorkspaceData
 func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) *schema.Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..

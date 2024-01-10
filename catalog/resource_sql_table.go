@@ -45,7 +45,7 @@ type SqlTableInfo struct {
 	WarehouseID           string            `json:"warehouse_id,omitempty"`
 
 	exec    common.CommandExecutor
-	sqlExec *sql.StatementExecutionAPI
+	sqlExec sql.StatementExecutionInterface
 }
 
 type SqlTablesAPI struct {

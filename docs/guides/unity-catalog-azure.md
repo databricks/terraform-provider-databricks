@@ -204,7 +204,7 @@ Each metastore exposes a 3-level namespace (catalog-schema-table) by which data 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  name         = "sandbox"
+  name = "sandbox"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net",
     azurerm_storage_container.ext_storage.name,
   azurerm_storage_account.ext_storage.name)

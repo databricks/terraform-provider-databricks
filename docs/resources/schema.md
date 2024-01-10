@@ -13,8 +13,8 @@ A `databricks_schema` is contained within [databricks_catalog](catalog.md) and c
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }

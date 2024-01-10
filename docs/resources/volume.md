@@ -37,8 +37,8 @@ This resource manages Volumes in Unity Catalog.
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }

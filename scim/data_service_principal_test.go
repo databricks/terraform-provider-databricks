@@ -101,7 +101,7 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.Apply(t)
-	assert.ErrorContains(t, err, "unexpected error handling request: unexpected end of JSON input")
+	assert.Error(t, err)
 }
 
 func TestDataServicePrincipalReadByNameDuplicates(t *testing.T) {

@@ -1,5 +1,43 @@
 # Version changelog
 
+## 1.34.0
+
+### New Features and Improvements:
+ * Added `workspace_path` to the [databricks_directory](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/directory) data source ([#3051](https://github.com/databricks/terraform-provider-databricks/pull/3051)).
+ * Added resource [databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant) for managing singular principal ([#3024](https://github.com/databricks/terraform-provider-databricks/pull/3024)).
+ * Added the [databricks_current_metastore](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/current_metastore) data source to retrieve information about a UC metastore attached to the current workspace ([#3012](https://github.com/databricks/terraform-provider-databricks/pull/3012)).
+ * Added search by `display_name` to [databricks_service_principal](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/service_principal) data source ([#2963](https://github.com/databricks/terraform-provider-databricks/pull/2963)).
+ * Fixed Read operation of [databricks_permission_assignment](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permission_assignment) resource ([#3066](https://github.com/databricks/terraform-provider-databricks/pull/3066)).
+ * Force creation of home folder if not created ([#3052](https://github.com/databricks/terraform-provider-databricks/pull/3052)).
+ * Sort based on the Task Key specified in the 'Depends On' field ([#3000](https://github.com/databricks/terraform-provider-databricks/pull/3000)).
+ * Stop using `/api/2.0/preview/accounts/` API in [databricks_mws_permission_assignment](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_permission_assignment) ([#3062](https://github.com/databricks/terraform-provider-databricks/pull/3062)).
+ * Used diffSuppressor instead of makeEmptyBlockSuppressFunc ([#3099](https://github.com/databricks/terraform-provider-databricks/pull/3099)).
+ * Added `skip_validation` to [databricks_storage_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/storage_credential) ([#3087](https://github.com/databricks/terraform-provider-databricks/pull/3087)).
+
+### Documentation Changes:
+ * Expand troubleshooting guide with documentation about private link problems ([#3064](https://github.com/databricks/terraform-provider-databricks/pull/3064)).
+ * Add a note about workspace or account-level provider usage ([#3074](https://github.com/databricks/terraform-provider-databricks/pull/3074)).
+ * Use tasks in the [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) examples ([#3097](https://github.com/databricks/terraform-provider-databricks/pull/3097)).
+
+### Exporter:
+ * Generate zero values for required attributes & attributes with non-zero defaults ([#3068](https://github.com/databricks/terraform-provider-databricks/pull/3068)).
+ * Improve handling of referenced objects & dependencies in [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#3082](https://github.com/databricks/terraform-provider-databricks/pull/3082)).
+ * Add emitting of libraries that are workspace files ([#3006](https://github.com/databricks/terraform-provider-databricks/pull/3006)).
+ * Add support for [databricks_artifact_allowlist](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/artifact_allowlist) ([#3083](https://github.com/databricks/terraform-provider-databricks/pull/3083)).
+ * Added export of [databricks_system_schema](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/system_schema) resources ([#3072](https://github.com/databricks/terraform-provider-databricks/pull/3072)).
+ * Generate cluster libraries blocks directly in [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster), don't generate [databricks_library](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/library) resources ([#2983](https://github.com/databricks/terraform-provider-databricks/pull/2983)).
+ * Increase coverage for [databricks_mount](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mount) resource generation ([#2982](https://github.com/databricks/terraform-provider-databricks/pull/2982)).
+ * Fixed some broken links ([#3061](https://github.com/databricks/terraform-provider-databricks/pull/3061)).
+
+### Internal Changes:
+ * Added an item to check if the ticket opener wants to do a bug fix ([#3020](https://github.com/databricks/terraform-provider-databricks/pull/3020)).
+ * Updated Go SDK to v0.29.0 ([#3098](https://github.com/databricks/terraform-provider-databricks/pull/3098)).
+ * Migrated SQL Warehouse to Go SDK ([#3044](https://github.com/databricks/terraform-provider-databricks/pull/3044)).
+ * Fixed `TestClustersDataSourceErrorsOut` test that run too long ([#3073](https://github.com/databricks/terraform-provider-databricks/pull/3073)).
+ * Fixed TestAccServicePrinicpalHomeDeleteNotDeleted ([#3075](https://github.com/databricks/terraform-provider-databricks/pull/3075)).
+ * Fixed diff schema on PRs ([#3071](https://github.com/databricks/terraform-provider-databricks/pull/3071)).
+
+
 ## 1.33.0
 New Features and Improvements:
  * Added support for ownership changes for unity catalog resources ([#3029](https://github.com/databricks/terraform-provider-databricks/pull/3029)).

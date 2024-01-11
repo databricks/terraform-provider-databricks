@@ -26,7 +26,7 @@ type PermissionsList struct {
 	Assignments []PrivilegeAssignment `json:"privilege_assignments" tf:"slice_set,alias:grant"`
 }
 
-// diff returns permissionsDiff of this permissions list with `diff` privileges removed
+// diffPermissions returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
 func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
 	// diffs change sets
 	configured := map[string]*schema.Set{}

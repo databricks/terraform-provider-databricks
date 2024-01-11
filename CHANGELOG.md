@@ -8,10 +8,8 @@
  * Added the [databricks_current_metastore](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/current_metastore) data source to retrieve information about a UC metastore attached to the current workspace ([#3012](https://github.com/databricks/terraform-provider-databricks/pull/3012)).
  * Added search by `display_name` to [databricks_service_principal](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/service_principal) data source ([#2963](https://github.com/databricks/terraform-provider-databricks/pull/2963)).
  * Fixed Read operation of [databricks_permission_assignment](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/permission_assignment) resource ([#3066](https://github.com/databricks/terraform-provider-databricks/pull/3066)).
- * Force creation of home folder if not created ([#3052](https://github.com/databricks/terraform-provider-databricks/pull/3052)).
  * Sort based on the Task Key specified in the 'Depends On' field ([#3000](https://github.com/databricks/terraform-provider-databricks/pull/3000)).
  * Stop using `/api/2.0/preview/accounts/` API in [databricks_mws_permission_assignment](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_permission_assignment) ([#3062](https://github.com/databricks/terraform-provider-databricks/pull/3062)).
- * Used diffSuppressor instead of makeEmptyBlockSuppressFunc ([#3099](https://github.com/databricks/terraform-provider-databricks/pull/3099)).
  * Added `skip_validation` to [databricks_storage_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/storage_credential) ([#3087](https://github.com/databricks/terraform-provider-databricks/pull/3087)).
 
 ### Documentation Changes:
@@ -36,6 +34,8 @@
  * Fixed `TestClustersDataSourceErrorsOut` test that run too long ([#3073](https://github.com/databricks/terraform-provider-databricks/pull/3073)).
  * Fixed TestAccServicePrinicpalHomeDeleteNotDeleted ([#3075](https://github.com/databricks/terraform-provider-databricks/pull/3075)).
  * Fixed diff schema on PRs ([#3071](https://github.com/databricks/terraform-provider-databricks/pull/3071)).
+ * Used diffSuppressor instead of makeEmptyBlockSuppressFunc ([#3099](https://github.com/databricks/terraform-provider-databricks/pull/3099)).
+ * Force creation of home folder if not created ([#3052](https://github.com/databricks/terraform-provider-databricks/pull/3052)).
 
 
 ## 1.33.0

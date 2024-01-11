@@ -143,11 +143,6 @@ var mapping = securableMapping{
 		"APPLY_TAG":      true,
 		"BROWSE":         true,
 	},
-	"view": { // TODO: Is this supported as it is not documented ?
-		"SELECT":    true,
-		"APPLY_TAG": true,
-		"BROWSE":    true,
-	},
 	"catalog": {
 		"CREATE": true,
 		"USAGE":  true,
@@ -240,11 +235,6 @@ var mapping = securableMapping{
 		"ALL_PRIVILEGES": true,
 		"APPLY_TAG":      true,
 		"EXECUTE":        true,
-	},
-	"materialized_view": { // TODO: Is this supported as it is not documented ?
-		"ALL_PRIVILEGES": true,
-		"SELECT":         true,
-		"REFRESH":        true,
 	},
 	"share": {
 		"SELECT": true,

@@ -343,3 +343,5 @@ scripts/tt
 .metals
 
 provider/completeness.md
+
+sandbox/

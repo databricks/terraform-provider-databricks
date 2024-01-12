@@ -12,12 +12,12 @@ import (
 )
 
 type SharesAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
 func NewSharesAPI(ctx context.Context, m any) SharesAPI {
-	return SharesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
+	return SharesAPI{m.(common.DatabricksAPI), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 const (
@@ -179,7 +179,7 @@ func ResourceShare() *schema.Resource {
 	})
 	return common.Resource{
 		Schema: shareSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -206,14 +206,14 @@ func ResourceShare() *schema.Resource {
 			d.SetId(si.Name)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			si, err := NewSharesAPI(ctx, c).get(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(si, shareSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			beforeSi, err := NewSharesAPI(ctx, c).get(d.Id())
 			if err != nil {
 				return err
@@ -256,7 +256,7 @@ func ResourceShare() *schema.Resource {
 			}
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

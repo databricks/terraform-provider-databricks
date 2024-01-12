@@ -43,11 +43,11 @@ type GlobalConfigForRead struct {
 }
 
 func NewSqlGlobalConfigAPI(ctx context.Context, m any) globalConfigAPI {
-	return globalConfigAPI{m.(*common.DatabricksClient), ctx}
+	return globalConfigAPI{m.(common.DatabricksAPI), ctx}
 }
 
 type globalConfigAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -56,8 +56,8 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 		"security_policy":           gc.SecurityPolicy,
 		"enable_serverless_compute": gc.EnableServerlessCompute,
 	}
-	if a.client.Config.Host == "" {
-		err := a.client.Config.EnsureResolved()
+	if a.client.Config().Host == "" {
+		err := a.client.Config().EnsureResolved()
 		if err != nil {
 			return err
 		}
@@ -118,7 +118,7 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 			"and may be removed from the Databricks Terraform provider in the future"
 		return m
 	})
-	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 		var gc GlobalConfig
 		common.DataToStructPointer(d, s, &gc)
 		if err := NewSqlGlobalConfigAPI(ctx, c).Set(gc); err != nil {
@@ -129,7 +129,7 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 	}
 	return common.Resource{
 		Create: setGlobalConfig,
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
 			if err != nil {
 				return err
@@ -138,7 +138,7 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 			return err
 		},
 		Update: setGlobalConfig,
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{SecurityPolicy: "DATA_ACCESS_CONTROL"})
 		},
 		Schema: s,

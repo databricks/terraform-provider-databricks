@@ -60,14 +60,14 @@ type SecretACLRequest struct {
 // NewSecretsAPI creates SecretsAPI instance from provider meta
 func NewSecretsAPI(ctx context.Context, m any) SecretsAPI {
 	return SecretsAPI{
-		client:  m.(*common.DatabricksClient),
+		client:  m.(common.DatabricksAPI),
 		context: ctx,
 	}
 }
 
 // SecretsAPI exposes the Secrets API
 type SecretsAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -146,7 +146,7 @@ func ResourceSecret() *schema.Resource {
 				Computed: true,
 			},
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			if err := NewSecretsAPI(ctx, c).Create(d.Get("string_value").(string), d.Get("scope").(string),
 				d.Get("key").(string)); err != nil {
 				return err
@@ -154,7 +154,7 @@ func ResourceSecret() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			scope, key, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -166,7 +166,7 @@ func ResourceSecret() *schema.Resource {
 			d.Set("config_reference", fmt.Sprintf("{{secrets/%s/%s}}", scope, key))
 			return d.Set("last_updated_timestamp", m.LastUpdatedTimestamp)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			scope, key, err := p.Unpack(d)
 			if err != nil {
 				return err

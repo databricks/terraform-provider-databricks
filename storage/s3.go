@@ -28,11 +28,11 @@ func (m S3IamMount) Name() string {
 }
 
 // Config ...
-func (m S3IamMount) Config(client *common.DatabricksClient) map[string]string {
+func (m S3IamMount) Config(client common.DatabricksAPI) map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 
-func (m S3IamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m S3IamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
 	nm := d.Get("name").(string)
 	if nm != "" {
 		return nil

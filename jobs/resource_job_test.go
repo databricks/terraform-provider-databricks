@@ -2164,7 +2164,7 @@ func TestJobRestarts(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ja := NewJobsAPI(ctx, client)
 		timeout := 500 * time.Millisecond
 
@@ -2269,7 +2269,7 @@ func TestJobsAPIList(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewJobsAPI(ctx, client)
 		l, err := a.List()
 		require.NoError(t, err)
@@ -2303,7 +2303,7 @@ func TestJobsAPIListMultiplePages(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewJobsAPI(ctx, client)
 		l, err := a.List()
 		require.NoError(t, err)
@@ -2324,7 +2324,7 @@ func TestJobsAPIListByName(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewJobsAPI(ctx, client)
 		l, err := a.ListByName("test", false)
 		require.NoError(t, err)
@@ -2348,7 +2348,7 @@ func TestJobsAPIRunsList(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewJobsAPI(ctx, client)
 		l, err := a.RunsList(JobRunsListRequest{
 			JobID:         234,

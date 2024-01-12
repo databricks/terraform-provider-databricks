@@ -29,7 +29,7 @@ func DataSourceWarehouse() *schema.Resource {
 		DataSourceID            string          `json:"data_source_id,omitempty" tf:"computed"`
 	}
 
-	return common.DataResource(SQLWarehouseInfo{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
+	return common.DataResource(SQLWarehouseInfo{}, func(ctx context.Context, e interface{}, c common.DatabricksAPI) error {
 		data := e.(*SQLWarehouseInfo)
 		var id string
 		if data.ID == "" && data.Name == "" {

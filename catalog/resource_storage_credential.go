@@ -40,7 +40,7 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 func ResourceStorageCredential() *schema.Resource {
 	return common.Resource{
 		Schema: storageCredentialSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			metastoreId := d.Get("metastore_id").(string)
 			tmpSchema := removeGcpSaField(storageCredentialSchema)
 
@@ -104,7 +104,7 @@ func ResourceStorageCredential() *schema.Resource {
 				return nil
 			})
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
@@ -123,7 +123,7 @@ func ResourceStorageCredential() *schema.Resource {
 				return common.StructToData(storageCredential, storageCredentialSchema, d)
 			})
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var update catalog.UpdateStorageCredential
 			force := d.Get("force_update").(bool)
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
@@ -209,7 +209,7 @@ func ResourceStorageCredential() *schema.Resource {
 				return nil
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			force := d.Get("force_destroy").(bool)
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{

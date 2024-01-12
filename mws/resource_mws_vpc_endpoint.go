@@ -14,12 +14,12 @@ import (
 
 // NewVPCEndpointAPI creates VPCEndpointAPI instance from provider meta
 func NewVPCEndpointAPI(ctx context.Context, m any) VPCEndpointAPI {
-	return VPCEndpointAPI{m.(*common.DatabricksClient), ctx}
+	return VPCEndpointAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // VPCEndpointAPI exposes the mws VPC endpoint API
 type VPCEndpointAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -87,7 +87,7 @@ func ResourceMwsVpcEndpoint() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "vpc_endpoint_id", "/")
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var vpcEndpoint VPCEndpoint
 			common.DataToStructPointer(d, s, &vpcEndpoint)
 			if err := NewVPCEndpointAPI(ctx, c).Create(&vpcEndpoint); err != nil {
@@ -97,7 +97,7 @@ func ResourceMwsVpcEndpoint() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			accountID, vpcEndpointID, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -108,7 +108,7 @@ func ResourceMwsVpcEndpoint() *schema.Resource {
 			}
 			return common.StructToData(vpcEndpoint, s, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			accountID, vpcEndpointID, err := p.Unpack(d)
 			if err != nil {
 				return err

@@ -61,7 +61,7 @@ type importContext struct {
 	// not modified/used only in single thread
 	Module            string
 	Context           context.Context
-	Client            *common.DatabricksClient
+	Client            common.DatabricksAPI
 	Importables       map[string]importable
 	Resources         map[string]*schema.Resource
 	Files             map[string]*hclwrite.File
@@ -199,7 +199,7 @@ func makeResourcesChannels(p *schema.Provider) map[string]resourceChannel {
 	return channels
 }
 
-func newImportContext(c *common.DatabricksClient) *importContext {
+func newImportContext(c common.DatabricksAPI) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
 	p.SetMeta(c)
@@ -299,7 +299,7 @@ func (ic *importContext) Run() error {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
 
-	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	ic.accountLevel = ic.Client.Config().IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
 		ic.accountClient, err = ic.Client.AccountClient()
@@ -412,7 +412,7 @@ func (ic *importContext) Run() error {
 		if ic.accountLevel {
 			dcfile.WriteString(fmt.Sprintf(`	host       = "%s"
 				account_id = "%s"
-			`, ic.Client.Config.Host, ic.Client.Config.AccountID))
+			`, ic.Client.Config().Host, ic.Client.Config().AccountID))
 		}
 		dcfile.WriteString(`}`)
 		dcfile.Close()

@@ -12,7 +12,7 @@ func DataSource{{.CamelName}}() *schema.Resource {
 		// data resources output fields annotated with tf:"computed" 
 		Ids []string {{.BT}}json:"ids,omitempty" tf:"computed,slice_set"{{.BT}}
 	}
-	return common.DataResource({{.LowerCamel}}Data{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	return common.DataResource({{.LowerCamel}}Data{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
 		data := e.(*{{.LowerCamel}}Data)
 		// TODO: implement me
 		data.Ids = append(data.Ids, "..") // replace

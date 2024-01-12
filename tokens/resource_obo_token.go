@@ -15,11 +15,11 @@ type OboToken struct {
 }
 
 func NewTokenManagementAPI(ctx context.Context, m any) TokenManagementAPI {
-	return TokenManagementAPI{m.(*common.DatabricksClient), ctx}
+	return TokenManagementAPI{m.(common.DatabricksAPI), ctx}
 }
 
 type TokenManagementAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -49,7 +49,7 @@ func ResourceOboToken() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: oboTokenSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var request OboToken
 			common.DataToStructPointer(d, oboTokenSchema, &request)
 			ot, err := NewTokenManagementAPI(ctx, c).CreateTokenOnBehalfOfServicePrincipal(request)
@@ -59,7 +59,7 @@ func ResourceOboToken() *schema.Resource {
 			d.SetId(ot.TokenInfo.TokenID)
 			return d.Set("token_value", ot.TokenValue)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			ot, err := NewTokenManagementAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
@@ -67,7 +67,7 @@ func ResourceOboToken() *schema.Resource {
 			// this method is just a shim to check if token does still exist
 			return d.Set("comment", ot.TokenInfo.Comment)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewTokenManagementAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()

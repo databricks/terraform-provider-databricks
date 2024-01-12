@@ -9,8 +9,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func updateFunctionFactory(pathPrefix string, updatable []string) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
-	return func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+func updateFunctionFactory(pathPrefix string, updatable []string) func(context.Context, *schema.ResourceData, common.DatabricksAPI) error {
+	return func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 		patch := map[string]any{}
 		for _, field := range updatable {
 

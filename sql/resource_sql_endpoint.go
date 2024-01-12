@@ -90,12 +90,12 @@ type EndpointList struct {
 
 // NewSQLEndpointsAPI ...
 func NewSQLEndpointsAPI(ctx context.Context, m any) SQLEndpointsAPI {
-	return SQLEndpointsAPI{m.(*common.DatabricksClient), ctx}
+	return SQLEndpointsAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // SQLEndpointsAPI ...
 type SQLEndpointsAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -213,7 +213,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var se SQLEndpoint
 			common.DataToStructPointer(d, s, &se)
 			if err := NewSQLEndpointsAPI(ctx, c).Create(&se, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -222,7 +222,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			d.SetId(se.ID)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			endpointsAPI := NewSQLEndpointsAPI(ctx, c)
 			se, err := endpointsAPI.Get(d.Id())
 			if err != nil {
@@ -234,12 +234,12 @@ func ResourceSqlEndpoint() *schema.Resource {
 			}
 			return common.StructToData(se, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var se SQLEndpoint
 			common.DataToStructPointer(d, s, &se)
 			return NewSQLEndpointsAPI(ctx, c).Edit(se)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewSQLEndpointsAPI(ctx, c).Delete(d.Id())
 		},
 		Schema: s,

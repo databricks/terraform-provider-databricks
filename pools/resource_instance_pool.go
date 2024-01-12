@@ -126,12 +126,12 @@ type InstancePoolList struct {
 
 // NewInstancePoolsAPI creates InstancePoolsAPI instance from provider meta
 func NewInstancePoolsAPI(ctx context.Context, m any) InstancePoolsAPI {
-	return InstancePoolsAPI{m.(*common.DatabricksClient), ctx}
+	return InstancePoolsAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // InstancePoolsAPI exposes the instance pools api
 type InstancePoolsAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -244,7 +244,7 @@ func ResourceInstancePool() *schema.Resource {
 	})
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var ip InstancePool
 			common.DataToStructPointer(d, s, &ip)
 			instancePoolInfo, err := NewInstancePoolsAPI(ctx, c).Create(ip)
@@ -254,20 +254,20 @@ func ResourceInstancePool() *schema.Resource {
 			d.SetId(instancePoolInfo.InstancePoolID)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			ip, err := NewInstancePoolsAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ip, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var ip InstancePool
 			common.DataToStructPointer(d, s, &ip)
 			ip.InstancePoolID = d.Id()
 			return NewInstancePoolsAPI(ctx, c).Update(ip)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewInstancePoolsAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()

@@ -466,7 +466,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 			},
 			Status: 400,
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		r := ResourcePermissions()
 		d := r.TestResourceData()
 		d.SetId("/clusters/abc")
@@ -1289,7 +1289,7 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		p := NewPermissionsAPI(ctx, client)
 		err := p.Update("/authorization/tokens", AccessControlChangeList{
 			AccessControlList: []AccessControlChange{
@@ -1351,7 +1351,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		p := NewPermissionsAPI(ctx, client)
 		err := p.Delete("/jobs/123")
 		assert.NoError(t, err)
@@ -1393,7 +1393,7 @@ func TestShouldDeleteNonExistentJob(t *testing.T) {
 				ErrorCode:  "INVALID_PARAMETER_VALUE",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		p := NewPermissionsAPI(ctx, client)
 		err := p.Delete("/jobs/123")
 		assert.NoError(t, err)
@@ -1448,7 +1448,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		p := NewPermissionsAPI(ctx, client)
 		err := p.Delete("/pipelines/123")
 		assert.NoError(t, err)
@@ -1496,7 +1496,7 @@ func TestDeleteMissing(t *testing.T) {
 			Status:   404,
 			Response: apierr.NotFound("missing"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		p := ResourcePermissions()
 		d := p.TestResourceData()
 		d.SetId("x")

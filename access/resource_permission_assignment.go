@@ -11,11 +11,11 @@ import (
 )
 
 func NewPermissionAssignmentAPI(ctx context.Context, m any) PermissionAssignmentAPI {
-	return PermissionAssignmentAPI{m.(*common.DatabricksClient), ctx}
+	return PermissionAssignmentAPI{m.(common.DatabricksAPI), ctx}
 }
 
 type PermissionAssignmentAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -84,7 +84,7 @@ func ResourcePermissionAssignment() *schema.Resource {
 	s := common.StructToSchema(entity{}, common.NoCustomize)
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var assignment entity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
@@ -95,7 +95,7 @@ func ResourcePermissionAssignment() *schema.Resource {
 			d.SetId(fmt.Sprintf("%d", assignment.PrincipalId))
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			list, err := NewPermissionAssignmentAPI(ctx, c).List()
 			if err != nil {
 				return err
@@ -110,7 +110,7 @@ func ResourcePermissionAssignment() *schema.Resource {
 			data.Permissions = permissions.Permissions
 			return common.StructToData(data, s, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewPermissionAssignmentAPI(ctx, c).Remove(d.Id())
 		},
 	}.ToResource()

@@ -14,7 +14,7 @@ func DataSourceShare() *schema.Resource {
 		CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 		CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
 	}
-	return common.DataResource(ShareDetail{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	return common.DataResource(ShareDetail{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
 		data := e.(*ShareDetail)
 		sharesAPI := NewSharesAPI(ctx, c)
 		share, err := sharesAPI.get(data.Name)

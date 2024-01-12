@@ -16,24 +16,24 @@ type currentConfig struct {
 }
 
 func DataSourceCurrentConfiguration() *schema.Resource {
-	return common.DataResource(currentConfig{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	return common.DataResource(currentConfig{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
 		data := e.(*currentConfig)
 		data.IsAccount = false
-		if c.Config.IsAccountClient() {
-			data.AccountId = c.Config.AccountID
+		if c.Config().IsAccountClient() {
+			data.AccountId = c.Config().AccountID
 			data.IsAccount = true
 		}
-		data.Host = c.Config.Host
-		if c.Config.IsAws() {
+		data.Host = c.Config().Host
+		if c.Config().IsAws() {
 			data.CloudType = "aws"
-		} else if c.Config.IsAzure() {
+		} else if c.Config().IsAzure() {
 			data.CloudType = "azure"
-		} else if c.Config.IsGcp() {
+		} else if c.Config().IsGcp() {
 			data.CloudType = "gcp"
 		} else {
 			data.CloudType = "unknown"
 		}
-		data.AuthType = c.Config.AuthType
+		data.AuthType = c.Config().AuthType
 		return nil
 	})
 }

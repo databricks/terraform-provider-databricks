@@ -14,13 +14,13 @@ import (
 
 // NewDefaultNamespaceSettingsAPI creates a DefaultNamespaceSettingsAPI instance
 func NewDefaultNamespaceSettingsAPI(ctx context.Context, m any) DefaultNamespaceSettingsAPI {
-	client := m.(*common.DatabricksClient)
+	client := m.(common.DatabricksAPI)
 	return DefaultNamespaceSettingsAPI{client, ctx}
 }
 
 // DefaultNamespaceSettingsAPI exposes the Default Namespace Settings API
 type DefaultNamespaceSettingsAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -110,7 +110,7 @@ var resourceSchema = common.StructToSchema(settings.DefaultNamespaceSetting{},
 func ResourceDefaultNamespaceSetting() *schema.Resource {
 	return common.Resource{
 		Schema: resourceSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var setting settings.DefaultNamespaceSetting
 			common.DataToStructPointer(d, resourceSchema, &setting)
 			setting.SettingName = "default"
@@ -127,7 +127,7 @@ func ResourceDefaultNamespaceSetting() *schema.Resource {
 			d.SetId(etag)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			settingAPI := NewDefaultNamespaceSettingsAPI(ctx, c)
 			res, err := settingAPI.Read(d.Id())
 			if err != nil {
@@ -144,7 +144,7 @@ func ResourceDefaultNamespaceSetting() *schema.Resource {
 			d.SetId(res.Etag)
 			return nil
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var setting settings.DefaultNamespaceSetting
 			common.DataToStructPointer(d, resourceSchema, &setting)
 			setting.SettingName = "default"
@@ -166,7 +166,7 @@ func ResourceDefaultNamespaceSetting() *schema.Resource {
 			d.SetId(etag)
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			etag, err := NewDefaultNamespaceSettingsAPI(ctx, c).DeleteWithRetry(d.Id())
 			if err != nil {
 				return err

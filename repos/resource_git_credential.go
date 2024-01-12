@@ -28,7 +28,7 @@ func ResourceGitCredential() *schema.Resource {
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -62,7 +62,7 @@ func ResourceGitCredential() *schema.Resource {
 			d.SetId(fmt.Sprintf("%d", resp.CredentialId))
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -79,7 +79,7 @@ func ResourceGitCredential() *schema.Resource {
 			d.Set("git_username", resp.GitUsername)
 			return nil
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var req workspace.UpdateCredentials
 
 			common.DataToStructPointer(d, s, &req)
@@ -94,7 +94,7 @@ func ResourceGitCredential() *schema.Resource {
 			}
 			return w.GitCredentials.Update(ctx, req)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

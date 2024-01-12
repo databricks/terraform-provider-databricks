@@ -64,12 +64,12 @@ func (v *VisualizationEntity) fromAPIObject(av *api.Visualization, schema map[st
 
 // NewVisualizationAPI ...
 func NewVisualizationAPI(ctx context.Context, m any) VisualizationAPI {
-	return VisualizationAPI{m.(*common.DatabricksClient), ctx}
+	return VisualizationAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // VisualizationAPI ...
 type VisualizationAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -157,7 +157,7 @@ func ResourceSqlVisualization() *schema.Resource {
 		})
 
 	return common.Resource{
-		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
 			var v VisualizationEntity
 			av, err := v.toAPIObject(s, data)
 			if err != nil {
@@ -181,7 +181,7 @@ func ResourceSqlVisualization() *schema.Resource {
 			p.Pack(data)
 			return nil
 		},
-		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
 			queryID, visualizationID, err := p.Unpack(data)
 			if err != nil {
 				return err
@@ -195,7 +195,7 @@ func ResourceSqlVisualization() *schema.Resource {
 			var v VisualizationEntity
 			return v.fromAPIObject(av, s, data)
 		},
-		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
 			_, visualizationID, err := p.Unpack(data)
 			if err != nil {
 				return err
@@ -209,7 +209,7 @@ func ResourceSqlVisualization() *schema.Resource {
 
 			return NewVisualizationAPI(ctx, c).Update(visualizationID, av)
 		},
-		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
 			_, visualizationID, err := p.Unpack(data)
 			if err != nil {
 				return err

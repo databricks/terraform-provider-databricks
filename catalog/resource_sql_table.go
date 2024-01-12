@@ -49,12 +49,12 @@ type SqlTableInfo struct {
 }
 
 type SqlTablesAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
 func NewSqlTablesAPI(ctx context.Context, m any) SqlTablesAPI {
-	return SqlTablesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
+	return SqlTablesAPI{m.(common.DatabricksAPI), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
@@ -115,7 +115,7 @@ func sqlTableIsManagedProperty(key string) bool {
 	return managedProps[key]
 }
 
-func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
+func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) (err error) {
 	defaultClusterName := "terraform-sql-table"
 	clustersAPI := clusters.NewClustersAPI(ctx, c)
 	// if a cluster id is specified, start the cluster
@@ -432,7 +432,7 @@ func ResourceSqlTable() *schema.Resource {
 			}
 			return nil
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var ti = new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, ti)
 			if err := ti.initCluster(ctx, d, c); err != nil {
@@ -444,14 +444,14 @@ func ResourceSqlTable() *schema.Resource {
 			d.SetId(ti.FullName())
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			ti, err := NewSqlTablesAPI(ctx, c).getTable(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ti, tableSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var newti = new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, newti)
 			if err := newti.initCluster(ctx, d, c); err != nil {
@@ -463,7 +463,7 @@ func ResourceSqlTable() *schema.Resource {
 			}
 			return newti.updateTable(&oldti)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var ti = new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, ti)
 			if err := ti.initCluster(ctx, d, c); err != nil {

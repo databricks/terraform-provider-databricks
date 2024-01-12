@@ -11,12 +11,12 @@ import (
 
 // NewStorageConfigurationsAPI creates MWSStorageConfigurationsAPI instance from provider meta
 func NewStorageConfigurationsAPI(ctx context.Context, m any) StorageConfigurationsAPI {
-	return StorageConfigurationsAPI{m.(*common.DatabricksClient), ctx}
+	return StorageConfigurationsAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // StorageConfigurationsAPI exposes the mws storageConfiguration API
 type StorageConfigurationsAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -58,7 +58,7 @@ func (a StorageConfigurationsAPI) List(mwsAcctID string) ([]StorageConfiguration
 func ResourceMwsStorageConfigurations() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "storage_configuration_id", "/")
 	return common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			name := d.Get("storage_configuration_name").(string)
 			bucketName := d.Get("bucket_name").(string)
 			accountID := d.Get("account_id").(string)
@@ -70,7 +70,7 @@ func ResourceMwsStorageConfigurations() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			accountID, storageID, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -83,7 +83,7 @@ func ResourceMwsStorageConfigurations() *schema.Resource {
 			d.Set("bucket_name", storageConifiguration.RootBucketInfo.BucketName)
 			return d.Set("creation_time", storageConifiguration.CreationTime)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			accountID, storageID, err := p.Unpack(d)
 			if err != nil {
 				return err

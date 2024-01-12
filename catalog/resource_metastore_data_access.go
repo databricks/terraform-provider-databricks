@@ -81,7 +81,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				Upgrade: dacMigrateV0,
 			},
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			metastoreId := d.Get("metastore_id").(string)
 
 			tmpSchema := removeGcpSaField(dacSchema)
@@ -132,7 +132,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				return nil
 			})
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			metastoreId, dacName, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -171,7 +171,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				return common.StructToData(storageCredential, dacSchema, d)
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			metastoreId, dacName, err := p.Unpack(d)
 			force := d.Get("force_destroy").(bool)
 			if err != nil {

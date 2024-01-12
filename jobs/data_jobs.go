@@ -12,7 +12,7 @@ func DataSourceJobs() *schema.Resource {
 	type jobsData struct {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
-	return common.DataResource(jobsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	return common.DataResource(jobsData{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
 		response := e.(*jobsData)
 		jobsAPI := NewJobsAPI(ctx, c)
 		list, err := jobsAPI.List()

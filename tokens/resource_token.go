@@ -38,12 +38,12 @@ type TokenList struct {
 
 // NewTokensAPI creates TokensAPI instance from provider meta
 func NewTokensAPI(ctx context.Context, m any) TokensAPI {
-	return TokensAPI{m.(*common.DatabricksClient), ctx}
+	return TokensAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // TokensAPI exposes the Secrets API
 type TokensAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -131,7 +131,7 @@ func ResourceToken() *schema.Resource {
 	}
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			comment := d.Get("comment").(string)
 			lifeTimeSeconds := d.Get("lifetime_seconds").(int)
 			tokenDuration := time.Duration(lifeTimeSeconds) * time.Second
@@ -142,14 +142,14 @@ func ResourceToken() *schema.Resource {
 			d.SetId(tokenResp.TokenInfo.TokenID)
 			return d.Set("token_value", tokenResp.TokenValue)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			tokenInfo, err := NewTokensAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(tokenInfo, s, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewTokensAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()

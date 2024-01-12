@@ -29,7 +29,7 @@ func ResourceLibrary() *schema.Resource {
 	}
 	return common.Resource{
 		Schema: libraySdkSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -58,7 +58,7 @@ func ResourceLibrary() *schema.Resource {
 			d.SetId(fmt.Sprintf("%s/%s", clusterID, lib.String()))
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			clusterID, libraryRep := parseId(d.Id())
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -81,7 +81,7 @@ func ResourceLibrary() *schema.Resource {
 			}
 			return apierr.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			clusterID, libraryRep := parseId(d.Id())
 			w, err := c.WorkspaceClient()
 			if err != nil {

@@ -28,13 +28,13 @@ func (m AzureADLSGen1Mount) Name() string {
 	return m.StorageResource
 }
 
-func (m AzureADLSGen1Mount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m AzureADLSGen1Mount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
 	return nil
 }
 
 // Config ...
-func (m AzureADLSGen1Mount) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
+func (m AzureADLSGen1Mount) Config(client common.DatabricksAPI) map[string]string {
+	aadEndpoint := client.Config().Environment().AzureActiveDirectoryEndpoint()
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 

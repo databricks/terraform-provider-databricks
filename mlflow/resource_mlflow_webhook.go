@@ -43,7 +43,7 @@ func ResourceMlflowWebhook() *schema.Resource {
 		})
 
 	return common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -61,7 +61,7 @@ func ResourceMlflowWebhook() *schema.Resource {
 			d.SetId(resp.Webhook.Id)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var mOrig ml.CreateRegistryWebhook
 			common.DataToStructPointer(d, s, &mOrig)
 			w, err := c.WorkspaceClient()
@@ -85,7 +85,7 @@ func ResourceMlflowWebhook() *schema.Resource {
 			}
 			return nil
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -95,7 +95,7 @@ func ResourceMlflowWebhook() *schema.Resource {
 			m.Id = d.Id()
 			return w.ModelRegistry.UpdateWebhook(ctx, m)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

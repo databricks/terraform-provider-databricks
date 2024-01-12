@@ -12,12 +12,12 @@ func DataSourceMwsCredentials() *schema.Resource {
 	type mwsCredentialsData struct {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
-	return common.DataResource(mwsCredentialsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	return common.DataResource(mwsCredentialsData{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
 		data := e.(*mwsCredentialsData)
-		if c.Config.AccountID == "" {
+		if c.Config().AccountID == "" {
 			return fmt.Errorf("provider block is missing `account_id` property")
 		}
-		credentials, err := NewCredentialsAPI(ctx, c).List(c.Config.AccountID)
+		credentials, err := NewCredentialsAPI(ctx, c).List(c.Config().AccountID)
 		if err != nil {
 			return err
 		}

@@ -12,10 +12,10 @@ import (
 
 func ResourceUserRole() *schema.Resource {
 	return common.NewPairID("user_id", "role").BindResource(common.BindResource{
-		CreateContext: func(ctx context.Context, userID, role string, c *common.DatabricksClient) error {
+		CreateContext: func(ctx context.Context, userID, role string, c common.DatabricksAPI) error {
 			return scim.NewUsersAPI(ctx, c).Patch(userID, scim.PatchRequest("add", "roles", role))
 		},
-		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
+		ReadContext: func(ctx context.Context, userID, roleARN string, c common.DatabricksAPI) error {
 			user, err := scim.NewUsersAPI(ctx, c).Read(userID, "roles")
 			hasRole := scim.ComplexValues(user.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
@@ -23,7 +23,7 @@ func ResourceUserRole() *schema.Resource {
 			}
 			return err
 		},
-		DeleteContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
+		DeleteContext: func(ctx context.Context, userID, roleARN string, c common.DatabricksAPI) error {
 			return scim.NewUsersAPI(ctx, c).Patch(userID, scim.PatchRequest(
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},

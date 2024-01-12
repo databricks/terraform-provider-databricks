@@ -16,13 +16,13 @@ import (
 
 // ReposAPI exposes the Repos API
 type ReposAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
 // NewReposAPI creates ReposAPI instance from provider meta
 func NewReposAPI(ctx context.Context, m any) ReposAPI {
-	return ReposAPI{m.(*common.DatabricksClient), ctx}
+	return ReposAPI{m.(common.DatabricksAPI), ctx}
 }
 
 type ReposSparseCheckout struct {
@@ -193,7 +193,7 @@ func ResourceRepo() *schema.Resource {
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			reposAPI := NewReposAPI(ctx, c)
 			var repo ReposInformation
 			common.DataToStructPointer(d, s, &repo)
@@ -215,7 +215,7 @@ func ResourceRepo() *schema.Resource {
 			}
 			return reposAPI.Update(d.Id(), updateReq)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			reposAPI := NewReposAPI(ctx, c)
 			resp, err := reposAPI.Read(d.Id())
 			if err != nil {
@@ -228,7 +228,7 @@ func ResourceRepo() *schema.Resource {
 			d.Set("workspace_path", "/Workspace"+resp.Path)
 			return nil
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var repo ReposInformation
 			common.DataToStructPointer(d, s, &repo)
 
@@ -256,7 +256,7 @@ func ResourceRepo() *schema.Resource {
 			}
 			return reposAPI.Update(d.Id(), req)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewReposAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()

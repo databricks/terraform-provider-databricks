@@ -46,7 +46,7 @@ func ResourceConnection() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			if d.Get("owner") != "" {
 				tflog.Warn(context.Background(), "owner field not currently supported. Support will be enabled in a future update.")
 			}
@@ -68,7 +68,7 @@ func ResourceConnection() *schema.Resource {
 			pi.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -91,7 +91,7 @@ func ResourceConnection() *schema.Resource {
 			}
 			return common.StructToData(conn, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			if d.Get("owner") != "" {
 				tflog.Warn(context.Background(), "owner field not currently supported. Support will be enabled in a future update.")
 			}
@@ -119,7 +119,7 @@ func ResourceConnection() *schema.Resource {
 			pi.Pack(d)
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

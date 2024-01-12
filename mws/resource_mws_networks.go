@@ -16,12 +16,12 @@ import (
 
 // NewNetworksAPI creates MWSNetworksAPI instance from provider meta
 func NewNetworksAPI(ctx context.Context, m any) NetworksAPI {
-	return NetworksAPI{m.(*common.DatabricksClient), ctx}
+	return NetworksAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // NetworksAPI exposes the mws networks API
 type NetworksAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -87,7 +87,7 @@ func ResourceMwsNetworks() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "network_id", "/")
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var network Network
 			common.DataToStructPointer(d, s, &network)
 			if err := NewNetworksAPI(ctx, c).Create(&network); err != nil {
@@ -97,7 +97,7 @@ func ResourceMwsNetworks() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			accountID, networkID, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -108,7 +108,7 @@ func ResourceMwsNetworks() *schema.Resource {
 			}
 			return common.StructToData(network, s, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			accountID, networkID, err := p.Unpack(d)
 			if err != nil {
 				return err

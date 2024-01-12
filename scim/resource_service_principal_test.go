@@ -562,7 +562,7 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 				Message: "cannot find service principal",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
@@ -584,7 +584,7 @@ func TestCreateForceOverwriteCannotListAccServicePrincipals(t *testing.T) {
 				TotalResults: 0,
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
@@ -625,7 +625,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 				ApplicationID: appID,
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		d.Set("application_id", appID)

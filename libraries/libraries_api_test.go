@@ -91,7 +91,7 @@ func TestWaitForLibrariesInstalled(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		libs := NewLibrariesAPI(ctx, client)
 		_, err := libs.WaitForLibrariesInstalled(Wait{
 			"missing", 50 * time.Millisecond, true, false,
@@ -167,7 +167,7 @@ func TestClusterLibraryStatuses_UpdateLibraries(t *testing.T) {
 			Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
 			Response: ClusterLibraryStatuses{},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		libsAPI := NewLibrariesAPI(ctx, client)
 		err := libsAPI.UpdateLibraries("abc", ClusterLibraryList{
 			Libraries: []Library{

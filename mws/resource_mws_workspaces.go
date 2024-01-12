@@ -28,12 +28,12 @@ const DefaultProvisionTimeout = 20 * time.Minute
 
 // NewWorkspacesAPI creates MWSWorkspacesAPI instance from provider meta
 func NewWorkspacesAPI(ctx context.Context, m any) WorkspacesAPI {
-	return WorkspacesAPI{m.(*common.DatabricksClient), ctx}
+	return WorkspacesAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // WorkspacesAPI exposes the mws workspaces API
 type WorkspacesAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -168,8 +168,8 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 
 // generateWorkspaceHostname computes the hostname for the specified workspace,
 // given the account console hostname.
-func generateWorkspaceHostname(client *common.DatabricksClient, ws Workspace) string {
-	u, err := url.Parse(client.Config.Host)
+func generateWorkspaceHostname(client common.DatabricksAPI, ws Workspace) string {
+	u, err := url.Parse(client.Config().Host)
 	if err != nil {
 		// Fallback.
 		log.Printf("[WARN] Unable to parse URL from client host: %v", err)
@@ -522,7 +522,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				Upgrade: workspaceMigrateV2,
 			},
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
@@ -545,7 +545,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			p.Pack(d)
 			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			accountID, workspaceID, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -567,7 +567,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			}
 			return EnsureTokenExistsIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var workspace Workspace
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
@@ -584,7 +584,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			}
 			return UpdateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			accountID, workspaceID, err := p.Unpack(d)
 			if err != nil {
 				return err

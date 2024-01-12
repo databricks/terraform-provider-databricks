@@ -58,7 +58,7 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 				Upgrade: bindingMigrateV0,
 			},
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -75,7 +75,7 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			d.SetId(fmt.Sprintf("%d|%s|%s", update.WorkspaceId, d.Get("securable_type").(string), securableName))
 			return err
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -95,7 +95,7 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			}
 			return apierr.NotFound("Catalog has no binding to this workspace")
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

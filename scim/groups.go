@@ -11,14 +11,14 @@ import (
 // NewGroupsAPI creates GroupsAPI instance from provider meta
 func NewGroupsAPI(ctx context.Context, m any) GroupsAPI {
 	return GroupsAPI{
-		client:  m.(*common.DatabricksClient),
+		client:  m.(common.DatabricksAPI),
 		context: ctx,
 	}
 }
 
 // GroupsAPI exposes the scim groups API
 type GroupsAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 

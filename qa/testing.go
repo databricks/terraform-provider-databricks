@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -18,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -73,6 +75,10 @@ type ResourceFixture struct {
 	// A list of HTTP fixtures representing requests and their corresponding
 	// responses. These are loaded into the mock Databricks server.
 	Fixtures []HTTPFixture
+
+	MockWorkspaceClientFunc func(*mocks.MockWorkspaceClient)
+
+	MockAccountClientFunc func(*mocks.MockAccountClient)
 
 	// The resource the unit test is testing.
 	Resource *schema.Resource
@@ -169,25 +175,70 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
 }
 
-func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
+func (f ResourceFixture) setDatabricksEnvironmentForTest(client common.DatabricksAPI, host string) {
 	if f.Azure || f.AzureSPN {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+		client.Config().DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:              config.CloudAzure,
 			DnsZone:            host,
 			AzureApplicationID: "azure-login-application-id",
 			AzureEnvironment:   &config.AzurePublicCloud,
 		}
 	} else if f.Gcp {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+		client.Config().DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:   config.CloudGCP,
 			DnsZone: host,
 		}
 	} else {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
+		client.Config().DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:   config.CloudAWS,
 			DnsZone: host,
 		}
 	}
+}
+
+func (f ResourceFixture) validateMocks() error {
+	configuredMocks := make([]string, 0)
+	if f.MockWorkspaceClientFunc != nil {
+		configuredMocks = append(configuredMocks, "MockWorkspaceClientFunc")
+	}
+	if f.MockAccountClientFunc != nil {
+		configuredMocks = append(configuredMocks, "MockAccountClientFunc")
+	}
+	if f.Fixtures != nil {
+		configuredMocks = append(configuredMocks, "Fixtures")
+	}
+	if len(configuredMocks) != 1 {
+		configured := strings.Join(configuredMocks, ", ")
+		return fmt.Errorf("exactly one of MockWorkspaceClientFunc, MockAccountClientFunc, Fixtures must be set, got %s", configured)
+	}
+	return nil
+}
+
+type server struct {
+	Close func()
+	URL   string
+}
+
+func (f ResourceFixture) setupClient(t *testing.T) (common.DatabricksAPI, server, error) {
+	if f.MockWorkspaceClientFunc != nil {
+
+	}
+	if f.MockAccountClientFunc != nil {
+
+	}
+	if f.Fixtures != nil {
+		token := "..."
+		if f.Token != "" {
+			token = f.Token
+		}
+		client, s, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
+		ss := server{
+			Close: s.Close,
+			URL:   s.URL,
+		}
+		return client, ss, err
+	}
+	return nil, server{}, errors.New("no mocks configured")
 }
 
 // Apply runs tests from fixture
@@ -196,28 +247,33 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.Token != "" {
 		token = f.Token
 	}
+	err := f.validateMocks()
+	if err != nil {
+		return nil, err
+	}
 	client, server, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
 	defer server.Close()
 	if err != nil {
 		return nil, err
 	}
-	client.Config.WithTesting()
+	config := client.Config()
+	config.WithTesting()
 	if f.CommandMock != nil {
 		client.WithCommandMock(f.CommandMock)
 	}
 	if f.Azure {
-		client.Config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+		config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	}
 	if f.AzureSPN {
-		client.Config.AzureClientID = "a"
-		client.Config.AzureClientSecret = "b"
-		client.Config.AzureTenantID = "c"
+		config.AzureClientID = "a"
+		config.AzureClientSecret = "b"
+		config.AzureTenantID = "c"
 	}
 	if f.Gcp {
-		client.Config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
+		config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
 	if f.AccountID != "" {
-		client.Config.AccountID = f.AccountID
+		config.AccountID = f.AccountID
 	}
 	f.setDatabricksEnvironmentForTest(client, server.URL)
 	if len(f.HCL) > 0 {
@@ -388,9 +444,9 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 		}
 		config[corner.part] = corner.value
 	}
-	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
+	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client common.DatabricksAPI) {
 		validData := resource.TestResourceData()
-		client.Config.AccountID = config["account_id"]
+		client.Config().AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue
@@ -448,12 +504,12 @@ func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixtu
 }
 
 // HttpFixtureClient creates client for emulated HTTP server
-func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.DatabricksClient, server *httptest.Server, err error) {
+func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client common.DatabricksAPI, server *httptest.Server, err error) {
 	return HttpFixtureClientWithToken(t, fixtures, "...")
 }
 
 // HttpFixtureClientWithToken creates client for emulated HTTP server
-func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (*common.DatabricksClient, *httptest.Server, error) {
+func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (common.DatabricksAPI, *httptest.Server, error) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {
@@ -549,7 +605,7 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 }
 
 // HTTPFixturesApply is a helper method
-func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx context.Context, client *common.DatabricksClient)) {
+func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx context.Context, client common.DatabricksAPI)) {
 	client, server, err := HttpFixtureClient(t, fixtures)
 	defer server.Close()
 	require.NoError(t, err)

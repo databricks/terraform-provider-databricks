@@ -210,7 +210,7 @@ func TestAccPipelineResource_CreatePipelineWithoutWorkers(t *testing.T) {
 			continuous = false
 		}
 		` + dltNotebookResource,
-		Check: resourceCheck("databricks_pipeline.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_pipeline.this", func(ctx context.Context, client common.DatabricksAPI, id string) error {
 			ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			w, err := client.WorkspaceClient()
 			assert.NoError(t, err)

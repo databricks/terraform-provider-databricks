@@ -16,10 +16,10 @@ import (
 
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
-	Create         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Read           func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Update         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Delete         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Create         func(ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error
+	Read           func(ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error
+	Update         func(ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error
+	Delete         func(ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error
 	CustomizeDiff  func(ctx context.Context, d *schema.ResourceDiff) error
 	StateUpgraders []schema.StateUpgrader
 	Schema         map[string]*schema.Schema
@@ -37,9 +37,9 @@ func nicerError(ctx context.Context, err error, action string) error {
 }
 
 func recoverable(cb func(
-	ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error) func(
-	ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
-	return func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) (err error) {
+	ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error) func(
+	ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error {
+	return func(ctx context.Context, d *schema.ResourceData, c DatabricksAPI) (err error) {
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
 			// so that any unforeseen bug would we visible to end-user
@@ -87,7 +87,7 @@ func (r Resource) ToResource() *schema.Resource {
 	if r.Update != nil {
 		update = func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			c := m.(*DatabricksClient)
+			c := m.(DatabricksAPI)
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
@@ -124,7 +124,7 @@ func (r Resource) ToResource() *schema.Resource {
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
+			err := recoverable(r.Read)(ctx, d, m.(DatabricksAPI))
 			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 			if ignoreMissing && apierr.IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -146,7 +146,7 @@ func (r Resource) ToResource() *schema.Resource {
 		CustomizeDiff:  r.saferCustomizeDiff(),
 		CreateContext: func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			c := m.(*DatabricksClient)
+			c := m.(DatabricksAPI)
 			err := recoverable(r.Create)(ctx, d, c)
 			if err != nil {
 				err = nicerError(ctx, err, "create")
@@ -162,7 +162,7 @@ func (r Resource) ToResource() *schema.Resource {
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
+			err := recoverable(r.Delete)(ctx, d, m.(DatabricksAPI))
 			if apierr.IsMissing(err) {
 				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -210,7 +210,7 @@ func makeEmptyBlockSuppressFunc(name string) func(k, old, new string, d *schema.
 }
 
 // Deprecated: migrate to WorkspaceData
-func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) *schema.Resource {
+func DataResource(sc any, read func(context.Context, any, DatabricksAPI) error) *schema.Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
 	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		return m
@@ -226,7 +226,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 			}()
 			ptr := reflect.New(reflect.ValueOf(sc).Type())
 			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
-			err := read(ctx, ptr.Interface(), m.(*DatabricksClient))
+			err := read(ctx, ptr.Interface(), m.(DatabricksAPI))
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
 				diags = diag.FromErr(err)
@@ -256,7 +256,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //		...
 //	})
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
-	return genericDatabricksData(func(c *DatabricksClient) (*databricks.WorkspaceClient, error) {
+	return genericDatabricksData(func(c DatabricksAPI) (*databricks.WorkspaceClient, error) {
 		return c.WorkspaceClient()
 	}, read)
 }
@@ -273,13 +273,13 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 //		...
 //	})
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) *schema.Resource {
-	return genericDatabricksData(func(c *DatabricksClient) (*databricks.AccountClient, error) {
+	return genericDatabricksData(func(c DatabricksAPI) (*databricks.AccountClient, error) {
 		return c.AccountClient()
 	}, read)
 }
 
 // genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients
-func genericDatabricksData[T any, C any](getClient func(*DatabricksClient) (C, error), read func(context.Context, *T, C) error) *schema.Resource {
+func genericDatabricksData[T any, C any](getClient func(DatabricksAPI) (C, error), read func(context.Context, *T, C) error) *schema.Resource {
 	var dummy T
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		// `id` attribute must be marked as computed, otherwise it's not set!
@@ -300,7 +300,7 @@ func genericDatabricksData[T any, C any](getClient func(*DatabricksClient) (C, e
 			}()
 			ptr := reflect.New(reflect.ValueOf(dummy).Type())
 			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
-			client := m.(*DatabricksClient)
+			client := m.(DatabricksAPI)
 			c, err := getClient(client)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")

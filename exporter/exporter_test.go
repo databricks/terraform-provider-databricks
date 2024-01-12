@@ -75,7 +75,7 @@ func workspaceConfKeysToURL() string {
 }
 
 func (ic *importContext) setClientsForTests() {
-	ic.accountLevel = ic.Client.Config.IsAccountClient()
+	ic.accountLevel = ic.Client.Config().IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
 		ic.accountClient, _ = ic.Client.AccountClient()
@@ -213,7 +213,7 @@ func TestImportingMounts(t *testing.T) {
 					Libraries: []libraries.Library{},
 				},
 			},
-		}, func(ctx context.Context, client *common.DatabricksClient) {
+		}, func(ctx context.Context, client common.DatabricksAPI) {
 			ic := newImportContext(client)
 			ic.setClientsForTests()
 			ic.services = "mounts"
@@ -623,7 +623,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Response: secrets.ACLItem{Permission: "READ", Principal: "users"},
 			},
 			emptyWorkspace,
-		}, func(ctx context.Context, client *common.DatabricksClient) {
+		}, func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -693,7 +693,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 				},
 			},
 			emptyWorkspace,
-		}, func(ctx context.Context, client *common.DatabricksClient) {
+		}, func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -889,7 +889,7 @@ func TestImportingClusters(t *testing.T) {
 				},
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			os.Setenv("EXPORTER_PARALLELISM_databricks_cluster", "1")
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -1097,7 +1097,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 				},
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			ic := newImportContext(client)
 			ic.services = "jobs,access,storage,clusters,pools"
 			ic.listing = "jobs"
@@ -1348,7 +1348,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 				},
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			ic := newImportContext(client)
 			ic.services = "jobs,access,storage,clusters,pools"
 			ic.listing = "jobs"
@@ -1431,7 +1431,7 @@ func TestImportingSecrets(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/secret-scopes-get-principal-response.json"),
 			},
-		}, func(ctx context.Context, client *common.DatabricksClient) {
+		}, func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -1496,7 +1496,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/global-init-script-get2.json"),
 			},
-		}, func(ctx context.Context, client *common.DatabricksClient) {
+		}, func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -1538,7 +1538,7 @@ func TestImportingUser(t *testing.T) {
 					},
 				},
 			},
-		}, func(ctx context.Context, client *common.DatabricksClient) {
+		}, func(ctx context.Context, client common.DatabricksAPI) {
 			ic := newImportContext(client)
 			ic.setClientsForTests()
 			err := resourcesMap["databricks_user"].Search(ic, &resource{
@@ -1601,7 +1601,7 @@ func TestImportingRepos(t *testing.T) {
 				Response: getJSONObject("test-data/get-repo-permissions.json"),
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -1671,7 +1671,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 				ReuseRequest: true,
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -1806,7 +1806,7 @@ func TestImportingSqlObjects(t *testing.T) {
 				Response: getJSONObject("test-data/get-sql-alert-permissions.json"),
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -1984,7 +1984,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 				Response: getJSONObject("test-data/get-workspace-file-permissions.json"),
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -2040,7 +2040,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 				Response: getJSONObject("test-data/list-instance-profiles.json"),
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -2073,7 +2073,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 				},
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -2136,7 +2136,7 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 				},
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -2186,7 +2186,7 @@ func TestImportingModelServing(t *testing.T) {
 				},
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -2237,7 +2237,7 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 				},
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -2255,7 +2255,7 @@ func TestIncrementalErrors(t *testing.T) {
 	// Testing missing `-updated-since`
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			ic := newImportContext(client)
 			ic.services = "model-serving"
 			ic.incremental = true
@@ -2266,7 +2266,7 @@ func TestIncrementalErrors(t *testing.T) {
 	// Testing broken `-updated-since`
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			ic := newImportContext(client)
 			ic.services = "model-serving"
 			ic.incremental = true
@@ -2353,7 +2353,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 				ReuseRequest: true,
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 			os.Mkdir(tmpDir, 0700)
@@ -2430,7 +2430,7 @@ func TestImportingRunJobTask(t *testing.T) {
 				Response: getJSONObject("test-data/run-job-child.json"),
 			},
 		},
-		func(ctx context.Context, client *common.DatabricksClient) {
+		func(ctx context.Context, client common.DatabricksAPI) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 

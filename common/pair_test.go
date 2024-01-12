@@ -144,13 +144,13 @@ func TestPairIDResource(t *testing.T) {
 				p.Schema(tt.schema)
 			}
 			resource := p.BindResource(BindResource{
-				ReadContext: func(ctx context.Context, left, right string, c *DatabricksClient) error {
+				ReadContext: func(ctx context.Context, left, right string, c DatabricksAPI) error {
 					return tt.err
 				},
-				CreateContext: func(ctx context.Context, left, right string, c *DatabricksClient) error {
+				CreateContext: func(ctx context.Context, left, right string, c DatabricksAPI) error {
 					return tt.err
 				},
-				DeleteContext: func(ctx context.Context, left, right string, c *DatabricksClient) error {
+				DeleteContext: func(ctx context.Context, left, right string, c DatabricksAPI) error {
 					return tt.err
 				},
 			})

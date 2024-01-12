@@ -15,7 +15,7 @@ import (
 )
 
 type PermissionsAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -98,7 +98,7 @@ func newStringSet(in []string) *schema.Set {
 }
 
 func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
-	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
+	return PermissionsAPI{m.(common.DatabricksAPI), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 func getPermissionEndpoint(securable, name string) string {
@@ -366,7 +366,7 @@ func ResourceGrants() *schema.Resource {
 			common.DiffToStructPointer(d, s, &grants)
 			return mapping.validate(d, grants)
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			securable, name := mapping.kv(d)
@@ -377,7 +377,7 @@ func ResourceGrants() *schema.Resource {
 			d.SetId(mapping.id(d))
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			split := strings.SplitN(d.Id(), "/", 2)
 			if len(split) != 2 {
 				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
@@ -391,13 +391,13 @@ func ResourceGrants() *schema.Resource {
 			}
 			return common.StructToData(grants, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			securable, name := mapping.kv(d)
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			return NewPermissionsAPI(ctx, c).replacePermissions(securable, name, grants)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			split := strings.SplitN(d.Id(), "/", 2)
 			if len(split) != 2 {
 				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())

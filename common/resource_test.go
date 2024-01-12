@@ -15,7 +15,7 @@ func TestImportingCallsRead(t *testing.T) {
 	r := Resource{
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c DatabricksAPI) error {
 			d.SetId("abc")
 			return d.Set("foo", 1)
 		},
@@ -41,7 +41,7 @@ func TestImportingCallsRead(t *testing.T) {
 func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {
 	nope := func(ctx context.Context,
 		d *schema.ResourceData,
-		c *DatabricksClient) error {
+		c DatabricksAPI) error {
 		return apierr.NotFound("nope")
 	}
 	r := Resource{
@@ -91,17 +91,17 @@ func TestUpdate(t *testing.T) {
 	r := Resource{
 		Update: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c DatabricksAPI) error {
 			return d.Set("foo", 1)
 		},
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c DatabricksAPI) error {
 			return apierr.NotFound("nope")
 		},
 		Delete: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c DatabricksAPI) error {
 			return apierr.NotFound("nope")
 		},
 		Schema: map[string]*schema.Schema{
@@ -130,12 +130,12 @@ func TestRecoverableFromPanic(t *testing.T) {
 	r := Resource{
 		Update: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c DatabricksAPI) error {
 			return d.Set("foo", 1)
 		},
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c DatabricksAPI) error {
 			panic(fmt.Errorf("what to do?..."))
 		},
 		Schema: map[string]*schema.Schema{

@@ -44,7 +44,7 @@ func ResourceGlobalInitScript() *schema.Resource {
 	}
 	s := FileContentSchemaWithoutPath(extra)
 	return common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			content, err := ReadContent(d)
 			if err != nil {
 				return err
@@ -66,7 +66,7 @@ func ResourceGlobalInitScript() *schema.Resource {
 			d.SetId(scriptID)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			globalInitScriptsAPI := NewGlobalInitScriptsAPI(ctx, c)
 			scriptStatus, err := globalInitScriptsAPI.Get(d.Id())
 			if err != nil {
@@ -74,7 +74,7 @@ func ResourceGlobalInitScript() *schema.Resource {
 			}
 			return common.StructToData(scriptStatus, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			content, err := ReadContent(d)
 			if err != nil {
 				return err
@@ -91,7 +91,7 @@ func ResourceGlobalInitScript() *schema.Resource {
 				Name:          d.Get("name").(string),
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewGlobalInitScriptsAPI(ctx, c).Delete(d.Id())
 		},
 		Schema:        s,

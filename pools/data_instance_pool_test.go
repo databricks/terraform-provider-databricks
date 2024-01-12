@@ -57,7 +57,7 @@ func TestDataSourceInstancePoolsGetPool(t *testing.T) {
 			Resource: "/api/2.0/instance-pools/list",
 			Response: InstancePoolList{},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		poolsAPI := NewInstancePoolsAPI(ctx, client)
 
 		_, err := getPool(poolsAPI, "searching_error")

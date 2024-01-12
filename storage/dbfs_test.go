@@ -26,7 +26,7 @@ func TestCreateFileFails(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/dbfs/close",
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewDbfsAPI(ctx, client)
 		err := a.Create("/create-fails", []byte("abc"), true)
 		assert.EqualError(t, err, "cannot create handle: fails")
@@ -58,7 +58,7 @@ func TestCreateFile_AddBlockFails(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/dbfs/close",
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewDbfsAPI(ctx, client)
 		err := a.Create("/add-fails", []byte("abc"), true)
 		assert.EqualError(t, err, "cannot add block: fails")
@@ -81,7 +81,7 @@ func TestCreateFile_CloseFails(t *testing.T) {
 			Status:   404,
 			Response: apierr.NotFound("fails"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewDbfsAPI(ctx, client)
 		err := a.Create("/close-fails", []byte("abc"), true)
 		assert.EqualError(t, err, "cannot close handle: fails")
@@ -115,7 +115,7 @@ func TestDbfsListRecursiveFails(t *testing.T) {
 			Status:       404,
 			Response:     apierr.NotFound("fails"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewDbfsAPI(ctx, client)
 		_, err := a.List("abc", true)
 		assert.EqualError(t, err, "cannot list abc: fails")
@@ -133,7 +133,7 @@ func TestDbfsReadFails(t *testing.T) {
 			Status:   404,
 			Response: apierr.NotFound("fails"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewDbfsAPI(ctx, client)
 		_, err := a.Read("abc")
 		assert.EqualError(t, err, "cannot read abc: fails")

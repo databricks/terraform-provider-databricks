@@ -199,7 +199,7 @@ func TestCommandsAPIExecute_FailGettingCluster(t *testing.T) {
 				Message: "Does not compute",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Does not compute")
@@ -215,7 +215,7 @@ func TestCommandsAPIExecute_StoppedCluster(t *testing.T) {
 				State: "TERMINATED",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Cluster abc has to be running or resizing, but is TERMINATED")
@@ -239,7 +239,7 @@ func TestCommandsAPIExecute_FailToCreateContext(t *testing.T) {
 				Message: "Does not compute",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Does not compute")
@@ -270,7 +270,7 @@ func TestCommandsAPIExecute_FailToWaitForContext(t *testing.T) {
 				Message: "Does not compute",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Does not compute")
@@ -308,7 +308,7 @@ func TestCommandsAPIExecute_FailToCreateCommand(t *testing.T) {
 				Message: "Does not compute",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Does not compute")
@@ -353,7 +353,7 @@ func TestCommandsAPIExecute_FailToWaitForCommand(t *testing.T) {
 				Message: "Does not compute",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Does not compute")
@@ -405,7 +405,7 @@ func TestCommandsAPIExecute_FailToGetCommand(t *testing.T) {
 				Message: "Does not compute",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Does not compute")
@@ -458,7 +458,7 @@ func TestCommandsAPIExecute_FailToDeleteContext(t *testing.T) {
 				Message: "Does not compute",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Does not compute")
@@ -507,7 +507,7 @@ func TestCommandsAPIExecute_NoCommandResults(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/1.2/contexts/destroy",
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		commands := NewCommandsAPI(ctx, client)
 		cr := commands.Execute("abc", "cobol", "Hello?")
 		assert.EqualError(t, cr.Err(), "Command has no results")

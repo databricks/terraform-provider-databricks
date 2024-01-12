@@ -26,7 +26,7 @@ func ResourceCluster() *schema.Resource {
 		Read:   resourceClusterRead,
 		Update: resourceClusterUpdate,
 		Delete: func(ctx context.Context,
-			d *schema.ResourceData, c *common.DatabricksClient) error {
+			d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewClustersAPI(ctx, c).PermanentDelete(d.Id())
 		},
 		Schema:        clusterSchema,
@@ -124,7 +124,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 	})
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 	var cluster Cluster
 	start := time.Now()
 	timeout := d.Timeout(schema.TimeoutCreate)
@@ -186,7 +186,7 @@ func setPinnedStatus(d *schema.ResourceData, clusterAPI ClustersAPI) error {
 	return d.Set("is_pinned", pinnedEvent == EvTypePinned)
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 	clusterAPI := NewClustersAPI(ctx, c)
 	clusterInfo, err := clusterAPI.Get(d.Id())
 	if err != nil {
@@ -232,7 +232,7 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	return false
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 	clusters := NewClustersAPI(ctx, c)
 	clusterID := d.Id()
 	cluster := Cluster{ClusterID: clusterID}

@@ -60,7 +60,7 @@ func ResourceMetastore() *schema.Resource {
 
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var create catalog.CreateMetastore
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &create)
@@ -104,7 +104,7 @@ func ResourceMetastore() *schema.Resource {
 				return nil
 			})
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				mi, err := acc.Metastores.GetByMetastoreId(ctx, d.Id())
 				if err != nil {
@@ -119,7 +119,7 @@ func ResourceMetastore() *schema.Resource {
 				return common.StructToData(mi, s, d)
 			})
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
 			update.Id = d.Id()
@@ -190,7 +190,7 @@ func ResourceMetastore() *schema.Resource {
 				return nil
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			force := d.Get("force_destroy").(bool)
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				return acc.Metastores.Delete(ctx, catalog.DeleteAccountMetastoreRequest{Force: force, MetastoreId: d.Id()})

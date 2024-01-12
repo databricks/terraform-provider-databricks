@@ -82,23 +82,23 @@ func (p *Pair) Pack(d *schema.ResourceData) {
 
 // BindResource defines resource with simplified functions
 type BindResource struct {
-	ReadContext   func(ctx context.Context, left, right string, c *DatabricksClient) error
-	CreateContext func(ctx context.Context, left, right string, c *DatabricksClient) error
-	DeleteContext func(ctx context.Context, left, right string, c *DatabricksClient) error
+	ReadContext   func(ctx context.Context, left, right string, c DatabricksAPI) error
+	CreateContext func(ctx context.Context, left, right string, c DatabricksAPI) error
+	DeleteContext func(ctx context.Context, left, right string, c DatabricksAPI) error
 }
 
 // BindResource creates resource that relies on binding ID pair with simple schema & importer
 func (p *Pair) BindResource(pr BindResource) *schema.Resource {
 	return Resource{
 		Schema: p.schema,
-		Read: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error {
 			left, right, err := p.Unpack(d)
 			if err != nil {
 				return err
 			}
 			return pr.ReadContext(ctx, left, right, c)
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error {
 			left := d.Get(p.left).(string)
 			if left == "" {
 				return fmt.Errorf("%s cannot be empty", p.left)
@@ -114,7 +114,7 @@ func (p *Pair) BindResource(pr BindResource) *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c DatabricksAPI) error {
 			left, right, err := p.Unpack(d)
 			if err != nil {
 				return err

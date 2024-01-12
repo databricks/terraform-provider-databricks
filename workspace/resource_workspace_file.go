@@ -32,7 +32,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			content, err := ReadContent(d)
 			if err != nil {
 				return err
@@ -67,7 +67,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 			d.SetId(path)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -80,7 +80,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 			d.Set("workspace_path", "/Workspace"+objectStatus.Path)
 			return common.StructToData(objectStatus, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -97,7 +97,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 				ForceSendFields: []string{"Content"},
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err

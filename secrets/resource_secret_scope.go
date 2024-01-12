@@ -14,12 +14,12 @@ import (
 
 // NewSecretScopesAPI creates SecretScopesAPI instance from provider meta
 func NewSecretScopesAPI(ctx context.Context, m any) SecretScopesAPI {
-	return SecretScopesAPI{m.(*common.DatabricksClient), ctx}
+	return SecretScopesAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // SecretScopesAPI exposes the Secret Scopes API
 type SecretScopesAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -59,7 +59,7 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		BackendType:            "DATABRICKS",
 	}
 	if s.KeyvaultMetadata != nil {
-		err := a.client.Config.EnsureResolved()
+		err := a.client.Config().EnsureResolved()
 		if err != nil {
 			return err
 		}
@@ -120,7 +120,7 @@ func ResourceSecretScope() *schema.Resource {
 		Schema:        s,
 		SchemaVersion: 2,
 
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var scope SecretScope
 			common.DataToStructPointer(d, s, &scope)
 			if err := NewSecretScopesAPI(ctx, c).Create(scope); err != nil {
@@ -129,14 +129,14 @@ func ResourceSecretScope() *schema.Resource {
 			d.SetId(scope.Name)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			scope, err := NewSecretScopesAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(scope, s, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewSecretScopesAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()

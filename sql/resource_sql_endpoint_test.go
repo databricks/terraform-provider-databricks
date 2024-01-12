@@ -291,7 +291,7 @@ func TestSQLEnpointAPI(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/sql/warehouses/stopping/stop",
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		a := NewSQLEndpointsAPI(ctx, client)
 		list, err := a.List()
 		require.NoError(t, err)
@@ -319,7 +319,7 @@ func TestResolveDataSourceIDError(t *testing.T) {
 			Response: map[string]any{},
 			Status:   404,
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")
 		require.Error(t, err)
 	})
@@ -332,7 +332,7 @@ func TestResolveDataSourceIDNotFound(t *testing.T) {
 			Resource: "/api/2.0/preview/sql/data_sources",
 			Response: []any{},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		_, err := NewSQLEndpointsAPI(ctx, client).ResolveDataSourceID("any")
 		require.Error(t, err)
 	})

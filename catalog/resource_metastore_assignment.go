@@ -24,7 +24,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			workspaceId := int64(d.Get("workspace_id").(int))
 			metastoreId := d.Get("metastore_id").(string)
 			var create catalog.CreateMetastoreAssignment
@@ -52,7 +52,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				return nil
 			})
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			first, _, err := pi.Unpack(d)
 			if err != nil {
 				return err
@@ -79,7 +79,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				return nil
 			})
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			workspaceId := int64(d.Get("workspace_id").(int))
 			metastoreId := d.Get("metastore_id").(string)
 			var update catalog.UpdateMetastoreAssignment
@@ -97,7 +97,7 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				return w.Metastores.UpdateAssignment(ctx, update)
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			first, metastoreId, err := pi.Unpack(d)
 			if err != nil {
 				return err

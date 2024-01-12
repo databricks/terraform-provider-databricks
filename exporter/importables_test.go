@@ -47,11 +47,11 @@ func importContextForTest() *importContext {
 	}
 }
 
-func importContextForTestWithClient(ctx context.Context, client *common.DatabricksClient) *importContext {
+func importContextForTestWithClient(ctx context.Context, client common.DatabricksAPI) *importContext {
 	ic := importContextForTest()
 	ic.Client = client
 	ic.Context = ctx
-	if client.Config.IsAccountClient() {
+	if client.Config().IsAccountClient() {
 		ic.accountClient, _ = client.AccountClient()
 	} else {
 		ic.workspaceClient, _ = client.WorkspaceClient()
@@ -279,7 +279,7 @@ func TestImportClusterLibraries(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		d := clusters.ResourceCluster().TestResourceData()
 		d.SetId("abc")
@@ -300,7 +300,7 @@ func TestImportClusterLibrariesFails(t *testing.T) {
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
 			Response:     apierr.NotFound("nope"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		d := clusters.ResourceCluster().TestResourceData()
 		d.SetId("abc")
@@ -320,7 +320,7 @@ func TestClusterListFails(t *testing.T) {
 			Status:   404,
 			Response: apierr.NotFound("nope"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_cluster"].List(ic)
 		assert.EqualError(t, err, "nope")
@@ -340,7 +340,7 @@ func TestClusterList_NoNameMatch(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.match = "bcd"
 		err := resourcesMap["databricks_cluster"].List(ic)
@@ -367,7 +367,7 @@ func TestInstnacePoolsListWithMatch(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.match = "bcd"
 		err := resourcesMap["databricks_instance_pool"].List(ic)
@@ -424,7 +424,7 @@ func TestGroupCacheError(t *testing.T) {
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_group"].List(ic)
 		assert.EqualError(t, err, "nope")
@@ -476,7 +476,7 @@ func TestUserSearchFails(t *testing.T) {
 	userFixture := qa.ListUsersFixtures([]iam.User{})
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		userFixture[0],
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceUser().TestResourceData()
 		d.Set("user_name", "dbc")
@@ -496,7 +496,7 @@ func TestUserSearchFails(t *testing.T) {
 func TestSpnSearchFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{})[0],
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceServicePrincipal().TestResourceData()
 		d.Set("application_id", "dbc")
@@ -528,7 +528,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 			Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/321?attributes=userName,displayName,active,externalId,entitlements,groups,roles",
 			Response:     scim.User{ID: "321", DisplayName: "spn", ApplicationID: "dbc"},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceServicePrincipal().TestResourceData()
 		d.Set("application_id", "dbc")
@@ -546,7 +546,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
 			scim.ResourceServicePrincipal().Schema["application_id"], d))
-		ic.Client.Config.Host = "https://abc.azuredatabricks.net"
+		ic.Client.Config().Host = "https://abc.azuredatabricks.net"
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
 			scim.ResourceServicePrincipal().Schema["display_name"], d))
 
@@ -623,7 +623,7 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		d := scim.ResourceUser().TestResourceData()
 		d.Set("user_name", "dbc")
@@ -652,7 +652,7 @@ func TestSecretScopeListNoNameMatch(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.match = "bcd"
 		err := resourcesMap["databricks_secret_scope"].List(ic)
@@ -692,7 +692,7 @@ func TestPoliciesListing(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_cluster_policy"].List(ic)
 		assert.NoError(t, err)
@@ -717,7 +717,7 @@ func TestPoliciesListNoNameMatch(t *testing.T) {
 			},
 		},
 		emptyPolicyFamilies,
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.match = "bcd"
 		err := resourcesMap["databricks_cluster_policy"].List(ic)
@@ -846,7 +846,7 @@ func TestGlobalInitScriptsErrors(t *testing.T) {
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_global_init_script"].List(ic)
 		assert.EqualError(t, err, "nope")
@@ -876,7 +876,7 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 				ContentBase64: "YWJj",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_global_init_script"].Import(ic, &resource{
 			ID: "sad-emoji",
@@ -898,7 +898,7 @@ func TestRepoListFails(t *testing.T) {
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		err := resourcesMap["databricks_repo"].List(ic)
 		assert.EqualError(t, err, "nope")
@@ -906,7 +906,7 @@ func TestRepoListFails(t *testing.T) {
 }
 
 func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAdmin bool, cb func(*importContext)) {
-	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
+	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(ic.Directory)
@@ -1239,7 +1239,7 @@ func TestSqlListObjects(t *testing.T) {
 			Response: dbsqlListResponse{PageSize: 1, Page: 2, TotalCount: 2,
 				Results: []map[string]any{{"key2": "value2"}}},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		answer, err := dbsqlListObjects(ic, "/preview/sql/queries")
 		assert.NoError(t, err)
@@ -1283,7 +1283,7 @@ func TestIncrementalListDLT(t *testing.T) {
 				LastModified: 1690156900000,
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.incremental = true
 		ic.updatedSinceStr = "2023-07-24T00:00:00Z"

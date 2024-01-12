@@ -14,7 +14,7 @@ func DataSourceWarehouses() *schema.Resource {
 		WarehouseNameContains string   `json:"warehouse_name_contains,omitempty"`
 		Ids                   []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}
-	return common.DataResource(warehousesData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
+	return common.DataResource(warehousesData{}, func(ctx context.Context, e interface{}, c common.DatabricksAPI) error {
 		data := e.(*warehousesData)
 		a := NewSQLEndpointsAPI(ctx, c)
 		list, err := a.List()

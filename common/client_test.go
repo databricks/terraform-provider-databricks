@@ -14,18 +14,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
-	req, err := http.NewRequest("GET", dc.Config.Host, nil)
+func configureAndAuthenticate(dc DatabricksAPI) (DatabricksAPI, error) {
+	req, err := http.NewRequest("GET", dc.Config().Host, nil)
 	if err != nil {
 		return dc, err
 	}
-	return dc, dc.Config.Authenticate(req)
+	return dc, dc.Config().Authenticate(req)
 }
 
-func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string) {
+func failsToAuthenticateWith(t *testing.T, dc DatabricksAPI, message string) {
 	_, err := configureAndAuthenticate(dc)
-	if dc.Config.AuthType != "" {
-		log.Printf("[INFO] Auth is: %s", dc.Config.AuthType)
+	if dc.Config().AuthType != "" {
+		log.Printf("[INFO] Auth is: %s", dc.Config().AuthType)
 	}
 	if assert.NotNil(t, err, "expected to have error: %s", message) {
 		assert.True(t, strings.HasPrefix(err.Error(), message), "Expected to have '%s' error, but got '%s'", message, err.Error())
@@ -63,7 +63,7 @@ func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, "basic", dc.Config.AuthType)
+	assert.Equal(t, "basic", dc.Config().AuthType)
 }
 
 func TestDatabricksClientConfigure_HostWithoutScheme(t *testing.T) {
@@ -76,9 +76,9 @@ func TestDatabricksClientConfigure_HostWithoutScheme(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, "pat", dc.Config.AuthType)
-	assert.Equal(t, "...", dc.Config.Token)
-	assert.Equal(t, "https://localhost:443", dc.Config.Host)
+	assert.Equal(t, "pat", dc.Config().AuthType)
+	assert.Equal(t, "...", dc.Config().Token)
+	assert.Equal(t, "https://localhost:443", dc.Config().Host)
 }
 
 func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
@@ -102,7 +102,7 @@ func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, "pat", dc.Config.AuthType)
+	assert.Equal(t, "pat", dc.Config().AuthType)
 }
 
 func TestDatabricksClientConfigure_BasicAuthDoesNotTakePrecedence(t *testing.T) {
@@ -128,8 +128,8 @@ func TestDatabricksClientConfigure_ConfigRead(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, "pat", dc.Config.AuthType)
-	assert.Equal(t, "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ", dc.Config.Token)
+	assert.Equal(t, "pat", dc.Config().AuthType)
+	assert.Equal(t, "PT0+IC9kZXYvdXJhbmRvbSA8PT0KYFZ", dc.Config().Token)
 }
 
 func TestDatabricksClientConfigure_NoHostGivesError(t *testing.T) {
@@ -233,9 +233,9 @@ func TestClientForHost(t *testing.T) {
 	assert.True(t, dc.IsAws())
 	cc, err := dc.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
 	assert.NoError(t, err)
-	assert.Equal(t, dc.Config.Username, cc.Config.Username)
-	assert.Equal(t, dc.Config.Password, cc.Config.Password)
-	assert.NotEqual(t, dc.Config.Host, cc.Config.Host)
+	assert.Equal(t, dc.Config().Username, cc.Config().Username)
+	assert.Equal(t, dc.Config().Password, cc.Config().Password)
+	assert.NotEqual(t, dc.Config().Host, cc.Config().Host)
 }
 
 func TestClientForHostAuthError(t *testing.T) {

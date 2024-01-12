@@ -638,7 +638,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 				Message: "cannot find user",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
@@ -659,7 +659,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 				TotalResults: 0,
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
@@ -699,7 +699,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 				UserName: "me@example.com",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
@@ -741,7 +741,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 				UserName: "me@example.com",
 			},
 		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	}, func(ctx context.Context, client common.DatabricksAPI) {
 		d := ResourceUser().TestResourceData()
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")

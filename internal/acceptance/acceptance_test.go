@@ -46,9 +46,9 @@ func TestRunningRealTerraformWithFixtureBackend(t *testing.T) {
 			ExpectedRequest: map[string]interface{}{"token_id": "abc"},
 		},
 	},
-		func(ctx context.Context, client *common.DatabricksClient) {
-			t.Setenv("DATABRICKS_HOST", client.Config.Host)
-			t.Setenv("DATABRICKS_TOKEN", client.Config.Token)
+		func(ctx context.Context, client common.DatabricksAPI) {
+			t.Setenv("DATABRICKS_HOST", client.Config().Host)
+			t.Setenv("DATABRICKS_TOKEN", client.Config().Token)
 
 			workspaceLevel(t, step{
 				Template: `resource "databricks_token" "this" {

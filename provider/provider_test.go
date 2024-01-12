@@ -74,7 +74,7 @@ func (tt providerFixture) rawConfig() map[string]any {
 	return rawConfig
 }
 
-func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
+func (tc providerFixture) apply(t *testing.T) common.DatabricksAPI {
 	c, err := configureProviderAndReturnClient(t, tc)
 	if tc.assertError != "" {
 		require.NotNilf(t, err, "Expected to have %s error", tc.assertError)
@@ -87,8 +87,8 @@ func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
 		return nil
 	}
 	assert.Equal(t, tc.assertAzure, c.IsAzure())
-	assert.Equal(t, tc.assertAuth, c.Config.AuthType)
-	assert.Equal(t, tc.assertHost, c.Config.Host)
+	assert.Equal(t, tc.assertAuth, c.Config().AuthType)
+	assert.Equal(t, tc.assertHost, c.Config().Host)
 	return c
 }
 
@@ -445,7 +445,7 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 	}
 }
 
-func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
+func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (common.DatabricksAPI, error) {
 	for k, v := range tt.env {
 		t.Setenv(k, v)
 	}
@@ -459,12 +459,12 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		}
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
-	client := p.Meta().(*common.DatabricksClient)
+	client := p.Meta().(common.DatabricksAPI)
 	r, err := http.NewRequest("GET", "", nil)
 	if err != nil {
 		return nil, err
 	}
-	err = client.Config.Authenticate(r)
+	err = client.Config().Authenticate(r)
 	if err != nil {
 		return nil, err
 	}

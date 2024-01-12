@@ -61,7 +61,7 @@ func (m GenericMount) Name() string {
 }
 
 // Config returns mount configurations
-func (m GenericMount) Config(client *common.DatabricksClient) map[string]string {
+func (m GenericMount) Config(client common.DatabricksAPI) map[string]string {
 	if block := m.getBlock(); block != nil {
 		return block.Config(client)
 	}
@@ -69,7 +69,7 @@ func (m GenericMount) Config(client *common.DatabricksClient) map[string]string 
 }
 
 // ApplyDefaults tries to apply defaults to a given resource
-func (m GenericMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m GenericMount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
 	if block := m.getBlock(); block != nil {
 		return block.ValidateAndApplyDefaults(d, client)
 	}
@@ -105,9 +105,9 @@ func getContainerDefaults(d *schema.ResourceData, allowed_schemas []string, suff
 	return "", "", fmt.Errorf("container_name or storage_account_name are empty, and resource_id or uri aren't specified")
 }
 
-func getTenantID(client *common.DatabricksClient) (string, error) {
-	if client.Config.AzureTenantID != "" {
-		return client.Config.AzureTenantID, nil
+func getTenantID(client common.DatabricksAPI) (string, error) {
+	if client.Config().AzureTenantID != "" {
+		return client.Config().AzureTenantID, nil
 	}
 	v, err := client.GetAzureJwtProperty("tid")
 	if err != nil {
@@ -143,7 +143,7 @@ func (m *AzureADLSGen2MountGeneric) Name() string {
 	return m.ContainerName
 }
 
-func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
 	if m.ContainerName == "" || m.StorageAccountName == "" {
 		acc, cont, err := getContainerDefaults(d, []string{"abfs", "abfss"}, "dfs.core.windows.net")
 		if err != nil {
@@ -168,8 +168,8 @@ func (m *AzureADLSGen2MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 }
 
 // Config returns mount configurations
-func (m *AzureADLSGen2MountGeneric) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
+func (m *AzureADLSGen2MountGeneric) Config(client common.DatabricksAPI) map[string]string {
+	aadEndpoint := client.Config().Environment().AzureActiveDirectoryEndpoint()
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",
 		"fs.azure.account.oauth.provider.type":                "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
@@ -202,7 +202,7 @@ func (m *AzureADLSGen1MountGeneric) Name() string {
 	return m.StorageResource
 }
 
-func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
 	rid := d.Get("resource_id").(string)
 	if m.StorageResource == "" {
 		if rid != "" {
@@ -233,8 +233,8 @@ func (m *AzureADLSGen1MountGeneric) ValidateAndApplyDefaults(d *schema.ResourceD
 }
 
 // Config ...
-func (m *AzureADLSGen1MountGeneric) Config(client *common.DatabricksClient) map[string]string {
-	aadEndpoint := client.Config.Environment().AzureActiveDirectoryEndpoint()
+func (m *AzureADLSGen1MountGeneric) Config(client common.DatabricksAPI) map[string]string {
+	aadEndpoint := client.Config().Environment().AzureActiveDirectoryEndpoint()
 	return map[string]string{
 		m.PrefixType + ".oauth2.access.token.provider.type": "ClientCredential",
 
@@ -266,7 +266,7 @@ func (m *AzureBlobMountGeneric) Name() string {
 	return m.ContainerName
 }
 
-func (m *AzureBlobMountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
+func (m *AzureBlobMountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
 	if m.ContainerName == "" || m.StorageAccountName == "" {
 		acc, cont, err := getContainerDefaults(d, []string{"wasb", "wasbs"}, "blob.core.windows.net")
 		if err != nil {
@@ -284,7 +284,7 @@ func (m *AzureBlobMountGeneric) ValidateAndApplyDefaults(d *schema.ResourceData,
 }
 
 // Config ...
-func (m *AzureBlobMountGeneric) Config(client *common.DatabricksClient) map[string]string {
+func (m *AzureBlobMountGeneric) Config(client common.DatabricksAPI) map[string]string {
 	var confKey string
 	if m.AuthType == "SAS" {
 		confKey = fmt.Sprintf("fs.azure.sas.%s.%s.blob.core.windows.net", m.ContainerName, m.StorageAccountName)

@@ -46,12 +46,12 @@ type ReadResponse struct {
 
 // NewDbfsAPI creates DBFSAPI instance from provider meta
 func NewDbfsAPI(ctx context.Context, m any) DbfsAPI {
-	return DbfsAPI{m.(*common.DatabricksClient), ctx}
+	return DbfsAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // DbfsAPI exposes the DBFS API
 type DbfsAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 

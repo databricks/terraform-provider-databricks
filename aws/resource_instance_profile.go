@@ -32,14 +32,14 @@ type InstanceProfileList struct {
 // NewInstanceProfilesAPI creates InstanceProfilesAPI instance from provider meta
 func NewInstanceProfilesAPI(ctx context.Context, m any) InstanceProfilesAPI {
 	return InstanceProfilesAPI{
-		client:  m.(*common.DatabricksClient),
+		client:  m.(common.DatabricksAPI),
 		context: ctx,
 	}
 }
 
 // InstanceProfilesAPI exposes the instance profiles api on the AWS deployment of Databricks
 type InstanceProfilesAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -157,14 +157,14 @@ func ResourceInstanceProfile() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: instanceProfileSchema,
-		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			profile, err := NewInstanceProfilesAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(profile, instanceProfileSchema, d)
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var profile InstanceProfileInfo
 			common.DataToStructPointer(d, instanceProfileSchema, &profile)
 			if err := NewInstanceProfilesAPI(ctx, c).Create(profile); err != nil {
@@ -173,10 +173,10 @@ func ResourceInstanceProfile() *schema.Resource {
 			d.SetId(profile.InstanceProfileArn)
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			return NewInstanceProfilesAPI(ctx, c).Delete(d.Id())
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
 			var profile InstanceProfileInfo
 			common.DataToStructPointer(d, instanceProfileSchema, &profile)
 			return NewInstanceProfilesAPI(ctx, c).Update(profile)

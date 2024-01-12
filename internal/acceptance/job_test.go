@@ -172,7 +172,7 @@ func TestAccJobControlRunState(t *testing.T) {
 		}
 		return true, nil
 	}
-	retryFor := func(ctx context.Context, client *common.DatabricksClient, id string, lastErr error, f func(context.Context, *databricks.WorkspaceClient, int64) (bool, error)) error {
+	retryFor := func(ctx context.Context, client common.DatabricksAPI, id string, lastErr error, f func(context.Context, *databricks.WorkspaceClient, int64) (bool, error)) error {
 		ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 		w, err := client.WorkspaceClient()
 		assert.NoError(t, err)
@@ -191,10 +191,10 @@ func TestAccJobControlRunState(t *testing.T) {
 		}
 		return lastErr
 	}
-	waitForRunToStart := func(ctx context.Context, client *common.DatabricksClient, id string) error {
+	waitForRunToStart := func(ctx context.Context, client common.DatabricksAPI, id string) error {
 		return retryFor(ctx, client, id, errors.New("timed out waiting for job run to start"), checkIfRunHasStarted)
 	}
-	waitForAllRunsToEnd := func(ctx context.Context, client *common.DatabricksClient, id string) error {
+	waitForAllRunsToEnd := func(ctx context.Context, client common.DatabricksAPI, id string) error {
 		return retryFor(ctx, client, id, errors.New("timed out waiting for job run to end"), checkIfAllRunsHaveEnded)
 	}
 	randomName1 := RandomName("notebook-")

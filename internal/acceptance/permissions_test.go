@@ -40,7 +40,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_permissions.dummy",
 				"object_type", "notebook"),
 			resourceCheck("databricks_permissions.dummy",
-				func(ctx context.Context, client *common.DatabricksClient, id string) error {
+				func(ctx context.Context, client common.DatabricksAPI, id string) error {
 					permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
 					if err != nil {
 						return err
@@ -74,7 +74,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 			}
 		}`, randomName),
 		Check: resourceCheck("databricks_permissions.dummy",
-			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			func(ctx context.Context, client common.DatabricksAPI, id string) error {
 				permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
 				if err != nil {
 					return err
@@ -114,7 +114,7 @@ func TestAccDatabricksReposPermissionsResourceFullLifecycle(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_permissions.dummy",
 				"object_type", "repo"),
 			resourceCheck("databricks_permissions.dummy",
-				func(ctx context.Context, client *common.DatabricksClient, id string) error {
+				func(ctx context.Context, client common.DatabricksAPI, id string) error {
 					permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
 					if err != nil {
 						return err

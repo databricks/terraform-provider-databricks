@@ -200,12 +200,12 @@ func (w *WidgetEntity) fromAPIObject(aw *api.Widget, schema map[string]*schema.S
 
 // NewWidgetAPI ...
 func NewWidgetAPI(ctx context.Context, m any) WidgetAPI {
-	return WidgetAPI{m.(*common.DatabricksClient), ctx}
+	return WidgetAPI{m.(common.DatabricksAPI), ctx}
 }
 
 // WidgetAPI ...
 type WidgetAPI struct {
-	client  *common.DatabricksClient
+	client  common.DatabricksAPI
 	context context.Context
 }
 
@@ -269,7 +269,7 @@ func ResourceSqlWidget() *schema.Resource {
 		})
 
 	return common.Resource{
-		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+		Create: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
 			var w WidgetEntity
 			aw, err := w.toAPIObject(s, data)
 			if err != nil {
@@ -293,7 +293,7 @@ func ResourceSqlWidget() *schema.Resource {
 			p.Pack(data)
 			return nil
 		},
-		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+		Read: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
 			dashboardID, widgetID, err := p.Unpack(data)
 			if err != nil {
 				return err
@@ -307,7 +307,7 @@ func ResourceSqlWidget() *schema.Resource {
 			var w WidgetEntity
 			return w.fromAPIObject(aw, s, data)
 		},
-		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
 			_, widgetID, err := p.Unpack(data)
 			if err != nil {
 				return err
@@ -321,7 +321,7 @@ func ResourceSqlWidget() *schema.Resource {
 
 			return NewWidgetAPI(ctx, c).Update(widgetID, aw)
 		},
-		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+		Delete: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
 			_, widgetID, err := p.Unpack(data)
 			if err != nil {
 				return err

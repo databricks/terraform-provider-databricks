@@ -17,7 +17,7 @@ func TestAccGitCredentials(t *testing.T) {
 			force = true
 		}`,
 		Check: resourceCheck("databricks_git_credential.this",
-			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			func(ctx context.Context, client common.DatabricksAPI, id string) error {
 				w, err := client.WorkspaceClient()
 				assert.NoError(t, err)
 				creds, err := w.GitCredentials.ListAll(ctx)

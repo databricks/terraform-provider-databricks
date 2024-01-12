@@ -20,7 +20,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 			}
 		}
 		`,
-		Check: resourceCheck("databricks_default_namespace_setting.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_default_namespace_setting.this", func(ctx context.Context, client common.DatabricksAPI, id string) error {
 			ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			w, err := client.WorkspaceClient()
 			assert.NoError(t, err)
@@ -40,7 +40,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				}
 			}`,
 			Destroy: true,
-			Check: resourceCheck("databricks_default_namespace_setting.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			Check: resourceCheck("databricks_default_namespace_setting.this", func(ctx context.Context, client common.DatabricksAPI, id string) error {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 				w, err := client.WorkspaceClient()
 				assert.NoError(t, err)

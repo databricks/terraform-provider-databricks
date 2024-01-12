@@ -24,7 +24,7 @@ func (cb mountCallback) preProcess(r *schema.Resource) func(
 		scm := r.Schema
 		common.DataToStructPointer(d, scm, &gm)
 		// TODO: propagate ctx all the way down to GetAzureJwtProperty()
-		err := gm.ValidateAndApplyDefaults(d, m.(*common.DatabricksClient))
+		err := gm.ValidateAndApplyDefaults(d, m.(common.DatabricksAPI))
 		if err != nil {
 			return diag.FromErr(err)
 		}

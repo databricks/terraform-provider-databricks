@@ -12,12 +12,12 @@ func DataSourceMwsWorkspaces() *schema.Resource {
 	type mwsWorkspacesData struct {
 		Ids map[string]int64 `json:"ids,omitempty" tf:"computed"`
 	}
-	return common.DataResource(mwsWorkspacesData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	return common.DataResource(mwsWorkspacesData{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
 		data := e.(*mwsWorkspacesData)
-		if c.Config.AccountID == "" {
+		if c.Config().AccountID == "" {
 			return fmt.Errorf("provider block is missing `account_id` property")
 		}
-		workspaces, err := NewWorkspacesAPI(ctx, c).List(c.Config.AccountID)
+		workspaces, err := NewWorkspacesAPI(ctx, c).List(c.Config().AccountID)
 		if err != nil {
 			return err
 		}

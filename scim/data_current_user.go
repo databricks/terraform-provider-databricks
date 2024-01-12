@@ -47,7 +47,7 @@ func DataSourceCurrentUser() *schema.Resource {
 			},
 		},
 		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			c := m.(*common.DatabricksClient)
+			c := m.(common.DatabricksAPI)
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return diag.FromErr(err)

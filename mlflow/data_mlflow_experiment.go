@@ -30,7 +30,7 @@ func DataSourceExperiment() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			experiment = experimentResponse
+			experiment = experimentResponse.Experiment
 			data.Name = experiment.Name
 		} else {
 			return fmt.Errorf("you need to specify either `name` or `experiment_id`")

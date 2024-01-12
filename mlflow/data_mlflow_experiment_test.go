@@ -16,11 +16,13 @@ func TestDataSourceExperimentById(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=1234567890",
-				Response: &ml.Experiment{
-					Name:             "/Users/databricks/my-experiment",
-					ExperimentId:     "1234567890",
-					ArtifactLocation: "dbfs:/databricks/mlflow-tracking/1234567890",
-					LifecycleStage:   "active",
+				Response: ml.GetExperimentResponse{
+					Experiment: &ml.Experiment{
+						Name:             "/Users/databricks/my-experiment",
+						ExperimentId:     "1234567890",
+						ArtifactLocation: "dbfs:/databricks/mlflow-tracking/1234567890",
+						LifecycleStage:   "active",
+					},
 				},
 			},
 		},
@@ -66,7 +68,7 @@ func TestDataSourceExperimentByName(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/mlflow/experiments/get-by-name?experiment_name=%s", url.QueryEscape(experimentName)),
-				Response: ml.GetExperimentByNameResponse{
+				Response: ml.GetExperimentResponse{
 					Experiment: &ml.Experiment{
 						Name:             experimentName,
 						ExperimentId:     "1234567890",

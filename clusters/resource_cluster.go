@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 )
@@ -57,71 +58,116 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-func resourceClusterSchema() map[string]*schema.Schema {
-	return common.StructToSchema(Cluster{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["spark_conf"].DiffSuppressFunc = SparkConfDiffSuppressFunc
-		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = ZoneDiffSuppress
-		common.MustSchemaPath(s, "gcp_attributes", "use_preemptible_executors").Deprecated = "Please use 'availability' instead."
+type ClusterResourceProvider struct{}
 
-		common.MustSchemaPath(s, "init_scripts", "dbfs").Deprecated = DbfsDeprecationWarning
+func (ClusterResourceProvider) UnderlyingType() compute.ClusterDetails {
+	return compute.ClusterDetails{}
+}
 
-		// adds `library` configuration block
-		s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
-			func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-				ss["library"].Set = func(i any) int {
-					lib := libraries.NewLibraryFromInstanceState(i)
-					return schema.HashString(lib.String())
-				}
+func (ClusterResourceProvider) Aliases() map[string]string {
+	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
+}
+
+func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetOptional().SetComputed()
+	common.CustomizeSchemaPath(s, "enable_local_disk_encryption").SetOptional().SetComputed()
+	common.CustomizeSchemaPath(s, "node_type_id").SetComputed().SetOptional().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
+	common.CustomizeSchemaPath(s, "driver_node_type_id").SetComputed().SetOptional().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
+	common.CustomizeSchemaPath(s, "driver_instance_pool_id").SetComputed().SetOptional().SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
+	common.CustomizeSchemaPath(s, "ssh_public_keys").SetMaxItems(10)
+	common.CustomizeSchemaPath(s, "init_scripts").SetMaxItems(10).AddNewField("abfss", common.StructToSchema(InitScriptStorageInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+		return ss
+	})["abfss"]).AddNewField("gcs", common.StructToSchema(InitScriptStorageInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+		return ss
+	})["gcs"])
+	common.CustomizeSchemaPath(s, "init_scripts", "dbfs").SetDeprecated(DbfsDeprecationWarning)
+	common.CustomizeSchemaPath(s, "init_scripts", "dbfs", "destination").SetRequired()
+	common.CustomizeSchemaPath(s, "init_scripts", "s3", "destination").SetRequired()
+	common.CustomizeSchemaPath(s, "workload_type", "clients").SetRequired()
+	common.CustomizeSchemaPath(s, "workload_type", "clients", "notebooks").SetOptional().SetDefault(true)
+	common.CustomizeSchemaPath(s, "workload_type", "clients", "jobs").SetOptional().SetDefault(true)
+	s["idempotency_token"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		ForceNew: true,
+	}
+	common.CustomizeSchemaPath(s, "data_security_mode").SetSuppressDiff()
+	common.CustomizeSchemaPath(s, "docker_image", "url").SetRequired()
+	common.CustomizeSchemaPath(s, "docker_image", "basic_auth", "password").SetRequired().SetSensitive()
+	common.CustomizeSchemaPath(s, "docker_image", "basic_auth", "username").SetRequired()
+	common.CustomizeSchemaPath(s, "spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
+	common.CustomizeSchemaPath(s, "aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
+	common.CustomizeSchemaPath(s, "aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
+	common.CustomizeSchemaPath(s, "azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
+	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"}).AddNewField(
+		"use_preemptible_executors",
+		&schema.Schema{
+			Type:       schema.TypeBool,
+			Optional:   true,
+			Deprecated: "Please use 'availability' instead.",
+		},
+	).AddNewField(
+		"zone_id",
+		&schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	)
+	s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
+		func(ss map[string]*schema.Schema) map[string]*schema.Schema {
+			ss["library"].Set = func(i any) int {
+				lib := libraries.NewLibraryFromInstanceState(i)
+				return schema.HashString(lib.String())
+			}
+			return ss
+		})["library"]
+
+	common.CustomizeSchemaPath(s, "autotermination_minutes").SetDefault(60)
+	common.CustomizeSchemaPath(s, "autoscale", "max_workers").SetOptional()
+	common.CustomizeSchemaPath(s, "autoscale", "min_workers").SetOptional()
+	s["apply_policy_default_values"] = &schema.Schema{
+		Optional: true,
+		Type:     schema.TypeBool,
+	}
+	common.CustomizeSchemaPath(s, "cluster_log_conf", "dbfs", "destination").SetRequired()
+	common.CustomizeSchemaPath(s, "cluster_log_conf", "s3", "destination").SetRequired()
+	common.CustomizeSchemaPath(s, "spark_version").SetRequired()
+	common.CustomizeSchemaPath(s, "cluster_id").SetOptional().SetComputed()
+	common.CustomizeSchemaPath(s, "instance_pool_id").SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
+	common.CustomizeSchemaPath(s, "runtime_engine").SetValidateFunc(validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false))
+	s["is_pinned"] = &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "" && new == "false" {
+				return true
+			}
+			return old == new
+		},
+	}
+	common.CustomizeSchemaPath(s, "state").SetReadOnly()
+	s["url"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	}
+	common.CustomizeSchemaPath(s, "default_tags").SetReadOnly()
+	common.CustomizeSchemaPath(s, "num_workers").SetDefault(0).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
+	s["cluster_mount_info"] = &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: common.StructToSchema(MountInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
 				return ss
-			})["library"]
+			}),
+		},
+	}
 
-		s["autotermination_minutes"].Default = 60
-		s["cluster_id"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		}
-		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
-		s["azure_attributes"].ConflictsWith = []string{"aws_attributes", "gcp_attributes"}
-		s["gcp_attributes"].ConflictsWith = []string{"aws_attributes", "azure_attributes"}
-		s["instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
-		s["driver_instance_pool_id"].ConflictsWith = []string{"driver_node_type_id", "node_type_id"}
-		s["driver_node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
-		s["node_type_id"].ConflictsWith = []string{"driver_instance_pool_id", "instance_pool_id"}
+	return s
+}
 
-		s["runtime_engine"].ValidateFunc = validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false)
-
-		s["is_pinned"] = &schema.Schema{
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				if old == "" && new == "false" {
-					return true
-				}
-				return old == new
-			},
-		}
-		s["state"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		}
-		s["default_tags"] = &schema.Schema{
-			Type:     schema.TypeMap,
-			Computed: true,
-		}
-		s["num_workers"] = &schema.Schema{
-			Type:             schema.TypeInt,
-			Optional:         true,
-			Default:          0,
-			ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-		}
-		s["url"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		}
-		return s
-	})
+func resourceClusterSchema() map[string]*schema.Schema {
+	return common.ResourceProviderStructToSchema[compute.ClusterDetails](ClusterResourceProvider{})
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

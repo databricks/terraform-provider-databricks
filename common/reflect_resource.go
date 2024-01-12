@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -38,12 +40,154 @@ var kindMap = map[reflect.Kind]string{
 	reflect.UnsafePointer: "UnsafePointer",
 }
 
+// Generic interface for resource provider struct. Using CustomizeSchema and Aliases functions to keep track of additional information
+// on top of the generated go-sdk struct. This is used to replace manually maintained structs with `tf` tags.
+type ResourceProviderStruct[T any] interface {
+	UnderlyingType() T
+	Aliases() map[string]string
+	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
+}
+
+// Takes in a ResourceProviderStruct and converts that into a map from string to schema.
+func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T]) map[string]*schema.Schema {
+	underlyingType := v.UnderlyingType()
+	rv := reflect.ValueOf(underlyingType)
+	scm := resourceProviderTypeToSchema(rv, rv.Type(), []string{}, v.Aliases())
+	scm = v.CustomizeSchema(scm)
+	return scm
+}
+
+func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, fieldNamePath []string, aliases map[string]string) map[string]*schema.Schema {
+	scm := map[string]*schema.Schema{}
+	rk := v.Kind()
+	if rk == reflect.Ptr {
+		v = v.Elem()
+		t = v.Type()
+		rk = v.Kind()
+	}
+	if rk != reflect.Struct {
+		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
+	}
+	for i := 0; i < v.NumField(); i++ {
+		typeField := t.Field(i)
+
+		fieldName := chooseFieldNameWithAliases(typeField, fieldNamePath, aliases)
+
+		if fieldName == "-" {
+			continue
+		}
+		scm[fieldName] = &schema.Schema{}
+		handleOptional(typeField, scm[fieldName])
+		switch typeField.Type.Kind() {
+		case reflect.Int, reflect.Int32, reflect.Int64:
+			scm[fieldName].Type = schema.TypeInt
+		case reflect.Float64:
+			scm[fieldName].Type = schema.TypeFloat
+		case reflect.Bool:
+			scm[fieldName].Type = schema.TypeBool
+		case reflect.String:
+			scm[fieldName].Type = schema.TypeString
+		case reflect.Map:
+			scm[fieldName].Type = schema.TypeMap
+			elem := typeField.Type.Elem()
+			switch elem.Kind() {
+			case reflect.String:
+				scm[fieldName].Elem = schema.TypeString
+			case reflect.Int64:
+				scm[fieldName].Elem = schema.TypeInt
+			default:
+				panic(fmt.Errorf("unsupported map value for %s: %s", fieldName, reflectKind(elem.Kind())))
+			}
+		case reflect.Ptr:
+			scm[fieldName].MaxItems = 1
+			scm[fieldName].Type = schema.TypeList
+			elem := typeField.Type.Elem()
+			sv := reflect.New(elem).Elem()
+			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases)
+			if scm[fieldName].DiffSuppressFunc != nil {
+				for _, v := range nestedSchema {
+					// to those relatively new to GoLang: we must explicitly pass down v by copy
+					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+				}
+			}
+			scm[fieldName].Elem = &schema.Resource{
+				Schema: nestedSchema,
+			}
+		case reflect.Struct:
+			scm[fieldName].MaxItems = 1
+			scm[fieldName].Type = schema.TypeList
+
+			elem := typeField.Type  // changed from ptr
+			sv := reflect.New(elem) // changed from ptr
+
+			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases)
+			if scm[fieldName].DiffSuppressFunc != nil {
+				for _, v := range nestedSchema {
+					// to those relatively new to GoLang: we must explicitly pass down v by copy
+					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+				}
+			}
+			scm[fieldName].Elem = &schema.Resource{
+				Schema: nestedSchema,
+			}
+		case reflect.Slice:
+			ft := schema.TypeList
+			scm[fieldName].Type = ft
+			elem := typeField.Type.Elem()
+			switch elem.Kind() {
+			case reflect.Int, reflect.Int32, reflect.Int64:
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeInt}
+			case reflect.Float64:
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeFloat}
+			case reflect.Bool:
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeBool}
+			case reflect.String:
+				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
+			case reflect.Struct:
+				sv := reflect.New(elem).Elem()
+				scm[fieldName].Elem = &schema.Resource{
+					Schema: resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases),
+				}
+			}
+		default:
+			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
+		}
+	}
+	return scm
+}
+
 func reflectKind(k reflect.Kind) string {
 	n, ok := kindMap[k]
 	if !ok {
 		return "other"
 	}
 	return n
+}
+
+func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath []string, aliases map[string]string) string {
+	jsonFieldName := getJsonFieldName(typeField)
+
+	aliasKey := strings.Join(append(fieldNamePath, jsonFieldName), ".")
+
+	var fieldName string
+
+	if value, ok := aliases[aliasKey]; ok {
+		fieldName = value
+	} else {
+		fieldName = jsonFieldName
+	}
+
+	return fieldName
+}
+
+func getJsonFieldName(typeField reflect.StructField) string {
+	jsonTag := typeField.Tag.Get("json")
+	// fields without JSON tags would be treated as if ignored,
+	// but keeping linters happy
+	if jsonTag == "" {
+		return "-"
+	}
+	return strings.Split(jsonTag, ",")[0]
 }
 
 // SchemaPath helps to navigate
@@ -72,6 +216,111 @@ func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema 
 		panic(err)
 	}
 	return sch
+}
+
+func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *CustomizableSchema {
+	sch := MustSchemaPath(s, path...)
+	return &CustomizableSchema{Schema: sch}
+}
+
+type CustomizableSchema struct {
+	Schema *schema.Schema
+}
+
+func (s *CustomizableSchema) SetOptional() *CustomizableSchema {
+	s.Schema.Optional = true
+	s.Schema.Required = false
+	return s
+}
+
+func (s *CustomizableSchema) SetComputed() *CustomizableSchema {
+	s.Schema.Computed = true
+	return s
+}
+
+func (s *CustomizableSchema) SetDefault(value any) *CustomizableSchema {
+	s.Schema.Default = value
+	s.Schema.Optional = true
+	s.Schema.Required = false
+	return s
+}
+
+// SetReadOnly sets the schema to be read-only (i.e. computed, non-optional).
+// This should be used for fields that are not user-configurable but are returned
+// by the platform.
+func (s *CustomizableSchema) SetReadOnly() *CustomizableSchema {
+	s.Schema.Optional = false
+	s.Schema.Required = false
+	s.Schema.MaxItems = 0
+	s.Schema.Computed = true
+	return s
+}
+
+// SetRequired sets the schema to be required.
+func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
+	s.Schema.Optional = false
+	s.Schema.Required = true
+	s.Schema.Computed = false
+	return s
+}
+
+func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
+	s.Schema.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", s.Schema.Type.Zero()))
+	return s
+}
+
+func (s *CustomizableSchema) SetCustomSuppressDiff(suppressor func(k, old, new string, d *schema.ResourceData) bool) *CustomizableSchema {
+	s.Schema.DiffSuppressFunc = suppressor
+	return s
+}
+
+func (s *CustomizableSchema) SetSensitive() *CustomizableSchema {
+	s.Schema.Sensitive = true
+	return s
+}
+
+func (s *CustomizableSchema) SetForceNew() *CustomizableSchema {
+	s.Schema.ForceNew = true
+	return s
+}
+
+func (s *CustomizableSchema) SetMaxItems(value int) *CustomizableSchema {
+	s.Schema.MaxItems = value
+	return s
+}
+
+func (s *CustomizableSchema) SetMinItems(value int) *CustomizableSchema {
+	s.Schema.MinItems = value
+	return s
+}
+
+func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchema {
+	s.Schema.ConflictsWith = value
+	return s
+}
+
+func (s *CustomizableSchema) SetDeprecated(reason string) *CustomizableSchema {
+	s.Schema.Deprecated = reason
+	return s
+}
+
+func (s *CustomizableSchema) SetValidateFunc(validate func(interface{}, string) ([]string, []error)) *CustomizableSchema {
+	s.Schema.ValidateFunc = validate
+	return s
+}
+
+func (s *CustomizableSchema) SetValidateDiagFunc(validate func(interface{}, cty.Path) diag.Diagnostics) *CustomizableSchema {
+	s.Schema.ValidateDiagFunc = validate
+	return s
+}
+
+func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *CustomizableSchema {
+	cv, ok := s.Schema.Elem.(*schema.Resource)
+	if !ok {
+		panic("Cannot add new field, target is not nested resource")
+	}
+	cv.Schema[key] = newField
+	return s
 }
 
 // StructToSchema makes schema from a struct type & applies customizations from callback given
@@ -191,13 +440,7 @@ func chooseFieldName(typeField reflect.StructField) string {
 	if alias != "" {
 		return alias
 	}
-	jsonTag := typeField.Tag.Get("json")
-	// fields without JSON tags would be treated as if ignored,
-	// but keeping linters happy
-	if jsonTag == "" {
-		return "-"
-	}
-	return strings.Split(jsonTag, ",")[0]
+	return getJsonFieldName(typeField)
 }
 
 func diffSuppressor(v *schema.Schema) func(k, old, new string, d *schema.ResourceData) bool {
@@ -236,7 +479,6 @@ func listAllFields(v reflect.Value) []field {
 		}
 	}
 	return fields
-}
 
 // typeToSchema converts struct into terraform schema. `path` is used for block suppressions
 // special path element `"0"` is used to denote either arrays or sets of elements

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -1294,4 +1295,68 @@ func TestIncrementalListDLT(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(ic.testEmits))
 	})
+}
+
+func TestListSystemSchemasSuccess(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		currentMetastoreSuccess,
+		{
+			Method:   "GET",
+			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
+			Response: catalog.ListSystemSchemasResponse{
+				Schemas: []catalog.SystemSchemaInfo{
+					{
+						Schema: "access",
+						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+					},
+					{
+						Schema: "marketplace",
+						State:  catalog.SystemSchemaInfoStateAvailable,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_system_schema"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, len(ic.testEmits), 1)
+	})
+}
+
+func TestListSystemSchemasErrorGetMetastore(t *testing.T) {
+	ic := importContextForTest()
+	err := resourcesMap["databricks_system_schema"].List(ic)
+	assert.EqualError(t, err, "there is no UC metastore information")
+}
+
+func TestListSystemSchemasErrorListing(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
+			Status:   404,
+			Response: apierr.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_system_schema"].List(ic)
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestListUcAllowListError(t *testing.T) {
+	ic := importContextForTest()
+	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
+	assert.EqualError(t, err, "there is no UC metastore information")
+}
+
+func TestListUcAllowListSuccess(t *testing.T) {
+	ic := importContextForTest()
+	ic.currentMetastore = currentMetastoreResponse
+	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
+	assert.NoError(t, err)
+	assert.Equal(t, len(ic.testEmits), 3)
 }

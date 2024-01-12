@@ -29,6 +29,7 @@ In addition to all arguments above, the following attributes are exported:
 
 - `id` - Path of directory on workspace
 - `object_id` - Unique identifier for a DIRECTORY
+- `workspace_path` - path on Workspace File System (WSFS) in form of `/Workspace` + `path`
 
 ## Access Control
 

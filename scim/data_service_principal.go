@@ -24,15 +24,34 @@ func DataSourceServicePrincipal() *schema.Resource {
 	return common.DataResource(spnData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		response := e.(*spnData)
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
-		spList, err := spnAPI.Filter(fmt.Sprintf("applicationId eq '%s'", response.ApplicationID), true)
+		var spList []User
+		var err error
+		if response.ApplicationID != "" && response.DisplayName != "" {
+			return fmt.Errorf("please specify only one of application_id or display_name")
+		}
+		if response.ApplicationID != "" {
+			spList, err = spnAPI.Filter(fmt.Sprintf("applicationId eq '%s'", response.ApplicationID), true)
+		} else if response.DisplayName != "" {
+			spList, err = spnAPI.Filter(fmt.Sprintf("displayName eq '%s'", response.DisplayName), true)
+		} else {
+			return fmt.Errorf("please specify either application_id or display_name")
+		}
 		if err != nil {
 			return err
 		}
 		if len(spList) == 0 {
-			return fmt.Errorf("cannot find SP with ID %s", response.ApplicationID)
+			if response.ApplicationID != "" {
+				return fmt.Errorf("cannot find SP with ID %s", response.ApplicationID)
+			} else {
+				return fmt.Errorf("cannot find SP with name %s", response.DisplayName)
+			}
+		} else if len(spList) > 1 {
+			return fmt.Errorf("there are more than 1 service principal with name %s", response.DisplayName)
 		}
+
 		sp := spList[0]
 		response.DisplayName = sp.DisplayName
+		response.ApplicationID = sp.ApplicationID
 		response.Home = fmt.Sprintf("/Users/%s", sp.ApplicationID)
 		response.Repos = fmt.Sprintf("/Repos/%s", sp.ApplicationID)
 		response.AclPrincipalID = fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID)

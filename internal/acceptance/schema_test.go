@@ -43,17 +43,33 @@ func TestUcAccSchema(t *testing.T) {
 			}
 		}
 
+		resource "databricks_schema" "stuff" {
+			catalog_name = databricks_catalog.sandbox.id
+			name         = "stuff{var.RANDOM}"
+			comment      = "this database is managed by terraform"
+			properties = {
+				kind = "various"
+			}
+		}
+
 		data "databricks_schemas" "sandbox" {
 			catalog_name = databricks_catalog.sandbox.id
 			depends_on = [databricks_schema.things]
-		}			  
+		}
 
+		# This overwrites all grants on schema "things"
 		resource "databricks_grants" "things" {
 			schema = databricks_schema.things.id
 			grant {
 				principal  = "{env.TEST_DATA_ENG_GROUP}"
 				privileges = ["USE_SCHEMA"]
 			}
+		}
+
+		resource "databricks_grant" "stuff_test_eng_group" {
+			schema = databricks_schema.stuff.id
+			principal  = "{env.TEST_DATA_ENG_GROUP}"
+			privileges = ["USE_SCHEMA"]
 		}`,
 	})
 }

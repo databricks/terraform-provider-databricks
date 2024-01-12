@@ -3,6 +3,7 @@ package sql
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -11,15 +12,15 @@ func TestWarehousesData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
+				Resource: "/api/2.0/sql/warehouses?",
 				Response: map[string]interface{}{
-					"warehouses": []SQLEndpoint{
+					"warehouses": []sql.GetWarehouseResponse{
 						{
-							ID:   "1",
+							Id:   "1",
 							Name: "bar",
 						},
 						{
-							ID:   "2",
+							Id:   "2",
 							Name: "bar",
 						},
 					},
@@ -41,15 +42,15 @@ func TestWarehousesDataContains(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
+				Resource: "/api/2.0/sql/warehouses?",
 				Response: map[string]interface{}{
-					"warehouses": []SQLEndpoint{
+					"warehouses": []sql.GetWarehouseResponse{
 						{
-							ID:   "111",
+							Id:   "111",
 							Name: "bar",
 						},
 						{
-							ID:   "2",
+							Id:   "2",
 							Name: "br",
 						},
 					},

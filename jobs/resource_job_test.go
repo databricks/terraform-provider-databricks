@@ -459,6 +459,11 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 								NodeTypeID:   "b",
 								NumWorkers:   3,
 							},
+							DependsOn: []jobs.TaskDependency{
+								{
+									TaskKey: "a",
+								},
+							},
 							NotebookTask: &NotebookTask{
 								NotebookPath: "/Stuff",
 							},
@@ -536,6 +541,10 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 
 		task {
 			task_key = "b"
+
+			depends_on {
+				task_key = "a"
+			}
 
 			new_cluster {
 				spark_version = "a"

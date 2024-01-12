@@ -11,12 +11,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -29,7 +32,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
-	"github.com/databricks/terraform-provider-databricks/sql"
+	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
@@ -313,7 +316,7 @@ var emptyWorkspace = qa.HTTPFixture{
 
 var emptySqlEndpoints = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/sql/warehouses",
+	Resource:     "/api/2.0/sql/warehouses?",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
@@ -342,7 +345,7 @@ var emptySqlQueries = qa.HTTPFixture{
 var emptySqlAlerts = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/preview/sql/alerts",
-	Response:     []sql.AlertEntity{},
+	Response:     []tfsql.AlertEntity{},
 	ReuseRequest: true,
 }
 
@@ -369,7 +372,27 @@ var allKnownWorkspaceConfs = qa.HTTPFixture{
 var emptyGlobalSQLConfig = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/sql/config/warehouses",
-	Response:     sql.GlobalConfigForRead{},
+	Response:     tfsql.GlobalConfigForRead{},
+	ReuseRequest: true,
+}
+
+var noCurrentMetastoreAttached = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/unity-catalog/metastore_summary",
+	Status:       404,
+	Response:     apierr.NotFound("nope"),
+	ReuseRequest: true,
+}
+
+var currentMetastoreResponse = &catalog.GetMetastoreSummaryResponse{
+	MetastoreId: "12345678-1234",
+	Name:        "test",
+}
+
+var currentMetastoreSuccess = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/unity-catalog/metastore_summary",
+	Response:     currentMetastoreResponse,
 	ReuseRequest: true,
 }
 
@@ -393,6 +416,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
+			noCurrentMetastoreAttached,
 			meAdminFixture,
 			emptyRepos,
 			emptyGitCredentials,
@@ -649,6 +673,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 					Groups: []scim.ComplexValue{},
 				},
 			},
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyModelServing,
 			emptyMlflowWebhooks,
@@ -712,6 +737,7 @@ func TestImportingClusters(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			{
 				Method:   "GET",
@@ -1391,6 +1417,7 @@ func TestImportingSecrets(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			{
 				Method:   "GET",
@@ -1474,6 +1501,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyWorkspaceConf,
 			dummyWorkspaceConf,
@@ -1576,6 +1604,7 @@ func TestImportingRepos(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			userListIdUsernameFixture,
 			userListIdUsernameFixture2,
 			userListFixture,
@@ -1630,6 +1659,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyWorkspaceConf,
 			dummyWorkspaceConf,
@@ -1689,6 +1719,7 @@ func TestImportingSqlObjects(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyGlobalSQLConfig,
@@ -1731,12 +1762,12 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
+				Resource: "/api/2.0/sql/warehouses?",
 				Response: getJSONObject("test-data/get-sql-endpoints.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses/f562046bc1272886",
+				Resource: "/api/2.0/sql/warehouses/f562046bc1272886?",
 				Response: getJSONObject("test-data/get-sql-endpoint.json"),
 			},
 			{
@@ -1744,8 +1775,8 @@ func TestImportingSqlObjects(t *testing.T) {
 				Resource: "/api/2.0/preview/sql/data_sources",
 				Response: []sql.DataSource{
 					{
-						ID:         "147164a6-8316-4a9d-beff-f57261801374",
-						EndpointID: "f562046bc1272886",
+						Id:          "147164a6-8316-4a9d-beff-f57261801374",
+						WarehouseId: "f562046bc1272886",
 					},
 				},
 				ReuseRequest: true,
@@ -1827,6 +1858,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyWorkspace,
 			emptyIpAccessLIst,
@@ -2002,6 +2034,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			userListIdUsernameFixture,
@@ -2059,17 +2092,27 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/sql/warehouses",
-				Response: sql.EndpointList{},
+				Resource: "/api/2.0/sql/warehouses?",
+				Response: sql.ListWarehousesResponse{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/config/warehouses",
-				Response: sql.GlobalConfigForRead{
-					EnableServerlessCompute: true,
-					InstanceProfileARN:      "arn:...",
+				Response: sql.GetWorkspaceWarehouseConfigResponse{
+					EnabledWarehouseTypes: []sql.WarehouseTypePair{
+						{
+							WarehouseType: sql.WarehouseTypePairWarehouseTypeClassic,
+							Enabled:       true,
+						},
+						{
+							WarehouseType: sql.WarehouseTypePairWarehouseTypePro,
+							Enabled:       true,
+						},
+					},
+					InstanceProfileArn: "arn:...",
 				},
 			},
 		},
@@ -2102,6 +2145,7 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			{
@@ -2154,6 +2198,7 @@ func TestImportingModelServing(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,
@@ -2204,6 +2249,7 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,
@@ -2297,6 +2343,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,
@@ -2407,6 +2454,7 @@ func TestImportingRunJobTask(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
 			emptyWorkspace,

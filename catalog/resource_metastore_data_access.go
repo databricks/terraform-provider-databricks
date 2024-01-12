@@ -53,6 +53,10 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 		Optional: true,
 	}
 
+	m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+		return old == "false" && new == "true"
+	}
+
 	return m
 }
 

@@ -20,6 +20,7 @@ type StorageCredentialInfo struct {
 	DatabricksGcpServiceAccount *catalog.DatabricksGcpServiceAccountResponse `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
 	MetastoreID                 string                                       `json:"metastore_id,omitempty" tf:"computed"`
 	ReadOnly                    bool                                         `json:"read_only,omitempty"`
+	SkipValidation              bool                                         `json:"skip_validation,omitempty"`
 }
 
 func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {

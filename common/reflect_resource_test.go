@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -423,7 +424,10 @@ func TestStructToData(t *testing.T) {
 }
 
 func TestDiffSuppressor(t *testing.T) {
-	dsf := diffSuppressor("")
+	stringSchema := &schema.Schema{
+		Type: schema.TypeString,
+	}
+	dsf := diffSuppressor(stringSchema)
 	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
 		"foo": {
 			Type:     schema.TypeBool,
@@ -444,7 +448,7 @@ func TestTypeToSchemaNoStruct(t *testing.T) {
 			fmt.Sprintf("%s", p))
 	}()
 	v := reflect.ValueOf(1)
-	typeToSchema(v, v.Type(), []string{})
+	typeToSchema(v, []string{})
 }
 
 func TestTypeToSchemaUnsupported(t *testing.T) {
@@ -457,7 +461,7 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 		New chan int `json:"new"`
 	}
 	v := reflect.ValueOf(nonsense{})
-	typeToSchema(v, v.Type(), []string{})
+	typeToSchema(v, []string{})
 }
 
 type data map[string]any
@@ -633,4 +637,80 @@ func TestDataResourceWithID(t *testing.T) {
 	assert.Len(t, diags, 0)
 	assert.Equal(t, "out: id", d.Get("out"))
 	assert.Equal(t, "abc", d.Id())
+}
+
+func TestStructToSchema_go_sdk_embedded(t *testing.T) {
+	type T struct {
+		sql.GetWarehouseResponse
+		Extra string `json:"extra,omitempty" tf:"computed"`
+	}
+	s := StructToSchema(T{}, nil)
+	autoStopMins, ok := s["auto_stop_mins"]
+	assert.True(t, ok)
+	assert.Equal(t, schema.TypeInt, autoStopMins.Type)
+	assert.True(t, autoStopMins.Optional)
+}
+
+func TestStructToData_go_sdk_embedded(t *testing.T) {
+	type T struct {
+		sql.GetWarehouseResponse
+		Extra string `json:"extra,omitempty" tf:"computed"`
+	}
+	s := StructToSchema(T{}, nil)
+	SetRequired(s["cluster_size"])
+	r := &schema.Resource{
+		Schema: s,
+	}
+	d := r.TestResourceData()
+	d.Set("cluster_size", "original")
+	err := StructToData(T{
+		GetWarehouseResponse: sql.GetWarehouseResponse{
+			ClusterSize: "abc123",
+		},
+		Extra: "extra",
+	}, s, d)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc123", d.Get("cluster_size"))
+	assert.Equal(t, "extra", d.Get("extra"))
+}
+
+func TestStructToSchema_go_sdk_field(t *testing.T) {
+	type T struct {
+		Warehouse *sql.GetWarehouseResponse `json:"warehouse,omitempty"`
+		Extra     string                    `json:"extra,omitempty" tf:"computed"`
+	}
+	s := StructToSchema(T{}, nil)
+	warehouse, ok := s["warehouse"]
+	assert.True(t, ok)
+	autoStopMins, ok := warehouse.Elem.(*schema.Resource).Schema["auto_stop_mins"]
+	assert.True(t, ok)
+	assert.Equal(t, schema.TypeInt, autoStopMins.Type)
+	assert.True(t, autoStopMins.Optional)
+}
+
+func TestStructToData_go_sdk_field(t *testing.T) {
+	type T struct {
+		Warehouse *sql.GetWarehouseResponse `json:"warehouse,omitempty"`
+		Extra     string                    `json:"extra,omitempty" tf:"computed"`
+	}
+	s := StructToSchema(T{}, nil)
+	SetRequired(MustSchemaPath(s, "warehouse", "cluster_size"))
+	r := &schema.Resource{
+		Schema: s,
+	}
+	d := r.TestResourceData()
+	d.Set("warehouse", []map[string]any{
+		{
+			"cluster_size": "original",
+		},
+	})
+	err := StructToData(T{
+		Warehouse: &sql.GetWarehouseResponse{
+			ClusterSize: "abc123",
+		},
+		Extra: "extra",
+	}, s, d)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc123", d.Get("warehouse.0.cluster_size"))
+	assert.Equal(t, "extra", d.Get("extra"))
 }

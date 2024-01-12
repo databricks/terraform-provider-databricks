@@ -265,7 +265,7 @@ func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
-	s.Schema.DiffSuppressFunc = diffSuppressor(fmt.Sprintf(s.Schema))
+	s.Schema.DiffSuppressFunc = diffSuppressor(s.Schema)
 	return s
 }
 

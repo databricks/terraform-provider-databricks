@@ -479,6 +479,7 @@ func listAllFields(v reflect.Value) []field {
 		}
 	}
 	return fields
+}
 
 // typeToSchema converts struct into terraform schema. `path` is used for block suppressions
 // special path element `"0"` is used to denote either arrays or sets of elements

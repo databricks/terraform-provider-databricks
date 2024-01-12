@@ -107,7 +107,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, fieldNamePath
 			if scm[fieldName].DiffSuppressFunc != nil {
 				for _, v := range nestedSchema {
 					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+					v.DiffSuppressFunc = diffSuppressor(v)
 				}
 			}
 			scm[fieldName].Elem = &schema.Resource{
@@ -124,7 +124,7 @@ func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, fieldNamePath
 			if scm[fieldName].DiffSuppressFunc != nil {
 				for _, v := range nestedSchema {
 					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+					v.DiffSuppressFunc = diffSuppressor(v)
 				}
 			}
 			scm[fieldName].Elem = &schema.Resource{
@@ -265,7 +265,7 @@ func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
-	s.Schema.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", s.Schema.Type.Zero()))
+	s.Schema.DiffSuppressFunc = diffSuppressor(fmt.Sprintf(s.Schema))
 	return s
 }
 

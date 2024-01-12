@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -197,19 +196,10 @@ func (f ResourceFixture) setDatabricksEnvironmentForTest(client common.Databrick
 }
 
 func (f ResourceFixture) validateMocks() error {
-	configuredMocks := make([]string, 0)
-	if f.MockWorkspaceClientFunc != nil {
-		configuredMocks = append(configuredMocks, "MockWorkspaceClientFunc")
-	}
-	if f.MockAccountClientFunc != nil {
-		configuredMocks = append(configuredMocks, "MockAccountClientFunc")
-	}
-	if f.Fixtures != nil {
-		configuredMocks = append(configuredMocks, "Fixtures")
-	}
-	if len(configuredMocks) != 1 {
-		configured := strings.Join(configuredMocks, ", ")
-		return fmt.Errorf("exactly one of MockWorkspaceClientFunc, MockAccountClientFunc, Fixtures must be set, got %s", configured)
+	isMockConfigured := f.MockAccountClientFunc != nil || f.MockWorkspaceClientFunc != nil
+	isFixtureConfigured := f.Fixtures != nil
+	if isFixtureConfigured && isMockConfigured {
+		return fmt.Errorf("either (MockWorkspaceClientFunc, MockAccountClientFunc) or Fixtures may be set, not both")
 	}
 	return nil
 }
@@ -220,12 +210,6 @@ type server struct {
 }
 
 func (f ResourceFixture) setupClient(t *testing.T) (common.DatabricksAPI, server, error) {
-	if f.MockWorkspaceClientFunc != nil {
-
-	}
-	if f.MockAccountClientFunc != nil {
-
-	}
 	if f.Fixtures != nil {
 		token := "..."
 		if f.Token != "" {
@@ -238,24 +222,34 @@ func (f ResourceFixture) setupClient(t *testing.T) (common.DatabricksAPI, server
 		}
 		return client, ss, err
 	}
-	return nil, server{}, errors.New("no mocks configured")
+	mw := mocks.NewMockWorkspaceClient(t)
+	ma := mocks.NewMockAccountClient(t)
+	if f.MockWorkspaceClientFunc != nil {
+		f.MockWorkspaceClientFunc(mw)
+	}
+	if f.MockAccountClientFunc != nil {
+		f.MockAccountClientFunc(ma)
+	}
+	return testingClient{
+			w: mw,
+			a: ma,
+		}, server{
+			Close: func() {},
+			URL:   "does-not-matter",
+		}, nil
 }
 
 // Apply runs tests from fixture
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
-	token := "..."
-	if f.Token != "" {
-		token = f.Token
-	}
 	err := f.validateMocks()
 	if err != nil {
 		return nil, err
 	}
-	client, server, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
-	defer server.Close()
+	client, server, err := f.setupClient(t)
 	if err != nil {
 		return nil, err
 	}
+	defer server.Close()
 	config := client.Config()
 	config.WithTesting()
 	if f.CommandMock != nil {
@@ -609,6 +603,24 @@ func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx c
 	client, server, err := HttpFixtureClient(t, fixtures)
 	defer server.Close()
 	require.NoError(t, err)
+	callback(context.Background(), client)
+}
+
+func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorkspaceClient), callback func(ctx context.Context, client common.DatabricksAPI)) {
+	mw := mocks.NewMockWorkspaceClient(t)
+	mockWorkspaceClient(mw)
+	client := testingClient{
+		w: mw,
+	}
+	callback(context.Background(), client)
+}
+
+func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountClient), callback func(ctx context.Context, client common.DatabricksAPI)) {
+	ma := mocks.NewMockAccountClient(t)
+	mockAccountClient(ma)
+	client := testingClient{
+		a: ma,
+	}
 	callback(context.Background(), client)
 }
 

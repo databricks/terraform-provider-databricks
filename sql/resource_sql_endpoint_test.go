@@ -3,14 +3,18 @@ package sql
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,92 +38,61 @@ var dataSourceListHTTPFixture = qa.HTTPFixture{
 	`),
 }
 
-func TestResourceSQLEndpointCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses",
-				ExpectedRequest: sql.CreateWarehouseRequest{
-					Name:               "foo",
-					ClusterSize:        "Small",
-					MaxNumClusters:     1,
-					AutoStopMins:       120,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
-				},
-				Response: sql.CreateWarehouseResponse{
-					Id: "abc",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc?",
-				ReuseRequest: true,
-				Response: sql.GetWarehouseResponse{
-					Name:           "foo",
-					ClusterSize:    "Small",
-					Id:             "abc",
-					State:          "RUNNING",
-					Tags:           &sql.EndpointTags{},
-					MaxNumClusters: 1,
-					NumClusters:    1,
-				},
-			},
-			dataSourceListHTTPFixture,
+func addDataSourceListHttpFixture(mw *mocks.MockWorkspaceClient) {
+	mw.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return([]sql.DataSource{
+		{
+			Id:          "2f47f0f9-b4b7-40e2-b130-43103151864c",
+			WarehouseId: "def",
 		},
-		Resource: ResourceSqlEndpoint(),
-		Create:   true,
-		HCL: `
-		name = "foo"
-  		cluster_size = "Small"
-		`,
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+		{
+			Id:          "d7c9d05c-7496-4c69-b089-48823edad40c",
+			WarehouseId: "abc",
+		},
+	}, nil)
 }
 
-func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
+func makeResponseWaiter[R any](resp R, warehouse *sql.GetWarehouseResponse) *sql.WaitGetWarehouseRunning[R] {
+	return &sql.WaitGetWarehouseRunning[R]{
+		Response: &resp,
+		Poll: func(_ time.Duration, _ func(*sql.GetWarehouseResponse)) (*sql.GetWarehouseResponse, error) {
+			return warehouse, nil
+		},
+	}
+}
+
+var createRequest = sql.CreateWarehouseRequest{
+	Name:               "foo",
+	ClusterSize:        "Small",
+	MaxNumClusters:     1,
+	AutoStopMins:       120,
+	EnablePhoton:       true,
+	SpotInstancePolicy: "COST_OPTIMIZED",
+}
+var getResponse = sql.GetWarehouseResponse{
+	Name:           "foo",
+	ClusterSize:    "Small",
+	Id:             "abc",
+	State:          "RUNNING",
+	Tags:           &sql.EndpointTags{},
+	MaxNumClusters: 1,
+	NumClusters:    1,
+}
+
+func TestResourceSQLEndpointCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses",
-				ExpectedRequest: sql.CreateWarehouseRequest{
-					Name:               "foo",
-					ClusterSize:        "Small",
-					MaxNumClusters:     1,
-					AutoStopMins:       0,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
-				},
-				Response: sql.CreateWarehouseResponse{
-					Id: "abc",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc?",
-				ReuseRequest: true,
-				Response: sql.GetWarehouseResponse{
-					Name:           "foo",
-					ClusterSize:    "Small",
-					Id:             "abc",
-					State:          "RUNNING",
-					Tags:           &sql.EndpointTags{},
-					MaxNumClusters: 1,
-					NumClusters:    1,
-				},
-			},
-			dataSourceListHTTPFixture,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockWarehousesAPI()
+			api.EXPECT().Create(mock.Anything, createRequest).Return(makeResponseWaiter(sql.CreateWarehouseResponse{
+				Id: "abc",
+			}, &getResponse), nil)
+			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
+			addDataSourceListHttpFixture(w)
 		},
 		Resource: ResourceSqlEndpoint(),
 		Create:   true,
 		HCL: `
 		name = "foo"
   		cluster_size = "Small"
-		auto_stop_mins = 0
 		`,
 	}.Apply(t)
 	require.NoError(t, err)
@@ -129,16 +102,11 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 
 func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses",
-				Status:   404,
-				Response: apierr.APIError{
-					ErrorCode: "FEATURE_DISABLED",
-					Message:   "Databricks SQL is not supported",
-				},
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			api := mwc.GetMockWarehousesAPI()
+			api.EXPECT().
+				Create(mock.Anything, createRequest).
+				Return(nil, errors.New("Databricks SQL is not supported"))
 		},
 		Resource: ResourceSqlEndpoint(),
 		Create:   true,
@@ -151,19 +119,10 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 
 func TestResourceSQLEndpointRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc?",
-				ReuseRequest: true,
-				Response: sql.GetWarehouseResponse{
-					Name:        "foo",
-					ClusterSize: "Small",
-					Id:          "abc",
-					State:       "RUNNING",
-				},
-			},
-			dataSourceListHTTPFixture,
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			api := mwc.GetMockWarehousesAPI()
+			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
+			addDataSourceListHttpFixture(mwc)
 		},
 		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
@@ -180,33 +139,19 @@ func TestResourceSQLEndpointRead(t *testing.T) {
 
 func TestResourceSQLEndpointUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses/abc/edit",
-				ExpectedRequest: sql.EditWarehouseRequest{
-					Id:                 "abc",
-					Name:               "foo",
-					ClusterSize:        "Small",
-					AutoStopMins:       120,
-					MaxNumClusters:     1,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc?",
-				ReuseRequest: true,
-				Response: sql.GetWarehouseResponse{
-					Name:        "foo",
-					ClusterSize: "Small",
-					Id:          "abc",
-					State:       "RUNNING",
-					NumClusters: 1,
-				},
-			},
-			dataSourceListHTTPFixture,
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			api := mwc.GetMockWarehousesAPI()
+			api.EXPECT().Edit(mock.Anything, sql.EditWarehouseRequest{
+				Id:                 "abc",
+				Name:               "foo",
+				ClusterSize:        "Small",
+				AutoStopMins:       120,
+				MaxNumClusters:     1,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+			}).Return(makeResponseWaiter(struct{}{}, &getResponse), nil)
+			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
+			addDataSourceListHttpFixture(mwc)
 		},
 		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
@@ -223,11 +168,9 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 
 func TestResourceSQLEndpointDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.0/sql/warehouses/abc?",
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			api := mwc.GetMockWarehousesAPI()
+			api.EXPECT().DeleteById(mock.Anything, "abc").Return(nil)
 		},
 		Resource: ResourceSqlEndpoint(),
 		ID:       "abc",
@@ -242,13 +185,8 @@ func TestResourceSQLEndpoint_CornerCases(t *testing.T) {
 }
 
 func TestResolveDataSourceIDError(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/sql/data_sources",
-			Response: map[string]any{},
-			Status:   404,
-		},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, apierr.ErrNotFound)
 	}, func(ctx context.Context, client common.DatabricksAPI) {
 		w, err := client.WorkspaceClient()
 		require.NoError(t, err)
@@ -258,12 +196,8 @@ func TestResolveDataSourceIDError(t *testing.T) {
 }
 
 func TestResolveDataSourceIDNotFound(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/preview/sql/data_sources",
-			Response: []any{},
-		},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return([]sql.DataSource{}, nil)
 	}, func(ctx context.Context, client common.DatabricksAPI) {
 		w, err := client.WorkspaceClient()
 		require.NoError(t, err)

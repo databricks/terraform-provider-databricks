@@ -38,6 +38,7 @@ func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 type DatabricksAPI interface {
 	WorkspaceClient() (*databricks.WorkspaceClient, error)
 	AccountClient() (*databricks.AccountClient, error)
+	ClientForHost(ctx context.Context, url string) (*DatabricksClient, error)
 	SetAccountId(accountId string) error
 	AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error
 	Config() *config.Config
@@ -50,18 +51,18 @@ type DatabricksAPI interface {
 	PatchWithResponse(ctx context.Context, path string, request any, response any) error
 	Put(ctx context.Context, path string, request any) error
 
+	Scim(ctx context.Context, method, path string, request any, response any) error
+
 	IsAzure() bool
 	IsAws() bool
 	IsGcp() bool
 
-	FormatURL(strs ...string) string
-	Scim(ctx context.Context, method, path string, request any, response any) error
-	GetAzureJwtProperty(key string) (any, error)
-	ClientForHost(ctx context.Context, url string) (*DatabricksClient, error)
-
 	CommandExecutor(ctx context.Context) CommandExecutor
 	WithCommandExecutor(cef func(context.Context, *DatabricksClient) CommandExecutor)
 	WithCommandMock(mock CommandMock)
+
+	FormatURL(strs ...string) string
+	GetAzureJwtProperty(key string) (any, error)
 }
 
 // DatabricksClient holds properties needed for authentication and HTTP client setup
@@ -81,7 +82,7 @@ type DatabricksClient struct {
 var _ DatabricksAPI = &DatabricksClient{}
 
 func (c *DatabricksClient) Config() *config.Config {
-	return c.Config()
+	return c.DatabricksClient.Config
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {

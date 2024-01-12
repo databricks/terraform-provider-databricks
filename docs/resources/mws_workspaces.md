@@ -358,6 +358,7 @@ In addition to all arguments above, the following attributes are exported:
 * `workspace_status` - (String) workspace status
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
+* `custom_tags` - (Map) Custom Tags added to workspace
 
 ## Import
 

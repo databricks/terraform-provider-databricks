@@ -866,7 +866,6 @@ func workspaceSchemaV2() cty.Type {
 			"custom_tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Computed: true,
 			},
 		},
 	}).CoreConfigSchema().ImpliedType()

@@ -2,16 +2,15 @@ package sql
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa/poll"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -20,24 +19,6 @@ import (
 
 // Define fixture for retrieving all data sources.
 // Shared between tests that end up performing a read operation.
-var dataSourceListHTTPFixture = qa.HTTPFixture{
-	Method:       "GET",
-	Resource:     "/api/2.0/preview/sql/data_sources",
-	ReuseRequest: true,
-	Response: json.RawMessage(`
-		[
-			{
-				"id": "2f47f0f9-b4b7-40e2-b130-43103151864c",
-				"warehouse_id": "def"
-			},
-			{
-				"id": "d7c9d05c-7496-4c69-b089-48823edad40c",
-				"warehouse_id": "abc"
-			}
-		]
-	`),
-}
-
 func addDataSourceListHttpFixture(mw *mocks.MockWorkspaceClient) {
 	mw.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return([]sql.DataSource{
 		{
@@ -49,15 +30,6 @@ func addDataSourceListHttpFixture(mw *mocks.MockWorkspaceClient) {
 			WarehouseId: "abc",
 		},
 	}, nil)
-}
-
-func makeResponseWaiter[R any](resp R, warehouse *sql.GetWarehouseResponse) *sql.WaitGetWarehouseRunning[R] {
-	return &sql.WaitGetWarehouseRunning[R]{
-		Response: &resp,
-		Poll: func(_ time.Duration, _ func(*sql.GetWarehouseResponse)) (*sql.GetWarehouseResponse, error) {
-			return warehouse, nil
-		},
-	}
 }
 
 var createRequest = sql.CreateWarehouseRequest{
@@ -82,9 +54,9 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			api := w.GetMockWarehousesAPI()
-			api.EXPECT().Create(mock.Anything, createRequest).Return(makeResponseWaiter(sql.CreateWarehouseResponse{
-				Id: "abc",
-			}, &getResponse), nil)
+			api.EXPECT().Create(mock.Anything, createRequest).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Poll: poll.Simple(getResponse),
+			}, nil)
 			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
 			addDataSourceListHttpFixture(w)
 		},
@@ -149,7 +121,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 				MaxNumClusters:     1,
 				EnablePhoton:       true,
 				SpotInstancePolicy: "COST_OPTIMIZED",
-			}).Return(makeResponseWaiter(struct{}{}, &getResponse), nil)
+			}).Return(&sql.WaitGetWarehouseRunning[struct{}]{Poll: poll.Simple(getResponse)}, nil)
 			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponse, nil)
 			addDataSourceListHttpFixture(mwc)
 		},

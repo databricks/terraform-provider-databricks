@@ -853,6 +853,34 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
 	}
 }
 
+func (ic *importContext) emitSqlParentDirectory(parent string) bool {
+	if parent == "" {
+		return false
+	}
+	res := sqlParentRegexp.FindStringSubmatch(parent)
+	if len(res) > 1 && ic.isServiceEnabled(ic.Importables["databricks_directory"].Service) {
+		r := resource{
+			Resource:  "databricks_directory",
+			Attribute: "object_id",
+			Value:     res[1],
+		}
+		err := ic.Importables["databricks_directory"].Search(ic, &r)
+		if err != nil || r.ID == "" {
+			log.Printf("[ERROR] error searching for directory with object_id: %s", res[1])
+			return true
+		}
+		if topLevelUserDirRegex.MatchString(r.ID) {
+			log.Printf("[DEBUG] don't emit top-level user folder: %s", r.ID)
+			return false
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_directory",
+			ID:       r.ID,
+		})
+	}
+	return true
+}
+
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
 		// TODO: can we pass a visitor here, that will emit corresponding object earlier?

@@ -48,6 +48,7 @@ var (
 	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
 	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
 	userDirRegex                 = regexp.MustCompile(`^(/Users/[^/]+)(/.*)?$`)
+	topLevelUserDirRegex         = regexp.MustCompile(`^(/Users/[^/]+)/?$`)
 	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
 	dltDefaultStorageRegex       = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
@@ -1540,15 +1541,8 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 				}
 			}
-			if query.Parent != "" {
-				res := sqlParentRegexp.FindStringSubmatch(query.Parent)
-				if len(res) > 1 {
-					ic.Emit(&resource{
-						Resource:  "databricks_directory",
-						Attribute: "object_id",
-						Value:     res[1],
-					})
-				}
+			if !ic.emitSqlParentDirectory(query.Parent) {
+				r.Data.Set("parent", "")
 			}
 			if ic.meAdmin {
 				ic.Emit(&resource{
@@ -1685,15 +1679,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			if dashboard.Parent != "" {
-				res := sqlParentRegexp.FindStringSubmatch(dashboard.Parent)
-				if len(res) > 1 {
-					ic.Emit(&resource{
-						Resource:  "databricks_directory",
-						Attribute: "object_id",
-						Value:     res[1],
-					})
-				}
+
+			if !ic.emitSqlParentDirectory(dashboard.Parent) {
+				r.Data.Set("parent", "")
 			}
 			for _, rv := range dashboard.Widgets {
 				var widget sql_api.Widget
@@ -1814,15 +1802,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if alert.QueryId != "" {
 				ic.Emit(&resource{Resource: "databricks_sql_query", ID: alert.QueryId})
 			}
-			if alert.Parent != "" {
-				res := sqlParentRegexp.FindStringSubmatch(alert.Parent)
-				if len(res) > 1 {
-					ic.Emit(&resource{
-						Resource:  "databricks_directory",
-						Attribute: "object_id",
-						Value:     res[1],
-					})
-				}
+			if !ic.emitSqlParentDirectory(alert.Parent) {
+				r.Data.Set("parent", "")
 			}
 			if ic.meAdmin {
 				ic.Emit(&resource{
@@ -1957,11 +1938,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "directories",
 		Name:           workspaceObjectResouceName,
 		Search: func(ic *importContext, r *resource) error {
-			directoryList := ic.getAllDirectories()
 			objId, err := strconv.ParseInt(r.Value, 10, 64)
 			if err != nil {
 				return err
 			}
+			directoryList := ic.getAllDirectories()
 			for _, directory := range directoryList {
 				if directory.ObjectID == objId {
 					r.ID = directory.Path

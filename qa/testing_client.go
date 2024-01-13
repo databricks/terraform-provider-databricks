@@ -11,8 +11,9 @@ import (
 )
 
 type testingClient struct {
-	a *mocks.MockAccountClient
-	w *mocks.MockWorkspaceClient
+	a      *mocks.MockAccountClient
+	w      *mocks.MockWorkspaceClient
+	config *config.Config
 }
 
 // AccountClient implements common.DatabricksAPI.
@@ -25,7 +26,10 @@ func (t testingClient) AccountClient() (*databricks.AccountClient, error) {
 
 // AccountOrWorkspaceRequest implements common.DatabricksAPI.
 func (t testingClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
-	panic("unimplemented")
+	if t.Config().IsAccountClient() {
+		return accCallback(t.a.AccountClient)
+	}
+	return wsCallback(t.w.WorkspaceClient)
 }
 
 // ClientForHost implements common.DatabricksAPI.
@@ -39,8 +43,8 @@ func (testingClient) CommandExecutor(ctx context.Context) common.CommandExecutor
 }
 
 // Config implements common.DatabricksAPI.
-func (testingClient) Config() *config.Config {
-	return &config.Config{}
+func (t testingClient) Config() *config.Config {
+	return t.config
 }
 
 // Delete implements common.DatabricksAPI.

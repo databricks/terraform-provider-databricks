@@ -231,8 +231,9 @@ func (f ResourceFixture) setupClient(t *testing.T) (common.DatabricksAPI, server
 		f.MockAccountClientFunc(ma)
 	}
 	return testingClient{
-			w: mw,
-			a: ma,
+			w:      mw,
+			a:      ma,
+			config: &config.Config{},
 		}, server{
 			Close: func() {},
 			URL:   "does-not-matter",

@@ -1,11 +1,14 @@
 package catalog
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestMetastoreCornerCases(t *testing.T) {
@@ -14,33 +17,24 @@ func TestMetastoreCornerCases(t *testing.T) {
 
 func TestCreateMetastore(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/metastores",
-				ExpectedRequest: catalog.CreateMetastore{
-					StorageRoot: "s3://b",
-					Name:        "a",
-				},
-				Response: MetastoreInfo{
-					MetastoreID: "abc",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Name: "a",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateMetastore{
+				StorageRoot: "s3://b",
+				Name:        "a",
+			}).Return(&catalog.MetastoreInfo{
+				MetastoreId: "abc",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:   "abc",
+				Name: "a",
+			}).Return(&catalog.MetastoreInfo{
+				Name: "a",
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				StorageRoot: "s3://b/abc",
+				Name:        "a",
+			}, nil)
 		},
 		Resource: ResourceMetastore(),
 		Create:   true,
@@ -53,35 +47,27 @@ func TestCreateMetastore(t *testing.T) {
 
 func TestCreateMetastoreWithOwner(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/metastores",
-				ExpectedRequest: catalog.CreateMetastore{
-					StorageRoot: "s3://b",
-					Name:        "a",
-				},
-				Response: MetastoreInfo{
-					MetastoreID: "abc",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Name:  "a",
-					Owner: "administrators",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
-					Owner:       "administrators",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateMetastore{
+				StorageRoot: "s3://b",
+				Name:        "a",
+			}).Return(&catalog.MetastoreInfo{
+				MetastoreId: "abc",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:    "abc",
+				Name:  "a",
+				Owner: "administrators",
+			}).Return(&catalog.MetastoreInfo{
+				Name:  "a",
+				Owner: "administrators",
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				StorageRoot: "s3://b/abc",
+				Name:        "a",
+				Owner:       "administrators",
+			}, nil)
 		},
 		Resource: ResourceMetastore(),
 		Create:   true,
@@ -95,38 +81,39 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 
 func TestCreateMetastore_DeltaSharing(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/metastores",
-				ExpectedRequest: catalog.CreateMetastore{
-					StorageRoot: "s3://b",
-					Name:        "a",
-				},
-				Response: MetastoreInfo{
-					MetastoreID: "abc",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Name:              "a",
-					Owner:             "administrators",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 0,
-					DeltaSharingOrganizationName:                "acme",
-					ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateMetastore{
+				StorageRoot: "s3://b",
+				Name:        "a",
+			}).Return(&catalog.MetastoreInfo{
+				MetastoreId: "abc",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                "abc",
+				Name:              "a",
+				Owner:             "administrators",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 0,
+				DeltaSharingOrganizationName:                "acme",
+				ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:              "a",
+				Owner:             "administrators",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 0,
+				DeltaSharingOrganizationName:                "acme",
+				ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				StorageRoot:       "s3://b/abc",
+				Name:              "a",
+				Owner:             "administrators",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 0,
+				DeltaSharingOrganizationName:                "acme",
+				ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+			}, nil)
 		},
 		Resource: ResourceMetastore(),
 		Create:   true,
@@ -143,11 +130,8 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 
 func TestDeleteMetastore(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockMetastoresAPI().EXPECT().Delete(mock.Anything, catalog.DeleteMetastoreRequest{Id: "abc"}).Return(nil)
 		},
 		Resource: ResourceMetastore(),
 		Delete:   true,
@@ -161,11 +145,11 @@ func TestDeleteMetastore(t *testing.T) {
 
 func TestForceDeleteMetastore(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?force=true",
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockMetastoresAPI().EXPECT().Delete(mock.Anything, catalog.DeleteMetastoreRequest{
+				Id:    "abc",
+				Force: true,
+			}).Return(nil)
 		},
 		Resource: ResourceMetastore(),
 		Delete:   true,
@@ -181,24 +165,23 @@ func TestForceDeleteMetastore(t *testing.T) {
 
 func TestUpdateMetastore_NoChanges(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Name:              "abc",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				StorageRoot: "s3://b/abc",
+				Name:        "abc",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                "abc",
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:              "a",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
 		},
 		Resource:    ResourceMetastore(),
 		ID:          "abc",
@@ -223,31 +206,33 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 
 func TestUpdateMetastore_OwnerChanges(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Owner: "updatedOwner",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Name:              "abc",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:    "abc",
+				Owner: "updatedOwner",
+			}).Return(&catalog.MetastoreInfo{
+				Name:  "abc",
+				Owner: "updatedOwner",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                "abc",
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:              "a",
+				Owner:             "updatedOwner",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				Owner:             "updatedOwner",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
 		},
 		Resource:    ResourceMetastore(),
 		ID:          "abc",
@@ -272,43 +257,29 @@ func TestUpdateMetastore_OwnerChanges(t *testing.T) {
 
 func TestUpdateMetastore_Rollback(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Owner: "updatedOwner",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Name:              "abc",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-				},
-				Response: apierr.APIErrorBody{
-					ErrorCode: "SERVER_ERROR",
-					Message:   "Something unexpected happened",
-				},
-				Status: 500,
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Owner: "admin",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:    "abc",
+				Owner: "updatedOwner",
+			}).Return(&catalog.MetastoreInfo{
+				Name:  "abc",
+				Owner: "updatedOwner",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                "abc",
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+			}).Return(nil, errors.New("Something unexpected happened"))
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:    "abc",
+				Owner: "admin",
+			}).Return(&catalog.MetastoreInfo{
+				Name:  "abc",
+				Owner: "admin",
+			}, nil)
 		},
 		Resource:    ResourceMetastore(),
 		ID:          "abc",
@@ -334,24 +305,24 @@ func TestUpdateMetastore_Rollback(t *testing.T) {
 
 func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/metastores/abc",
-				ExpectedRequest: catalog.UpdateMetastore{
-					Name:              "abc",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastores/abc?",
-				Response: MetastoreInfo{
-					StorageRoot: "s3://b/abc",
-					Name:        "a",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                "abc",
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
 		},
 		Resource:    ResourceMetastore(),
 		ID:          "abc",
@@ -376,41 +347,34 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 
 func TestCreateAccountMetastore(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/accounts/100/metastores",
-				ExpectedRequest: catalog.AccountsCreateMetastore{
-					MetastoreInfo: &catalog.CreateMetastore{
-						StorageRoot: "s3://b",
-						Name:        "a",
-					},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockAccountMetastoresAPI().EXPECT()
+			e.Create(mock.Anything, catalog.AccountsCreateMetastore{
+				MetastoreInfo: &catalog.CreateMetastore{
+					StorageRoot: "s3://b",
+					Name:        "a",
 				},
-				Response: catalog.AccountsMetastoreInfo{
-					MetastoreInfo: &catalog.MetastoreInfo{
-						MetastoreId: "abc",
-					},
+			}).Return(&catalog.AccountsMetastoreInfo{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					MetastoreId: "abc",
 				},
-			},
-			{
-				Method:   "PUT",
-				Resource: "/api/2.0/accounts/100/metastores/abc",
-				ExpectedRequest: catalog.AccountsUpdateMetastore{
-					MetastoreInfo: &catalog.UpdateMetastore{
-						Name: "a",
-					},
+			}, nil)
+			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
+				MetastoreId: "abc",
+				MetastoreInfo: &catalog.UpdateMetastore{
+					Name: "a",
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: catalog.AccountsMetastoreInfo{
-					MetastoreInfo: &catalog.MetastoreInfo{
-						StorageRoot: "s3://b/abc",
-						Name:        "a",
-					},
+			}).Return(&catalog.AccountsMetastoreInfo{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					Name: "a",
 				},
-			},
+			}, nil)
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					StorageRoot: "s3://b/abc",
+					Name:        "a",
+				},
+			}, nil)
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",

@@ -284,6 +284,9 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
 	}
 	if ws.CustomTags != nil {
+		if !a.client.IsAws() {
+			return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
+		}
 		request["custom_tags"] = ws.CustomTags
 	}
 
@@ -537,7 +540,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 				return err
 			}
 			if !c.IsAws() && workspace.CustomTags != nil {
-				return errors.New("custom_tags are only allowed for AWS workspaces")
+				return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
 			}
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")

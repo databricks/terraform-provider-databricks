@@ -263,7 +263,7 @@ var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "s
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
-	request := map[string]string{}
+	request := map[string]any{}
 
 	if ws.CredentialsID != "" {
 		request["credentials_id"] = ws.CredentialsID
@@ -282,6 +282,9 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
+	}
+	if ws.CustomTags != nil {
+		request["custom_tags"] = ws.CustomTags
 	}
 
 	if len(request) == 0 {

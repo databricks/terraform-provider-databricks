@@ -224,6 +224,16 @@ func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema 
 }
 
 func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *CustomizableSchema {
+	if len(path) == 0 {
+		// Wrapping the input map into a schema when the path is empty.
+		// The primary use case for this situation is for adding a new field at the top level.
+		wrappedSch := &schema.Schema{
+			Elem: &schema.Resource{
+				Schema: s,
+			},
+		}
+		return &CustomizableSchema{Schema: wrappedSch}
+	}
 	sch := MustSchemaPath(s, path...)
 	return &CustomizableSchema{Schema: sch}
 }

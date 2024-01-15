@@ -86,11 +86,11 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 	common.CustomizeSchemaPath(s, "workload_type", "clients").SetRequired()
 	common.CustomizeSchemaPath(s, "workload_type", "clients", "notebooks").SetOptional().SetDefault(true)
 	common.CustomizeSchemaPath(s, "workload_type", "clients", "jobs").SetOptional().SetDefault(true)
-	s["idempotency_token"] = &schema.Schema{
+	common.CustomizeSchemaPath(s).AddNewField("idempotency_token", &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		ForceNew: true,
-	}
+	})
 	common.CustomizeSchemaPath(s, "data_security_mode").SetSuppressDiff()
 	common.CustomizeSchemaPath(s, "docker_image", "url").SetRequired()
 	common.CustomizeSchemaPath(s, "docker_image", "basic_auth", "password").SetRequired().SetSensitive()
@@ -113,29 +113,30 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 			Optional: true,
 		},
 	)
-	s["library"] = common.StructToSchema(libraries.ClusterLibraryList{},
+
+	common.CustomizeSchemaPath(s).AddNewField("library", common.StructToSchema(libraries.ClusterLibraryList{},
 		func(ss map[string]*schema.Schema) map[string]*schema.Schema {
 			ss["library"].Set = func(i any) int {
 				lib := libraries.NewLibraryFromInstanceState(i)
 				return schema.HashString(lib.String())
 			}
 			return ss
-		})["library"]
+		})["library"])
 
 	common.CustomizeSchemaPath(s, "autotermination_minutes").SetDefault(60)
 	common.CustomizeSchemaPath(s, "autoscale", "max_workers").SetOptional()
 	common.CustomizeSchemaPath(s, "autoscale", "min_workers").SetOptional()
-	s["apply_policy_default_values"] = &schema.Schema{
+	common.CustomizeSchemaPath(s).AddNewField("apply_policy_default_values", &schema.Schema{
 		Optional: true,
 		Type:     schema.TypeBool,
-	}
+	})
 	common.CustomizeSchemaPath(s, "cluster_log_conf", "dbfs", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "cluster_log_conf", "s3", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "spark_version").SetRequired()
 	common.CustomizeSchemaPath(s, "cluster_id").SetOptional().SetComputed()
 	common.CustomizeSchemaPath(s, "instance_pool_id").SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
 	common.CustomizeSchemaPath(s, "runtime_engine").SetValidateFunc(validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false))
-	s["is_pinned"] = &schema.Schema{
+	common.CustomizeSchemaPath(s).AddNewField("is_pinned", &schema.Schema{
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  false,
@@ -145,15 +146,15 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 			}
 			return old == new
 		},
-	}
+	})
 	common.CustomizeSchemaPath(s, "state").SetReadOnly()
-	s["url"] = &schema.Schema{
+	common.CustomizeSchemaPath(s).AddNewField("url", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
-	}
+	})
 	common.CustomizeSchemaPath(s, "default_tags").SetReadOnly()
 	common.CustomizeSchemaPath(s, "num_workers").SetDefault(0).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
-	s["cluster_mount_info"] = &schema.Schema{
+	common.CustomizeSchemaPath(s).AddNewField("cluster_mount_info", &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
@@ -161,7 +162,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 				return ss
 			}),
 		},
-	}
+	})
 
 	return s
 }

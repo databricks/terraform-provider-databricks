@@ -166,6 +166,9 @@ func reflectKind(k reflect.Kind) string {
 
 func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath []string, aliases map[string]string) string {
 	jsonFieldName := getJsonFieldName(typeField)
+	if jsonFieldName == "-" {
+		return "-"
+	}
 
 	aliasKey := strings.Join(append(fieldNamePath, jsonFieldName), ".")
 
@@ -295,6 +298,10 @@ func (s *CustomizableSchema) SetMinItems(value int) *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetConflictsWith cannot take in empty list")
+		return s
+	}
 	s.Schema.ConflictsWith = value
 	return s
 }

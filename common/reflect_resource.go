@@ -57,6 +57,8 @@ func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T]) map[stri
 	return scm
 }
 
+// A copy of typeToSchema that works with the ResourceProviderStruct, by taking in an aliases map and handling the `tf` overrides differently from
+// the existing typeToSchema function.
 func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, fieldNamePath []string, aliases map[string]string) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()

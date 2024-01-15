@@ -1540,16 +1540,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 				}
 			}
-			if query.Parent != "" {
-				res := sqlParentRegexp.FindStringSubmatch(query.Parent)
-				if len(res) > 1 {
-					ic.Emit(&resource{
-						Resource:  "databricks_directory",
-						Attribute: "object_id",
-						Value:     res[1],
-					})
-				}
-			}
+			ic.emitSqlParentDirectory(query.Parent)
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
@@ -1685,16 +1676,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			if dashboard.Parent != "" {
-				res := sqlParentRegexp.FindStringSubmatch(dashboard.Parent)
-				if len(res) > 1 {
-					ic.Emit(&resource{
-						Resource:  "databricks_directory",
-						Attribute: "object_id",
-						Value:     res[1],
-					})
-				}
-			}
+
+			ic.emitSqlParentDirectory(dashboard.Parent)
 			for _, rv := range dashboard.Widgets {
 				var widget sql_api.Widget
 				err = json.Unmarshal(rv, &widget)
@@ -1814,16 +1797,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if alert.QueryId != "" {
 				ic.Emit(&resource{Resource: "databricks_sql_query", ID: alert.QueryId})
 			}
-			if alert.Parent != "" {
-				res := sqlParentRegexp.FindStringSubmatch(alert.Parent)
-				if len(res) > 1 {
-					ic.Emit(&resource{
-						Resource:  "databricks_directory",
-						Attribute: "object_id",
-						Value:     res[1],
-					})
-				}
-			}
+			ic.emitSqlParentDirectory(alert.Parent)
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_permissions",
@@ -1957,11 +1931,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "directories",
 		Name:           workspaceObjectResouceName,
 		Search: func(ic *importContext, r *resource) error {
-			directoryList := ic.getAllDirectories()
 			objId, err := strconv.ParseInt(r.Value, 10, 64)
 			if err != nil {
 				return err
 			}
+			directoryList := ic.getAllDirectories()
 			for _, directory := range directoryList {
 				if directory.ObjectID == objId {
 					r.ID = directory.Path

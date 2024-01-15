@@ -104,7 +104,7 @@ func TestEmitNoSearchAvail(t *testing.T) {
 				Service: "e",
 			},
 		},
-		services:  "e",
+		services:  []string{"e"},
 		waitGroup: &sync.WaitGroup{},
 		channels: map[string]resourceChannel{
 			"a": ch,
@@ -140,7 +140,7 @@ func TestEmitNoSearchFails(t *testing.T) {
 				},
 			},
 		},
-		services:  "e",
+		services:  []string{"e"},
 		waitGroup: &sync.WaitGroup{},
 		channels: map[string]resourceChannel{
 			"a": ch,
@@ -176,7 +176,7 @@ func TestEmitNoSearchNoId(t *testing.T) {
 				},
 			},
 		},
-		services:  "e",
+		services:  []string{"e"},
 		waitGroup: &sync.WaitGroup{},
 		channels: map[string]resourceChannel{
 			"a": ch,
@@ -216,7 +216,7 @@ func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 				},
 			},
 		},
-		services:  "e",
+		services:  []string{"e"},
 		waitGroup: &sync.WaitGroup{},
 		channels: map[string]resourceChannel{
 			"a": ch,

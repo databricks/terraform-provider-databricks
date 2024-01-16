@@ -75,11 +75,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 	common.CustomizeSchemaPath(s, "driver_node_type_id").SetComputed().SetOptional().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
 	common.CustomizeSchemaPath(s, "driver_instance_pool_id").SetComputed().SetOptional().SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
 	common.CustomizeSchemaPath(s, "ssh_public_keys").SetMaxItems(10)
-	common.CustomizeSchemaPath(s, "init_scripts").SetMaxItems(10).AddNewField("abfss", common.StructToSchema(InitScriptStorageInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-		return ss
-	})["abfss"]).AddNewField("gcs", common.StructToSchema(InitScriptStorageInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-		return ss
-	})["gcs"])
+	common.CustomizeSchemaPath(s, "init_scripts").SetMaxItems(10).AddNewField("abfss", common.StructToSchema(InitScriptStorageInfo{}, nil)["abfss"]).AddNewField("gcs", common.StructToSchema(InitScriptStorageInfo{}, nil)["gcs"])
 	common.CustomizeSchemaPath(s, "init_scripts", "dbfs").SetDeprecated(DbfsDeprecationWarning)
 	common.CustomizeSchemaPath(s, "init_scripts", "dbfs", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "init_scripts", "s3", "destination").SetRequired()
@@ -158,9 +154,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: common.StructToSchema(MountInfo{}, func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-				return ss
-			}),
+			Schema: common.StructToSchema(MountInfo{}, nil),
 		},
 	})
 

@@ -145,7 +145,6 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 	})
 	common.CustomizeSchemaPath(s, "cluster_cores").SetReadOnly()
 	common.CustomizeSchemaPath(s, "cluster_memory_mb").SetReadOnly()
-	common.CustomizeSchemaPath(s, "creator_user_name").SetReadOnly()
 	common.CustomizeSchemaPath(s, "driver").SetReadOnly()
 	common.CustomizeSchemaPath(s, "executors").SetReadOnly()
 	common.CustomizeSchemaPath(s, "jdbc_port").SetReadOnly()

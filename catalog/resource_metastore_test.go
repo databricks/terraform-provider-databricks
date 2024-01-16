@@ -755,7 +755,9 @@ func TestReadAccountMetastore(t *testing.T) {
 func TestReadAccountMetastore_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockAccountMetastoresAPI().EXPECT().GetByMetastoreId(mock.Anything, "abc").Return(nil, apierr.ErrNotFound)
+			a.GetMockAccountMetastoresAPI().EXPECT().GetByMetastoreId(mock.Anything, "abc").Return(nil, &apierr.APIError{
+				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+			})
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
@@ -789,7 +791,9 @@ func TestReadMetastore_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockMetastoresAPI().EXPECT()
-			e.GetById(mock.Anything, "abc").Return(nil, apierr.ErrNotFound)
+			e.GetById(mock.Anything, "abc").Return(nil, &apierr.APIError{
+				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+			})
 		},
 		Resource: ResourceMetastore(),
 		ID:       "abc",

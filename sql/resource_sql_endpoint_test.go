@@ -158,7 +158,9 @@ func TestResourceSQLEndpoint_CornerCases(t *testing.T) {
 
 func TestResolveDataSourceIDError(t *testing.T) {
 	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
-		mwc.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, apierr.ErrNotFound)
+		mwc.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, &apierr.APIError{
+			ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+		})
 	}, func(ctx context.Context, client common.DatabricksAPI) {
 		w, err := client.WorkspaceClient()
 		require.NoError(t, err)

@@ -45,7 +45,7 @@ func TestWarehouseData_Error(t *testing.T) {
 		NonWritable: true,
 		HCL:         `id = "abc"`,
 		ID:          "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestWarehouseDataByName_ListError(t *testing.T) {
@@ -58,7 +58,7 @@ func TestWarehouseDataByName_ListError(t *testing.T) {
 		NonWritable: true,
 		HCL:         `name = "abc"`,
 		ID:          "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestWarehouseDataByName_NotFoundError(t *testing.T) {

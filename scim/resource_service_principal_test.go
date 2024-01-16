@@ -150,7 +150,7 @@ func TestResourceServicePrincipalCreate_Error(t *testing.T) {
 		display_name = "Example Service Principal"
 		allow_cluster_create = true
 		`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
@@ -332,7 +332,7 @@ func TestResourceServicePrincipalUpdate_Error(t *testing.T) {
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
@@ -365,7 +365,7 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceServicePrincipalDelete(t *testing.T) {
@@ -389,7 +389,7 @@ func TestResourceServicePrincipalDelete_Error(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceServicePrincipalDelete_NoErrorEmtpyParams(t *testing.T) {

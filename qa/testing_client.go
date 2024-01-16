@@ -137,4 +137,4 @@ func (t testingClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
 
 var _ common.DatabricksAPI = testingClient{}
 
-var ErrImATeapot = errors.New("I'm a teapot")
+var ErrImATeapot = errors.New("i'm a teapot")

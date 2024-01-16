@@ -415,7 +415,7 @@ var HTTPFailures = []HTTPFixture{
 		Response: apierr.APIError{
 			ErrorCode:  "NONSENSE",
 			StatusCode: 418,
-			Message:    "I'm a teapot",
+			Message:    "i'm a teapot",
 		},
 	},
 }
@@ -424,7 +424,7 @@ var HTTPFailures = []HTTPFixture{
 func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
 	config := map[string]string{
 		"id":           "x",
-		"expect_error": "I'm a teapot",
+		"expect_error": "i'm a teapot",
 		"account_id":   "",
 	}
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{

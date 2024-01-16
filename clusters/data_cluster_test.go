@@ -155,7 +155,7 @@ func TestClusterDataByName_ListError(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestClusterData_Error(t *testing.T) {
@@ -166,7 +166,7 @@ func TestClusterData_Error(t *testing.T) {
 		NonWritable: true,
 		HCL:         `cluster_id = "abc"`,
 		ID:          "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestClusterData_ErrorNoParams(t *testing.T) {

@@ -1178,7 +1178,7 @@ func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_RUN"
 		}`,
-	}.ExpectError(t, "cannot load path /foo/bar: I'm a teapot")
+	}.ExpectError(t, "cannot load path /foo/bar: i'm a teapot")
 }
 
 func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
@@ -1195,7 +1195,7 @@ func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_MANAGE"
 		}`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourcePermissionsUpdate(t *testing.T) {

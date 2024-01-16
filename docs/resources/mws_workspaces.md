@@ -192,6 +192,13 @@ resource "databricks_mws_workspaces" "this" {
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 
   token {}
+
+  # Optional Custom Tags
+  custom_tags = {
+
+    "SoldToCode" = "1234"
+
+  }
 }
 
 output "databricks_token" {
@@ -328,6 +335,7 @@ The following arguments are available:
   * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`.
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
+* `custom_tags` - (Optional / AWS only) - The custom tags key-value pairing that is attached to this workspace. These tags will be applied to clusters automatically in addition to any `default_tags` or `custom_tags` on a cluster level. Please note it can take up to an hour for custom_tags to be set due to scheduling on Control Plane. After custom tags are applied, they can be modified however they can never be completely removed.
 
 ### token block
 
@@ -346,6 +354,7 @@ On AWS, the following arguments could be modified after the workspace is running
 * `credentials_id`
 * `storage_customer_managed_key_id`
 * `private_access_settings_id`
+* `custom_tags`
 
 ## Attribute Reference
 
@@ -357,6 +366,7 @@ In addition to all arguments above, the following attributes are exported:
 * `workspace_status` - (String) workspace status
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
+* `custom_tags` - (Map) Custom Tags (if present) added to workspace
 
 ## Timeouts
 

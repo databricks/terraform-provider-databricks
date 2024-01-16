@@ -132,7 +132,7 @@ func TestEmitUser(t *testing.T) {
 		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		assert.True(t, len(ic.testEmits) == 0)
 		ic.emitUserOrServicePrincipal("user@domain.com")
@@ -147,7 +147,7 @@ func TestEmitServicePrincipal(t *testing.T) {
 		spListIdUsernameFixture2,
 		spListFixture,
 		spReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.emitUserOrServicePrincipal("21aab5a7-ee70-4385-34d4-a77278be5cb6")
 		assert.True(t, len(ic.testEmits) == 1)
@@ -164,7 +164,7 @@ func TestEmitUserError(t *testing.T) {
 				Resources: []iam.User{},
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.emitUserOrServicePrincipal("abc")
 		assert.True(t, len(ic.testEmits) == 0)
@@ -177,7 +177,7 @@ func TestEmitUserOrServicePrincipalForPath(t *testing.T) {
 		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.emitUserOrServicePrincipalForPath("/Users/user@domain.com/abc", "/Users")
 		assert.True(t, len(ic.testEmits) == 1)
@@ -202,7 +202,7 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.emitNotebookOrRepo("/Users/user@domain.com/abc")
 		assert.True(t, len(ic.testEmits) == 1)
@@ -214,7 +214,7 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 		userListIdUsernameFixture,
 		userListFixture,
 		userReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.emitNotebookOrRepo("/Repos/user@domain.com/repo/abc")
 		assert.True(t, len(ic.testEmits) == 1)
@@ -228,7 +228,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		result_false_partslength_more_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/abc", "/Users")
 		assert.False(t, result_false_partslength_more_than_3)
@@ -251,7 +251,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com", "/Users")
 		assert.True(t, result_true_user_directory)
@@ -262,7 +262,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/", "/Users")
 		assert.True(t, result_true_user_directory)
@@ -273,7 +273,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		spListIdUsernameFixture2,
 		spListFixture,
 		spReadFixture,
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		result_true_sp_directory := ic.IsUserOrServicePrincipalDirectory("/Users/21aab5a7-ee70-4385-34d4-a77278be5cb6", "/Users")
 		assert.True(t, result_true_sp_directory)

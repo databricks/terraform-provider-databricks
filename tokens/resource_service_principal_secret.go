@@ -22,12 +22,12 @@ type ListServicePrincipalSecrets struct {
 
 // NewServicePrincipalSecretAPI creates ServicePrincipalSecretAPI instance from provider meta
 func NewServicePrincipalSecretAPI(ctx context.Context, m any) ServicePrincipalSecretAPI {
-	return ServicePrincipalSecretAPI{m.(common.DatabricksAPI), ctx}
+	return ServicePrincipalSecretAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // ServicePrincipalSecretAPI exposes the API to create client secrets
 type ServicePrincipalSecretAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -61,7 +61,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: spnSecretSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.Config().AccountID == "" {
 				return errors.New("must have `account_id` on provider")
 			}
@@ -92,7 +92,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 			}
 			return d.Set("secret", secret.Secret)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.Config().AccountID == "" {
 				return errors.New("must have `account_id` on provider")
 			}
@@ -110,7 +110,7 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 			}
 			return apierr.NotFound("client secret not found")
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.Config().AccountID == "" {
 				return errors.New("must have `account_id` on provider")
 			}

@@ -16,12 +16,12 @@ import (
 
 // NewServicePrincipalsAPI creates ServicePrincipalsAPI instance from provider meta
 func NewServicePrincipalsAPI(ctx context.Context, m any) ServicePrincipalsAPI {
-	return ServicePrincipalsAPI{m.(common.DatabricksAPI), ctx}
+	return ServicePrincipalsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // ServicePrincipalsAPI exposes the scim servicePrincipal API
 type ServicePrincipalsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -152,7 +152,7 @@ func ResourceServicePrincipal() *schema.Resource {
 	}
 	return common.Resource{
 		Schema: servicePrincipalSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp := spFromData(d)
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			servicePrincipal, err := spAPI.Create(sp)
@@ -162,7 +162,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			d.SetId(servicePrincipal.ID)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp, err := NewServicePrincipalsAPI(ctx, c).Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
@@ -177,7 +177,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			}
 			return sp.Entitlements.readIntoData(d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var applicationId string
 			if c.IsAzure() {
 				applicationId = d.Get("application_id").(string)
@@ -190,7 +190,7 @@ func ResourceServicePrincipal() *schema.Resource {
 				ApplicationID: applicationId,
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			appId := d.Get("application_id").(string)
 			var err error = nil

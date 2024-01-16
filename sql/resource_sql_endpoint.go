@@ -88,7 +88,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -106,7 +106,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			d.SetId(resp.Id)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -121,7 +121,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			}
 			return common.StructToData(warehouse, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -135,7 +135,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			}
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

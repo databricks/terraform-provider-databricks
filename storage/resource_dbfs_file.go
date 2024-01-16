@@ -24,7 +24,7 @@ func ResourceDbfsFile() *schema.Resource {
 				Computed: true,
 			},
 		}),
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			path := d.Get("path").(string)
 			content, err := workspace.ReadContent(d)
 			if err != nil {
@@ -36,7 +36,7 @@ func ResourceDbfsFile() *schema.Resource {
 			d.SetId(path)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			dbfsAPI := NewDbfsAPI(ctx, c)
 			fileInfo, err := dbfsAPI.Status(d.Id())
 			if err != nil {
@@ -47,7 +47,7 @@ func ResourceDbfsFile() *schema.Resource {
 			d.Set("file_size", fileInfo.FileSize)
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewDbfsAPI(ctx, c).Delete(d.Id(), false)
 		},
 		StateUpgraders: []schema.StateUpgrader{

@@ -84,12 +84,12 @@ type DeletePath struct {
 
 // NewNotebooksAPI creates NotebooksAPI instance from provider meta
 func NewNotebooksAPI(ctx context.Context, m any) NotebooksAPI {
-	return NotebooksAPI{m.(common.DatabricksAPI), ctx}
+	return NotebooksAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // NotebooksAPI exposes the Notebooks API
 type NotebooksAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -361,7 +361,7 @@ func ResourceNotebook() *schema.Resource {
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			content, err := ReadContent(d)
 			if err != nil {
 				return err
@@ -403,7 +403,7 @@ func ResourceNotebook() *schema.Resource {
 			d.SetId(path)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			objectStatus, err := notebooksAPI.Read(d.Id())
 			if err != nil {
@@ -412,7 +412,7 @@ func ResourceNotebook() *schema.Resource {
 			d.Set("url", c.FormatURL("#workspace", d.Id()))
 			return common.StructToData(objectStatus, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			content, err := ReadContent(d)
 			if err != nil {
@@ -439,7 +439,7 @@ func ResourceNotebook() *schema.Resource {
 				Path:      d.Id(),
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			objType := d.Get("object_type")
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), !(objType == Notebook || objType == File))
 		},

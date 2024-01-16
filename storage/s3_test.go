@@ -19,7 +19,7 @@ func TestPreprocessS3MountOnDeletedClusterNoInstanceProfileSpecifiedError(t *tes
 			Status:   404,
 			Response: apierr.NotFound("cluster deleted"),
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
 		d := r.TestResourceData()
 		d.Set("uri", "s3://bucket")
@@ -90,7 +90,7 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 				StateMessage: "created",
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
 		d := r.TestResourceData()
 		d.MarkNewResource()

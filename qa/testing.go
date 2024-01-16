@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -174,7 +175,7 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
 }
 
-func (f ResourceFixture) setDatabricksEnvironmentForTest(client common.DatabricksAPI, host string) {
+func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
 	if f.Azure || f.AzureSPN {
 		client.Config().DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:              config.CloudAzure,
@@ -209,7 +210,7 @@ type server struct {
 	URL   string
 }
 
-func (f ResourceFixture) setupClient(t *testing.T) (common.DatabricksAPI, server, error) {
+func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, server, error) {
 	if f.Fixtures != nil {
 		token := "..."
 		if f.Token != "" {
@@ -230,14 +231,13 @@ func (f ResourceFixture) setupClient(t *testing.T) (common.DatabricksAPI, server
 	if f.MockAccountClientFunc != nil {
 		f.MockAccountClientFunc(ma)
 	}
-	return testingClient{
-			w:      mw,
-			a:      ma,
-			config: &config.Config{},
-		}, server{
-			Close: func() {},
-			URL:   "does-not-matter",
-		}, nil
+	c := &common.DatabricksClient{}
+	c.SetWorkspaceClient(mw.WorkspaceClient)
+	c.SetAccountClient(ma.AccountClient)
+	return c, server{
+		Close: func() {},
+		URL:   "does-not-matter",
+	}, nil
 }
 
 // Apply runs tests from fixture
@@ -407,6 +407,7 @@ func CornerCaseAccountID(id string) CornerCase {
 	return CornerCase{"account_id", id}
 }
 
+var ErrImATeapot = errors.New("i'm a teapot")
 var HTTPFailures = []HTTPFixture{
 	{
 		MatchAny:     true,
@@ -439,7 +440,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 		}
 		config[corner.part] = corner.value
 	}
-	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client common.DatabricksAPI) {
+	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
 		client.Config().AccountID = config["account_id"]
 		for n, v := range m {
@@ -499,12 +500,12 @@ func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixtu
 }
 
 // HttpFixtureClient creates client for emulated HTTP server
-func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client common.DatabricksAPI, server *httptest.Server, err error) {
+func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.DatabricksClient, server *httptest.Server, err error) {
 	return HttpFixtureClientWithToken(t, fixtures, "...")
 }
 
 // HttpFixtureClientWithToken creates client for emulated HTTP server
-func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (common.DatabricksAPI, *httptest.Server, error) {
+func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (*common.DatabricksClient, *httptest.Server, error) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		found := false
 		for i, fixture := range fixtures {
@@ -600,28 +601,26 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 }
 
 // HTTPFixturesApply is a helper method
-func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx context.Context, client common.DatabricksAPI)) {
+func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx context.Context, client *common.DatabricksClient)) {
 	client, server, err := HttpFixtureClient(t, fixtures)
 	defer server.Close()
 	require.NoError(t, err)
 	callback(context.Background(), client)
 }
 
-func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorkspaceClient), callback func(ctx context.Context, client common.DatabricksAPI)) {
+func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorkspaceClient), callback func(ctx context.Context, client *common.DatabricksClient)) {
 	mw := mocks.NewMockWorkspaceClient(t)
 	mockWorkspaceClient(mw)
-	client := testingClient{
-		w: mw,
-	}
+	client := &common.DatabricksClient{}
+	client.SetWorkspaceClient(mw.WorkspaceClient)
 	callback(context.Background(), client)
 }
 
-func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountClient), callback func(ctx context.Context, client common.DatabricksAPI)) {
+func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountClient), callback func(ctx context.Context, client *common.DatabricksClient)) {
 	ma := mocks.NewMockAccountClient(t)
 	mockAccountClient(ma)
-	client := testingClient{
-		a: ma,
-	}
+	client := &common.DatabricksClient{}
+	client.SetAccountClient(ma.AccountClient)
 	callback(context.Background(), client)
 }
 

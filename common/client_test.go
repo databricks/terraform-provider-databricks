@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func configureAndAuthenticate(dc DatabricksAPI) (DatabricksAPI, error) {
+func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 	req, err := http.NewRequest("GET", dc.Config().Host, nil)
 	if err != nil {
 		return dc, err
@@ -22,7 +22,7 @@ func configureAndAuthenticate(dc DatabricksAPI) (DatabricksAPI, error) {
 	return dc, dc.Config().Authenticate(req)
 }
 
-func failsToAuthenticateWith(t *testing.T, dc DatabricksAPI, message string) {
+func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string) {
 	_, err := configureAndAuthenticate(dc)
 	if dc.Config().AuthType != "" {
 		log.Printf("[INFO] Auth is: %s", dc.Config().AuthType)

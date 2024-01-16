@@ -29,13 +29,13 @@ type experimentWrapper struct {
 
 // ExperimentsAPI ...
 type ExperimentsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
 // NewExperimentsAPI ...
 func NewExperimentsAPI(ctx context.Context, m any) ExperimentsAPI {
-	return ExperimentsAPI{m.(common.DatabricksAPI), ctx}
+	return ExperimentsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // Create ...
@@ -73,7 +73,7 @@ func ResourceMlflowExperiment() *schema.Resource {
 		common.NoCustomize)
 
 	return common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var e Experiment
 			common.DataToStructPointer(d, s, &e)
 			if err := NewExperimentsAPI(ctx, c).Create(&e); err != nil {
@@ -82,20 +82,20 @@ func ResourceMlflowExperiment() *schema.Resource {
 			d.SetId(e.ExperimentId)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			e, err := NewExperimentsAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(*e, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var e Experiment
 			common.DataToStructPointer(d, s, &e)
 			updateDoc := experimentUpdate{ExperimentId: d.Id(), NewName: e.Name}
 			return NewExperimentsAPI(ctx, c).Update(&updateDoc)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewExperimentsAPI(ctx, c).Delete(d.Id())
 		},
 		StateUpgraders: []schema.StateUpgrader{},

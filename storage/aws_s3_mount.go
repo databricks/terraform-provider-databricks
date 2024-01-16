@@ -26,12 +26,12 @@ func (m AWSIamMount) Name() string {
 	return m.S3BucketName
 }
 
-func (m AWSIamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
+func (m AWSIamMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
 	return nil
 }
 
 // Config ...
-func (m AWSIamMount) Config(client common.DatabricksAPI) map[string]string {
+func (m AWSIamMount) Config(client *common.DatabricksClient) map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 

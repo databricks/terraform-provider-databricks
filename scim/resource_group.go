@@ -36,7 +36,7 @@ func ResourceGroup() *schema.Resource {
 		})
 	addEntitlementsToSchema(&groupSchema)
 	return common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			g := Group{
 				DisplayName:  d.Get("display_name").(string),
 				Entitlements: readEntitlementsFromData(d),
@@ -50,7 +50,7 @@ func ResourceGroup() *schema.Resource {
 			d.SetId(group.ID)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			group, err := NewGroupsAPI(ctx, c).Read(d.Id(), "displayName,externalId,entitlements")
 			if err != nil {
 				return err
@@ -65,12 +65,12 @@ func ResourceGroup() *schema.Resource {
 			}
 			return group.Entitlements.readIntoData(d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			groupName := d.Get("display_name").(string)
 			return NewGroupsAPI(ctx, c).UpdateNameAndEntitlements(d.Id(), groupName,
 				d.Get("external_id").(string), readEntitlementsFromData(d))
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewGroupsAPI(ctx, c).Delete(d.Id())
 		},
 		Schema: groupSchema,

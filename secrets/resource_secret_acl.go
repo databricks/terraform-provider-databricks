@@ -10,12 +10,12 @@ import (
 
 // NewSecretAclsAPI creates SecretAclsAPI instance from provider meta
 func NewSecretAclsAPI(ctx context.Context, m any) SecretAclsAPI {
-	return SecretAclsAPI{m.(common.DatabricksAPI), ctx}
+	return SecretAclsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // SecretAclsAPI exposes the Secret ACL API
 type SecretAclsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -77,7 +77,7 @@ func ResourceSecretACL() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if err := NewSecretAclsAPI(ctx, c).Create(
 				d.Get("scope").(string), d.Get("principal").(string),
 				ACLPermission(d.Get("permission").(string))); err != nil {
@@ -87,7 +87,7 @@ func ResourceSecretACL() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			scope, principal, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -98,7 +98,7 @@ func ResourceSecretACL() *schema.Resource {
 			}
 			return d.Set("permission", secretACL.Permission)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			scope, principal, err := p.Unpack(d)
 			if err != nil {
 				return err

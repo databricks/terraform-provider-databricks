@@ -9,12 +9,12 @@ import (
 )
 
 type ProvidersAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
 func NewProvidersAPI(ctx context.Context, m interface{}) ProvidersAPI {
-	return ProvidersAPI{m.(common.DatabricksAPI), ctx}
+	return ProvidersAPI{m.(*common.DatabricksClient), ctx}
 }
 
 type ProviderInfo struct {
@@ -63,7 +63,7 @@ func ResourceProvider() *schema.Resource {
 	}
 	return common.Resource{
 		Schema: providerSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)
 			if err := NewProvidersAPI(ctx, c).createProvider(&ri); err != nil {
@@ -72,19 +72,19 @@ func ResourceProvider() *schema.Resource {
 			d.SetId(ri.Name)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ri, err := NewProvidersAPI(ctx, c).getProvider(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ri, providerSchemaForRead, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)
 			return NewProvidersAPI(ctx, c).updateProvider(&ri)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewProvidersAPI(ctx, c).deleteProvider(d.Id())
 		},
 	}.ToResource()

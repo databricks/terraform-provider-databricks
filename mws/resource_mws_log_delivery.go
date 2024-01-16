@@ -32,13 +32,13 @@ type LogDeliveryConfiguration struct {
 
 // LogDeliveryAPI ...
 type LogDeliveryAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
 // NewLogDeliveryAPI ...
 func NewLogDeliveryAPI(ctx context.Context, m any) LogDeliveryAPI {
-	return LogDeliveryAPI{m.(common.DatabricksAPI), ctx}
+	return LogDeliveryAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // Read reads log delivery configuration
@@ -79,7 +79,7 @@ func ResourceMwsLogDelivery() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ldc LogDeliveryConfiguration
 			common.DataToStructPointer(d, s, &ldc)
 			configID, err := NewLogDeliveryAPI(ctx, c).Create(ldc)
@@ -92,7 +92,7 @@ func ResourceMwsLogDelivery() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ldc LogDeliveryConfiguration
 			common.DataToStructPointer(d, s, &ldc)
 			err := NewLogDeliveryAPI(ctx, c).Patch(ldc.AccountID, ldc.ConfigID, ldc.Status)
@@ -101,7 +101,7 @@ func ResourceMwsLogDelivery() *schema.Resource {
 			}
 			return common.StructToData(ldc, s, d)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, configID, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -112,7 +112,7 @@ func ResourceMwsLogDelivery() *schema.Resource {
 			}
 			return common.StructToData(ldc, s, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, configID, err := p.Unpack(d)
 			if err != nil {
 				return err

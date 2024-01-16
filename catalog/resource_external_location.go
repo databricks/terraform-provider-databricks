@@ -41,7 +41,7 @@ func ResourceExternalLocation() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -72,7 +72,7 @@ func ResourceExternalLocation() *schema.Resource {
 			}
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -83,7 +83,7 @@ func ResourceExternalLocation() *schema.Resource {
 			}
 			return common.StructToData(el, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_update").(bool)
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -126,7 +126,7 @@ func ResourceExternalLocation() *schema.Resource {
 			}
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
 			w, err := c.WorkspaceClient()
 			if err != nil {

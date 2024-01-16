@@ -9,14 +9,14 @@ import (
 // NewGlobalInitScriptsAPI creates GlobalInitScriptsAPI instance from provider meta
 func NewGlobalInitScriptsAPI(ctx context.Context, m any) GlobalInitScriptsAPI {
 	return GlobalInitScriptsAPI{
-		client:  m.(common.DatabricksAPI),
+		client:  m.(*common.DatabricksClient),
 		context: ctx,
 	}
 }
 
 // GlobalInitScriptsAPI exposes the Global Init Scripts API: https://docs.databricks.com/dev-tools/api/latest/global-init-scripts.html#
 type GlobalInitScriptsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 

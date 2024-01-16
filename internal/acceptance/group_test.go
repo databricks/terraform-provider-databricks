@@ -19,7 +19,7 @@ func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 			display_name = "` + name + `"
 		}`,
 		Check: resourceCheck("databricks_group.this",
-			func(ctx context.Context, client common.DatabricksAPI, id string) error {
+			func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				// duplicate code between workspace level and account level, because clients
 				// might get different
 				groupsAPI := scim.NewGroupsAPI(ctx, client)
@@ -50,7 +50,7 @@ func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_group.this", "allow_cluster_create", "true"),
 			resource.TestCheckResourceAttr("databricks_group.this", "allow_instance_pool_create", "false"),
 			resourceCheck("databricks_group.this",
-				func(ctx context.Context, client common.DatabricksAPI, id string) error {
+				func(ctx context.Context, client *common.DatabricksClient, id string) error {
 					groupsAPI := scim.NewGroupsAPI(ctx, client)
 					group, err := groupsAPI.Read(id, "displayName,entitlements")
 					if err != nil {

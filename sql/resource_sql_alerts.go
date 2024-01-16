@@ -130,7 +130,7 @@ func ResourceSqlAlert() *schema.Resource {
 	})
 
 	return common.Resource{
-		Create: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -147,7 +147,7 @@ func ResourceSqlAlert() *schema.Resource {
 			data.SetId(apiAlert.Id)
 			return nil
 		},
-		Read: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -160,7 +160,7 @@ func ResourceSqlAlert() *schema.Resource {
 			var a AlertEntity
 			return a.fromAPIObject(apiAlert, s, data)
 		},
-		Update: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -172,7 +172,7 @@ func ResourceSqlAlert() *schema.Resource {
 			}
 			return w.Alerts.Update(ctx, ca)
 		},
-		Delete: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

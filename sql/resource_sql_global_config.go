@@ -43,11 +43,11 @@ type GlobalConfigForRead struct {
 }
 
 func NewSqlGlobalConfigAPI(ctx context.Context, m any) globalConfigAPI {
-	return globalConfigAPI{m.(common.DatabricksAPI), ctx}
+	return globalConfigAPI{m.(*common.DatabricksClient), ctx}
 }
 
 type globalConfigAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -118,7 +118,7 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 			"and may be removed from the Databricks Terraform provider in the future"
 		return m
 	})
-	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		var gc GlobalConfig
 		common.DataToStructPointer(d, s, &gc)
 		if err := NewSqlGlobalConfigAPI(ctx, c).Set(gc); err != nil {
@@ -129,7 +129,7 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 	}
 	return common.Resource{
 		Create: setGlobalConfig,
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
 			if err != nil {
 				return err
@@ -138,7 +138,7 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 			return err
 		},
 		Update: setGlobalConfig,
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{SecurityPolicy: "DATA_ACCESS_CONTROL"})
 		},
 		Schema: s,

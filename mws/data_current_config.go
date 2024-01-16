@@ -16,7 +16,7 @@ type currentConfig struct {
 }
 
 func DataSourceCurrentConfiguration() *schema.Resource {
-	return common.DataResource(currentConfig{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
+	return common.DataResource(currentConfig{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*currentConfig)
 		data.IsAccount = false
 		if c.Config().IsAccountClient() {

@@ -392,13 +392,13 @@ type UpdateJobRequest struct {
 
 // NewJobsAPI creates JobsAPI instance from provider meta
 func NewJobsAPI(ctx context.Context, m any) JobsAPI {
-	client := m.(common.DatabricksAPI)
+	client := m.(*common.DatabricksClient)
 	return JobsAPI{client, ctx}
 }
 
 // JobsAPI exposes the Jobs API
 type JobsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -889,7 +889,7 @@ func ResourceJob() *schema.Resource {
 			}
 			return nil
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
 			common.DataToStructPointer(d, jobSchema, &js)
 			if js.isMultiTask() {
@@ -903,7 +903,7 @@ func ResourceJob() *schema.Resource {
 			d.SetId(job.ID())
 			return getJobLifecycleManager(d, c).OnCreate(ctx)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
 			job, err := NewJobsAPI(ctx, c).Read(d.Id())
 			if err != nil {
@@ -912,7 +912,7 @@ func ResourceJob() *schema.Resource {
 			d.Set("url", c.FormatURL("#job/", d.Id()))
 			return common.StructToData(*job.Settings, jobSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
 			common.DataToStructPointer(d, jobSchema, &js)
 			if js.isMultiTask() {
@@ -928,7 +928,7 @@ func ResourceJob() *schema.Resource {
 			}
 			return getJobLifecycleManager(d, c).OnUpdate(ctx)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)
 			w, err := c.WorkspaceClient()
 			if err != nil {

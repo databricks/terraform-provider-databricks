@@ -25,7 +25,7 @@ func ResourceArtifactAllowlist() *schema.Resource {
 	allowlistSchema := common.StructToSchema(ArtifactAllowlistInfo{}, common.NoCustomize)
 	p := common.NewPairID("metastore_id", "artifact_type")
 
-	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		w, err := c.WorkspaceClient()
 		if err != nil {
 			return err
@@ -54,7 +54,7 @@ func ResourceArtifactAllowlist() *schema.Resource {
 	return common.Resource{
 		Schema: allowlistSchema,
 		Create: createOrUpdate,
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -81,7 +81,7 @@ func ResourceArtifactAllowlist() *schema.Resource {
 			return common.StructToData(allowlist, allowlistSchema, d)
 		},
 		Update: createOrUpdate,
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

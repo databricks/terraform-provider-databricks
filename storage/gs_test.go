@@ -19,7 +19,7 @@ func TestCreateOrValidateClusterForGoogleStorage_Failures(t *testing.T) {
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceMount().TestResourceData()
 		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "a", "")
 		assert.EqualError(t, err, "cannot re-create mounting cluster: nope")
@@ -88,7 +88,7 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 				StateMessage: "created",
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceMount().TestResourceData()
 		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "removed-cluster", "service-account")
 		assert.NoError(t, err)
@@ -108,7 +108,7 @@ func TestCreateOrValidateClusterForGoogleStorage_FailsOnErrorGettingCluster(t *t
 				Message:    "Server error",
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceMount().TestResourceData()
 		err := createOrValidateClusterForGoogleStorage(ctx, client, d, "my-cluster", "service-account")
 		assert.EqualError(t, err, "cannot get mounting cluster: Server error")

@@ -12,12 +12,12 @@ import (
 
 // NewCredentialsAPI creates MWSCredentialsAPI instance from provider meta
 func NewCredentialsAPI(ctx context.Context, m any) CredentialsAPI {
-	return CredentialsAPI{m.(common.DatabricksAPI), ctx}
+	return CredentialsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // CredentialsAPI exposes the mws credentials API
 type CredentialsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -48,7 +48,7 @@ type CredentialInfo struct {
 func ResourceMwsCredentials() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "credentials_id", "/")
 	return common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			err := c.SetAccountId(d.Get("account_id").(string))
 			if err != nil {
 				return err
@@ -76,7 +76,7 @@ func ResourceMwsCredentials() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			acc, err := c.AccountClient()
 			if err != nil {
 				return err
@@ -95,10 +95,10 @@ func ResourceMwsCredentials() *schema.Resource {
 			return d.Set("external_id", credentials.AwsCredentials.StsRole.ExternalId)
 		},
 		// this resource cannot be updated, add this to prevent "doesn't support update" error from TF
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return nil
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			acc, err := c.AccountClient()
 			if err != nil {
 				return err

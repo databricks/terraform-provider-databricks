@@ -12,12 +12,12 @@ import (
 
 // NewPrivateAccessSettingsAPI creates VPCEndpointAPI instance from provider meta
 func NewPrivateAccessSettingsAPI(ctx context.Context, m any) PrivateAccessSettingsAPI {
-	return PrivateAccessSettingsAPI{m.(common.DatabricksAPI), ctx}
+	return PrivateAccessSettingsAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // PrivateAccessSettingsAPI exposes the PAS API
 type PrivateAccessSettingsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -67,7 +67,7 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "private_access_settings_id", "/")
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var pas PrivateAccessSettings
 			common.DataToStructPointer(d, s, &pas)
 			if err := NewPrivateAccessSettingsAPI(ctx, c).Create(&pas); err != nil {
@@ -77,7 +77,7 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, pasID, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -88,7 +88,7 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 			}
 			return common.StructToData(pas, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, pasID, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -98,7 +98,7 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 			pas.PasID = pasID
 			return NewPrivateAccessSettingsAPI(ctx, c).Update(&pas)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, pasID, err := p.Unpack(d)
 			if err != nil {
 				return err

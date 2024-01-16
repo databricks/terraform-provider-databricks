@@ -11,14 +11,14 @@ import (
 // NewUsersAPI creates UsersAPI instance from provider meta
 func NewUsersAPI(ctx context.Context, m any) UsersAPI {
 	return UsersAPI{
-		client:  m.(common.DatabricksAPI),
+		client:  m.(*common.DatabricksClient),
 		context: ctx,
 	}
 }
 
 // UsersAPI exposes the scim user API
 type UsersAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 

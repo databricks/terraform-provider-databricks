@@ -455,12 +455,12 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 
 // NewQueryAPI ...
 func NewQueryAPI(ctx context.Context, m any) QueryAPI {
-	return QueryAPI{m.(common.DatabricksAPI), ctx}
+	return QueryAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // QueryAPI ...
 type QueryAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -548,7 +548,7 @@ func ResourceSqlQuery() *schema.Resource {
 		})
 
 	return common.Resource{
-		Create: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var q QueryEntity
 			aq, err := q.toAPIObject(s, data)
 			if err != nil {
@@ -565,7 +565,7 @@ func ResourceSqlQuery() *schema.Resource {
 			data.SetId(aq.ID)
 			return nil
 		},
-		Read: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			aq, err := NewQueryAPI(ctx, c).Read(data.Id())
 			if err != nil {
 				return err
@@ -574,7 +574,7 @@ func ResourceSqlQuery() *schema.Resource {
 			var q QueryEntity
 			return q.fromAPIObject(aq, s, data)
 		},
-		Update: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var q QueryEntity
 			aq, err := q.toAPIObject(s, data)
 			if err != nil {
@@ -583,7 +583,7 @@ func ResourceSqlQuery() *schema.Resource {
 
 			return NewQueryAPI(ctx, c).Update(data.Id(), aq)
 		},
-		Delete: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewQueryAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,

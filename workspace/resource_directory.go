@@ -38,7 +38,7 @@ func ResourceDirectory() *schema.Resource {
 		},
 	}
 
-	directoryRead := func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+	directoryRead := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		notebooksAPI := NewNotebooksAPI(ctx, c)
 		objectStatus, err := notebooksAPI.Read(d.Id())
 		if err != nil {
@@ -58,7 +58,7 @@ func ResourceDirectory() *schema.Resource {
 
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			path := d.Get("path").(string)
 			if err := notebooksAPI.Mkdirs(path); err != nil {
@@ -70,7 +70,7 @@ func ResourceDirectory() *schema.Resource {
 		},
 		Read:   directoryRead,
 		Update: directoryRead,
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), d.Get("delete_recursive").(bool))
 		},
 	}.ToResource()

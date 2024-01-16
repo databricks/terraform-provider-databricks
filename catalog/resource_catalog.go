@@ -53,7 +53,7 @@ func ResourceCatalog() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: catalogSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -111,7 +111,7 @@ func ResourceCatalog() *schema.Resource {
 			})
 			return err
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -123,7 +123,7 @@ func ResourceCatalog() *schema.Resource {
 			}
 			return common.StructToData(ci, catalogSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -190,7 +190,7 @@ func ResourceCatalog() *schema.Resource {
 			})
 			return err
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

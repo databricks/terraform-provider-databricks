@@ -1027,7 +1027,7 @@ func TestListWorkspaces(t *testing.T) {
 
 func TestWorkspace_WaitForResolve_Failure(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{},
-		func(ctx context.Context, client common.DatabricksAPI) {
+		func(ctx context.Context, client *common.DatabricksClient) {
 			a := NewWorkspacesAPI(ctx, client)
 			rerr := a.verifyWorkspaceReachable(Workspace{
 				WorkspaceURL: "https://900150983cd24fb0.cloud.databricks.com",
@@ -1045,7 +1045,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: `{}`, // we just need a JSON for this
 		},
-	}, func(ctx context.Context, wsClient common.DatabricksAPI) {
+	}, func(ctx context.Context, wsClient *common.DatabricksClient) {
 		// inner HTTP server is used for outer request for Accounts API
 		qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 			{
@@ -1059,7 +1059,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 					WorkspaceURL:    wsClient.Config().Host,
 				},
 			},
-		}, func(ctx context.Context, client common.DatabricksAPI) {
+		}, func(ctx context.Context, client *common.DatabricksClient) {
 			a := NewWorkspacesAPI(ctx, client)
 			err := a.WaitForRunning(Workspace{
 				AccountID:   "abc",
@@ -1087,7 +1087,7 @@ func updateWorkspaceScimFixture(t *testing.T, fixtures []qa.HTTPFixture, state m
 	}
 	scimAPI = append(scimAPI, fixtures...)
 	// outer HTTP server is used for inner request for "just created" workspace
-	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient common.DatabricksAPI) {
+	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[0].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
@@ -1133,7 +1133,7 @@ func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture
 	}
 	scimAPI = append(scimAPI, fixtures...)
 	// outer HTTP server is used for inner request for "just created" workspace
-	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient common.DatabricksAPI) {
+	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[1].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
@@ -1337,7 +1337,7 @@ func TestEnsureTokenExists(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
 		d.Set("workspace_url", client.Config().Host)
@@ -1367,7 +1367,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
 		d.Set("workspace_url", client.Config().Host)
@@ -1423,7 +1423,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 				Message:    "i'm a teapot",
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
@@ -1480,7 +1480,7 @@ func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
 				Message:    "🐜",
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 
 		assert.EqualError(t, wsApi.explainWorkspaceFailure(Workspace{

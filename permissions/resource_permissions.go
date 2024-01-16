@@ -96,14 +96,14 @@ func (acc AccessControlChange) String() string {
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
 func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{
-		client:  m.(common.DatabricksAPI),
+		client:  m.(*common.DatabricksClient),
 		context: ctx,
 	}
 }
 
 // PermissionsAPI exposes general permission related methods
 type PermissionsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -403,7 +403,7 @@ func ResourcePermissions() *schema.Resource {
 			}
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			id := d.Id()
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -428,7 +428,7 @@ func ResourcePermissions() *schema.Resource {
 			}
 			return common.StructToData(entity, s, d)
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
 			w, err := c.WorkspaceClient()
@@ -472,14 +472,14 @@ func ResourcePermissions() *schema.Resource {
 			}
 			return errors.New("at least one type of resource identifiers must be set")
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
 			return NewPermissionsAPI(ctx, c).Update(d.Id(), AccessControlChangeList{
 				AccessControlList: entity.AccessControlList,
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewPermissionsAPI(ctx, c).Delete(d.Id())
 		},
 	}.ToResource()

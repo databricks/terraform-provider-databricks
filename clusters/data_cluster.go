@@ -15,7 +15,7 @@ func DataSourceCluster() *schema.Resource {
 		Name        string       `json:"cluster_name,omitempty" tf:"computed"`
 		ClusterInfo *ClusterInfo `json:"cluster_info,omitempty" tf:"computed"`
 	}
-	return common.DataResource(clusterData{}, func(ctx context.Context, e interface{}, c common.DatabricksAPI) error {
+	return common.DataResource(clusterData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
 		data := e.(*clusterData)
 		clusterAPI := NewClustersAPI(ctx, c)
 		if data.Name != "" {

@@ -62,7 +62,7 @@ type importContext struct {
 	// not modified/used only in single thread
 	Module            string
 	Context           context.Context
-	Client            common.DatabricksAPI
+	Client            *common.DatabricksClient
 	Importables       map[string]importable
 	Resources         map[string]*schema.Resource
 	Files             map[string]*hclwrite.File
@@ -203,7 +203,7 @@ func makeResourcesChannels(p *schema.Provider) map[string]resourceChannel {
 	return channels
 }
 
-func newImportContext(c common.DatabricksAPI) *importContext {
+func newImportContext(c *common.DatabricksClient) *importContext {
 	p := provider.DatabricksProvider()
 	p.TerraformVersion = "exporter"
 	p.SetMeta(c)

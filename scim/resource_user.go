@@ -82,7 +82,7 @@ func ResourceUser() *schema.Resource {
 	}
 	return common.Resource{
 		Schema: userSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
@@ -95,7 +95,7 @@ func ResourceUser() *schema.Resource {
 			d.SetId(user.ID)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			user, err := NewUsersAPI(ctx, c).Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
@@ -109,14 +109,14 @@ func ResourceUser() *schema.Resource {
 			d.Set("acl_principal_id", fmt.Sprintf("users/%s", user.UserName))
 			return user.Entitlements.readIntoData(d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
 			return NewUsersAPI(ctx, c).Update(d.Id(), u)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			user := NewUsersAPI(ctx, c)
 			userName := d.Get("user_name").(string)
 			var err error = nil

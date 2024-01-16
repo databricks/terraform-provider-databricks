@@ -161,7 +161,7 @@ func TestResolveDataSourceIDError(t *testing.T) {
 		mwc.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, &apierr.APIError{
 			ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 		})
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		w, err := client.WorkspaceClient()
 		require.NoError(t, err)
 		_, err = resolveDataSourceID(ctx, w, "any")
@@ -172,7 +172,7 @@ func TestResolveDataSourceIDError(t *testing.T) {
 func TestResolveDataSourceIDNotFound(t *testing.T) {
 	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
 		mwc.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return([]sql.DataSource{}, nil)
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		w, err := client.WorkspaceClient()
 		require.NoError(t, err)
 		_, err = resolveDataSourceID(ctx, w, "any")

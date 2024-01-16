@@ -18,7 +18,7 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 		m["instance_profile_id"].ValidateDiagFunc = ValidArn
 		return m
 	}).BindResource(common.BindResource{
-		ReadContext: func(ctx context.Context, groupID, roleARN string, c common.DatabricksAPI) error {
+		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
 			group, err := scim.NewGroupsAPI(ctx, c).Read(groupID, "roles")
 			hasRole := scim.ComplexValues(group.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
@@ -26,10 +26,10 @@ func ResourceGroupInstanceProfile() *schema.Resource {
 			}
 			return err
 		},
-		CreateContext: func(ctx context.Context, groupID, roleARN string, c common.DatabricksAPI) error {
+		CreateContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
 			return scim.NewGroupsAPI(ctx, c).Patch(groupID, scim.PatchRequest("add", "roles", roleARN))
 		},
-		DeleteContext: func(ctx context.Context, groupID, roleARN string, c common.DatabricksAPI) error {
+		DeleteContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
 			return scim.NewGroupsAPI(ctx, c).Patch(groupID, scim.PatchRequest(
 				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
 		},

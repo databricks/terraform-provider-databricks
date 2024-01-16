@@ -61,12 +61,12 @@ func (d *DashboardEntity) fromAPIObject(ad *api.Dashboard, schema map[string]*sc
 
 // NewDashboardAPI ...
 func NewDashboardAPI(ctx context.Context, m any) DashboardAPI {
-	return DashboardAPI{m.(common.DatabricksAPI), ctx}
+	return DashboardAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // DashboardAPI ...
 type DashboardAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -102,7 +102,7 @@ func ResourceSqlDashboard() *schema.Resource {
 		common.NoCustomize)
 
 	return common.Resource{
-		Create: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
@@ -119,7 +119,7 @@ func ResourceSqlDashboard() *schema.Resource {
 			data.SetId(ad.ID)
 			return nil
 		},
-		Read: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			ad, err := NewDashboardAPI(ctx, c).Read(data.Id())
 			if err != nil {
 				return err
@@ -128,7 +128,7 @@ func ResourceSqlDashboard() *schema.Resource {
 			var d DashboardEntity
 			return d.fromAPIObject(ad, s, data)
 		},
-		Update: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
@@ -137,7 +137,7 @@ func ResourceSqlDashboard() *schema.Resource {
 
 			return NewDashboardAPI(ctx, c).Update(data.Id(), ad)
 		},
-		Delete: func(ctx context.Context, data *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewDashboardAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,

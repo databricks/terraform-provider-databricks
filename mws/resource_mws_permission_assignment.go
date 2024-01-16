@@ -12,11 +12,11 @@ import (
 )
 
 func NewPermissionAssignmentAPI(ctx context.Context, m any) PermissionAssignmentAPI {
-	return PermissionAssignmentAPI{m.(common.DatabricksAPI), ctx}
+	return PermissionAssignmentAPI{m.(*common.DatabricksClient), ctx}
 }
 
 type PermissionAssignmentAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -103,7 +103,7 @@ func ResourceMwsPermissionAssignment() *schema.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var assignment entity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
@@ -115,7 +115,7 @@ func ResourceMwsPermissionAssignment() *schema.Resource {
 			pair.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			workspaceId, principalId, err := pair.Unpack(d)
 			if err != nil {
 				return fmt.Errorf("parse id: %w", err)
@@ -130,7 +130,7 @@ func ResourceMwsPermissionAssignment() *schema.Resource {
 			}
 			return common.StructToData(permissions, s, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			workspaceId, principalId, err := pair.Unpack(d)
 			if err != nil {
 				return fmt.Errorf("parse id: %w", err)

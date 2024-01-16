@@ -9,12 +9,12 @@ import (
 )
 
 type TablesAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
 func NewTablesAPI(ctx context.Context, m any) TablesAPI {
-	return TablesAPI{m.(common.DatabricksAPI), context.WithValue(ctx, common.Api, common.API_2_1)}
+	return TablesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
 }
 
 type ColumnInfo struct {
@@ -77,7 +77,7 @@ func ResourceTable() *schema.Resource {
 			}
 			return nil
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti TableInfo
 			common.DataToStructPointer(d, tableSchema, &ti)
 			if err := NewTablesAPI(ctx, c).createTable(&ti); err != nil {
@@ -86,7 +86,7 @@ func ResourceTable() *schema.Resource {
 			d.SetId(ti.FullName())
 			return update(ctx, d, c)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ti, err := NewTablesAPI(ctx, c).getTable(d.Id())
 			if err != nil {
 				return err
@@ -94,7 +94,7 @@ func ResourceTable() *schema.Resource {
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: update,
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},
 	}.ToResource()

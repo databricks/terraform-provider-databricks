@@ -76,10 +76,10 @@ type mockMount struct{}
 
 func (t mockMount) Source() string { return "fake-mount" }
 func (t mockMount) Name() string   { return "fake-mount" }
-func (t mockMount) Config(client common.DatabricksAPI) map[string]string {
+func (t mockMount) Config(client *common.DatabricksClient) map[string]string {
 	return map[string]string{"fake-key": "fake-value"}
 }
-func (m mockMount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
+func (m mockMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
 	return nil
 }
 
@@ -240,7 +240,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		clusterID, err := getMountingClusterID(ctx, client, "abc")
 		assert.NoError(t, err)
 		assert.Equal(t, "bcd", clusterID)
@@ -306,7 +306,7 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		// no mounting cluster given, try creating it
 		_, err := getMountingClusterID(ctx, client, "")
 		assert.EqualError(t, err, "failed to get mouting cluster: nope")
@@ -332,7 +332,7 @@ func TestMountCRD(t *testing.T) {
 			Status:       404,
 			Response:     apierr.NotFound("nope"),
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
 		d := r.TestResourceData()
 		client.WithCommandMock(func(commandStr string) common.CommandResults {

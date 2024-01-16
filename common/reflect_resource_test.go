@@ -592,7 +592,7 @@ func TestDataResource(t *testing.T) {
 			In  string `json:"in"`
 			Out string `json:"out,omitempty" tf:"computed"`
 		}
-		return DataResource(entry{}, func(ctx context.Context, e any, c DatabricksAPI) error {
+		return DataResource(entry{}, func(ctx context.Context, e any, c *DatabricksClient) error {
 			dto := e.(*entry)
 			dto.Out = "out: " + dto.In
 			if dto.In == "fail" {
@@ -624,7 +624,7 @@ func TestDataResourceWithID(t *testing.T) {
 			ID  string `json:"id,omitempty" tf:"computed"`
 			Out string `json:"out,omitempty" tf:"computed"`
 		}
-		return DataResource(entry{}, func(ctx context.Context, e any, c DatabricksAPI) error {
+		return DataResource(entry{}, func(ctx context.Context, e any, c *DatabricksClient) error {
 			dto := e.(*entry)
 			dto.Out = "out: " + dto.In
 			dto.ID = "abc"

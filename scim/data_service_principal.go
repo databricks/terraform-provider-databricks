@@ -21,7 +21,7 @@ func DataSourceServicePrincipal() *schema.Resource {
 		ExternalID     string `json:"external_id,omitempty" tf:"computed"`
 		AclPrincipalID string `json:"acl_principal_id,omitempty" tf:"computed"`
 	}
-	return common.DataResource(spnData{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
+	return common.DataResource(spnData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		response := e.(*spnData)
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
 		var spList []User

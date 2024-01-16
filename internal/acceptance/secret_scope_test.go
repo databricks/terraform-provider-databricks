@@ -28,7 +28,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "name", scope),
 			resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 			resourceCheck("databricks_secret_scope.my_scope",
-				func(ctx context.Context, client common.DatabricksAPI, id string) error {
+				func(ctx context.Context, client *common.DatabricksClient, id string) error {
 					secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
 					acls, err := secretACLAPI.List(id)
 					require.NoError(t, err)

@@ -22,14 +22,14 @@ type Command struct {
 // NewCommandsAPI creates CommandsAPI instance from provider meta
 func NewCommandsAPI(ctx context.Context, m any) CommandsAPI {
 	return CommandsAPI{
-		client:  m.(common.DatabricksAPI),
+		client:  m.(*common.DatabricksClient),
 		context: context.WithValue(ctx, common.Api, common.API_1_2),
 	}
 }
 
 // CommandsAPI exposes the Context & Commands API
 type CommandsAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 

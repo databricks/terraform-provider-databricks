@@ -29,12 +29,12 @@ func (m AzureADLSGen2Mount) Name() string {
 	return m.ContainerName
 }
 
-func (m AzureADLSGen2Mount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
+func (m AzureADLSGen2Mount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
 	return nil
 }
 
 // Config returns mount configurations
-func (m AzureADLSGen2Mount) Config(client common.DatabricksAPI) map[string]string {
+func (m AzureADLSGen2Mount) Config(client *common.DatabricksClient) map[string]string {
 	aadEndpoint := client.Config().Environment().AzureActiveDirectoryEndpoint()
 	return map[string]string{
 		"fs.azure.account.auth.type":                          "OAuth",

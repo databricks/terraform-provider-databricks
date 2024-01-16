@@ -24,7 +24,7 @@ func ResourceSystemSchema() *schema.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return systemSchema
 		})
-	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		o, n := d.GetChange("schema")
 		old, okOld := o.(string)
 		new, okNew := n.(string)
@@ -66,7 +66,7 @@ func ResourceSystemSchema() *schema.Resource {
 	return common.Resource{
 		Schema: systemSchema,
 		Create: createOrUpdate,
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, schemaName, err := pi.Unpack(d)
 			if err != nil {
 				return err
@@ -91,7 +91,7 @@ func ResourceSystemSchema() *schema.Resource {
 			return nil
 		},
 		Update: createOrUpdate,
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, schemaName, err := pi.Unpack(d)
 			if err != nil {
 				return err

@@ -49,7 +49,7 @@ func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
 			}
 		}`,
 		Check: resourceCheck("databricks_access_control_rule_set.sp_rule_set",
-			func(ctx context.Context, client common.DatabricksAPI, id string) error {
+			func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				a, err := client.AccountClient()
 				if err != nil {
 					return err
@@ -87,7 +87,7 @@ func TestMwsAccAccountGroupRuleSetsFullLifeCycle(t *testing.T) {
 			}
 		}`,
 		Check: resourceCheck("databricks_access_control_rule_set.group_rule_set",
-			func(ctx context.Context, client common.DatabricksAPI, id string) error {
+			func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				a, err := client.AccountClient()
 				if err != nil {
 					return err

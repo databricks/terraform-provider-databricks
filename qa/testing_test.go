@@ -299,18 +299,18 @@ func TestResourceCornerCases(t *testing.T) {
 		"foo": "bar",
 	}
 	ResourceCornerCases(t, common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var b dummy
 			return c.Post(ctx, "/dummy", x, &b)
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var b dummy
 			return c.Get(ctx, "/dummy", x, &b)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return c.Put(ctx, "/dummy", x)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return c.Delete(ctx, "/dummy", x)
 		},
 		Schema: map[string]*schema.Schema{

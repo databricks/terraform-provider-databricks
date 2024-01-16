@@ -17,7 +17,7 @@ import (
 )
 
 // This function applies configuration defined in the resource data to the workspace.
-func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	o, n := d.GetChange("custom_config")
 	old, okOld := o.(map[string]any)
 	new, okNew := n.(map[string]any)
@@ -71,7 +71,7 @@ func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c common.Da
 
 }
 
-func updateWorkspaceConf(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+func updateWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	err := applyWorkspaceConf(ctx, d, c)
 	if err != nil {
 		// Update methods from the Terraform SDK persist terraform configuration
@@ -90,7 +90,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 	return common.Resource{
 		Create: applyWorkspaceConf,
 		Update: updateWorkspaceConf,
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			config := d.Get("custom_config").(map[string]any)
 			log.Printf("[DEBUG] Config available in state: %v", config)
 			w, err := c.WorkspaceClient()
@@ -116,7 +116,7 @@ func ResourceWorkspaceConf() *schema.Resource {
 			log.Printf("[DEBUG] Setting new config to state: %v", config)
 			return d.Set("custom_config", config)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			patch := settings.WorkspaceConf{}
 			config := d.Get("custom_config").(map[string]any)
 			for k, v := range config {

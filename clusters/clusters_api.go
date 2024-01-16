@@ -557,14 +557,14 @@ func (a ClustersAPI) defaultTimeout() time.Duration {
 // NewClustersAPI creates ClustersAPI instance from provider meta
 func NewClustersAPI(ctx context.Context, m any) ClustersAPI {
 	return ClustersAPI{
-		client:  m.(common.DatabricksAPI),
+		client:  m.(*common.DatabricksClient),
 		context: ctx,
 	}
 }
 
 // ClustersAPI is a struct that contains the Databricks api client to perform queries
 type ClustersAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 

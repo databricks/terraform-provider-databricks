@@ -210,7 +210,7 @@ func run(t *testing.T, steps []step) {
 			ExpectError:               s.ExpectError,
 			Check: func(state *terraform.State) error {
 				// get configured client from provider
-				client := provider.Meta().(common.DatabricksAPI)
+				client := provider.Meta().(*common.DatabricksClient)
 
 				// Default check for all runs. Asserts that the read operation succeeds.
 				for n, is := range state.RootModule().Resources {
@@ -250,7 +250,7 @@ func run(t *testing.T, steps []step) {
 
 // resourceCheck calls back a function with client and resource id
 func resourceCheck(name string,
-	cb func(ctx context.Context, client common.DatabricksAPI, id string) error) resource.TestCheckFunc {
+	cb func(ctx context.Context, client *common.DatabricksClient, id string) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -268,7 +268,7 @@ func resourceCheck(name string,
 
 // resourceCheckWithState calls back a function with client and resource instance state
 func resourceCheckWithState(name string,
-	cb func(ctx context.Context, client common.DatabricksAPI, state *terraform.InstanceState) error) resource.TestCheckFunc {
+	cb func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

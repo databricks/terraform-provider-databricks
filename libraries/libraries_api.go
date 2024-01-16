@@ -18,14 +18,14 @@ import (
 func NewLibrariesAPI(ctx context.Context, m any) LibrariesAPI {
 	// TODO: context.WithValue
 	return LibrariesAPI{
-		client:  m.(common.DatabricksAPI),
+		client:  m.(*common.DatabricksClient),
 		context: ctx,
 	}
 }
 
 // LibrariesAPI exposes the Library API
 type LibrariesAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 

@@ -143,7 +143,7 @@ func ResourceGrant() *schema.Resource {
 
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			principal := d.Get("principal").(string)
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
 			var grants = catalog.PermissionsList{
@@ -163,7 +163,7 @@ func ResourceGrant() *schema.Resource {
 			d.SetId(toSecurableId(d))
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			securable, name, principal, err := parseSecurableId(d)
 			if err != nil {
 				return err
@@ -178,7 +178,7 @@ func ResourceGrant() *schema.Resource {
 			}
 			return common.StructToData(*grantsForPrincipal, s, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			securable, name, principal, err := parseSecurableId(d)
 			if err != nil {
 				return err
@@ -195,7 +195,7 @@ func ResourceGrant() *schema.Resource {
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			securable, name, principal, err := parseSecurableId(d)
 			if err != nil {
 				return err

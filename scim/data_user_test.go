@@ -65,7 +65,7 @@ func TestDataSourceUserGerUser(t *testing.T) {
 			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27empty_search%27",
 			Response: UserList{},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		usersAPI := NewUsersAPI(ctx, client)
 		user, err := getUser(usersAPI, "a", "")
 		assert.NoError(t, err)

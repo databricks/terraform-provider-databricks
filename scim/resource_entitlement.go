@@ -27,10 +27,10 @@ func ResourceEntitlements() *schema.Resource {
 		})
 	addEntitlementsToSchema(&entitlementSchema)
 	return common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return patchEntitlements(ctx, d, c, "replace")
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			split := strings.SplitN(d.Id(), "/", 2)
 			if len(split) != 2 {
 				return fmt.Errorf("ID must be two elements: %s", d.Id())
@@ -60,17 +60,17 @@ func ResourceEntitlements() *schema.Resource {
 			}
 			return nil
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return enforceEntitlements(ctx, d, c)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return patchEntitlements(ctx, d, c, "remove")
 		},
 		Schema: entitlementSchema,
 	}.ToResource()
 }
 
-func patchEntitlements(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI, op string) error {
+func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, op string) error {
 	groupId := d.Get("group_id").(string)
 	userId := d.Get("user_id").(string)
 	spnId := d.Get("service_principal_id").(string)
@@ -109,7 +109,7 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c common.Dat
 	return nil
 }
 
-func enforceEntitlements(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+func enforceEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	split := strings.SplitN(d.Id(), "/", 2)
 	if len(split) != 2 {
 		return fmt.Errorf("ID must be two elements: %s", d.Id())

@@ -95,7 +95,7 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 			}
 		}`,
 		Check: resourceCheckWithState("databricks_mws_workspaces.this",
-			func(ctx context.Context, client common.DatabricksAPI, state *terraform.InstanceState) error {
+			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
 				workspaceUrl, ok := state.Attributes["workspace_url"]
 				assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
 
@@ -155,7 +155,7 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 			}
 		}`,
 			Check: resourceCheckWithState("databricks_mws_workspaces.this",
-				func(ctx context.Context, client common.DatabricksAPI, state *terraform.InstanceState) error {
+				func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
 					workspaceUrl, ok := state.Attributes["workspace_url"]
 					assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
 

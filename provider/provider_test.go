@@ -74,7 +74,7 @@ func (tt providerFixture) rawConfig() map[string]any {
 	return rawConfig
 }
 
-func (tc providerFixture) apply(t *testing.T) common.DatabricksAPI {
+func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
 	c, err := configureProviderAndReturnClient(t, tc)
 	if tc.assertError != "" {
 		require.NotNilf(t, err, "Expected to have %s error", tc.assertError)
@@ -445,7 +445,7 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 	}
 }
 
-func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (common.DatabricksAPI, error) {
+func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
 	for k, v := range tt.env {
 		t.Setenv(k, v)
 	}
@@ -459,7 +459,7 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (common.
 		}
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
-	client := p.Meta().(common.DatabricksAPI)
+	client := p.Meta().(*common.DatabricksClient)
 	r, err := http.NewRequest("GET", "", nil)
 	if err != nil {
 		return nil, err

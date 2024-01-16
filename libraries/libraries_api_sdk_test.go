@@ -91,7 +91,7 @@ func TestWaitForLibrariesInstalledSdk(t *testing.T) {
 				},
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		w, err := client.WorkspaceClient()
 		if err != nil {
 			panic(err)

@@ -240,7 +240,7 @@ func (ta *SqlPermissions) apply(qb func(objType, key string) string) error {
 	return fmt.Errorf("cannot execute %s: %s", sqlQuery, r.Error())
 }
 
-func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) (err error) {
+func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	clustersAPI := clusters.NewClustersAPI(ctx, c)
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ta.ClusterID = ci.(string)
@@ -299,14 +299,14 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 }
 
 func tableAclForUpdate(ctx context.Context, d *schema.ResourceData,
-	s map[string]*schema.Schema, c common.DatabricksAPI) (ta SqlPermissions, err error) {
+	s map[string]*schema.Schema, c *common.DatabricksClient) (ta SqlPermissions, err error) {
 	common.DataToStructPointer(d, s, &ta)
 	err = ta.initCluster(ctx, d, c)
 	return
 }
 
 func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
-	s map[string]*schema.Schema, c common.DatabricksAPI) (ta SqlPermissions, err error) {
+	s map[string]*schema.Schema, c *common.DatabricksClient) (ta SqlPermissions, err error) {
 	ta, err = loadTableACL(d.Id())
 	if err != nil {
 		return
@@ -333,7 +333,7 @@ func ResourceSqlPermissions() *schema.Resource {
 	})
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ta, err := tableAclForUpdate(ctx, d, s, c)
 			if err != nil {
 				return err
@@ -344,7 +344,7 @@ func ResourceSqlPermissions() *schema.Resource {
 			d.SetId(ta.ID())
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ta, err := tableAclForLoad(ctx, d, s, c)
 			if err != nil {
 				return err
@@ -359,7 +359,7 @@ func ResourceSqlPermissions() *schema.Resource {
 			common.StructToData(ta, s, d)
 			return nil
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ta, err := tableAclForUpdate(ctx, d, s, c)
 			if err != nil {
 				return err
@@ -369,7 +369,7 @@ func ResourceSqlPermissions() *schema.Resource {
 			}
 			return ta.enforce()
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ta, err := tableAclForLoad(ctx, d, s, c)
 			if err != nil {
 				return err

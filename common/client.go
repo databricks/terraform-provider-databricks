@@ -35,36 +35,6 @@ func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 	return user, err
 }
 
-type DatabricksAPI interface {
-	WorkspaceClient() (*databricks.WorkspaceClient, error)
-	AccountClient() (*databricks.AccountClient, error)
-	ClientForHost(ctx context.Context, url string) (*DatabricksClient, error)
-	SetAccountId(accountId string) error
-	AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error
-	Config() *config.Config
-
-	Get(ctx context.Context, path string, request any, response any) error
-	Post(ctx context.Context, path string, request any, response any) error
-	Delete(ctx context.Context, path string, request any) error
-	DeleteWithResponse(ctx context.Context, path string, request any, response any) error
-	Patch(ctx context.Context, path string, request any) error
-	PatchWithResponse(ctx context.Context, path string, request any, response any) error
-	Put(ctx context.Context, path string, request any) error
-
-	Scim(ctx context.Context, method, path string, request any, response any) error
-
-	IsAzure() bool
-	IsAws() bool
-	IsGcp() bool
-
-	CommandExecutor(ctx context.Context) CommandExecutor
-	WithCommandExecutor(cef func(context.Context, *DatabricksClient) CommandExecutor)
-	WithCommandMock(mock CommandMock)
-
-	FormatURL(strs ...string) string
-	GetAzureJwtProperty(key string) (any, error)
-}
-
 // DatabricksClient holds properties needed for authentication and HTTP client setup
 // fields with `name` struct tags become Terraform provider attributes. `env` struct tag
 // can hold one or more coma-separated env variable names to find value, if not specified
@@ -79,7 +49,7 @@ type DatabricksClient struct {
 	mu                    sync.Mutex
 }
 
-var _ DatabricksAPI = &DatabricksClient{}
+var _ *DatabricksClient = &DatabricksClient{}
 
 func (c *DatabricksClient) Config() *config.Config {
 	return c.DatabricksClient.Config
@@ -101,6 +71,20 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	})
 	c.cachedWorkspaceClient = w
 	return w, nil
+}
+
+// Set the cached workspace client.
+func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceClient = w
+}
+
+// Set the cached account client.
+func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedAccountClient = a
 }
 
 func (c *DatabricksClient) SetAccountId(accountId string) error {

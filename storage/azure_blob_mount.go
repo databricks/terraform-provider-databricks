@@ -28,12 +28,12 @@ func (m AzureBlobMount) Name() string {
 	return m.ContainerName
 }
 
-func (m AzureBlobMount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
+func (m AzureBlobMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
 	return nil
 }
 
 // Config ...
-func (m AzureBlobMount) Config(client common.DatabricksAPI) map[string]string {
+func (m AzureBlobMount) Config(client *common.DatabricksClient) map[string]string {
 	var confKey string
 	if m.AuthType == "SAS" {
 		confKey = fmt.Sprintf("fs.azure.sas.%s.%s.blob.core.windows.net", m.ContainerName, m.StorageAccountName)

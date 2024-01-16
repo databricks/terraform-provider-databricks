@@ -27,7 +27,7 @@ func (m GSMount) Name() string {
 	return m.BucketName
 }
 
-func (m GSMount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error {
+func (m GSMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
 	nm := d.Get("name").(string)
 	if nm != "" {
 		return nil
@@ -41,7 +41,7 @@ func (m GSMount) ValidateAndApplyDefaults(d *schema.ResourceData, client common.
 }
 
 // Config ...
-func (m GSMount) Config(client common.DatabricksAPI) map[string]string {
+func (m GSMount) Config(client *common.DatabricksClient) map[string]string {
 	return make(map[string]string) // return empty map so nil map does not marshal to null
 }
 

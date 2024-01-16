@@ -361,7 +361,7 @@ func TestCreateForceOverwriteCannotListGroups(t *testing.T) {
 				Message: "cannot find group",
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceGroup().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedGroup(
@@ -401,7 +401,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 				DisplayName: "abc",
 			},
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceGroup().TestResourceData()
 		d.Set("force", true)
 		d.Set("display_name", "abc")

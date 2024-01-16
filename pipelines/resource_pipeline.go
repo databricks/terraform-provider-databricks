@@ -181,12 +181,12 @@ type PipelineListResponse struct {
 }
 
 type PipelinesAPI struct {
-	client common.DatabricksAPI
+	client *common.DatabricksClient
 	ctx    context.Context
 }
 
 func NewPipelinesAPI(ctx context.Context, m any) PipelinesAPI {
-	return PipelinesAPI{m.(common.DatabricksAPI), ctx}
+	return PipelinesAPI{m.(*common.DatabricksClient), ctx}
 }
 
 func (a PipelinesAPI) Create(s PipelineSpec, timeout time.Duration) (string, error) {
@@ -355,7 +355,7 @@ func ResourcePipeline() *schema.Resource {
 	var pipelineSchema = common.StructToSchema(PipelineSpec{}, adjustPipelineResourceSchema)
 	return common.Resource{
 		Schema: pipelineSchema,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var s PipelineSpec
 			common.DataToStructPointer(d, pipelineSchema, &s)
 			api := NewPipelinesAPI(ctx, c)
@@ -367,7 +367,7 @@ func ResourcePipeline() *schema.Resource {
 			d.Set("url", c.FormatURL("#joblist/pipelines/", d.Id()))
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			i, err := NewPipelinesAPI(ctx, c).Read(d.Id())
 			if err != nil {
 				return err
@@ -377,12 +377,12 @@ func ResourcePipeline() *schema.Resource {
 			}
 			return common.StructToData(*i.Spec, pipelineSchema, d)
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var s PipelineSpec
 			common.DataToStructPointer(d, pipelineSchema, &s)
 			return NewPipelinesAPI(ctx, c).Update(d.Id(), s, d.Timeout(schema.TimeoutUpdate))
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			api := NewPipelinesAPI(ctx, c)
 			return api.Delete(d.Id(), d.Timeout(schema.TimeoutDelete))
 		},

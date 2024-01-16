@@ -35,12 +35,12 @@ type CustomerManagedKey struct {
 
 // NewCustomerManagedKeysAPI creates CustomerManagedKeysAPI instance from provider meta
 func NewCustomerManagedKeysAPI(ctx context.Context, m any) CustomerManagedKeysAPI {
-	return CustomerManagedKeysAPI{m.(common.DatabricksAPI), ctx}
+	return CustomerManagedKeysAPI{m.(*common.DatabricksClient), ctx}
 }
 
 // CustomerManagedKeysAPI exposes the mws customerManagedKeys API
 type CustomerManagedKeysAPI struct {
-	client  common.DatabricksAPI
+	client  *common.DatabricksClient
 	context context.Context
 }
 
@@ -75,7 +75,7 @@ func ResourceMwsCustomerManagedKeys() *schema.Resource {
 	s := common.StructToSchema(CustomerManagedKey{}, nil)
 	p := common.NewPairSeparatedID("account_id", "customer_managed_key_id", "/")
 	return common.Resource{
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var cmk CustomerManagedKey
 			common.DataToStructPointer(d, s, &cmk)
 			customerManagedKeyData, err := NewCustomerManagedKeysAPI(ctx, c).Create(cmk)
@@ -86,7 +86,7 @@ func ResourceMwsCustomerManagedKeys() *schema.Resource {
 			p.Pack(d)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, cmkID, err := p.Unpack(d)
 			if err != nil {
 				return err
@@ -97,7 +97,7 @@ func ResourceMwsCustomerManagedKeys() *schema.Resource {
 			}
 			return common.StructToData(cmk, s, d)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, cmkID, err := p.Unpack(d)
 			if err != nil {
 				return err

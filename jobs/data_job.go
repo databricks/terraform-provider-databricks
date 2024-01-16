@@ -16,7 +16,7 @@ func DataSourceJob() *schema.Resource {
 		JobName string `json:"job_name,omitempty" tf:"computed"`
 		Job     *Job   `json:"job_settings,omitempty" tf:"computed"`
 	}
-	return common.DataResource(queryableJobData{}, func(ctx context.Context, e any, c common.DatabricksAPI) error {
+	return common.DataResource(queryableJobData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*queryableJobData)
 		jobsAPI := NewJobsAPI(ctx, c)
 		var list []Job

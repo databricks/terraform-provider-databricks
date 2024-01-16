@@ -1260,7 +1260,7 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 			Status:   418,
 			Response: apierr.NotFound("missing"),
 		},
-	}, func(ctx context.Context, client common.DatabricksAPI) {
+	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewClustersAPI(ctx, client)
 		_, err := a.Create(Cluster{})
 		assert.EqualError(t, err, "missing")

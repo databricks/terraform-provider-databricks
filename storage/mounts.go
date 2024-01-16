@@ -21,10 +21,10 @@ import (
 // Mount exposes generic url & extra config map options
 type Mount interface {
 	Source() string
-	Config(client common.DatabricksAPI) map[string]string
+	Config(client *common.DatabricksClient) map[string]string
 
 	Name() string
-	ValidateAndApplyDefaults(d *schema.ResourceData, client common.DatabricksAPI) error
+	ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error
 }
 
 // MountPoint is something actionable
@@ -69,7 +69,7 @@ func (mp MountPoint) Delete() error {
 }
 
 // Mount mounts object store on workspace
-func (mp MountPoint) Mount(mo Mount, client common.DatabricksAPI) (source string, err error) {
+func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source string, err error) {
 	extraConfigs, err := json.Marshal(mo.Config(client))
 	if err != nil {
 		return
@@ -166,7 +166,7 @@ func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error
 	return cluster.ClusterID, nil
 }
 
-func getMountingClusterID(ctx context.Context, client common.DatabricksAPI, clusterID string) (string, error) {
+func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, clusterID string) (string, error) {
 	clustersAPI := clusters.NewClustersAPI(ctx, client)
 	if clusterID == "" {
 		return getOrCreateMountingCluster(clustersAPI)
@@ -192,7 +192,7 @@ func mountCluster(ctx context.Context, tpl any, d *schema.ResourceData,
 	var mountPoint MountPoint
 	var mountConfig Mount
 
-	client := m.(common.DatabricksAPI)
+	client := m.(*common.DatabricksClient)
 	mountPoint.Exec = client.CommandExecutor(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
@@ -233,7 +233,7 @@ func mountCreate(tpl any, r *schema.Resource) func(context.Context, *schema.Reso
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		client := m.(common.DatabricksAPI)
+		client := m.(*common.DatabricksClient)
 		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(), d.Id())
 		source, err := mountPoint.Mount(mountConfig, client)
 		if err != nil {

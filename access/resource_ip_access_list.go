@@ -30,7 +30,7 @@ func ResourceIPAccessList() *schema.Resource {
 	})
 	return common.Resource{
 		Schema: s,
-		Create: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -44,7 +44,7 @@ func ResourceIPAccessList() *schema.Resource {
 			d.SetId(status.IpAccessList.ListId)
 			return nil
 		},
-		Read: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -56,7 +56,7 @@ func ResourceIPAccessList() *schema.Resource {
 			common.StructToData(status.IpAccessList, s, d)
 			return nil
 		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -66,7 +66,7 @@ func ResourceIPAccessList() *schema.Resource {
 			iacl.IpAccessListId = d.Id()
 			return w.IpAccessLists.Update(ctx, iacl)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c common.DatabricksAPI) error {
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

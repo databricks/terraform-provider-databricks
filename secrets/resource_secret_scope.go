@@ -59,7 +59,7 @@ func (a SecretScopesAPI) Create(s SecretScope) error {
 		BackendType:            "DATABRICKS",
 	}
 	if s.KeyvaultMetadata != nil {
-		err := a.client.Config().EnsureResolved()
+		err := a.client.Config.EnsureResolved()
 		if err != nil {
 			return err
 		}

@@ -845,7 +845,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_access_control_rule_set",
 					ID: fmt.Sprintf("accounts/%s/groups/%s/ruleSets/default",
-						ic.Client.Config().AccountID, r.ID),
+						ic.Client.Config.AccountID, r.ID),
 				})
 			}
 
@@ -956,7 +956,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_access_control_rule_set",
 					ID: fmt.Sprintf("accounts/%s/servicePrincipals/%s/ruleSets/default",
-						ic.Client.Config().AccountID, applicationID),
+						ic.Client.Config.AccountID, applicationID),
 				})
 			}
 			return nil
@@ -2113,7 +2113,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		AccountLevel: true,
 		Service:      "access",
 		List: func(ic *importContext) error {
-			accountId := ic.Client.Config().AccountID
+			accountId := ic.Client.Config.AccountID
 			// emit default ruleset
 			ic.Emit(&resource{
 				Resource: "databricks_access_control_rule_set",

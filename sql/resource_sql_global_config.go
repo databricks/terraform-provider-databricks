@@ -56,8 +56,8 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 		"security_policy":           gc.SecurityPolicy,
 		"enable_serverless_compute": gc.EnableServerlessCompute,
 	}
-	if a.client.Config().Host == "" {
-		err := a.client.Config().EnsureResolved()
+	if a.client.Config.Host == "" {
+		err := a.client.Config.EnsureResolved()
 		if err != nil {
 			return err
 		}

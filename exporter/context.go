@@ -303,7 +303,7 @@ func (ic *importContext) Run() error {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
 
-	ic.accountLevel = ic.Client.Config().IsAccountClient()
+	ic.accountLevel = ic.Client.Config.IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
 		ic.accountClient, err = ic.Client.AccountClient()
@@ -422,7 +422,7 @@ func (ic *importContext) Run() error {
 		if ic.accountLevel {
 			dcfile.WriteString(fmt.Sprintf(`	host       = "%s"
 				account_id = "%s"
-			`, ic.Client.Config().Host, ic.Client.Config().AccountID))
+			`, ic.Client.Config.Host, ic.Client.Config.AccountID))
 		}
 		dcfile.WriteString(`}`)
 		dcfile.Close()

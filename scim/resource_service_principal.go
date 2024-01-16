@@ -194,7 +194,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			appId := d.Get("application_id").(string)
 			var err error = nil
-			isAccount := c.Config().IsAccountClient() && c.Config().AccountID != ""
+			isAccount := c.Config.IsAccountClient() && c.Config.AccountID != ""
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
 			// Determine if disable or delete

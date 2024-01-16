@@ -72,7 +72,7 @@ func ResourceMwsCredentials() *schema.Resource {
 				return err
 			}
 			d.Set("credentials_id", credentials.CredentialsId)
-			d.Set("account_id", c.Config().AccountID)
+			d.Set("account_id", c.Config.AccountID)
 			p.Pack(d)
 			return nil
 		},

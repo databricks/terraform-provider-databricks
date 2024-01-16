@@ -177,19 +177,19 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
 	if f.Azure || f.AzureSPN {
-		client.Config().DatabricksEnvironment = &config.DatabricksEnvironment{
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:              config.CloudAzure,
 			DnsZone:            host,
 			AzureApplicationID: "azure-login-application-id",
 			AzureEnvironment:   &config.AzurePublicCloud,
 		}
 	} else if f.Gcp {
-		client.Config().DatabricksEnvironment = &config.DatabricksEnvironment{
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:   config.CloudGCP,
 			DnsZone: host,
 		}
 	} else {
-		client.Config().DatabricksEnvironment = &config.DatabricksEnvironment{
+		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:   config.CloudAWS,
 			DnsZone: host,
 		}
@@ -251,7 +251,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return nil, err
 	}
 	defer server.Close()
-	config := client.Config()
+	config := client.Config
 	config.WithTesting()
 	if f.CommandMock != nil {
 		client.WithCommandMock(f.CommandMock)
@@ -442,7 +442,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := resource.TestResourceData()
-		client.Config().AccountID = config["account_id"]
+		client.Config.AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue

@@ -52,7 +52,7 @@ func importContextForTestWithClient(ctx context.Context, client *common.Databric
 	ic := importContextForTest()
 	ic.Client = client
 	ic.Context = ctx
-	if client.Config().IsAccountClient() {
+	if client.Config.IsAccountClient() {
 		ic.accountClient, _ = client.AccountClient()
 	} else {
 		ic.workspaceClient, _ = client.WorkspaceClient()
@@ -547,7 +547,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
 			scim.ResourceServicePrincipal().Schema["application_id"], d))
-		ic.Client.Config().Host = "https://abc.azuredatabricks.net"
+		ic.Client.Config.Host = "https://abc.azuredatabricks.net"
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
 			scim.ResourceServicePrincipal().Schema["display_name"], d))
 

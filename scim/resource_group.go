@@ -58,7 +58,7 @@ func ResourceGroup() *schema.Resource {
 			d.Set("display_name", group.DisplayName)
 			d.Set("external_id", group.ExternalID)
 			d.Set("acl_principal_id", fmt.Sprintf("groups/%s", group.DisplayName))
-			if c.Config().IsAccountClient() {
+			if c.Config.IsAccountClient() {
 				d.Set("url", c.FormatURL("users/groups/", d.Id(), "/information"))
 			} else {
 				d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))

@@ -24,7 +24,7 @@ func ResourceAccessControlRuleSet() *schema.Resource {
 			return m
 		})
 	readFromWsOrAcc := func(ctx context.Context, c *common.DatabricksClient, getRuleSetReq iam.GetRuleSetRequest) (*iam.RuleSetResponse, error) {
-		if c.Config().AccountID != "" {
+		if c.Config.AccountID != "" {
 			accountClient, err := c.AccountClient()
 			if err != nil {
 				return nil, err
@@ -38,7 +38,7 @@ func ResourceAccessControlRuleSet() *schema.Resource {
 		return workspaceClient.AccountAccessControlProxy.GetRuleSet(ctx, getRuleSetReq)
 	}
 	updateThroughWsOrAcc := func(ctx context.Context, c *common.DatabricksClient, updateRuleSetReq iam.UpdateRuleSetRequest) (*iam.RuleSetResponse, error) {
-		if c.Config().AccountID != "" {
+		if c.Config.AccountID != "" {
 			accountClient, err := c.AccountClient()
 			if err != nil {
 				return nil, err

@@ -51,17 +51,13 @@ type DatabricksClient struct {
 
 var _ *DatabricksClient = &DatabricksClient{}
 
-func (c *DatabricksClient) Config() *config.Config {
-	return c.DatabricksClient.Config
-}
-
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.cachedWorkspaceClient != nil {
 		return c.cachedWorkspaceClient, nil
 	}
-	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.Config()))
+	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.Config))
 	if err != nil {
 		return nil, err
 	}
@@ -93,11 +89,11 @@ func (c *DatabricksClient) SetAccountId(accountId string) error {
 	if accountId == "" {
 		return nil
 	}
-	oldAccountID := c.Config().AccountID
+	oldAccountID := c.Config.AccountID
 	if oldAccountID != "" && oldAccountID != accountId {
 		return fmt.Errorf("account ID is already set to %s", oldAccountID)
 	}
-	c.Config().AccountID = accountId
+	c.Config.AccountID = accountId
 	return nil
 }
 
@@ -107,7 +103,7 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	if c.cachedAccountClient != nil {
 		return c.cachedAccountClient, nil
 	}
-	acc, err := databricks.NewAccountClient((*databricks.Config)(c.Config()))
+	acc, err := databricks.NewAccountClient((*databricks.Config)(c.Config))
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +112,7 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 }
 
 func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
-	if c.Config().IsAccountClient() {
+	if c.Config.IsAccountClient() {
 		a, err := c.AccountClient()
 		if err != nil {
 			return err
@@ -189,11 +185,11 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 
 // scimVisitor is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	if c.Config().IsAccountClient() && c.Config().AccountID != "" {
+	if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 		// until `/preview` is there for workspace scim,
 		// `/api/2.0` is added by completeUrl visitor
 		r.URL.Path = strings.ReplaceAll(r.URL.Path, "/api/2.0/preview",
-			fmt.Sprintf("/api/2.0/accounts/%s", c.Config().AccountID))
+			fmt.Sprintf("/api/2.0/accounts/%s", c.Config.AccountID))
 	}
 	return nil
 }
@@ -207,7 +203,7 @@ func (c *DatabricksClient) Scim(ctx context.Context, method, path string, reques
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination
 func (c *DatabricksClient) IsAzure() bool {
-	return c.Config().IsAzure()
+	return c.Config.IsAzure()
 }
 
 // IsAws returns true if client is configured for AWS
@@ -217,12 +213,12 @@ func (c *DatabricksClient) IsAws() bool {
 
 // IsGcp returns true if client is configured for GCP
 func (c *DatabricksClient) IsGcp() bool {
-	return c.Config().GoogleServiceAccount != "" || c.Config().IsGcp()
+	return c.Config.GoogleServiceAccount != "" || c.Config.IsGcp()
 }
 
 // FormatURL creates URL from the client Host and additional strings
 func (c *DatabricksClient) FormatURL(strs ...string) string {
-	host := c.Config().Host
+	host := c.Config.Host
 	if !strings.HasSuffix(host, "/") {
 		host += "/"
 	}
@@ -237,24 +233,24 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	// create dummy http request
 	req, _ := http.NewRequestWithContext(ctx, "GET", "/", nil)
 	// Ensure that client is authenticated
-	err := c.Config().Authenticate(req)
+	err := c.Config.Authenticate(req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authenticate parent client: %w", err)
 	}
 	cfg := &config.Config{
 		Host:                 url,
-		Username:             c.Config().Username,
-		Password:             c.Config().Password,
-		Token:                c.Config().Token,
-		ClientID:             c.Config().ClientID,
-		ClientSecret:         c.Config().ClientSecret,
-		GoogleServiceAccount: c.Config().GoogleServiceAccount,
-		GoogleCredentials:    c.Config().GoogleCredentials,
-		InsecureSkipVerify:   c.Config().InsecureSkipVerify,
-		HTTPTimeoutSeconds:   c.Config().HTTPTimeoutSeconds,
-		DebugTruncateBytes:   c.Config().DebugTruncateBytes,
-		DebugHeaders:         c.Config().DebugHeaders,
-		RateLimitPerSecond:   c.Config().RateLimitPerSecond,
+		Username:             c.Config.Username,
+		Password:             c.Config.Password,
+		Token:                c.Config.Token,
+		ClientID:             c.Config.ClientID,
+		ClientSecret:         c.Config.ClientSecret,
+		GoogleServiceAccount: c.Config.GoogleServiceAccount,
+		GoogleCredentials:    c.Config.GoogleCredentials,
+		InsecureSkipVerify:   c.Config.InsecureSkipVerify,
+		HTTPTimeoutSeconds:   c.Config.HTTPTimeoutSeconds,
+		DebugTruncateBytes:   c.Config.DebugTruncateBytes,
+		DebugHeaders:         c.Config.DebugHeaders,
+		RateLimitPerSecond:   c.Config.RateLimitPerSecond,
 	}
 	client, err := client.New(cfg)
 	if err != nil {
@@ -271,14 +267,14 @@ func (aa *DatabricksClient) GetAzureJwtProperty(key string) (any, error) {
 	if !aa.IsAzure() {
 		return "", fmt.Errorf("can't get Azure JWT token in non-Azure environment")
 	}
-	if key == "tid" && aa.Config().AzureTenantID != "" {
-		return aa.Config().AzureTenantID, nil
+	if key == "tid" && aa.Config.AzureTenantID != "" {
+		return aa.Config.AzureTenantID, nil
 	}
-	request, err := http.NewRequest("GET", aa.Config().Host, nil)
+	request, err := http.NewRequest("GET", aa.Config.Host, nil)
 	if err != nil {
 		return nil, err
 	}
-	err = aa.Config().Authenticate(request)
+	err = aa.Config.Authenticate(request)
 	if err != nil {
 		return nil, err
 	}

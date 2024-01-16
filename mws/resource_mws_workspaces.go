@@ -169,7 +169,7 @@ func (a WorkspacesAPI) Create(ws *Workspace, timeout time.Duration) error {
 // generateWorkspaceHostname computes the hostname for the specified workspace,
 // given the account console hostname.
 func generateWorkspaceHostname(client *common.DatabricksClient, ws Workspace) string {
-	u, err := url.Parse(client.Config().Host)
+	u, err := url.Parse(client.Config.Host)
 	if err != nil {
 		// Fallback.
 		log.Printf("[WARN] Unable to parse URL from client host: %v", err)

@@ -1056,7 +1056,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 					AccountID:       "abc",
 					WorkspaceID:     1234,
 					WorkspaceStatus: "RUNNING",
-					WorkspaceURL:    wsClient.Config().Host,
+					WorkspaceURL:    wsClient.Config.Host,
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -1091,9 +1091,9 @@ func updateWorkspaceScimFixture(t *testing.T, fixtures []qa.HTTPFixture, state m
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[0].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
-			WorkspaceURL:    wsClient.Config().Host,
+			WorkspaceURL:    wsClient.Config.Host,
 		}
-		state["workspace_url"] = wsClient.Config().Host
+		state["workspace_url"] = wsClient.Config.Host
 		state["workspace_name"] = "b"
 		state["account_id"] = "c"
 		state["network_id"] = "d"
@@ -1137,9 +1137,9 @@ func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[1].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
-			WorkspaceURL:    wsClient.Config().Host,
+			WorkspaceURL:    wsClient.Config.Host,
 		}
-		state["workspace_url"] = wsClient.Config().Host
+		state["workspace_url"] = wsClient.Config.Host
 		state["workspace_name"] = "b"
 		state["account_id"] = "c"
 		state["storage_customer_managed_key_id"] = "1234"
@@ -1340,7 +1340,7 @@ func TestEnsureTokenExists(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Config().Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1370,7 +1370,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Config().Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,
@@ -1427,7 +1427,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 		r := ResourceMwsWorkspaces()
 		d := r.TestResourceData()
-		d.Set("workspace_url", client.Config().Host)
+		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
 				"lifetime_seconds": 3600,

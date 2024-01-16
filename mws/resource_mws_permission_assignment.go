@@ -25,22 +25,22 @@ type Permissions struct {
 }
 
 func (a PermissionAssignmentAPI) CreateOrUpdate(workspaceId, principalId int64, r Permissions) error {
-	if a.client.Config().AccountID == "" {
+	if a.client.Config.AccountID == "" {
 		return errors.New("must have `account_id` on provider")
 	}
 	path := fmt.Sprintf(
 		"/accounts/%s/workspaces/%d/permissionassignments/principals/%d",
-		a.client.Config().AccountID, workspaceId, principalId)
+		a.client.Config.AccountID, workspaceId, principalId)
 	return a.client.Put(a.context, path, r)
 }
 
 func (a PermissionAssignmentAPI) Remove(workspaceId, principalId string) error {
-	if a.client.Config().AccountID == "" {
+	if a.client.Config.AccountID == "" {
 		return errors.New("must have `account_id` on provider")
 	}
 	path := fmt.Sprintf(
 		"/accounts/%s/workspaces/%s/permissionassignments/principals/%s",
-		a.client.Config().AccountID, workspaceId, principalId)
+		a.client.Config.AccountID, workspaceId, principalId)
 	return a.client.Delete(a.context, path, nil)
 }
 
@@ -72,11 +72,11 @@ func (l PermissionAssignmentList) ForPrincipal(principalId int64) (res Permissio
 }
 
 func (a PermissionAssignmentAPI) List(workspaceId int64) (list PermissionAssignmentList, err error) {
-	if a.client.Config().AccountID == "" {
+	if a.client.Config.AccountID == "" {
 		return list, errors.New("must have `account_id` on provider")
 	}
 	path := fmt.Sprintf("/accounts/%s/workspaces/%d/permissionassignments",
-		a.client.Config().AccountID, workspaceId)
+		a.client.Config.AccountID, workspaceId)
 	err = a.client.Get(a.context, path, nil, &list)
 	return
 }

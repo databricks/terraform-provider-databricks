@@ -107,7 +107,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.Config().AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+	client.Config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
@@ -160,7 +160,7 @@ func TestGetOrCreateRunningCluster_Existing_AzureAuth(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.Config().AzureResourceID = "/a/b/c"
+	client.Config.AzureResourceID = "/a/b/c"
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).GetOrCreateRunningCluster("mount")
@@ -190,7 +190,7 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.Config().AzureResourceID = "/a/b/c"
+	client.Config.AzureResourceID = "/a/b/c"
 
 	ctx := context.Background()
 	clusterInfo, err := NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)
@@ -235,7 +235,7 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 	defer server.Close()
 	require.NoError(t, err)
 
-	client.Config().AzureResourceID = "/a/b/c"
+	client.Config.AzureResourceID = "/a/b/c"
 
 	ctx := context.Background()
 	_, err = NewClustersAPI(ctx, client).waitForClusterStatus("abc", ClusterStateRunning)

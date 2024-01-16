@@ -87,8 +87,8 @@ func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
 		return nil
 	}
 	assert.Equal(t, tc.assertAzure, c.IsAzure())
-	assert.Equal(t, tc.assertAuth, c.Config().AuthType)
-	assert.Equal(t, tc.assertHost, c.Config().Host)
+	assert.Equal(t, tc.assertAuth, c.Config.AuthType)
+	assert.Equal(t, tc.assertHost, c.Config.Host)
 	return c
 }
 
@@ -464,7 +464,7 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 	if err != nil {
 		return nil, err
 	}
-	err = client.Config().Authenticate(r)
+	err = client.Config.Authenticate(r)
 	if err != nil {
 		return nil, err
 	}

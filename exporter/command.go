@@ -49,9 +49,9 @@ func (ic *importContext) allServicesAndListing() (string, string) {
 
 func (ic *importContext) interactivePrompts() {
 	req, _ := http.NewRequest("GET", "/", nil)
-	for ic.Client.Config().Authenticate(req) != nil {
-		ic.Client.Config().Host = askFor("🔑 Databricks Workspace URL:")
-		ic.Client.Config().Token = askFor("🔑 Databricks Workspace PAT:")
+	for ic.Client.Config.Authenticate(req) != nil {
+		ic.Client.Config.Host = askFor("🔑 Databricks Workspace URL:")
+		ic.Client.Config.Token = askFor("🔑 Databricks Workspace PAT:")
 	}
 	ic.match = askFor("🔍 Match entity names (optional):")
 	listing := ""

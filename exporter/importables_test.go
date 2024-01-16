@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
@@ -915,7 +916,7 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAd
 		ic.meAdmin = asAdmin
 		ic.importing = map[string]bool{}
 		ic.variables = map[string]string{}
-		ic.services = services
+		ic.services = strings.Split(services, ",")
 		ic.startImportChannels()
 		cb(ic)
 	})
@@ -1359,4 +1360,13 @@ func TestListUcAllowListSuccess(t *testing.T) {
 	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
 	assert.NoError(t, err)
 	assert.Equal(t, len(ic.testEmits), 3)
+}
+
+func TestEmitSqlParent(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitSqlParentDirectory("")
+	assert.Equal(t, len(ic.testEmits), 0)
+	ic.emitSqlParentDirectory("folders/12345")
+	assert.Equal(t, 1, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_directory[<unknown>] (object_id: 12345)")
 }

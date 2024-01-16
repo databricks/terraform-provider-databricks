@@ -117,7 +117,8 @@ func Run(args ...string) error {
 	flags.StringVar(&ic.notebooksFormat, "notebooksFormat", "SOURCE",
 		"Format to export notebooks: SOURCE, DBC, JUPYTER. Default: SOURCE")
 	services, listing := ic.allServicesAndListing()
-	flags.StringVar(&ic.services, "services", services,
+	var configuredServices string
+	flags.StringVar(&configuredServices, "services", services,
 		"Comma-separated list of services to import. By default all services are imported.")
 	flags.StringVar(&ic.listing, "listing", listing,
 		"Comma-separated list of services to be listed and further passed on for importing. "+
@@ -145,5 +146,6 @@ func Run(args ...string) error {
 	if ic.debug {
 		logLevel = append(logLevel, "[DEBUG]")
 	}
+	ic.services = strings.Split(configuredServices, ",")
 	return ic.Run()
 }

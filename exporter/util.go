@@ -853,6 +853,20 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
 	}
 }
 
+func (ic *importContext) emitSqlParentDirectory(parent string) {
+	if parent == "" {
+		return
+	}
+	res := sqlParentRegexp.FindStringSubmatch(parent)
+	if len(res) > 1 {
+		ic.Emit(&resource{
+			Resource:  "databricks_directory",
+			Attribute: "object_id",
+			Value:     res[1],
+		})
+	}
+}
+
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
 	return func(ic *importContext) error {
 		// TODO: can we pass a visitor here, that will emit corresponding object earlier?

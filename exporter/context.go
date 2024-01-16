@@ -21,6 +21,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"golang.org/x/exp/slices"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -89,7 +90,7 @@ type importContext struct {
 	incremental              bool
 	mounts                   bool
 	noFormat                 bool
-	services                 string
+	services                 []string
 	listing                  string
 	match                    string
 	lastActiveDays           int64
@@ -810,6 +811,10 @@ func (ic *importContext) ResourceName(r *resource) string {
 	return name
 }
 
+func (ic *importContext) isServiceEnabled(service string) bool {
+	return slices.Contains[[]string, string](ic.services, service)
+}
+
 func (ic *importContext) Emit(r *resource) {
 	// TODO: change into channels, if stack trace depth issues would surface
 	_, v := r.MatchPair()
@@ -846,8 +851,8 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	// TODO: add similar condition for checking workspace-level objects only. After new ACLs import is merged
 
-	// TODO: split services into slice?
-	if !strings.Contains(ic.services, ir.Service) {
+	// TODO: split services into slice?  Yes, otherwise it will be problematic with generic names like UC
+	if !ic.isServiceEnabled(ir.Service) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the import", r.Resource, ir.Service)
 		return
 	}

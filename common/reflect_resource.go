@@ -312,7 +312,6 @@ func (s *CustomizableSchema) SetMinItems(value int) *CustomizableSchema {
 func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchema {
 	if len(value) == 0 {
 		panic("SetConflictsWith cannot take in empty list")
-		return s
 	}
 	s.Schema.ConflictsWith = value
 	return s
@@ -337,6 +336,10 @@ func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *C
 	cv, ok := s.Schema.Elem.(*schema.Resource)
 	if !ok {
 		panic("Cannot add new field, target is not nested resource")
+	}
+	_, exists := cv.Schema[key]
+	if exists {
+		panic("Cannot add new field, " + key + " already exists in the schema")
 	}
 	cv.Schema[key] = newField
 	return s

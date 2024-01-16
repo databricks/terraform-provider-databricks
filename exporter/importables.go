@@ -566,7 +566,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						}
 					}
 				}
-				if strings.HasSuffix(pathString, ".notebook_task.0.source") && d.Get(pathString).(string) == "WORKSPACE" {
+				if strings.HasSuffix(pathString, ".notebook_task.0.source") && js.GitSource == nil && d.Get(pathString).(string) == "WORKSPACE" {
 					return true
 				}
 			}

@@ -348,7 +348,7 @@ func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *C
 // StructToSchema makes schema from a struct type & applies customizations from callback given
 func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, []string{})
+	scm := typeToSchema(rv, []string{}, map[string]string{})
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -588,7 +588,7 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, append(path, fieldName))
+			nestedSchema := typeToSchema(sv, append(path, fieldName), aliases)
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -606,7 +606,7 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, append(path, fieldName))
+			nestedSchema := typeToSchema(sv, append(path, fieldName), aliases)
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -636,7 +636,7 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, append(path, fieldName)),
+					Schema: typeToSchema(sv, append(path, fieldName), aliases),
 				}
 			}
 		default:

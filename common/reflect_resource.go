@@ -52,111 +52,111 @@ type ResourceProviderStruct[T any] interface {
 func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T]) map[string]*schema.Schema {
 	underlyingType := v.UnderlyingType()
 	rv := reflect.ValueOf(underlyingType)
-	scm := resourceProviderTypeToSchema(rv, rv.Type(), []string{}, v.Aliases())
+	scm := typeToSchema(rv, []string{}, v.Aliases())
 	scm = v.CustomizeSchema(scm)
 	return scm
 }
 
 // A copy of typeToSchema that works with the ResourceProviderStruct, by taking in an aliases map and handling the `tf` overrides differently from
 // the existing typeToSchema function.
-func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, fieldNamePath []string, aliases map[string]string) map[string]*schema.Schema {
-	scm := map[string]*schema.Schema{}
-	rk := v.Kind()
-	if rk == reflect.Ptr {
-		v = v.Elem()
-		t = v.Type()
-		rk = v.Kind()
-	}
-	if rk != reflect.Struct {
-		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
-	}
-	for i := 0; i < v.NumField(); i++ {
-		typeField := t.Field(i)
+// func resourceProviderTypeToSchema(v reflect.Value, t reflect.Type, fieldNamePath []string, aliases map[string]string) map[string]*schema.Schema {
+// 	scm := map[string]*schema.Schema{}
+// 	rk := v.Kind()
+// 	if rk == reflect.Ptr {
+// 		v = v.Elem()
+// 		t = v.Type()
+// 		rk = v.Kind()
+// 	}
+// 	if rk != reflect.Struct {
+// 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
+// 	}
+// 	for i := 0; i < v.NumField(); i++ {
+// 		typeField := t.Field(i)
 
-		fieldName := chooseFieldNameWithAliases(typeField, fieldNamePath, aliases)
+// 		fieldName := chooseFieldNameWithAliases(typeField, fieldNamePath, aliases)
 
-		if fieldName == "-" {
-			continue
-		}
-		scm[fieldName] = &schema.Schema{}
-		handleOptional(typeField, scm[fieldName])
-		switch typeField.Type.Kind() {
-		case reflect.Int, reflect.Int32, reflect.Int64:
-			scm[fieldName].Type = schema.TypeInt
-		case reflect.Float64:
-			scm[fieldName].Type = schema.TypeFloat
-		case reflect.Bool:
-			scm[fieldName].Type = schema.TypeBool
-		case reflect.String:
-			scm[fieldName].Type = schema.TypeString
-		case reflect.Map:
-			scm[fieldName].Type = schema.TypeMap
-			elem := typeField.Type.Elem()
-			switch elem.Kind() {
-			case reflect.String:
-				scm[fieldName].Elem = schema.TypeString
-			case reflect.Int64:
-				scm[fieldName].Elem = schema.TypeInt
-			default:
-				panic(fmt.Errorf("unsupported map value for %s: %s", fieldName, reflectKind(elem.Kind())))
-			}
-		case reflect.Ptr:
-			scm[fieldName].MaxItems = 1
-			scm[fieldName].Type = schema.TypeList
-			elem := typeField.Type.Elem()
-			sv := reflect.New(elem).Elem()
-			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases)
-			if scm[fieldName].DiffSuppressFunc != nil {
-				for _, v := range nestedSchema {
-					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(v)
-				}
-			}
-			scm[fieldName].Elem = &schema.Resource{
-				Schema: nestedSchema,
-			}
-		case reflect.Struct:
-			scm[fieldName].MaxItems = 1
-			scm[fieldName].Type = schema.TypeList
+// 		if fieldName == "-" {
+// 			continue
+// 		}
+// 		scm[fieldName] = &schema.Schema{}
+// 		handleOptional(typeField, scm[fieldName])
+// 		switch typeField.Type.Kind() {
+// 		case reflect.Int, reflect.Int32, reflect.Int64:
+// 			scm[fieldName].Type = schema.TypeInt
+// 		case reflect.Float64:
+// 			scm[fieldName].Type = schema.TypeFloat
+// 		case reflect.Bool:
+// 			scm[fieldName].Type = schema.TypeBool
+// 		case reflect.String:
+// 			scm[fieldName].Type = schema.TypeString
+// 		case reflect.Map:
+// 			scm[fieldName].Type = schema.TypeMap
+// 			elem := typeField.Type.Elem()
+// 			switch elem.Kind() {
+// 			case reflect.String:
+// 				scm[fieldName].Elem = schema.TypeString
+// 			case reflect.Int64:
+// 				scm[fieldName].Elem = schema.TypeInt
+// 			default:
+// 				panic(fmt.Errorf("unsupported map value for %s: %s", fieldName, reflectKind(elem.Kind())))
+// 			}
+// 		case reflect.Ptr:
+// 			scm[fieldName].MaxItems = 1
+// 			scm[fieldName].Type = schema.TypeList
+// 			elem := typeField.Type.Elem()
+// 			sv := reflect.New(elem).Elem()
+// 			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases)
+// 			if scm[fieldName].DiffSuppressFunc != nil {
+// 				for _, v := range nestedSchema {
+// 					// to those relatively new to GoLang: we must explicitly pass down v by copy
+// 					v.DiffSuppressFunc = diffSuppressor(v)
+// 				}
+// 			}
+// 			scm[fieldName].Elem = &schema.Resource{
+// 				Schema: nestedSchema,
+// 			}
+// 		case reflect.Struct:
+// 			scm[fieldName].MaxItems = 1
+// 			scm[fieldName].Type = schema.TypeList
 
-			elem := typeField.Type  // changed from ptr
-			sv := reflect.New(elem) // changed from ptr
+// 			elem := typeField.Type  // changed from ptr
+// 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases)
-			if scm[fieldName].DiffSuppressFunc != nil {
-				for _, v := range nestedSchema {
-					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(v)
-				}
-			}
-			scm[fieldName].Elem = &schema.Resource{
-				Schema: nestedSchema,
-			}
-		case reflect.Slice:
-			ft := schema.TypeList
-			scm[fieldName].Type = ft
-			elem := typeField.Type.Elem()
-			switch elem.Kind() {
-			case reflect.Int, reflect.Int32, reflect.Int64:
-				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeInt}
-			case reflect.Float64:
-				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeFloat}
-			case reflect.Bool:
-				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeBool}
-			case reflect.String:
-				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
-			case reflect.Struct:
-				sv := reflect.New(elem).Elem()
-				scm[fieldName].Elem = &schema.Resource{
-					Schema: resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases),
-				}
-			}
-		default:
-			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
-		}
-	}
-	return scm
-}
+// 			nestedSchema := resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases)
+// 			if scm[fieldName].DiffSuppressFunc != nil {
+// 				for _, v := range nestedSchema {
+// 					// to those relatively new to GoLang: we must explicitly pass down v by copy
+// 					v.DiffSuppressFunc = diffSuppressor(v)
+// 				}
+// 			}
+// 			scm[fieldName].Elem = &schema.Resource{
+// 				Schema: nestedSchema,
+// 			}
+// 		case reflect.Slice:
+// 			ft := schema.TypeList
+// 			scm[fieldName].Type = ft
+// 			elem := typeField.Type.Elem()
+// 			switch elem.Kind() {
+// 			case reflect.Int, reflect.Int32, reflect.Int64:
+// 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeInt}
+// 			case reflect.Float64:
+// 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeFloat}
+// 			case reflect.Bool:
+// 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeBool}
+// 			case reflect.String:
+// 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
+// 			case reflect.Struct:
+// 				sv := reflect.New(elem).Elem()
+// 				scm[fieldName].Elem = &schema.Resource{
+// 					Schema: resourceProviderTypeToSchema(sv, elem, append(fieldNamePath, fieldName), aliases),
+// 				}
+// 			}
+// 		default:
+// 			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
+// 		}
+// 	}
+// 	return scm
+// }
 
 func reflectKind(k reflect.Kind) string {
 	n, ok := kindMap[k]

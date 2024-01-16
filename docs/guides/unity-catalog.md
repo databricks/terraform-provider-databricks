@@ -297,7 +297,16 @@ resource "aws_iam_policy" "external_data_access" {
           "${aws_s3_bucket.external.arn}/*"
         ],
         "Effect" : "Allow"
-      }
+      }, 
+      {
+        "Action" : [
+          "sts:AssumeRole"
+        ],
+        "Resource" : [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access"
+        ],
+        "Effect" : "Allow"
+      },
     ]
   })
   tags = merge(local.tags, {

@@ -143,6 +143,19 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 			return old == new
 		},
 	})
+	common.CustomizeSchemaPath(s, "cluster_cores").SetReadOnly()
+	common.CustomizeSchemaPath(s, "cluster_memory_mb").SetReadOnly()
+	common.CustomizeSchemaPath(s, "creator_user_name").SetReadOnly()
+	common.CustomizeSchemaPath(s, "driver").SetReadOnly()
+	common.CustomizeSchemaPath(s, "executors").SetReadOnly()
+	common.CustomizeSchemaPath(s, "jdbc_port").SetReadOnly()
+	common.CustomizeSchemaPath(s, "last_restarted_time").SetReadOnly()
+	common.CustomizeSchemaPath(s, "last_state_loss_time").SetReadOnly()
+	common.CustomizeSchemaPath(s, "spark_context_id").SetReadOnly()
+	common.CustomizeSchemaPath(s, "start_time").SetReadOnly()
+	common.CustomizeSchemaPath(s, "state_message").SetReadOnly()
+	common.CustomizeSchemaPath(s, "terminated_time").SetReadOnly()
+	common.CustomizeSchemaPath(s, "termination_reason").SetReadOnly()
 	common.CustomizeSchemaPath(s, "state").SetReadOnly()
 	common.CustomizeSchemaPath(s).AddNewField("url", &schema.Schema{
 		Type:     schema.TypeString,

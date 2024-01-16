@@ -583,7 +583,7 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, append(path, fieldName, "0"))
+			nestedSchema := typeToSchema(sv, append(path, fieldName))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -601,7 +601,7 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, append(path, fieldName, "0"))
+			nestedSchema := typeToSchema(sv, append(path, fieldName))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -631,7 +631,7 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, append(path, fieldName, "0")),
+					Schema: typeToSchema(sv, append(path, fieldName)),
 				}
 			}
 		default:

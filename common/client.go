@@ -55,7 +55,7 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	if c.cachedWorkspaceClient != nil {
 		return c.cachedWorkspaceClient, nil
 	}
-	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.Config))
+	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
 	if err != nil {
 		return nil, err
 	}
@@ -87,11 +87,11 @@ func (c *DatabricksClient) SetAccountId(accountId string) error {
 	if accountId == "" {
 		return nil
 	}
-	oldAccountID := c.Config.AccountID
+	oldAccountID := c.DatabricksClient.Config.AccountID
 	if oldAccountID != "" && oldAccountID != accountId {
 		return fmt.Errorf("account ID is already set to %s", oldAccountID)
 	}
-	c.Config.AccountID = accountId
+	c.DatabricksClient.Config.AccountID = accountId
 	return nil
 }
 
@@ -101,7 +101,7 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	if c.cachedAccountClient != nil {
 		return c.cachedAccountClient, nil
 	}
-	acc, err := databricks.NewAccountClient((*databricks.Config)(c.Config))
+	acc, err := databricks.NewAccountClient((*databricks.Config)(c.DatabricksClient.Config))
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	// create dummy http request
 	req, _ := http.NewRequestWithContext(ctx, "GET", "/", nil)
 	// Ensure that client is authenticated
-	err := c.Config.Authenticate(req)
+	err := c.DatabricksClient.Config.Authenticate(req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authenticate parent client: %w", err)
 	}

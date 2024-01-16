@@ -505,7 +505,7 @@ func listAllFields(v reflect.Value) []field {
 
 // typeToSchema converts struct into terraform schema. `path` is used for block suppressions
 // special path element `"0"` is used to denote either arrays or sets of elements
-func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -520,7 +520,12 @@ func typeToSchema(v reflect.Value, path []string) map[string]*schema.Schema {
 		typeField := field.sf
 		tfTag := typeField.Tag.Get("tf")
 
-		fieldName := chooseFieldName(typeField)
+		var fieldName string
+		if len(aliases) == 0 {
+			fieldName = chooseFieldName(typeField)
+		} else {
+			fieldName = chooseFieldNameWithAliases(typeField, path, aliases)
+		}
 		if fieldName == "-" {
 			continue
 		}

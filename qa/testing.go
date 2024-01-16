@@ -231,7 +231,11 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	if f.MockAccountClientFunc != nil {
 		f.MockAccountClientFunc(ma)
 	}
-	c := &common.DatabricksClient{}
+	c := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
 	c.SetWorkspaceClient(mw.WorkspaceClient)
 	c.SetAccountClient(ma.AccountClient)
 	return c, server{
@@ -611,7 +615,11 @@ func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx c
 func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorkspaceClient), callback func(ctx context.Context, client *common.DatabricksClient)) {
 	mw := mocks.NewMockWorkspaceClient(t)
 	mockWorkspaceClient(mw)
-	client := &common.DatabricksClient{}
+	client := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
 	client.SetWorkspaceClient(mw.WorkspaceClient)
 	callback(context.Background(), client)
 }
@@ -619,7 +627,11 @@ func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorksp
 func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountClient), callback func(ctx context.Context, client *common.DatabricksClient)) {
 	ma := mocks.NewMockAccountClient(t)
 	mockAccountClient(ma)
-	client := &common.DatabricksClient{}
+	client := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
 	client.SetAccountClient(ma.AccountClient)
 	callback(context.Background(), client)
 }

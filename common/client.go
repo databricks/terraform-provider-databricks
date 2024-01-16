@@ -49,8 +49,6 @@ type DatabricksClient struct {
 	mu                    sync.Mutex
 }
 
-var _ *DatabricksClient = &DatabricksClient{}
-
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()

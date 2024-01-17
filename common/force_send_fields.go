@@ -3,8 +3,9 @@ package common
 import (
 	"fmt"
 	"reflect"
-	"slices"
 	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 // SetForceSendFields adds any fields specified in the `fields` parameter to the ForceSendFields field of the

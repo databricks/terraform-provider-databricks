@@ -67,5 +67,5 @@ func TestDataSourceDirectory_Error(t *testing.T) {
 		State: map[string]any{
 			"path": "/a/b/c",
 		},
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }

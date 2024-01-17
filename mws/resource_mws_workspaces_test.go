@@ -1510,7 +1510,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			Response: apierr.APIError{
 				ErrorCode:  "NONSENSE",
 				StatusCode: 418,
-				Message:    "I'm a teapot",
+				Message:    "i'm a teapot",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -1526,9 +1526,9 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			},
 		})
 		for msg, err := range map[string]error{
-			"cannot create token: I'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
-			"cannot read token: I'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
-			"cannot remove token: I'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
+			"cannot create token: i'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
+			"cannot read token: i'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
+			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
 		} {
 			assert.EqualError(t, err, msg)
 		}

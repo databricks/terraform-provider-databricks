@@ -79,6 +79,8 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 	common.CustomizeSchemaPath(s, "init_scripts", "dbfs").SetDeprecated(DbfsDeprecationWarning)
 	common.CustomizeSchemaPath(s, "init_scripts", "dbfs", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "init_scripts", "s3", "destination").SetRequired()
+	common.CustomizeSchemaPath(s, "init_scripts", "volumes", "destination").SetRequired()
+	common.CustomizeSchemaPath(s, "init_scripts", "workspace", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "workload_type", "clients").SetRequired()
 	common.CustomizeSchemaPath(s, "workload_type", "clients", "notebooks").SetOptional().SetDefault(true)
 	common.CustomizeSchemaPath(s, "workload_type", "clients", "jobs").SetOptional().SetDefault(true)

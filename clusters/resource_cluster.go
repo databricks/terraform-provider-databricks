@@ -131,11 +131,11 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 		Computed: true,
 	})
 	common.CustomizeSchemaPath(s).AddNewField("default_tags", &schema.Schema{
-		Type:     schema.TypeString,
+		Type:     schema.TypeMap,
 		Computed: true,
 	})
 	common.CustomizeSchemaPath(s).AddNewField("state", &schema.Schema{
-		Type:     schema.TypeMap,
+		Type:     schema.TypeString,
 		Computed: true,
 	})
 	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()

@@ -60,8 +60,8 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 type ClusterResourceProvider struct{}
 
-func (ClusterResourceProvider) UnderlyingType() compute.ClusterDetails {
-	return compute.ClusterDetails{}
+func (ClusterResourceProvider) UnderlyingType() compute.ClusterSpec {
+	return compute.ClusterSpec{}
 }
 
 func (ClusterResourceProvider) Aliases() map[string]string {

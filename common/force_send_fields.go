@@ -53,7 +53,7 @@ func SetForceSendFields(req any, d attributeGetter, fields []string) {
 			panic(fmt.Errorf("unexpected field %s not found in request structure, expected one of: %s", fieldName, strings.Join(allFieldNames, ", ")))
 		}
 		// Check if the field was ever set, even to the zero value of the type.
-		if _, ok := d.GetOkExists(fieldName); !ok {
+		if v, ok := d.GetOkExists(fieldName); !(ok && isZeroValueOfType(v)) {
 			continue
 		}
 		if !slices.Contains(forceSendFields, structField.Name) {
@@ -61,4 +61,8 @@ func SetForceSendFields(req any, d attributeGetter, fields []string) {
 		}
 	}
 	forceSendFieldsField.Set(reflect.ValueOf(forceSendFields))
+}
+
+func isZeroValueOfType(v any) bool {
+	return reflect.ValueOf(v).IsZero()
 }

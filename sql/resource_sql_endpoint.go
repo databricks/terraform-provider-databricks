@@ -95,7 +95,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			}
 			var se sql.CreateWarehouseRequest
 			common.DataToStructPointer(d, s, &se)
-			common.SetForceSendFields(&se, d, []string{"enable_serverless_compute"})
+			common.SetForceSendFields(&se, d, []string{"enable_serverless_compute", "enable_photon"})
 			wait, err := w.Warehouses.Create(ctx, se)
 			if err != nil {
 				return fmt.Errorf("failed creating warehouse: %w", err)

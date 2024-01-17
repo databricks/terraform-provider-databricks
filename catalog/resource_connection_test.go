@@ -64,6 +64,49 @@ func TestConnectionsCreate(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
+				ExpectedRequest: catalog.UpdateConnection{
+					Name: "testConnectionName",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Owner: "InitialOwner",
+				},
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					Comment:        "This is a test comment.",
+					FullName:       "testConnectionName",
+					MetastoreId:    "abc",
+					Owner:          "InitialOwner",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Properties: map[string]string{
+						"purpose": "testing",
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					Comment:        "This is a test comment.",
+					FullName:       "testConnectionName",
+					Owner:          "InitialOwner",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Properties: map[string]string{
+						"purpose": "testing",
+					},
+				},
+			},
 		},
 		Resource: ResourceConnection(),
 		Create:   true,
@@ -183,7 +226,7 @@ func TestConnectionRead_Error(t *testing.T) {
 }
 
 func TestConnectionsUpdate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -199,13 +242,13 @@ func TestConnectionsUpdate(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
-					Name: "testConnectionNameNew",
+					Name: "testConnectionName",
 					Options: map[string]string{
 						"host": "test.com",
 					},
 				},
 				Response: catalog.ConnectionInfo{
-					Name:           "testConnectionNameNew",
+					Name:           "testConnectionName",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "testComment",
 					MetastoreId:    "abc",
@@ -216,9 +259,9 @@ func TestConnectionsUpdate(t *testing.T) {
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/connections/testConnectionNameNew?",
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
 				Response: catalog.ConnectionInfo{
-					Name:           "testConnectionNameNew",
+					Name:           "testConnectionName",
 					ConnectionType: catalog.ConnectionType("testConnectionType"),
 					Comment:        "testComment",
 					MetastoreId:    "abc",
@@ -236,18 +279,108 @@ func TestConnectionsUpdate(t *testing.T) {
 			"comment":         "testComment",
 		},
 		HCL: `
-		name = "testConnectionNameNew"
+		name = "testConnectionName"
 		connection_type = "testConnectionType"
 		comment = "testComment"
 		options = {
 			host     = "test.com"
 		}
 		`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "testConnectionNameNew", d.Get("name"))
-	assert.Equal(t, "testConnectionType", d.Get("connection_type"))
-	assert.Equal(t, "testComment", d.Get("comment"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":            "testConnectionName",
+		"connection_type": "testConnectionType",
+		"comment":         "testComment",
+	})
+}
+
+func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					MetastoreId:    "abc",
+					Comment:        "testComment",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
+				ExpectedRequest: catalog.UpdateConnection{
+					Name:  "testConnectionName",
+					Owner: "admin",
+				},
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					Comment:        "testComment",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Owner: "admin",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
+				ExpectedRequest: catalog.UpdateConnection{
+					Name: "testConnectionName",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+				},
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					Comment:        "testComment",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Owner: "admin",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					Comment:        "testComment",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+					Owner: "admin",
+				},
+			},
+		},
+		Resource: ResourceConnection(),
+		Update:   true,
+		ID:       "abc|testConnectionName",
+		InstanceState: map[string]string{
+			"connection_type": "testConnectionType",
+			"comment":         "testComment",
+		},
+		HCL: `
+		name = "testConnectionName"
+		connection_type = "testConnectionType"
+		comment = "testComment"
+		options = {
+			host     = "test.com"
+		}
+		owner = "admin"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":            "testConnectionName",
+		"connection_type": "testConnectionType",
+		"comment":         "testComment",
+		"owner":           "admin",
+	})
 }
 
 func TestConnectionUpdate_Error(t *testing.T) {
@@ -257,7 +390,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
-					Name: "testConnectionNameNew",
+					Name: "testConnectionName",
 					Options: map[string]string{
 						"host": "test.com",
 					},
@@ -277,7 +410,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 			"comment":         "testComment",
 		},
 		HCL: `
-		name = "testConnectionNameNew"
+		name = "testConnectionName"
 		connection_type = "testConnectionType"
 		options = {
 			host     = "test.com"

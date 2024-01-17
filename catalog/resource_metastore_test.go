@@ -735,6 +735,7 @@ func TestReadAccountMetastore(t *testing.T) {
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
+					Region:      "us-east1",
 				},
 			}, nil)
 		},

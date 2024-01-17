@@ -174,7 +174,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 }
 
 func resourceClusterSchema() map[string]*schema.Schema {
-	return common.ResourceProviderStructToSchema[compute.ClusterDetails](ClusterResourceProvider{})
+	return common.ResourceProviderStructToSchema[compute.ClusterSpec](ClusterResourceProvider{})
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

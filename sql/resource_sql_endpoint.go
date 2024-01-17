@@ -88,9 +88,6 @@ func ResourceSqlEndpoint() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			return nil
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {

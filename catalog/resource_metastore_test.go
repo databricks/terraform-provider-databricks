@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -757,7 +758,7 @@ func TestReadAccountMetastore_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockAccountMetastoresAPI().EXPECT().GetByMetastoreId(mock.Anything, "abc").Return(nil, &apierr.APIError{
-				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+				StatusCode: http.StatusNotFound,
 			})
 		},
 		Resource:  ResourceMetastore(),
@@ -793,7 +794,7 @@ func TestReadMetastore_Error(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockMetastoresAPI().EXPECT()
 			e.GetById(mock.Anything, "abc").Return(nil, &apierr.APIError{
-				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+				StatusCode: http.StatusNotFound,
 			})
 		},
 		Resource: ResourceMetastore(),

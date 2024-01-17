@@ -210,12 +210,27 @@ type server struct {
 	URL   string
 }
 
+type testCredentialsProvider struct {
+	token string
+}
+
+func (testCredentialsProvider) Name() string {
+	return "test"
+}
+
+func (t testCredentialsProvider) Configure(ctx context.Context, cfg *config.Config) (func(*http.Request) error, error) {
+	return func(r *http.Request) error {
+		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", t.token))
+		return nil
+	}, nil
+}
+
 func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, server, error) {
+	token := "..."
+	if f.Token != "" {
+		token = f.Token
+	}
 	if f.Fixtures != nil {
-		token := "..."
-		if f.Token != "" {
-			token = f.Token
-		}
 		client, s, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
 		ss := server{
 			Close: s.Close,
@@ -238,6 +253,7 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	}
 	c.SetWorkspaceClient(mw.WorkspaceClient)
 	c.SetAccountClient(ma.AccountClient)
+	c.Config.Credentials = testCredentialsProvider{token: token}
 	return c, server{
 		Close: func() {},
 		URL:   "does-not-matter",

@@ -58,7 +58,7 @@ func SetForceSendFields(req any, d attributeGetter, fields []string) {
 		if v, ok := d.GetOkExists(fieldName); !(ok && isZeroValueOfType(v)) {
 			continue
 		}
-		if !slices.Contains(forceSendFields, structField.Name) {
+		if !slices.Contains[[]string, string](forceSendFields, structField.Name) {
 			forceSendFields = append(forceSendFields, structField.Name)
 		}
 	}

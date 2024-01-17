@@ -74,38 +74,28 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 
 func TestResourceSQLEndpointCreate_NoServerless(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/sql/warehouses",
-				ExpectedRequest: sql.CreateWarehouseRequest{
-					Name:               "foo",
-					ClusterSize:        "Small",
-					MaxNumClusters:     1,
-					AutoStopMins:       120,
-					EnablePhoton:       true,
-					SpotInstancePolicy: "COST_OPTIMIZED",
-					ForceSendFields:    []string{"EnableServerlessCompute"},
-				},
-				Response: sql.CreateWarehouseResponse{
-					Id: "abc",
-				},
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/sql/warehouses/abc?",
-				ReuseRequest: true,
-				Response: sql.GetWarehouseResponse{
-					Name:           "foo",
-					ClusterSize:    "Small",
-					Id:             "abc",
-					State:          "RUNNING",
-					Tags:           &sql.EndpointTags{},
-					MaxNumClusters: 1,
-					NumClusters:    1,
-				},
-			},
-			dataSourceListHTTPFixture,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockWarehousesAPI()
+			response := sql.GetWarehouseResponse{
+				Id:              "abc",
+				Name:            "foo",
+				ClusterSize:     "Small",
+				AutoStopMins:    120,
+				ForceSendFields: []string{"EnableServerlessCompute"},
+			}
+			api.EXPECT().Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				AutoStopMins:       120,
+				EnablePhoton:       true,
+				MaxNumClusters:     1,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"EnableServerlessCompute"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Poll: poll.Simple(response),
+			}, nil)
+			api.EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
+			addDataSourceListHttpFixture(w)
 		},
 		Resource: ResourceSqlEndpoint(),
 		Create:   true,

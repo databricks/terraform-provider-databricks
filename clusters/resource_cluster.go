@@ -130,6 +130,15 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 		Optional: true,
 		Computed: true,
 	})
+	common.CustomizeSchemaPath(s).AddNewField("default_tags", &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	})
+	common.CustomizeSchemaPath(s).AddNewField("state", &schema.Schema{
+		Type:     schema.TypeMap,
+		Computed: true,
+	})
+	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()
 	common.CustomizeSchemaPath(s, "instance_pool_id").SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
 	common.CustomizeSchemaPath(s, "runtime_engine").SetValidateFunc(validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false))
 	common.CustomizeSchemaPath(s).AddNewField("is_pinned", &schema.Schema{

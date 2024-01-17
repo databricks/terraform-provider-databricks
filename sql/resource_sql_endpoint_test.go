@@ -72,42 +72,75 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
-func TestResourceSQLEndpointCreate_NoServerless(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			api := w.GetMockWarehousesAPI()
-			response := sql.GetWarehouseResponse{
-				Id:              "abc",
-				Name:            "foo",
-				ClusterSize:     "Small",
-				AutoStopMins:    120,
-				ForceSendFields: []string{"EnableServerlessCompute"},
-			}
-			api.EXPECT().Create(mock.Anything, sql.CreateWarehouseRequest{
-				Name:               "foo",
-				ClusterSize:        "Small",
-				AutoStopMins:       120,
-				EnablePhoton:       true,
-				MaxNumClusters:     1,
-				SpotInstancePolicy: "COST_OPTIMIZED",
-				ForceSendFields:    []string{"EnableServerlessCompute"},
-			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
-				Poll: poll.Simple(response),
-			}, nil)
-			api.EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
-			addDataSourceListHttpFixture(w)
+func TestResourceSQLEndpointCreate_ForceSendFields(t *testing.T) {
+	type forceSendFieldTestCase struct {
+		hcl                             string
+		expectedEnableServerlessCompute bool
+		expectedPhoton                  bool
+		expectedForceSendFields         []string
+	}
+	cases := []forceSendFieldTestCase{
+		{
+			hcl:                             "enable_serverless_compute = true",
+			expectedEnableServerlessCompute: true,
+			expectedPhoton:                  true,
+			expectedForceSendFields:         nil,
 		},
-		Resource: ResourceSqlEndpoint(),
-		Create:   true,
-		HCL: `
-		name = "foo"
-  		cluster_size = "Small"
-		enable_serverless_compute = false
-		`,
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+		{
+			hcl:                             "enable_serverless_compute = false",
+			expectedEnableServerlessCompute: false,
+			expectedPhoton:                  true,
+			expectedForceSendFields:         []string{"EnableServerlessCompute"},
+		},
+		{
+			hcl:                             "enable_photon = false",
+			expectedEnableServerlessCompute: false,
+			expectedPhoton:                  false,
+			expectedForceSendFields:         []string{"EnablePhoton"},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.hcl, func(t *testing.T) {
+			d, err := qa.ResourceFixture{
+				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+					api := w.GetMockWarehousesAPI()
+					response := sql.GetWarehouseResponse{
+						Id:                      "abc",
+						Name:                    "foo",
+						ClusterSize:             "Small",
+						AutoStopMins:            120,
+						EnablePhoton:            c.expectedPhoton,
+						EnableServerlessCompute: c.expectedEnableServerlessCompute,
+						ForceSendFields:         c.expectedForceSendFields,
+					}
+					api.EXPECT().Create(mock.Anything, sql.CreateWarehouseRequest{
+						Name:                    "foo",
+						ClusterSize:             "Small",
+						AutoStopMins:            120,
+						EnablePhoton:            c.expectedPhoton,
+						EnableServerlessCompute: c.expectedEnableServerlessCompute,
+						MaxNumClusters:          1,
+						SpotInstancePolicy:      "COST_OPTIMIZED",
+						ForceSendFields:         c.expectedForceSendFields,
+					}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+						Poll: poll.Simple(response),
+					}, nil)
+					api.EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
+					addDataSourceListHttpFixture(w)
+				},
+				Resource: ResourceSqlEndpoint(),
+				Create:   true,
+				HCL: `
+				name = "foo"
+				cluster_size = "Small"
+				` + c.hcl,
+			}.Apply(t)
+			require.NoError(t, err)
+			assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+			assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+		})
+	}
+
 }
 
 func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {

@@ -55,7 +55,8 @@ func SetForceSendFields(req any, d attributeGetter, fields []string) {
 		// Check if the field was ever set, even to the zero value of the type.
 		// Technically we should probably check this based on the the TF schema
 		// for this field, but this is a reasonable approximation.
-		if v, ok := d.GetOkExists(fieldName); !(ok && isZeroValueOfType(v)) {
+		v, ok := d.GetOkExists(fieldName)
+		if !(ok && isZeroValueOfType(v)) {
 			continue
 		}
 		if !slices.Contains[[]string, string](forceSendFields, structField.Name) {

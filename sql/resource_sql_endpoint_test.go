@@ -72,7 +72,6 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
-
 func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

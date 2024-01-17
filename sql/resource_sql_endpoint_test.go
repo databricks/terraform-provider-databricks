@@ -80,6 +80,54 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
+func TestResourceSQLEndpointCreate_NoServerless(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/warehouses",
+				ExpectedRequest: sql.CreateWarehouseRequest{
+					Name:               "foo",
+					ClusterSize:        "Small",
+					MaxNumClusters:     1,
+					AutoStopMins:       120,
+					EnablePhoton:       true,
+					SpotInstancePolicy: "COST_OPTIMIZED",
+					ForceSendFields:    []string{"EnableServerlessCompute"},
+				},
+				Response: sql.CreateWarehouseResponse{
+					Id: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/sql/warehouses/abc?",
+				ReuseRequest: true,
+				Response: sql.GetWarehouseResponse{
+					Name:           "foo",
+					ClusterSize:    "Small",
+					Id:             "abc",
+					State:          "RUNNING",
+					Tags:           &sql.EndpointTags{},
+					MaxNumClusters: 1,
+					NumClusters:    1,
+				},
+			},
+			dataSourceListHTTPFixture,
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		enable_serverless_compute = false
+		`,
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+}
+
 func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

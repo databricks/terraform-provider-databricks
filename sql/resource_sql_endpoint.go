@@ -63,7 +63,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 		m["cluster_size"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.StringInSlice(ClusterSizes, false))
 		common.SetDefault(m["enable_photon"], true)
-		common.SetSuppressDiff(m["enable_serverless_compute"])
+		m["enable_serverless_compute"].Computed = true
 		common.SetReadOnly(m["health"])
 		common.SetReadOnly(m["jdbc_url"])
 		common.SetDefault(m["max_num_clusters"], 1)
@@ -88,6 +88,9 @@ func ResourceSqlEndpoint() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return nil
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -95,6 +98,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			}
 			var se sql.CreateWarehouseRequest
 			common.DataToStructPointer(d, s, &se)
+			common.SetForceSendFields(&se, d, []string{"enable_serverless_compute"})
 			wait, err := w.Warehouses.Create(ctx, se)
 			if err != nil {
 				return fmt.Errorf("failed creating warehouse: %w", err)
@@ -128,6 +132,7 @@ func ResourceSqlEndpoint() *schema.Resource {
 			}
 			var se sql.EditWarehouseRequest
 			common.DataToStructPointer(d, s, &se)
+			common.SetForceSendFields(&se, d, []string{"enable_serverless_compute", "enable_photon"})
 			se.Id = d.Id()
 			_, err = w.Warehouses.Edit(ctx, se)
 			if err != nil {

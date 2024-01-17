@@ -438,7 +438,7 @@ func TestResourceUserDelete_Error(t *testing.T) {
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {

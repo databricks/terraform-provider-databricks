@@ -67,6 +67,20 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	return w, nil
 }
 
+// Set the cached workspace client.
+func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceClient = w
+}
+
+// Set the cached account client.
+func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedAccountClient = a
+}
+
 func (c *DatabricksClient) SetAccountId(accountId string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()

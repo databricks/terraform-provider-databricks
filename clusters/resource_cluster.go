@@ -122,14 +122,14 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 	common.CustomizeSchemaPath(s, "autotermination_minutes").SetDefault(60)
 	common.CustomizeSchemaPath(s, "autoscale", "max_workers").SetOptional()
 	common.CustomizeSchemaPath(s, "autoscale", "min_workers").SetOptional()
-	common.CustomizeSchemaPath(s).AddNewField("apply_policy_default_values", &schema.Schema{
-		Optional: true,
-		Type:     schema.TypeBool,
-	})
 	common.CustomizeSchemaPath(s, "cluster_log_conf", "dbfs", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "cluster_log_conf", "s3", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "spark_version").SetRequired()
-	common.CustomizeSchemaPath(s, "cluster_id").SetOptional().SetComputed()
+	common.CustomizeSchemaPath(s).AddNewField("cluster_id", &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	})
 	common.CustomizeSchemaPath(s, "instance_pool_id").SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
 	common.CustomizeSchemaPath(s, "runtime_engine").SetValidateFunc(validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false))
 	common.CustomizeSchemaPath(s).AddNewField("is_pinned", &schema.Schema{
@@ -143,24 +143,10 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 			return old == new
 		},
 	})
-	common.CustomizeSchemaPath(s, "cluster_cores").SetReadOnly()
-	common.CustomizeSchemaPath(s, "cluster_memory_mb").SetReadOnly()
-	common.CustomizeSchemaPath(s, "driver").SetReadOnly()
-	common.CustomizeSchemaPath(s, "executors").SetReadOnly()
-	common.CustomizeSchemaPath(s, "jdbc_port").SetReadOnly()
-	common.CustomizeSchemaPath(s, "last_restarted_time").SetReadOnly()
-	common.CustomizeSchemaPath(s, "last_state_loss_time").SetReadOnly()
-	common.CustomizeSchemaPath(s, "spark_context_id").SetReadOnly()
-	common.CustomizeSchemaPath(s, "start_time").SetReadOnly()
-	common.CustomizeSchemaPath(s, "state_message").SetReadOnly()
-	common.CustomizeSchemaPath(s, "terminated_time").SetReadOnly()
-	common.CustomizeSchemaPath(s, "termination_reason").SetReadOnly()
-	common.CustomizeSchemaPath(s, "state").SetReadOnly()
 	common.CustomizeSchemaPath(s).AddNewField("url", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	})
-	common.CustomizeSchemaPath(s, "default_tags").SetReadOnly()
 	common.CustomizeSchemaPath(s, "num_workers").SetDefault(0).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
 	common.CustomizeSchemaPath(s).AddNewField("cluster_mount_info", &schema.Schema{
 		Type:     schema.TypeList,

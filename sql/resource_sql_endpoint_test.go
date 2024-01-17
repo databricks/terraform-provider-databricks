@@ -72,6 +72,37 @@ func TestResourceSQLEndpointCreate(t *testing.T) {
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
 }
 
+
+func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Poll: poll.Simple(getResponse),
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&getResponse, nil)
+			addDataSourceListHttpFixture(w)
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
+	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+}
+
 func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {

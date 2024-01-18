@@ -51,6 +51,51 @@ func TestResourcePASCreate(t *testing.T) {
 	assert.Equal(t, "abc/pas_id", d.Id())
 }
 
+func TestResourcePASCreate_PublicAccessDisabled(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/private-access-settings",
+				ExpectedRequest: PrivateAccessSettings{
+					AccountID:           "abc",
+					Region:              "ar",
+					PublicAccessEnabled: false,
+					PasName:             "pas_name",
+					PrivateAccessLevel:  "ACCOUNT",
+					ForceSendFields:     []string{"PublicAccessEnabled"},
+				},
+				Response: PrivateAccessSettings{
+					PasID: "pas_id",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
+
+				Response: PrivateAccessSettings{
+					AccountID:           "abc",
+					PasID:               "pas_id",
+					PublicAccessEnabled: false,
+					Region:              "ar",
+					PasName:             "pas_name",
+					ForceSendFields:     []string{"PublicAccessEnabled"},
+				},
+			},
+		},
+		Resource: ResourceMwsPrivateAccessSettings(),
+		HCL: `
+		account_id = "abc"
+		private_access_settings_name = "pas_name"
+		public_access_enabled = false
+		region = "ar"
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/pas_id", d.Id())
+}
+
 func TestResourcePASCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -178,6 +223,50 @@ func TestResourcePAS_Update(t *testing.T) {
 		account_id = "abc"
 		private_access_settings_name = "pas_name"
 		public_access_enabled = true
+		region = "eu-west-1"
+		private_access_level = "ENDPOINT"
+		allowed_vpc_endpoint_ids = ["a", "b"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourcePAS_Update_PublicAccessDisabled(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
+				ExpectedRequest: PrivateAccessSettings{
+					Region:                "eu-west-1",
+					PublicAccessEnabled:   false,
+					PrivateAccessLevel:    "ENDPOINT",
+					AccountID:             "abc",
+					PasID:                 "pas_id",
+					PasName:               "pas_name",
+					AllowedVpcEndpointIDS: []string{"a", "b"},
+					ForceSendFields:       []string{"PublicAccessEnabled"},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
+				Response: PrivateAccessSettings{
+					Region:              "eu-west-1",
+					PublicAccessEnabled: false,
+					AccountID:           "abc",
+					PasID:               "pas_id",
+					PasName:             "pas_name",
+					ForceSendFields:     []string{"PublicAccessEnabled"},
+				},
+			},
+		},
+		Resource: ResourceMwsPrivateAccessSettings(),
+		Update:   true,
+		ID:       "abc/pas_id",
+		HCL: `
+		account_id = "abc"
+		private_access_settings_name = "pas_name"
+		public_access_enabled = false
 		region = "eu-west-1"
 		private_access_level = "ENDPOINT"
 		allowed_vpc_endpoint_ids = ["a", "b"]

@@ -471,6 +471,10 @@ func (a data) GetOk(key string) (any, bool) {
 	return v, ok
 }
 
+func (a data) GetOkExists(key string) (any, bool) {
+	return a.GetOk(key)
+}
+
 func TestDiffToStructPointerPanic(t *testing.T) {
 	type Nonsense struct {
 		New int `json:"new,omitempty"`

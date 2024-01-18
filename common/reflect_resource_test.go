@@ -42,6 +42,12 @@ func TestChooseFieldName(t *testing.T) {
 	}))
 }
 
+func TestChooseFieldNameWithAliasesMap(t *testing.T) {
+	assert.Equal(t, "foo", chooseFieldNameWithAliases(reflect.StructField{
+		Tag: `json:"bar"`,
+	}, []string{"a"}, map[string]string{"a.bar": "foo"}))
+}
+
 type testSliceItem struct {
 	SliceItem string   `json:"slice_item,omitempty"`
 	Nested    *testPtr `json:"nested,omitempty"`

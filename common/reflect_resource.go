@@ -71,15 +71,10 @@ func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath []s
 
 	aliasKey := strings.Join(append(fieldNamePath, jsonFieldName), ".")
 
-	var fieldName string
-
 	if value, ok := aliases[aliasKey]; ok {
-		fieldName = value
-	} else {
-		fieldName = jsonFieldName
+		return value
 	}
-
-	return fieldName
+	return jsonFieldName
 }
 
 func getJsonFieldName(typeField reflect.StructField) string {

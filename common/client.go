@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type cachedMe struct {
@@ -81,7 +82,7 @@ func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
 	c.cachedAccountClient = a
 }
 
-func (c *DatabricksClient) SetAccountId(accountId string) error {
+func (c *DatabricksClient) setAccountId(accountId string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if accountId == "" {
@@ -107,6 +108,33 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	}
 	c.cachedAccountClient = acc
 	return acc, nil
+}
+
+func (c *DatabricksClient) AccountClientWithAccountIdFromConfig(d *schema.ResourceData) (*databricks.AccountClient, error) {
+	accountID, ok := d.GetOk("account_id")
+	if ok {
+		err := c.setAccountId(accountID.(string))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.AccountClient()
+}
+
+func (c *DatabricksClient) AccountClientWithAccountIdFromPair(d *schema.ResourceData, p *Pair) (*databricks.AccountClient, string, error) {
+	accountID, resourceId, err := p.Unpack(d)
+	if err != nil {
+		return nil, "", err
+	}
+	err = c.setAccountId(accountID)
+	if err != nil {
+		return nil, "", err
+	}
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, "", err
+	}
+	return a, resourceId, nil
 }
 
 func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {

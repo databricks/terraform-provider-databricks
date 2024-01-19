@@ -49,11 +49,7 @@ func ResourceMwsCredentials() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "credentials_id", "/")
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			err := c.SetAccountId(d.Get("account_id").(string))
-			if err != nil {
-				return err
-			}
-			acc, err := c.AccountClient()
+			acc, err := c.AccountClientWithAccountIdFromConfig(d)
 			if err != nil {
 				return err
 			}

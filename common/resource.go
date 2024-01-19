@@ -438,3 +438,12 @@ func NoCustomize(m map[string]*schema.Schema) map[string]*schema.Schema {
 var NoAuth string = "default auth: cannot configure default credentials, " +
 	"please check https://docs.databricks.com/en/dev-tools/auth.html#databricks-client-unified-authentication " +
 	"to configure credentials for your preferred authentication method"
+
+func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s["account_id"] = &schema.Schema{
+		Type:       schema.TypeString,
+		Optional:   true,
+		Deprecated: "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
+	}
+	return s
+}

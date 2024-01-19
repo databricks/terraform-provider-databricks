@@ -43,35 +43,23 @@ func TestResourcePASCreate(t *testing.T) {
 
 func TestResourcePASCreate_PublicAccessDisabled(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/accounts/abc/private-access-settings",
-				ExpectedRequest: PrivateAccessSettings{
-					AccountID:           "abc",
-					Region:              "ar",
-					PublicAccessEnabled: false,
-					PasName:             "pas_name",
-					PrivateAccessLevel:  "ACCOUNT",
-					ForceSendFields:     []string{"PublicAccessEnabled"},
-				},
-				Response: PrivateAccessSettings{
-					PasID: "pas_id",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/private-access-settings/pas_id",
-
-				Response: PrivateAccessSettings{
-					AccountID:           "abc",
-					PasID:               "pas_id",
-					PublicAccessEnabled: false,
-					Region:              "ar",
-					PasName:             "pas_name",
-					ForceSendFields:     []string{"PublicAccessEnabled"},
-				},
-			},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockPrivateAccessAPI().EXPECT()
+			e.Create(mock.Anything, provisioning.UpsertPrivateAccessSettingsRequest{
+				Region:                    "ar",
+				PrivateAccessSettingsName: "pas_name",
+				PrivateAccessLevel:        "ACCOUNT",
+				PublicAccessEnabled:       false,
+				ForceSendFields:           []string{"PublicAccessEnabled"},
+			}).Return(&provisioning.PrivateAccessSettings{
+				PrivateAccessSettingsId: "pas_id",
+			}, nil)
+			e.GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(&provisioning.PrivateAccessSettings{
+				PrivateAccessSettingsId:   "pas_id",
+				Region:                    "ar",
+				PrivateAccessSettingsName: "pas_name",
+				ForceSendFields:           []string{"PublicAccessEnabled"},
+			}, nil)
 		},
 		Resource: ResourceMwsPrivateAccessSettings(),
 		HCL: `
@@ -123,7 +111,7 @@ func TestResourcePASRead(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc/pas_id", d.Id(), "Id should not be empty")
-	assert.Equal(t, "account_id", d.Get("account_id"))
+	assert.Equal(t, "abc", d.Get("account_id"))
 	assert.Equal(t, "pas_name", d.Get("private_access_settings_name"))
 	assert.Equal(t, "ar", d.Get("region"))
 	assert.Equal(t, "pas_id", d.Get("private_access_settings_id"))
@@ -204,6 +192,7 @@ func TestResourcePAS_Update_PublicAccessDisabled(t *testing.T) {
 				PrivateAccessSettingsId:   "pas_id",
 				PrivateAccessSettingsName: "pas_name",
 				AllowedVpcEndpointIds:     []string{"a", "b"},
+				ForceSendFields:           []string{"PublicAccessEnabled"},
 			}).Return(nil)
 			e.GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(&provisioning.PrivateAccessSettings{
 				Region:                    "eu-west-1",
@@ -212,6 +201,7 @@ func TestResourcePAS_Update_PublicAccessDisabled(t *testing.T) {
 				PrivateAccessSettingsId:   "pas_id",
 				PrivateAccessSettingsName: "pas_name",
 				AllowedVpcEndpointIds:     []string{"a", "b"},
+				ForceSendFields:           []string{"PublicAccessEnabled"},
 			}, nil)
 		},
 		Resource: ResourceMwsPrivateAccessSettings(),

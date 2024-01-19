@@ -21,6 +21,8 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 		s["private_access_level"].ValidateFunc = validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true)
 		common.SetDefault(s["private_access_level"], "ACCOUNT")
 
+		s["private_access_settings_id"].Computed = true
+
 		common.AddAccountIdField(s)
 		return s
 	})

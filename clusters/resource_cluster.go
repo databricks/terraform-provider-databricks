@@ -69,6 +69,7 @@ func (ClusterResourceProvider) Aliases() map[string]string {
 }
 
 func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+	common.CustomizeSchemaPath(s, "cluster_source").SetComputed()
 	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetComputed()
 	common.CustomizeSchemaPath(s, "enable_local_disk_encryption").SetComputed()
 	common.CustomizeSchemaPath(s, "node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})

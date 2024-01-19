@@ -64,6 +64,18 @@ func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
 
 func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 	s.Schema.DiffSuppressFunc = diffSuppressor(s.Schema)
+	if s.Schema.Type == schema.TypeList && s.Schema.MaxItems == 1 {
+		// If it is a list with max items = 1, it means the corresponding sdk schema type is a struct or a ptr.
+		// In this case we would like to set the diff suppressor for the underlying fields as well.
+		resource, ok := s.Schema.Elem.(*schema.Resource)
+		if !ok {
+			panic("Cannot cast Elem into Resource type.")
+		}
+		nestedSchema := resource.Schema
+		for _, v := range nestedSchema {
+			v.DiffSuppressFunc = diffSuppressor(v)
+		}
+	}
 	return s
 }
 

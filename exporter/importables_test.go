@@ -1106,6 +1106,7 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 		},
 	}, "notebooks,directories", true, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
+		ic.services = []string{"notebooks"}
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
@@ -1400,8 +1401,32 @@ func TestListUcAllowListSuccess(t *testing.T) {
 func TestEmitSqlParent(t *testing.T) {
 	ic := importContextForTest()
 	ic.emitSqlParentDirectory("")
-	assert.Equal(t, len(ic.testEmits), 0)
+	assert.Equal(t, 0, len(ic.testEmits))
 	ic.emitSqlParentDirectory("folders/12345")
 	assert.Equal(t, 1, len(ic.testEmits))
 	assert.Contains(t, ic.testEmits, "databricks_directory[<unknown>] (object_id: 12345)")
+}
+
+func TestEmitFilesFromSlice(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitFilesFromSlice([]string{
+		"dbfs:/FileStore/test.txt",
+		"/Workspace/Shared/test.txt",
+		"nothing",
+	})
+	assert.Equal(t, 2, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+}
+
+func TestEmitFilesFromMap(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitFilesFromMap(map[string]string{
+		"k1": "dbfs:/FileStore/test.txt",
+		"k2": "/Workspace/Shared/test.txt",
+		"k3": "nothing",
+	})
+	assert.Equal(t, 2, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
 }

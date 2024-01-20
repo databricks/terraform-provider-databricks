@@ -1038,6 +1038,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		case schema.TypeFloat:
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
+			// TODO: Resolve references in maps as well, and also support different types inside map...
 			ov := map[string]cty.Value{}
 			for key, iv := range raw.(map[string]any) {
 				v := cty.StringVal(fmt.Sprintf("%v", iv))

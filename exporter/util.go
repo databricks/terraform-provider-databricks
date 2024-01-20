@@ -43,14 +43,26 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 	}
+}
 
+func (ic *importContext) emitFilesFromSlice(slice []string) {
+	for _, p := range slice {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
+}
+
+func (ic *importContext) emitFilesFromMap(m map[string]string) {
+	for _, p := range m {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
 }
 
 func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
-	ic.emitInitScripts(c.InitScripts)
 	if c.AwsAttributes != nil {
 		ic.Emit(&resource{
 			Resource: "databricks_instance_profile",
@@ -76,6 +88,7 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitInitScripts(c.InitScripts)
 	ic.emitSecretsFromSecretsPath(c.SparkConf)
 	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)

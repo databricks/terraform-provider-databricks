@@ -150,11 +150,16 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 		var err error
 		if common.StringIsUUID(userOrSPName) {
 			_, err = ic.findSpnByAppID(userOrSPName)
+			if err != nil {
+				ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
+			}
 		} else {
 			_, err = ic.findUserByName(strings.ToLower(userOrSPName))
+			if err != nil {
+				ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
+			}
 		}
 		return err == nil
-
 	}
 	return false
 }
@@ -341,6 +346,12 @@ func (ic *importContext) cacheGroups() error {
 		log.Printf("[INFO] Cached %d groups", len(ic.allGroups))
 	}
 	return nil
+}
+
+func (ic *importContext) addIgnoredResource(msg string) {
+	ic.ignoredResourcesMutex.Lock()
+	defer ic.ignoredResourcesMutex.Unlock()
+	ic.ignoredResources[msg] = struct{}{}
 }
 
 const (
@@ -849,7 +860,8 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
 			Incremental: ic.incremental,
 		})
 	} else {
-		log.Printf("[DEBUG] Not emitting a workspace object %s for deleted user", path)
+		log.Printf("[WARN] Not emitting a workspace object %s for deleted user. Path='%s'", resourceType, path)
+		ic.addIgnoredResource(fmt.Sprintf("%s. path=%s", resourceType, path))
 	}
 }
 

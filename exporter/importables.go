@@ -575,6 +575,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			numTasks := r.Data.Get("task.#").(int)
+			if numTasks == 0 {
+				log.Printf("[WARN] Ignoring job with ID %s", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_job. id=%s", r.ID))
+			}
+			return numTasks == 0
+		},
 	},
 	"databricks_cluster_policy": {
 		WorkspaceLevel: true,
@@ -1247,6 +1255,9 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_repo",
 						ID:       fmt.Sprintf("%d", repo.ID),
 					})
+				} else {
+					log.Printf("[WARN] ignoring databricks_repo without Git provider. Path: %s", repo.Path)
+					ic.addIgnoredResource(fmt.Sprintf("databricks_repo. path=%s", repo.Path))
 				}
 				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(objList))
 			}
@@ -1273,6 +1284,15 @@ var resourcesMap map[string]importable = map[string]importable{
 				return d.Get("tag").(string) == ""
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			shouldIgnore := r.Data.Get("url").(string) == ""
+			if shouldIgnore {
+				path := r.Data.Get("path").(string)
+				log.Printf("[WARN] ignoring databricks_repo without Git provider. Path: %s", path)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_repo. path=%s", r.Data.Get("path").(string)))
+			}
+			return shouldIgnore
 		},
 
 		Depends: []reference{
@@ -1910,6 +1930,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return pathString == "creator_user_name" || defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			numLibraries := r.Data.Get("library.#").(int)
+			if numLibraries == 0 {
+				log.Printf("[WARN] Ignoring DLT Pipeline with ID %s", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_pipeline. id=%s", r.ID))
+			}
+			return numLibraries == 0
+		},
 		Depends: []reference{
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -2148,7 +2176,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			var rule iam.RuleSetResponse
 			s := ic.Resources["databricks_access_control_rule_set"].Schema
 			common.DataToStructPointer(r.Data, s, &rule)
-			return len(rule.GrantRules) == 0
+			shouldIgnore := len(rule.GrantRules) == 0
+			if shouldIgnore {
+				log.Printf("[WARN] ignoring databricks_access_control_rule_set without grant rules. ID: %s", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_access_control_rule_set. ID=%s", r.ID))
+			}
+			return shouldIgnore
 		},
 	},
 	"databricks_system_schema": {

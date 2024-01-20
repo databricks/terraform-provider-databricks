@@ -46,6 +46,7 @@ func importContextForTest() *importContext {
 		allSps:                   map[string]scim.User{},
 		channels:                 makeResourcesChannels(p),
 		exportDeletedUsersAssets: false,
+		ignoredResources:         map[string]struct{}{},
 	}
 }
 
@@ -250,6 +251,40 @@ func TestRepoName(t *testing.T) {
 	// Repo with path
 	d.Set("path", "/Repos/user/test")
 	assert.Equal(t, "user_test_12345", resourcesMap["databricks_repo"].Name(ic, d))
+}
+
+func TestRepoIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := repos.ResourceRepo().TestResourceData()
+	d.SetId("12345")
+	d.Set("path", "/Repos/user/test")
+	r := &resource{ID: "12345", Data: d}
+	// Repo without URL
+	assert.True(t, resourcesMap["databricks_repo"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+	// Repo with URL
+	d.Set("url", "https://github.com/abc/abc.git")
+	assert.False(t, resourcesMap["databricks_repo"].Ignore(ic, r))
+}
+
+func TestDLTIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := pipelines.ResourcePipeline().TestResourceData()
+	d.SetId("12345")
+	r := &resource{ID: "12345", Data: d}
+	// job without libraries
+	assert.True(t, resourcesMap["databricks_pipeline"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
+func TestJobsIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := jobs.ResourceJob().TestResourceData()
+	d.SetId("12345")
+	r := &resource{ID: "12345", Data: d}
+	// job without tasks
+	assert.True(t, resourcesMap["databricks_job"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
 }
 
 func TestJobName(t *testing.T) {

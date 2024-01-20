@@ -109,6 +109,7 @@ func TestEmitNoSearchAvail(t *testing.T) {
 		channels: map[string]resourceChannel{
 			"a": ch,
 		},
+		ignoredResources: map[string]struct{}{},
 	}
 	go func() {
 		for r := range ch {
@@ -181,6 +182,7 @@ func TestEmitNoSearchNoId(t *testing.T) {
 		channels: map[string]resourceChannel{
 			"a": ch,
 		},
+		ignoredResources: map[string]struct{}{},
 	}
 	go func() {
 		for r := range ch {

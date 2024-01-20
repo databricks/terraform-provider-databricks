@@ -21,6 +21,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -145,6 +146,10 @@ type importContext struct {
 
 	// Workspace-level UC Metastore information
 	currentMetastore *catalog.GetMetastoreSummaryResponse
+
+	// tracking ignored objects
+	ignoredResourcesMutex sync.Mutex
+	ignoredResources      map[string]struct{}
 }
 
 type mount struct {
@@ -238,6 +243,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		allSps:              map[string]scim.User{},
 		waitGroup:           &sync.WaitGroup{},
 		channels:            makeResourcesChannels(p),
+		ignoredResources:    map[string]struct{}{},
 	}
 }
 
@@ -465,6 +471,17 @@ func (ic *importContext) Run() error {
 		statsBytes, _ := json.Marshal(statsData)
 		if _, err = stats.Write(statsBytes); err != nil {
 			return err
+		}
+	}
+
+	// output ignored resources...
+	if ignored, err := os.Create(fmt.Sprintf("%s/ignored_resources.txt", ic.Directory)); err == nil {
+		defer ignored.Close()
+		ic.ignoredResourcesMutex.Lock()
+		keys := maps.Keys(ic.ignoredResources)
+		sort.Strings(keys)
+		for _, s := range keys {
+			ignored.WriteString(s + "\n")
 		}
 	}
 
@@ -705,6 +722,7 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			if !matched {
 				continue
 			}
+			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			if sr.Mode == "data" {
 				return strValue, hcl.Traversal{
 					hcl.TraverseRoot{Name: "data"},

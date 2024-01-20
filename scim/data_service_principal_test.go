@@ -12,7 +12,7 @@ func TestDataServicePrincipalReadByAppId(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%22abc%22",
 				Response: UserList{
 					Resources: []User{
 						{
@@ -57,7 +57,7 @@ func TestDataServicePrincipalReadByIdNotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%22abc%22",
 				Response: UserList{},
 			},
 		},
@@ -74,7 +74,7 @@ func TestDataServicePrincipalReadByNameNotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=displayName%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=displayName%20eq%20%22abc%22",
 				Response: UserList{},
 			},
 		},
@@ -91,7 +91,7 @@ func TestDataServicePrincipalReadError(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%20eq%20%22abc%22",
 				Status:   500,
 			},
 		},
@@ -109,7 +109,7 @@ func TestDataServicePrincipalReadByNameDuplicates(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=displayName%20eq%20%27abc%27",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=displayName%20eq%20%22abc%22",
 				Response: UserList{
 					Resources: []User{
 						{

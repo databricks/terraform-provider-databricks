@@ -632,7 +632,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Status:   417,
 			Response: apierr.APIErrorBody{
 				Message: "cannot find user",
@@ -654,7 +654,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				TotalResults: 0,
 			},
@@ -675,7 +675,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				Resources: []User{
 					{
@@ -717,7 +717,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				Resources: []User{
 					{

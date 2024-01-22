@@ -140,7 +140,7 @@ func TestDataServicePrincipalReadByDisplayName(t *testing.T) {
 		"acl_principal_id": "servicePrincipals/abc",
 	})
 }
-func TestDataServicePrincipalReadByAppnIdNotFound(t *testing.T) {
+func TestDataServicePrincipalReadByAppIdNotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -250,7 +250,7 @@ func TestDataServicePrincipalReadNoParams(t *testing.T) {
 	}.ExpectError(t, "please specify either application_id, display_name, or sp_id")
 }
 
-func TestDataServicePrincipalReadAppIdAndName(t *testing.T) {
+func TestDataServicePrincipalReadInvalidConfig(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: DataSourceServicePrincipal(),
 		HCL: `display_name = "abc"
@@ -258,27 +258,5 @@ func TestDataServicePrincipalReadAppIdAndName(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "please specify only one of: application_id, sp_id, or display_name")
-}
-
-func TestDataServicePrincipalReadAppIdAndSpId(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: DataSourceServicePrincipal(),
-		HCL: `sp_id = "abc"
-		application_id = "abc"`,
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.ExpectError(t, "please specify only one of: application_id, sp_id, or display_name")
-}
-
-func TestDataServicePrincipalReadSpIdAndName(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: DataSourceServicePrincipal(),
-		HCL: `display_name = "abc"
-		sp_id = "abc"`,
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.ExpectError(t, "please specify only one of: application_id, sp_id, or display_name")
+	}.ExpectError(t, "invalid config supplied. [application_id] Invalid combination of arguments. [display_name] Invalid combination of arguments. [sp_id] Invalid combination of arguments")
 }

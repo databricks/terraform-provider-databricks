@@ -31,8 +31,9 @@ resource "databricks_group_member" "my_member_a" {
 
 Data source allows you to pick service principals by one of the following attributes (only one of them):
 
-- `application_id` - (Required if `display_name` isn't used) ID of the service principal. The service principal must exist before this resource can be retrieved.
-- `display_name` - (Required if `application_id` isn't used) Exact display name of the service principal. The service principal must exist before this resource can be retrieved.  In case if there are several service principals with the same name, an error is thrown.
+- `application_id` - (Required if neither `display_name` nor `sp_id` is used) ID of the service principal. The service principal must exist before this resource can be retrieved.
+- `display_name` - (Required if neither `application_id` nor `sp_id` is  used) Exact display name of the service principal. The service principal must exist before this resource can be retrieved.  In case if there are several service principals with the same name, an error is thrown.
+- `sp_id` - (Required if neither `application_id` nor `sp_id` is used) Unique ID for a service principal in the Databricks workspace. The service principal must exist before this resource can be retrieved. 
 
 ## Attribute Reference
 

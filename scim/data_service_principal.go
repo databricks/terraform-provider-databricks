@@ -30,9 +30,9 @@ func DataSourceServicePrincipal() *schema.Resource {
 			return fmt.Errorf("please specify only one of application_id or display_name")
 		}
 		if response.ApplicationID != "" {
-			spList, err = spnAPI.Filter(fmt.Sprintf("applicationId eq '%s'", response.ApplicationID), true)
+			spList, err = spnAPI.Filter(fmt.Sprintf(`applicationId eq "%s"`, response.ApplicationID), true)
 		} else if response.DisplayName != "" {
-			spList, err = spnAPI.Filter(fmt.Sprintf("displayName eq '%s'", response.DisplayName), true)
+			spList, err = spnAPI.Filter(fmt.Sprintf(`displayName eq "%s"`, response.DisplayName), true)
 		} else {
 			return fmt.Errorf("please specify either application_id or display_name")
 		}

@@ -252,7 +252,7 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 	if !slices.Contains(knownErrs, err.Error()) {
 		return err
 	}
-	spList, err := spAPI.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")), true)
+	spList, err := spAPI.Filter(fmt.Sprintf(`applicationId eq "%s"`, strings.ReplaceAll(u.ApplicationID, "'", "")), true)
 	if err != nil {
 		return err
 	}

@@ -581,6 +581,9 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 // TF SDK - feel free to replace the usages of this interface in a PR.
 type attributeGetter interface {
 	GetOk(key string) (any, bool)
+	// This method should only be used for optional boolean parameters according to the Terraform docs:
+	// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.GetOkExists
+	GetOkExists(key string) (any, bool)
 }
 
 // DiffToStructPointer reads resource diff with given schema onto result pointer. Panics.

@@ -21,6 +21,8 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -89,7 +91,7 @@ type importContext struct {
 	incremental              bool
 	mounts                   bool
 	noFormat                 bool
-	services                 string
+	services                 []string
 	listing                  string
 	match                    string
 	lastActiveDays           int64
@@ -144,6 +146,10 @@ type importContext struct {
 
 	// Workspace-level UC Metastore information
 	currentMetastore *catalog.GetMetastoreSummaryResponse
+
+	// tracking ignored objects
+	ignoredResourcesMutex sync.Mutex
+	ignoredResources      map[string]struct{}
 }
 
 type mount struct {
@@ -237,6 +243,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		allSps:              map[string]scim.User{},
 		waitGroup:           &sync.WaitGroup{},
 		channels:            makeResourcesChannels(p),
+		ignoredResources:    map[string]struct{}{},
 	}
 }
 
@@ -464,6 +471,17 @@ func (ic *importContext) Run() error {
 		statsBytes, _ := json.Marshal(statsData)
 		if _, err = stats.Write(statsBytes); err != nil {
 			return err
+		}
+	}
+
+	// output ignored resources...
+	if ignored, err := os.Create(fmt.Sprintf("%s/ignored_resources.txt", ic.Directory)); err == nil {
+		defer ignored.Close()
+		ic.ignoredResourcesMutex.Lock()
+		keys := maps.Keys(ic.ignoredResources)
+		sort.Strings(keys)
+		for _, s := range keys {
+			ignored.WriteString(s + "\n")
 		}
 	}
 
@@ -704,6 +722,7 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			if !matched {
 				continue
 			}
+			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			if sr.Mode == "data" {
 				return strValue, hcl.Traversal{
 					hcl.TraverseRoot{Name: "data"},
@@ -810,6 +829,10 @@ func (ic *importContext) ResourceName(r *resource) string {
 	return name
 }
 
+func (ic *importContext) isServiceEnabled(service string) bool {
+	return slices.Contains[[]string, string](ic.services, service)
+}
+
 func (ic *importContext) Emit(r *resource) {
 	// TODO: change into channels, if stack trace depth issues would surface
 	_, v := r.MatchPair()
@@ -846,8 +869,8 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	// TODO: add similar condition for checking workspace-level objects only. After new ACLs import is merged
 
-	// TODO: split services into slice?
-	if !strings.Contains(ic.services, ir.Service) {
+	// TODO: split services into slice?  Yes, otherwise it will be problematic with generic names like UC
+	if !ic.isServiceEnabled(ir.Service) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the import", r.Resource, ir.Service)
 		return
 	}
@@ -1015,6 +1038,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		case schema.TypeFloat:
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
+			// TODO: Resolve references in maps as well, and also support different types inside map...
 			ov := map[string]cty.Value{}
 			for key, iv := range raw.(map[string]any) {
 				v := cty.StringVal(fmt.Sprintf("%v", iv))

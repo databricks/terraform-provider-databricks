@@ -43,14 +43,26 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 	}
+}
 
+func (ic *importContext) emitFilesFromSlice(slice []string) {
+	for _, p := range slice {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
+}
+
+func (ic *importContext) emitFilesFromMap(m map[string]string) {
+	for _, p := range m {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
 }
 
 func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
-	ic.emitInitScripts(c.InitScripts)
 	if c.AwsAttributes != nil {
 		ic.Emit(&resource{
 			Resource: "databricks_instance_profile",
@@ -76,6 +88,7 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitInitScripts(c.InitScripts)
 	ic.emitSecretsFromSecretsPath(c.SparkConf)
 	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
@@ -150,11 +163,16 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 		var err error
 		if common.StringIsUUID(userOrSPName) {
 			_, err = ic.findSpnByAppID(userOrSPName)
+			if err != nil {
+				ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
+			}
 		} else {
 			_, err = ic.findUserByName(strings.ToLower(userOrSPName))
+			if err != nil {
+				ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
+			}
 		}
 		return err == nil
-
 	}
 	return false
 }
@@ -341,6 +359,12 @@ func (ic *importContext) cacheGroups() error {
 		log.Printf("[INFO] Cached %d groups", len(ic.allGroups))
 	}
 	return nil
+}
+
+func (ic *importContext) addIgnoredResource(msg string) {
+	ic.ignoredResourcesMutex.Lock()
+	defer ic.ignoredResourcesMutex.Unlock()
+	ic.ignoredResources[msg] = struct{}{}
 }
 
 const (
@@ -849,7 +873,22 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
 			Incremental: ic.incremental,
 		})
 	} else {
-		log.Printf("[DEBUG] Not emitting a workspace object %s for deleted user", path)
+		log.Printf("[WARN] Not emitting a workspace object %s for deleted user. Path='%s'", resourceType, path)
+		ic.addIgnoredResource(fmt.Sprintf("%s. path=%s", resourceType, path))
+	}
+}
+
+func (ic *importContext) emitSqlParentDirectory(parent string) {
+	if parent == "" {
+		return
+	}
+	res := sqlParentRegexp.FindStringSubmatch(parent)
+	if len(res) > 1 {
+		ic.Emit(&resource{
+			Resource:  "databricks_directory",
+			Attribute: "object_id",
+			Value:     res[1],
+		})
 	}
 }
 

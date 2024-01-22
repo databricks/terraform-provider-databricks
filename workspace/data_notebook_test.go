@@ -55,7 +55,7 @@ func TestDataSourceNotebook_ErrorExport(t *testing.T) {
 			"path":   "/a/b/c",
 			"format": "SOURCE",
 		},
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestDataSourceNotebook_ErrorStatus(t *testing.T) {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
@@ -45,6 +46,7 @@ func importContextForTest() *importContext {
 		allSps:                   map[string]scim.User{},
 		channels:                 makeResourcesChannels(p),
 		exportDeletedUsersAssets: false,
+		ignoredResources:         map[string]struct{}{},
 	}
 }
 
@@ -249,6 +251,40 @@ func TestRepoName(t *testing.T) {
 	// Repo with path
 	d.Set("path", "/Repos/user/test")
 	assert.Equal(t, "user_test_12345", resourcesMap["databricks_repo"].Name(ic, d))
+}
+
+func TestRepoIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := repos.ResourceRepo().TestResourceData()
+	d.SetId("12345")
+	d.Set("path", "/Repos/user/test")
+	r := &resource{ID: "12345", Data: d}
+	// Repo without URL
+	assert.True(t, resourcesMap["databricks_repo"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+	// Repo with URL
+	d.Set("url", "https://github.com/abc/abc.git")
+	assert.False(t, resourcesMap["databricks_repo"].Ignore(ic, r))
+}
+
+func TestDLTIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := pipelines.ResourcePipeline().TestResourceData()
+	d.SetId("12345")
+	r := &resource{ID: "12345", Data: d}
+	// job without libraries
+	assert.True(t, resourcesMap["databricks_pipeline"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
+func TestJobsIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := jobs.ResourceJob().TestResourceData()
+	d.SetId("12345")
+	r := &resource{ID: "12345", Data: d}
+	// job without tasks
+	assert.True(t, resourcesMap["databricks_job"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
 }
 
 func TestJobName(t *testing.T) {
@@ -915,7 +951,7 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAd
 		ic.meAdmin = asAdmin
 		ic.importing = map[string]bool{}
 		ic.variables = map[string]string{}
-		ic.services = services
+		ic.services = strings.Split(services, ",")
 		ic.startImportChannels()
 		cb(ic)
 	})
@@ -1070,6 +1106,7 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 		},
 	}, "notebooks,directories", true, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
+		ic.services = []string{"notebooks"}
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
@@ -1359,4 +1396,37 @@ func TestListUcAllowListSuccess(t *testing.T) {
 	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
 	assert.NoError(t, err)
 	assert.Equal(t, len(ic.testEmits), 3)
+}
+
+func TestEmitSqlParent(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitSqlParentDirectory("")
+	assert.Equal(t, 0, len(ic.testEmits))
+	ic.emitSqlParentDirectory("folders/12345")
+	assert.Equal(t, 1, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_directory[<unknown>] (object_id: 12345)")
+}
+
+func TestEmitFilesFromSlice(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitFilesFromSlice([]string{
+		"dbfs:/FileStore/test.txt",
+		"/Workspace/Shared/test.txt",
+		"nothing",
+	})
+	assert.Equal(t, 2, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+}
+
+func TestEmitFilesFromMap(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitFilesFromMap(map[string]string{
+		"k1": "dbfs:/FileStore/test.txt",
+		"k2": "/Workspace/Shared/test.txt",
+		"k3": "nothing",
+	})
+	assert.Equal(t, 2, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
 }

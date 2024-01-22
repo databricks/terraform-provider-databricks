@@ -51,5 +51,5 @@ func TestMetastoresData_Error(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }

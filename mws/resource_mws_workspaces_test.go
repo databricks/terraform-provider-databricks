@@ -34,6 +34,9 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 					NetworkID:                           "fgh",
 					ManagedServicesCustomerManagedKeyID: "def",
 					StorageCustomerManagedKeyID:         "def",
+					CustomTags: map[string]string{
+						"SoldToCode": "1234",
+					},
 				},
 				Response: Workspace{
 					WorkspaceID:    1234,
@@ -57,6 +60,9 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 					ManagedServicesCustomerManagedKeyID: "def",
 					StorageCustomerManagedKeyID:         "def",
 					AccountID:                           "abc",
+					CustomTags: map[string]string{
+						"SoldToCode": "1234",
+					},
 				},
 			},
 		},
@@ -71,6 +77,9 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 			"workspace_name":                           "labdata",
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
+			"custom_tags": map[string]any{
+				"SoldToCode": "1234",
+			},
 		},
 		Create: true,
 	}.Apply(t)
@@ -151,6 +160,87 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		Gcp:    true,
 		Create: true,
 	}.ApplyNoError(t)
+}
+
+func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":                   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id":                 "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
+					},
+					"workspace_name": "labdata",
+					"custom_tags": map[string]any{
+						"SoldToCode": "1234",
+					},
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_PARAMETER_VALUE",
+					Message:   "custom_tags are only allowed for AWS workspaces",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
+			}
+		}
+		private_access_settings_id = "pas_id_a"
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+			master_ip_range = "e"
+		}
+		custom_tags = {
+			SoldToCode = "1234"
+		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ExpectError(t, "custom_tags are only allowed for AWS workspaces")
 }
 
 func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
@@ -1420,7 +1510,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			Response: apierr.APIError{
 				ErrorCode:  "NONSENSE",
 				StatusCode: 418,
-				Message:    "I'm a teapot",
+				Message:    "i'm a teapot",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -1436,9 +1526,9 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			},
 		})
 		for msg, err := range map[string]error{
-			"cannot create token: I'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
-			"cannot read token: I'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
-			"cannot remove token: I'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
+			"cannot create token: i'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
+			"cannot read token: i'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
+			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
 		} {
 			assert.EqualError(t, err, msg)
 		}

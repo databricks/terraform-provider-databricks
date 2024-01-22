@@ -237,7 +237,7 @@ func TestDataServicePrincipalReadByNameDuplicates(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "abc",
-	}.ExpectError(t, "there are more than 2 Service Principals with name abc")
+	}.ExpectError(t, "there are 2 Service Principals with name abc")
 }
 
 func TestDataServicePrincipalReadNoParams(t *testing.T) {

@@ -63,7 +63,7 @@ func DataSourceServicePrincipal() *schema.Resource {
 					return diag.FromErr(fmt.Errorf("cannot find SP with name %s", response.DisplayName))
 				}
 			} else if len(spList) > 1 {
-				return diag.FromErr(fmt.Errorf("there are more than %d Service Principals with name %s", len(spList), response.DisplayName))
+				return diag.FromErr(fmt.Errorf("there are %d Service Principals with name %s", len(spList), response.DisplayName))
 			}
 
 			sp := spList[0]

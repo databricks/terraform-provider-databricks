@@ -46,6 +46,10 @@ func ResourceExternalLocation() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var createExternalLocationRequest catalog.CreateExternalLocation
 			common.DataToStructPointer(d, s, &createExternalLocationRequest)
 			el, err := w.ExternalLocations.Create(ctx, createExternalLocationRequest)
@@ -61,6 +65,7 @@ func ResourceExternalLocation() *schema.Resource {
 
 			var updateExternalLocationRequest catalog.UpdateExternalLocation
 			common.DataToStructPointer(d, s, &updateExternalLocationRequest)
+			updateExternalLocationRequest.Name = d.Id()
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
 			if err != nil {
 				return err
@@ -84,11 +89,39 @@ func ResourceExternalLocation() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var updateExternalLocationRequest catalog.UpdateExternalLocation
 			common.DataToStructPointer(d, s, &updateExternalLocationRequest)
+			updateExternalLocationRequest.Name = d.Id()
 			updateExternalLocationRequest.Force = force
+
+			if d.HasChange("owner") {
+				_, err = w.ExternalLocations.Update(ctx, catalog.UpdateExternalLocation{
+					Name:  updateExternalLocationRequest.Name,
+					Owner: updateExternalLocationRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateExternalLocationRequest.Owner = ""
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.ExternalLocations.Update(ctx, catalog.UpdateExternalLocation{
+						Name:  updateExternalLocationRequest.Name,
+						Owner: old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
 			return nil
@@ -96,6 +129,10 @@ func ResourceExternalLocation() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
 			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
 			if err != nil {
 				return err
 			}

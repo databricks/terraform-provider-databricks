@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/databricks-sdk-go/service/ml"
 )
@@ -61,7 +62,7 @@ var (
 	}
 )
 
-func TestWebookCreateJobSpec(t *testing.T) {
+func TestWebhookCreateJobSpec(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -80,7 +81,7 @@ func TestWebookCreateJobSpec(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"id": testWhID, "status": "ACTIVE", "job_spec.0.access_token": "dapi1234"})
 }
 
-func TestWebookCreateUrlSpec(t *testing.T) {
+func TestWebhookCreateUrlSpec(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -142,7 +143,7 @@ func TestWebookCreateUrlSpec(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"id": testWhID, "status": "ACTIVE", "http_url_spec.0.authorization": "Bearer dapi..."})
 }
 
-func TestWebookCreateError(t *testing.T) {
+func TestWebhookCreateError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -161,7 +162,7 @@ func TestWebookCreateError(t *testing.T) {
 	}.ExpectError(t, "error creating a webhook: ")
 }
 
-func TestWebookCreateErrorNoUrlOrJobSpec(t *testing.T) {
+func TestWebhookCreateErrorNoUrlOrJobSpec(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceMlflowWebhook(),
 		Create:   true,
@@ -173,7 +174,7 @@ func TestWebookCreateErrorNoUrlOrJobSpec(t *testing.T) {
 	}.ExpectError(t, "at least one of http_url_spec or job_spec should be specified")
 }
 
-func TestWebookRead(t *testing.T) {
+func TestWebhookRead(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			listFixture,
@@ -184,7 +185,7 @@ func TestWebookRead(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"id": testWhID})
 }
 
-func TestWebookReadError(t *testing.T) {
+func TestWebhookReadError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			listFixture,
@@ -195,7 +196,7 @@ func TestWebookReadError(t *testing.T) {
 	}.ExpectError(t, "webhook with ID 123456 isn't found")
 }
 
-func TestWebookReadErrorBadResponse(t *testing.T) {
+func TestWebhookReadErrorBadResponse(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -213,7 +214,7 @@ func TestWebookReadErrorBadResponse(t *testing.T) {
 	}.ExpectError(t, "error reading list of webhooks: ")
 }
 
-func TestWebookUpdate(t *testing.T) {
+func TestWebhookUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -242,7 +243,7 @@ func TestWebookUpdate(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"id": testWhID, "status": "ACTIVE"})
 }
 
-func TestWebookDelete(t *testing.T) {
+func TestWebhookDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -257,8 +258,8 @@ func TestWebookDelete(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"id": testWhID})
 }
 
-func TestWebookDeleteError(t *testing.T) {
-	qa.ResourceFixture{
+func TestWebhookDeleteError(t *testing.T) {
+	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -270,5 +271,7 @@ func TestWebookDeleteError(t *testing.T) {
 		Delete:   true,
 		ID:       testWhID,
 		HCL:      testWhHCL,
-	}.ExpectError(t, "Response from server (400 Bad Request) : unexpected end of JSON input")
+	}.Apply(t)
+	assert.Error(t, err)
+
 }

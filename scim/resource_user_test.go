@@ -438,7 +438,7 @@ func TestResourceUserDelete_Error(t *testing.T) {
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {
@@ -592,6 +592,33 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
 }
 
+func TestResourceUserDelete_ForceDeleteHomeDir(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Status: 200,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+			force_delete_home_dir = true
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {
 	d := ResourceUser().TestResourceData()
 	d.Set("force", true)
@@ -605,7 +632,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Status:   417,
 			Response: apierr.APIErrorBody{
 				Message: "cannot find user",
@@ -627,7 +654,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				TotalResults: 0,
 			},
@@ -648,7 +675,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				Resources: []User{
 					{
@@ -690,7 +717,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				Resources: []User{
 					{

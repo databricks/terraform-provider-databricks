@@ -93,7 +93,7 @@ By default, Databricks creates a VPC in your AWS account for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "random_string" "naming" {
@@ -192,6 +192,13 @@ resource "databricks_mws_workspaces" "this" {
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 
   token {}
+
+  # Optional Custom Tags
+  custom_tags = {
+
+    "SoldToCode" = "1234"
+
+  }
 }
 
 output "databricks_token" {
@@ -210,7 +217,7 @@ To get workspace running, you have to configure a network object:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 variable "databricks_google_service_account" {}
 variable "google_project" {}
@@ -271,7 +278,7 @@ By default, Databricks creates a VPC in your GCP project for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 data "google_client_openid_userinfo" "me" {
@@ -312,7 +319,7 @@ output "databricks_token" {
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
 * `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).
@@ -328,6 +335,7 @@ The following arguments are available:
   * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`.
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
+* `custom_tags` - (Optional / AWS only) - The custom tags key-value pairing that is attached to this workspace. These tags will be applied to clusters automatically in addition to any `default_tags` or `custom_tags` on a cluster level. Please note it can take up to an hour for custom_tags to be set due to scheduling on Control Plane. After custom tags are applied, they can be modified however they can never be completely removed.
 
 ### token block
 
@@ -346,6 +354,7 @@ On AWS, the following arguments could be modified after the workspace is running
 * `credentials_id`
 * `storage_customer_managed_key_id`
 * `private_access_settings_id`
+* `custom_tags`
 
 ## Attribute Reference
 
@@ -357,10 +366,7 @@ In addition to all arguments above, the following attributes are exported:
 * `workspace_status` - (String) workspace status
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
-
-## Import
-
--> **Note** Importing this resource is not currently supported.
+* `custom_tags` - (Map) Custom Tags (if present) added to workspace
 
 ## Timeouts
 
@@ -381,6 +387,10 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 * Mac OS X Yosemite - `sudo discoveryutil udnsflushcaches`
 * Mac OS X Snow Leopard - `sudo dscacheutil -flushcache`
 * Mac OS X Leopard and below - `sudo lookupd -flushcache`
+
+## Import
+
+-> **Note** Importing this resource is not currently supported.
 
 ## Related Resources
 

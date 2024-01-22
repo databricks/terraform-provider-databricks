@@ -30,7 +30,7 @@ The following arguments are supported:
 * `branch` - (Optional) name of the branch for initial checkout. If not specified, the default branch of the repository will be used.  Conflicts with `tag`.  If `branch` is removed, and `tag` isn't specified, then the repository will stay at the previously checked out state.
 * `tag` - (Optional) name of the tag for initial checkout.  Conflicts with `branch`.
 
-## sparse_checkout
+### sparse_checkout
 
 Optional `sparse_checkout` configuration block contains attributes related to [sparse checkout feature](https://docs.databricks.com/repos/git-operations-with-repos.html#configure-sparse-checkout-mode) in Databricks Repos.  It supports following attributes:
 
@@ -45,6 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` -  Repo identifier
 * `commit_hash` - Hash of the HEAD commit at time of the last executed operation. It won't change if you manually perform pull operation via UI or API
+* `workspace_path` - path on Workspace File System (WSFS) in form of `/Workspace` + `path`
 
 ## Access Control
 

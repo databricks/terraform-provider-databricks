@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -18,7 +19,10 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -80,25 +84,26 @@ type importContext struct {
 	Scope importedResources
 
 	// command-line resources (immutable, or set by the single thread)
-	includeUserDomains  bool
-	importAllUsers      bool
-	debug               bool
-	incremental         bool
-	mounts              bool
-	noFormat            bool
-	services            string
-	listing             string
-	match               string
-	lastActiveDays      int64
-	lastActiveMs        int64
-	generateDeclaration bool
-	meAdmin             bool
-	prefix              string
-	accountLevel        bool
-	shImports           map[string]bool
-	notebooksFormat     string
-	updatedSinceStr     string
-	updatedSinceMs      int64
+	includeUserDomains       bool
+	importAllUsers           bool
+	exportDeletedUsersAssets bool
+	debug                    bool
+	incremental              bool
+	mounts                   bool
+	noFormat                 bool
+	services                 []string
+	listing                  string
+	match                    string
+	lastActiveDays           int64
+	lastActiveMs             int64
+	generateDeclaration      bool
+	meAdmin                  bool
+	prefix                   string
+	accountLevel             bool
+	shImports                map[string]bool
+	notebooksFormat          string
+	updatedSinceStr          string
+	updatedSinceMs           int64
 
 	waitGroup *sync.WaitGroup
 
@@ -138,6 +143,13 @@ type importContext struct {
 
 	builtInPolicies      map[string]compute.PolicyFamily
 	builtInPoliciesMutex sync.Mutex
+
+	// Workspace-level UC Metastore information
+	currentMetastore *catalog.GetMetastoreSummaryResponse
+
+	// tracking ignored objects
+	ignoredResourcesMutex sync.Mutex
+	ignoredResources      map[string]struct{}
 }
 
 type mount struct {
@@ -231,6 +243,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		allSps:              map[string]scim.User{},
 		waitGroup:           &sync.WaitGroup{},
 		channels:            makeResourcesChannels(p),
+		ignoredResources:    map[string]struct{}{},
 	}
 }
 
@@ -318,6 +331,12 @@ func (ic *importContext) Run() error {
 				ic.meAdmin = true
 				break
 			}
+		}
+		currentMetastore, err := ic.workspaceClient.Metastores.Summary(ic.Context)
+		if err == nil {
+			ic.currentMetastore = currentMetastore
+		} else {
+			log.Printf("[WARN] can't get current UC metastore: %v", err)
 		}
 	}
 	// Concurrent execution part
@@ -452,6 +471,17 @@ func (ic *importContext) Run() error {
 		statsBytes, _ := json.Marshal(statsData)
 		if _, err = stats.Write(statsBytes); err != nil {
 			return err
+		}
+	}
+
+	// output ignored resources...
+	if ignored, err := os.Create(fmt.Sprintf("%s/ignored_resources.txt", ic.Directory)); err == nil {
+		defer ignored.Close()
+		ic.ignoredResourcesMutex.Lock()
+		keys := maps.Keys(ic.ignoredResources)
+		sort.Strings(keys)
+		for _, s := range keys {
+			ignored.WriteString(s + "\n")
 		}
 	}
 
@@ -692,6 +722,7 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			if !matched {
 				continue
 			}
+			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			if sr.Mode == "data" {
 				return strValue, hcl.Traversal{
 					hcl.TraverseRoot{Name: "data"},
@@ -798,6 +829,10 @@ func (ic *importContext) ResourceName(r *resource) string {
 	return name
 }
 
+func (ic *importContext) isServiceEnabled(service string) bool {
+	return slices.Contains[[]string, string](ic.services, service)
+}
+
 func (ic *importContext) Emit(r *resource) {
 	// TODO: change into channels, if stack trace depth issues would surface
 	_, v := r.MatchPair()
@@ -834,8 +869,8 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	// TODO: add similar condition for checking workspace-level objects only. After new ACLs import is merged
 
-	// TODO: split services into slice?
-	if !strings.Contains(ic.services, ir.Service) {
+	// TODO: split services into slice?  Yes, otherwise it will be problematic with generic names like UC
+	if !ic.isServiceEnabled(ir.Service) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the import", r.Resource, ir.Service)
 		return
 	}
@@ -953,7 +988,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 	for _, tuple := range ss {
 		a, as := tuple.Field, tuple.Schema
 		pathString := strings.Join(append(path, a), ".")
-		raw, ok := d.GetOk(pathString)
+		raw, nonZero := d.GetOk(pathString)
 		// log.Printf("[DEBUG] path=%s, raw='%v'", pathString, raw)
 		if i.ShouldOmitField == nil { // we don't have custom function, so skip computed & default fields
 			if defaultShouldOmitFieldFunc(ic, pathString, as, d) {
@@ -968,16 +1003,24 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 				// sensitive fields are moved to variable depends, variable name is normalized
 				// TODO: handle a case when we have multiple blocks, so names won't be unique
 				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
-				ok = true
+				nonZero = true
 			}
 		}
-		if !ok {
+		shouldSkip := !nonZero
+		if as.Required { // for required fields we must produce a value, even empty...
+			shouldSkip = false
+		} else if as.Default != nil && !reflect.DeepEqual(raw, as.Default) {
+			// In case when have zero value, but there is non-zero default, we also need to produce it
+			shouldSkip = false
+		}
+		if shouldSkip {
 			continue
 		}
 		switch as.Type {
 		case schema.TypeString:
 			value := raw.(string)
-			body.SetAttributeRaw(a, ic.reference(i, append(path, a), value, cty.StringVal(value)))
+			tokens := ic.reference(i, append(path, a), value, cty.StringVal(value))
+			body.SetAttributeRaw(a, tokens)
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))
 		case schema.TypeInt:
@@ -995,6 +1038,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		case schema.TypeFloat:
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
+			// TODO: Resolve references in maps as well, and also support different types inside map...
 			ov := map[string]cty.Value{}
 			for key, iv := range raw.(map[string]any) {
 				v := cty.StringVal(fmt.Sprintf("%v", iv))

@@ -19,7 +19,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/scim"
-	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
@@ -41,20 +40,29 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 			})
 		}
 		if is.Workspace != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_workspace_file",
-				ID:       is.Workspace.Destination,
-			})
+			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 	}
+}
 
+func (ic *importContext) emitFilesFromSlice(slice []string) {
+	for _, p := range slice {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
+}
+
+func (ic *importContext) emitFilesFromMap(m map[string]string) {
+	for _, p := range m {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
 }
 
 func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
-	ic.emitInitScripts(c.InitScripts)
 	if c.AwsAttributes != nil {
 		ic.Emit(&resource{
 			Resource: "databricks_instance_profile",
@@ -80,6 +88,7 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitInitScripts(c.InitScripts)
 	ic.emitSecretsFromSecretsPath(c.SparkConf)
 	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
@@ -112,27 +121,33 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	if userOrSPName == "" {
 		return
 	}
-	// TODO: think about another way of checking for a user. ideally we need to check against the
-	// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
-	if strings.Contains(userOrSPName, "@") {
-		ic.Emit(&resource{
-			Resource:  "databricks_user",
-			Attribute: "user_name",
-			Value:     strings.ToLower(userOrSPName),
-		})
-	} else if common.StringIsUUID(userOrSPName) {
-		ic.Emit(&resource{
-			Resource:  "databricks_service_principal",
-			Attribute: "application_id",
-			Value:     userOrSPName,
-		})
+	if common.StringIsUUID(userOrSPName) {
+		user, err := ic.findSpnByAppID(userOrSPName)
+		if err != nil {
+			log.Printf("[ERROR] Can't find SP with application ID %s", userOrSPName)
+		} else {
+			ic.Emit(&resource{
+				Resource: "databricks_service_principal",
+				ID:       user.ID,
+			})
+		}
+	} else {
+		user, err := ic.findUserByName(strings.ToLower(userOrSPName))
+		if err != nil {
+			log.Printf("[ERROR] Can't find user with name %s", userOrSPName)
+		} else {
+			ic.Emit(&resource{
+				Resource: "databricks_user",
+				ID:       user.ID,
+			})
+		}
 	}
 }
 
 func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
 	if strings.HasPrefix(path, prefix) {
 		parts := strings.SplitN(path, "/", 4)
-		if len(parts) >= 3 {
+		if len(parts) >= 3 && parts[2] != "" {
 			ic.emitUserOrServicePrincipal(parts[2])
 		}
 	}
@@ -143,27 +158,49 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) 
 		return false
 	}
 	parts := strings.SplitN(path, "/", 4)
-	if len(parts) == 3 || (len(parts) == 4 && parts[3] == "") {
-		// TODO: think about another way of checking for a user. ideally we need to check against the
-		// list of users/SPs obtained via SCIM API - this will be done in the refactoring requested by the SCIM team
+	if (len(parts) == 3 || (len(parts) == 4 && parts[3] == "")) && parts[2] != "" {
 		userOrSPName := parts[2]
-		return strings.Contains(userOrSPName, "@") || common.StringIsUUID(userOrSPName)
+		var err error
+		if common.StringIsUUID(userOrSPName) {
+			_, err = ic.findSpnByAppID(userOrSPName)
+			if err != nil {
+				ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
+			}
+		} else {
+			_, err = ic.findUserByName(strings.ToLower(userOrSPName))
+			if err != nil {
+				ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
+			}
+		}
+		return err == nil
 	}
 	return false
 }
 
-func (ic *importContext) emitNotebookOrRepo(path string) {
+func (ic *importContext) emitRepoByPath(path string) {
+	ic.Emit(&resource{
+		Resource:  "databricks_repo",
+		Attribute: "path",
+		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
+	})
+}
+
+func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
-		ic.Emit(&resource{
-			Resource:  "databricks_repo",
-			Attribute: "path",
-			Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-		})
+		ic.emitRepoByPath(path)
 	} else {
 		ic.Emit(&resource{
-			Resource: "databricks_notebook",
+			Resource: "databricks_workspace_file",
 			ID:       path,
 		})
+	}
+}
+
+func (ic *importContext) emitNotebookOrRepo(path string) {
+	if strings.HasPrefix(path, "/Repos") {
+		ic.emitRepoByPath(path)
+	} else {
+		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
 }
 
@@ -250,14 +287,24 @@ func (ic *importContext) emitRoles(objType string, id string, roles []scim.Compl
 	}
 }
 
-func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll libraries.ClusterLibraryList
-	common.DataToStructPointer(d, s, &cll)
-	for _, lib := range cll.Libraries {
+func (ic *importContext) emitLibraries(libs []libraries.Library) {
+	for _, lib := range libs {
+		// Files on DBFS
 		ic.emitIfDbfsFile(lib.Whl)
 		ic.emitIfDbfsFile(lib.Jar)
 		ic.emitIfDbfsFile(lib.Egg)
+		// Files on WSFS
+		ic.emitIfWsfsFile(lib.Whl)
+		ic.emitIfWsfsFile(lib.Jar)
+		ic.emitIfWsfsFile(lib.Egg)
 	}
+
+}
+
+func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
+	var cll libraries.ClusterLibraryList
+	common.DataToStructPointer(d, s, &cll)
+	ic.emitLibraries(cll.Libraries)
 	return nil
 }
 
@@ -266,16 +313,12 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 	if err != nil {
 		return err
 	}
-	if cll.LibraryStatuses != nil {
-		for _, lib := range cll.LibraryStatuses {
-			ic.Emit(&resource{
-				Resource: "databricks_library",
-				ID:       lib.Library.GetID(d.Id()),
-			})
-			ic.emitIfDbfsFile(lib.Library.Egg)
-			ic.emitIfDbfsFile(lib.Library.Jar)
-			ic.emitIfDbfsFile(lib.Library.Whl)
-		}
+	for _, lib := range cll.LibraryStatuses {
+		// Emit workspace file libraries if necessary
+		// Emit Volume libraries when resource is available
+		ic.emitIfDbfsFile(lib.Library.Egg)
+		ic.emitIfDbfsFile(lib.Library.Jar)
+		ic.emitIfDbfsFile(lib.Library.Whl)
 	}
 	return nil
 }
@@ -316,6 +359,12 @@ func (ic *importContext) cacheGroups() error {
 		log.Printf("[INFO] Cached %d groups", len(ic.allGroups))
 	}
 	return nil
+}
+
+func (ic *importContext) addIgnoredResource(msg string) {
+	ic.ignoredResourcesMutex.Lock()
+	defer ic.ignoredResourcesMutex.Unlock()
+	ic.ignoredResources[msg] = struct{}{}
 }
 
 const (
@@ -484,6 +533,13 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 	}
 }
 
+func (ic *importContext) emitIfWsfsFile(path string) {
+	if strings.HasPrefix(path, "/Workspace/") {
+		normalPath := strings.TrimPrefix(path, "/Workspace")
+		ic.emitWorkspaceFileOrRepo(normalPath)
+	}
+}
+
 // todo: generic with go1.18
 type dbsqlListResponse struct {
 	Results    []map[string]any `json:"results"`
@@ -525,14 +581,13 @@ func (ic *importContext) getSqlDataSources() (map[string]string, error) {
 	ic.sqlDatasourcesMutex.Lock()
 	defer ic.sqlDatasourcesMutex.Unlock()
 	if ic.sqlDatasources == nil {
-		var dss []sql.DataSource
-		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
+		dss, err := ic.workspaceClient.DataSources.List(ic.Context)
 		if err != nil {
 			return nil, err
 		}
 		ic.sqlDatasources = make(map[string]string, len(dss))
 		for _, ds := range dss {
-			ic.sqlDatasources[ds.ID] = ds.EndpointID
+			ic.sqlDatasources[ds.Id] = ds.WarehouseId
 		}
 	}
 	return ic.sqlDatasources, nil
@@ -777,6 +832,13 @@ func generateUniqueID(v string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
 }
 
+func shouldOmitMd5Field(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "md5" { // `md5` is kind of computed, but not declared as it...
+		return true
+	}
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
 func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) string {
 	name := d.Get("path").(string)
 	if name == "" {
@@ -793,6 +855,41 @@ func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
 		return obs.ModifiedAtInteractive.TimeMillis
 	}
 	return obs.ModifiedAt
+}
+
+func (ic *importContext) shouldEmitForPath(path string) bool {
+	if !ic.exportDeletedUsersAssets && strings.HasPrefix(path, "/Users/") {
+		userDir := userDirRegex.ReplaceAllString(path, "$1")
+		return ic.IsUserOrServicePrincipalDirectory(userDir, "/Users")
+	}
+	return true
+}
+
+func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
+	if ic.shouldEmitForPath(path) {
+		ic.Emit(&resource{
+			Resource:    resourceType,
+			ID:          path,
+			Incremental: ic.incremental,
+		})
+	} else {
+		log.Printf("[WARN] Not emitting a workspace object %s for deleted user. Path='%s'", resourceType, path)
+		ic.addIgnoredResource(fmt.Sprintf("%s. path=%s", resourceType, path))
+	}
+}
+
+func (ic *importContext) emitSqlParentDirectory(parent string) {
+	if parent == "" {
+		return
+	}
+	res := sqlParentRegexp.FindStringSubmatch(parent)
+	if len(res) > 1 {
+		ic.Emit(&resource{
+			Resource:  "databricks_directory",
+			Attribute: "object_id",
+			Value:     res[1],
+		})
+	}
 }
 
 func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
@@ -816,11 +913,7 @@ func createListWorkspaceObjectsFunc(objType string, resourceType string, objName
 			if !ic.MatchesName(object.Path) {
 				continue
 			}
-			ic.Emit(&resource{
-				Resource:    resourceType,
-				ID:          object.Path,
-				Incremental: ic.incremental,
-			})
+			ic.maybeEmitWorkspaceObject(resourceType, object.Path)
 
 			if offset%50 == 0 {
 				log.Printf("[INFO] Scanned %d of %d %ss", offset+1, len(objectsList), objName)

@@ -53,6 +53,10 @@ func TestMwsAccWorkspaces(t *testing.T) {
 			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
 
+			custom_tags = {
+				"randomkey" = "randomvalue"
+			}
+
 			token {
 				comment = "Test {var.RANDOM}"
 			}

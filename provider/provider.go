@@ -2,10 +2,8 @@ package provider
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"reflect"
 	"sort"
 	"strings"
@@ -62,6 +60,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster_policy":          policies.DataSourceClusterPolicy(),
 			"databricks_catalogs":                catalog.DataSourceCatalogs(),
 			"databricks_current_config":          mws.DataSourceCurrentConfiguration(),
+			"databricks_current_metastore":       catalog.DataSourceCurrentMetastore(),
 			"databricks_current_user":            scim.DataSourceCurrentUser(),
 			"databricks_dbfs_file":               storage.DataSourceDbfsFile(),
 			"databricks_dbfs_file_paths":         storage.DataSourceDbfsFilePaths(),
@@ -111,6 +110,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_external_location":           catalog.ResourceExternalLocation(),
 			"databricks_git_credential":              repos.ResourceGitCredential(),
 			"databricks_global_init_script":          workspace.ResourceGlobalInitScript(),
+			"databricks_grant":                       catalog.ResourceGrant(),
 			"databricks_grants":                      catalog.ResourceGrants(),
 			"databricks_group":                       scim.ResourceGroup(),
 			"databricks_group_instance_profile":      aws.ResourceGroupInstanceProfile(),
@@ -249,24 +249,6 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
 			cfg.AuthType = newer
 		}
-	}
-	// The OAuth2 library used by the SDK caches the context, so for long-lived applications
-	// where tokens may need to be refreshed, we need to use a context with no timeout.
-	r, err := http.NewRequest("", "", nil)
-	if err != nil {
-		return nil, diag.FromErr(err)
-	}
-	err = cfg.Authenticate(r)
-	// When a user creates a workspace and then configures the Databricks provider in the same
-	// module for that workspace, the workspace does not exist at planning time, so computed
-	// attributes like the host are not included in the ConfigureProvider call. In this case,
-	// authentication will fail, but it is safe to continue: the client will not be used, as
-	// no resources yet exist in the as-yet-nonexisting workspace, so Terraform will not attempt
-	// to fetch any resources.
-	if errors.Is(err, config.ErrCannotConfigureAuth) {
-		tflog.Debug(ctx, "default authentication failed, continuing. During planning, this is expected when the configured workspace does not yet exist.")
-	} else if err != nil {
-		return nil, diag.FromErr(err)
 	}
 	client, err := client.New(cfg)
 	if err != nil {

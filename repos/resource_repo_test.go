@@ -50,7 +50,8 @@ func TestResourceRepoRead(t *testing.T) {
 		ID:       repoIDStr,
 	}.ApplyAndExpectData(t,
 		map[string]any{"id": repoIDStr, "path": path, "branch": branch, "git_provider": provider,
-			"url": url, "commit_hash": "7e0847ede61f07adede22e2bcce6050216489171"})
+			"url": url, "commit_hash": "7e0847ede61f07adede22e2bcce6050216489171",
+			"workspace_path": "/Workspace" + path})
 }
 
 func TestResourceRepoRead_NotFound(t *testing.T) {

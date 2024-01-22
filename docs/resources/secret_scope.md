@@ -20,7 +20,7 @@ The following arguments are supported:
 * `name` - (Required) Scope name requested by the user. Must be unique within a workspace. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
 * `initial_manage_principal` - (Optional) The principal with the only possible value `users` that is initially granted `MANAGE` permission to the created scope.  If it's omitted, then the [databricks_secret_acl](secret_acl.md) with `MANAGE` permission applied to the scope is assigned to the API request issuer's user identity (see [documentation](https://docs.databricks.com/dev-tools/api/latest/secrets.html#create-secret-scope)). This part of the state cannot be imported.
 
-## keyvault_metadata
+### keyvault_metadata
 
 On Azure, it is possible to create Azure Databricks secret scopes backed by Azure Key Vault. Secrets are stored in Azure Key Vault and can be accessed through the Azure Databricks secrets utilities, making use of Azure Databricks access control and secret redaction. A secret scope may be configured with at most one Key Vault. 
 

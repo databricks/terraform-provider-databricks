@@ -26,7 +26,7 @@ To get started with Unity Catalog, this guide takes you throw the following high
   - [Provider initialization](#provider-initialization)
   - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore-and-link-it-to-workspaces)
   - [Configure external locations and credentials](#configure-external-locations-and-credentials)
-  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)  
+  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)
   - [Configure Unity Catalog clusters](#configure-unity-catalog-clusters)
 
 ## Provider initialization
@@ -204,8 +204,7 @@ Each metastore exposes a 3-level namespace (catalog-schema-table) by which data 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
-  name         = "sandbox"
+  name = "sandbox"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net",
     azurerm_storage_container.ext_storage.name,
   azurerm_storage_account.ext_storage.name)

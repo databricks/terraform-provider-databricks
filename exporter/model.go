@@ -220,7 +220,8 @@ func (r *resource) ImportResource(ic *importContext) {
 			return
 		}
 		if r.ID == "" {
-			log.Printf("[INFO] Cannot find %s", r)
+			log.Printf("[WARN] Cannot find %s", r)
+			ic.addIgnoredResource(fmt.Sprintf("%s: %s=%s", r.Resource, r.Attribute, r.Value))
 			return
 		}
 	}

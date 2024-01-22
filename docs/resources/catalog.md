@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_catalog Resource
 
+-> **Note** This resource could be only used with workspace-level provider!
+
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
 
 A `databricks_catalog` is contained within [databricks_metastore](metastore.md) and can contain [databricks_schema](schema.md). By default, Databricks creates `default` schema for every new catalog, but Terraform plugin is removing this auto-created schema, so that resource destruction could be done in a clean way.
@@ -11,9 +13,8 @@ A `databricks_catalog` is contained within [databricks_metastore](metastore.md) 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }
@@ -40,8 +41,8 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `metastore_id` - ID of the parent metastore.
 * `id` - ID of this catalog - same as the `name`.
-* `metastore_id` - ID of the metastore.
 
 ## Import
 

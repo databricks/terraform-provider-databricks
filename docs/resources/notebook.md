@@ -42,6 +42,25 @@ resource "databricks_notebook" "lesson" {
 }
 ```
 
+## Trim Extensions
+
+```hcl
+data "databricks_current_user" "me" {
+}
+
+resource "databricks_notebook" "example.py" {
+  source = "${path.module}/example.py"
+  path   = "${data.databricks_current_user.me.home}/AA/BB/example.py"
+  trim_export_extension = true
+}
+```
+
+This will create a notebook named `example` on databricks workspace; when exporting as `source` in the GUI, it will be renamed `example.py`.
+
+You can run the notebook with `%run example`.
+
+If you do not specify `trim_export_extension` argument and include the a extension in the `path` argument, the notebook will be created as `example.py`, but when exporting as `source` in GUI, it will be renamed `example.py.py`.
+
 ## Argument Reference
 
 -> **Note** Notebook on Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed notebook won't be overwritten by Terraform, if there's no local change to notebook sources. Notebooks are identified by their path, so changing notebook's name manually on the workspace and then applying Terraform state would result in creation of notebook from Terraform state.
@@ -52,6 +71,7 @@ The size of a notebook source code must not exceed a few megabytes. The followin
 * `source` - Path to notebook in source code format on local filesystem. Conflicts with `content_base64`.
 * `content_base64` - The base64-encoded notebook source code. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a notebook with configuration properties for a data pipeline.
 * `language` -  (required with `content_base64`) One of `SCALA`, `PYTHON`, `SQL`, `R`.
+* `trim_export_extension` (optional) - defaults to `false`; setting this to `true` will create notebooks without extensions even when `path` specifies an extension. This functionality exists to prevent exports of notebooks with duplicate extensions by databricks workspace GUI.
 
 ## Attribute Reference
 

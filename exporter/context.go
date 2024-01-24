@@ -628,6 +628,7 @@ func (ic *importContext) generateVariables() error {
 func (ic *importContext) generateHclForResources(sh *os.File) {
 	resources := ic.Scope.Sorted()
 	scopeSize := ic.Scope.Len()
+	t1 := time.Now()
 	log.Printf("[INFO] Generating configuration for %d resources", scopeSize)
 	for i, r := range resources {
 		ir := ic.Importables[r.Resource]
@@ -639,6 +640,7 @@ func (ic *importContext) generateHclForResources(sh *os.File) {
 		if ir.Ignore != nil && ir.Ignore(ic, r) {
 			continue
 		}
+		// log.Printf("[DEBUG] Generating %s: %s", r.Resource, r.ID)
 		body := f.Body()
 		if ir.Body != nil {
 			err := ir.Body(ic, body, r)
@@ -667,6 +669,8 @@ func (ic *importContext) generateHclForResources(sh *os.File) {
 	for k := range ic.shImports {
 		sh.WriteString(k + "\n")
 	}
+	log.Printf("[INFO] Finished generation of configuration for %d resources (took %v seconds)", scopeSize,
+		time.Since(t1).Seconds())
 }
 
 func (ic *importContext) MatchesName(n string) bool {

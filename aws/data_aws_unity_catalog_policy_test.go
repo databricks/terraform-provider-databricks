@@ -46,14 +46,9 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
       "Action": [
         "sts:AssumeRole"
       ],
-      "Principal": {
-        "AWS": "arn:aws:iam::123456789098:root"
-      },
-      "Condition": {
-        "ArnEquals": {
-          "aws:PrincipalArn": "arn:aws:iam::123456789098:role/databricks-role"
-        }
-      }
+      "Resource": [
+        "arn:aws:iam::123456789098:role/databricks-role"
+      ]
     },
     {
       "Effect": "Allow",
@@ -109,14 +104,9 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
       "Action": [
         "sts:AssumeRole"
       ],
-      "Principal": {
-        "AWS": "arn:aws:iam::123456789098:root"
-      },
-      "Condition": {
-        "ArnEquals": {
-          "aws:PrincipalArn": "arn:aws:iam::123456789098:role/databricks-role"
-        }
-      }
+      "Resource": [
+        "arn:aws:iam::123456789098:role/databricks-role"
+      ]
     }
   ]
 }`,

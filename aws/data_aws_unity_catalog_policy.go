@@ -38,13 +38,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m interfac
 				Actions: []string{
 					"sts:AssumeRole",
 				},
-				Principal: map[string]string{
-					"AWS": fmt.Sprintf("arn:aws:iam::%s:root", awsAccountId),
-				},
-				Condition: map[string]map[string]string{
-					"ArnEquals": {
-						"aws:PrincipalArn": fmt.Sprintf("arn:aws:iam::%s:role/%s", awsAccountId, roleName),
-					},
+				Resources: []string{
+					fmt.Sprintf("arn:aws:iam::%s:role/%s", awsAccountId, roleName),
 				},
 			},
 		},

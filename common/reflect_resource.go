@@ -182,6 +182,7 @@ func handleComputed(typeField reflect.StructField, schema *schema.Schema) {
 	for _, tag := range tfTags {
 		if tag == "computed" {
 			schema.Computed = true
+			schema.Required = false
 			break
 		}
 	}

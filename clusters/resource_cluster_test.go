@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,15 +20,15 @@ func TestResourceClusterCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/create",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.ClusterSpec{
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 				},
-				Response: ClusterInfo{
-					ClusterID: "abc",
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
 					State:     ClusterStateRunning,
 				},
 			},
@@ -35,12 +36,12 @@ func TestResourceClusterCreate(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  ClusterStateRunning,
 				},

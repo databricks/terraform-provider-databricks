@@ -518,6 +518,7 @@ func (ic *importContext) startImportChannels() {
 					log.Printf("[DEBUG] channel for %s, channel size=%d got %v", resourceType, len(ch), r)
 					if r != nil {
 						r.ImportResource(ic)
+						log.Printf("[DEBUG] Finished importing %s, %v", resourceType, r)
 					}
 				}
 			}()

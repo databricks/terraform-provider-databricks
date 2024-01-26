@@ -273,7 +273,7 @@ type JobSettings struct {
 	Queue                *jobs.QueueSettings           `json:"queue,omitempty"`
 	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"computed"`
 	Health               *JobHealth                    `json:"health,omitempty"`
-	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
+	Parameters           []jobs.JobParameterDefinition `json:"parameters,omitempty" tf:"alias:parameter"`
 	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
 	EditMode             jobs.CreateJobEditMode        `json:"edit_mode,omitempty"`
 }
@@ -340,12 +340,6 @@ type JobParameter struct {
 	Name    string `json:"name,omitempty"`
 	Default string `json:"default,omitempty"`
 	Value   string `json:"value,omitempty"`
-}
-
-// Job-level parameter definitions
-type JobParameterDefinition struct {
-	Name    string `json:"name,omitempty"`
-	Default string `json:"default,omitempty"`
 }
 
 // RunState of the job

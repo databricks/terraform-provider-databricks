@@ -371,7 +371,7 @@ func TestResourceJobCreate_JobParameters(t *testing.T) {
 						},
 					},
 					MaxConcurrentRuns: 1,
-					Parameters: []JobParameterDefinition{
+					Parameters: []jobs.JobParameterDefinition{
 						{
 							Name:    "hello",
 							Default: "world",
@@ -400,7 +400,7 @@ func TestResourceJobCreate_JobParameters(t *testing.T) {
 								TaskKey: "b",
 							},
 						},
-						Parameters: []JobParameterDefinition{
+						Parameters: []jobs.JobParameterDefinition{
 							{
 								Name:    "hello",
 								Default: "world",

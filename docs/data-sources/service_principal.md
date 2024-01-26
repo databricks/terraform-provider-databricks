@@ -39,6 +39,7 @@ Data source allows you to pick service principals by one of the following attrib
 Data source exposes the following attributes:
 
 - `id` - The id of the service principal.
+- `application_id` - The application ID of the service principal.
 - `external_id` - ID of the service principal in an external identity provider.
 - `display_name` - Display name of the [service principal](../resources/service_principal.md), e.g. `Foo SPN`.
 - `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/11111111-2222-3333-4444-555666777888`.

@@ -575,6 +575,7 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 		ic.waitGroup.Done()
 	}
 	// update existing file if incremental mode
+	numResources := len(newResources)
 	if ic.incremental {
 		log.Printf("[DEBUG] Starting to merge existing resources for %s", generatedFile)
 		f := hclwrite.NewEmptyFile()
@@ -586,6 +587,7 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 			} else {
 				log.Printf("[DEBUG] resource %s doesn't exist, adding...", blockName)
 				f.Body().AppendBlock(block)
+				numResources = numResources + 1
 			}
 		}
 		_, err = tf.WriteString(string(f.Bytes()))
@@ -595,8 +597,7 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 		log.Printf("[DEBUG] Finished merging existing resources for %s", generatedFile)
 	}
 	tf.Close()
-	stat, err := os.Stat(generatedFile)
-	if err != nil && stat.Size() == 0 {
+	if numResources == 0 {
 		log.Printf("[DEBUG] removing empty file %s - no resources for a given service", generatedFile)
 		os.Remove(generatedFile)
 	}

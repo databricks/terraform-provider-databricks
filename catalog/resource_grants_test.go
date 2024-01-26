@@ -165,6 +165,30 @@ func TestGrantCreateMetastoreId(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestErrorIfWrongMetastoreId(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "old_id",
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		metastore = "new_id"
+
+		grant {
+			principal = "me"
+			privileges = ["MODIFY"]
+		}`,
+	}.ExpectError(t, "metastore_id must be empty or equal to the metastore id assigned to the workspace: old_id. "+
+		"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set")
+}
+
 func TestWaitUntilReady(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

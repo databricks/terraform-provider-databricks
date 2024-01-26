@@ -595,8 +595,8 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 		log.Printf("[DEBUG] Finished merging existing resources for %s", generatedFile)
 	}
 	tf.Close()
-	stat, _ := os.Stat(generatedFile)
-	if stat.Size() == 0 {
+	stat, err := os.Stat(generatedFile)
+	if err != nil && stat.Size() == 0 {
 		log.Printf("[DEBUG] removing empty file %s - no resources for a given service", generatedFile)
 		os.Remove(generatedFile)
 	}

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
@@ -20,8 +21,10 @@ var logLevel = levelWriter{"[INFO]", "[ERROR]", "[WARN]"}
 func (lw *levelWriter) Write(p []byte) (n int, err error) {
 	a := string(p)
 	for _, l := range *lw {
-		if strings.Contains(a, l) {
-			return os.Stdout.Write(p)
+		if strings.HasPrefix(a, l) {
+			timeStr := time.Now().Local().Format(time.RFC3339Nano)
+			logStr := a[0:len(l)] + " " + timeStr + ": " + strings.TrimLeft(a[len(l):len(a)-1], " ") + "\n"
+			return os.Stdout.WriteString(logStr)
 		}
 	}
 	return

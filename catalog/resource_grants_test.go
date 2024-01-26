@@ -106,7 +106,7 @@ func TestGrantCreateMetastoreId(t *testing.T) {
 						},
 						{
 							Principal:  "someone-else",
-							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+							Privileges: []catalog.Privilege{"SELECT", "USE_SHARE"},
 						},
 					},
 				},
@@ -118,12 +118,12 @@ func TestGrantCreateMetastoreId(t *testing.T) {
 					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []catalog.Privilege{"MODIFY"},
+							Add:       []catalog.Privilege{"USE_SHARE"},
 							Remove:    []catalog.Privilege{"SELECT"},
 						},
 						{
 							Principal: "someone-else",
-							Remove:    []catalog.Privilege{"MODIFY", "SELECT"},
+							Remove:    []catalog.Privilege{"SELECT", "USE_SHARE"},
 						},
 					},
 				},
@@ -135,7 +135,7 @@ func TestGrantCreateMetastoreId(t *testing.T) {
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []catalog.Privilege{"MODIFY"},
+							Privileges: []catalog.Privilege{"USE_SHARE"},
 						},
 					},
 				},
@@ -147,7 +147,7 @@ func TestGrantCreateMetastoreId(t *testing.T) {
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{
 							Principal:  "me",
-							Privileges: []catalog.Privilege{"MODIFY"},
+							Privileges: []catalog.Privilege{"USE_SHARE"},
 						},
 					},
 				},
@@ -160,7 +160,7 @@ func TestGrantCreateMetastoreId(t *testing.T) {
 
 		grant {
 			principal = "me"
-			privileges = ["MODIFY"]
+			privileges = ["USE_SHARE"]
 		}`,
 	}.ApplyNoError(t)
 }

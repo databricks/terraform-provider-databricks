@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -55,6 +56,10 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 
 	m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 		return old == "false" && new == "true"
+	}
+
+	m["name"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+		return strings.EqualFold(old, new)
 	}
 
 	return m

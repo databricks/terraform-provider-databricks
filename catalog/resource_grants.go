@@ -319,11 +319,19 @@ func ResourceGrants() *schema.Resource {
 			return mapping.validate(d, grants)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			securable, name := mapping.kv(d)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			err := replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
+			err = replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 			if err != nil {
 				return err
 			}
@@ -346,6 +354,14 @@ func ResourceGrants() *schema.Resource {
 			return common.StructToData(sdkPermissionsListToPermissionsList(*grants), s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			securable, name, err := parseId(d)
 			if err != nil {
 				return err
@@ -356,6 +372,14 @@ func ResourceGrants() *schema.Resource {
 			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			securable, name, err := parseId(d)
 			if err != nil {
 				return err

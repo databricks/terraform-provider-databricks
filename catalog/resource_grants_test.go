@@ -85,6 +85,110 @@ func TestGrantCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestGrantCreateMetastoreId(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "metastore_id",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"SELECT", "USE_SHARE"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"USE_SHARE"},
+							Remove:    []catalog.Privilege{"SELECT"},
+						},
+						{
+							Principal: "someone-else",
+							Remove:    []catalog.Privilege{"SELECT", "USE_SHARE"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"USE_SHARE"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"USE_SHARE"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		metastore = "metastore_id"
+
+		grant {
+			principal = "me"
+			privileges = ["USE_SHARE"]
+		}`,
+	}.ApplyNoError(t)
+}
+
+func TestErrorIfWrongMetastoreId(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId: "old_id",
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		metastore = "new_id"
+
+		grant {
+			principal = "me"
+			privileges = ["MODIFY"]
+		}`,
+	}.ExpectError(t, "metastore_id must be empty or equal to the metastore id assigned to the workspace: old_id. "+
+		"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set")
+}
+
 func TestWaitUntilReady(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

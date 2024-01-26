@@ -42,12 +42,12 @@ type stateApproximation struct {
 }
 
 // TODO: check if it's used directly by multiple threads?
-func (s *stateApproximation) Resources() []resourceApproximation {
+func (s *stateApproximation) Resources() *[]resourceApproximation {
 	s.mutex.RLocker().Lock()
 	defer s.mutex.RLocker().Unlock()
-	c := make([]resourceApproximation, len(s.resources))
-	copy(c, s.resources)
-	return c
+	// c := make([]resourceApproximation, len(s.resources))
+	// copy(c, s.resources)
+	return &s.resources
 }
 
 func (s *stateApproximation) Has(r *resource) bool {

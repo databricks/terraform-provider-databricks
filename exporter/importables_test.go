@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"sync"
@@ -38,7 +39,6 @@ func importContextForTest() *importContext {
 	return &importContext{
 		Importables:              resourcesMap,
 		Resources:                p.ResourcesMap,
-		Files:                    map[string]*hclwrite.File{},
 		testEmits:                map[string]bool{},
 		nameFixes:                nameFixes,
 		waitGroup:                &sync.WaitGroup{},
@@ -946,6 +946,7 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAd
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		os.MkdirAll(ic.Directory, 0755)
 		defer os.RemoveAll(ic.Directory)
 		ic.testEmits = nil
 		ic.meAdmin = asAdmin
@@ -955,6 +956,16 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAd
 		ic.startImportChannels()
 		cb(ic)
 	})
+}
+
+func getGeneratedFile(ic *importContext, service string) string {
+	fileName := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
+	content, err := os.ReadFile(fileName)
+	if err != nil {
+		log.Printf("[ERROR] can't read file %s", fileName)
+		return ""
+	}
+	return string(content)
 }
 
 func TestNotebookGeneration(t *testing.T) {
@@ -998,12 +1009,12 @@ func TestNotebookGeneration(t *testing.T) {
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
 		  source = "${path.module}/notebooks/First/Second_123.py"
 		  path   = "/First/Second"
-		}`), string(ic.Files["notebooks"].Bytes()))
+		}`), getGeneratedFile(ic, "notebooks"))
 	})
 }
 
@@ -1048,14 +1059,14 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
 		  source   = "${path.module}/notebooks/First/Second_123.ipynb"
 		  path     = "/First/Second"
 		  language = "PYTHON"
 		  format   = "JUPYTER"
-		}`), string(ic.Files["notebooks"].Bytes()))
+		}`), getGeneratedFile(ic, "notebooks"))
 	})
 }
 
@@ -1111,12 +1122,12 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "fir_st_second_123" {
 		  source = "${path.module}/notebooks/Fir_st_/Second_123.py"
 		  path   = "/Fir\"st\\/Second"
-		}`), string(ic.Files["notebooks"].Bytes()))
+		}`), getGeneratedFile(ic, "notebooks"))
 	})
 }
 
@@ -1159,11 +1170,11 @@ func TestDirectoryGeneration(t *testing.T) {
 
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_directory" "first_1234" {
 		  path = "/first"
-		}`), string(ic.Files["directories"].Bytes()))
+		}`), getGeneratedFile(ic, "directories"))
 	})
 }
 
@@ -1187,13 +1198,13 @@ func TestGlobalInitScriptGen(t *testing.T) {
 
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_global_init_script" "new_importing_things" {
 		  source  = "${path.module}/files/new_importing_things.sh"
 		  name    = "New: Importing ^ Things"
 		  enabled = true
-		}`), string(ic.Files["workspace"].Bytes()))
+		}`), getGeneratedFile(ic, "workspace"))
 	})
 }
 
@@ -1219,13 +1230,13 @@ func TestSecretGen(t *testing.T) {
 
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_secret" "a_b_eb2980a5a2" {
 		  string_value = var.string_value_a_b_eb2980a5a2
 		  scope        = "a"
 		  key          = "b"
-		}`), string(ic.Files["secrets"].Bytes()))
+		}`), getGeneratedFile(ic, "secrets"))
 	})
 }
 
@@ -1254,12 +1265,12 @@ func TestDbfsFileGen(t *testing.T) {
 
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_dbfs_file" "_0cc175b9c0f1b6a831c399e269772661_a" {
 		  source = "${path.module}/files/_0cc175b9c0f1b6a831c399e269772661_a"
 		  path   = "a"
-		}`), string(ic.Files["storage"].Bytes()))
+		}`), getGeneratedFile(ic, "storage"))
 	})
 }
 

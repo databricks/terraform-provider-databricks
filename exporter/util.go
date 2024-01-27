@@ -126,7 +126,7 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	_, exists := ic.emittedUsers[userOrSPName]
 	ic.emittedUsersMutex.RUnlock()
 	if exists {
-		log.Printf("[DEBUG] user or SP %s already emitted...", userOrSPName)
+		// log.Printf("[DEBUG] user or SP %s already emitted...", userOrSPName)
 		return
 	}
 	if common.StringIsUUID(userOrSPName) {
@@ -194,7 +194,7 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, 
 	result, exists := ic.userOrSpDirectories[userDir]
 	ic.userOrSpDirectoriesMutex.RUnlock()
 	if exists {
-		log.Printf("[DEBUG] Directory %s already checked. Result=%v", userDir, result)
+		// log.Printf("[DEBUG] Directory %s already checked. Result=%v", userDir, result)
 		return result
 	}
 	var err error
@@ -265,6 +265,7 @@ func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
 	if v.ObjectType != workspace.Directory {
 		return true
 	}
+	// TODO: rewrite to use suffix check, etc., instead of split and slice contains?
 	parts := strings.Split(v.Path, "/")
 	result := len(parts) > 1 && slices.Contains[[]string, string](directoriesToIgnore, parts[len(parts)-1])
 	if result {

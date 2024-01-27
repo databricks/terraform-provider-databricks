@@ -36,30 +36,39 @@ type resourceApproximation struct {
 }
 
 type resourceApproximationHolder struct {
-	mutex     sync.RWMutex
-	resources []resourceApproximation
+	mutex      sync.RWMutex
+	resources  []resourceApproximation
+	attributes map[string]struct{}
+}
+
+func makeMatchPair(k, v string) string {
+	return k + "/" + v
 }
 
 func (rah *resourceApproximationHolder) Has(r *resource) bool {
+	k, v := r.MatchPair()
+	matchPairKey := makeMatchPair(k, v)
+	// log.Printf("[DEBUG] resourceApproximationHolder.Has is called for %s/%s", k, v)
 	rah.mutex.RLocker().Lock()
 	defer rah.mutex.RLocker().Unlock()
-	k, v := r.MatchPair()
-	// TODO: can we generate unique keys for direct lookup?
-	for _, sr := range rah.resources {
-		for _, i := range sr.Instances {
-			tv, ok := i.Attributes[k].(string)
-			if ok && tv == v {
-				return true
-			}
-		}
-	}
-	return false
+	_, exists := rah.attributes[matchPairKey]
+	// log.Printf("[DEBUG] resourceApproximationHolder.Has is finished. Resource found? %v", exists)
+	return exists
 }
 
 func (rah *resourceApproximationHolder) Append(ra resourceApproximation) {
+	// log.Printf("[DEBUG] resourceApproximationHolder.Append: %v. Instances count=%d", ra, len(ra.Instances))
 	rah.mutex.Lock()
 	defer rah.mutex.Unlock()
 	rah.resources = append(rah.resources, ra)
+	for _, i := range ra.Instances {
+		for k, v := range i.Attributes {
+			tv, ok := v.(string)
+			if ok {
+				rah.attributes[makeMatchPair(k, tv)] = struct{}{}
+			}
+		}
+	}
 }
 
 type stateApproximation struct {
@@ -69,7 +78,7 @@ type stateApproximation struct {
 func newStateApproximation(suppported_resources []string) *stateApproximation {
 	sa := stateApproximation{rmap: map[string]*resourceApproximationHolder{}}
 	for _, k := range suppported_resources {
-		sa.rmap[k] = &resourceApproximationHolder{}
+		sa.rmap[k] = &resourceApproximationHolder{attributes: map[string]struct{}{}}
 	}
 	return &sa
 }

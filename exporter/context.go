@@ -76,6 +76,7 @@ type importContext struct {
 	workspaceClient *databricks.WorkspaceClient
 	accountClient   *databricks.AccountClient
 
+	// TODO: do we need per-resource type channels? What about single channel and many handlers?
 	channels map[string]resourceChannel
 
 	// mutable resources

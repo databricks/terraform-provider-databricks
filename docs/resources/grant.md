@@ -32,15 +32,11 @@ See [databricks_grants Metastore grants](grants.md#metastore-grants) for the lis
 
 ```hcl
 resource "databricks_grant" "sandbox_data_engineers" {
-  metastore = databricks_metastore.this.id
-
   principal  = "Data Engineers"
   privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
 }
 
 resource "databricks_grant" "sandbox_data_sharer" {
-  metastore = databricks_metastore.this.id
-
   principal  = "Data Sharer"
   privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
 }

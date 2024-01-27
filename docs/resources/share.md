@@ -33,6 +33,19 @@ resource "databricks_share" "some" {
 }
 ```
 
+Creating a Delta Sharing share and add a schema to it(including all current and future tables).
+
+```hcl
+resource "databricks_share" "schema_share" {
+    name = "schema_share"
+    object {
+        name = "catalog_name.schema_name"
+        data_object_type = "SCHEMA"
+        history_data_sharing_status = "ENABLED"
+    }
+}
+```
+
 Creating a Delta Sharing share and share a table with partitions spec and history
 
 ```hcl

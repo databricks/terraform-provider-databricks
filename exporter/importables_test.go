@@ -32,10 +32,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/maps"
 )
 
 func importContextForTest() *importContext {
 	p := provider.DatabricksProvider()
+	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
 		Importables:              resourcesMap,
 		Resources:                p.ResourcesMap,
@@ -44,9 +46,12 @@ func importContextForTest() *importContext {
 		waitGroup:                &sync.WaitGroup{},
 		allUsers:                 map[string]scim.User{},
 		allSps:                   map[string]scim.User{},
-		channels:                 makeResourcesChannels(p),
+		channels:                 makeResourcesChannels(supportedResources),
 		exportDeletedUsersAssets: false,
 		ignoredResources:         map[string]struct{}{},
+		State:                    newStateApproximation(supportedResources),
+		emittedUsers:             map[string]struct{}{},
+		userOrSpDirectories:      map[string]bool{},
 	}
 }
 

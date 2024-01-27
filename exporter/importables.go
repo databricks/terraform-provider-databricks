@@ -48,7 +48,6 @@ var (
 	fileNameNormalizationRegex   = regexp.MustCompile(`[^-_\w/.@]`)
 	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.\d+\.new_cluster\.\d+\.)`)
 	dltClusterRegex              = regexp.MustCompile(`^(cluster\.\d+\.)`)
-	userDirRegex                 = regexp.MustCompile(`^(/Users/[^/]+)(/.*)?$`)
 	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
 	dltDefaultStorageRegex       = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
@@ -297,7 +296,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			lastActiveMs := ic.getLastActiveMs()
 			nonInteractiveClusters := []string{"JOB", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
 			for offset, c := range clusters {
-				log.Printf("[DEBUG] Cluster %s, source: %s", c.ClusterID, c.ClusterSource)
 				if slices.Contains(nonInteractiveClusters, string(c.ClusterSource)) {
 					// TODO: Should we check cluster name as well?
 					// jobRunClusterNameRegex = regexp.MustCompile(`^job-\d+-run-\d+$`)
@@ -2051,7 +2049,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 
-			if r.ID == "/Shared" || r.ID == "/Users" || ic.IsUserOrServicePrincipalDirectory(r.ID, "/Users") {
+			if r.ID == "/Shared" || r.ID == "/Users" || ic.IsUserOrServicePrincipalDirectory(r.ID, "/Users", true) {
 				r.Mode = "data"
 			}
 

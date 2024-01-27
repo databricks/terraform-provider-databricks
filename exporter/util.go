@@ -121,10 +121,19 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	if userOrSPName == "" {
 		return
 	}
+	// Cache check here to avoid emitting
+	ic.emittedUsersMutex.RLock()
+	_, exists := ic.emittedUsers[userOrSPName]
+	ic.emittedUsersMutex.RUnlock()
+	if exists {
+		log.Printf("[DEBUG] user or SP %s already emitted...", userOrSPName)
+		return
+	}
 	if common.StringIsUUID(userOrSPName) {
 		user, err := ic.findSpnByAppID(userOrSPName)
 		if err != nil {
 			log.Printf("[ERROR] Can't find SP with application ID %s", userOrSPName)
+			ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
 		} else {
 			ic.Emit(&resource{
 				Resource: "databricks_service_principal",
@@ -135,6 +144,7 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 		user, err := ic.findUserByName(strings.ToLower(userOrSPName))
 		if err != nil {
 			log.Printf("[ERROR] Can't find user with name %s", userOrSPName)
+			ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
 		} else {
 			ic.Emit(&resource{
 				Resource: "databricks_user",
@@ -142,39 +152,67 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 			})
 		}
 	}
+	ic.emittedUsersMutex.Lock()
+	ic.emittedUsers[userOrSPName] = struct{}{}
+	ic.emittedUsersMutex.Unlock()
+}
+
+func getUserOrSpNameAndDirectory(path, prefix string) (string, string) {
+	if !strings.HasPrefix(path, prefix) {
+		return "", ""
+	}
+	pathLen := len(path)
+	prefixLen := len(prefix)
+	searchStart := prefixLen + 1
+	if pathLen <= searchStart {
+		return "", ""
+	}
+	pos := strings.Index(path[searchStart:pathLen], "/")
+	if pos == -1 { // we have only user directory...
+		return path[searchStart:pathLen], path
+	}
+	return path[searchStart : pos+searchStart], path[0 : pos+searchStart]
 }
 
 func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
-	if strings.HasPrefix(path, prefix) {
-		parts := strings.SplitN(path, "/", 4)
-		if len(parts) >= 3 && parts[2] != "" {
-			ic.emitUserOrServicePrincipal(parts[2])
-		}
+	userOrSpName, _ := getUserOrSpNameAndDirectory(path, prefix)
+	if userOrSpName != "" {
+		ic.emitUserOrServicePrincipal(userOrSpName)
 	}
 }
 
-func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) bool {
-	if !strings.HasPrefix(path, prefix) {
+func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, strict bool) bool {
+	userOrSPName, userDir := getUserOrSpNameAndDirectory(path, prefix)
+	if userOrSPName == "" {
 		return false
 	}
-	parts := strings.SplitN(path, "/", 4)
-	if (len(parts) == 3 || (len(parts) == 4 && parts[3] == "")) && parts[2] != "" {
-		userOrSPName := parts[2]
-		var err error
-		if common.StringIsUUID(userOrSPName) {
-			_, err = ic.findSpnByAppID(userOrSPName)
-			if err != nil {
-				ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
-			}
-		} else {
-			_, err = ic.findUserByName(strings.ToLower(userOrSPName))
-			if err != nil {
-				ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
-			}
-		}
-		return err == nil
+	// strict mode means that it should be exactly user dir, maybe with trailing `/`
+	if strict && !(len(path) == len(userDir) || (len(path) == len(userDir)+1 && path[len(path)-1] == '/')) {
+		return false
 	}
-	return false
+	ic.userOrSpDirectoriesMutex.RLock()
+	result, exists := ic.userOrSpDirectories[userDir]
+	ic.userOrSpDirectoriesMutex.RUnlock()
+	if exists {
+		log.Printf("[DEBUG] Directory %s already checked. Result=%v", userDir, result)
+		return result
+	}
+	var err error
+	if common.StringIsUUID(userOrSPName) {
+		_, err = ic.findSpnByAppID(userOrSPName)
+		if err != nil {
+			ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
+		}
+	} else {
+		_, err = ic.findUserByName(strings.ToLower(userOrSPName))
+		if err != nil {
+			ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
+		}
+	}
+	ic.userOrSpDirectoriesMutex.Lock()
+	ic.userOrSpDirectories[userDir] = (err == nil)
+	ic.userOrSpDirectoriesMutex.Unlock()
+	return err == nil
 }
 
 func (ic *importContext) emitRepoByPath(path string) {
@@ -858,8 +896,7 @@ func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
 
 func (ic *importContext) shouldEmitForPath(path string) bool {
 	if !ic.exportDeletedUsersAssets && strings.HasPrefix(path, "/Users/") {
-		userDir := userDirRegex.ReplaceAllString(path, "$1")
-		return ic.IsUserOrServicePrincipalDirectory(userDir, "/Users")
+		return ic.IsUserOrServicePrincipalDirectory(path, "/Users", false)
 	}
 	return true
 }

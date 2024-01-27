@@ -79,14 +79,13 @@ type importContext struct {
 	channels map[string]resourceChannel
 
 	// mutable resources
-	State stateApproximation
+	State *stateApproximation
 	Scope importedResources
 
 	// command-line resources (immutable, or set by the single thread)
 	includeUserDomains       bool
 	importAllUsers           bool
 	exportDeletedUsersAssets bool
-	debug                    bool
 	incremental              bool
 	mounts                   bool
 	noFormat                 bool
@@ -149,6 +148,14 @@ type importContext struct {
 	// tracking ignored objects
 	ignoredResourcesMutex sync.Mutex
 	ignoredResources      map[string]struct{}
+
+	// emitting of users/SPs
+	emittedUsers      map[string]struct{}
+	emittedUsersMutex sync.RWMutex
+
+	//
+	userOrSpDirectories      map[string]bool
+	userOrSpDirectoriesMutex sync.RWMutex
 }
 
 type mount struct {
@@ -188,21 +195,23 @@ const (
 
 // increased concurrency limits, could be also overridden via environment variables with name: envVariablePrefix + resource type
 var goroutinesNumber = map[string]int{
-	"databricks_notebook":          7,
+	"databricks_notebook":          10,
 	"databricks_directory":         5,
 	"databricks_workspace_file":    5,
 	"databricks_dbfs_file":         3,
 	"databricks_user":              1,
 	"databricks_service_principal": 1,
 	"databricks_sql_dashboard":     3,
+	"databricks_sql_widget":        4,
+	"databricks_sql_visualization": 4,
 	"databricks_sql_query":         5,
 	"databricks_sql_alert":         2,
-	"databricks_permissions":       10,
+	"databricks_permissions":       11,
 }
 
-func makeResourcesChannels(p *schema.Provider) map[string]resourceChannel {
-	channels := make(map[string]resourceChannel, len(p.ResourcesMap))
-	for r := range p.ResourcesMap {
+func makeResourcesChannels(resources []string) map[string]resourceChannel {
+	channels := make(map[string]resourceChannel, len(resources))
+	for _, r := range resources {
 		channels[r] = make(resourceChannel, defaultChannelSize)
 	}
 	return channels
@@ -220,28 +229,30 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		return commands.NewCommandsAPI(ctx, c)
 	})
 
+	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
-		Client:      c,
-		Context:     ctx,
-		State:       stateApproximation{},
-		Importables: resourcesMap,
-		Resources:   p.ResourcesMap,
-		Scope:       importedResources{},
-		importing:   map[string]bool{},
-		nameFixes:   nameFixes,
-		hclFixes:    []regexFix{ // Be careful with that! it may break working code
-		},
+		Client:              c,
+		Context:             ctx,
+		State:               newStateApproximation(supportedResources),
+		Importables:         resourcesMap,
+		Resources:           p.ResourcesMap,
+		Scope:               importedResources{},
+		importing:           map[string]bool{},
+		nameFixes:           nameFixes,
+		hclFixes:            []regexFix{}, // Be careful with that! it may break working code
 		variables:           map[string]string{},
 		allDirectories:      []workspace.ObjectStatus{},
 		allWorkspaceObjects: []workspace.ObjectStatus{},
 		workspaceConfKeys:   workspaceConfKeys,
-		shImports:           make(map[string]bool),
+		shImports:           map[string]bool{},
 		notebooksFormat:     "SOURCE",
 		allUsers:            map[string]scim.User{},
 		allSps:              map[string]scim.User{},
 		waitGroup:           &sync.WaitGroup{},
-		channels:            makeResourcesChannels(p),
+		channels:            makeResourcesChannels(supportedResources),
 		ignoredResources:    map[string]struct{}{},
+		emittedUsers:        map[string]struct{}{},
+		userOrSpDirectories: map[string]bool{},
 	}
 }
 
@@ -623,7 +634,11 @@ func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel
 }
 
 func (ic *importContext) processSingleResource(resourcesChan resourceChannel, writerChannels map[string]dataWriteChannel) {
+	processed := 0
+	generated := 0
+	ignored := 0
 	for r := range resourcesChan {
+		processed = processed + 1
 		if r == nil {
 			log.Print("[WARN] Got nil resource...")
 			ic.waitGroup.Done()
@@ -631,6 +646,8 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 		}
 		ir := ic.Importables[r.Resource]
 		if ir.Ignore != nil && ir.Ignore(ic, r) {
+			log.Printf("[WARN] Ignoring resource %s: %s", r.Resource, r.Name)
+			ignored = ignored + 1
 			ic.waitGroup.Done()
 			continue
 		}
@@ -670,11 +687,13 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 				log.Printf("[WARN] can't find a channel for service: %s, resource: %s", ir.Service, r.Resource)
 			}
 			log.Printf("[DEBUG] Finished generating %s: %s", r.Resource, r.Name)
+			generated = generated + 1
 		} else {
 			log.Printf("[WARN] error generating resource body: %v, or body blocks len is 0", err)
 		}
 		ic.waitGroup.Done()
 	}
+	log.Printf("[DEBUG] processed resources: %d, generated: %d, ignored: %d", processed, generated, ignored)
 }
 
 func (ic *importContext) generateAndWriteResources(sh *os.File) {
@@ -730,12 +749,11 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		close(ch)
 	}
 
-	log.Printf("[INFO] Finished generation of configuration for %d resources (took %v seconds)", scopeSize,
-		time.Since(t1).Seconds())
+	log.Printf("[INFO] Finished generation of configuration for %d resources (took %v seconds)",
+		scopeSize, time.Since(t1).Seconds())
 }
 
 func (ic *importContext) generateVariables() error {
-	// TODO: test it when MLflow webhooks will be merged
 	if len(ic.variables) == 0 {
 		return nil
 	}
@@ -793,10 +811,7 @@ func (ic *importContext) MatchesName(n string) bool {
 // this will run single threaded
 func (ic *importContext) Find(r *resource, pick string, ref reference) (string, hcl.Traversal) {
 	log.Printf("[DEBUG] Starting searching for reference for resource %s %s, pick=%s, ref=%v", r.Resource, r.ID, pick, ref)
-	for _, sr := range *ic.State.Resources() {
-		if sr.Type != r.Resource {
-			continue
-		}
+	for _, sr := range *ic.State.Resources(r.Resource) {
 		// optimize performance by avoiding doing regexp matching multiple times
 		matchValue := ""
 		if ref.MatchType == MatchRegexp {

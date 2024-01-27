@@ -20,21 +20,18 @@ func TestMatchesName(t *testing.T) {
 }
 
 func TestImportContextFindSkips(t *testing.T) {
-	_, traversal := (&importContext{
-		State: stateApproximation{
-			resources: []resourceApproximation{
-				{
-					Type: "a",
-					Instances: []instanceApproximation{
-						{
-							Attributes: map[string]any{
-								"b": nil,
-							},
-						},
-					},
+	state := newStateApproximation([]string{"a"})
+	state.Append(resourceApproximation{
+		Type: "a",
+		Instances: []instanceApproximation{
+			{
+				Attributes: map[string]any{
+					"b": nil,
 				},
 			},
-		},
+		}})
+	_, traversal := (&importContext{
+		State: state,
 	}).Find(&resource{
 		Resource:  "a",
 		Attribute: "b",
@@ -44,22 +41,17 @@ func TestImportContextFindSkips(t *testing.T) {
 }
 
 func TestImportContextHas(t *testing.T) {
-	assert.True(t, (&importContext{
-		State: stateApproximation{
-			resources: []resourceApproximation{
-				{
-					Type: "a",
-					Instances: []instanceApproximation{
-						{
-							Attributes: map[string]any{
-								"b": "d",
-							},
-						},
-					},
+	state := newStateApproximation([]string{"a"})
+	state.Append(resourceApproximation{
+		Type: "a",
+		Instances: []instanceApproximation{
+			{
+				Attributes: map[string]any{
+					"b": "d",
 				},
 			},
-		},
-	}).Has(&resource{
+		}})
+	assert.True(t, (&importContext{State: state}).Has(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
@@ -68,8 +60,10 @@ func TestImportContextHas(t *testing.T) {
 }
 
 func TestEmitNaResource(t *testing.T) {
+	state := newStateApproximation([]string{"a"})
 	(&importContext{
 		importing: map[string]bool{},
+		State:     state,
 	}).Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
@@ -79,11 +73,13 @@ func TestEmitNaResource(t *testing.T) {
 }
 
 func TestEmitNoImportable(t *testing.T) {
+	state := newStateApproximation([]string{"a"})
 	(&importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
 		},
+		State: state,
 	}).Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
@@ -94,6 +90,7 @@ func TestEmitNoImportable(t *testing.T) {
 
 func TestEmitNoSearchAvail(t *testing.T) {
 	ch := make(resourceChannel)
+	state := newStateApproximation([]string{"a"})
 	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
@@ -110,6 +107,7 @@ func TestEmitNoSearchAvail(t *testing.T) {
 			"a": ch,
 		},
 		ignoredResources: map[string]struct{}{},
+		State:            state,
 	}
 	go func() {
 		for r := range ch {
@@ -128,6 +126,7 @@ func TestEmitNoSearchAvail(t *testing.T) {
 
 func TestEmitNoSearchFails(t *testing.T) {
 	ch := make(resourceChannel, 10)
+	state := newStateApproximation([]string{"a"})
 	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
@@ -146,6 +145,7 @@ func TestEmitNoSearchFails(t *testing.T) {
 		channels: map[string]resourceChannel{
 			"a": ch,
 		},
+		State: state,
 	}
 	go func() {
 		for r := range ch {
@@ -164,6 +164,7 @@ func TestEmitNoSearchFails(t *testing.T) {
 
 func TestEmitNoSearchNoId(t *testing.T) {
 	ch := make(resourceChannel, 10)
+	state := newStateApproximation([]string{"a"})
 	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
@@ -183,6 +184,7 @@ func TestEmitNoSearchNoId(t *testing.T) {
 			"a": ch,
 		},
 		ignoredResources: map[string]struct{}{},
+		State:            state,
 	}
 	go func() {
 		for r := range ch {
@@ -201,6 +203,7 @@ func TestEmitNoSearchNoId(t *testing.T) {
 
 func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 	ch := make(resourceChannel, 10)
+	state := newStateApproximation([]string{"a"})
 	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
@@ -223,6 +226,7 @@ func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 		channels: map[string]resourceChannel{
 			"a": ch,
 		},
+		State: state,
 	}
 	go func() {
 		for r := range ch {

@@ -230,20 +230,20 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		result_false_partslength_more_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/abc", "/Users")
+		result_false_partslength_more_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/abc", "/Users", true)
 		assert.False(t, result_false_partslength_more_than_3)
 	})
 
 	ic := importContextForTest()
-	result_false_partslength_less_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users", "/Users")
+	result_false_partslength_less_than_3 := ic.IsUserOrServicePrincipalDirectory("/Users", "/Users", true)
 	assert.False(t, result_false_partslength_less_than_3)
 
 	ic = importContextForTest()
-	result_false_part2_empty := ic.IsUserOrServicePrincipalDirectory("/Users/", "/Users")
+	result_false_part2_empty := ic.IsUserOrServicePrincipalDirectory("/Users/", "/Users", true)
 	assert.False(t, result_false_part2_empty)
 
 	ic = importContextForTest()
-	result_false_notprefix_with_user := ic.IsUserOrServicePrincipalDirectory("/Shared", "/Users")
+	result_false_notprefix_with_user := ic.IsUserOrServicePrincipalDirectory("/Shared", "/Users", true)
 	assert.False(t, result_false_notprefix_with_user)
 
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
@@ -253,7 +253,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com", "/Users")
+		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com", "/Users", true)
 		assert.True(t, result_true_user_directory)
 	})
 
@@ -264,7 +264,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/", "/Users")
+		result_true_user_directory := ic.IsUserOrServicePrincipalDirectory("/Users/user@domain.com/", "/Users", true)
 		assert.True(t, result_true_user_directory)
 	})
 
@@ -275,7 +275,7 @@ func TestIsUserOrServicePrincipalDirectory(t *testing.T) {
 		spReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		result_true_sp_directory := ic.IsUserOrServicePrincipalDirectory("/Users/21aab5a7-ee70-4385-34d4-a77278be5cb6", "/Users")
+		result_true_sp_directory := ic.IsUserOrServicePrincipalDirectory("/Users/21aab5a7-ee70-4385-34d4-a77278be5cb6", "/Users", true)
 		assert.True(t, result_true_sp_directory)
 	})
 }

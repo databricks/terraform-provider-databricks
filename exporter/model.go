@@ -35,29 +35,17 @@ type resourceApproximation struct {
 	Instances []instanceApproximation `json:"instances"`
 }
 
-type stateApproximation struct {
-	mutex sync.RWMutex
-	// TODO: use map by type -> should speedup Has function?
+type resourceApproximationHolder struct {
+	mutex     sync.RWMutex
 	resources []resourceApproximation
 }
 
-// TODO: check if it's used directly by multiple threads?
-func (s *stateApproximation) Resources() *[]resourceApproximation {
-	s.mutex.RLocker().Lock()
-	defer s.mutex.RLocker().Unlock()
-	// c := make([]resourceApproximation, len(s.resources))
-	// copy(c, s.resources)
-	return &s.resources
-}
-
-func (s *stateApproximation) Has(r *resource) bool {
-	s.mutex.RLocker().Lock()
-	defer s.mutex.RLocker().Unlock()
+func (rah *resourceApproximationHolder) Has(r *resource) bool {
+	rah.mutex.RLocker().Lock()
+	defer rah.mutex.RLocker().Unlock()
 	k, v := r.MatchPair()
-	for _, sr := range s.resources {
-		if sr.Type != r.Resource {
-			continue
-		}
+	// TODO: can we generate unique keys for direct lookup?
+	for _, sr := range rah.resources {
 		for _, i := range sr.Instances {
 			tv, ok := i.Attributes[k].(string)
 			if ok && tv == v {
@@ -68,10 +56,46 @@ func (s *stateApproximation) Has(r *resource) bool {
 	return false
 }
 
+func (rah *resourceApproximationHolder) Append(ra resourceApproximation) {
+	rah.mutex.Lock()
+	defer rah.mutex.Unlock()
+	rah.resources = append(rah.resources, ra)
+}
+
+type stateApproximation struct {
+	rmap map[string]*resourceApproximationHolder
+}
+
+func newStateApproximation(suppported_resources []string) *stateApproximation {
+	sa := stateApproximation{rmap: map[string]*resourceApproximationHolder{}}
+	for _, k := range suppported_resources {
+		sa.rmap[k] = &resourceApproximationHolder{}
+	}
+	return &sa
+}
+
+func (s *stateApproximation) Resources(resource_type string) *[]resourceApproximation {
+	rah := s.rmap[resource_type]
+	if rah != nil {
+		return &rah.resources
+	}
+	panic(fmt.Sprintf("There is no support for resource type %s", resource_type))
+}
+
+func (s *stateApproximation) Has(r *resource) bool {
+	rah, exist := s.rmap[r.Resource]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", r.Resource))
+	}
+	return rah.Has(r)
+}
+
 func (s *stateApproximation) Append(ra resourceApproximation) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	s.resources = append(s.resources, ra)
+	rah, exist := s.rmap[ra.Type]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", ra.Type))
+	}
+	rah.Append(ra)
 }
 
 type importable struct {

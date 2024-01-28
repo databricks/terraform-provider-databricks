@@ -828,6 +828,22 @@ func (ic *importContext) MatchesName(n string) bool {
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }
 
+func genTraversalTokens(sr *resourceApproximation, pick string) hcl.Traversal {
+	if sr.Mode == "data" {
+		return hcl.Traversal{
+			hcl.TraverseRoot{Name: "data"},
+			hcl.TraverseAttr{Name: sr.Type},
+			hcl.TraverseAttr{Name: sr.Name},
+			hcl.TraverseAttr{Name: pick},
+		}
+	}
+	return hcl.Traversal{
+		hcl.TraverseRoot{Name: sr.Type},
+		hcl.TraverseAttr{Name: sr.Name},
+		hcl.TraverseAttr{Name: pick},
+	}
+}
+
 // this will run single threaded
 func (ic *importContext) Find(r *resource, pick string, ref reference) (string, hcl.Traversal) {
 	log.Printf("[DEBUG] Starting searching for reference for resource %s %s, pick=%s, ref=%v", r.Resource, r.ID, pick, ref)
@@ -847,6 +863,19 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 		matchValue = res[1]
 	} else if ref.MatchType == MatchCaseInsensitive {
 		matchValue = strings.ToLower(r.Value) // performance optimization to avoid doing it in the loop
+	} else if ref.MatchType == MatchExact || ref.MatchType == MatchDefault {
+		matchValue = r.Value
+	}
+	// doing explicit lookup in the state
+	if ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp {
+		sr := ic.State.Get(r.Resource, r.Attribute, matchValue)
+		if sr != nil {
+			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s %s, pick=%s, ref=%v. Found: type=%s name=%s",
+				r.Resource, r.ID, pick, ref, sr.Type, sr.Name)
+			return matchValue, genTraversalTokens(sr, pick)
+		}
+		log.Printf("[DEBUG] Finished direct lookup for reference for resource %s %s, pick=%s, ref=%v. Not found", r.Resource, r.ID, pick, ref)
+		return "", nil
 	}
 
 	for _, sr := range *ic.State.Resources(r.Resource) {
@@ -860,37 +889,22 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			strValue := v.(string)
 			matched := false
 			switch ref.MatchType {
-			case MatchExact, MatchDefault:
-				matched = (strValue == r.Value)
+			case MatchExact, MatchDefault, MatchRegexp:
+				matched = (matchValue == strValue)
 			case MatchCaseInsensitive:
 				matched = (strings.ToLower(strValue) == matchValue)
 			case MatchPrefix:
 				matched = strings.HasPrefix(r.Value, strValue)
-			case MatchRegexp:
-				matched = (matchValue == strValue)
 			default:
 				log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 			}
 			if !matched {
 				continue
 			}
+			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			log.Printf("[DEBUG] Finished searching for reference for resource %s %s, pick=%s, ref=%v. Found: type=%s name=%s",
 				r.Resource, r.ID, pick, ref, sr.Type, sr.Name)
-			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
-			if sr.Mode == "data" {
-				return strValue, hcl.Traversal{
-					hcl.TraverseRoot{Name: "data"},
-					hcl.TraverseAttr{Name: sr.Type},
-					hcl.TraverseAttr{Name: sr.Name},
-					hcl.TraverseAttr{Name: pick},
-				}
-			}
-			return strValue, hcl.Traversal{
-				hcl.TraverseRoot{Name: sr.Type},
-				hcl.TraverseAttr{Name: sr.Name},
-				hcl.TraverseAttr{Name: pick},
-			}
-
+			return strValue, genTraversalTokens(sr, pick)
 		}
 	}
 	log.Printf("[DEBUG] Finished searching for reference for resource %s %s, pick=%s, ref=%v. Not found", r.Resource, r.ID, pick, ref)
@@ -1095,6 +1109,7 @@ var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
 func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value) hclwrite.Tokens {
 	match := dependsRe.ReplaceAllString(strings.Join(path, "."), "")
+	// TODO: get reference candidate, but if it's a `data`, then look for another non-data reference if possible..
 	for _, d := range i.Depends {
 		if d.Path != match {
 			continue

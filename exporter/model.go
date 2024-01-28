@@ -37,8 +37,8 @@ type resourceApproximation struct {
 
 type resourceApproximationHolder struct {
 	mutex      sync.RWMutex
-	resources  []resourceApproximation
-	attributes map[string]struct{}
+	resources  []*resourceApproximation
+	attributes map[string]*resourceApproximation
 }
 
 func makeMatchPair(k, v string) string {
@@ -56,16 +56,24 @@ func (rah *resourceApproximationHolder) Has(r *resource) bool {
 	return exists
 }
 
+func (rah *resourceApproximationHolder) Get(attr, value string) *resourceApproximation {
+	matchPairKey := makeMatchPair(attr, value)
+	rah.mutex.RLocker().Lock()
+	defer rah.mutex.RLocker().Unlock()
+	ra := rah.attributes[matchPairKey]
+	return ra
+}
+
 func (rah *resourceApproximationHolder) Append(ra resourceApproximation) {
 	// log.Printf("[DEBUG] resourceApproximationHolder.Append: %v. Instances count=%d", ra, len(ra.Instances))
 	rah.mutex.Lock()
 	defer rah.mutex.Unlock()
-	rah.resources = append(rah.resources, ra)
+	rah.resources = append(rah.resources, &ra)
 	for _, i := range ra.Instances {
 		for k, v := range i.Attributes {
 			tv, ok := v.(string)
 			if ok {
-				rah.attributes[makeMatchPair(k, tv)] = struct{}{}
+				rah.attributes[makeMatchPair(k, tv)] = &ra
 			}
 		}
 	}
@@ -78,12 +86,12 @@ type stateApproximation struct {
 func newStateApproximation(suppported_resources []string) *stateApproximation {
 	sa := stateApproximation{rmap: map[string]*resourceApproximationHolder{}}
 	for _, k := range suppported_resources {
-		sa.rmap[k] = &resourceApproximationHolder{attributes: map[string]struct{}{}}
+		sa.rmap[k] = &resourceApproximationHolder{attributes: map[string]*resourceApproximation{}}
 	}
 	return &sa
 }
 
-func (s *stateApproximation) Resources(resource_type string) *[]resourceApproximation {
+func (s *stateApproximation) Resources(resource_type string) *[]*resourceApproximation {
 	rah := s.rmap[resource_type]
 	if rah != nil {
 		return &rah.resources
@@ -97,6 +105,14 @@ func (s *stateApproximation) Has(r *resource) bool {
 		panic(fmt.Sprintf("There is no support for resource type %s", r.Resource))
 	}
 	return rah.Has(r)
+}
+
+func (s *stateApproximation) Get(resource_type, attr, value string) *resourceApproximation {
+	rah, exist := s.rmap[resource_type]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", resource_type))
+	}
+	return rah.Get(attr, value)
 }
 
 func (s *stateApproximation) Append(ra resourceApproximation) {

@@ -30,6 +30,10 @@ data "databricks_mlflow_experiment" "this" {
 This data source exports the following attributes:
 
 * `artifact_location` - Location where artifacts for the experiment are stored.
-* `name` - Path to experiment.
+* `creation_time` - Creation time in unix time stamp.
+* `experiment_id` - Unique identifier for the experiment. (same as `id`)
+* `id` - Unique identifier for the experiment. (same as `experiment_id`)
+* `last_update_time` - Last update time in unix time stamp.
 * `lifecycle_stage` - Current life cycle stage of the experiment: `active` or `deleted`.
-* `experiment_id` - Unique identifier for the experiment.
+* `name` - Path to experiment.
+* `tags` - Additional metadata key-value pairs.

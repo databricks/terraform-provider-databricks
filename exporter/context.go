@@ -673,7 +673,7 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 		}
 		var err error
 		f := hclwrite.NewEmptyFile()
-		log.Printf("[DEBUG] Generating %s: %s", r.Resource, r.Name)
+		log.Printf("[TRACE] Generating %s: %s", r.Resource, r.Name)
 		body := f.Body()
 		if ir.Body != nil {
 			err = ir.Body(ic, body, r)
@@ -706,7 +706,7 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 			} else {
 				log.Printf("[WARN] can't find a channel for service: %s, resource: %s", ir.Service, r.Resource)
 			}
-			log.Printf("[DEBUG] Finished generating %s: %s", r.Resource, r.Name)
+			log.Printf("[TRACE] Finished generating %s: %s", r.Resource, r.Name)
 			generated = generated + 1
 		} else {
 			log.Printf("[WARN] error generating resource body: %v, or body blocks len is 0", err)
@@ -866,16 +866,19 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 	} else if ref.MatchType == MatchExact || ref.MatchType == MatchDefault {
 		matchValue = r.Value
 	}
-	// doing explicit lookup in the state
-	if ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp {
+	// doing explicit lookup in the state.  For case insensitive matches, first attempt to lookup for the value, and do iteration if it's not found
+	if ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp || ref.MatchType == MatchCaseInsensitive {
 		sr := ic.State.Get(r.Resource, r.Attribute, matchValue)
 		if sr != nil {
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s %s, pick=%s, ref=%v. Found: type=%s name=%s",
 				r.Resource, r.ID, pick, ref, sr.Type, sr.Name)
 			return matchValue, genTraversalTokens(sr, pick)
 		}
-		log.Printf("[DEBUG] Finished direct lookup for reference for resource %s %s, pick=%s, ref=%v. Not found", r.Resource, r.ID, pick, ref)
-		return "", nil
+		if ref.MatchType != MatchCaseInsensitive { // for case-insensitive matching we'll try iteration
+			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s %s, pick=%s, ref=%v. Not found",
+				r.Resource, r.ID, pick, ref)
+			return "", nil
+		}
 	}
 
 	for _, sr := range *ic.State.Resources(r.Resource) {
@@ -889,8 +892,6 @@ func (ic *importContext) Find(r *resource, pick string, ref reference) (string, 
 			strValue := v.(string)
 			matched := false
 			switch ref.MatchType {
-			case MatchExact, MatchDefault, MatchRegexp:
-				matched = (matchValue == strValue)
 			case MatchCaseInsensitive:
 				matched = (strings.ToLower(strValue) == matchValue)
 			case MatchPrefix:

@@ -3,40 +3,48 @@ package mlflow
 import (
 	"context"
 	"fmt"
-	"github.com/databricks/databricks-sdk-go/service/ml"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func DataSourceExperiment() *schema.Resource {
-	return common.WorkspaceData(func(ctx context.Context, data *struct {
-		ExperimentId     string `json:"experiment_id,omitempty" tf:"computed"`
-		Name             string `json:"name,omitempty" tf:"computed"`
-		ArtifactLocation string `json:"artifact_location,omitempty" tf:"computed"`
-		LifecycleStage   string `json:"lifecycle_stage,omitempty" tf:"computed"`
-	}, w *databricks.WorkspaceClient) error {
-		var experiment *ml.Experiment
+	type experimentDataParams struct {
+		ExperimentId string `json:"experiment_id" tf:"computed,optional"`
+		Name         string `json:"name" tf:"computed,optional"`
+	}
+
+	type MlExperiment struct {
+		ml.Experiment
+		Id string `json:"id,omitempty" tf:"computed"`
+	}
+
+	return common.WorkspaceDataWithParams(func(ctx context.Context, data experimentDataParams, w *databricks.WorkspaceClient) (*MlExperiment, error) {
+		var experiment *MlExperiment
+		if data.ExperimentId == "" && data.Name == "" {
+			return nil, fmt.Errorf("either 'experiment_id' or 'name' should be provided")
+		}
+
+		experiment = &MlExperiment{}
+
 		if data.Name != "" {
 			experimentResponse, err := w.Experiments.GetByName(ctx, ml.GetByNameRequest{ExperimentName: data.Name})
 			if err != nil {
-				return err
+				return nil, err
 			}
-			experiment = experimentResponse.Experiment
-			data.ExperimentId = experiment.ExperimentId
+			experiment.Experiment = *experimentResponse.Experiment
 		} else if data.ExperimentId != "" {
 			experimentResponse, err := w.Experiments.GetExperiment(ctx, ml.GetExperimentRequest{ExperimentId: data.ExperimentId})
 			if err != nil {
-				return err
+				return nil, err
 			}
-			experiment = experimentResponse.Experiment
-			data.Name = experiment.Name
-		} else {
-			return fmt.Errorf("you need to specify either `name` or `experiment_id`")
+			experiment.Experiment = *experimentResponse.Experiment
 		}
-		data.ArtifactLocation = experiment.ArtifactLocation
-		data.LifecycleStage = experiment.LifecycleStage
-		return nil
+
+		experiment.Id = experiment.ExperimentId
+
+		return experiment, nil
 	})
 }

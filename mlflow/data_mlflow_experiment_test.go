@@ -2,10 +2,11 @@ package mlflow
 
 import (
 	"fmt"
-	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/ml"
 	"net/url"
 	"testing"
+
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/ml"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
@@ -29,13 +30,16 @@ func TestDataSourceExperimentById(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceExperiment(),
-		ID:          ".",
+		ID:          "_",
 		HCL:         fmt.Sprintf(`experiment_id = "%s"`, "1234567890"),
-	}.ApplyAndExpectData(t, map[string]any{
+	}.ApplyAndExpectData(t, map[string]interface{}{
 		"artifact_location": "dbfs:/databricks/mlflow-tracking/1234567890",
+		"creation_time":     0,
 		"experiment_id":     "1234567890",
+		"last_update_time":  0,
 		"lifecycle_stage":   "active",
 		"name":              "/Users/databricks/my-experiment",
+		"tags":              []interface{}{},
 	})
 }
 
@@ -83,11 +87,14 @@ func TestDataSourceExperimentByName(t *testing.T) {
 		Resource:    DataSourceExperiment(),
 		ID:          ".",
 		HCL:         fmt.Sprintf(`name = "%s"`, experimentName),
-	}.ApplyAndExpectData(t, map[string]any{
+	}.ApplyAndExpectData(t, map[string]interface{}{
 		"artifact_location": "dbfs:/databricks/mlflow-tracking/1234567890",
+		"creation_time":     0,
 		"experiment_id":     "1234567890",
+		"last_update_time":  0,
 		"lifecycle_stage":   "active",
 		"name":              experimentName,
+		"tags":              []interface{}{},
 	})
 }
 

@@ -76,8 +76,8 @@ type importContext struct {
 	workspaceClient *databricks.WorkspaceClient
 	accountClient   *databricks.AccountClient
 
-	// TODO: do we need per-resource type channels? What about single channel and many handlers?
-	channels map[string]resourceChannel
+	channels       map[string]resourceChannel
+	defaultChannel resourceChannel // biggest bottleneck is that it's FIFO, so there could be a situaton that first all notebooks are submitted, then their permissions
 
 	// mutable resources
 	State *stateApproximation
@@ -173,7 +173,7 @@ var nameFixes = []regexFix{
 	{regexp.MustCompile(`[_]{2,}`), "_"},
 }
 
-// less aggressive name normalization
+// less aggressive name normalizations
 var simpleNameFixes = []regexFix{
 	{nameNormalizationRegex, "_"},
 }
@@ -210,7 +210,11 @@ var goroutinesNumber = map[string]int{
 	"databricks_permissions":       11,
 }
 
-func makeResourcesChannels(resources []string) map[string]resourceChannel {
+func makeResourcesChannels() map[string]resourceChannel {
+	resources := []string{"databricks_user", "databricks_service_principal", "databricks_group"}
+	if val, exists := os.LookupEnv("EXPORTER_DEDICATED_RESOUSE_CHANNELS"); exists {
+		resources = strings.Split(val, ",")
+	}
 	channels := make(map[string]resourceChannel, len(resources))
 	for _, r := range resources {
 		channels[r] = make(resourceChannel, defaultChannelSize)
@@ -229,6 +233,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		c *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, c)
 	})
+
+	defaultHanlerChannelSize := getEnvAsInt("EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE", defaultChannelSize)
 
 	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
@@ -250,7 +256,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		allUsers:            map[string]scim.User{},
 		allSps:              map[string]scim.User{},
 		waitGroup:           &sync.WaitGroup{},
-		channels:            makeResourcesChannels(supportedResources),
+		channels:            makeResourcesChannels(),
+		defaultChannel:      make(resourceChannel, defaultHanlerChannelSize),
 		ignoredResources:    map[string]struct{}{},
 		emittedUsers:        map[string]struct{}{},
 		userOrSpDirectories: map[string]bool{},
@@ -490,11 +497,21 @@ func (ic *importContext) Run() error {
 	return nil
 }
 
+func (ic *importContext) resourceHandler(num int, resourceType string, ch resourceChannel) {
+	log.Printf("[DEBUG] Starting goroutine %d for resource %s", num, resourceType)
+	for r := range ch {
+		log.Printf("[DEBUG] channel for %s, channel size=%d got %v", resourceType, len(ch), r)
+		if r != nil {
+			r.ImportResource(ic)
+			log.Printf("[DEBUG] Finished importing %s, %v", resourceType, r)
+		}
+	}
+}
+
 func (ic *importContext) startImportChannels() {
 	for rt, c := range ic.channels {
 		ch := c
 		resourceType := rt
-
 		numRoutines, exists := goroutinesNumber[resourceType]
 		if !exists {
 			numRoutines = defaultNumRoutines
@@ -504,16 +521,17 @@ func (ic *importContext) startImportChannels() {
 		for i := 0; i < numRoutines; i++ {
 			num := i
 			go func() {
-				log.Printf("[DEBUG] Starting goroutine %d for resource %s", num, resourceType)
-				for r := range ch {
-					log.Printf("[DEBUG] channel for %s, channel size=%d got %v", resourceType, len(ch), r)
-					if r != nil {
-						r.ImportResource(ic)
-						log.Printf("[DEBUG] Finished importing %s, %v", resourceType, r)
-					}
-				}
+				ic.resourceHandler(num, resourceType, ch)
 			}()
 		}
+	}
+
+	numRoutines := getEnvAsInt(envVariablePrefix+"default", 15)
+	for i := 0; i < numRoutines; i++ {
+		num := i
+		go func() {
+			ic.resourceHandler(num, "default", ic.defaultChannel)
+		}()
 	}
 }
 
@@ -522,6 +540,7 @@ func (ic *importContext) closeImportChannels() {
 		log.Printf("[DEBUG] Closing channel for resource %s", rt)
 		close(ch)
 	}
+	close(ic.defaultChannel)
 }
 
 func generateBlockFullName(block *hclwrite.Block) string {
@@ -704,7 +723,7 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	log.Printf("[INFO] Generating configuration for %d resources", scopeSize)
 
 	// make configurable via environment variables
-	resourceHandlersNumber := getEnvAsInt("EXPORTER_RESOURCE_HANDLERS", 50)
+	resourceHandlersNumber := getEnvAsInt("EXPORTER_RESOURCE_GENERATORS", 50)
 	resourcesChan := make(resourceChannel, defaultChannelSize)
 
 	resourceWriters := make(map[string]dataWriteChannel, len(ic.Resources))
@@ -812,23 +831,25 @@ func (ic *importContext) MatchesName(n string) bool {
 // this will run single threaded
 func (ic *importContext) Find(r *resource, pick string, ref reference) (string, hcl.Traversal) {
 	log.Printf("[DEBUG] Starting searching for reference for resource %s %s, pick=%s, ref=%v", r.Resource, r.ID, pick, ref)
-	for _, sr := range *ic.State.Resources(r.Resource) {
-		// optimize performance by avoiding doing regexp matching multiple times
-		matchValue := ""
-		if ref.MatchType == MatchRegexp {
-			if ref.Regexp == nil {
-				log.Printf("[WARN] you must provide regular expression for 'regexp' match type")
-				continue
-			}
-			res := ref.Regexp.FindStringSubmatch(r.Value)
-			if len(res) < 2 {
-				log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, r.Value)
-				continue
-			}
-			matchValue = res[1]
-		} else if ref.MatchType == MatchCaseInsensitive {
-			matchValue = strings.ToLower(r.Value) // performance optimization to avoid doing it in the loop
+	// TODO: Can we cache findings?
+	// optimize performance by avoiding doing regexp matching multiple times
+	matchValue := ""
+	if ref.MatchType == MatchRegexp {
+		if ref.Regexp == nil {
+			log.Printf("[WARN] you must provide regular expression for 'regexp' match type")
+			return "", nil
 		}
+		res := ref.Regexp.FindStringSubmatch(r.Value)
+		if len(res) < 2 {
+			log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, r.Value)
+			return "", nil
+		}
+		matchValue = res[1]
+	} else if ref.MatchType == MatchCaseInsensitive {
+		matchValue = strings.ToLower(r.Value) // performance optimization to avoid doing it in the loop
+	}
+
+	for _, sr := range *ic.State.Resources(r.Resource) {
 		for _, i := range sr.Instances {
 			v := i.Attributes[r.Attribute]
 			if v == nil {
@@ -1015,7 +1036,9 @@ func (ic *importContext) Emit(r *resource) {
 		ic.waitGroup.Add(1)
 		ch <- r
 	} else {
-		log.Printf("[WARN] Can't find channel for resource %s", r.Resource)
+		log.Print("[TRACE] increasing counter & sending to the default channel")
+		ic.waitGroup.Add(1)
+		ic.defaultChannel <- r
 	}
 }
 

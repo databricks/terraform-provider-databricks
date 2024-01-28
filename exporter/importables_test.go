@@ -46,12 +46,13 @@ func importContextForTest() *importContext {
 		waitGroup:                &sync.WaitGroup{},
 		allUsers:                 map[string]scim.User{},
 		allSps:                   map[string]scim.User{},
-		channels:                 makeResourcesChannels(supportedResources),
+		channels:                 makeResourcesChannels(),
 		exportDeletedUsersAssets: false,
 		ignoredResources:         map[string]struct{}{},
 		State:                    newStateApproximation(supportedResources),
 		emittedUsers:             map[string]struct{}{},
 		userOrSpDirectories:      map[string]bool{},
+		defaultChannel:           make(resourceChannel, defaultChannelSize),
 	}
 }
 

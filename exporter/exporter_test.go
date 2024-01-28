@@ -798,12 +798,25 @@ func TestImportingClusters(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
 				ExpectedRequest: clusters.EventsRequest{
+					ClusterID:  "test1",
+					Order:      "DESC",
+					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+					Limit:      1,
+				},
+				Response:     clusters.EventDetails{},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: clusters.EventsRequest{
 					ClusterID:  "test2",
 					Order:      "DESC",
 					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
 					Limit:      1,
 				},
-				Response: clusters.EventDetails{},
+				Response:     clusters.EventDetails{},
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",

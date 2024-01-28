@@ -798,7 +798,7 @@ func TestImportingClusters(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
 				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "test1",
+					ClusterID:  "test2",
 					Order:      "DESC",
 					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
 					Limit:      1,
@@ -810,7 +810,7 @@ func TestImportingClusters(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
 				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "test2",
+					ClusterID:  "test1",
 					Order:      "DESC",
 					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
 					Limit:      1,
@@ -929,7 +929,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
-			os.Setenv("EXPORTER_PARALLELISM_databricks_cluster", "1")
+			os.Setenv("EXPORTER_PARALLELISM_default", "1")
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
@@ -939,6 +939,7 @@ func TestImportingClusters(t *testing.T) {
 			ic.services = []string{"access", "users", "policies", "compute", "secrets", "groups", "storage"}
 
 			err := ic.Run()
+			os.Unsetenv("EXPORTER_PARALLELISM_default")
 			assert.NoError(t, err)
 		})
 }

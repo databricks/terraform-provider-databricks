@@ -240,12 +240,11 @@ func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 	defer ic.wsObjectsMutex.Unlock()
 	if len(ic.allWorkspaceObjects) == 0 {
 		t1 := time.Now()
-		log.Printf("[DEBUG] %v. Starting to list all workspace objects", t1.Local().Format(time.RFC3339))
+		log.Print("[INFO] Starting to list all workspace objects")
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
 		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories)
-		t2 := time.Now()
-		log.Printf("[DEBUG] %v. Finished listing of all workspace objects. %d objects in total. %v seconds",
-			t2.Local().Format(time.RFC3339), len(ic.allWorkspaceObjects), t2.Sub(t1).Seconds())
+		log.Printf("[INFO] Finished listing of all workspace objects. %d objects in total. %v seconds",
+			len(ic.allWorkspaceObjects), time.Since(t1).Seconds())
 	}
 	return ic.allWorkspaceObjects
 }

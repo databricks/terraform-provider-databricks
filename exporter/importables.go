@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zclconf/go-cty/cty"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -45,8 +46,8 @@ var (
 	globalWorkspaceConfName      = "global_workspace_conf"
 	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
 	fileNameNormalizationRegex   = regexp.MustCompile(`[^-_\w/.@]`)
-	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.[0-9]+\.new_cluster\.[0-9]+\.)`)
-	dltClusterRegex              = regexp.MustCompile(`^(cluster\.[0-9]+\.)`)
+	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.\d+\.new_cluster\.\d+\.)`)
+	dltClusterRegex              = regexp.MustCompile(`^(cluster\.\d+\.)`)
 	userDirRegex                 = regexp.MustCompile(`^(/Users/[^/]+)(/.*)?$`)
 	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
@@ -294,9 +295,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			lastActiveMs := ic.getLastActiveMs()
+			nonInteractiveClusters := []string{"JOB", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
 			for offset, c := range clusters {
-				if c.ClusterSource == "JOB" {
-					log.Printf("[INFO] Skipping job cluster %s", c.ClusterID)
+				log.Printf("[DEBUG] Cluster %s, source: %s", c.ClusterID, c.ClusterSource)
+				if slices.Contains(nonInteractiveClusters, string(c.ClusterSource)) {
+					// TODO: Should we check cluster name as well?
+					// jobRunClusterNameRegex = regexp.MustCompile(`^job-\d+-run-\d+$`)
+					// jobRunClusterNameRegex.MatchString(c.ClusterName)
+					log.Printf("[INFO] Skipping non-interactive cluster %s", c.ClusterID)
 					continue
 				}
 				if strings.HasPrefix(c.ClusterName, "terraform-") {

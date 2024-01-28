@@ -170,10 +170,6 @@ const (
 	defaultDirectoryChannelSize = 100000
 )
 
-func getFormattedNowTime() string {
-	return time.Now().Local().Format(time.RFC3339Nano)
-}
-
 func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChannel chan directoryInfo,
 	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(ObjectStatus) bool) {
 	defer wg.Done()
@@ -201,8 +197,8 @@ func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChan
 	answer.append(newList)
 	for _, v := range directories {
 		wg.Add(1)
-		log.Printf("[DEBUG] %s: putting directory '%s' into channel. Channel size: %d",
-			getFormattedNowTime(), v.Path, len(dirChannel))
+		log.Printf("[DEBUG] putting directory '%s' into channel. Channel size: %d",
+			v.Path, len(dirChannel))
 		dirChannel <- directoryInfo{Path: v.Path}
 		time.Sleep(15 * time.Millisecond)
 	}
@@ -232,20 +228,20 @@ func (a NotebooksAPI) ListParallel(path string, shouldIncludeDir func(ObjectStat
 	for i := 0; i < numWorkers; i++ {
 		t := i
 		go func() {
-			log.Printf("[DEBUG] %s: starting go routine %d", getFormattedNowTime(), t)
+			log.Printf("[DEBUG] starting go routine %d", t)
 			for directory := range dirChannel {
-				log.Printf("[DEBUG] %s: processing directory %s", getFormattedNowTime(), directory.Path)
+				log.Printf("[DEBUG] processing directory %s", directory.Path)
 				a.recursiveAddPathsParallel(directory, dirChannel, &answer, wg, shouldIncludeDir)
 			}
 		}()
 
 	}
-	log.Printf("[DEBUG] %s: pushing initial path to channel", getFormattedNowTime())
+	log.Print("[DEBUG] pushing initial path to channel")
 	wg.Add(1)
 	a.recursiveAddPathsParallel(directoryInfo{Path: path}, dirChannel, &answer, wg, shouldIncludeDir)
-	log.Printf("[DEBUG] %s: starting to wait", getFormattedNowTime())
+	log.Print("[DEBUG] starting to wait")
 	wg.Wait()
-	log.Printf("[DEBUG] %s: closing the directory channel", getFormattedNowTime())
+	log.Print("[DEBUG] closing the directory channel")
 	close(dirChannel)
 
 	answer.MU.Lock()

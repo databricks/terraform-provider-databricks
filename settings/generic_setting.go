@@ -28,7 +28,7 @@ func retryOnEtagError[Req, Resp any](f func(req Req) (Resp, error), firstReq Req
 }
 
 func isEtagVersionError(err error) bool {
-	return errors.Is(err, databricks.ErrResourceConflict) || errors.Is(err, databricks.ErrNotFound)
+	return errors.Is(err, databricks.ErrResourceConflict)
 }
 
 func getEtagFromError(err error) (string, error) {
@@ -217,7 +217,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 				if err != nil {
 					return err
 				}
-				res, err = retryOnEtagError(func(etag string) (*T, error) { return defn.Read(ctx, w, etag) }, d.Id(), func(req *string, newEtag string) { *req = newEtag })
+				res, err = defn.Read(ctx, w, d.Id())
 				if err != nil {
 					return err
 				}

@@ -1,5 +1,35 @@
 # Version changelog
 
+## 1.35.0
+
+### New Features and Improvements:
+ * Allow custom tags on AWS customer managed VPC workspaces ([#3114](https://github.com/databricks/terraform-provider-databricks/pull/3114)).
+ * Allow disabling serverless and photon for [databricks_sql_warehouse](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_warehouse) ([#3128](https://github.com/databricks/terraform-provider-databricks/pull/3128)).
+ * Allow updating owner of [databricks_connection](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/connection) ([#3080](https://github.com/databricks/terraform-provider-databricks/pull/3080)).
+ * Fix public_access_enabled property for mws_private_access_settings ([#3132](https://github.com/databricks/terraform-provider-databricks/pull/3132)).
+ 
+### Documentation Changes:
+ * Reference OpenTofu support in TF Readme ([#3141](https://github.com/databricks/terraform-provider-databricks/pull/3141)).
+ 
+### Exporter:
+ * Better handling of ignored objects ([#3055](https://github.com/databricks/terraform-provider-databricks/pull/3055)).
+ * Don't omit `source` for notebook tasks from workspace when there is a Git configuration ([#3120](https://github.com/databricks/terraform-provider-databricks/pull/3120)).
+ * Improvements in jobs, DLT pipelines and policies ([#3140](https://github.com/databricks/terraform-provider-databricks/pull/3140)).
+ * Small refactoring ([#3115](https://github.com/databricks/terraform-provider-databricks/pull/3115)).
+ 
+### Internal Changes:
+ * Add Self-Assume Capability to the Identity-Bound policy for IAM roles provisioned by TF ([#3124](https://github.com/databricks/terraform-provider-databricks/pull/3124)).
+ * Bump TF provider to go 1.21 ([#3129](https://github.com/databricks/terraform-provider-databricks/pull/3129)).
+ * Bump github.com/cloudflare/circl from 1.3.6 to 1.3.7 ([#3088](https://github.com/databricks/terraform-provider-databricks/pull/3088)).
+ * Migrate [databricks_mws_private_access_settings](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_private_access_settings) to Go SDK ([#3135](https://github.com/databricks/terraform-provider-databricks/pull/3135)).
+ * Refactor catalog/resource_grants to use Go SDK ([#3090](https://github.com/databricks/terraform-provider-databricks/pull/3090)).
+ * Remove Authenticate call from TF Configure ([#3100](https://github.com/databricks/terraform-provider-databricks/pull/3100)).
+ * Remove debug binary ([#3107](https://github.com/databricks/terraform-provider-databricks/pull/3107)).
+ * Support Go SDK Mocking Library in Terraform Unit Tests ([#3121](https://github.com/databricks/terraform-provider-databricks/pull/3121)).
+ * Update go SDK to 0.30.0 ([#3145](https://github.com/databricks/terraform-provider-databricks/pull/3145)).
+ * Use double quotes with filters in SCIM ([#3136](https://github.com/databricks/terraform-provider-databricks/pull/3136)).
+
+
 ## 1.34.0
 
 ### New Features and Improvements:

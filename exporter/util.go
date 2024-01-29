@@ -43,14 +43,26 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 	}
+}
 
+func (ic *importContext) emitFilesFromSlice(slice []string) {
+	for _, p := range slice {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
+}
+
+func (ic *importContext) emitFilesFromMap(m map[string]string) {
+	for _, p := range m {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
 }
 
 func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
-	ic.emitInitScripts(c.InitScripts)
 	if c.AwsAttributes != nil {
 		ic.Emit(&resource{
 			Resource: "databricks_instance_profile",
@@ -76,6 +88,7 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitInitScripts(c.InitScripts)
 	ic.emitSecretsFromSecretsPath(c.SparkConf)
 	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
@@ -227,12 +240,11 @@ func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
 	defer ic.wsObjectsMutex.Unlock()
 	if len(ic.allWorkspaceObjects) == 0 {
 		t1 := time.Now()
-		log.Printf("[DEBUG] %v. Starting to list all workspace objects", t1.Local().Format(time.RFC3339))
+		log.Print("[INFO] Starting to list all workspace objects")
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
 		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories)
-		t2 := time.Now()
-		log.Printf("[DEBUG] %v. Finished listing of all workspace objects. %d objects in total. %v seconds",
-			t2.Local().Format(time.RFC3339), len(ic.allWorkspaceObjects), t2.Sub(t1).Seconds())
+		log.Printf("[INFO] Finished listing of all workspace objects. %d objects in total. %v seconds",
+			len(ic.allWorkspaceObjects), time.Since(t1).Seconds())
 	}
 	return ic.allWorkspaceObjects
 }

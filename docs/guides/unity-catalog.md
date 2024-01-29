@@ -23,7 +23,7 @@ This guide uses the following variables in configurations:
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
-To get started with Unity Catalog, this guide takes you throw the following high-level steps:
+To get started with Unity Catalog, this guide takes you through the following high-level steps:
 
 - [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)

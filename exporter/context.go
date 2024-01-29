@@ -234,7 +234,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		return commands.NewCommandsAPI(ctx, c)
 	})
 
-	defaultHanlerChannelSize := getEnvAsInt("EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE", defaultChannelSize)
+	defaultHanlerChannelSize := getEnvAsInt("EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE", defaultChannelSize*2)
 
 	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{

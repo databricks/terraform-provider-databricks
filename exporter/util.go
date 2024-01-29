@@ -263,6 +263,7 @@ func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 // TODO: Ignore databricks_automl as well?
 var directoriesToIgnore = []string{".ide", ".bundle", "__pycache__"}
 
+// TODO: add ignoring directories of deleted users?  This could potentially decrease the number of processed objects...
 func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
 	if v.ObjectType != workspace.Directory {
 		return true
@@ -995,8 +996,8 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			for object := range objectsChannel {
 				processedObjects.Add(1)
 				ic.waitGroup.Add(1)
-				// log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
-				// 	num, len(objectsChannel), object)
+				log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
+					num, len(objectsChannel), object)
 				emitWorkpaceObject(ic, object)
 				ic.waitGroup.Done()
 			}
@@ -1021,6 +1022,7 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 		}
 	})
 	close(objectsChannel)
+	log.Printf("[DEBUG] processedObjects=%d", processedObjects.Load())
 	if processedObjects.Load() == 0 { // we didn't have side effect from listing as it was already happened
 		log.Printf("[DEBUG] ic.getAllWorkspaceObjects already was called before, so we need to explicitly submit all objects")
 		for _, object := range allObjects {

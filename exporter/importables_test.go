@@ -1009,6 +1009,7 @@ func TestNotebookGeneration(t *testing.T) {
 				Path:       "/First/Second",
 				Language:   "PYTHON",
 			},
+			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",

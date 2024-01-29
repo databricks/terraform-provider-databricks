@@ -244,7 +244,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
-		objects := ic.getAllWorkspaceObjects()
+		objects := ic.getAllWorkspaceObjects(nil)
 		ic.wsObjectsMutex.Lock()
 		defer ic.wsObjectsMutex.Unlock()
 		if len(ic.allDirectories) == 0 {
@@ -274,14 +274,14 @@ func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
 	return !result
 }
 
-func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
+func (ic *importContext) getAllWorkspaceObjects(visitor func([]workspace.ObjectStatus)) []workspace.ObjectStatus {
 	ic.wsObjectsMutex.Lock()
 	defer ic.wsObjectsMutex.Unlock()
 	if len(ic.allWorkspaceObjects) == 0 {
 		t1 := time.Now()
 		log.Print("[INFO] Starting to list all workspace objects")
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories)
+		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories, visitor)
 		log.Printf("[INFO] Finished listing of all workspace objects. %d objects in total. %v seconds",
 			len(ic.allWorkspaceObjects), time.Since(t1).Seconds())
 	}
@@ -929,35 +929,36 @@ func (ic *importContext) emitSqlParentDirectory(parent string) {
 	}
 }
 
-func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
-	return func(ic *importContext) error {
-		// TODO: can we pass a visitor here, that will emit corresponding object earlier?
-		objectsList := ic.getAllWorkspaceObjects()
-		updatedSinceMs := ic.getUpdatedSinceMs()
-		for offset, object := range objectsList {
-			if object.ObjectType != objType || strings.HasPrefix(object.Path, "/Repos") {
-				continue
-			}
-			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
-				continue
-			}
-			modifiedAt := wsObjectGetModifiedAt(object)
-			if ic.incremental && modifiedAt < updatedSinceMs {
-				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
-					modifiedAt, updatedSinceMs)
-				continue
-			}
-			if !ic.MatchesName(object.Path) {
-				continue
-			}
-			ic.maybeEmitWorkspaceObject(resourceType, object.Path)
-
-			if offset%50 == 0 {
-				log.Printf("[INFO] Scanned %d of %d %ss", offset+1, len(objectsList), objName)
-			}
+func visitNotebooksAndWorkspaceFiles(ic *importContext, objects []workspace.ObjectStatus, updatedSinceMs int64) error {
+	log.Printf("[DEBUG] Emitting from the directory visitor")
+	for _, object := range objects {
+		if !(object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) || strings.HasPrefix(object.Path, "/Repos") {
+			log.Printf("[DEBUG] Skipping unsupported entry %v", object)
+			continue
 		}
-		return nil
+		if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
+			continue
+		}
+		modifiedAt := wsObjectGetModifiedAt(object)
+		if ic.incremental && modifiedAt < updatedSinceMs {
+			log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
+				object.Path, modifiedAt, updatedSinceMs)
+			continue
+		}
+		if !ic.MatchesName(object.Path) {
+			continue
+		}
+		switch object.ObjectType {
+		case workspace.Notebook:
+			ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
+		case workspace.File:
+			ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+		default:
+			log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
+		}
+
 	}
+	return nil
 }
 
 func (ic *importContext) getLastActiveMs() int64 {

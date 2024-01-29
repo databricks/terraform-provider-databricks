@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -171,7 +170,7 @@ const (
 )
 
 func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChannel chan directoryInfo,
-	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(ObjectStatus) bool) {
+	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(ObjectStatus) bool, visitor func([]ObjectStatus)) {
 	defer wg.Done()
 	notebookInfoList, err := a.list(directory.Path)
 	if err != nil {
@@ -197,10 +196,12 @@ func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChan
 	answer.append(newList)
 	for _, v := range directories {
 		wg.Add(1)
-		log.Printf("[DEBUG] putting directory '%s' into channel. Channel size: %d",
-			v.Path, len(dirChannel))
+		log.Printf("[DEBUG] putting directory '%s' into channel. Channel size: %d", v.Path, len(dirChannel))
 		dirChannel <- directoryInfo{Path: v.Path}
-		time.Sleep(15 * time.Millisecond)
+		// time.Sleep(15 * time.Millisecond)
+	}
+	if visitor != nil {
+		visitor(newList)
 	}
 }
 
@@ -214,7 +215,8 @@ func getEnvAsInt(envName string, defaultValue int) int {
 	return defaultValue
 }
 
-func (a NotebooksAPI) ListParallel(path string, shouldIncludeDir func(ObjectStatus) bool) ([]ObjectStatus, error) {
+func (a NotebooksAPI) ListParallel(path string, shouldIncludeDir func(ObjectStatus) bool,
+	visitor func([]ObjectStatus)) ([]ObjectStatus, error) {
 	var answer syncAnswer
 	wg := &sync.WaitGroup{}
 
@@ -231,14 +233,14 @@ func (a NotebooksAPI) ListParallel(path string, shouldIncludeDir func(ObjectStat
 			log.Printf("[DEBUG] starting go routine %d", t)
 			for directory := range dirChannel {
 				log.Printf("[DEBUG] processing directory %s", directory.Path)
-				a.recursiveAddPathsParallel(directory, dirChannel, &answer, wg, shouldIncludeDir)
+				a.recursiveAddPathsParallel(directory, dirChannel, &answer, wg, shouldIncludeDir, visitor)
 			}
 		}()
 
 	}
 	log.Print("[DEBUG] pushing initial path to channel")
 	wg.Add(1)
-	a.recursiveAddPathsParallel(directoryInfo{Path: path}, dirChannel, &answer, wg, shouldIncludeDir)
+	a.recursiveAddPathsParallel(directoryInfo{Path: path}, dirChannel, &answer, wg, shouldIncludeDir, visitor)
 	log.Print("[DEBUG] starting to wait")
 	wg.Wait()
 	log.Print("[DEBUG] closing the directory channel")

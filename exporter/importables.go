@@ -1427,7 +1427,13 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "notebooks",
 		Name:           workspaceObjectResouceName,
-		List:           createListWorkspaceObjectsFunc(workspace.Notebook, "databricks_notebook", "notebook"),
+		List: func(ic *importContext) error {
+			updatedSinceMs := ic.getUpdatedSinceMs()
+			ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
+				visitNotebooksAndWorkspaceFiles(ic, objects, updatedSinceMs)
+			})
+			return nil
+		},
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -1487,7 +1493,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "notebooks",
 		Name:           workspaceObjectResouceName,
-		List:           createListWorkspaceObjectsFunc(workspace.File, "databricks_workspace_file", "workspace_file"),
+		// We don't need list function for workspace files because it will be handled by the notebooks listing
+		// List: createListWorkspaceObjectsFunc(workspace.File, "databricks_workspace_file", "workspace_file"),
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)

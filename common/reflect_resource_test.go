@@ -42,6 +42,12 @@ func TestChooseFieldName(t *testing.T) {
 	}))
 }
 
+func TestChooseFieldNameWithAliasesMap(t *testing.T) {
+	assert.Equal(t, "foo", chooseFieldNameWithAliases(reflect.StructField{
+		Tag: `json:"bar"`,
+	}, []string{"a"}, map[string]string{"a.bar": "foo"}))
+}
+
 type testSliceItem struct {
 	SliceItem string   `json:"slice_item,omitempty"`
 	Nested    *testPtr `json:"nested,omitempty"`
@@ -448,7 +454,7 @@ func TestTypeToSchemaNoStruct(t *testing.T) {
 			fmt.Sprintf("%s", p))
 	}()
 	v := reflect.ValueOf(1)
-	typeToSchema(v, []string{})
+	typeToSchema(v, []string{}, map[string]string{})
 }
 
 func TestTypeToSchemaUnsupported(t *testing.T) {
@@ -461,7 +467,7 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 		New chan int `json:"new"`
 	}
 	v := reflect.ValueOf(nonsense{})
-	typeToSchema(v, []string{})
+	typeToSchema(v, []string{}, map[string]string{})
 }
 
 type data map[string]any

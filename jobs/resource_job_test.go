@@ -439,6 +439,88 @@ func TestResourceJobCreate_JobParameters(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "231", d.Id())
 }
+
+func TestResourceJobCreate_JobParameters_EmptyDefault(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name:              "JobParameterTesting",
+					MaxConcurrentRuns: 1,
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "a",
+						},
+					},
+					Parameters: []jobs.JobParameterDefinition{
+						{
+							Name:    "key",
+							Default: "",
+						},
+					},
+				},
+				Response: Job{
+					JobID: 231,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=231",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "a",
+							},
+						},
+						Parameters: []jobs.JobParameterDefinition{
+							{
+								Name:    "key",
+								Default: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobParameterTesting"
+
+		parameter {
+				name = "key"
+				default = ""
+		}
+
+		task {
+			task_key = "a"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "231", d.Id())
+}
+
+func TestResourceJobCreate_JobParameters_DefaultIsRequired(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobParameterTesting"
+
+		parameter {
+				name = "key"
+		}
+
+		task {
+			task_key = "a"
+		}`,
+	}.ExpectError(t, "invalid config supplied. [parameter.#.default] Missing required argument")
+}
+
 func TestResourceJobCreate_JobClusters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

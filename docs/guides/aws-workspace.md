@@ -6,7 +6,7 @@ page_title: "Provisioning AWS Databricks E2"
 
 You can provision multiple Databricks workspaces with Terraform.
 
-![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/main/docs/simplest-multiworkspace.png)
+![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -257,7 +257,7 @@ resource "databricks_mws_storage_configurations" "this" {
 
 ## Databricks E2 Workspace
 
-Once [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are set up, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
+Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are set up, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
 Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. We specify `databricks_host` and `databricks_token` outputs, which must be used in the latter modules.
 
@@ -291,7 +291,7 @@ output "databricks_token" {
 
 ### Data resources and Authentication is not configured errors
 
-_In Terraform 0.13 and later_, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `default auth: cannot configure default credentials` error is raised. To work around this issue and guarantee proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if a workspace is created _in one module_ and resources [within the workspace](workspace-management.md) are created _in another_. We do not recommend using Terraform 0.12 and earlier if your usage involves data resources.
+*In Terraform 0.13 and later*, data resources have the same dependency resolution behavior [as defined for managed resources](https://www.terraform.io/docs/language/resources/behavior.html#resource-dependencies). Most data resources make an API call to a workspace. If a workspace doesn't exist yet, `default auth: cannot configure default credentials` error is raised. To work around this issue and guarantee proper lazy authentication with data resources, you should add `depends_on = [databricks_mws_workspaces.this]` to the body. This issue doesn't occur if a workspace is created *in one module* and resources [within the workspace](workspace-management.md) are created *in another*. We do not recommend using Terraform 0.12 and earlier if your usage involves data resources.
 
 ```hcl
 data "databricks_current_user" "me" {
@@ -341,8 +341,8 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 
 - Try creating workspace from UI:
 
-![create_workspace_error](https://github.com/databricks/terraform-provider-databricks/raw/main/docs/images/create_workspace_error.png)
+![create_workspace_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png)
 
 - Verify if the role and policy exist (assume role should allow external ID)
 
-![iam_role_trust_error](https://github.com/databricks/terraform-provider-databricks/raw/main/docs/images/iam_role_trust_error.png)
+![iam_role_trust_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png)

@@ -6,7 +6,7 @@ page_title: "Provisioning Databricks on AWS with PrivateLink"
 
 Databricks PrivateLink support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure. You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically using a programmatic approach. This guide assumes you are deploying into an existing VPC and have set up credentials and storage configurations as per prior examples, notably here.
 
-![Private link backend](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-e2-private-link-backend.png)
+![Private link backend](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-private-link-backend.png)
 
 This guide uses the following variables in configurations:
 
@@ -128,7 +128,7 @@ The first step is to create the required AWS objects:
 - A subnet dedicated to your VPC endpoints.
 - A security group dedicated to your VPC endpoints and satisfying required inbound/outbound TCP/HTTPS traffic rules on ports 443 and 6666, respectively.
 
-For workspace with [compliance security profile](https://docs.databricks.com/security/privacy/security-profile.html#prepare-a-workspace-for-the-compliance-security-profile), you need _additionally_ allow bidirectional access to port 2443 for FIPS connections. The ports to allow bidirectional access are 443, 2443, and 6666.
+For workspace with [compliance security profile](https://docs.databricks.com/security/privacy/security-profile.html#prepare-a-workspace-for-the-compliance-security-profile), you need *additionally* allow bidirectional access to port 2443 for FIPS connections. The ports to allow bidirectional access are 443, 2443, and 6666.
 
 ```hcl
 data "aws_vpc" "prod" {

@@ -12,12 +12,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func retryOnEtagError[Req, Resp any](f func(req Req) (Resp, error), firstReq Req, updateReq func(req *Req, newEtag string)) (Resp, error) {
+func retryOnEtagError[Req, Resp any](f func(req Req) (Resp, error), firstReq Req, updateReq func(req *Req, newEtag string), retriableErrors []error) (Resp, error) {
 	req := firstReq
 	// Retry once on etag error.
 	res, err := f(req)
 	if err == nil {
 		return res, nil
+	}
+	if !isRetriableError(err, retriableErrors) {
+		return res, err
 	}
 	etag, err := getEtagFromError(err)
 	if err != nil {
@@ -27,14 +30,16 @@ func retryOnEtagError[Req, Resp any](f func(req Req) (Resp, error), firstReq Req
 	return f(req)
 }
 
-func isEtagVersionError(err error) bool {
-	return errors.Is(err, databricks.ErrResourceConflict)
+func isRetriableError(err error, retriableErrors []error) bool {
+	for _, retriableError := range retriableErrors {
+		if errors.Is(err, retriableError) {
+			return true
+		}
+	}
+	return false
 }
 
 func getEtagFromError(err error) (string, error) {
-	if !isEtagVersionError(err) {
-		return "", err
-	}
 	errorInfos := apierr.GetErrorInfo(err)
 	if len(errorInfos) > 0 {
 		metadata := errorInfos[0].Metadata
@@ -173,7 +178,8 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 			s["setting_name"].Computed = true
 			return s
 		})
-
+	createOrUpdateRetriableErrors := []error{apierr.ErrNotFound, apierr.ErrResourceConflict}
+	deleteRetriableErrors := []error{apierr.ErrResourceConflict}
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, setting T) error {
 		common.DataToStructPointer(d, resourceSchema, &setting)
 		var res string
@@ -183,7 +189,13 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 			if err != nil {
 				return err
 			}
-			res, err = retryOnEtagError[T, string](func(setting T) (string, error) { return defn.Update(ctx, w, setting) }, setting, defn.SetETag)
+			res, err = retryOnEtagError[T, string](
+				func(setting T) (string, error) {
+					return defn.Update(ctx, w, setting)
+				},
+				setting,
+				defn.SetETag,
+				createOrUpdateRetriableErrors)
 			if err != nil {
 				return err
 			}
@@ -192,7 +204,13 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 			if err != nil {
 				return err
 			}
-			res, err = retryOnEtagError(func(setting T) (string, error) { return defn.Update(ctx, a, setting) }, setting, defn.SetETag)
+			res, err = retryOnEtagError(
+				func(setting T) (string, error) {
+					return defn.Update(ctx, a, setting)
+				},
+				setting,
+				defn.SetETag,
+				createOrUpdateRetriableErrors)
 			if err != nil {
 				return err
 			}
@@ -226,7 +244,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 				if err != nil {
 					return err
 				}
-				res, err = retryOnEtagError(func(etag string) (*T, error) { return defn.Read(ctx, a, etag) }, d.Id(), func(req *string, newEtag string) { *req = newEtag })
+				res, err = defn.Read(ctx, a, d.Id())
 				if err != nil {
 					return err
 				}
@@ -251,13 +269,20 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var etag string
+			updateETag := func(req *string, newEtag string) { *req = newEtag }
 			switch defn := defn.(type) {
 			case workspaceSettingDefinition[T]:
 				w, err := c.WorkspaceClient()
 				if err != nil {
 					return err
 				}
-				etag, err = retryOnEtagError(func(etag string) (string, error) { return defn.Delete(ctx, w, etag) }, d.Id(), func(req *string, newEtag string) { *req = newEtag })
+				etag, err = retryOnEtagError(
+					func(etag string) (string, error) {
+						return defn.Delete(ctx, w, etag)
+					},
+					d.Id(),
+					updateETag,
+					deleteRetriableErrors)
 				if err != nil {
 					return err
 				}
@@ -266,7 +291,13 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 				if err != nil {
 					return err
 				}
-				etag, err = retryOnEtagError(func(etag string) (string, error) { return defn.Delete(ctx, a, etag) }, d.Id(), func(req *string, newEtag string) { *req = newEtag })
+				etag, err = retryOnEtagError(
+					func(etag string) (string, error) {
+						return defn.Delete(ctx, a, etag)
+					},
+					d.Id(),
+					updateETag,
+					deleteRetriableErrors)
 				if err != nil {
 					return err
 				}

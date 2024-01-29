@@ -9,7 +9,6 @@ Retrieves the settings of [databricks_mlflow_experiment](../resources/mlflow_exp
 
 ## Example Usage
 
-
 ```hcl
 data "databricks_mlflow_experiment" "this" {
   experiment_id = "1234567890"

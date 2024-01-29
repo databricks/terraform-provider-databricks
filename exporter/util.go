@@ -118,7 +118,7 @@ func (ic *importContext) emitListOfUsers(users []string) {
 }
 
 func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
-	if userOrSPName == "" {
+	if userOrSPName == "" || !slices.Contains(ic.services, "users") {
 		return
 	}
 	// Cache check here to avoid emitting
@@ -130,7 +130,7 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 		return
 	}
 	if common.StringIsUUID(userOrSPName) {
-		user, err := ic.findSpnByAppID(userOrSPName)
+		user, err := ic.findSpnByAppID(userOrSPName, false)
 		if err != nil {
 			log.Printf("[ERROR] Can't find SP with application ID %s", userOrSPName)
 			ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
@@ -141,7 +141,7 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 			})
 		}
 	} else {
-		user, err := ic.findUserByName(strings.ToLower(userOrSPName))
+		user, err := ic.findUserByName(strings.ToLower(userOrSPName), false)
 		if err != nil {
 			log.Printf("[ERROR] Can't find user with name %s", userOrSPName)
 			ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
@@ -199,12 +199,12 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, 
 	}
 	var err error
 	if common.StringIsUUID(userOrSPName) {
-		_, err = ic.findSpnByAppID(userOrSPName)
+		_, err = ic.findSpnByAppID(userOrSPName, true)
 		if err != nil {
 			ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
 		}
 	} else {
-		_, err = ic.findUserByName(strings.ToLower(userOrSPName))
+		_, err = ic.findUserByName(strings.ToLower(userOrSPName), true)
 		if err != nil {
 			ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
 		}
@@ -410,9 +410,15 @@ const (
 )
 
 func (ic *importContext) getUsersMapping() {
-	ic.usersMutex.Lock()
-	defer ic.usersMutex.Unlock()
-	if ic.allUsersMapping == nil {
+	ic.allUsersMutex.RLocker().Lock()
+	userMapping := ic.allUsersMapping
+	ic.allUsersMutex.RLocker().Unlock()
+	if userMapping == nil {
+		ic.allUsersMutex.Lock()
+		defer ic.allUsersMutex.Unlock()
+		if ic.allUsersMapping != nil {
+			return
+		}
 		ic.allUsersMapping = make(map[string]string)
 		var users []iam.User
 		var err error
@@ -433,10 +439,11 @@ func (ic *importContext) getUsersMapping() {
 			// log.Printf("[DEBUG] adding user %v into the map. %d out of %d", user, i+1, len(users))
 			ic.allUsersMapping[user.UserName] = user.Id
 		}
+		log.Printf("[DEBUG] users are copied")
 	}
 }
 
-func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
+func (ic *importContext) findUserByName(name string, fastCheck bool) (u scim.User, err error) {
 	log.Printf("[DEBUG] Looking for user %s", name)
 	ic.usersMutex.RLocker().Lock()
 	user, exists := ic.allUsers[name]
@@ -452,13 +459,16 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 		return
 	}
 	ic.getUsersMapping()
-	ic.usersMutex.RLocker().Lock()
+	ic.allUsersMutex.RLocker().Lock()
 	userId, exists := ic.allUsersMapping[name]
-	ic.usersMutex.RLocker().Unlock()
+	ic.allUsersMutex.RLocker().Unlock()
 	if !exists {
 		err = fmt.Errorf("there is no user '%s'", name)
 		u = scim.User{UserName: nonExistingUserOrSp}
 	} else {
+		if fastCheck {
+			return scim.User{UserName: name}, nil
+		}
 		a := scim.NewUsersAPI(ic.Context, ic.Client)
 		u, err = a.Read(userId, "id,userName,displayName,active,externalId,entitlements,groups,roles")
 		if err != nil {
@@ -525,7 +535,7 @@ func (ic *importContext) getBuiltinPolicyFamilies() map[string]compute.PolicyFam
 	return ic.builtInPolicies
 }
 
-func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
+func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u scim.User, err error) {
 	log.Printf("[DEBUG] Looking for SP %s", applicationID)
 	ic.spsMutex.RLocker().Lock()
 	sp, exists := ic.allSps[applicationID]
@@ -548,6 +558,9 @@ func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err 
 		err = fmt.Errorf("there is no service principal '%s'", applicationID)
 		u = scim.User{ApplicationID: nonExistingUserOrSp}
 	} else {
+		if fastCheck {
+			return scim.User{ApplicationID: applicationID}, nil
+		}
 		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
 		u, err = a.Read(spId, "userName,displayName,active,externalId,entitlements,groups,roles")
 		if err != nil {
@@ -929,35 +942,63 @@ func (ic *importContext) emitSqlParentDirectory(parent string) {
 	}
 }
 
-func visitNotebooksAndWorkspaceFiles(ic *importContext, objects []workspace.ObjectStatus, updatedSinceMs int64) error {
-	log.Printf("[DEBUG] Emitting from the directory visitor")
-	for _, object := range objects {
-		if !(object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) || strings.HasPrefix(object.Path, "/Repos") {
-			log.Printf("[DEBUG] Skipping unsupported entry %v", object)
-			continue
-		}
-		if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
-			continue
-		}
-		modifiedAt := wsObjectGetModifiedAt(object)
-		if ic.incremental && modifiedAt < updatedSinceMs {
-			log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
-				object.Path, modifiedAt, updatedSinceMs)
-			continue
-		}
-		if !ic.MatchesName(object.Path) {
-			continue
-		}
-		switch object.ObjectType {
-		case workspace.Notebook:
-			ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
-		case workspace.File:
-			ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
-		default:
-			log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
-		}
-
+func listNotebooksAndWorkspaceFiles(ic *importContext) error {
+	updatedSinceMs := ic.getUpdatedSinceMs()
+	objectsChannel := make(chan workspace.ObjectStatus, defaultChannelSize)
+	numRoutines := 10
+	for i := 0; i < numRoutines; i++ {
+		num := i
+		ic.waitGroup.Add(1)
+		go func() {
+			log.Printf("[DEBUG] Starting channel %d for workspace objects", num)
+			for object := range objectsChannel {
+				ic.waitGroup.Add(1)
+				log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
+					num, len(objectsChannel), object)
+				switch object.ObjectType {
+				case workspace.Notebook:
+					ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
+				case workspace.File:
+					ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+				default:
+					log.Printf("[WARN] channel %d for workspace objects, unknown type %s for path %s",
+						num, object.ObjectType, object.Path)
+				}
+				ic.waitGroup.Done()
+			}
+			log.Printf("[DEBUG] channel %d for workspace objects is finished", num)
+			ic.waitGroup.Done()
+		}()
 	}
+	ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
+		for _, object := range objects {
+			if !(object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) ||
+				strings.HasPrefix(object.Path, "/Repos") {
+				// log.Printf("[DEBUG] Skipping unsupported entry %v", object)
+				continue
+			}
+			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
+				continue
+			}
+			modifiedAt := wsObjectGetModifiedAt(object)
+			if ic.incremental && modifiedAt < updatedSinceMs {
+				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
+					object.Path, modifiedAt, updatedSinceMs)
+				continue
+			}
+			if !ic.MatchesName(object.Path) {
+				continue
+			}
+			object := object
+			switch object.ObjectType {
+			case workspace.Notebook, workspace.File:
+				objectsChannel <- object
+			default:
+				log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
+			}
+		}
+	})
+	close(objectsChannel)
 	return nil
 }
 

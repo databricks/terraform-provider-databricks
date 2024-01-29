@@ -90,7 +90,7 @@ type importContext struct {
 	incremental              bool
 	mounts                   bool
 	noFormat                 bool
-	services                 []string
+	services                 []string // TODO: change to the map to search faster?
 	listing                  string
 	match                    string
 	lastActiveDays           int64
@@ -119,8 +119,9 @@ type importContext struct {
 
 	//
 	allUsers        map[string]scim.User
-	allUsersMapping map[string]string // maps user_name -> internal ID
 	usersMutex      sync.RWMutex
+	allUsersMapping map[string]string // maps user_name -> internal ID
+	allUsersMutex   sync.RWMutex
 
 	//
 	allSps        map[string]scim.User

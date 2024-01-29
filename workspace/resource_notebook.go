@@ -194,14 +194,14 @@ func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChan
 		}
 	}
 	answer.append(newList)
+	if visitor != nil {
+		visitor(newList)
+	}
 	for _, v := range directories {
 		wg.Add(1)
 		log.Printf("[DEBUG] putting directory '%s' into channel. Channel size: %d", v.Path, len(dirChannel))
 		dirChannel <- directoryInfo{Path: v.Path}
 		// time.Sleep(15 * time.Millisecond)
-	}
-	if visitor != nil {
-		visitor(newList)
 	}
 }
 

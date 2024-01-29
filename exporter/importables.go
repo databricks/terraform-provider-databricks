@@ -920,7 +920,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
-			u, err := ic.findUserByName(r.Value)
+			u, err := ic.findUserByName(r.Value, false)
 			if err != nil {
 				return err
 			}
@@ -930,7 +930,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			username := r.Data.Get("user_name").(string)
 			r.Data.Set("force", true)
-			u, err := ic.findUserByName(username)
+			u, err := ic.findUserByName(username, false)
 			if err != nil {
 				return err
 			}
@@ -963,7 +963,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		// TODO: we need to add List operation here as well
 		Search: func(ic *importContext, r *resource) error {
-			u, err := ic.findSpnByAppID(r.Value)
+			u, err := ic.findSpnByAppID(r.Value, false)
 			if err != nil {
 				return err
 			}
@@ -988,7 +988,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			applicationID := r.Data.Get("application_id").(string)
 			r.Data.Set("force", true)
-			u, err := ic.findSpnByAppID(applicationID)
+			u, err := ic.findSpnByAppID(applicationID, false)
 			if err != nil {
 				return err
 			}
@@ -1427,13 +1427,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "notebooks",
 		Name:           workspaceObjectResouceName,
-		List: func(ic *importContext) error {
-			updatedSinceMs := ic.getUpdatedSinceMs()
-			ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
-				visitNotebooksAndWorkspaceFiles(ic, objects, updatedSinceMs)
-			})
-			return nil
-		},
+		List:           listNotebooksAndWorkspaceFiles,
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)

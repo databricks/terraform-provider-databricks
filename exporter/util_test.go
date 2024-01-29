@@ -134,6 +134,7 @@ func TestEmitUser(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.services = []string{"users"}
 		assert.True(t, len(ic.testEmits) == 0)
 		ic.emitUserOrServicePrincipal("user@domain.com")
 		assert.True(t, len(ic.testEmits) == 1)
@@ -149,6 +150,7 @@ func TestEmitServicePrincipal(t *testing.T) {
 		spReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.services = []string{"users"}
 		ic.emitUserOrServicePrincipal("21aab5a7-ee70-4385-34d4-a77278be5cb6")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_service_principal[<unknown>] (id: id)"])
@@ -156,6 +158,23 @@ func TestEmitServicePrincipal(t *testing.T) {
 }
 
 func TestEmitUserError(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+			Response: iam.ListUsersResponse{
+				Resources: []iam.User{},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.services = []string{"users"}
+		ic.emitUserOrServicePrincipal("abc")
+		assert.True(t, len(ic.testEmits) == 0)
+	})
+}
+
+func TestEmitUserServiceNotEnabled(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
@@ -179,6 +198,7 @@ func TestEmitUserOrServicePrincipalForPath(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.services = []string{"users"}
 		ic.emitUserOrServicePrincipalForPath("/Users/user@domain.com/abc", "/Users")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_user[<unknown>] (id: id)"])

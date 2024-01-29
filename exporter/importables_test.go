@@ -1017,6 +1017,7 @@ func TestNotebookGeneration(t *testing.T) {
 			Response: workspace.ExportPath{
 				Content: "YWJj",
 			},
+			ReuseRequest: true,
 		},
 	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
@@ -1068,6 +1069,7 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 			Response: workspace.ExportPath{
 				Content: "YWJj",
 			},
+			ReuseRequest: true,
 		},
 	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "JUPYTER"
@@ -1113,6 +1115,7 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 				ObjectType: "DIRECTORY",
 				Path:       "/Fir\"st\\",
 			},
+			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1123,6 +1126,7 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 				Path:       "/Fir\"st\\/Second",
 				Language:   "PYTHON",
 			},
+			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1130,6 +1134,7 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 			Response: workspace.ExportPath{
 				Content: "YWJj",
 			},
+			ReuseRequest: true,
 		},
 	}, "notebooks,directories", true, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"

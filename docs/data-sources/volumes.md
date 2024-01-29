@@ -29,11 +29,12 @@ output "all_volumes" {
 
 This data source exports the following attributes:
 
-* `ids` - a set of [databricks_volume](../resources/volume.md) full names: *`catalog`.`schema`.`volume`*
+* `ids` - a list of [databricks_volume](../resources/volume.md) full names: *`catalog`.`schema`.`volume`*
 
 ## Related Resources
 
 The following resources are used in the same context:
 
+* [databricks_volume](../resources/volume.md) to manage volumes within Unity Catalog.
 * [databricks_schema](../resources/schema.md) to manage schemas within Unity Catalog.
 * [databricks_catalog](../resources/catalog.md) to manage catalogs within Unity Catalog.

@@ -16,6 +16,7 @@ import (
 
 func TestImportClusterEmitsInitScripts(t *testing.T) {
 	ic := importContextForTest()
+	ic.enableServices("storage")
 	ic.importCluster(&clusters.Cluster{
 		InitScripts: []clusters.InitScriptStorageInfo{
 			{
@@ -134,7 +135,7 @@ func TestEmitUser(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		ic.services = []string{"users"}
+		ic.enableServices("users")
 		assert.True(t, len(ic.testEmits) == 0)
 		ic.emitUserOrServicePrincipal("user@domain.com")
 		assert.True(t, len(ic.testEmits) == 1)
@@ -150,7 +151,7 @@ func TestEmitServicePrincipal(t *testing.T) {
 		spReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		ic.services = []string{"users"}
+		ic.enableServices("users")
 		ic.emitUserOrServicePrincipal("21aab5a7-ee70-4385-34d4-a77278be5cb6")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_service_principal[<unknown>] (id: id)"])
@@ -168,7 +169,7 @@ func TestEmitUserError(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		ic.services = []string{"users"}
+		ic.enableServices("users")
 		ic.emitUserOrServicePrincipal("abc")
 		assert.True(t, len(ic.testEmits) == 0)
 	})
@@ -198,7 +199,7 @@ func TestEmitUserOrServicePrincipalForPath(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		ic.services = []string{"users"}
+		ic.enableServices("users")
 		ic.emitUserOrServicePrincipalForPath("/Users/user@domain.com/abc", "/Users")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_user[<unknown>] (id: id)"])
@@ -224,6 +225,7 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("notebooks")
 		ic.emitNotebookOrRepo("/Users/user@domain.com/abc")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_notebook[<unknown>] (id: /Users/user@domain.com/abc)"])
@@ -236,6 +238,7 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 		userReadFixture,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("repos")
 		ic.emitNotebookOrRepo("/Repos/user@domain.com/repo/abc")
 		assert.True(t, len(ic.testEmits) == 1)
 		assert.True(t, ic.testEmits["databricks_repo[<unknown>] (path: /Repos/user@domain.com/repo)"])

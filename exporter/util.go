@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/aws"
@@ -118,7 +119,7 @@ func (ic *importContext) emitListOfUsers(users []string) {
 }
 
 func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
-	if userOrSPName == "" || !slices.Contains(ic.services, "users") {
+	if userOrSPName == "" || !ic.isServiceEnabled("users") {
 		return
 	}
 	// Cache check here to avoid emitting
@@ -928,6 +929,13 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
 	}
 }
 
+func (ic *importContext) enableServices(services string) {
+	ic.services = map[string]struct{}{}
+	for _, s := range strings.Split(services, ",") {
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+}
+
 func (ic *importContext) emitSqlParentDirectory(parent string) {
 	if parent == "" {
 		return
@@ -942,51 +950,64 @@ func (ic *importContext) emitSqlParentDirectory(parent string) {
 	}
 }
 
+func (ic *importContext) shouldSkipWorkspaceObject(object workspace.ObjectStatus, updatedSinceMs int64) bool {
+	if !(object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) ||
+		strings.HasPrefix(object.Path, "/Repos") {
+		// log.Printf("[DEBUG] Skipping unsupported entry %v", object)
+		return true
+	}
+	if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
+		return true
+	}
+	modifiedAt := wsObjectGetModifiedAt(object)
+	if ic.incremental && modifiedAt < updatedSinceMs {
+		log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
+			object.Path, modifiedAt, updatedSinceMs)
+		return true
+	}
+	if !ic.MatchesName(object.Path) {
+		return true
+	}
+	return false
+}
+
+func emitWorkpaceObject(ic *importContext, object workspace.ObjectStatus) {
+	switch object.ObjectType {
+	case workspace.Notebook:
+		ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
+	case workspace.File:
+		ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+	default:
+		log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
+	}
+}
+
 func listNotebooksAndWorkspaceFiles(ic *importContext) error {
-	updatedSinceMs := ic.getUpdatedSinceMs()
 	objectsChannel := make(chan workspace.ObjectStatus, defaultChannelSize)
 	numRoutines := 10
+	var processedObjects atomic.Uint64
 	for i := 0; i < numRoutines; i++ {
 		num := i
 		ic.waitGroup.Add(1)
 		go func() {
 			log.Printf("[DEBUG] Starting channel %d for workspace objects", num)
 			for object := range objectsChannel {
+				processedObjects.Add(1)
 				ic.waitGroup.Add(1)
 				log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
 					num, len(objectsChannel), object)
-				switch object.ObjectType {
-				case workspace.Notebook:
-					ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
-				case workspace.File:
-					ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
-				default:
-					log.Printf("[WARN] channel %d for workspace objects, unknown type %s for path %s",
-						num, object.ObjectType, object.Path)
-				}
+				emitWorkpaceObject(ic, object)
 				ic.waitGroup.Done()
 			}
 			log.Printf("[DEBUG] channel %d for workspace objects is finished", num)
 			ic.waitGroup.Done()
 		}()
 	}
-	ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
+	// There are two use cases - this function will handle listing, or it will receive listing
+	updatedSinceMs := ic.getUpdatedSinceMs()
+	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
-			if !(object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) ||
-				strings.HasPrefix(object.Path, "/Repos") {
-				// log.Printf("[DEBUG] Skipping unsupported entry %v", object)
-				continue
-			}
-			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
-				continue
-			}
-			modifiedAt := wsObjectGetModifiedAt(object)
-			if ic.incremental && modifiedAt < updatedSinceMs {
-				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
-					object.Path, modifiedAt, updatedSinceMs)
-				continue
-			}
-			if !ic.MatchesName(object.Path) {
+			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
 				continue
 			}
 			object := object
@@ -999,6 +1020,15 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 		}
 	})
 	close(objectsChannel)
+	if processedObjects.Load() == 0 { // we didn't have side effect from listing as it was already happened
+		log.Printf("[DEBUG] ic.getAllWorkspaceObjects already was called before, so we need to explicitly submit all objects")
+		for _, object := range allObjects {
+			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
+				continue
+			}
+			emitWorkpaceObject(ic, object)
+		}
+	}
 	return nil
 }
 

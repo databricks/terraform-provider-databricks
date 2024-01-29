@@ -22,7 +22,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -90,7 +89,7 @@ type importContext struct {
 	incremental              bool
 	mounts                   bool
 	noFormat                 bool
-	services                 []string // TODO: change to the map to search faster?
+	services                 map[string]struct{}
 	listing                  string
 	match                    string
 	lastActiveDays           int64
@@ -310,7 +309,7 @@ func (ic *importContext) Run() error {
 	}
 
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
-		ic.Module, ic.Directory, ic.services)
+		ic.Module, ic.Directory, maps.Keys(ic.services))
 
 	ic.notebooksFormat = strings.ToUpper(ic.notebooksFormat)
 	_, supportedFormat := fileExtensionFormatMapping[ic.notebooksFormat]
@@ -1001,7 +1000,8 @@ func (ic *importContext) ResourceName(r *resource) string {
 }
 
 func (ic *importContext) isServiceEnabled(service string) bool {
-	return slices.Contains[[]string, string](ic.services, service)
+	_, exists := ic.services[service]
+	return exists
 }
 
 func (ic *importContext) Emit(r *resource) {
@@ -1009,6 +1009,15 @@ func (ic *importContext) Emit(r *resource) {
 	_, v := r.MatchPair()
 	if v == "" {
 		log.Printf("[DEBUG] %s has got empty identifier", r)
+		return
+	}
+	ir, ok := ic.Importables[r.Resource]
+	if !ok {
+		log.Printf("[ERROR] %s is not available for import", r)
+		return
+	}
+	if !ic.isServiceEnabled(ir.Service) {
+		log.Printf("[DEBUG] %s (%s service) is not part of the import", r.Resource, ir.Service)
 		return
 	}
 	if ic.Has(r) {
@@ -1023,11 +1032,6 @@ func (ic *importContext) Emit(r *resource) {
 		return
 	}
 	ic.setImportingState(r.String(), false) // we're starting to add a new resource
-	ir, ok := ic.Importables[r.Resource]
-	if !ok {
-		log.Printf("[ERROR] %s is not available for import", r)
-		return
-	}
 	_, ok = ic.Resources[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available in provider", r)
@@ -1040,11 +1044,6 @@ func (ic *importContext) Emit(r *resource) {
 	}
 	// TODO: add similar condition for checking workspace-level objects only. After new ACLs import is merged
 
-	// TODO: split services into slice?  Yes, otherwise it will be problematic with generic names like UC
-	if !ic.isServiceEnabled(ir.Service) {
-		log.Printf("[DEBUG] %s (%s service) is not part of the import", r.Resource, ir.Service)
-		return
-	}
 	// from here, it should be done by the goroutine...  send resource into the channel
 	ch, exists := ic.channels[r.Resource]
 	if exists {

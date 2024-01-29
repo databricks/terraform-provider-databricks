@@ -101,7 +101,6 @@ func TestEmitNoSearchAvail(t *testing.T) {
 				Service: "e",
 			},
 		},
-		services:  []string{"e"},
 		waitGroup: &sync.WaitGroup{},
 		channels: map[string]resourceChannel{
 			"a": ch,
@@ -109,6 +108,7 @@ func TestEmitNoSearchAvail(t *testing.T) {
 		ignoredResources: map[string]struct{}{},
 		State:            state,
 	}
+	ic.enableServices("e")
 	go func() {
 		for r := range ch {
 			r.ImportResource(ic)
@@ -140,13 +140,13 @@ func TestEmitNoSearchFails(t *testing.T) {
 				},
 			},
 		},
-		services:  []string{"e"},
 		waitGroup: &sync.WaitGroup{},
 		channels: map[string]resourceChannel{
 			"a": ch,
 		},
 		State: state,
 	}
+	ic.enableServices("e")
 	go func() {
 		for r := range ch {
 			r.ImportResource(ic)
@@ -178,7 +178,6 @@ func TestEmitNoSearchNoId(t *testing.T) {
 				},
 			},
 		},
-		services:  []string{"e"},
 		waitGroup: &sync.WaitGroup{},
 		channels: map[string]resourceChannel{
 			"a": ch,
@@ -186,6 +185,7 @@ func TestEmitNoSearchNoId(t *testing.T) {
 		ignoredResources: map[string]struct{}{},
 		State:            state,
 	}
+	ic.enableServices("e")
 	go func() {
 		for r := range ch {
 			r.ImportResource(ic)
@@ -221,13 +221,13 @@ func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 				},
 			},
 		},
-		services:  []string{"e"},
 		waitGroup: &sync.WaitGroup{},
 		channels: map[string]resourceChannel{
 			"a": ch,
 		},
 		State: state,
 	}
+	ic.enableServices("e")
 	go func() {
 		for r := range ch {
 			r.ImportResource(ic)

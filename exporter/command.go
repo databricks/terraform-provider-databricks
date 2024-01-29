@@ -152,6 +152,6 @@ func Run(args ...string) error {
 	} else if debug {
 		logLevel = append(logLevel, "[DEBUG]")
 	}
-	ic.services = strings.Split(configuredServices, ",")
+	ic.enableServices(configuredServices)
 	return ic.Run()
 }

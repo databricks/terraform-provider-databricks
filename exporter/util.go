@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -282,7 +283,7 @@ func (ic *importContext) getAllWorkspaceObjects(visitor func([]workspace.ObjectS
 		t1 := time.Now()
 		log.Print("[INFO] Starting to list all workspace objects")
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories, visitor)
+		ic.allWorkspaceObjects, _ = ListParallel(notebooksAPI, "/", excludeAuxiliaryDirectories, visitor)
 		log.Printf("[INFO] Finished listing of all workspace objects. %d objects in total. %v seconds",
 			len(ic.allWorkspaceObjects), time.Since(t1).Seconds())
 	}
@@ -994,8 +995,8 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			for object := range objectsChannel {
 				processedObjects.Add(1)
 				ic.waitGroup.Add(1)
-				log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
-					num, len(objectsChannel), object)
+				// log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
+				// 	num, len(objectsChannel), object)
 				emitWorkpaceObject(ic, object)
 				ic.waitGroup.Done()
 			}
@@ -1056,4 +1057,102 @@ func getEnvAsInt(envName string, defaultValue int) int {
 		log.Printf("[ERROR] Can't parse value '%s' of environment variable '%s'", val, envName)
 	}
 	return defaultValue
+}
+
+// Parallel listing implementation
+type syncAnswer struct {
+	MU   sync.Mutex
+	data []workspace.ObjectStatus
+}
+
+func (a *syncAnswer) append(objs []workspace.ObjectStatus) {
+	a.MU.Lock()
+	a.data = append(a.data, objs...)
+	a.MU.Unlock()
+}
+
+type directoryInfo struct {
+	Path     string
+	Attempts int
+}
+
+// constants related to the parallel listing
+const (
+	directoryListingMaxAttempts = 3
+	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
+	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
+	defaultWorkersPoolSize      = 10
+	defaultDirectoryChannelSize = 100000
+)
+
+func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo, dirChannel chan directoryInfo,
+	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(workspace.ObjectStatus) bool, visitor func([]workspace.ObjectStatus)) {
+	defer wg.Done()
+	notebookInfoList, err := a.ListInternalImpl(directory.Path)
+	if err != nil {
+		log.Printf("[WARN] error listing '%s': %v", directory.Path, err)
+		if directory.Attempts < directoryListingMaxAttempts {
+			wg.Add(1)
+			dirChannel <- directoryInfo{Path: directory.Path, Attempts: directory.Attempts + 1}
+		}
+	}
+
+	newList := make([]workspace.ObjectStatus, 0, len(notebookInfoList))
+	directories := make([]workspace.ObjectStatus, 0, len(notebookInfoList))
+	for _, v := range notebookInfoList {
+		if v.ObjectType == workspace.Directory {
+			if shouldIncludeDir(v) {
+				newList = append(newList, v)
+				directories = append(directories, v)
+			}
+		} else {
+			newList = append(newList, v)
+		}
+	}
+	answer.append(newList)
+	if visitor != nil {
+		visitor(newList)
+	}
+	for _, v := range directories {
+		wg.Add(1)
+		log.Printf("[DEBUG] putting directory '%s' into channel. Channel size: %d", v.Path, len(dirChannel))
+		dirChannel <- directoryInfo{Path: v.Path}
+		// time.Sleep(15 * time.Millisecond)
+	}
+}
+
+func ListParallel(a workspace.NotebooksAPI, path string, shouldIncludeDir func(workspace.ObjectStatus) bool,
+	visitor func([]workspace.ObjectStatus)) ([]workspace.ObjectStatus, error) {
+	var answer syncAnswer
+	wg := &sync.WaitGroup{}
+
+	if shouldIncludeDir == nil {
+		shouldIncludeDir = func(workspace.ObjectStatus) bool { return true }
+	}
+
+	numWorkers := getEnvAsInt(envVarListParallelism, defaultWorkersPoolSize)
+	channelSize := getEnvAsInt(envVarDirectoryChannelSize, defaultDirectoryChannelSize)
+	dirChannel := make(chan directoryInfo, channelSize)
+	for i := 0; i < numWorkers; i++ {
+		t := i
+		go func() {
+			log.Printf("[DEBUG] starting go routine %d", t)
+			for directory := range dirChannel {
+				log.Printf("[DEBUG] processing directory %s", directory.Path)
+				recursiveAddPathsParallel(a, directory, dirChannel, &answer, wg, shouldIncludeDir, visitor)
+			}
+		}()
+
+	}
+	log.Print("[DEBUG] pushing initial path to channel")
+	wg.Add(1)
+	recursiveAddPathsParallel(a, directoryInfo{Path: path}, dirChannel, &answer, wg, shouldIncludeDir, visitor)
+	log.Print("[DEBUG] starting to wait")
+	wg.Wait()
+	log.Print("[DEBUG] closing the directory channel")
+	close(dirChannel)
+
+	answer.MU.Lock()
+	defer answer.MU.Unlock()
+	return answer.data, nil
 }

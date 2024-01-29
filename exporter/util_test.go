@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestImportClusterEmitsInitScripts(t *testing.T) {
@@ -325,4 +326,67 @@ func TestExcludeAuxiliaryDirectories(t *testing.T) {
 		ObjectType: workspace.Directory}))
 	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
 		ObjectType: workspace.Directory}))
+}
+
+func TestParallelListing(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2F",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						ObjectID:   1,
+						ObjectType: workspace.Directory,
+						Path:       "/a",
+					},
+					{
+						ObjectID:   2,
+						ObjectType: workspace.Directory,
+						Path:       "/b",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2Fa",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						ObjectID:   3,
+						ObjectType: workspace.Notebook,
+						Language:   workspace.Python,
+						Path:       "/a/e",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/list?path=%2Fb",
+			Response: workspace.ObjectList{
+				Objects: []workspace.ObjectStatus{
+					{
+						ObjectID:   4,
+						ObjectType: workspace.Notebook,
+						Language:   workspace.SQL,
+						Path:       "/b/c",
+					},
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	os.Setenv("EXPORTER_WS_LIST_PARALLLELISM", "2")
+	os.Setenv("EXPORTER_CHANNEL_SIZE", "100")
+	ctx := context.Background()
+	api := workspace.NewNotebooksAPI(ctx, client)
+	objects, err := ListParallel(api, "/", nil, func(os []workspace.ObjectStatus) {})
+
+	require.NoError(t, err)
+	require.Equal(t, 4, len(objects))
+
 }

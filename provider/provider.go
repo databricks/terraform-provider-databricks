@@ -105,7 +105,6 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster":                     clusters.ResourceCluster(),
 			"databricks_cluster_policy":              policies.ResourceClusterPolicy(),
 			"databricks_dbfs_file":                   storage.ResourceDbfsFile(),
-			"databricks_default_namespace_setting":   settings.ResourceDefaultNamespaceSetting(),
 			"databricks_directory":                   workspace.ResourceDirectory(),
 			"databricks_entitlements":                scim.ResourceEntitlements(),
 			"databricks_external_location":           catalog.ResourceExternalLocation(),
@@ -177,6 +176,9 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_workspace_file":              workspace.ResourceWorkspaceFile(),
 		},
 		Schema: providerSchema(),
+	}
+	for name, resource := range settings.AllSettingsResources() {
+		p.ResourcesMap[fmt.Sprintf("databricks_%s_setting", name)] = resource
 	}
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		if p.TerraformVersion != "" {

@@ -8,7 +8,7 @@ You can provision multiple Databricks workspaces with Terraform. This example sh
 
 For more information, please visit [Data Exfiltration Protection With Databricks on AWS](https://databricks.com/blog/2021/02/02/data-exfiltration-protection-with-databricks-on-aws.html).
 
-![Data Exfiltration_Workspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/docs/images/aws-e2-firewall-workspace.png)
+![Data Exfiltration_Workspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/aws-e2-firewall-workspace.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -196,7 +196,7 @@ resource "aws_nat_gateway" "db_nat" {
 Databricks must have access to at least one AWS security group and no more than five security groups. You can reuse existing security groups rather than create new ones.
 Security groups must have the following rules:
 
-***Egress (outbound):***
+**_Egress (outbound):_**
 
 - Allow all TCP and UDP access to the workspace security group (for internal traffic)
 - Allow TCP access to 0.0.0.0/0 for these ports:
@@ -204,7 +204,7 @@ Security groups must have the following rules:
   - 3306: for the metastore
   - 6666: only required if you use PrivateLink
 
-***Ingress (inbound):*** Required for all workspaces (these can be separate rules or combined into one):
+**_Ingress (inbound):_** Required for all workspaces (these can be separate rules or combined into one):
 
 - Allow TCP on all ports when the traffic source uses the same security group
 - Allow UDP on all ports when the traffic source uses the same security group

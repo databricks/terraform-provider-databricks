@@ -32,31 +32,31 @@ Code contributions—bug fixes, new development, test improvement—all follow a
 
 1. Clone down the repo to your local system.
 
-    ```bash
-    git clone git@github.com:YOUR_USER_NAME/terraform-provider-databricks.git
-    ```
+   ```bash
+   git clone git@github.com:YOUR_USER_NAME/terraform-provider-databricks.git
+   ```
 
 1. Create a new branch to hold your work.
 
-    ```bash
-    git checkout -b new-branch-name
-    ```
+   ```bash
+   git checkout -b new-branch-name
+   ```
 
 1. Work on your new code. Write and run tests.
 
 1. Commit your changes.
 
-    ```bash
-    git add -A
+   ```bash
+   git add -A
 
-    git commit -m "commit message here"
-    ```
+   git commit -m "commit message here"
+   ```
 
 1. Push your changes to your GitHub repo.
 
-    ```bash
-    git push origin branch-name
-    ```
+   ```bash
+   git push origin branch-name
+   ```
 
 1. Open a Pull Request (PR). Go to the original project repo on GitHub. There will be a message about your recently pushed branch, asking if you would like to open a pull request. Follow the prompts, compare across repositories, and submit the PR. This will send an email to the committers. You may want to consider sending an email to the mailing list for more visibility. (For more details, see the [GitHub guide on PRs](https://help.github.com/articles/creating-a-pull-request-from-a-fork).)
 
@@ -73,7 +73,7 @@ Additional git and GitHub resources:
 If you use Terraform 0.12, please execute the following curl command in your shell:
 
 ```bash
-curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
 ## Installing from source
@@ -130,7 +130,7 @@ Boilerplate for data sources could be generated via `go run provider/gen/main.go
 
 The general process for adding a new resource is:
 
-*Define the resource models.* The models for a resource are `struct`s defining the schemas of the objects in the Databricks REST API. Define structures used for multiple resources in a common `models.go` file; otherwise, you can define these directly in your resource file. An example model:
+_Define the resource models._ The models for a resource are `struct`s defining the schemas of the objects in the Databricks REST API. Define structures used for multiple resources in a common `models.go` file; otherwise, you can define these directly in your resource file. An example model:
 
 ```go
 type Field struct {
@@ -160,15 +160,15 @@ Some interesting points to note here:
   - `force_new` to indicate a change in this value requires the replacement (destroy and create) of the resource
   - `suppress_diff` to allow comparison based on something other than primitive, list or map equality, either via a `CustomizeDiffFunc`, or the default diff for the type of the schema
 - Do not use bare references to structs in the model; rather, use pointers to structs. Maps and slices are permitted, as well as the following primitive types: int, int32, int64, float64, bool, string.
-See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
+  See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
 
-*Define the Terraform schema.* This is made easy for you by the `StructToSchema` method in the `common` package, which converts your struct automatically to a Terraform schema, accepting also a function allowing the user to post-process the automatically generated schema, if needed.
+_Define the Terraform schema._ This is made easy for you by the `StructToSchema` method in the `common` package, which converts your struct automatically to a Terraform schema, accepting also a function allowing the user to post-process the automatically generated schema, if needed.
 
 ```go
 var exampleSchema = common.StructToSchema(Example{}, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
 ```
 
-*Define the API client for the resource.* You will need to implement create, read, update, and delete functions.
+_Define the API client for the resource._ You will need to implement create, read, update, and delete functions.
 
 ```go
 type ExampleApi struct {
@@ -200,7 +200,7 @@ func (a ExampleApi) Delete(id string) error {
 }
 ```
 
-*Define the Resource object itself.* This is made quite simple by using the `toResource` function defined on the `Resource` type in the `common` package. A simple example:
+_Define the Resource object itself._ This is made quite simple by using the `toResource` function defined on the `Resource` type in the `common` package. A simple example:
 
 ```go
 func ResourceExample() *schema.Resource {
@@ -235,9 +235,9 @@ func ResourceExample() *schema.Resource {
 }
 ```
 
-*Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
+_Add the resource to the top-level provider._ Simply add the resource to the provider definition in `provider/provider.go`.
 
-*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field. With the help of `qa.ResourceCornerCases` and `qa.ResourceFixture` one can achieve 100% code coverage for all of the new code.
+_Write unit tests for your resource._ To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field. With the help of `qa.ResourceCornerCases` and `qa.ResourceFixture` one can achieve 100% code coverage for all of the new code.
 
 A simple example:
 
@@ -284,7 +284,7 @@ func TestExampleResourceCreate(t *testing.T) {
 }
 ```
 
-*Write acceptance tests.* These are E2E tests which run terraform against the live cloud and Databricks APIs. For these, you can use the `Step` helpers defined in the `internal/acceptance` package. An example:
+_Write acceptance tests._ These are E2E tests which run terraform against the live cloud and Databricks APIs. For these, you can use the `Step` helpers defined in the `internal/acceptance` package. An example:
 
 ```go
 func TestAccSecretAclResource(t *testing.T) {

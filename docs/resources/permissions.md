@@ -8,7 +8,7 @@ This resource allows you to generically manage [access control](https://docs.dat
 
 -> **Note** Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset unless the changes are also reflected in the configuration.
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically.
+-> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/main/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically.
 
 -> **Note** If multiple permission levels are specified for an identity (e.g. `CAN_RESTART` and `CAN_MANAGE` for a cluster), only the highest level permission is returned and will cause permanent drift.
 
@@ -805,7 +805,7 @@ access_control {
 
 Arguments for the `access_control` block are:
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/master/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically.
+-> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/main/access/resource_permissions.go#L261-L271) those `access_control` blocks automatically.
 
 - `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
 

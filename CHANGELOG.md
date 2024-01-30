@@ -1,5 +1,25 @@
 # Version changelog
 
+## 1.35.1
+
+### New Features and Improvements
+* Exporter: timestamps are now added to log entries ([#3146](https://github.com/databricks/terraform-provider-databricks/pull/3146)).
+* Validate metastore id for databricks_grant and databricks_grants resources ([#3159](https://github.com/databricks/terraform-provider-databricks/pull/3159)).
+* Exporter: Skip emitting of clusters that come from more cluster sources ([#3161](https://github.com/databricks/terraform-provider-databricks/pull/3161)).
+* Fix typo in docs ([#3166](https://github.com/databricks/terraform-provider-databricks/pull/3166)).
+* Migrate cluster schema to use the go-sdk struct ([#3076](https://github.com/databricks/terraform-provider-databricks/pull/3076)).
+* Introduce Generic Settings Resource ([#2997](https://github.com/databricks/terraform-provider-databricks/pull/2997)).
+* Update actions/setup-go to v5 ([#3154](https://github.com/databricks/terraform-provider-databricks/pull/3154)).
+* Change default branch from `master` to `main` ([#3174](https://github.com/databricks/terraform-provider-databricks/pull/3174)).
+
+
+### Documentation Changes
+
+### Exporter
+
+### Internal Changes
+
+
 ## 1.35.0
 
 ### New Features and Improvements:

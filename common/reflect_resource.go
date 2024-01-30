@@ -218,6 +218,46 @@ func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	}
 }
 
+func handleExactlyOneOf(typeField reflect.StructField, schema *schema.Schema) {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	prefix := "exactly_one_of:"
+	for _, tag := range tfTags {
+		if strings.HasPrefix(tag, prefix) {
+			schema.ExactlyOneOf = strings.Split(strings.TrimPrefix(tag, prefix), ";")
+		}
+	}
+}
+
+func handleAtLeastOneOf(typeField reflect.StructField, schema *schema.Schema) {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	prefix := "at_least_one_of:"
+	for _, tag := range tfTags {
+		if strings.HasPrefix(tag, prefix) {
+			schema.AtLeastOneOf = strings.Split(strings.TrimPrefix(tag, prefix), ";")
+		}
+	}
+}
+
+func handleConflictsWith(typeField reflect.StructField, schema *schema.Schema) {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	prefix := "conflicts_with:"
+	for _, tag := range tfTags {
+		if strings.HasPrefix(tag, prefix) {
+			schema.ConflictsWith = strings.Split(strings.TrimPrefix(tag, prefix), ";")
+		}
+	}
+}
+
+func handleRequiredWith(typeField reflect.StructField, schema *schema.Schema) {
+	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
+	prefix := "required_with:"
+	for _, tag := range tfTags {
+		if strings.HasPrefix(tag, prefix) {
+			schema.RequiredWith = strings.Split(strings.TrimPrefix(tag, prefix), ";")
+		}
+	}
+}
+
 func getAlias(typeField reflect.StructField) string {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
@@ -322,10 +362,16 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 				}
 			}
 		}
+
 		handleOptional(typeField, scm[fieldName])
 		handleComputed(typeField, scm[fieldName])
 		handleForceNew(typeField, scm[fieldName])
 		handleSensitive(typeField, scm[fieldName])
+		handleExactlyOneOf(typeField, scm[fieldName])
+		handleAtLeastOneOf(typeField, scm[fieldName])
+		handleConflictsWith(typeField, scm[fieldName])
+		handleRequiredWith(typeField, scm[fieldName])
+
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt

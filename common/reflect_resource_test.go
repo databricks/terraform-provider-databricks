@@ -74,6 +74,10 @@ type testStruct struct {
 	FloatSlice     []float64         `json:"float_slice,omitempty"`
 	BoolSlice      []bool            `json:"bool_slice,omitempty"`
 	TfOptional     string            `json:"tf_optional" tf:"optional"`
+	ExactlyOneOf   string            `json:"exactly_one_of,omitempty" tf:"exactly_one_of:exactly_one_of;non_optional"`
+	AtLeastOneOf   string            `json:"at_least_one_of" tf:"at_least_one_of:at_least_one_of;integer;int_slice"`
+	ConflictsWith  string            `json:"conflicts_with" tf:"conflicts_with:at_least_one_of"`
+	RequiredWith   string            `json:"required_with" tf:"required_with:bool_slice;float_slice"`
 	Hidden         string            `json:"-"`
 	Hidden2        string
 }
@@ -82,10 +86,10 @@ var scm = StructToSchema(testStruct{}, nil)
 
 var testStructFields = []string{"integer", "float", "non_optional", "string", "computed_field", "force_new_field", "map_field",
 	"slice_set_struct", "slice_set_string", "ptr_item", "string_slice", "bool", "int_slice", "float_slice",
-	"bool_slice", "tf_optional"}
+	"bool_slice", "tf_optional", "exactly_one_of", "at_least_one_of", "conflicts_with", "required_with"}
 
 var testStructOptionalFields = []string{"integer", "float", "string", "computed_field", "force_new_field", "map_field", "slice_set_struct",
-	"ptr_item", "slice_set_string", "bool", "int_slice", "float_slice", "bool_slice", "tf_optional"}
+	"ptr_item", "slice_set_string", "bool", "int_slice", "float_slice", "bool_slice", "tf_optional", "exactly_one_of"}
 
 var testStructRequiredFields = []string{"non_optional"}
 
@@ -99,6 +103,14 @@ var testStructSliceStructFields = []string{"slice_set_struct"}
 
 var testStructSliceNonStructFields = []string{"slice_set_string", "string_slice", "int_slice", "float_slice",
 	"bool_slice"}
+
+var testStructExactlyOneOfFields = []string{"exactly_one_of"}
+
+var testStructAtLeastOneOfFields = []string{"at_least_one_of"}
+
+var testStructConflictsWith = []string{"conflicts_with"}
+
+var testStructRequiredWith = []string{"required_with"}
 
 func TestStructToSchema_type(t *testing.T) {
 	expectedMap := map[string]schema.ValueType{
@@ -188,6 +200,37 @@ func TestStructToSchema_required_values_set(t *testing.T) {
 	}
 }
 
+func TestStructToSchema_exactlyoneof_value_set(t *testing.T) {
+	for _, field := range testStructExactlyOneOfFields {
+		requiredField, ok := scm[field]
+		assert.Truef(t, ok, "%s key not found", field)
+		assert.Equalf(t, requiredField.ExactlyOneOf, []string{"exactly_one_of", "non_optional"}, "exactly_one_of is not set to an expected value")
+	}
+}
+
+func TestStructToSchema_atleastoneof_value_set(t *testing.T) {
+	for _, field := range testStructAtLeastOneOfFields {
+		requiredField, ok := scm[field]
+		assert.Truef(t, ok, "%s key not found", field)
+		assert.Equalf(t, requiredField.AtLeastOneOf, []string{"at_least_one_of", "integer", "int_slice"}, "at_least_one_of is not set to an expected value")
+	}
+}
+
+func TestStructToSchema_conflictswith_value_set(t *testing.T) {
+	for _, field := range testStructConflictsWith {
+		requiredField, ok := scm[field]
+		assert.Truef(t, ok, "%s key not found", field)
+		assert.Equalf(t, requiredField.ConflictsWith, []string{"at_least_one_of"}, "conflicts_with is not set to an expected value")
+	}
+}
+
+func TestStructToSchema_requiredwith_value_set(t *testing.T) {
+	for _, field := range testStructRequiredWith {
+		requiredField, ok := scm[field]
+		assert.Truef(t, ok, "%s key not found", field)
+		assert.Equalf(t, requiredField.RequiredWith, []string{"bool_slice", "float_slice"}, "required_with is not set to an expected value")
+	}
+}
 func TestStructToSchema_base_values_are_set(t *testing.T) {
 	for _, field := range testStructFields {
 		_, ok := scm[field]

@@ -106,9 +106,33 @@ func (s *CustomizableSchema) SetMinItems(value int) *CustomizableSchema {
 
 func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchema {
 	if len(value) == 0 {
-		panic("SetConflictsWith cannot take in empty list")
+		panic("SetConflictsWith cannot take in an empty list")
 	}
 	s.Schema.ConflictsWith = value
+	return s
+}
+
+func (s *CustomizableSchema) SetExactlyOneOf(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetExactlyOneOf cannot take in an empty list")
+	}
+	s.Schema.ExactlyOneOf = value
+	return s
+}
+
+func (s *CustomizableSchema) SetAtLeastOneOf(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetAtLeastOneOf cannot take in an empty list")
+	}
+	s.Schema.AtLeastOneOf = value
+	return s
+}
+
+func (s *CustomizableSchema) SetRequiredWith(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetRequiredWith cannot take in an empty list")
+	}
+	s.Schema.RequiredWith = value
 	return s
 }
 

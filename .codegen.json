@@ -1,5 +1,5 @@
 {
-    "formatter": "go run golang.org/x/tools/cmd/goimports@latest -w $FILENAMES && gofmt -w $FILENAMES",
+    "formatter": "make fmt",
     "version": {
         "common/version.go": "version = \"$VERSION\""
     },
@@ -8,8 +8,7 @@
             "go"
         ],
         "post_generate": [
-            "go run honnef.co/go/tools/cmd/staticcheck@v0.4.0 ./...",
-            "go run gotest.tools/gotestsum@latest --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./..."
+            "make test"
         ]
     }
 }

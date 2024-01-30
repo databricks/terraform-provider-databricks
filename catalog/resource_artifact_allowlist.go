@@ -30,6 +30,10 @@ func ResourceArtifactAllowlist() *schema.Resource {
 		if err != nil {
 			return err
 		}
+		err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+		if err != nil {
+			return err
+		}
 
 		var createAllowlist ArtifactAllowlistInfo
 		common.DataToStructPointer(d, allowlistSchema, &createAllowlist)
@@ -79,6 +83,11 @@ func ResourceArtifactAllowlist() *schema.Resource {
 		Update: createOrUpdate,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
 			if err != nil {
 				return err
 			}

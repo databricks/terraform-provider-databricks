@@ -2,13 +2,11 @@ package permissions
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -1180,7 +1178,7 @@ func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_RUN"
 		}`,
-	}.ExpectError(t, "cannot load path /foo/bar: I'm a teapot")
+	}.ExpectError(t, "cannot load path /foo/bar: i'm a teapot")
 }
 
 func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
@@ -1197,7 +1195,7 @@ func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_MANAGE"
 		}`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourcePermissionsUpdate(t *testing.T) {
@@ -1464,11 +1462,10 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 			m = x
 		}
 	}
-	_, err := m.idRetriever(context.Background(), databricks.Must(databricks.NewWorkspaceClient(
-		(*databricks.Config)(config.NewMockConfig(func(r *http.Request) error {
-			return fmt.Errorf("nope")
-		})))), "x")
-	assert.EqualError(t, err, "cannot load path x: nope")
+	w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+	require.NoError(t, err)
+	_, err = m.idRetriever(context.Background(), w, "x")
+	assert.ErrorContains(t, err, "cannot load path x")
 }
 
 func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {

@@ -4,7 +4,10 @@ subcategory: "Unity Catalog"
 # databricks_grants Resource
 
 -> **Note**
-  It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
+Two different resources help you manage your Unity Catalog grants for a securable. Each of these resources serves a different use case:
+
+[databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants): Authoritative. Sets the grants of a securable and replaces any existing grants defined inside or outside of Terraform.
+[databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant): Authoritative for a given principal. Updates the grants of a securable to a single principal. Other principals within the grants for the securables are preserved.
 
 -> **Note**
   This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
@@ -29,11 +32,10 @@ Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/s
 
 ## Metastore grants
 
-You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `CREATE_STORAGE_CREDENTIAL`, `MANAGE_ALLOWLIST`, `SET_SHARE_PERMISSION`, `USE_MARKETPLACE_ASSETS`, `USE_CONNECTION`, `USE_PROVIDER`, `USE_RECIPIENT` and `USE_SHARE` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
+You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `CREATE_STORAGE_CREDENTIAL`, `MANAGE_ALLOWLIST`, `SET_SHARE_PERMISSION`, `USE_MARKETPLACE_ASSETS`, `USE_CONNECTION`, `USE_PROVIDER`, `USE_RECIPIENT` and `USE_SHARE` privileges to [databricks_metastore](metastore.md) assigned to the workspace.
 
 ```hcl
 resource "databricks_grants" "sandbox" {
-  metastore = databricks_metastore.this.id
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
@@ -51,9 +53,8 @@ You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `CREATE_CONNECTION`, `CREATE_SCHEMA
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }

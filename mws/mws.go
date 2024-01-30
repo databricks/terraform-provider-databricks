@@ -1,5 +1,7 @@
 package mws
 
+import "github.com/databricks/databricks-sdk-go/marshal"
+
 // StsRole is the object that contains cross account role arn and external app id
 type StsRole struct {
 	RoleArn    string `json:"role_arn,omitempty"`
@@ -105,4 +107,14 @@ type PrivateAccessSettings struct {
 	PublicAccessEnabled   bool     `json:"public_access_enabled,omitempty"`
 	PrivateAccessLevel    string   `json:"private_access_level,omitempty" tf:"default:ACCOUNT"`
 	AllowedVpcEndpointIDS []string `json:"allowed_vpc_endpoint_ids,omitempty"`
+
+	ForceSendFields []string `json:"-"`
+}
+
+func (s *PrivateAccessSettings) UnmarshalJSON(b []byte) error {
+	return marshal.Unmarshal(b, s)
+}
+
+func (s PrivateAccessSettings) MarshalJSON() ([]byte, error) {
+	return marshal.Marshal(s)
 }

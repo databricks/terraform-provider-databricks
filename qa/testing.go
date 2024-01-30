@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -18,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -73,6 +75,10 @@ type ResourceFixture struct {
 	// A list of HTTP fixtures representing requests and their corresponding
 	// responses. These are loaded into the mock Databricks server.
 	Fixtures []HTTPFixture
+
+	MockWorkspaceClientFunc func(*mocks.MockWorkspaceClient)
+
+	MockAccountClientFunc func(*mocks.MockAccountClient)
 
 	// The resource the unit test is testing.
 	Resource *schema.Resource
@@ -190,34 +196,84 @@ func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.Databric
 	}
 }
 
-// Apply runs tests from fixture
-func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
+func (f ResourceFixture) validateMocks() error {
+	isMockConfigured := f.MockAccountClientFunc != nil || f.MockWorkspaceClientFunc != nil
+	isFixtureConfigured := f.Fixtures != nil
+	if isFixtureConfigured && isMockConfigured {
+		return fmt.Errorf("either (MockWorkspaceClientFunc, MockAccountClientFunc) or Fixtures may be set, not both")
+	}
+	return nil
+}
+
+type server struct {
+	Close func()
+	URL   string
+}
+
+func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, server, error) {
 	token := "..."
 	if f.Token != "" {
 		token = f.Token
 	}
-	client, server, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
-	defer server.Close()
+	if f.Fixtures != nil {
+		client, s, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
+		ss := server{
+			Close: s.Close,
+			URL:   s.URL,
+		}
+		return client, ss, err
+	}
+	mw := mocks.NewMockWorkspaceClient(t)
+	ma := mocks.NewMockAccountClient(t)
+	if f.MockWorkspaceClientFunc != nil {
+		f.MockWorkspaceClientFunc(mw)
+	}
+	if f.MockAccountClientFunc != nil {
+		f.MockAccountClientFunc(ma)
+	}
+	c := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
+	c.SetWorkspaceClient(mw.WorkspaceClient)
+	c.SetAccountClient(ma.AccountClient)
+	c.Config.Credentials = testCredentialsProvider{token: token}
+	return c, server{
+		Close: func() {},
+		URL:   "does-not-matter",
+	}, nil
+}
+
+// Apply runs tests from fixture
+func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
+	err := f.validateMocks()
 	if err != nil {
 		return nil, err
 	}
-	client.Config.WithTesting()
+	client, server, err := f.setupClient(t)
+	if err != nil {
+		return nil, err
+	}
+	defer server.Close()
+	config := client.Config
+	config.WithTesting()
 	if f.CommandMock != nil {
 		client.WithCommandMock(f.CommandMock)
 	}
 	if f.Azure {
-		client.Config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+		config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 	}
 	if f.AzureSPN {
-		client.Config.AzureClientID = "a"
-		client.Config.AzureClientSecret = "b"
-		client.Config.AzureTenantID = "c"
+		config.AzureClientID = "a"
+		config.AzureClientSecret = "b"
+		config.AzureTenantID = "c"
 	}
 	if f.Gcp {
-		client.Config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
+		config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
 	}
 	if f.AccountID != "" {
-		client.Config.AccountID = f.AccountID
+		config.AccountID = f.AccountID
 	}
 	f.setDatabricksEnvironmentForTest(client, server.URL)
 	if len(f.HCL) > 0 {
@@ -356,6 +412,7 @@ func CornerCaseAccountID(id string) CornerCase {
 	return CornerCase{"account_id", id}
 }
 
+var ErrImATeapot = errors.New("i'm a teapot")
 var HTTPFailures = []HTTPFixture{
 	{
 		MatchAny:     true,
@@ -364,7 +421,7 @@ var HTTPFailures = []HTTPFixture{
 		Response: apierr.APIError{
 			ErrorCode:  "NONSENSE",
 			StatusCode: 418,
-			Message:    "I'm a teapot",
+			Message:    "i'm a teapot",
 		},
 	},
 }
@@ -373,7 +430,7 @@ var HTTPFailures = []HTTPFixture{
 func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
 	config := map[string]string{
 		"id":           "x",
-		"expect_error": "I'm a teapot",
+		"expect_error": "i'm a teapot",
 		"account_id":   "",
 	}
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
@@ -398,7 +455,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 			validData.SetId(config["id"])
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
-				assert.Equalf(t, config["expect_error"], diags[0].Summary,
+				assert.Containsf(t, diags[0].Summary, config["expect_error"],
 					"%s didn't handle correct error on valid data", n)
 			}
 		}
@@ -553,6 +610,30 @@ func HTTPFixturesApply(t *testing.T, fixtures []HTTPFixture, callback func(ctx c
 	client, server, err := HttpFixtureClient(t, fixtures)
 	defer server.Close()
 	require.NoError(t, err)
+	callback(context.Background(), client)
+}
+
+func MockWorkspaceApply(t *testing.T, mockWorkspaceClient func(*mocks.MockWorkspaceClient), callback func(ctx context.Context, client *common.DatabricksClient)) {
+	mw := mocks.NewMockWorkspaceClient(t)
+	mockWorkspaceClient(mw)
+	client := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
+	client.SetWorkspaceClient(mw.WorkspaceClient)
+	callback(context.Background(), client)
+}
+
+func MockAccountsApply(t *testing.T, mockAccountClient func(*mocks.MockAccountClient), callback func(ctx context.Context, client *common.DatabricksClient)) {
+	ma := mocks.NewMockAccountClient(t)
+	mockAccountClient(ma)
+	client := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
+	client.SetAccountClient(ma.AccountClient)
 	callback(context.Background(), client)
 }
 

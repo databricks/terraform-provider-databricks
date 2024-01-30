@@ -24,6 +24,7 @@
 | [databricks_external_location](docs/resources/external_location.md)
 | [databricks_git_credential](docs/resources/git_credential.md)
 | [databricks_global_init_script](docs/resources/global_init_script.md)
+| [databricks_grant](docs/resources/grant.md)
 | [databricks_grants](docs/resources/grants.md)
 | [databricks_group](docs/resources/group.md)
 | [databricks_group](docs/data-sources/group.md) data
@@ -155,6 +156,10 @@ output "job_url" {
 ```
 
 Then run `terraform init` then `terraform apply` to apply the hcl code to your Databricks workspace.
+
+## OpenTofu Support
+
+[OpenTofu](https://opentofu.org/) is an open-source fork of Terraform with the MPL 2.0 license. The Databricks Terraform provider should be compatible with OpenTofu, but this integration is not actively tested and should be considered experimental. Please raise a Github issue if you find any incompatibility.
 
 ## Switching from `databrickslabs` to `databricks` namespace
 

@@ -45,6 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` -  Repo identifier
 * `commit_hash` - Hash of the HEAD commit at time of the last executed operation. It won't change if you manually perform pull operation via UI or API
+* `workspace_path` - path on Workspace File System (WSFS) in form of `/Workspace` + `path`
 
 ## Access Control
 

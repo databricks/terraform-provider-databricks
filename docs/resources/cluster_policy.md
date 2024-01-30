@@ -55,7 +55,7 @@ resource "databricks_cluster_policy" "fair_use" {
   name       = "${var.team} cluster policy"
   definition = jsonencode(merge(local.default_policy, var.policy_overrides))
 
-  library {
+  libraries {
     pypi {
       package = "databricks-sdk==0.12.0"
       // repo can also be specified here

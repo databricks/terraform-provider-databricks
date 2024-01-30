@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type cachedMe struct {
@@ -67,6 +68,34 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	return w, nil
 }
 
+// Set the cached workspace client.
+func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceClient = w
+}
+
+// Set the cached account client.
+func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedAccountClient = a
+}
+
+func (c *DatabricksClient) setAccountId(accountId string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if accountId == "" {
+		return nil
+	}
+	oldAccountID := c.DatabricksClient.Config.AccountID
+	if oldAccountID != "" && oldAccountID != accountId {
+		return fmt.Errorf("account ID is already set to %s", oldAccountID)
+	}
+	c.DatabricksClient.Config.AccountID = accountId
+	return nil
+}
+
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -79,6 +108,33 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	}
 	c.cachedAccountClient = acc
 	return acc, nil
+}
+
+func (c *DatabricksClient) AccountClientWithAccountIdFromConfig(d *schema.ResourceData) (*databricks.AccountClient, error) {
+	accountID, ok := d.GetOk("account_id")
+	if ok {
+		err := c.setAccountId(accountID.(string))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.AccountClient()
+}
+
+func (c *DatabricksClient) AccountClientWithAccountIdFromPair(d *schema.ResourceData, p *Pair) (*databricks.AccountClient, string, error) {
+	accountID, resourceId, err := p.Unpack(d)
+	if err != nil {
+		return nil, "", err
+	}
+	err = c.setAccountId(accountID)
+	if err != nil {
+		return nil, "", err
+	}
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, "", err
+	}
+	return a, resourceId, nil
 }
 
 func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {

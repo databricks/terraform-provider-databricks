@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -34,15 +36,17 @@ import (
 func importContextForTest() *importContext {
 	p := provider.DatabricksProvider()
 	return &importContext{
-		Importables: resourcesMap,
-		Resources:   p.ResourcesMap,
-		Files:       map[string]*hclwrite.File{},
-		testEmits:   map[string]bool{},
-		nameFixes:   nameFixes,
-		waitGroup:   &sync.WaitGroup{},
-		allUsers:    map[string]scim.User{},
-		allSps:      map[string]scim.User{},
-		channels:    makeResourcesChannels(p),
+		Importables:              resourcesMap,
+		Resources:                p.ResourcesMap,
+		Files:                    map[string]*hclwrite.File{},
+		testEmits:                map[string]bool{},
+		nameFixes:                nameFixes,
+		waitGroup:                &sync.WaitGroup{},
+		allUsers:                 map[string]scim.User{},
+		allSps:                   map[string]scim.User{},
+		channels:                 makeResourcesChannels(p),
+		exportDeletedUsersAssets: false,
+		ignoredResources:         map[string]struct{}{},
 	}
 }
 
@@ -249,6 +253,40 @@ func TestRepoName(t *testing.T) {
 	assert.Equal(t, "user_test_12345", resourcesMap["databricks_repo"].Name(ic, d))
 }
 
+func TestRepoIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := repos.ResourceRepo().TestResourceData()
+	d.SetId("12345")
+	d.Set("path", "/Repos/user/test")
+	r := &resource{ID: "12345", Data: d}
+	// Repo without URL
+	assert.True(t, resourcesMap["databricks_repo"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+	// Repo with URL
+	d.Set("url", "https://github.com/abc/abc.git")
+	assert.False(t, resourcesMap["databricks_repo"].Ignore(ic, r))
+}
+
+func TestDLTIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := pipelines.ResourcePipeline().TestResourceData()
+	d.SetId("12345")
+	r := &resource{ID: "12345", Data: d}
+	// job without libraries
+	assert.True(t, resourcesMap["databricks_pipeline"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
+func TestJobsIgnore(t *testing.T) {
+	ic := importContextForTest()
+	d := jobs.ResourceJob().TestResourceData()
+	d.SetId("12345")
+	r := &resource{ID: "12345", Data: d}
+	// job without tasks
+	assert.True(t, resourcesMap["databricks_job"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
 func TestJobName(t *testing.T) {
 	ic := importContextForTest()
 	d := jobs.ResourceJob().TestResourceData()
@@ -258,13 +296,6 @@ func TestJobName(t *testing.T) {
 	// job with name
 	d.Set("name", "test@1pm")
 	assert.Equal(t, "test_1pm_12345", resourcesMap["databricks_job"].Name(ic, d))
-}
-
-func TestClusterLibrary(t *testing.T) {
-	ic := importContextForTest()
-	d := clusters.ResourceLibrary().TestResourceData()
-	d.SetId("a-b-c")
-	assert.Equal(t, "lib_a-b-c_7b193b3d", resourcesMap["databricks_library"].Name(ic, d))
 }
 
 func TestImportClusterLibraries(t *testing.T) {
@@ -752,6 +783,91 @@ func TestAwsS3MountProfile(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_mount[<unknown>] (id: /mnt/abc)"])
 }
 
+func TestMountsBodyGeneration(t *testing.T) {
+	ic := importContextForTest()
+	ic.mounts = true
+	ic.match = "abc"
+	ic.mountMap = map[string]mount{}
+	ic.variables = map[string]string{}
+	ic.mountMap["/mnt/abc"] = mount{
+		URL:             "s3a://abc",
+		InstanceProfile: "bcd",
+	}
+	ic.mountMap["/mnt/def"] = mount{
+		URL:       "s3a://def",
+		ClusterID: "bcd",
+	}
+	ic.mountMap["/mnt/gcs"] = mount{
+		URL:       "gs://gcs/dir",
+		ClusterID: "bcd",
+	}
+	ic.mountMap["/mnt/abfss"] = mount{
+		URL: "abfss://test@test.dfs.core.windows.net/directory",
+	}
+	ic.mountMap["/mnt/wasbs"] = mount{
+		URL: "wasbs://test@test.blob.core.windows.net/directory",
+	}
+	ic.mountMap["/mnt/adls"] = mount{
+		URL: "adls://test.dfs.core.windows.net/directory",
+	}
+	ic.mountMap["/mnt/dbfs"] = mount{
+		URL: "dbfs:/directory",
+	}
+
+	//
+	f := hclwrite.NewEmptyFile()
+	body := f.Body()
+
+	err := generateMountBody(ic, body, &resource{
+		ID:       "/mnt/abc",
+		Name:     "abc",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/def",
+		Name:     "def",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/abfss",
+		Name:     "abfss",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/gcs",
+		Name:     "gcs",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/adls",
+		Name:     "adls",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/wasbs",
+		Name:     "wasbs",
+		Resource: "databricks_mount",
+	})
+	assert.NoError(t, err)
+
+	err = generateMountBody(ic, body, &resource{
+		ID:       "/mnt/dbfs",
+		Name:     "dbfs",
+		Resource: "databricks_mount",
+	})
+	assert.EqualError(t, err, "no matching handler for: dbfs:/directory")
+}
+
 func TestGlobalInitScriptNameFromId(t *testing.T) {
 	ic := importContextForTest()
 	d := workspace.ResourceGlobalInitScript().TestResourceData()
@@ -835,7 +951,7 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAd
 		ic.meAdmin = asAdmin
 		ic.importing = map[string]bool{}
 		ic.variables = map[string]string{}
-		ic.services = services
+		ic.services = strings.Split(services, ",")
 		ic.startImportChannels()
 		cb(ic)
 	})
@@ -990,6 +1106,7 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 		},
 	}, "notebooks,directories", true, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
+		ic.services = []string{"notebooks"}
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
@@ -1215,4 +1332,101 @@ func TestIncrementalListDLT(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(ic.testEmits))
 	})
+}
+
+func TestListSystemSchemasSuccess(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		currentMetastoreSuccess,
+		{
+			Method:   "GET",
+			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
+			Response: catalog.ListSystemSchemasResponse{
+				Schemas: []catalog.SystemSchemaInfo{
+					{
+						Schema: "access",
+						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+					},
+					{
+						Schema: "marketplace",
+						State:  catalog.SystemSchemaInfoStateAvailable,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_system_schema"].List(ic)
+		assert.NoError(t, err)
+		assert.Equal(t, len(ic.testEmits), 1)
+	})
+}
+
+func TestListSystemSchemasErrorGetMetastore(t *testing.T) {
+	ic := importContextForTest()
+	err := resourcesMap["databricks_system_schema"].List(ic)
+	assert.EqualError(t, err, "there is no UC metastore information")
+}
+
+func TestListSystemSchemasErrorListing(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
+			Status:   404,
+			Response: apierr.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_system_schema"].List(ic)
+		assert.EqualError(t, err, "nope")
+	})
+}
+
+func TestListUcAllowListError(t *testing.T) {
+	ic := importContextForTest()
+	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
+	assert.EqualError(t, err, "there is no UC metastore information")
+}
+
+func TestListUcAllowListSuccess(t *testing.T) {
+	ic := importContextForTest()
+	ic.currentMetastore = currentMetastoreResponse
+	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
+	assert.NoError(t, err)
+	assert.Equal(t, len(ic.testEmits), 3)
+}
+
+func TestEmitSqlParent(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitSqlParentDirectory("")
+	assert.Equal(t, 0, len(ic.testEmits))
+	ic.emitSqlParentDirectory("folders/12345")
+	assert.Equal(t, 1, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_directory[<unknown>] (object_id: 12345)")
+}
+
+func TestEmitFilesFromSlice(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitFilesFromSlice([]string{
+		"dbfs:/FileStore/test.txt",
+		"/Workspace/Shared/test.txt",
+		"nothing",
+	})
+	assert.Equal(t, 2, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+}
+
+func TestEmitFilesFromMap(t *testing.T) {
+	ic := importContextForTest()
+	ic.emitFilesFromMap(map[string]string{
+		"k1": "dbfs:/FileStore/test.txt",
+		"k2": "/Workspace/Shared/test.txt",
+		"k3": "nothing",
+	})
+	assert.Equal(t, 2, len(ic.testEmits))
+	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
 }

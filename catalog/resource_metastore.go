@@ -74,7 +74,14 @@ func ResourceMetastore() *schema.Resource {
 				if err != nil {
 					return err
 				}
+				emptyRequest, err := common.IsRequestEmpty(update)
+				if err != nil {
+					return err
+				}
 				d.SetId(mi.MetastoreInfo.MetastoreId)
+				if emptyRequest {
+					return nil
+				}
 				_, err = acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   mi.MetastoreInfo.MetastoreId,
 					MetastoreInfo: &update,
@@ -115,21 +122,69 @@ func ResourceMetastore() *schema.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update catalog.UpdateMetastore
 			common.DataToStructPointer(d, s, &update)
+			update.Id = d.Id()
 			updateForceSendFields(&update)
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				if d.HasChange("owner") {
+					_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+						MetastoreId: d.Id(),
+						MetastoreInfo: &catalog.UpdateMetastore{
+							Id:    update.Id,
+							Owner: update.Owner,
+						},
+					})
+					if err != nil {
+						return err
+					}
+				}
+				update.Owner = ""
 				_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   d.Id(),
 					MetastoreInfo: &update,
 				})
 				if err != nil {
+					if d.HasChange("owner") {
+						// Rollback
+						old, new := d.GetChange("owner")
+						_, rollbackErr := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+							MetastoreId: d.Id(),
+							MetastoreInfo: &catalog.UpdateMetastore{
+								Id:    update.Id,
+								Owner: old.(string),
+							},
+						})
+						if rollbackErr != nil {
+							return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+						}
+					}
 					return err
 				}
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {
-				update.Id = d.Id()
+				if d.HasChange("owner") {
+					_, err := w.Metastores.Update(ctx, catalog.UpdateMetastore{
+						Id:    update.Id,
+						Owner: update.Owner,
+					})
+					if err != nil {
+						return err
+					}
+				}
+				update.Owner = ""
 				_, err := w.Metastores.Update(ctx, update)
 				if err != nil {
+					if d.HasChange("owner") {
+						// Rollback
+						old, new := d.GetChange("owner")
+						_, rollbackErr := w.Metastores.Update(ctx, catalog.UpdateMetastore{
+							Id:    update.Id,
+							Owner: old.(string),
+						})
+						if rollbackErr != nil {
+							return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+						}
+					}
 					return err
 				}
 				return nil

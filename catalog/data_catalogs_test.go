@@ -41,5 +41,5 @@ func TestCatalogsData_Error(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }

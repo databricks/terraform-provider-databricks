@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_schema Resource
 
+-> **Note** This resource could be only used with workspace-level provider!
+
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
 
 A `databricks_schema` is contained within [databricks_catalog](catalog.md) and can contain tables & views.
@@ -11,9 +13,8 @@ A `databricks_schema` is contained within [databricks_catalog](catalog.md) and c
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }

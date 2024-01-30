@@ -30,7 +30,7 @@ resource "databricks_storage_credential" "external" {
   }
   dynamic "databricks_gcp_service_account" {
     # map for a conditional block
-    for_each = data.databricks_current_config.this.cloud_type == "gcp" ? {} : { gcp = true }    
+    for_each = data.databricks_current_config.this.cloud_type == "gcp" ? {} : { gcp = true }
     content {}
   }
   comment = "Managed by TF"

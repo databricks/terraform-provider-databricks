@@ -59,6 +59,11 @@ func ResourceCatalog() *schema.Resource {
 				return err
 			}
 
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			var createCatalogRequest catalog.CreateCatalog
 			common.DataToStructPointer(d, catalogSchema, &createCatalogRequest)
 			ci, err := w.Catalogs.Create(ctx, createCatalogRequest)
@@ -80,6 +85,7 @@ func ResourceCatalog() *schema.Resource {
 			}
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
+			updateCatalogRequest.Name = d.Id()
 			_, err = w.Catalogs.Update(ctx, updateCatalogRequest)
 			if err != nil {
 				return err
@@ -122,10 +128,41 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
+
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
+			updateCatalogRequest.Name = d.Id()
+
+			if d.HasChange("owner") {
+				_, err = w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+					Name:  updateCatalogRequest.Name,
+					Owner: updateCatalogRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateCatalogRequest.Owner = ""
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
+
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+						Name:  updateCatalogRequest.Name,
+						Owner: old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
 
@@ -158,6 +195,12 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
+
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			force := d.Get("force_destroy").(bool)
 			// If the workspace has isolation mode ISOLATED, we need to add the current workspace to its
 			// bindings before deleting.

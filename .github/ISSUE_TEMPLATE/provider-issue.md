@@ -37,3 +37,6 @@ Thank you for opening an issue. Please note that we try to keep the Databricks P
 
 ### Important Factoids
 <!-- Are there anything atypical about your accounts that we should know? -->
+
+### Would you like to implement a fix?
+<!-- If you plan to implement a fix for this, let the maintainers and community know -->

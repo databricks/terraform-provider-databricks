@@ -23,7 +23,7 @@ This guide uses the following variables in configurations:
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
-To get started with Unity Catalog, this guide takes you throw the following high-level steps:
+To get started with Unity Catalog, this guide takes you through the following high-level steps:
 
 - [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)
@@ -297,7 +297,16 @@ resource "aws_iam_policy" "external_data_access" {
           "${aws_s3_bucket.external.arn}/*"
         ],
         "Effect" : "Allow"
-      }
+      }, 
+      {
+        "Action" : [
+          "sts:AssumeRole"
+        ],
+        "Resource" : [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access"
+        ],
+        "Effect" : "Allow"
+      },
     ]
   })
   tags = merge(local.tags, {
@@ -345,7 +354,6 @@ Each metastore exposes a 3-level namespace (catalog-schema-table) by which data 
 resource "databricks_catalog" "sandbox" {
   provider     = databricks.workspace
   storage_root = "s3://${aws_s3_bucket.external.id}/some"
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {

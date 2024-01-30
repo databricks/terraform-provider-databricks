@@ -16,7 +16,7 @@ import (
 func TestResourceDirectoryRead(t *testing.T) {
 	path := "/test/path"
 	objectID := 12345
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -32,10 +32,9 @@ func TestResourceDirectoryRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       path,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
-	assert.Equal(t, path, d.Get("path"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": path, "path": path, "workspace_path": "/Workspace" + path, "object_id": objectID,
+	})
 }
 
 func TestResourceDirectoryDelete(t *testing.T) {

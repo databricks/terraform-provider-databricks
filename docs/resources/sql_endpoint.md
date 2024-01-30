@@ -1,6 +1,7 @@
 ---
 subcategory: "Databricks SQL"
 ---
+
 # databricks_sql_endpoint Resource
 
 This resource is used to manage [Databricks SQL warehouses](https://docs.databricks.com/sql/admin/sql-endpoints.html). To create [SQL warehouses](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
@@ -45,7 +46,7 @@ The following arguments are supported:
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 
-* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/admin/sql-endpoints.html#switch-the-sql-warehouse-type-pro-classic-or-serverless) or [Azure](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/create-sql-warehouse#--upgrade-a-pro-or-classic-sql-warehouse-to-a-serverless-sql-warehouse). Set to `PRO` or `CLASSIC`.  If the field `enable_serverless_compute` has the value `true` either explicitly or through the default logic (see that field above for details), the default is `PRO`, which is required for serverless SQL warehouses. Otherwise, the default is `CLASSIC`.
+* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/admin/sql-endpoints.html#switch-the-sql-warehouse-type-pro-classic-or-serverless) or [Azure](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/create-sql-warehouse#--upgrade-a-pro-or-classic-sql-warehouse-to-a-serverless-sql-warehouse). Set to `PRO` or `CLASSIC`. If the field `enable_serverless_compute` has the value `true` either explicitly or through the default logic (see that field above for details), the default is `PRO`, which is required for serverless SQL warehouses. Otherwise, the default is `CLASSIC`.
 
 ## Attribute reference
 
@@ -54,6 +55,11 @@ In addition to all arguments above, the following attributes are exported:
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
 * `data_source_id` - ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.
+* `creator_name` - The username of the user who created the endpoint.
+* `num_active_sessions` - The current number of clusters used by the endpoint.
+* `num_clusters` - The current number of clusters used by the endpoint.
+* `state` - The current state of the endpoint.
+* `health` - Health status of the endpoint.
 
 ## Access control
 

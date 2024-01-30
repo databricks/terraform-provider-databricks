@@ -32,6 +32,10 @@ func ResourceDirectory() *schema.Resource {
 			Default:  false,
 			Optional: true,
 		},
+		"workspace_path": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 	}
 
 	directoryRead := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -44,7 +48,12 @@ func ResourceDirectory() *schema.Resource {
 			d.SetId("")
 			return fmt.Errorf("different object type, %s, on this path other than a directory", objectStatus.ObjectType)
 		}
-		return common.StructToData(objectStatus, s, d)
+		err = common.StructToData(objectStatus, s, d)
+		if err != nil {
+			return err
+		}
+		d.Set("workspace_path", "/Workspace"+d.Id())
+		return nil
 	}
 
 	return common.Resource{

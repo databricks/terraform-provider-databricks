@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
@@ -20,8 +21,10 @@ var logLevel = levelWriter{"[INFO]", "[ERROR]", "[WARN]"}
 func (lw *levelWriter) Write(p []byte) (n int, err error) {
 	a := string(p)
 	for _, l := range *lw {
-		if strings.Contains(a, l) {
-			return os.Stdout.Write(p)
+		if strings.HasPrefix(a, l) {
+			timeStr := time.Now().Local().Format(time.RFC3339Nano)
+			logStr := a[0:len(l)] + " " + timeStr + ": " + strings.TrimLeft(a[len(l):len(a)-1], " ") + "\n"
+			return os.Stdout.WriteString(logStr)
 		}
 	}
 	return
@@ -100,6 +103,8 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.includeUserDomains, "includeUserDomains", false, "Include domain portion in `databricks_user` resource name")
 	flags.BoolVar(&ic.importAllUsers, "importAllUsers", false,
 		"Import all users and service principals, even if they aren't referenced in any resource")
+	flags.BoolVar(&ic.exportDeletedUsersAssets, "exportDeletedUsersAssets", false,
+		"Export assets (notebooks, etc.) of deleted users & service principals")
 	flags.StringVar(&ic.Directory, "directory", cwd,
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
@@ -115,7 +120,8 @@ func Run(args ...string) error {
 	flags.StringVar(&ic.notebooksFormat, "notebooksFormat", "SOURCE",
 		"Format to export notebooks: SOURCE, DBC, JUPYTER. Default: SOURCE")
 	services, listing := ic.allServicesAndListing()
-	flags.StringVar(&ic.services, "services", services,
+	var configuredServices string
+	flags.StringVar(&configuredServices, "services", services,
 		"Comma-separated list of services to import. By default all services are imported.")
 	flags.StringVar(&ic.listing, "listing", listing,
 		"Comma-separated list of services to be listed and further passed on for importing. "+
@@ -143,5 +149,6 @@ func Run(args ...string) error {
 	if ic.debug {
 		logLevel = append(logLevel, "[DEBUG]")
 	}
+	ic.services = strings.Split(configuredServices, ",")
 	return ic.Run()
 }

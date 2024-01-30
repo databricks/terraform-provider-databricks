@@ -14,7 +14,7 @@ It is possible to create [a Databricks job](https://docs.databricks.com/data-eng
 
 ```hcl
 resource "databricks_job" "this" {
-  name = "Job with multiple tasks"
+  name        = "Job with multiple tasks"
   description = "This job executes multiple tasks on a shared job cluster, which will be provisioned as part of execution, and terminated once all tasks are finished."
 
   job_cluster {
@@ -419,7 +419,9 @@ By default, all users can create and modify jobs unless an administrator [enable
 * [databricks_permissions](permissions.md#Job-usage) can control which groups or individual users can *Can View*, *Can Manage Run*, and *Can Manage*.
 * [databricks_cluster_policy](cluster_policy.md) can control which kinds of clusters users can create for jobs.
 
-## Single-task syntax (legacy)
+## Single-task syntax (deprecated)
+
+-> **Deprecated** Please define tasks in a `task` block rather than using single-task syntax. 
 
 This syntax uses Jobs API 2.0 to create a job with a single task. Only a subset of arguments above is supported (`name`, `libraries`, `email_notifications`, `webhook_notifications`, `timeout_seconds`, `max_retries`, `min_retry_interval_millis`, `retry_on_timeout`, `schedule`, `max_concurrent_runs`), and only a single block of `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` can be specified.
 

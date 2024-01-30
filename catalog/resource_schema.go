@@ -39,6 +39,10 @@ func ResourceSchema() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var createSchemaRequest catalog.CreateSchema
 			common.DataToStructPointer(d, s, &createSchemaRequest)
 			schema, err := w.Schemas.Create(ctx, createSchemaRequest)
@@ -77,11 +81,38 @@ func ResourceSchema() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
 			var updateSchemaRequest catalog.UpdateSchema
 			common.DataToStructPointer(d, s, &updateSchemaRequest)
 			updateSchemaRequest.FullName = d.Id()
+
+			if d.HasChange("owner") {
+				_, err := w.Schemas.Update(ctx, catalog.UpdateSchema{
+					FullName: updateSchemaRequest.FullName,
+					Owner:    updateSchemaRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateSchemaRequest.Owner = ""
 			schema, err := w.Schemas.Update(ctx, updateSchemaRequest)
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Schemas.Update(ctx, catalog.UpdateSchema{
+						FullName: updateSchemaRequest.FullName,
+						Owner:    old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
 			// We need to update the resource Id because Name is updatable and FullName consists of Name,
@@ -93,6 +124,10 @@ func ResourceSchema() *schema.Resource {
 			force := d.Get("force_destroy").(bool)
 			name := d.Id()
 			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
 			if err != nil {
 				return err
 			}

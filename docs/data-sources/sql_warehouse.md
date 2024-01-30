@@ -3,7 +3,7 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_warehouse Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
+-> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
 
 Retrieves information about a [databricks_sql_warehouse](../resources/sql_warehouse.md) using its id. This could be retrieved programmatically using [databricks_sql_warehouses](../data-sources/sql_warehouses.md) data source.
 
@@ -59,6 +59,11 @@ This data source exports the following attributes:
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
 * `data_source_id` - ID of the data source for this warehouse. This is used to bind an Databricks SQL query to an warehouse.
+* `creator_name` - The username of the user who created the endpoint.
+* `num_active_sessions` - The current number of clusters used by the endpoint.
+* `num_clusters` - The current number of clusters used by the endpoint.
+* `state` - The current state of the endpoint.
+* `health` - Health status of the endpoint.
 
 ## Related resources
 

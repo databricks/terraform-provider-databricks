@@ -291,6 +291,9 @@ func (js *JobSettings) sortTasksByKey() {
 func (js *JobSettings) adjustTasks() {
 	js.sortTasksByKey()
 	for _, task := range js.Tasks {
+		sort.Slice(task.DependsOn, func(i, j int) bool {
+			return task.DependsOn[i].TaskKey < task.DependsOn[j].TaskKey
+		})
 		sortWebhookNotifications(task.WebhookNotifications)
 	}
 }
@@ -686,6 +689,25 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
+
+		// Deprecated Job API 2.0 attributes
+		var topLevelDeprecatedAttr = []string{
+			"max_retries",
+			"min_retry_interval_millis",
+			"retry_on_timeout",
+			"notebook_task",
+			"spark_jar_task",
+			"spark_python_task",
+			"spark_submit_task",
+			"pipeline_task",
+			"python_wheel_task",
+			"dbt_task",
+			"run_job_task",
+		}
+
+		for _, attr := range topLevelDeprecatedAttr {
+			s[attr].Deprecated = "should be used inside a task block and not inside a job block"
+		}
 
 		// we need to have only one of user name vs service principal in the run_as block
 		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}

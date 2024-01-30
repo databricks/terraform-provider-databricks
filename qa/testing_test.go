@@ -321,7 +321,7 @@ func TestResourceCornerCases(t *testing.T) {
 		},
 	}.ToResource(),
 		CornerCaseID("x"),
-		CornerCaseExpectError("I'm a teapot"),
+		CornerCaseExpectError("i'm a teapot"),
 		CornerCaseSkipCRUD("head"))
 }
 

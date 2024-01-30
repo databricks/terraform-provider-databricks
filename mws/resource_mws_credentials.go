@@ -49,7 +49,7 @@ func ResourceMwsCredentials() *schema.Resource {
 	p := common.NewPairSeparatedID("account_id", "credentials_id", "/")
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			acc, err := c.AccountClient()
+			acc, err := c.AccountClientWithAccountIdFromConfig(d)
 			if err != nil {
 				return err
 			}
@@ -105,6 +105,10 @@ func ResourceMwsCredentials() *schema.Resource {
 			}
 			return acc.Credentials.DeleteByCredentialsId(ctx, credsId)
 		},
-		Schema: common.StructToSchema(CredentialInfo{}, common.NoCustomize),
+		Schema: common.StructToSchema(CredentialInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			// nolint
+			s["account_id"].Deprecated = "`account_id` should be set as part of the Databricks Config, not in the resource."
+			return s
+		}),
 	}.ToResource()
 }

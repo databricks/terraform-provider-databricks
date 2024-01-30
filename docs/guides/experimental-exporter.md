@@ -45,6 +45,7 @@ All arguments are optional, and they tune what code is being generated.
 * `-skip-interactive` - optionally run in a non-interactive mode.
 * `-includeUserDomains` - optionally include domain name into generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally include all users and service principals even if they are only part of the `users` group.
+* `-exportDeletedUsersAssets` - optionally include assets of deleted users and service principals.
 * `-incremental` - experimental option for incremental export of modified resources and merging with existing resources. *Please note that only a limited set of resources (notebooks, SQL queries/dashboards/alerts, ...) provides information about the last modified date - all other resources will be re-exported again! Also, it's impossible to detect the deletion of the resources, so you must do periodic full export if resources are deleted!*   **Requires** `-updated-since` option if no `exporter-run-stats.json` file exists in the output directory.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a given timestamp. I.e., `2023-07-24T00:00:00Z`. If not specified, the exporter will try to load the last run timestamp from the `exporter-run-stats.json` file generated during the export and use it.
 * `-notebooksFormat` - optional format for exporting of notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This option could be used to export notebooks with embedded dashboards.
@@ -52,7 +53,7 @@ All arguments are optional, and they tune what code is being generated.
 
 ## Services
 
-Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.  
+Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.
 
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
@@ -76,6 +77,8 @@ Services are just logical groups of resources used for filtering and organizatio
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
 * `sql-queries` - **listing** [databricks_sql_query](../resources/sql_query.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
+* `uc-artifact-allowlist` - exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
+* `uc-system-schemas` - exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
 * `workspace` - [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
 
@@ -99,6 +102,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | Resource | Generated code | Incremental |
 | --- | --- | --- |
 | [databricks_access_control_rule_set](../resources/access_control_rule_set.md) | Yes | No |
+| [databricks_artifact_allowlist](../resources/artifact_allowlist.md) | Yes | No |
 | [databricks_cluster](../resources/cluster.md) | Yes | No |
 | [databricks_cluster_policy](../resources/cluster_policy.md) | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No |
@@ -111,7 +115,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_instance_profile](../resources/instance_profile.md) | Yes | No |
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes |
 | [databricks_job](../resources/job.md) | Yes | No |
-| [databricks_library](../resources/library.md) | Yes | No |
+| [databricks_library](../resources/library.md) | Yes\* | No |
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No |
 | [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes |
@@ -134,9 +138,14 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_query](../resources/sql_query.md) | Yes | Yes |
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes | Yes |
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes |
+| [databricks_system_schema](../resources/system_schema.md) | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No |
 | [databricks_user](../resources/user.md) | Yes | No |
 | [databricks_user_instance_profile](../resources/user_instance_profile.md) | No (Deprecated) | No |
 | [databricks_user_role](../resources/user_role.md) | Yes | No |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No |
 | [databricks_workspace_file](../resources/workspace_file.md) | Yes | Yes |
+
+Notes:
+
+- \* - libraries are exported as blocks inside the cluster definition instead of generating `databricks_library` resources.  This is done to decrease the number of generated resources.

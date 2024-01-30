@@ -56,20 +56,19 @@ func ResourceConnection() *schema.Resource {
 			}
 			var createConnectionRequest catalog.CreateConnection
 			common.DataToStructPointer(d, s, &createConnectionRequest)
-			_, err = w.Connections.Create(ctx, createConnectionRequest)
+			conn, err := w.Connections.Create(ctx, createConnectionRequest)
 			if err != nil {
 				return err
 			}
 			// Update owner if it is provided
-			if d.Get("owner") == "" {
-				return nil
-			}
-			var updateConnectionRequest catalog.UpdateConnection
-			common.DataToStructPointer(d, s, &updateConnectionRequest)
-			updateConnectionRequest.NameArg = updateConnectionRequest.Name
-			conn, err := w.Connections.Update(ctx, updateConnectionRequest)
-			if err != nil {
-				return err
+			if d.Get("owner") != "" {
+				var updateConnectionRequest catalog.UpdateConnection
+				common.DataToStructPointer(d, s, &updateConnectionRequest)
+				updateConnectionRequest.NameArg = updateConnectionRequest.Name
+				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
+				if err != nil {
+					return err
+				}
 			}
 			d.Set("metastore_id", conn.MetastoreId)
 			pi.Pack(d)

@@ -29,7 +29,7 @@ type Resource struct {
 	Importer           *schema.ResourceImporter
 
 	// Set to true for account-level resources that are never managed at the
-	// workspace level, like workspaces and OAuth. If false, the resource
+	// workspace level, like workspaces and networks. If false, the resource
 	// will have a `workspace_id` attribute that allows the user to use an
 	// account-level provider to manage workspace-level resources.
 	IsAccountLevelOnly bool

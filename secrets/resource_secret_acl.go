@@ -56,7 +56,7 @@ func (a SecretAclsAPI) List(scope string) ([]ACLItem, error) {
 }
 
 // ResourceSecretACL manages access to secret scopes
-func ResourceSecretACL() *schema.Resource {
+func ResourceSecretACL() common.Resource {
 	p := common.NewPairSeparatedID("scope", "principal", "|||")
 	return common.Resource{
 		Schema: map[string]*schema.Schema{
@@ -105,5 +105,5 @@ func ResourceSecretACL() *schema.Resource {
 			}
 			return NewSecretAclsAPI(ctx, c).Delete(scope, principal)
 		},
-	}.ToResource()
+	}
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -468,11 +469,11 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourcePermissions()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.SetId("/clusters/abc")
-		diags := r.ReadContext(ctx, d, client)
-		assert.True(t, diags.HasError())
-		assert.Equal(t, "Internal error happened", diags[0].Summary)
+		diags := r.Read(ctx, d, client)
+		assert.NotNil(t, diags)
+		assert.Equal(t, "Internal error happened", diag.FromErr(diags)[0].Summary)
 	})
 }
 
@@ -1476,7 +1477,7 @@ func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
 				GroupName: "admins",
 			},
 		},
-	}).ToPermissionsEntity(ResourcePermissions().TestResourceData(), "me")
+	}).ToPermissionsEntity(ResourcePermissions().ToResource().TestResourceData(), "me")
 	assert.EqualError(t, err, "unknown object type bananas")
 }
 
@@ -1498,9 +1499,9 @@ func TestDeleteMissing(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := ResourcePermissions()
-		d := p.TestResourceData()
+		d := p.ToResource().TestResourceData()
 		d.SetId("x")
-		diags := p.DeleteContext(ctx, d, client)
+		diags := p.Delete(ctx, d, client)
 		assert.Nil(t, diags)
 	})
 }

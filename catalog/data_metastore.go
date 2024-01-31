@@ -6,10 +6,9 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceMetastore() *schema.Resource {
+func DataSourceMetastore() common.Resource {
 	type AccountMetastoreByID struct {
 		Id        string                 `json:"metastore_id"`
 		Metastore *catalog.MetastoreInfo `json:"metastore_info,omitempty" tf:"computed" `

@@ -290,7 +290,7 @@ func parseId(d *schema.ResourceData) (string, string, error) {
 	return split[0], split[1], nil
 }
 
-func ResourceGrants() *schema.Resource {
+func ResourceGrants() common.Resource {
 	s := common.StructToSchema(PermissionsList{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			alof := []string{}
@@ -387,5 +387,5 @@ func ResourceGrants() *schema.Resource {
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.PermissionsList{})
 		},
-	}.ToResource()
+	}
 }

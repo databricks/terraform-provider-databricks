@@ -14,7 +14,7 @@ func directoryPathSuppressDiff(k, old, new string, d *schema.ResourceData) bool 
 }
 
 // ResourceDirectory manages directories
-func ResourceDirectory() *schema.Resource {
+func ResourceDirectory() common.Resource {
 	s := map[string]*schema.Schema{
 		"path": {
 			Type:             schema.TypeString,
@@ -73,5 +73,5 @@ func ResourceDirectory() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), d.Get("delete_recursive").(bool))
 		},
-	}.ToResource()
+	}
 }

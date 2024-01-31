@@ -13,11 +13,8 @@ import (
 //     If the setting name is user-settable, it will be provided in the third argument to the updateFunc method. If not, you must set the
 //     SettingName field appropriately. You must also set AllowMissing: true and the field mask to the field to update.
 //  3. Add a new entry to the AllSettingsResources map below. The final resource name will be "databricks_<SETTING_NAME>_setting".
-func AllSettingsResources() map[string]common.DatabricksTerraformResource {
-	return map[string]common.DatabricksTerraformResource{
-		"default_namespace": {
-			Resource:         makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
-			IsWorkspaceLevel: true,
-		},
+func AllSettingsResources() map[string]common.Resource {
+	return map[string]common.Resource{
+		"default_namespace": makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
 	}
 }

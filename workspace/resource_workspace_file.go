@@ -13,7 +13,7 @@ import (
 )
 
 // ResourceWorkspaceFile manages files in workspace
-func ResourceWorkspaceFile() *schema.Resource {
+func ResourceWorkspaceFile() common.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"url": {
 			Type:     schema.TypeString,
@@ -104,5 +104,5 @@ func ResourceWorkspaceFile() *schema.Resource {
 			}
 			return client.Workspace.Delete(ctx, ws_api.Delete{Path: d.Id(), Recursive: false})
 		},
-	}.ToResource()
+	}
 }

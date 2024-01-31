@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type currentConfig struct {
@@ -15,7 +14,7 @@ type currentConfig struct {
 	AuthType  string `json:"auth_type,omitempty" tf:"computed"`
 }
 
-func DataSourceCurrentConfiguration() *schema.Resource {
+func DataSourceCurrentConfiguration() common.Resource {
 	return common.DataResource(currentConfig{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*currentConfig)
 		data.IsAccount = false

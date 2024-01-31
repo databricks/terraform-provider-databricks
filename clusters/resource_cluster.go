@@ -166,6 +166,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 			Schema: common.StructToSchema(MountInfo{}, nil),
 		},
 	})
+	common.AddWorkspaceIdField(s)
 
 	return s
 }

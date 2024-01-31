@@ -48,6 +48,16 @@ type DatabricksClient struct {
 	cachedWorkspaceClient *databricks.WorkspaceClient
 	cachedAccountClient   *databricks.AccountClient
 	mu                    sync.Mutex
+
+	cachedWorkspaceClients   map[int64]*databricks.WorkspaceClient
+	cachedWorkspaceClientsMu sync.Mutex
+}
+
+func addCachedMe(w *databricks.WorkspaceClient) {
+	internalImpl := w.CurrentUser.Impl()
+	w.CurrentUser.WithImpl(&cachedMe{
+		internalImpl: internalImpl,
+	})
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
@@ -60,11 +70,56 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	if err != nil {
 		return nil, err
 	}
-	internalImpl := w.CurrentUser.Impl()
-	w.CurrentUser.WithImpl(&cachedMe{
-		internalImpl: internalImpl,
-	})
+	addCachedMe(w)
 	c.cachedWorkspaceClient = w
+	return w, nil
+}
+
+func (c *DatabricksClient) InConfiguredWorkspace(ctx context.Context, d *schema.ResourceData) (*DatabricksClient, error) {
+	workspaceId, ok := d.GetOk("workspace_id")
+	if !ok {
+		return c, nil
+	}
+	w, err := c.getConfiguredWorkspaceClient(ctx, int64(workspaceId.(int)))
+	if err != nil {
+		return nil, err
+	}
+	apiClient, err := client.New(w.Config)
+	if err != nil {
+		return nil, err
+	}
+	return &DatabricksClient{
+		DatabricksClient:      apiClient,
+		cachedWorkspaceClient: w,
+	}, nil
+}
+
+func (c *DatabricksClient) getConfiguredWorkspaceClient(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
+	if w, ok := c.cachedWorkspaceClients[workspaceId]; ok {
+		return w, nil
+	}
+	c.cachedWorkspaceClientsMu.Lock()
+	defer c.cachedWorkspaceClientsMu.Unlock()
+	if w, ok := c.cachedWorkspaceClients[workspaceId]; ok {
+		return w, nil
+	}
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, err
+	}
+	if c.cachedWorkspaceClients == nil {
+		c.cachedWorkspaceClients = make(map[int64]*databricks.WorkspaceClient)
+	}
+	ws, err := a.Workspaces.GetByWorkspaceId(ctx, workspaceId)
+	if err != nil {
+		return nil, err
+	}
+	w, err := a.GetWorkspaceClient(*ws)
+	if err != nil {
+		return nil, err
+	}
+	addCachedMe(w)
+	c.cachedWorkspaceClients[workspaceId] = w
 	return w, nil
 }
 
@@ -97,6 +152,9 @@ func (c *DatabricksClient) setAccountId(accountId string) error {
 }
 
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
+	if c.cachedAccountClient != nil {
+		return c.cachedAccountClient, nil
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.cachedAccountClient != nil {

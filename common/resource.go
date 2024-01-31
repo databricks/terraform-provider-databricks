@@ -87,7 +87,10 @@ func (r Resource) ToResource() *schema.Resource {
 	if r.Update != nil {
 		update = func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			c := m.(*DatabricksClient)
+			c, err := m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
@@ -124,7 +127,11 @@ func (r Resource) ToResource() *schema.Resource {
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
+			c, err := m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = recoverable(r.Read)(ctx, d, c)
 			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 			if ignoreMissing && apierr.IsMissing(err) {
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -146,8 +153,11 @@ func (r Resource) ToResource() *schema.Resource {
 		CustomizeDiff:  r.saferCustomizeDiff(),
 		CreateContext: func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			c := m.(*DatabricksClient)
-			err := recoverable(r.Create)(ctx, d, c)
+			c, err := m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = recoverable(r.Create)(ctx, d, c)
 			if err != nil {
 				err = nicerError(ctx, err, "create")
 				return diag.FromErr(err)
@@ -162,7 +172,11 @@ func (r Resource) ToResource() *schema.Resource {
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
+			c, err := m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = recoverable(r.Delete)(ctx, d, c)
 			if apierr.IsMissing(err) {
 				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
@@ -444,6 +458,16 @@ func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 		Type:       schema.TypeString,
 		Optional:   true,
 		Deprecated: "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
+	}
+	return s
+}
+
+func AddWorkspaceIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s["workspace_id"] = &schema.Schema{
+		Type:        schema.TypeInt,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "The workspace id of the workspace, for example 1234567890. This can be retrieved from `databricks_mws_workspaces.<YOUR_WORKSPACE>.workspace_id`. This attribute is required when using an account-level provider.",
 	}
 	return s
 }

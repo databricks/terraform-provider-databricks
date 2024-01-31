@@ -69,3 +69,27 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 		}`,
 	})
 }
+
+func TestMwsAccClusterResource_CreateClusterWithAccountLevelProvider(t *testing.T) {
+	accountLevel(t, step{
+		Template: `
+		data "databricks_spark_version" "latest" {
+			workspace_id = 5549111504720597
+		}
+		resource "databricks_cluster" "this" {
+			workspace_id = 5549111504720597
+			cluster_name = "singlenode-{var.RANDOM}"
+			spark_version = data.databricks_spark_version.latest.id
+			instance_pool_id = "1127-101603-faked620-pool-c10aq68g"
+			num_workers = 0
+			autotermination_minutes = 10
+			spark_conf = {
+				"spark.databricks.cluster.profile" = "singleNode"
+				"spark.master" = "local[*]"
+			}
+			custom_tags = {
+				"ResourceClass" = "SingleNode"
+			}
+		}`,
+	})
+}

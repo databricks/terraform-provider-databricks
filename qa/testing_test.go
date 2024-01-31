@@ -105,7 +105,7 @@ var noopContextResource = common.Resource{
 }
 
 func TestResourceFixture_ID(t *testing.T) {
-	_, err := ResourceFixture{}.prepareExecution()
+	_, err := ResourceFixture{}.prepareExecution(nil)
 	assert.EqualError(t, err, "no `Create|Read|Update|Delete: true` specificed")
 
 	f := ResourceFixture{

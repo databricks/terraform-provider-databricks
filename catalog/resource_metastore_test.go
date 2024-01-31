@@ -172,17 +172,6 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 				StorageRoot: "s3://b/abc",
 				Name:        "abc",
 			}, nil)
-			e.Update(mock.Anything, catalog.UpdateMetastore{
-				Id:                "abc",
-				Name:              "abc",
-				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
-			}).Return(&catalog.MetastoreInfo{
-				Name:              "a",
-				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-			}, nil)
 		},
 		Resource:    ResourceMetastore(),
 		ID:          "abc",
@@ -215,18 +204,6 @@ func TestUpdateMetastore_OwnerChanges(t *testing.T) {
 			}).Return(&catalog.MetastoreInfo{
 				Name:  "abc",
 				Owner: "updatedOwner",
-			}, nil)
-			e.Update(mock.Anything, catalog.UpdateMetastore{
-				Id:                "abc",
-				Name:              "abc",
-				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
-			}).Return(&catalog.MetastoreInfo{
-				Name:              "a",
-				Owner:             "updatedOwner",
-				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 			}, nil)
 			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
 				Name:              "abc",
@@ -269,7 +246,7 @@ func TestUpdateMetastore_Rollback(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "abc",
+				Name:              "abcd",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -294,7 +271,7 @@ func TestUpdateMetastore_Rollback(t *testing.T) {
 			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
 		},
 		HCL: `
-		name = "abc"
+		name = "abcd"
 		storage_root = "s3:/a"
 		owner = "updatedOwner"
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
@@ -507,22 +484,6 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
-			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
-				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:                "abc",
-					Name:              "abc",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
-				},
-			}).Return(&catalog.AccountsMetastoreInfo{
-				MetastoreInfo: &catalog.MetastoreInfo{
-					Name:              "abc",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-				},
-			}, nil)
 			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
@@ -567,22 +528,6 @@ func TestUpdateAccountMetastore_OwnerChanges(t *testing.T) {
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "abc",
 					Owner: "updatedOwner",
-				},
-			}, nil)
-			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
-				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:                "abc",
-					Name:              "abc",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
-					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
-				},
-			}).Return(&catalog.AccountsMetastoreInfo{
-				MetastoreInfo: &catalog.MetastoreInfo{
-					Name:              "abc",
-					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				},
 			}, nil)
 			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
@@ -635,7 +580,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
 					Id:                "abc",
-					Name:              "abc",
+					Name:              "abcd",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -667,7 +612,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
 		},
 		HCL: `
-		name = "abc"
+		name = "abcd"
 		storage_root = "s3:/a"
 		owner = "updatedOwner"
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"

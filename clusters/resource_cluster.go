@@ -21,7 +21,7 @@ const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or c
 var clusterSchema = resourceClusterSchema()
 
 // ResourceCluster - returns Cluster resource description
-func ResourceCluster() *schema.Resource {
+func ResourceCluster() common.Resource {
 	return common.Resource{
 		Create: resourceClusterCreate,
 		Read:   resourceClusterRead,
@@ -37,7 +37,7 @@ func ResourceCluster() *schema.Resource {
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 			Delete: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-	}.ToResource()
+	}
 }
 
 func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {

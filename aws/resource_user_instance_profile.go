@@ -12,7 +12,7 @@ import (
 )
 
 // ResourceUserInstanceProfile binds user and instance profile
-func ResourceUserInstanceProfile() *schema.Resource {
+func ResourceUserInstanceProfile() common.Resource {
 	r := common.NewPairID("user_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["instance_profile_id"].ValidateDiagFunc = ValidArn

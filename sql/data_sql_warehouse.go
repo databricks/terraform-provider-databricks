@@ -7,7 +7,6 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Note that these fields are both marked as computed/optional because users can specify either the name or the ID
@@ -17,7 +16,7 @@ type sqlWarehouseDataParams struct {
 	Name string `json:"name" tf:"computed,optional"`
 }
 
-func DataSourceWarehouse() *schema.Resource {
+func DataSourceWarehouse() common.Resource {
 	return common.WorkspaceDataWithParams(func(ctx context.Context, data sqlWarehouseDataParams, w *databricks.WorkspaceClient) (*SqlWarehouse, error) {
 		if data.Id == "" && data.Name == "" {
 			return nil, fmt.Errorf("either 'id' or 'name' should be provided")

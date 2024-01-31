@@ -592,7 +592,7 @@ func TestStructToData_CornerCases(t *testing.T) {
 }
 
 func TestDataToReflectValueBypass(t *testing.T) {
-	err := DataToReflectValue(nil, &schema.Resource{Schema: map[string]*schema.Schema{}}, reflect.ValueOf(0))
+	err := DataToReflectValue(nil, map[string]*schema.Schema{}, reflect.ValueOf(0))
 	assert.EqualError(t, err, "value of Struct is expected, but got Int: 0")
 }
 
@@ -609,7 +609,7 @@ func TestDataResource(t *testing.T) {
 				return fmt.Errorf("happens")
 			}
 			return nil
-		})
+		}).ToResource()
 	}()
 	d := r.TestResourceData()
 	d.Set("in", "test")
@@ -639,7 +639,7 @@ func TestDataResourceWithID(t *testing.T) {
 			dto.Out = "out: " + dto.In
 			dto.ID = "abc"
 			return nil
-		})
+		}).ToResource()
 	}()
 	d := r.TestResourceData()
 	d.Set("in", "id")

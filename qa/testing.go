@@ -81,7 +81,7 @@ type ResourceFixture struct {
 	MockAccountClientFunc func(*mocks.MockAccountClient)
 
 	// The resource the unit test is testing.
-	Resource *schema.Resource
+	Resource common.Resource
 
 	// Set to true if the diff generated in the test will force a recreation
 	// of the resource.
@@ -123,10 +123,10 @@ type ResourceFixture struct {
 }
 
 // wrapper type for calling resource methords
-type resourceCRUD func(context.Context, *schema.ResourceData, any) diag.Diagnostics
+type resourceCRUD func(context.Context, *schema.ResourceData, *common.DatabricksClient) error
 
 func (cb resourceCRUD) before(before func(d *schema.ResourceData)) resourceCRUD {
-	return func(ctx context.Context, d *schema.ResourceData, i any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, i *common.DatabricksClient) error {
 		before(d)
 		return cb(ctx, d, i)
 	}
@@ -144,7 +144,7 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		if f.ID != "" {
 			return nil, fmt.Errorf("ID is not available for Create")
 		}
-		return resourceCRUD(f.Resource.CreateContext).before(func(d *schema.ResourceData) {
+		return resourceCRUD(f.Resource.Create).before(func(d *schema.ResourceData) {
 			d.MarkNewResource()
 		}), nil
 	case f.Read:
@@ -153,7 +153,7 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		}
 		preRead := f.State
 		f.State = nil
-		return resourceCRUD(f.Resource.ReadContext).before(func(d *schema.ResourceData) {
+		return resourceCRUD(f.Resource.Read).before(func(d *schema.ResourceData) {
 			if f.New {
 				d.MarkNewResource()
 			}
@@ -165,12 +165,12 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Update")
 		}
-		return resourceCRUD(f.Resource.UpdateContext).withId(f.ID), nil
+		return resourceCRUD(f.Resource.Update).withId(f.ID), nil
 	case f.Delete:
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Delete")
 		}
-		return resourceCRUD(f.Resource.DeleteContext).withId(f.ID), nil
+		return resourceCRUD(f.Resource.Delete).withId(f.ID), nil
 	}
 	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
 }
@@ -290,8 +290,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
+	resource := f.Resource.ToResource()
 	if f.State != nil {
-		diags := f.Resource.Validate(resourceConfig)
+		diags := resource.Validate(resourceConfig)
 		if diags.HasError() {
 			return nil, fmt.Errorf("invalid config supplied. %s",
 				strings.ReplaceAll(diagsToString(diags), "\"", ""))
@@ -302,7 +303,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		Attributes: f.InstanceState,
 	}
 	ctx := context.Background()
-	diff, err := f.Resource.Diff(ctx, is, resourceConfig, client)
+	diff, err := resource.Diff(ctx, is, resourceConfig, client)
 	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err
@@ -317,7 +318,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = f.Resource.InternalValidate(f.Resource.Schema, !f.NonWritable)
+	err = resource.InternalValidate(f.Resource.Schema, !f.NonWritable)
 	if err != nil {
 		return nil, err
 	}
@@ -325,14 +326,14 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		// this is a bit strange, but we'll fix it later
 		diags := execute(ctx, resourceData, client)
 		if diags != nil {
-			return resourceData, fmt.Errorf(diagsToString(diags))
+			return resourceData, fmt.Errorf(diagsToString(diag.FromErr(diags)))
 		}
 	}
 	if resourceData.Id() == "" && !f.Removed {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
-	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, f.Resource.CustomizeDiff, client, true)
+	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, resource.CustomizeDiff, client, true)
 	if err != nil {
 		return nil, err
 	}
@@ -427,17 +428,17 @@ var HTTPFailures = []HTTPFixture{
 }
 
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
-func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
+func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCase) {
 	config := map[string]string{
 		"id":           "x",
 		"expect_error": "i'm a teapot",
 		"account_id":   "",
 	}
-	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
-		"create": resource.CreateContext,
-		"read":   resource.ReadContext,
-		"update": resource.UpdateContext,
-		"delete": resource.DeleteContext,
+	m := map[string]func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error{
+		"create": resource.Create,
+		"read":   resource.Read,
+		"update": resource.Update,
+		"delete": resource.Delete,
 	}
 	for _, corner := range cc {
 		if corner.part == "skip_crud" {
@@ -445,8 +446,9 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 		}
 		config[corner.part] = corner.value
 	}
+	r := resource.ToResource()
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
-		validData := resource.TestResourceData()
+		validData := r.TestResourceData()
 		client.Config.AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
@@ -455,7 +457,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 			validData.SetId(config["id"])
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
-				assert.Containsf(t, diags[0].Summary, config["expect_error"],
+				assert.Containsf(t, diag.FromErr(diags)[0].Summary, config["expect_error"],
 					"%s didn't handle correct error on valid data", n)
 			}
 		}

@@ -842,7 +842,7 @@ func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 	}
 }
 
-func ResourceJob() *schema.Resource {
+func ResourceJob() common.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
 		var js JobSettings
 		common.DataToStructPointer(d, jobSchema, &js)
@@ -940,5 +940,5 @@ func ResourceJob() *schema.Resource {
 			}
 			return w.Jobs.DeleteByJobId(ctx, jobID)
 		},
-	}.ToResource()
+	}
 }

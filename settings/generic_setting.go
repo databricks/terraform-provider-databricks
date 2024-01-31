@@ -168,7 +168,7 @@ func (w accountSetting[T]) SetETag(t *T, newEtag string) {
 
 var _ accountSettingDefinition[struct{}] = accountSetting[struct{}]{}
 
-func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.Resource {
+func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.Resource {
 	resourceSchema := common.StructToSchema(defn.SettingStruct(),
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["etag"].Computed = true
@@ -307,5 +307,5 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) *schema.
 			d.SetId(etag)
 			return nil
 		},
-	}.ToResource()
+	}
 }

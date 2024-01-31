@@ -174,6 +174,9 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
 			}
+			if workspaceId, ok := d.GetOk("workspace_id"); ok && !r.IsAccountLevelOnly {
+				d.Set("original_workspace_id", workspaceId)
+			}
 			return nil
 		},
 		ReadContext:   generateReadFunc(true),

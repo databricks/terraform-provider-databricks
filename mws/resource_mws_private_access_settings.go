@@ -74,5 +74,6 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 			}
 			return a.PrivateAccess.DeleteByPrivateAccessSettingsId(ctx, pasID)
 		},
+		IsAccountLevelOnly: true,
 	}
 }

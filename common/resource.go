@@ -14,18 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Wrapper of the underlying Terraform resource. Needed as some resources are implemented directly
-// with *schema.Resource rather than the Resource type in this package.
-type DatabricksTerraformResource struct {
-	// The underlying TF resource
-	Resource *schema.Resource
-
-	// Whether the resource is available at the workspace-level. If true,
-	// generated resources will have a `workspace_id` field for use when
-	// an account-level provider is used.
-	IsWorkspaceLevel bool
-}
-
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
 	Create             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
@@ -39,6 +27,12 @@ type Resource struct {
 	Timeouts           *schema.ResourceTimeout
 	DeprecationMessage string
 	Importer           *schema.ResourceImporter
+
+	// Set to true for account-level resources that are never managed at the
+	// workspace level, like workspaces and OAuth. If false, the resource
+	// will have a `workspace_id` attribute that allows the user to use an
+	// account-level provider to manage workspace-level resources.
+	IsAccountLevelOnly bool
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -208,6 +202,9 @@ func (r Resource) ToResource() *schema.Resource {
 		Timeouts:           r.Timeouts,
 		DeprecationMessage: r.DeprecationMessage,
 	}
+	if r.IsAccountLevelOnly {
+		r.Schema = AddWorkspaceIdField(r.Schema)
+	}
 	if resource.Importer == nil {
 		resource.Importer = &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData,
@@ -336,9 +333,11 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 //		...
 //	})
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) Resource {
-	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, s struct{}, t *T, ac *databricks.AccountClient) error {
+	resource := genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, s struct{}, t *T, ac *databricks.AccountClient) error {
 		return read(ctx, t, ac)
 	}, false)
+	resource.IsAccountLevelOnly = true
+	return resource
 }
 
 // AccountDataWithParams defines a data source that can be used to read data from the workspace API.
@@ -373,7 +372,7 @@ func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient
 //	         ...
 //		  })
 func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.AccountClient) (*T, error)) Resource {
-	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, o P, s *T, a *databricks.AccountClient) error {
+	resource := genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, o P, s *T, a *databricks.AccountClient) error {
 		res, err := read(ctx, o, a)
 		if err != nil {
 			return err
@@ -381,6 +380,8 @@ func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.A
 		*s = *res
 		return nil
 	}, true)
+	resource.IsAccountLevelOnly = true
+	return resource
 }
 
 // genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients.

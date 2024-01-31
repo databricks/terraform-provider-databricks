@@ -119,5 +119,6 @@ func ResourceMwsLogDelivery() common.Resource {
 			}
 			return NewLogDeliveryAPI(ctx, c).Patch(accountID, configID, "DISABLED")
 		},
+		IsAccountLevelOnly: true,
 	}
 }

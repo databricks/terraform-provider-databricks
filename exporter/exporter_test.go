@@ -219,7 +219,7 @@ func TestImportingMounts(t *testing.T) {
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
 			ic.setClientsForTests()
-			ic.services = []string{"mounts"}
+			ic.enableServices("mounts")
 			ic.listing = "mounts"
 			ic.mounts = true
 
@@ -654,7 +654,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			services, listing := ic.allServicesAndListing()
-			ic.services = strings.Split(services, ",")
+			ic.enableServices(services)
 			ic.listing = listing
 
 			err := ic.Run()
@@ -726,7 +726,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			ic.Directory = tmpDir
 			services, listing := ic.allServicesAndListing()
 			ic.listing = listing
-			ic.services = strings.Split(services, ",")
+			ic.enableServices(services)
 
 			err := ic.Run()
 			assert.EqualError(t, err, "no resources to import")
@@ -803,7 +803,20 @@ func TestImportingClusters(t *testing.T) {
 					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
 					Limit:      1,
 				},
-				Response: clusters.EventDetails{},
+				Response:     clusters.EventDetails{},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: clusters.EventsRequest{
+					ClusterID:  "test1",
+					Order:      "DESC",
+					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+					Limit:      1,
+				},
+				Response:     clusters.EventDetails{},
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -916,16 +929,17 @@ func TestImportingClusters(t *testing.T) {
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
-			os.Setenv("EXPORTER_PARALLELISM_databricks_cluster", "1")
+			os.Setenv("EXPORTER_PARALLELISM_default", "1")
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "compute"
-			ic.services = []string{"access", "users", "policies", "compute", "secrets", "groups", "storage"}
+			ic.enableServices("access,users,policies,compute,secrets,groups,storage")
 
 			err := ic.Run()
+			os.Unsetenv("EXPORTER_PARALLELISM_default")
 			assert.NoError(t, err)
 		})
 }
@@ -1125,7 +1139,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = []string{"jobs", "access", "storage", "clusters", "pools"}
+			ic.enableServices("jobs,access,storage,clusters,pools")
 			ic.listing = "jobs"
 			ic.mounts = true
 			ic.meAdmin = true
@@ -1376,7 +1390,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = []string{"jobs", "access", "storage", "clusters", "pools"}
+			ic.enableServices("jobs,access,storage,clusters,pools")
 			ic.listing = "jobs"
 			ic.mounts = true
 			ic.meAdmin = true
@@ -1466,7 +1480,7 @@ func TestImportingSecrets(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.listing = "secrets"
 			services, _ := ic.allServicesAndListing()
-			ic.services = strings.Split(services, ",")
+			ic.enableServices(services)
 			ic.generateDeclaration = true
 
 			err := ic.Run()
@@ -1532,7 +1546,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.listing = "workspace"
 			services, _ := ic.allServicesAndListing()
-			ic.services = strings.Split(services, ",")
+			ic.enableServices(services)
 			ic.generateDeclaration = true
 
 			err := ic.Run()
@@ -1637,7 +1651,7 @@ func TestImportingRepos(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "repos"
-			ic.services = []string{"repos"}
+			ic.enableServices(ic.listing)
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -1708,7 +1722,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "workspace,access"
-			ic.services = []string{"workspace", "access"}
+			ic.enableServices(ic.listing)
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -1844,7 +1858,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "sql-dashboards,sql-queries,sql-endpoints,sql-alerts"
-			ic.services = []string{"sql-dashboards", "sql-queries", "sql-alerts", "sql-endpoints", "access", "notebooks"}
+			ic.enableServices("sql-dashboards,sql-queries,sql-alerts,sql-endpoints,access,notebooks")
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2023,7 +2037,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "dlt"
-			ic.services = []string{"dlt", "access", "notebooks", "users", "repos", "secrets"}
+			ic.enableServices("dlt,access,notebooks,users,repos,secrets")
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2081,7 +2095,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			ic.Directory = tmpDir
 			ic.match = "test"
 			ic.listing = "dlt"
-			ic.services = []string{"dlt", "access"}
+			ic.enableServices("dlt,access")
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2123,7 +2137,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "sql-endpoints"
-			ic.services = []string{"sql-endpoints"}
+			ic.enableServices(ic.listing)
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2187,7 +2201,7 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "notebooks"
-			ic.services = []string{"notebooks"}
+			ic.enableServices(ic.listing)
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2238,7 +2252,7 @@ func TestImportingModelServing(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "model-serving"
-			ic.services = []string{"model-serving"}
+			ic.enableServices(ic.listing)
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2290,7 +2304,7 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "mlflow-webhooks"
-			ic.services = []string{"mlflow-webhooks"}
+			ic.enableServices(ic.listing)
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2303,7 +2317,7 @@ func TestIncrementalErrors(t *testing.T) {
 		[]qa.HTTPFixture{},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = []string{"model-serving"}
+			ic.enableServices("model-serving")
 			ic.incremental = true
 
 			err := ic.Run()
@@ -2314,7 +2328,7 @@ func TestIncrementalErrors(t *testing.T) {
 		[]qa.HTTPFixture{},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
-			ic.services = []string{"model-serving"}
+			ic.enableServices("model-serving")
 			ic.incremental = true
 			ic.updatedSinceStr = "aaa"
 
@@ -2422,7 +2436,7 @@ resource "databricks_pipeline" "def" {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "dlt,mlflow-webhooks"
-			ic.services = []string{"dlt", "mlflow-webhooks"}
+			ic.enableServices(ic.listing)
 			ic.incremental = true
 			ic.updatedSinceStr = "2023-07-24T00:00:00Z"
 			ic.meAdmin = false
@@ -2485,7 +2499,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.listing = "jobs"
-			ic.services = []string{"jobs"}
+			ic.enableServices(ic.listing)
 			ic.match = "runjobtask"
 
 			err := ic.Run()

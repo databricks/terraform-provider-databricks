@@ -148,6 +148,10 @@ func ResourceCatalog() *schema.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			updateCatalogRequest.Owner = ""
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
 

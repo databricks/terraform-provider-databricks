@@ -152,6 +152,11 @@ func ResourceStorageCredential() *schema.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,

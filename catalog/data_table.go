@@ -15,10 +15,6 @@ type tableParams struct {
 
 func DataSourceTable() *schema.Resource {
 	return common.WorkspaceDataWithParams(func(ctx context.Context, data tableParams, w *databricks.WorkspaceClient) (*catalog.TableInfo, error) {
-		table_info, err := w.Tables.Get(ctx, catalog.GetTableRequest{FullName: data.FullName})
-		if err != nil {
-			return nil, err
-		}
-		return table_info, nil
+		return w.Tables.Get(ctx, catalog.GetTableRequest{FullName: data.FullName})
 	})
 }

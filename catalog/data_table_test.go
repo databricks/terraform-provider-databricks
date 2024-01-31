@@ -16,10 +16,10 @@ func TestTableData(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/tables/a.b.c?",
 				Response: catalog.TableInfo{
-					CreatedAt: 	 1706294508998,
+					CreatedAt:   1706294508998,
 					CatalogName: "a",
 					SchemaName:  "b",
-					Name: 		 "c",
+					Name:        "c",
 				},
 			},
 		},

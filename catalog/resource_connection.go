@@ -90,6 +90,10 @@ func ResourceConnection() *schema.Resource {
 			// We need to preserve original sensitive options as API doesn't return them
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)
+			// If there are no options returned, need to initialize the map
+			if conn.Options == nil {
+				conn.Options = map[string]string{}
+			}
 			for key, element := range cOrig.Options {
 				if slices.Contains(sensitiveOptions, key) {
 					conn.Options[key] = element

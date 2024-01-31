@@ -123,10 +123,10 @@ type ResourceFixture struct {
 }
 
 // wrapper type for calling resource methords
-type resourceCRUD func(context.Context, *schema.ResourceData, *common.DatabricksClient) error
+type resourceCRUD func(context.Context, *schema.ResourceData, any) diag.Diagnostics
 
 func (cb resourceCRUD) before(before func(d *schema.ResourceData)) resourceCRUD {
-	return func(ctx context.Context, d *schema.ResourceData, i *common.DatabricksClient) error {
+	return func(ctx context.Context, d *schema.ResourceData, i any) diag.Diagnostics {
 		before(d)
 		return cb(ctx, d, i)
 	}
@@ -138,13 +138,13 @@ func (cb resourceCRUD) withId(id string) resourceCRUD {
 	})
 }
 
-func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
+func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, error) {
 	switch {
 	case f.Create:
 		if f.ID != "" {
 			return nil, fmt.Errorf("ID is not available for Create")
 		}
-		return resourceCRUD(f.Resource.Create).before(func(d *schema.ResourceData) {
+		return resourceCRUD(r.CreateContext).before(func(d *schema.ResourceData) {
 			d.MarkNewResource()
 		}), nil
 	case f.Read:
@@ -153,7 +153,7 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		}
 		preRead := f.State
 		f.State = nil
-		return resourceCRUD(f.Resource.Read).before(func(d *schema.ResourceData) {
+		return resourceCRUD(r.ReadContext).before(func(d *schema.ResourceData) {
 			if f.New {
 				d.MarkNewResource()
 			}
@@ -165,12 +165,12 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Update")
 		}
-		return resourceCRUD(f.Resource.Update).withId(f.ID), nil
+		return resourceCRUD(r.UpdateContext).withId(f.ID), nil
 	case f.Delete:
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Delete")
 		}
-		return resourceCRUD(f.Resource.Delete).withId(f.ID), nil
+		return resourceCRUD(r.DeleteContext).withId(f.ID), nil
 	}
 	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
 }
@@ -286,11 +286,11 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		f.State = fixHCL(out).(map[string]any)
 	}
 	resourceConfig := terraform.NewResourceConfigRaw(f.State)
-	execute, err := f.prepareExecution()
+	resource := f.Resource.ToResource()
+	execute, err := f.prepareExecution(resource)
 	if err != nil {
 		return nil, err
 	}
-	resource := f.Resource.ToResource()
 	if f.State != nil {
 		diags := resource.Validate(resourceConfig)
 		if diags.HasError() {
@@ -326,7 +326,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		// this is a bit strange, but we'll fix it later
 		diags := execute(ctx, resourceData, client)
 		if diags != nil {
-			return resourceData, fmt.Errorf(diagsToString(diag.FromErr(diags)))
+			return resourceData, fmt.Errorf(diagsToString(diags))
 		}
 	}
 	if resourceData.Id() == "" && !f.Removed {

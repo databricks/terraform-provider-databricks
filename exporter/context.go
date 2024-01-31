@@ -75,8 +75,9 @@ type importContext struct {
 	workspaceClient *databricks.WorkspaceClient
 	accountClient   *databricks.AccountClient
 
-	channels       map[string]resourceChannel
-	defaultChannel resourceChannel // biggest bottleneck is that it's FIFO, so there could be a situaton that first all notebooks are submitted, then their permissions
+	channels                 map[string]resourceChannel
+	defaultChannel           resourceChannel
+	defaultHanlerChannelSize int
 
 	// mutable resources
 	State *stateApproximation
@@ -234,33 +235,34 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		return commands.NewCommandsAPI(ctx, c)
 	})
 
-	defaultHanlerChannelSize := getEnvAsInt("EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE", defaultChannelSize*2)
+	defaultHanlerChannelSize := getEnvAsInt("EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE", defaultChannelSize*3)
 
 	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
-		Client:              c,
-		Context:             ctx,
-		State:               newStateApproximation(supportedResources),
-		Importables:         resourcesMap,
-		Resources:           p.ResourcesMap,
-		Scope:               importedResources{},
-		importing:           map[string]bool{},
-		nameFixes:           nameFixes,
-		hclFixes:            []regexFix{}, // Be careful with that! it may break working code
-		variables:           map[string]string{},
-		allDirectories:      []workspace.ObjectStatus{},
-		allWorkspaceObjects: []workspace.ObjectStatus{},
-		workspaceConfKeys:   workspaceConfKeys,
-		shImports:           map[string]bool{},
-		notebooksFormat:     "SOURCE",
-		allUsers:            map[string]scim.User{},
-		allSps:              map[string]scim.User{},
-		waitGroup:           &sync.WaitGroup{},
-		channels:            makeResourcesChannels(),
-		defaultChannel:      make(resourceChannel, defaultHanlerChannelSize),
-		ignoredResources:    map[string]struct{}{},
-		emittedUsers:        map[string]struct{}{},
-		userOrSpDirectories: map[string]bool{},
+		Client:                   c,
+		Context:                  ctx,
+		State:                    newStateApproximation(supportedResources),
+		Importables:              resourcesMap,
+		Resources:                p.ResourcesMap,
+		Scope:                    importedResources{},
+		importing:                map[string]bool{},
+		nameFixes:                nameFixes,
+		hclFixes:                 []regexFix{}, // Be careful with that! it may break working code
+		variables:                map[string]string{},
+		allDirectories:           []workspace.ObjectStatus{},
+		allWorkspaceObjects:      []workspace.ObjectStatus{},
+		workspaceConfKeys:        workspaceConfKeys,
+		shImports:                map[string]bool{},
+		notebooksFormat:          "SOURCE",
+		allUsers:                 map[string]scim.User{},
+		allSps:                   map[string]scim.User{},
+		waitGroup:                &sync.WaitGroup{},
+		channels:                 makeResourcesChannels(),
+		defaultHanlerChannelSize: defaultHanlerChannelSize,
+		defaultChannel:           make(resourceChannel, defaultHanlerChannelSize),
+		ignoredResources:         map[string]struct{}{},
+		emittedUsers:             map[string]struct{}{},
+		userOrSpDirectories:      map[string]bool{},
 	}
 }
 

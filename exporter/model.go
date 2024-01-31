@@ -35,6 +35,7 @@ type resourceApproximation struct {
 	Instances []instanceApproximation `json:"instances"`
 }
 
+// TODO: think if something like trie may help here...
 type resourceApproximationHolder struct {
 	mutex      sync.RWMutex
 	resources  []*resourceApproximation

@@ -974,6 +974,14 @@ func (ic *importContext) shouldSkipWorkspaceObject(object workspace.ObjectStatus
 }
 
 func emitWorkpaceObject(ic *importContext, object workspace.ObjectStatus) {
+	// check the size of the default channel, and add delays if it has less than %20 capacity left.
+	// In this case we won't need to have increase the size of the default channel to extended capacity.
+	defChannelSize := len(ic.defaultChannel)
+	if float64(defChannelSize) > float64(ic.defaultHanlerChannelSize)*0.8 {
+		log.Printf("[DEBUG] waiting a bit before emitting a resource because default channel is 80%% full (%d): %v",
+			defChannelSize, object)
+		time.Sleep(1 * time.Second)
+	}
 	switch object.ObjectType {
 	case workspace.Notebook:
 		ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
@@ -986,7 +994,7 @@ func emitWorkpaceObject(ic *importContext, object workspace.ObjectStatus) {
 
 func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	objectsChannel := make(chan workspace.ObjectStatus, defaultChannelSize)
-	numRoutines := 10
+	numRoutines := 2 // TODO: make configurable? together with the channel size?
 	var processedObjects atomic.Uint64
 	for i := 0; i < numRoutines; i++ {
 		num := i
@@ -996,8 +1004,8 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			for object := range objectsChannel {
 				processedObjects.Add(1)
 				ic.waitGroup.Add(1)
-				log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
-					num, len(objectsChannel), object)
+				// log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
+				// 	num, len(objectsChannel), object)
 				emitWorkpaceObject(ic, object)
 				ic.waitGroup.Done()
 			}
@@ -1112,14 +1120,14 @@ func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo
 		}
 	}
 	answer.append(newList)
-	if visitor != nil {
-		visitor(newList)
-	}
 	for _, v := range directories {
 		wg.Add(1)
 		log.Printf("[DEBUG] putting directory '%s' into channel. Channel size: %d", v.Path, len(dirChannel))
 		dirChannel <- directoryInfo{Path: v.Path}
-		// time.Sleep(15 * time.Millisecond)
+		time.Sleep(3 * time.Millisecond)
+	}
+	if visitor != nil {
+		visitor(newList)
 	}
 }
 

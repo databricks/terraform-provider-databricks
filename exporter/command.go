@@ -98,7 +98,7 @@ func Run(args ...string) error {
 	if err != nil {
 		return err
 	}
-	var skipInteractive bool
+	var skipInteractive, trace, debug bool
 	flags.BoolVar(&skipInteractive, "skip-interactive", false, "Skip interactive mode")
 	flags.BoolVar(&ic.includeUserDomains, "includeUserDomains", false, "Include domain portion in `databricks_user` resource name")
 	flags.BoolVar(&ic.importAllUsers, "importAllUsers", false,
@@ -113,7 +113,8 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.noFormat, "noformat", false, "Don't run `terraform fmt` on exported files")
 	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
 		"Include only resources updated since a given timestamp (in ISO8601 format, i.e. 2023-07-01T00:00:00Z)")
-	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information.")
+	flags.BoolVar(&debug, "debug", false, "Print extra debug information.")
+	flags.BoolVar(&trace, "trace", false, "Print full debug information.")
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
 		"Generate Databricks provider declaration.")
@@ -146,9 +147,11 @@ func Run(args ...string) error {
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"
 	}
-	if ic.debug {
+	if trace {
+		logLevel = append(logLevel, "[DEBUG]", "[TRACE]")
+	} else if debug {
 		logLevel = append(logLevel, "[DEBUG]")
 	}
-	ic.services = strings.Split(configuredServices, ",")
+	ic.enableServices(configuredServices)
 	return ic.Run()
 }

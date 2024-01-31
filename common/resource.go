@@ -202,7 +202,7 @@ func (r Resource) ToResource() *schema.Resource {
 		Timeouts:           r.Timeouts,
 		DeprecationMessage: r.DeprecationMessage,
 	}
-	if r.IsAccountLevelOnly {
+	if !r.IsAccountLevelOnly {
 		r.Schema = AddWorkspaceIdField(r.Schema)
 	}
 	if resource.Importer == nil {

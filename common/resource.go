@@ -14,6 +14,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// Wrapper of the underlying Terraform resource. Needed as some resources are implemented directly
+// with *schema.Resource rather than the Resource type in this package.
+type DatabricksTerraformResource struct {
+	// The underlying TF resource
+	Resource *schema.Resource
+
+	// Whether the resource is available at the workspace-level. If true,
+	// generated resources will have a `workspace_id` field for use when
+	// an account-level provider is used.
+	IsWorkspaceLevel bool
+}
+
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
 	Create         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
@@ -172,7 +184,7 @@ func (r Resource) ToResource() *schema.Resource {
 		UpdateContext: update,
 		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			c, err := m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			c, err := m.(*DatabricksClient).InConfiguredWorkspaceForDelete(ctx, d)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -468,6 +480,15 @@ func AddWorkspaceIdField(s map[string]*schema.Schema) map[string]*schema.Schema 
 		Optional:    true,
 		ForceNew:    true,
 		Description: "The workspace id of the workspace, for example 1234567890. This can be retrieved from `databricks_mws_workspaces.<YOUR_WORKSPACE>.workspace_id`. This attribute is required when using an account-level provider.",
+	}
+	// Separate field to track the original workspace ID when using an account-level provider.
+	// Needed when changing the workspace ID, as `workspace_id` in state will reflect
+	// the new ID during apply.
+	s["original_workspace_id"] = &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: false,
+		Required: false,
+		Computed: true,
 	}
 	return s
 }

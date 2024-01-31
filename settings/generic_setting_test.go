@@ -12,7 +12,7 @@ import (
 )
 
 // Choose an arbitrary setting to test.
-var testSetting = AllSettingsResources()["default_namespace"]
+var testSetting = AllSettingsResources()["default_namespace"].Resource
 
 func TestQueryCreateDefaultNameSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{

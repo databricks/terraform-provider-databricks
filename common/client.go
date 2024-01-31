@@ -76,7 +76,15 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 }
 
 func (c *DatabricksClient) InConfiguredWorkspace(ctx context.Context, d *schema.ResourceData) (*DatabricksClient, error) {
-	workspaceId, ok := d.GetOk("workspace_id")
+	return c.inConfiguredWorkspace(ctx, d, "workspace_id")
+}
+
+func (c *DatabricksClient) InConfiguredWorkspaceForDelete(ctx context.Context, d *schema.ResourceData) (*DatabricksClient, error) {
+	return c.inConfiguredWorkspace(ctx, d, "original_workspace_id")
+}
+
+func (c *DatabricksClient) inConfiguredWorkspace(ctx context.Context, d *schema.ResourceData, key string) (*DatabricksClient, error) {
+	workspaceId, ok := d.GetOk(key)
 	if !ok {
 		return c, nil
 	}

@@ -2168,6 +2168,7 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 				Response: workspace.ObjectList{
 					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus},
 				},
+				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",

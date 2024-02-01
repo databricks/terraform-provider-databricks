@@ -86,6 +86,7 @@ func ResourceModelServing() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("serving_endpoint_id", endpoint.Id)
 			return nil
 
 		},

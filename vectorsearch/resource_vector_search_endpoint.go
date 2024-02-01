@@ -42,8 +42,7 @@ func ResourceVectorSearchEndpoint() *schema.Resource {
 			}
 			var req vectorsearch.CreateEndpoint
 			common.DataToStructPointer(d, s, &req)
-			endpoint, err := w.VectorSearchEndpoints.CreateEndpointAndWait(ctx, req,
-				retries.Timeout[vectorsearch.EndpointInfo](d.Timeout(schema.TimeoutCreate)))
+			endpoint, err := w.VectorSearchEndpoints.CreateEndpoint(ctx, req).GetWithTimeout(d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return err
 			}

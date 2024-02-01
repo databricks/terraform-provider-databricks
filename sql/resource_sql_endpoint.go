@@ -51,7 +51,7 @@ func resolveDataSourceID(ctx context.Context, w *databricks.WorkspaceClient, war
 	return "", fmt.Errorf("no data source found for endpoint %s", warehouseId)
 }
 
-func ResourceSqlEndpoint() *schema.Resource {
+func ResourceSqlEndpoint() common.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["id"].Computed = true
@@ -145,5 +145,5 @@ func ResourceSqlEndpoint() *schema.Resource {
 			return w.Warehouses.DeleteById(ctx, d.Id())
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

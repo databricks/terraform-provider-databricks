@@ -125,7 +125,7 @@ func (a ClustersAPI) LatestSparkVersionOrDefault(svr SparkVersionRequest) string
 }
 
 // DataSourceSparkVersion returns DBR version matching to the specification
-func DataSourceSparkVersion() *schema.Resource {
+func DataSourceSparkVersion() common.Resource {
 	s := common.StructToSchema(SparkVersionRequest{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 
@@ -135,10 +135,10 @@ func DataSourceSparkVersion() *schema.Resource {
 		return s
 	})
 
-	return &schema.Resource{
+	return common.Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			c, err := m.(*common.DatabricksClient).InConfiguredWorkspace(ctx, d)
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			c, err := m.InConfiguredWorkspace(ctx, d)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -146,7 +146,7 @@ func DataSourceSparkVersion() *schema.Resource {
 			common.DataToStructPointer(d, s, &this)
 			version, err := NewClustersAPI(ctx, c).LatestSparkVersion(this)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(version)
 			return nil

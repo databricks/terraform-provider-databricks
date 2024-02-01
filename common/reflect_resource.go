@@ -654,8 +654,8 @@ func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, 
 }
 
 // DataToReflectValue reads reflect value from data
-func DataToReflectValue(d *schema.ResourceData, r *schema.Resource, rv reflect.Value) error {
-	return readReflectValueFromData([]string{}, d, rv, r.Schema)
+func DataToReflectValue(d *schema.ResourceData, s map[string]*schema.Schema, rv reflect.Value) error {
+	return readReflectValueFromData([]string{}, d, rv, s)
 }
 
 func readReflectValueFromData(path []string, d attributeGetter,

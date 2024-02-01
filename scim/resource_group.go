@@ -11,7 +11,7 @@ import (
 )
 
 // ResourceGroup manages user groups
-func ResourceGroup() *schema.Resource {
+func ResourceGroup() common.Resource {
 	type entity struct {
 		DisplayName string `json:"display_name" tf:"force_new"`
 		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
@@ -74,7 +74,7 @@ func ResourceGroup() *schema.Resource {
 			return NewGroupsAPI(ctx, c).Delete(d.Id())
 		},
 		Schema: groupSchema,
-	}.ToResource()
+	}
 }
 
 func createForceOverridesManuallyAddedGroup(err error, d *schema.ResourceData, groupsAPI GroupsAPI, g Group) error {

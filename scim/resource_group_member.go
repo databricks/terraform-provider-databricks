@@ -6,12 +6,10 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // ResourceGroupMember bind group with member
-func ResourceGroupMember() *schema.Resource {
+func ResourceGroupMember() common.Resource {
 	return common.NewPairID("group_id", "member_id").BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
 			return NewGroupsAPI(ctx, c).Patch(groupID, PatchRequest("add", "members", memberID))

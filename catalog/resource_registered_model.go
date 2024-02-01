@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceRegisteredModel() *schema.Resource {
+func ResourceRegisteredModel() common.Resource {
 	s := common.StructToSchema(
 		catalog.CreateRegisteredModelRequest{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -68,5 +68,5 @@ func ResourceRegisteredModel() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{},
 		Schema:         s,
 		SchemaVersion:  0,
-	}.ToResource()
+	}
 }

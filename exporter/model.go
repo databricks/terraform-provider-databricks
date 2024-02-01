@@ -35,43 +35,93 @@ type resourceApproximation struct {
 	Instances []instanceApproximation `json:"instances"`
 }
 
-type stateApproximation struct {
-	mutex sync.RWMutex
-	// TODO: use map by type -> should speedup Has function?
-	resources []resourceApproximation
+// TODO: think if something like trie may help here...
+type resourceApproximationHolder struct {
+	mutex      sync.RWMutex
+	resources  []*resourceApproximation
+	attributes map[string]*resourceApproximation
 }
 
-// TODO: check if it's used directly by multiple threads?
-func (s *stateApproximation) Resources() []resourceApproximation {
-	s.mutex.RLocker().Lock()
-	defer s.mutex.RLocker().Unlock()
-	c := make([]resourceApproximation, len(s.resources))
-	copy(c, s.resources)
-	return c
+func makeMatchPair(k, v string) string {
+	return k + "/" + v
 }
 
-func (s *stateApproximation) Has(r *resource) bool {
-	s.mutex.RLocker().Lock()
-	defer s.mutex.RLocker().Unlock()
+func (rah *resourceApproximationHolder) Has(r *resource) bool {
 	k, v := r.MatchPair()
-	for _, sr := range s.resources {
-		if sr.Type != r.Resource {
-			continue
-		}
-		for _, i := range sr.Instances {
-			tv, ok := i.Attributes[k].(string)
-			if ok && tv == v {
-				return true
+	matchPairKey := makeMatchPair(k, v)
+	// log.Printf("[DEBUG] resourceApproximationHolder.Has is called for %s/%s", k, v)
+	rah.mutex.RLocker().Lock()
+	defer rah.mutex.RLocker().Unlock()
+	_, exists := rah.attributes[matchPairKey]
+	// log.Printf("[DEBUG] resourceApproximationHolder.Has is finished. Resource found? %v", exists)
+	return exists
+}
+
+func (rah *resourceApproximationHolder) Get(attr, value string) *resourceApproximation {
+	matchPairKey := makeMatchPair(attr, value)
+	rah.mutex.RLocker().Lock()
+	defer rah.mutex.RLocker().Unlock()
+	ra := rah.attributes[matchPairKey]
+	return ra
+}
+
+func (rah *resourceApproximationHolder) Append(ra resourceApproximation) {
+	// log.Printf("[DEBUG] resourceApproximationHolder.Append: %v. Instances count=%d", ra, len(ra.Instances))
+	rah.mutex.Lock()
+	defer rah.mutex.Unlock()
+	rah.resources = append(rah.resources, &ra)
+	for _, i := range ra.Instances {
+		for k, v := range i.Attributes {
+			tv, ok := v.(string)
+			if ok {
+				rah.attributes[makeMatchPair(k, tv)] = &ra
 			}
 		}
 	}
-	return false
+}
+
+type stateApproximation struct {
+	rmap map[string]*resourceApproximationHolder
+}
+
+func newStateApproximation(suppported_resources []string) *stateApproximation {
+	sa := stateApproximation{rmap: map[string]*resourceApproximationHolder{}}
+	for _, k := range suppported_resources {
+		sa.rmap[k] = &resourceApproximationHolder{attributes: map[string]*resourceApproximation{}}
+	}
+	return &sa
+}
+
+func (s *stateApproximation) Resources(resource_type string) *[]*resourceApproximation {
+	rah := s.rmap[resource_type]
+	if rah != nil {
+		return &rah.resources
+	}
+	panic(fmt.Sprintf("There is no support for resource type %s", resource_type))
+}
+
+func (s *stateApproximation) Has(r *resource) bool {
+	rah, exist := s.rmap[r.Resource]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", r.Resource))
+	}
+	return rah.Has(r)
+}
+
+func (s *stateApproximation) Get(resource_type, attr, value string) *resourceApproximation {
+	rah, exist := s.rmap[resource_type]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", resource_type))
+	}
+	return rah.Get(attr, value)
 }
 
 func (s *stateApproximation) Append(ra resourceApproximation) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	s.resources = append(s.resources, ra)
+	rah, exist := s.rmap[ra.Type]
+	if !exist {
+		panic(fmt.Sprintf("There is no support for resource type %s", ra.Type))
+	}
+	rah.Append(ra)
 }
 
 type importable struct {

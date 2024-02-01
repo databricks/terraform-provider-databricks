@@ -460,7 +460,7 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 }
 
 // ResourceMwsWorkspaces manages E2 workspaces
-func ResourceMwsWorkspaces() *schema.Resource {
+func ResourceMwsWorkspaces() common.Resource {
 	workspaceSchema := common.StructToSchema(Workspace{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			for name, fieldSchema := range s {
@@ -613,7 +613,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			Read:   schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-	}.ToResource()
+	}
 }
 
 func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {

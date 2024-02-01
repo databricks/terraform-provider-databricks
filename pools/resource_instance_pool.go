@@ -169,7 +169,7 @@ func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 }
 
 // ResourceInstancePool ...
-func ResourceInstancePool() *schema.Resource {
+func ResourceInstancePool() common.Resource {
 	s := common.StructToSchema(InstancePool{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["enable_elastic_disk"].Default = true
 		s["aws_attributes"].ConflictsWith = []string{"azure_attributes", "gcp_attributes"}
@@ -270,5 +270,5 @@ func ResourceInstancePool() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewInstancePoolsAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

@@ -86,7 +86,7 @@ func updateWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.
 }
 
 // ResourceWorkspaceConf maintains workspace configuration for specified keys
-func ResourceWorkspaceConf() *schema.Resource {
+func ResourceWorkspaceConf() common.Resource {
 	return common.Resource{
 		Create: applyWorkspaceConf,
 		Update: updateWorkspaceConf,
@@ -146,5 +146,5 @@ func ResourceWorkspaceConf() *schema.Resource {
 				Optional: true,
 			},
 		},
-	}.ToResource()
+	}
 }

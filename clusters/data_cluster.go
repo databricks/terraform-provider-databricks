@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceCluster() *schema.Resource {
+func DataSourceCluster() common.Resource {
 	type clusterData struct {
 		Id          string       `json:"id,omitempty" tf:"computed"`
 		ClusterId   string       `json:"cluster_id,omitempty" tf:"computed"`

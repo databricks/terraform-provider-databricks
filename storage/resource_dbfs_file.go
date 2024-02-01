@@ -11,7 +11,7 @@ import (
 )
 
 // ResourceDbfsFile manages files on DBFS
-func ResourceDbfsFile() *schema.Resource {
+func ResourceDbfsFile() common.Resource {
 	return common.Resource{
 		SchemaVersion: 1,
 		Schema: workspace.FileContentSchema(map[string]*schema.Schema{
@@ -57,5 +57,5 @@ func ResourceDbfsFile() *schema.Resource {
 				Upgrade: workspace.MigrateV0,
 			},
 		},
-	}.ToResource()
+	}
 }

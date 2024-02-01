@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -42,7 +41,11 @@ func ResourceVectorSearchEndpoint() *schema.Resource {
 			}
 			var req vectorsearch.CreateEndpoint
 			common.DataToStructPointer(d, s, &req)
-			endpoint, err := w.VectorSearchEndpoints.CreateEndpoint(ctx, req).GetWithTimeout(d.Timeout(schema.TimeoutCreate))
+			wait, err := w.VectorSearchEndpoints.CreateEndpoint(ctx, req)
+			if err != nil {
+				return err
+			}
+			endpoint, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return err
 			}

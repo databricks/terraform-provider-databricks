@@ -7,7 +7,8 @@ import (
 )
 
 type CustomizableSchema struct {
-	Schema *schema.Schema
+	Schema         *schema.Schema
+	isSuppressDiff bool
 }
 
 func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *CustomizableSchema {
@@ -64,6 +65,7 @@ func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
 
 func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 	s.Schema.DiffSuppressFunc = diffSuppressor(s.Schema)
+	s.isSuppressDiff = true
 	if s.Schema.Type == schema.TypeList && s.Schema.MaxItems == 1 {
 		// If it is a list with max items = 1, it means the corresponding sdk schema type is a struct or a ptr.
 		// In this case we would like to set the diff suppressor for the underlying fields as well.
@@ -106,9 +108,33 @@ func (s *CustomizableSchema) SetMinItems(value int) *CustomizableSchema {
 
 func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchema {
 	if len(value) == 0 {
-		panic("SetConflictsWith cannot take in empty list")
+		panic("SetConflictsWith cannot take in an empty list")
 	}
 	s.Schema.ConflictsWith = value
+	return s
+}
+
+func (s *CustomizableSchema) SetExactlyOneOf(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetExactlyOneOf cannot take in an empty list")
+	}
+	s.Schema.ExactlyOneOf = value
+	return s
+}
+
+func (s *CustomizableSchema) SetAtLeastOneOf(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetAtLeastOneOf cannot take in an empty list")
+	}
+	s.Schema.AtLeastOneOf = value
+	return s
+}
+
+func (s *CustomizableSchema) SetRequiredWith(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetRequiredWith cannot take in an empty list")
+	}
+	s.Schema.RequiredWith = value
 	return s
 }
 
@@ -137,5 +163,8 @@ func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *C
 		panic("Cannot add new field, " + key + " already exists in the schema")
 	}
 	cv.Schema[key] = newField
+	if s.isSuppressDiff {
+		newField.DiffSuppressFunc = diffSuppressor(newField)
+	}
 	return s
 }

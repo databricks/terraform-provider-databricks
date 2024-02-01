@@ -200,7 +200,7 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 }
 
 // ResourceNotebook manages notebooks
-func ResourceNotebook() *schema.Resource {
+func ResourceNotebook() common.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"language": {
 			Type:     schema.TypeString,
@@ -332,7 +332,7 @@ func ResourceNotebook() *schema.Resource {
 			objType := d.Get("object_type")
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), !(objType == Notebook || objType == File))
 		},
-	}.ToResource()
+	}
 }
 
 func isParentDoesntExistError(err error) bool {

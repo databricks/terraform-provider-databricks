@@ -173,7 +173,7 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 	return changes
 }
 
-func ResourceShare() *schema.Resource {
+func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		return m
 	})
@@ -267,5 +267,5 @@ func ResourceShare() *schema.Resource {
 			}
 			return w.Shares.DeleteByName(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

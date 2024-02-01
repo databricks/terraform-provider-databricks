@@ -38,7 +38,7 @@ func updateForceSendFields(req *catalog.UpdateMetastore) {
 	}
 }
 
-func ResourceMetastore() *schema.Resource {
+func ResourceMetastore() common.Resource {
 	s := common.StructToSchema(MetastoreInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["force_destroy"] = &schema.Schema{
@@ -208,5 +208,5 @@ func ResourceMetastore() *schema.Resource {
 				return w.Metastores.Delete(ctx, catalog.DeleteMetastoreRequest{Force: force, Id: d.Id()})
 			})
 		},
-	}.ToResource()
+	}
 }

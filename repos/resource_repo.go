@@ -167,7 +167,7 @@ func validatePath(i interface{}, k string) (_ []string, errors []error) {
 	return
 }
 
-func ResourceRepo() *schema.Resource {
+func ResourceRepo() common.Resource {
 	s := common.StructToSchema(ReposInformation{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["url"].ValidateFunc = validation.IsURLWithScheme([]string{"https", "http"})
 		s["git_provider"].DiffSuppressFunc = common.EqualFoldDiffSuppress
@@ -259,5 +259,5 @@ func ResourceRepo() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewReposAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

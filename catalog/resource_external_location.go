@@ -22,7 +22,7 @@ type ExternalLocationInfo struct {
 	EncDetails     *catalog.EncryptionDetails `json:"encryption_details,omitempty"`
 }
 
-func ResourceExternalLocation() *schema.Resource {
+func ResourceExternalLocation() common.Resource {
 	s := common.StructToSchema(ExternalLocationInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["force_destroy"] = &schema.Schema{
@@ -145,5 +145,5 @@ func ResourceExternalLocation() *schema.Resource {
 				Force: force,
 			})
 		},
-	}.ToResource()
+	}
 }

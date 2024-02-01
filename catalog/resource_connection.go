@@ -36,7 +36,7 @@ type ConnectionInfo struct {
 
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "OAuthPvtKey", "GoogleServiceAccountKeyJson"}
 
-func ResourceConnection() *schema.Resource {
+func ResourceConnection() common.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		common.NoCustomize)
 	pi := common.NewPairID("metastore_id", "name").Schema(
@@ -56,20 +56,19 @@ func ResourceConnection() *schema.Resource {
 			}
 			var createConnectionRequest catalog.CreateConnection
 			common.DataToStructPointer(d, s, &createConnectionRequest)
-			_, err = w.Connections.Create(ctx, createConnectionRequest)
+			conn, err := w.Connections.Create(ctx, createConnectionRequest)
 			if err != nil {
 				return err
 			}
 			// Update owner if it is provided
-			if d.Get("owner") == "" {
-				return nil
-			}
-			var updateConnectionRequest catalog.UpdateConnection
-			common.DataToStructPointer(d, s, &updateConnectionRequest)
-			updateConnectionRequest.NameArg = updateConnectionRequest.Name
-			conn, err := w.Connections.Update(ctx, updateConnectionRequest)
-			if err != nil {
-				return err
+			if d.Get("owner") != "" {
+				var updateConnectionRequest catalog.UpdateConnection
+				common.DataToStructPointer(d, s, &updateConnectionRequest)
+				updateConnectionRequest.NameArg = updateConnectionRequest.Name
+				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
+				if err != nil {
+					return err
+				}
 			}
 			d.Set("metastore_id", conn.MetastoreId)
 			pi.Pack(d)
@@ -91,6 +90,10 @@ func ResourceConnection() *schema.Resource {
 			// We need to preserve original sensitive options as API doesn't return them
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)
+			// If there are no options returned, need to initialize the map
+			if conn.Options == nil {
+				conn.Options = map[string]string{}
+			}
 			for key, element := range cOrig.Options {
 				if slices.Contains(sensitiveOptions, key) {
 					conn.Options[key] = element
@@ -160,5 +163,5 @@ func ResourceConnection() *schema.Resource {
 			}
 			return w.Connections.DeleteByNameArg(ctx, connName)
 		},
-	}.ToResource()
+	}
 }

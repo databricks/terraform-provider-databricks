@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func ResourceMwsPrivateAccessSettings() *schema.Resource {
+func ResourceMwsPrivateAccessSettings() common.Resource {
 	s := common.StructToSchema(provisioning.PrivateAccessSettings{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["private_access_settings_name"].ValidateFunc = validation.StringLenBetween(4, 256)
@@ -74,5 +74,5 @@ func ResourceMwsPrivateAccessSettings() *schema.Resource {
 			}
 			return a.PrivateAccess.DeleteByPrivateAccessSettingsId(ctx, pasID)
 		},
-	}.ToResource()
+	}
 }

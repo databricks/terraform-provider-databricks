@@ -384,7 +384,7 @@ func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	return nil
 }
 
-func ResourceSqlTable() *schema.Resource {
+func ResourceSqlTable() common.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["data_source_format"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
@@ -471,5 +471,5 @@ func ResourceSqlTable() *schema.Resource {
 			}
 			return ti.deleteTable()
 		},
-	}.ToResource()
+	}
 }

@@ -38,7 +38,7 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 		return adjustDataAccessSchema(m)
 	})
 
-func ResourceStorageCredential() *schema.Resource {
+func ResourceStorageCredential() common.Resource {
 	return common.Resource{
 		Schema: storageCredentialSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -239,5 +239,5 @@ func ResourceStorageCredential() *schema.Resource {
 				})
 			})
 		},
-	}.ToResource()
+	}
 }

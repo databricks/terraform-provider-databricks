@@ -28,7 +28,7 @@ type VolumeInfo struct {
 	VolumeType      catalog.VolumeType `json:"volume_type" tf:"force_new"`
 }
 
-func ResourceVolume() *schema.Resource {
+func ResourceVolume() common.Resource {
 	s := common.StructToSchema(VolumeInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
@@ -126,5 +126,5 @@ func ResourceVolume() *schema.Resource {
 			}
 			return w.Volumes.DeleteByFullNameArg(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

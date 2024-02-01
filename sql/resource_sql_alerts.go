@@ -122,7 +122,7 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Sc
 	return common.StructToData(a, s, data)
 }
 
-func ResourceSqlAlert() *schema.Resource {
+func ResourceSqlAlert() common.Resource {
 	s := common.StructToSchema(AlertEntity{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		options := m["options"].Elem.(*schema.Resource)
 		options.Schema["op"].ValidateFunc = validation.StringInSlice([]string{">", ">=", "<", "<=", "==", "!="}, true)
@@ -180,5 +180,5 @@ func ResourceSqlAlert() *schema.Resource {
 			return w.Alerts.DeleteByAlertId(ctx, data.Id())
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

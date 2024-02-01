@@ -20,7 +20,7 @@ type SchemaInfo struct {
 	FullName    string            `json:"full_name,omitempty" tf:"computed"`
 }
 
-func ResourceSchema() *schema.Resource {
+func ResourceSchema() common.Resource {
 	s := common.StructToSchema(SchemaInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			delete(m, "full_name")
@@ -183,5 +183,5 @@ func ResourceSchema() *schema.Resource {
 			}
 			return w.Schemas.DeleteByFullName(ctx, name)
 		},
-	}.ToResource()
+	}
 }

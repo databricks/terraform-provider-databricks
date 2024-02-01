@@ -95,7 +95,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 }
 
 // ResourceServicePrincipal manages service principals within workspace
-func ResourceServicePrincipal() *schema.Resource {
+func ResourceServicePrincipal() common.Resource {
 	type entity struct {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
 		DisplayName   string `json:"display_name,omitempty" tf:"computed,force_new"`
@@ -236,7 +236,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			}
 			return err
 		},
-	}.ToResource()
+	}
 }
 
 func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.ResourceData, spAPI ServicePrincipalsAPI, u User) error {

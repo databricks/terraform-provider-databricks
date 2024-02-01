@@ -37,7 +37,7 @@ func (a TokenManagementAPI) Read(tokenID string) (ti TokenResponse, err error) {
 	return
 }
 
-func ResourceOboToken() *schema.Resource {
+func ResourceOboToken() common.Resource {
 	oboTokenSchema := common.StructToSchema(OboToken{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["token_value"] = &schema.Schema{
@@ -70,5 +70,5 @@ func ResourceOboToken() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTokenManagementAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

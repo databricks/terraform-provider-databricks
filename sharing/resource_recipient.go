@@ -34,7 +34,7 @@ type RecipientInfo struct {
 	IpAccessList                   *IpAccessList `json:"ip_access_list,omitempty"`
 }
 
-func ResourceRecipient() *schema.Resource {
+func ResourceRecipient() common.Resource {
 	recipientSchema := common.StructToSchema(RecipientInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false)
 		return m
@@ -114,5 +114,5 @@ func ResourceRecipient() *schema.Resource {
 			}
 			return w.Recipients.DeleteByName(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

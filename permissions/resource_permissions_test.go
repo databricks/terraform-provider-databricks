@@ -13,7 +13,6 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/workspace"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -468,12 +467,12 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 			Status: 400,
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourcePermissions()
-		d := r.ToResource().TestResourceData()
+		r := ResourcePermissions().ToResource()
+		d := r.TestResourceData()
 		d.SetId("/clusters/abc")
-		diags := r.Read(ctx, d, client)
+		diags := r.ReadContext(ctx, d, client)
 		assert.NotNil(t, diags)
-		assert.Equal(t, "Internal error happened", diag.FromErr(diags)[0].Summary)
+		assert.Equal(t, "Internal error happened", diags[0].Summary)
 	})
 }
 

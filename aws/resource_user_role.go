@@ -7,10 +7,9 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceUserRole() *schema.Resource {
+func ResourceUserRole() common.Resource {
 	return common.NewPairID("user_id", "role").BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, userID, role string, c *common.DatabricksClient) error {
 			return scim.NewUsersAPI(ctx, c).Patch(userID, scim.PatchRequest("add", "roles", role))

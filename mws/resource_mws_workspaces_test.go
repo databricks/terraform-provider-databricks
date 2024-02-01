@@ -1429,7 +1429,7 @@ func TestEnsureTokenExists(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
@@ -1459,7 +1459,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
@@ -1480,7 +1480,7 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 		t.Fatal(err)
 	}
 	r := ResourceMwsWorkspaces()
-	d := r.TestResourceData()
+	d := r.ToResource().TestResourceData()
 	d.Set("workspace_url", client.Config.Host)
 	d.Set("token", []any{
 		map[string]any{
@@ -1516,7 +1516,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{

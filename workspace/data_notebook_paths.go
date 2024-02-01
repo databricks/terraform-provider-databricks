@@ -3,19 +3,19 @@ package workspace
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // DataSourceNotebookPaths ...
-func DataSourceNotebookPaths() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func DataSourceNotebookPaths() common.Resource {
+	return common.Resource{
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			path := d.Get("path").(string)
 			recursive := d.Get("recursive").(bool)
 			notebookList, err := NewNotebooksAPI(ctx, m).List(path, recursive, false)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(path)
 			var notebookPathList []map[string]string

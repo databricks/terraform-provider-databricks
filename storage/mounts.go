@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -14,7 +15,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -101,22 +101,22 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 	return result.Text(), result.Err()
 }
 
-func commonMountResource(tpl Mount, s map[string]*schema.Schema) *schema.Resource {
-	resource := &schema.Resource{
+func commonMountResource(tpl Mount, s map[string]*schema.Schema) common.Resource {
+	resource := common.Resource{
 		SchemaVersion: 2,
 		Schema:        s,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 	// nolint should be a bigger context-aware refactor
-	resource.CreateContext = mountCreate(tpl, resource)
-	resource.ReadContext = mountRead(tpl, resource)
-	resource.DeleteContext = mountDelete(tpl, resource)
-	resource.Importer = &schema.ResourceImporter{
-		StateContext: schema.ImportStatePassthroughContext,
-	}
+	resource.Create = mountCreate(tpl, resource)
+	resource.Read = mountRead(tpl, resource)
+	resource.Delete = mountDelete(tpl, resource)
 	return resource
 }
 
-func deprecatedMountTesource(r *schema.Resource) *schema.Resource {
+func deprecatedMountResource(r common.Resource) common.Resource {
 	r.DeprecationMessage = "Resource is deprecated and will be removed in further versions. " +
 		"Please rewrite configuration using `databricks_mount` resource. More info at " +
 		"https://registry.terraform.io/providers/databricks/databricks/latest/docs/" +
@@ -161,6 +161,10 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error) {
 	cluster, err := clustersAPI.GetOrCreateRunningCluster("terraform-mount", getCommonClusterObject(clustersAPI, "terraform-mount"))
 	if err != nil {
+		// Do not treat missing cluster like a missing resource.
+		if apierr.IsMissing(err) {
+			err = errors.New(err.Error())
+		}
 		return "", fmt.Errorf("failed to get mouting cluster: %w", err)
 	}
 	return cluster.ClusterID, nil
@@ -188,11 +192,10 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 }
 
 func mountCluster(ctx context.Context, tpl any, d *schema.ResourceData,
-	m any, r *schema.Resource) (Mount, MountPoint, error) {
+	client *common.DatabricksClient, r common.Resource) (Mount, MountPoint, error) {
 	var mountPoint MountPoint
 	var mountConfig Mount
 
-	client := m.(*common.DatabricksClient)
 	mountPoint.Exec = client.CommandExecutor(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
@@ -205,7 +208,7 @@ func mountCluster(ctx context.Context, tpl any, d *schema.ResourceData,
 	mountType := reflect.TypeOf(tpl)
 	mountTypePointer := reflect.New(mountType)
 	mountReflectValue := mountTypePointer.Elem()
-	common.DataToReflectValue(d, r, mountReflectValue)
+	common.DataToReflectValue(d, r.Schema, mountReflectValue)
 	mountInterface := mountReflectValue.Interface()
 	mountConfig = mountInterface.(Mount)
 
@@ -227,17 +230,16 @@ func mountCluster(ctx context.Context, tpl any, d *schema.ResourceData,
 }
 
 // returns resource create mount for object store on workspace
-func mountCreate(tpl any, r *schema.Resource) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-		mountConfig, mountPoint, err := mountCluster(ctx, tpl, d, m, r)
+func mountCreate(tpl any, r common.Resource) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
+	return func(ctx context.Context, d *schema.ResourceData, client *common.DatabricksClient) error {
+		mountConfig, mountPoint, err := mountCluster(ctx, tpl, d, client, r)
 		if err != nil {
-			return diag.FromErr(err)
+			return err
 		}
-		client := m.(*common.DatabricksClient)
 		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(), d.Id())
 		source, err := mountPoint.Mount(mountConfig, client)
 		if err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		d.Set("source", source)
 		return readMountSource(ctx, mountPoint, d)
@@ -245,7 +247,7 @@ func mountCreate(tpl any, r *schema.Resource) func(context.Context, *schema.Reso
 }
 
 // reads and sets source of the mount
-func readMountSource(ctx context.Context, mp MountPoint, d *schema.ResourceData) diag.Diagnostics {
+func readMountSource(ctx context.Context, mp MountPoint, d *schema.ResourceData) error {
 	source, err := mp.Source()
 	if err != nil {
 		if err.Error() == "Mount not found" {
@@ -253,33 +255,33 @@ func readMountSource(ctx context.Context, mp MountPoint, d *schema.ResourceData)
 			d.SetId("")
 			return nil
 		}
-		return diag.FromErr(err)
+		return err
 	}
 	d.Set("source", source)
 	return nil
 }
 
 // return resource reader function
-func mountRead(tpl any, r *schema.Resource) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func mountRead(tpl any, r common.Resource) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
+	return func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		return readMountSource(ctx, mp, d)
 	}
 }
 
 // returns delete resource function
-func mountDelete(tpl any, r *schema.Resource) func(context.Context, *schema.ResourceData, any) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func mountDelete(tpl any, r common.Resource) func(context.Context, *schema.ResourceData, *common.DatabricksClient) error {
+	return func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 		_, mp, err := mountCluster(ctx, tpl, d, m, r)
 		if err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		log.Printf("[INFO] Unmounting /mnt/%s", d.Id())
 		if err = mp.Delete(); err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		return nil
 	}

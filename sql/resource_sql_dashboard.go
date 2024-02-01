@@ -96,7 +96,7 @@ func (a DashboardAPI) Delete(dashboardID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil)
 }
 
-func ResourceSqlDashboard() *schema.Resource {
+func ResourceSqlDashboard() common.Resource {
 	s := common.StructToSchema(
 		DashboardEntity{},
 		common.NoCustomize)
@@ -141,5 +141,5 @@ func ResourceSqlDashboard() *schema.Resource {
 			return NewDashboardAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

@@ -27,7 +27,7 @@ func readWebHook(w *databricks.WorkspaceClient, ctx context.Context, ID string) 
 	return ml.RegistryWebhook{}, fmt.Errorf("webhook with ID %s isn't found", ID)
 }
 
-func ResourceMlflowWebhook() *schema.Resource {
+func ResourceMlflowWebhook() common.Resource {
 	s := common.StructToSchema(
 		ml.CreateRegistryWebhook{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -103,5 +103,5 @@ func ResourceMlflowWebhook() *schema.Resource {
 			return w.ModelRegistry.DeleteWebhook(ctx, ml.DeleteWebhookRequest{Id: d.Id()})
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

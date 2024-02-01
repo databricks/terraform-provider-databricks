@@ -7,7 +7,8 @@ import (
 )
 
 type CustomizableSchema struct {
-	Schema *schema.Schema
+	Schema         *schema.Schema
+	isSuppressDiff bool
 }
 
 func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *CustomizableSchema {
@@ -64,6 +65,7 @@ func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
 
 func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 	s.Schema.DiffSuppressFunc = diffSuppressor(s.Schema)
+	s.isSuppressDiff = true
 	if s.Schema.Type == schema.TypeList && s.Schema.MaxItems == 1 {
 		// If it is a list with max items = 1, it means the corresponding sdk schema type is a struct or a ptr.
 		// In this case we would like to set the diff suppressor for the underlying fields as well.
@@ -137,5 +139,8 @@ func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *C
 		panic("Cannot add new field, " + key + " already exists in the schema")
 	}
 	cv.Schema[key] = newField
+	if s.isSuppressDiff {
+		newField.DiffSuppressFunc = diffSuppressor(newField)
+	}
 	return s
 }

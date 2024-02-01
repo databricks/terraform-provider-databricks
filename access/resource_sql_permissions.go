@@ -316,7 +316,7 @@ func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
 }
 
 // ResourceSqlPermissions manages table ACLs
-func ResourceSqlPermissions() *schema.Resource {
+func ResourceSqlPermissions() common.Resource {
 	s := common.StructToSchema(SqlPermissions{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		alof := []string{"database", "table", "view", "catalog", "any_file", "anonymous_function"}
 		for _, field := range alof {
@@ -376,5 +376,5 @@ func ResourceSqlPermissions() *schema.Resource {
 			}
 			return ta.revoke()
 		},
-	}.ToResource()
+	}
 }

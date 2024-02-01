@@ -36,7 +36,7 @@ type ConnectionInfo struct {
 
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "OAuthPvtKey", "GoogleServiceAccountKeyJson"}
 
-func ResourceConnection() *schema.Resource {
+func ResourceConnection() common.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		common.NoCustomize)
 	pi := common.NewPairID("metastore_id", "name").Schema(
@@ -156,5 +156,5 @@ func ResourceConnection() *schema.Resource {
 			}
 			return w.Connections.DeleteByNameArg(ctx, connName)
 		},
-	}.ToResource()
+	}
 }

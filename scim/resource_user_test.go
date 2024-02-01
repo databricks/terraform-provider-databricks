@@ -620,7 +620,7 @@ func TestResourceUserDelete_ForceDeleteHomeDir(t *testing.T) {
 }
 
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {
-	d := ResourceUser().TestResourceData()
+	d := ResourceUser().ToResource().TestResourceData()
 	d.Set("force", true)
 	rerr := createForceOverridesManuallyAddedUser(
 		fmt.Errorf("nonsense"), d,
@@ -639,7 +639,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
 			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
@@ -660,7 +660,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
 			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
@@ -700,7 +700,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
@@ -742,7 +742,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(

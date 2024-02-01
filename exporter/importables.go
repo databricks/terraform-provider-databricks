@@ -724,8 +724,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				// generated HCL code for data source, and it only supports the `name` attribute
 				r.Data.Set("definition", "")
 				builtInClusterPolicies := ic.getBuiltinPolicyFamilies()
-				_, isBuiltin := builtInClusterPolicies[policyFamilyId]
-				if isBuiltin && clusterPolicy.PolicyFamilyDefinitionOverrides == "" {
+				v, isBuiltin := builtInClusterPolicies[policyFamilyId]
+				if isBuiltin && clusterPolicy.PolicyFamilyDefinitionOverrides == "" && v.Name == clusterPolicy.Name {
 					r.Mode = "data"
 				}
 			}

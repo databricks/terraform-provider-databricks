@@ -66,8 +66,8 @@ func ResourceModelServing() *schema.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
-			_, mOrig := d.GetOk("config.0.served_models")
-			_, eOrig := d.GetOk("config.0.served_entities")
+			var sOrig serving.ServingEndpointDetailed
+			common.DataToStructPointer(d, s, &sOrig)
 			if err != nil {
 				return err
 			}
@@ -75,16 +75,16 @@ func ResourceModelServing() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			// If the original state file does not have the respective key, we change the response back to nil
+			if sOrig.Config.ServedModels == nil {
+				endpoint.Config.ServedModels = nil
+			}
+			if sOrig.Config.ServedEntities == nil {
+				endpoint.Config.ServedEntities = nil
+			}
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err
-			}
-			// If the original state file does not have the respective key, we change the response back to nil
-			if !mOrig {
-				d.Set("config.0.served_models", nil)
-			}
-			if !eOrig {
-				d.Set("config.0.served_entities", nil)
 			}
 			return nil
 

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/qa/poll"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
@@ -25,10 +26,11 @@ func TestVectorSearchEndpointCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockVectorSearchEndpointsAPI().EXPECT()
-			e.CreateEndpointAndWait(mock.Anything, vectorsearch.CreateEndpoint{
+			e.CreateEndpoint(mock.Anything, vectorsearch.CreateEndpoint{
 				Name:         "abc",
 				EndpointType: "STANDARD",
-			}, mock.Anything).Return(ei, nil)
+			}).Return(&vectorsearch.WaitGetEndpointVectorSearchEndpointOnline[vectorsearch.EndpointInfo]{Poll: poll.Simple(*ei)}, nil)
+
 			e.GetEndpointByEndpointName(mock.Anything, "abc").Return(ei, nil)
 		},
 		Resource: ResourceVectorSearchEndpoint(),

@@ -613,6 +613,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			Read:   schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
+		IsAccountLevelOnly: true,
 	}
 }
 

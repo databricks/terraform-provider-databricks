@@ -27,6 +27,12 @@ type Resource struct {
 	Timeouts           *schema.ResourceTimeout
 	DeprecationMessage string
 	Importer           *schema.ResourceImporter
+
+	// Set to true for account-level only resources, i.e. resources that can only be configured
+	// with an account-level provider. When false, the resource will include a workspace_id
+	// field that can be set when using an account-level provider to target a specific workspace
+	// in the account.
+	IsAccountLevelOnly bool
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -77,6 +83,7 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 		err = r.CustomizeDiff(ctx, rd)
 		if err != nil {
 			err = nicerError(ctx, err, "customize diff for")
+			return
 		}
 		return
 	}
@@ -212,6 +219,9 @@ func (r Resource) ToResource() *schema.Resource {
 				return []*schema.ResourceData{d}, err
 			},
 		}
+	}
+	if !r.IsAccountLevelOnly {
+		r.Schema = AddWorkspaceIdField(r.Schema)
 	}
 	return resource
 }

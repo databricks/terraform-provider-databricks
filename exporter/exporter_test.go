@@ -2168,16 +2168,19 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 				Response: workspace.ObjectList{
 					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus},
 				},
+				ReuseRequest: true,
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/get-status?path=%2FNotebook",
-				Response: notebookStatus,
+				Method:       "GET",
+				Resource:     "/api/2.0/workspace/get-status?path=%2FNotebook",
+				Response:     notebookStatus,
+				ReuseRequest: true,
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/workspace/get-status?path=%2FFile",
-				Response: fileStatus,
+				Method:       "GET",
+				Resource:     "/api/2.0/workspace/get-status?path=%2FFile",
+				Response:     fileStatus,
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -2185,6 +2188,7 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 				Response: workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -2192,6 +2196,7 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 				Response: workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
+				ReuseRequest: true,
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {

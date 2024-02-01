@@ -333,23 +333,23 @@ func TestMountCRD(t *testing.T) {
 			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourceMount()
-		d := r.ToResource().TestResourceData()
+		r := ResourceMount().ToResource()
+		d := r.TestResourceData()
 		d.Set("name", "a name")
 		d.Set("uri", "a uri")
 		client.WithCommandMock(func(commandStr string) common.CommandResults {
 			return common.CommandResults{}
 		})
-		diags := r.Create(ctx, d, client)
-		assert.NotNil(t, diags)
-		assert.EqualError(t, diags, "failed to get mouting cluster: nope")
+		diags := r.CreateContext(ctx, d, client)
+		assert.True(t, diags.HasError())
+		assert.Equal(t, diags[0].Summary, "failed to get mouting cluster: nope")
 
-		diags = r.Read(ctx, d, client)
-		assert.NotNil(t, diags)
-		assert.EqualError(t, diags, "failed to get mouting cluster: nope")
+		diags = r.ReadContext(ctx, d, client)
+		assert.True(t, diags.HasError())
+		assert.Equal(t, diags[0].Summary, "failed to get mouting cluster: nope")
 
-		diags = r.Delete(ctx, d, client)
-		assert.NotNil(t, diags)
-		assert.EqualError(t, diags, "failed to get mouting cluster: nope")
+		diags = r.DeleteContext(ctx, d, client)
+		assert.True(t, diags.HasError())
+		assert.Equal(t, diags[0].Summary, "failed to get mouting cluster: nope")
 	})
 }

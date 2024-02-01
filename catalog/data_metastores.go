@@ -6,10 +6,9 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceMetastores() *schema.Resource {
+func DataSourceMetastores() common.Resource {
 	type metastoresData struct {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}

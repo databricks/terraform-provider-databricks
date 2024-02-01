@@ -211,6 +211,26 @@ resource "databricks_grant" "customers_data_analysts" {
 }
 ```
 
+## Function grants
+
+See [databricks_grants Function grants](grants.md#function-grants) for the list of privileges that apply to Registered models.
+
+```hcl
+resource "databricks_grant" "udf_data_engineers" {
+  function = "main.reporting.udf"
+
+  principal  = "Data Engineers"
+  privileges = ["EXECUTE"]
+}
+
+resource "databricks_grant" "udf_data_analysts" {
+  function = "main.reporting.udf"
+
+  principal  = "Data Analysts"
+  privileges = ["EXECUTE"]
+}
+```
+
 ## Storage credential grants
 
 See [databricks_grants Storage credential grants](grants.md#storage-credential-grants) for the list of privileges that apply to Storage credentials.

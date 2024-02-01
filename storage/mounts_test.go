@@ -342,14 +342,14 @@ func TestMountCRD(t *testing.T) {
 		})
 		diags := r.CreateContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, diags[0].Summary, "failed to get mouting cluster: nope")
+		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
 
 		diags = r.ReadContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, diags[0].Summary, "failed to get mouting cluster: nope")
+		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
 
 		diags = r.DeleteContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, diags[0].Summary, "failed to get mouting cluster: nope")
+		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
 	})
 }

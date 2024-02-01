@@ -125,6 +125,7 @@ func TestClusterPolicy(t *testing.T) {
 func TestPredefinedClusterPolicy(t *testing.T) {
 	d := policies.ResourceClusterPolicy().TestResourceData()
 	d.Set("policy_family_id", "job-cluster")
+	d.Set("name", "Job Compute")
 	policy, _ := json.Marshal(map[string]map[string]string{})
 	d.Set("definition", string(policy))
 	ic := importContextForTest()

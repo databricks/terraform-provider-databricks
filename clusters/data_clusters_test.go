@@ -82,4 +82,5 @@ func TestClustersDataSourceErrorsOut(t *testing.T) {
 		DatabricksClient: client,
 	})
 	assert.NotNil(t, diag)
+	assert.True(t, diag.HasError())
 }

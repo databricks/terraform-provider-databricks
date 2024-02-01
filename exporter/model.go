@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -243,6 +244,15 @@ func (r *resource) ImportCommand(ic *importContext) string {
 	return fmt.Sprintf(`terraform import %s%s.%s "%s"`, m, r.Resource, r.Name, r.ID)
 }
 
+var (
+	maxRetries = 5
+	retryDelay = 2
+)
+
+func isRetryableError(err string, i int) bool {
+	return (strings.Contains(err, "context deadline exceeded") || strings.Contains(err, "Error handling request")) && i < (maxRetries-1)
+}
+
 func (r *resource) ImportResource(ic *importContext) {
 	defer ic.waitGroup.Done()
 	pr, ok := ic.Resources[r.Resource]
@@ -265,9 +275,17 @@ func (r *resource) ImportResource(ic *importContext) {
 			log.Printf("[ERROR] Searching %s is not available", r)
 			return
 		}
-		if err := ir.Search(ic, r); err != nil {
-			log.Printf("[ERROR] Cannot search for a resource %s: %v", err, r)
-			return
+		for i := 0; i < maxRetries; i++ {
+			err := ir.Search(ic, r)
+			if err == nil {
+				break
+			}
+			if !isRetryableError(err.Error(), i) {
+				log.Printf("[ERROR] Cannot search for a resource of %s: %s", r, err)
+				return
+			}
+			log.Printf("[INFO] next retry (%d) for searching of %v", (i + 1), r)
+			time.Sleep(time.Duration(retryDelay) * time.Second)
 		}
 		if r.ID == "" {
 			log.Printf("[WARN] Cannot find %s", r)
@@ -288,9 +306,18 @@ func (r *resource) ImportResource(ic *importContext) {
 		if apiVersion != "" {
 			ctx = context.WithValue(ctx, common.Api, apiVersion)
 		}
-		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
-			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
-			return
+		// TODO: rewrite to retries package...
+		for i := 0; i < maxRetries; i++ {
+			dia := pr.ReadContext(ctx, r.Data, ic.Client)
+			if dia == nil {
+				break
+			}
+			if !isRetryableError(fmt.Sprintf("%v", dia), i) {
+				log.Printf("[ERROR] Error reading %s#%s after %d retries: %v", r.Resource, r.ID, i, dia)
+				return
+			}
+			log.Printf("[INFO] next retry (%d) for reading of %s#%s", (i + 1), r.Resource, r.ID)
+			time.Sleep(time.Duration(retryDelay) * time.Second)
 		}
 		if r.Data.Id() == "" {
 			r.Data.SetId(r.ID)
@@ -298,9 +325,17 @@ func (r *resource) ImportResource(ic *importContext) {
 	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {
-		if err := ir.Import(ic, r); err != nil {
-			log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
-			return
+		for i := 0; i < maxRetries; i++ {
+			err := ir.Import(ic, r)
+			if err == nil {
+				break
+			}
+			if !isRetryableError(err.Error(), i) {
+				log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
+				return
+			}
+			log.Printf("[INFO] next retry (%d) for importing of %s#%s", (i + 1), r.Resource, r.ID)
+			time.Sleep(time.Duration(retryDelay) * time.Second)
 		}
 	}
 	ic.Add(r)

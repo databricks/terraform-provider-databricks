@@ -201,6 +201,50 @@ func TestEmitNoSearchNoId(t *testing.T) {
 	close(ch)
 }
 
+func TestEmitNoSearchNoIdWithRetry(t *testing.T) {
+	ch := make(resourceChannel, 10)
+	state := newStateApproximation([]string{"a"})
+	i := 0
+	ic := &importContext{
+		importing: map[string]bool{},
+		Resources: map[string]*schema.Resource{
+			"a": {},
+		},
+		Importables: map[string]importable{
+			"a": {
+				Service: "e",
+				Search: func(ic *importContext, r *resource) error {
+					if i > 0 {
+						return nil
+					}
+					i = i + 1
+					return fmt.Errorf("context deadline exceeded (Client.Timeout exceeded while awaiting headers)")
+				},
+			},
+		},
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+		ignoredResources: map[string]struct{}{},
+		State:            state,
+	}
+	ic.enableServices("e")
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
+		Resource:  "a",
+		Attribute: "b",
+		Value:     "d",
+		Name:      "c",
+	})
+	ic.waitGroup.Wait()
+	close(ch)
+}
+
 func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 	ch := make(resourceChannel, 10)
 	state := newStateApproximation([]string{"a"})

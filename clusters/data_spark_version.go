@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"golang.org/x/mod/semver"
 )
@@ -131,7 +130,6 @@ func DataSourceSparkVersion() common.Resource {
 
 		s["photon"].Deprecated = "Specify runtime_engine=\"PHOTON\" in the cluster configuration"
 		s["graviton"].Deprecated = "Not required anymore - it's automatically enabled on the Graviton-based node types"
-		common.AddWorkspaceIdField(s)
 		return s
 	})
 
@@ -140,7 +138,7 @@ func DataSourceSparkVersion() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			c, err := m.InConfiguredWorkspace(ctx, d)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			var this SparkVersionRequest
 			common.DataToStructPointer(d, s, &this)

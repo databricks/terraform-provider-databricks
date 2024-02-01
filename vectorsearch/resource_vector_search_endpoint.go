@@ -17,10 +17,8 @@ func ResourceVectorSearchEndpoint() *schema.Resource {
 	s := common.StructToSchema(
 		vectorsearch.EndpointInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			common.CustomizeSchemaPath(s, "name").SetRequired()
-			s["name"].ForceNew = true
-			s["endpoint_type"].ForceNew = true
-			common.CustomizeSchemaPath(s, "endpoint_type").SetRequired()
+			common.CustomizeSchemaPath(s, "name").SetRequired().SetForceNew()
+			common.CustomizeSchemaPath(s, "endpoint_type").SetRequired().SetForceNew()
 			delete(s, "id")
 			common.CustomizeSchemaPath(s, "creator").SetReadOnly()
 			common.CustomizeSchemaPath(s, "creation_timestamp").SetReadOnly()

@@ -429,6 +429,76 @@ func TestStructToData(t *testing.T) {
 	DataToStructPointer(d, s, &dummyCopy)
 }
 
+func TestStructToDataNoSkipEmpty(t *testing.T) {
+	s := StructToSchema(Dummy{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		return s
+	})
+	assert.NotNil(t, s)
+	assert.Equal(t, 5, s["tags"].MaxItems)
+	assert.Equal(t, 10, s["addresses"].MaxItems)
+
+	sp, err := SchemaPath(s, "addresses", "line")
+	assert.NoError(t, err)
+	assert.Equal(t, schema.TypeString, sp.Type)
+
+	dummyOrig := Dummy{
+		Enabled:     false,
+		Workers:     1004,
+		Description: "something",
+		Addresses: []Address{
+			{
+				Line:      "abc",
+				IsPrimary: false,
+			},
+			{
+				Line:      "def",
+				IsPrimary: true,
+			},
+		},
+		Unique: []Address{
+			{
+				Line:      "oop",
+				IsPrimary: false,
+			},
+		},
+		Things: []string{"one", "two", "two"},
+		Tags: map[string]string{
+			"Foo": "Bar",
+		},
+		Home: &Address{
+			Line:      "bcd",
+			IsPrimary: true,
+		},
+	}
+
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	d.MarkNewResource()
+	err = StructToData(dummyOrig, s, d)
+	assert.NoError(t, err)
+
+	dummyUpdate := Dummy{
+		Enabled:     false,
+		Workers:     1004,
+		Description: "something",
+		Addresses:   []Address{},
+		Unique:      []Address{},
+		Things:      []string{},
+		Tags:        map[string]string{},
+		Home: &Address{
+			Line:      "bcd",
+			IsPrimary: true,
+		},
+	}
+
+	err = StructToDataNoSkipEmpty(dummyUpdate, s, d, []string{"addresses"})
+	assert.NoError(t, err)
+
+	// This was overwritten with empty list from dummtUpdate
+	assert.Equal(t, 0, d.Get("addresses.#"))
+	// This is not overwritten, so it retains the list from dummyOrig
+	assert.Equal(t, 1, d.Get("unique.#"))
+}
+
 func TestDiffSuppressor(t *testing.T) {
 	stringSchema := &schema.Schema{
 		Type: schema.TypeString,

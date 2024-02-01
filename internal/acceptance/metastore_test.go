@@ -117,5 +117,12 @@ func runMetastoreTestWithOwnerUpdates(t *testing.T, extraAttributes map[string]a
 			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
 			%s
 		}`, template),
+	}, step{
+		Template: fmt.Sprintf(`resource "databricks_metastore" "this" {
+			name = "{var.STICKY_RANDOM}-updated"
+			force_destroy = true
+			owner = "{env.TEST_DATA_ENG_GROUP}"
+			%s
+		}`, template),
 	})
 }

@@ -194,7 +194,7 @@ func TestUpdateMetastore_NoChanges(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestUpdateMetastore_OwnerChanges(t *testing.T) {
+func TestUpdateMetastore_OnlyOwnerChanges(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockMetastoresAPI().EXPECT()
@@ -229,6 +229,57 @@ func TestUpdateMetastore_OwnerChanges(t *testing.T) {
 		owner = "updatedOwner"
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
 		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateMetastore_OwnerAndOtherChanges(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:    "abc",
+				Owner: "updatedOwner",
+			}).Return(&catalog.MetastoreInfo{
+				Name:  "abc",
+				Owner: "updatedOwner",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                "abc",
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
+				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				Owner:             "updatedOwner",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				Owner:             "updatedOwner",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                "abc",
+			"storage_root":        "s3:/a",
+			"owner":               "admin",
+			"delta_sharing_scope": "INTERNAL_AND_EXTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "updatedOwner"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1004
 		`,
 	}.ApplyNoError(t)
 }

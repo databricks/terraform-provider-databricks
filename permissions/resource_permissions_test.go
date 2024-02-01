@@ -471,7 +471,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		d := r.TestResourceData()
 		d.SetId("/clusters/abc")
 		diags := r.ReadContext(ctx, d, client)
-		assert.NotNil(t, diags)
+		assert.True(t, diags.HasError())
 		assert.Equal(t, "Internal error happened", diags[0].Summary)
 	})
 }

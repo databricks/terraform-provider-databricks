@@ -251,7 +251,6 @@ func TestUpdateMetastore_OwnerAndOtherChanges(t *testing.T) {
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 			}).Return(&catalog.MetastoreInfo{
-				Name:              "abc",
 				Owner:             "updatedOwner",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
@@ -297,9 +296,9 @@ func TestUpdateMetastore_Rollback(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "abcd",
+				Name:              "abc",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 			}).Return(nil, errors.New("Something unexpected happened"))
 			e.Update(mock.Anything, catalog.UpdateMetastore{
@@ -322,11 +321,11 @@ func TestUpdateMetastore_Rollback(t *testing.T) {
 			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
 		},
 		HCL: `
-		name = "abcd"
+		name = "abc"
 		storage_root = "s3:/a"
 		owner = "updatedOwner"
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
-		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		delta_sharing_recipient_token_lifetime_in_seconds = 1004
 		`,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
@@ -631,9 +630,9 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
 					Id:                "abc",
-					Name:              "abcd",
+					Name:              "abc",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+					DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 				},
 			}).Return(nil, errors.New("Something unexpected happened"))
@@ -663,11 +662,11 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
 		},
 		HCL: `
-		name = "abcd"
+		name = "abc"
 		storage_root = "s3:/a"
 		owner = "updatedOwner"
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
-		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		delta_sharing_recipient_token_lifetime_in_seconds = 1004
 		`,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")

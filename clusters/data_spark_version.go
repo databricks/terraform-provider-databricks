@@ -136,13 +136,9 @@ func DataSourceSparkVersion() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			c, err := m.InConfiguredWorkspace(ctx, d)
-			if err != nil {
-				return err
-			}
 			var this SparkVersionRequest
 			common.DataToStructPointer(d, s, &this)
-			version, err := NewClustersAPI(ctx, c).LatestSparkVersion(this)
+			version, err := NewClustersAPI(ctx, m).LatestSparkVersion(this)
 			if err != nil {
 				return err
 			}

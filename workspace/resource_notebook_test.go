@@ -481,7 +481,7 @@ func TestResourceNotebookUpdate_DBC(t *testing.T) {
 
 func TestNotebookLanguageSuppressSourceDiff(t *testing.T) {
 	r := ResourceNotebook()
-	d := r.TestResourceData()
+	d := r.ToResource().TestResourceData()
 	d.Set("source", "this.PY")
 	suppress := r.Schema["language"].DiffSuppressFunc
 	assert.True(t, suppress("language", Python, Python, d))

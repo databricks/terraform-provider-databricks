@@ -21,7 +21,7 @@ var getSecurableName = func(d *schema.ResourceData) string {
 	return securableName.(string)
 }
 
-func ResourceCatalogWorkspaceBinding() *schema.Resource {
+func ResourceCatalogWorkspaceBinding() common.Resource {
 	workspaceBindingSchema := common.StructToSchema(catalog.WorkspaceBinding{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["catalog_name"] = &schema.Schema{
@@ -109,7 +109,7 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			})
 			return err
 		},
-	}.ToResource()
+	}
 }
 
 // migrate to v1 state, as catalog_name is moved to securable_name

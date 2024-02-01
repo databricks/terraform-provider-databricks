@@ -73,7 +73,7 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 		return adjustDataAccessSchema(m)
 	})
 
-func ResourceMetastoreDataAccess() *schema.Resource {
+func ResourceMetastoreDataAccess() common.Resource {
 	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
 		Schema:        dacSchema,
@@ -194,7 +194,7 @@ func ResourceMetastoreDataAccess() *schema.Resource {
 				})
 			})
 		},
-	}.ToResource()
+	}
 }
 
 // migrate to v1 state, as the id is now changed

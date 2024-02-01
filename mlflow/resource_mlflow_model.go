@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceMlflowModel() *schema.Resource {
+func ResourceMlflowModel() common.Resource {
 	s := common.StructToSchema(
 		ml.CreateModelRequest{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -74,5 +74,5 @@ func ResourceMlflowModel() *schema.Resource {
 			return w.ModelRegistry.DeleteModel(ctx, req)
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

@@ -41,19 +41,6 @@ func ResourceModelServing() *schema.Resource {
 			common.MustSchemaPath(m, "config", "auto_capture_config", "schema_name").ForceNew = true
 			common.MustSchemaPath(m, "config", "auto_capture_config", "table_name_prefix").ForceNew = true
 
-			common.MustSchemaPath(m, "config", "served_models").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				if _, exists := d.GetOk("config.0.served_entities"); exists {
-					return true
-				}
-				return false
-			}
-			common.MustSchemaPath(m, "config", "served_entities").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				if _, exists := d.GetOk("config.0.served_models"); exists {
-					return true
-				}
-				return false
-			}
-
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,

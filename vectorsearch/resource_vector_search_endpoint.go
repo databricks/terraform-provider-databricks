@@ -12,7 +12,7 @@ import (
 
 const DefaultProvisionTimeout = 45 * time.Minute
 
-func ResourceVectorSearchEndpoint() *schema.Resource {
+func ResourceVectorSearchEndpoint() common.Resource {
 	s := common.StructToSchema(
 		vectorsearch.EndpointInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -81,5 +81,5 @@ func ResourceVectorSearchEndpoint() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-	}.ToResource()
+	}
 }

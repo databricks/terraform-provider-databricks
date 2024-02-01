@@ -126,6 +126,10 @@ func ResourceConnection() *schema.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			updateConnectionRequest.Owner = ""
 			_, err = w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {

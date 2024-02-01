@@ -27,6 +27,8 @@ func TestUcAccConnectionsResourceFullLifecycle(t *testing.T) {
 	}, step{
 		Template: connectionTemplateWithOwner("test.mysql.database.aws.com", "account users"),
 	}, step{
+		Template: connectionTemplateWithOwner("test.mysql.database.aws.com", "{env.TEST_DATA_ENG_GROUP}"),
+	}, step{
 		Template: connectionTemplateWithOwner("test.mysql.database.azure.com", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

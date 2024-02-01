@@ -88,7 +88,6 @@ func ResourceModelServing() *schema.Resource {
 			}
 			d.Set("serving_endpoint_id", endpoint.Id)
 			return nil
-
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

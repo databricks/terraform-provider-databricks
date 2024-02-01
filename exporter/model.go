@@ -245,8 +245,8 @@ func (r *resource) ImportCommand(ic *importContext) string {
 }
 
 var (
-	maxRetries = 5
-	retryDelay = 2
+	maxRetries        = 5
+	retryDelaySeconds = 2
 )
 
 func isRetryableError(err string, i int) bool {
@@ -285,7 +285,7 @@ func (r *resource) ImportResource(ic *importContext) {
 				return
 			}
 			log.Printf("[INFO] next retry (%d) for searching of %v", (i + 1), r)
-			time.Sleep(time.Duration(retryDelay) * time.Second)
+			time.Sleep(time.Duration(retryDelaySeconds) * time.Second)
 		}
 		if r.ID == "" {
 			log.Printf("[WARN] Cannot find %s", r)
@@ -317,7 +317,7 @@ func (r *resource) ImportResource(ic *importContext) {
 				return
 			}
 			log.Printf("[INFO] next retry (%d) for reading of %s#%s", (i + 1), r.Resource, r.ID)
-			time.Sleep(time.Duration(retryDelay) * time.Second)
+			time.Sleep(time.Duration(retryDelaySeconds) * time.Second)
 		}
 		if r.Data.Id() == "" {
 			r.Data.SetId(r.ID)
@@ -335,7 +335,7 @@ func (r *resource) ImportResource(ic *importContext) {
 				return
 			}
 			log.Printf("[INFO] next retry (%d) for importing of %s#%s", (i + 1), r.Resource, r.ID)
-			time.Sleep(time.Duration(retryDelay) * time.Second)
+			time.Sleep(time.Duration(retryDelaySeconds) * time.Second)
 		}
 	}
 	ic.Add(r)

@@ -87,7 +87,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_spark_version":           clusters.DataSourceSparkVersion().ToResource(),
 			"databricks_sql_warehouse":           sql.DataSourceWarehouse().ToResource(),
 			"databricks_sql_warehouses":          sql.DataSourceWarehouses().ToResource(),
-      "databricks_table":                   catalog.DataSourceTable().ToResource(),
+			"databricks_table":                   catalog.DataSourceTable().ToResource(),
 			"databricks_tables":                  catalog.DataSourceTables().ToResource(),
 			"databricks_views":                   catalog.DataSourceViews().ToResource(),
 			"databricks_user":                    scim.DataSourceUser().ToResource(),

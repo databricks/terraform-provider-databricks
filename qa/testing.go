@@ -318,7 +318,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = resource.InternalValidate(f.Resource.Schema, !f.NonWritable)
+	err = resource.InternalValidate(resource.Schema, !f.NonWritable)
 	if err != nil {
 		return nil, err
 	}
@@ -434,11 +434,12 @@ func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCas
 		"expect_error": "i'm a teapot",
 		"account_id":   "",
 	}
-	m := map[string]func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error{
-		"create": resource.Create,
-		"read":   resource.Read,
-		"update": resource.Update,
-		"delete": resource.Delete,
+	r := resource.ToResource()
+	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
+		"create": r.CreateContext,
+		"read":   r.ReadContext,
+		"update": r.UpdateContext,
+		"delete": r.DeleteContext,
 	}
 	for _, corner := range cc {
 		if corner.part == "skip_crud" {
@@ -446,7 +447,6 @@ func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCas
 		}
 		config[corner.part] = corner.value
 	}
-	r := resource.ToResource()
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := r.TestResourceData()
 		client.Config.AccountID = config["account_id"]
@@ -457,7 +457,7 @@ func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCas
 			validData.SetId(config["id"])
 			diags := v(ctx, validData, client)
 			if assert.Len(t, diags, 1) {
-				assert.Containsf(t, diag.FromErr(diags)[0].Summary, config["expect_error"],
+				assert.Containsf(t, diags[0].Summary, config["expect_error"],
 					"%s didn't handle correct error on valid data", n)
 			}
 		}

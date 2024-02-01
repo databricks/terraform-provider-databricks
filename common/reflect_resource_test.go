@@ -614,10 +614,7 @@ func TestDataResource(t *testing.T) {
 	d := r.TestResourceData()
 	d.Set("in", "test")
 
-	diags := r.ReadContext(context.Background(), d, nil)
-	assert.Len(t, diags, 1)
-
-	diags = r.ReadContext(context.Background(), d, &DatabricksClient{})
+	diags := r.ReadContext(context.Background(), d, &DatabricksClient{})
 	assert.Len(t, diags, 0)
 	assert.Equal(t, "out: test", d.Get("out"))
 	assert.Equal(t, "_", d.Id())

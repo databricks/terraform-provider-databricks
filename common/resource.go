@@ -122,6 +122,8 @@ func (r Resource) ToResource() *schema.Resource {
 			}
 		}
 	}
+	// Ignore missing for read for resources, but not for data sources.
+	ignoreMissingForRead := (r.Create != nil || r.Update != nil || r.Delete != nil)
 	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
@@ -142,12 +144,18 @@ func (r Resource) ToResource() *schema.Resource {
 		}
 	}
 	resource := &schema.Resource{
-		Schema:         r.Schema,
-		SchemaVersion:  r.SchemaVersion,
-		StateUpgraders: r.StateUpgraders,
-		CustomizeDiff:  r.saferCustomizeDiff(),
-		CreateContext: func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
+		Schema:             r.Schema,
+		SchemaVersion:      r.SchemaVersion,
+		StateUpgraders:     r.StateUpgraders,
+		CustomizeDiff:      r.saferCustomizeDiff(),
+		ReadContext:        generateReadFunc(ignoreMissingForRead),
+		UpdateContext:      update,
+		Importer:           r.Importer,
+		Timeouts:           r.Timeouts,
+		DeprecationMessage: r.DeprecationMessage,
+	}
+	if r.Create != nil {
+		resource.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			err := recoverable(r.Create)(ctx, d, c)
 			if err != nil {
@@ -159,11 +167,10 @@ func (r Resource) ToResource() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			return nil
-		},
-		ReadContext:   generateReadFunc(true),
-		UpdateContext: update,
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
+		}
+	}
+	if r.Delete != nil {
+		resource.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
 			if apierr.IsMissing(err) {
 				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
@@ -177,10 +184,7 @@ func (r Resource) ToResource() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			return nil
-		},
-		Importer:           r.Importer,
-		Timeouts:           r.Timeouts,
-		DeprecationMessage: r.DeprecationMessage,
+		}
 	}
 	if resource.Importer == nil {
 		resource.Importer = &schema.ResourceImporter{
@@ -214,12 +218,6 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 	return Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *DatabricksClient) (err error) {
-			defer func() {
-				// using recoverable() would cause more complex rewrapping of DataToStructPointer & StructToData
-				if panic := recover(); panic != nil {
-					err = fmt.Errorf("panic: %v", panic)
-				}
-			}()
 			ptr := reflect.New(reflect.ValueOf(sc).Type())
 			DataToReflectValue(d, s, ptr.Elem())
 			err = read(ctx, ptr.Interface(), m)

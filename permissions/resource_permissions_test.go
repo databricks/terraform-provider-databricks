@@ -1498,10 +1498,10 @@ func TestDeleteMissing(t *testing.T) {
 			Response: apierr.NotFound("missing"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		p := ResourcePermissions()
-		d := p.ToResource().TestResourceData()
+		p := ResourcePermissions().ToResource()
+		d := p.TestResourceData()
 		d.SetId("x")
-		diags := p.Delete(ctx, d, client)
+		diags := p.DeleteContext(ctx, d, client)
 		assert.Nil(t, diags)
 	})
 }

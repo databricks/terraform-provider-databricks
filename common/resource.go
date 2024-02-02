@@ -28,11 +28,16 @@ type Resource struct {
 	DeprecationMessage string
 	Importer           *schema.ResourceImporter
 
-	// Set to true for account-level only resources, i.e. resources that can only be configured
-	// with an account-level provider. When false, the resource will include a workspace_id
-	// field that can be set when using an account-level provider to target a specific workspace
-	// in the account.
-	IsAccountLevelOnly bool
+	// StrictProviderLevelResource indicates whether a resource can only be managed using a
+	// provider at the appropriate level, i.e. workspace-level resources that can only be
+	// managed with a workspace-level provider.
+	//
+	// All account-level resources can only be managed with an account-level provider, so this
+	// must be set to `true` for all account-level resources.
+	//
+	// When false, the resource will include a workspace_id field that can be set when using an
+	// account-level provider to target a specific workspace in the account.
+	StrictProviderLevelResource bool
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -89,14 +94,33 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 	}
 }
 
+func (r Resource) getSchema() map[string]*schema.Schema {
+	if r.Schema == nil {
+		return make(map[string]*schema.Schema)
+	}
+	return r.Schema
+}
+
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
+	getClient := func(_ context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
+		return m.(*DatabricksClient), nil
+	}
+	getDeleteClient := getClient
+	if !r.StrictProviderLevelResource {
+		getClient = func(ctx context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
+			return m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+		}
+		getDeleteClient = func(ctx context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
+			return m.(*DatabricksClient).InConfiguredWorkspaceForDelete(ctx, d)
+		}
+	}
 	var update func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics
 	if r.Update != nil {
 		update = func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			c, err := m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			c, err := getClient(ctx, m, d)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -138,7 +162,7 @@ func (r Resource) ToResource() *schema.Resource {
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			c, err := m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			c, err := getClient(ctx, m, d)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -158,7 +182,7 @@ func (r Resource) ToResource() *schema.Resource {
 		}
 	}
 	resource := &schema.Resource{
-		Schema:             r.Schema,
+		Schema:             r.getSchema(),
 		SchemaVersion:      r.SchemaVersion,
 		StateUpgraders:     r.StateUpgraders,
 		CustomizeDiff:      r.saferCustomizeDiff(),
@@ -170,7 +194,7 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	if r.Create != nil {
 		resource.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			c, err := m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			c, err := getClient(ctx, m, d)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -187,7 +211,7 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	if r.Delete != nil {
 		resource.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			c, err := m.(*DatabricksClient).InConfiguredWorkspaceForDelete(ctx, d)
+			c, err := getDeleteClient(ctx, m, d)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -220,8 +244,8 @@ func (r Resource) ToResource() *schema.Resource {
 			},
 		}
 	}
-	if !r.IsAccountLevelOnly {
-		r.Schema = AddWorkspaceIdField(r.Schema)
+	if !r.StrictProviderLevelResource {
+		resource.Schema = AddWorkspaceIdField(resource.Schema)
 	}
 	return resource
 }

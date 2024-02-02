@@ -113,6 +113,6 @@ func ResourceMwsStorageConfigurations() common.Resource {
 				Computed: true,
 			},
 		},
-		IsAccountLevelOnly: true,
+		StrictProviderLevelResource: true,
 	}
 }

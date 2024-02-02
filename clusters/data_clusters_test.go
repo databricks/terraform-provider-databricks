@@ -78,7 +78,8 @@ func TestClustersDataSourceErrorsOut(t *testing.T) {
 		RetryTimeoutSeconds: 1,
 		HTTPTimeoutSeconds:  1,
 	})
-	diag := DataSourceClusters().ToResource().ReadContext(context.Background(), nil, &common.DatabricksClient{
+	resource := DataSourceClusters().ToResource()
+	diag := resource.ReadContext(context.Background(), resource.TestResourceData(), &common.DatabricksClient{
 		DatabricksClient: client,
 	})
 	assert.NotNil(t, diag)

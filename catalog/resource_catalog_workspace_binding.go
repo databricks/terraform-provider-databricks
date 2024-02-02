@@ -109,6 +109,7 @@ func ResourceCatalogWorkspaceBinding() common.Resource {
 			})
 			return err
 		},
+		StrictProviderLevelResource: true,
 	}
 }
 

@@ -113,7 +113,7 @@ func ResourceMwsCustomerManagedKeys() common.Resource {
 				Upgrade: migrateResourceCustomerManagedKeyV0,
 			},
 		},
-		IsAccountLevelOnly: true,
+		StrictProviderLevelResource: true,
 	}
 }
 

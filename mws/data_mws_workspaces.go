@@ -26,6 +26,6 @@ func DataSourceMwsWorkspaces() common.Resource {
 		}
 		return nil
 	})
-	resource.IsAccountLevelOnly = true
+	resource.StrictProviderLevelResource = true
 	return resource
 }

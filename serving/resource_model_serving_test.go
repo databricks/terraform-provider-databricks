@@ -316,6 +316,20 @@ func TestModelServingRead(t *testing.T) {
 								ScaleToZeroEnabled: false,
 							},
 						},
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								Name:               "prod_model",
+								EntityName:         "ads1",
+								EntityVersion:      "2",
+								ScaleToZeroEnabled: true,
+							},
+							{
+								Name:               "candidate_model",
+								EntityName:         "ads1",
+								EntityVersion:      "4",
+								ScaleToZeroEnabled: false,
+							},
+						},
 						TrafficConfig: &serving.TrafficConfig{
 							Routes: []serving.Route{
 								{

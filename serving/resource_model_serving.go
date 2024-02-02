@@ -75,12 +75,18 @@ func ResourceModelServing() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// If the original state file does not have the respective key, we change the response back to nil
-			if sOrig.Config.ServedModels == nil {
+			// WIP: There must be a way to know which resource the user is trying to create
+			// otherwise it will lead to a diff for existing resources in previous providers
+			if d.IsNewResource() || sOrig.Config == nil {
+				// If it is a new resource, then we only return ServedEntities
 				endpoint.Config.ServedModels = nil
-			}
-			if sOrig.Config.ServedEntities == nil {
-				endpoint.Config.ServedEntities = nil
+			} else {
+				// If it is an existing resource, then have to set one of the responses to nil
+				if sOrig.Config.ServedModels == nil {
+					endpoint.Config.ServedModels = nil
+				} else if sOrig.Config.ServedEntities == nil {
+					endpoint.Config.ServedEntities = nil
+				}
 			}
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {

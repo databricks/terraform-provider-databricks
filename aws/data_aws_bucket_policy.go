@@ -86,5 +86,6 @@ func DataAwsBucketPolicy() common.Resource {
 				ForceNew: true,
 			},
 		},
+		StrictProviderLevelResource: true,
 	}
 }

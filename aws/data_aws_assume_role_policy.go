@@ -86,5 +86,6 @@ func DataAwsAssumeRolePolicy() common.Resource {
 				ForceNew: true,
 			},
 		},
+		StrictProviderLevelResource: true,
 	}
 }

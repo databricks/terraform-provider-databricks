@@ -48,8 +48,8 @@ type ResourceProviderStruct[T any] interface {
 
 // Takes in a ResourceProviderStruct and converts that into a map from string to schema.
 func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T]) map[string]*schema.Schema {
-	underlyingType := v.UnderlyingType()
-	rv := reflect.ValueOf(underlyingType)
+	// underlyingType := v.UnderlyingType()
+	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, []string{}, v.Aliases())
 	scm = v.CustomizeSchema(scm)
 	return scm

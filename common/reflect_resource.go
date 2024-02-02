@@ -40,15 +40,13 @@ var kindMap = map[reflect.Kind]string{
 
 // Generic interface for resource provider struct. Using CustomizeSchema and Aliases functions to keep track of additional information
 // on top of the generated go-sdk struct. This is used to replace manually maintained structs with `tf` tags.
-type ResourceProviderStruct[T any] interface {
-	UnderlyingType() T
+type ResourceProviderStruct interface {
 	Aliases() map[string]string
 	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
 // Takes in a ResourceProviderStruct and converts that into a map from string to schema.
-func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T]) map[string]*schema.Schema {
-	// underlyingType := v.UnderlyingType()
+func ResourceProviderStructToSchema(v ResourceProviderStruct) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, []string{}, v.Aliases())
 	scm = v.CustomizeSchema(scm)

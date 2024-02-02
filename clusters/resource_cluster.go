@@ -62,10 +62,6 @@ type ClusterResourceProvider struct {
 	compute.ClusterSpec
 }
 
-func (ClusterResourceProvider) UnderlyingType() compute.ClusterSpec {
-	return compute.ClusterSpec{}
-}
-
 func (ClusterResourceProvider) Aliases() map[string]string {
 	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
 }
@@ -173,7 +169,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 }
 
 func resourceClusterSchema() map[string]*schema.Schema {
-	return common.ResourceProviderStructToSchema[compute.ClusterSpec](ClusterResourceProvider{})
+	return common.ResourceProviderStructToSchema(ClusterResourceProvider{})
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

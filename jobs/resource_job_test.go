@@ -293,6 +293,188 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_TaskOrder(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "Featurizer",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey:           "a",
+							ExistingClusterID: "abc",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/a",
+							},
+						},
+						{
+							TaskKey: "b",
+							DependsOn: []jobs.TaskDependency{
+								{
+									TaskKey: "a",
+								},
+							},
+							ExistingClusterID: "abc",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/b",
+							},
+						},
+						{
+							TaskKey: "c",
+							DependsOn: []jobs.TaskDependency{
+								{
+									TaskKey: "a",
+								},
+								{
+									TaskKey: "b",
+								},
+							},
+							ExistingClusterID: "abc",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/c",
+							},
+						},
+						{
+							TaskKey: "d",
+							DependsOn: []jobs.TaskDependency{
+								{
+									TaskKey: "a",
+								},
+								{
+									TaskKey: "b",
+								},
+								{
+									TaskKey: "c",
+								},
+							},
+							ExistingClusterID: "abc",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/d",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+					Health: &JobHealth{
+						Rules: []JobHealthRule{
+							{
+								Metric:    "RUN_DURATION_SECONDS",
+								Operation: "GREATER_THAN",
+								Value:     3600,
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+							{
+								TaskKey: "a",
+							},
+							{
+								TaskKey: "d",
+							},
+							{
+								TaskKey: "c",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "Featurizer"
+
+		health {
+			rules {
+				metric = "RUN_DURATION_SECONDS"
+				op     = "GREATER_THAN"
+				value  = 3600						  
+			}
+		}
+
+		task {
+			task_key = "a"
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/a"
+			}
+		}
+
+		task {
+			task_key = "b"
+
+			depends_on {
+				task_key = "a"
+			}
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/b"
+			}
+		}
+		
+		task {
+			task_key = "c"
+
+			depends_on {
+				task_key = "a"
+			}
+
+			depends_on {
+				task_key = "b"
+			}
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/c"
+			}
+		}
+
+		task {
+			task_key = "d"
+
+			depends_on {
+				task_key = "a"
+			}
+
+			depends_on {
+				task_key = "b"
+			}
+
+			depends_on {
+				task_key = "c"
+			}
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/d"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
+
 func TestResourceJobCreate_ConditionTask(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

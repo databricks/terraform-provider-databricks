@@ -7,10 +7,9 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceExperiment() *schema.Resource {
+func DataSourceExperiment() common.Resource {
 	type experimentDataParams struct {
 		ExperimentId string `json:"experiment_id" tf:"computed,optional"`
 		Name         string `json:"name" tf:"computed,optional"`

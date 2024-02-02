@@ -23,7 +23,7 @@ const (
 )
 
 // ResourceUser manages users within workspace
-func ResourceUser() *schema.Resource {
+func ResourceUser() common.Resource {
 	type entity struct {
 		UserName    string `json:"user_name" tf:"force_new"`
 		DisplayName string `json:"display_name,omitempty" tf:"computed"`
@@ -162,7 +162,7 @@ func ResourceUser() *schema.Resource {
 			}
 			return err
 		},
-	}.ToResource()
+	}
 }
 
 func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, usersAPI UsersAPI, u User) error {

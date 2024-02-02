@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceJobs() *schema.Resource {
+func DataSourceJobs() common.Resource {
 	type jobsData struct {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}

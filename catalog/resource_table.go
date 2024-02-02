@@ -63,7 +63,7 @@ func (a TablesAPI) deleteTable(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
 }
 
-func ResourceTable() *schema.Resource {
+func ResourceTable() common.Resource {
 	tableSchema := common.StructToSchema(TableInfo{},
 		common.NoCustomize)
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
@@ -97,5 +97,5 @@ func ResourceTable() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},
-	}.ToResource()
+	}
 }

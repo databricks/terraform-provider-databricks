@@ -114,7 +114,7 @@ func (a SecretsAPI) Read(scope string, key string) (SecretMetadata, error) {
 }
 
 // ResourceSecret manages secrets
-func ResourceSecret() *schema.Resource {
+func ResourceSecret() common.Resource {
 	p := common.NewPairSeparatedID("scope", "key", "|||")
 	return common.Resource{
 		Schema: map[string]*schema.Schema{
@@ -173,5 +173,5 @@ func ResourceSecret() *schema.Resource {
 			}
 			return NewSecretsAPI(ctx, c).Delete(scope, key)
 		},
-	}.ToResource()
+	}
 }

@@ -50,6 +50,8 @@ All arguments are optional, and they tune what code is being generated.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a given timestamp. I.e., `2023-07-24T00:00:00Z`. If not specified, the exporter will try to load the last run timestamp from the `exporter-run-stats.json` file generated during the export and use it.
 * `-notebooksFormat` - optional format for exporting of notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This option could be used to export notebooks with embedded dashboards.
 * `-noformat` - optionally turn off the execution of `terraform fmt` on the exported files (enabled by default).
+* `-debug` - turn on debug output.
+* `-trace` - turn on trace output (includes debug level as well).
 
 ## Services
 
@@ -92,7 +94,9 @@ To speed up export, Terraform Exporter performs many operations, such as listing
 
 * `EXPORTER_WS_LIST_PARALLELISM` (default: `5`) controls how many Goroutines are used to perform parallel listing of Databricks Workspace objects (notebooks, directories, workspace files, ...).
 * `EXPORTER_DIRECTORIES_CHANNEL_SIZE` (default: `100000`) controls the channel's capacity when listing workspace objects. Please ensure that this value is big enough (greater than the number of directories in the workspace; default value should be ok for most cases); otherwise, there is a chance of deadlock.
-* `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of a specific type (replace `NNN` with the exact resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets the number of Goroutines for `databricks_notebook` resource to `10`).  Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go` or equal to `2` if there is no value.  *Don't increase default values too much to avoid REST API throttling!*
+* `EXPORTER_DEDICATED_RESOUSE_CHANNELS` - by default, only specific resources (`databricks_user`, `databricks_service_principal`, `databricks_group`) have dedicated channels - the rest are handled by the shared channel.  This is done to prevent throttling by specific APIs.  You can override this by providing a comma-separated list of resources as this environment variable.
+* `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of a specific type (replace `NNN` with the exact resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets the number of Goroutines for `databricks_notebook` resource to `10`).  There is a shared channel (with name `default`) for handling of resources for which there are no dedicated channels - use `EXPORTER_PARALLELISM_default` to increase it's size (default size is `15`).   Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go` or equal to `2` if there is no value.  *Don't increase default values too much to avoid REST API throttling!*
+* `EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE` - the size of the shared channel (default: `200000`) - you may need to increase it if you have a huge workspace.
 
 
 ## Support Matrix

@@ -218,17 +218,24 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, 
 }
 
 func (ic *importContext) emitRepoByPath(path string) {
-	ic.Emit(&resource{
-		Resource:  "databricks_repo",
-		Attribute: "path",
-		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-	})
+	parts := strings.SplitN(path, "/", 5)
+	if len(parts) >= 4 {
+		ic.Emit(&resource{
+			Resource:  "databricks_repo",
+			Attribute: "path",
+			Value:     strings.Join(parts[:4], "/"),
+		})
+	} else {
+		log.Printf("[WARN] Incorrect Repos path")
+	}
 }
 
 func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: wrap this into ic.shouldEmit...
+		// TODO: strip /Workspace prefix if it's provided
 		ic.Emit(&resource{
 			Resource: "databricks_workspace_file",
 			ID:       path,
@@ -240,6 +247,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: strip /Workspace prefix if it's provided
 		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
 }

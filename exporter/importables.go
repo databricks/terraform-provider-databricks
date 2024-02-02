@@ -392,6 +392,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "path"},
 			{Path: "task.spark_submit_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_submit_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "task.sql_task.file.path", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "path"},
 			{Path: "task.sql_task.alert.alert_id", Resource: "databricks_sql_alert"},
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_sql_query"},
@@ -410,7 +412,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.run_job_task.job_parameters", Resource: "databricks_repo", Match: "workspace_path", MatchType: MatchPrefix},
 			{Path: "task.spark_python_task.python_file", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "task.spark_jar_task.parameters", Resource: "databricks_repo", Match: "workspace_path", MatchType: MatchPrefix},
-			{Path: "task.spark_submit_task.parameters", Resource: "databricks_repo", Match: "workspace_path", MatchType: MatchPrefix},
+			{Path: "task.spark_python_task.python_file", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
+			{Path: "task.sql_task.file.path", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
+			{Path: "task.dbt_task.project_directory", Resource: "databricks_repo", Match: "path", MatchType: MatchPrefix},
 			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path", MatchType: MatchPrefix},
 		},
 		Import: func(ic *importContext, r *resource) error {
@@ -491,6 +495,9 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       task.SqlTask.WarehouseID,
 						})
 					}
+					if task.SqlTask.File != nil && task.SqlTask.File.Source == "WORKSPACE" {
+						ic.emitWorkspaceFileOrRepo(task.SqlTask.File.Path)
+					}
 				}
 				if task.DbtTask != nil {
 					if task.DbtTask.WarehouseId != "" {
@@ -498,6 +505,25 @@ var resourcesMap map[string]importable = map[string]importable{
 							Resource: "databricks_sql_endpoint",
 							ID:       task.DbtTask.WarehouseId,
 						})
+					}
+					if task.DbtTask.Source == "WORKSPACE" {
+						directory := task.DbtTask.ProjectDirectory
+						if strings.HasPrefix(directory, "/Repos") {
+							ic.emitRepoByPath(directory)
+						} else {
+							nbAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+							objects, err := nbAPI.List(directory, true, true)
+							if err == nil {
+								for _, object := range objects {
+									if object.ObjectType != workspace.File {
+										continue
+									}
+									ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+								}
+							} else {
+								log.Printf("[WARN] Can't list directory %s for DBT task in job %s (id: %s)", directory, job.Name, r.ID)
+							}
+						}
 					}
 				}
 				if task.RunJobTask != nil && task.RunJobTask.JobID != 0 {

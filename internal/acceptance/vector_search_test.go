@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
-func TestAccVectorSearchEndpoint(t *testing.T) {
+func TestUcAccVectorSearchEndpoint(t *testing.T) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	switch cloudEnv {
 	case "aws", "azure":
@@ -18,7 +18,7 @@ func TestAccVectorSearchEndpoint(t *testing.T) {
 
 	name := fmt.Sprintf("terraform-test-vector-search-%[1]s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
-	workspaceLevel(t, step{
+	unityWorkspaceLevel(t, step{
 		Template: fmt.Sprintf(`
 			resource "databricks_vector_search_endpoint" "this" {
 				name          = "%s"

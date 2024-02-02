@@ -3,7 +3,9 @@ subcategory: "Vector Search"
 ---
 # databricks_vector_search_endpoint Resource
 
-This resource allows you to create [Vector Search Endpoint](https://docs.databricks.com/en/generative-ai/vector-search.html) in Databricks.  Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Vector Search Endpoint is used to create and access vector search indexes.
+-> **Note** This resource could be only used on Unity Catalog-enabled workspace!
+
+This resource allows you to create [Vector Search Endpoint](https://docs.databricks.com/en/generative-ai/vector-search.html) in Databricks.  Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Vector Search Endpoint is used to create and access vector search indexes. 
 
 ## Example Usage
 

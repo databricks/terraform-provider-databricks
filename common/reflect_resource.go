@@ -422,7 +422,7 @@ func IsRequestEmpty(v any) (bool, error) {
 		return false, fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rv.Kind()), rv)
 	}
 	var isNotEmpty bool
-	err := iterFields(rv, []string{}, StructToSchema(v, nil), func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	err := iterFields(rv, []string{}, StructToSchema(v, nil), map[string]string{}, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
 		if isNotEmpty {
 			return nil
 		}
@@ -448,7 +448,7 @@ func isGoSdk(v reflect.Value) bool {
 	return false
 }
 
-func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
+func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]string,
 	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
 	rk := rv.Kind()
 	if rk != reflect.Struct {
@@ -461,7 +461,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	fields := listAllFields(rv)
 	for _, field := range fields {
 		typeField := field.sf
-		fieldName := chooseFieldName(typeField)
+		fieldName := chooseFieldNameWithAliases(typeField, path, aliases)
 		if fieldName == "-" {
 			continue
 		}
@@ -519,7 +519,7 @@ func collectionToMaps(v any, s *schema.Schema) ([]any, error) {
 			}
 			v = v.Elem()
 		}
-		err := iterFields(v, []string{}, r.Schema, func(fieldSchema *schema.Schema,
+		err := iterFields(v, []string{}, r.Schema, map[string]string{}, func(fieldSchema *schema.Schema,
 			path []string, valueField *reflect.Value) error {
 			fieldName := path[len(path)-1]
 			fieldValue := valueField.Interface()
@@ -572,7 +572,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	return iterFields(v, []string{}, s, func(
+	return iterFields(v, []string{}, s, map[string]string{}, func(
 		fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
 		fieldValue := valueField.Interface()
 		if fieldValue == nil {
@@ -658,7 +658,7 @@ func DataToReflectValue(d *schema.ResourceData, s map[string]*schema.Schema, rv 
 
 func readReflectValueFromData(path []string, d attributeGetter,
 	rv reflect.Value, s map[string]*schema.Schema) error {
-	return iterFields(rv, path, s, func(fieldSchema *schema.Schema,
+	return iterFields(rv, path, s, map[string]string{}, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)

@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -265,8 +266,12 @@ func (r *resource) ImportResource(ic *importContext) {
 			log.Printf("[ERROR] Searching %s is not available", r)
 			return
 		}
-		if err := ir.Search(ic, r); err != nil {
-			log.Printf("[ERROR] Cannot search for a resource %s: %v", err, r)
+		err := runWithRetries(func() error {
+			return ir.Search(ic, r)
+		},
+			fmt.Sprintf("searching of %v", r))
+		if err != nil {
+			log.Printf("[ERROR] Error searching %s#%s: %v", r.Resource, r.ID, err)
 			return
 		}
 		if r.ID == "" {
@@ -288,7 +293,11 @@ func (r *resource) ImportResource(ic *importContext) {
 		if apiVersion != "" {
 			ctx = context.WithValue(ctx, common.Api, apiVersion)
 		}
-		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
+		dia := runWithRetries(func() diag.Diagnostics {
+			return pr.ReadContext(ctx, r.Data, ic.Client)
+		},
+			fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
+		if dia != nil {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
@@ -298,7 +307,11 @@ func (r *resource) ImportResource(ic *importContext) {
 	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {
-		if err := ir.Import(ic, r); err != nil {
+		err := runWithRetries(func() error {
+			return ir.Import(ic, r)
+		},
+			fmt.Sprintf("importing of %s#%s", r.Resource, r.ID))
+		if err != nil {
 			log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
 			return
 		}

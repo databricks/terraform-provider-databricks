@@ -11,7 +11,7 @@ import (
 func TestUcAccVectorSearchEndpoint(t *testing.T) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	switch cloudEnv {
-	case "aws", "azure":
+	case "ucws", "azure":
 	default:
 		t.Skipf("not available on %s", cloudEnv)
 	}
@@ -22,7 +22,7 @@ func TestUcAccVectorSearchEndpoint(t *testing.T) {
 		Template: fmt.Sprintf(`
 			resource "databricks_vector_search_endpoint" "this" {
 				name          = "%s"
-				endpoint_type = "STANDARD"
+				mendpoint_type = "STANDARD"
 			  }
 			`, name),
 	},

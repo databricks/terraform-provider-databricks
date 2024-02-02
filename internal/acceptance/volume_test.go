@@ -46,9 +46,19 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
-	},
-		step{
-			Template: prefixTestTemplate + `
+	}, step{
+		Template: prefixTestTemplate + `
+		resource "databricks_volume" "this" {
+			name = "name-abc"
+			comment = "comment-pqr"
+			owner = "{env.TEST_DATA_ENG_GROUP}"
+			catalog_name = "main"
+			schema_name = databricks_schema.this.name 
+			volume_type = "EXTERNAL"
+			storage_location   = databricks_external_location.some.url
+		}`,
+	}, step{
+		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
 			name = "name-def"
 			comment = "comment-def"
@@ -58,7 +68,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
-		})
+	})
 }
 
 func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
@@ -68,6 +78,17 @@ func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 			name = "name-abc"
 			comment = "comment-abc"
 			owner = "account users"
+			catalog_name = "main"
+			schema_name = databricks_schema.this.name 
+			volume_type = "EXTERNAL"
+			storage_location   = databricks_external_location.some.url
+		}`,
+	}, step{
+		Template: prefixTestTemplate + `
+		resource "databricks_volume" "this" {
+			name = "name-abc"
+			comment = "comment-abc"
+			owner = "{env.TEST_DATA_ENG_GROUP}"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"

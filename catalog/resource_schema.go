@@ -99,6 +99,10 @@ func ResourceSchema() common.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			updateSchemaRequest.Owner = ""
 			schema, err := w.Schemas.Update(ctx, updateSchemaRequest)
 			if err != nil {

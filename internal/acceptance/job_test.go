@@ -92,7 +92,7 @@ func TestAccJobTasks(t *testing.T) {
 					notebook_path = databricks_notebook.this.path
 					base_parameters = {
 						"param_0" = "{{job.parameters.empty_default}}"
-						"param_0" = "{{job.parameters.non_empty_default}}"
+						"param_1" = "{{job.parameters.non_empty_default}}"
 					}
 				}
 			}

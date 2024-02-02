@@ -22,7 +22,7 @@ func TestUcAccVectorSearchEndpoint(t *testing.T) {
 		Template: fmt.Sprintf(`
 			resource "databricks_vector_search_endpoint" "this" {
 				name          = "%s"
-				mendpoint_type = "STANDARD"
+				endpoint_type = "STANDARD"
 			  }
 			`, name),
 	},

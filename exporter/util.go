@@ -1088,7 +1088,6 @@ type directoryInfo struct {
 
 // constants related to the parallel listing
 const (
-	directoryListingMaxAttempts = 3
 	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
 	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
 	defaultWorkersPoolSize      = 10
@@ -1101,8 +1100,11 @@ func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo
 	notebookInfoList, err := a.ListInternalImpl(directory.Path)
 	if err != nil {
 		log.Printf("[WARN] error listing '%s': %v", directory.Path, err)
-		if directory.Attempts < directoryListingMaxAttempts {
+		if isRetryableError(err.Error(), directory.Attempts) {
 			wg.Add(1)
+			log.Printf("[INFO] attempt %d of retrying listing of '%s' after error: %v",
+				directory.Attempts+1, directory.Path, err)
+			time.Sleep(time.Duration(retryDelaySeconds) * time.Second)
 			dirChannel <- directoryInfo{Path: directory.Path, Attempts: directory.Attempts + 1}
 		}
 	}
@@ -1165,4 +1167,41 @@ func ListParallel(a workspace.NotebooksAPI, path string, shouldIncludeDir func(w
 	answer.MU.Lock()
 	defer answer.MU.Unlock()
 	return answer.data, nil
+}
+
+var (
+	maxRetries        = 5
+	retryDelaySeconds = 2
+	retriableErrors   = []string{"context deadline exceeded", "Error handling request", "Timed out after "}
+)
+
+func isRetryableError(err string, i int) bool {
+	if i < (maxRetries - 1) {
+		for _, msg := range retriableErrors {
+			if strings.Contains(err, msg) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
+	var err ERR
+	delay := 1
+	for i := 0; i < maxRetries; i++ {
+		err = runFunc()
+		valOf := reflect.ValueOf(&err).Elem()
+		if valOf.IsNil() || valOf.IsZero() {
+			break
+		}
+		if !isRetryableError(fmt.Sprintf("%v", err), i) {
+			log.Printf("[ERROR] Error %s after %d retries: %v", msg, i, err)
+			return err
+		}
+		delay = delay * retryDelaySeconds
+		log.Printf("[INFO] next retry (%d) for %s after %d seconds", (i + 1), msg, delay)
+		time.Sleep(time.Duration(delay) * time.Second)
+	}
+	return err
 }

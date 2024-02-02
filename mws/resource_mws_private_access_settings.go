@@ -74,6 +74,6 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 			}
 			return a.PrivateAccess.DeleteByPrivateAccessSettingsId(ctx, pasID)
 		},
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

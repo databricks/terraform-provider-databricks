@@ -115,6 +115,6 @@ func ResourceMwsVpcEndpoint() common.Resource {
 			}
 			return NewVPCEndpointAPI(ctx, c).Delete(accountID, vpcEndpointID)
 		},
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

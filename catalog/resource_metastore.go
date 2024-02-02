@@ -198,5 +198,6 @@ func ResourceMetastore() common.Resource {
 				return w.Metastores.Delete(ctx, catalog.DeleteMetastoreRequest{Force: force, Id: d.Id()})
 			})
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

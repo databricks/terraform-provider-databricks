@@ -147,6 +147,6 @@ func DataAwsCrossaccountPolicy() common.Resource {
 				ForceNew: true,
 			},
 		},
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

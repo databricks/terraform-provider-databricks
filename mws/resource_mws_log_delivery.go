@@ -119,6 +119,6 @@ func ResourceMwsLogDelivery() common.Resource {
 			}
 			return NewLogDeliveryAPI(ctx, c).Patch(accountID, configID, "DISABLED")
 		},
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

@@ -141,5 +141,6 @@ func ResourceExternalLocation() common.Resource {
 				Force: force,
 			})
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

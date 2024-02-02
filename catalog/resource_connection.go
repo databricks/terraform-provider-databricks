@@ -156,5 +156,6 @@ func ResourceConnection() common.Resource {
 			}
 			return w.Connections.DeleteByNameArg(ctx, connName)
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

@@ -122,5 +122,6 @@ func ResourceVolume() common.Resource {
 			}
 			return w.Volumes.DeleteByFullNameArg(ctx, d.Id())
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

@@ -87,5 +87,6 @@ func ResourceProvider() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewProvidersAPI(ctx, c).deleteProvider(d.Id())
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

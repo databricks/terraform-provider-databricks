@@ -219,5 +219,6 @@ func ResourceCatalog() common.Resource {
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

@@ -110,6 +110,6 @@ func ResourceMwsCredentials() common.Resource {
 			s["account_id"].Deprecated = "`account_id` should be set as part of the Databricks Config, not in the resource."
 			return s
 		}),
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

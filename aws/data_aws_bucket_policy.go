@@ -86,6 +86,6 @@ func DataAwsBucketPolicy() common.Resource {
 				ForceNew: true,
 			},
 		},
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

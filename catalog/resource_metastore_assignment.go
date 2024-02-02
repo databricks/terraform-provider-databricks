@@ -117,6 +117,6 @@ func ResourceMetastoreAssignment() common.Resource {
 		},
 		// This API is a workspace-level API that refers to other workspaces, so we can't
 		// use an account-level provider (since workspace_id is ambiguous in this case).
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

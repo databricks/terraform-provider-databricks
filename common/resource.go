@@ -14,6 +14,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type WorkspaceIdField int
+
+const (
+	// WorkspaceId is the defalt value, since all non-UC workspace resources belong to a workspace.
+	WorkspaceId WorkspaceIdField = iota
+	// Do not expose a workspace_id field. This is used for account-level resources.
+	NoWorkspaceId
+	// Use management_workspace_id to specify the workspace_id. This is used for UC resources,
+	// where resources do not belong to a workspace but are managed using a specific workspace's
+	// API.
+	ManagementWorkspaceId
+	// Used for deletion.
+	OriginalWorkspaceId
+)
+
+func (w WorkspaceIdField) Field() string {
+	switch w {
+	case WorkspaceId:
+		return "workspace_id"
+	case NoWorkspaceId:
+		return ""
+	case ManagementWorkspaceId:
+		return "management_workspace_id"
+	case OriginalWorkspaceId:
+		return "original_workspace_id"
+	default:
+		panic(fmt.Sprintf("unknown workspace_id field type: %d", w))
+	}
+}
+
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
 	Create             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
@@ -28,16 +58,22 @@ type Resource struct {
 	DeprecationMessage string
 	Importer           *schema.ResourceImporter
 
-	// StrictProviderLevelResource indicates whether a resource can only be managed using a
+	// WorkspaceIdField indicates whether a resource can only be managed using a
 	// provider at the appropriate level, i.e. workspace-level resources that can only be
-	// managed with a workspace-level provider.
+	// managed with a workspace-level provider, and if so, what the name is of the field
+	// that should be used to specify the workspace_id.
 	//
 	// All account-level resources can only be managed with an account-level provider, so this
 	// must be set to `true` for all account-level resources.
 	//
 	// When false, the resource will include a workspace_id field that can be set when using an
 	// account-level provider to target a specific workspace in the account.
-	StrictProviderLevelResource bool
+	WorkspaceIdField WorkspaceIdField
+	// workspace_id = check that specified workspace_id matches current workspace ID when using workspace-level provider
+	// What happens if your workspace client still doesn't work yet for existing resource?
+	//   We could always block and ask to apply once cleanly, then future applies should work.
+	// can only be skipped if workspace_id is known after apply (new resource case)
+	// management_workspace_id = should never be in the diff.
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -68,10 +104,7 @@ func recoverable(cb func(
 }
 
 func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
-	if r.CustomizeDiff == nil {
-		return nil
-	}
-	return func(ctx context.Context, rd *schema.ResourceDiff, _ any) (err error) {
+	return func(ctx context.Context, rd *schema.ResourceDiff, m any) (err error) {
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
 			// so that any unforeseen bug would we visible to end-user
@@ -82,13 +115,19 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 					"customize diff for")
 			}
 		}()
+		c := m.(*DatabricksClient)
+		if r.WorkspaceIdField == WorkspaceId && rd.NewValueKnown("workspace_id") && !c.Config.IsAccountClient() {
+			// TODO: check that the provided workspace ID matches that for the provider
+		}
 		// we don't propagate instance of SDK client to the diff function, because
 		// authentication is not deterministic at this stage with the recent Terraform
 		// versions. Diff customization must be limited to hermetic checks only anyway.
-		err = r.CustomizeDiff(ctx, rd)
-		if err != nil {
-			err = nicerError(ctx, err, "customize diff for")
-			return
+		if r.CustomizeDiff != nil {
+			err = r.CustomizeDiff(ctx, rd)
+			if err != nil {
+				err = nicerError(ctx, err, "customize diff for")
+				return
+			}
 		}
 		return
 	}
@@ -107,12 +146,12 @@ func (r Resource) ToResource() *schema.Resource {
 		return m.(*DatabricksClient), nil
 	}
 	getDeleteClient := getClient
-	if !r.StrictProviderLevelResource {
+	if r.WorkspaceIdField != NoWorkspaceId {
 		getClient = func(ctx context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
-			return m.(*DatabricksClient).InConfiguredWorkspace(ctx, d)
+			return m.(*DatabricksClient).InConfiguredWorkspace(ctx, d, r.WorkspaceIdField)
 		}
 		getDeleteClient = func(ctx context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
-			return m.(*DatabricksClient).InConfiguredWorkspaceForDelete(ctx, d)
+			return m.(*DatabricksClient).InConfiguredWorkspace(ctx, d, OriginalWorkspaceId)
 		}
 	}
 	var update func(ctx context.Context, d *schema.ResourceData,
@@ -244,8 +283,8 @@ func (r Resource) ToResource() *schema.Resource {
 			},
 		}
 	}
-	if !r.StrictProviderLevelResource {
-		resource.Schema = AddWorkspaceIdField(resource.Schema)
+	if r.WorkspaceIdField != NoWorkspaceId {
+		resource.Schema = AddWorkspaceIdField(resource.Schema, r.WorkspaceIdField)
 	}
 	return resource
 }
@@ -496,17 +535,17 @@ func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 	return s
 }
 
-func AddWorkspaceIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
-	s["workspace_id"] = &schema.Schema{
-		Type:        schema.TypeInt,
-		Optional:    true,
-		ForceNew:    true,
+func AddWorkspaceIdField(s map[string]*schema.Schema, f WorkspaceIdField) map[string]*schema.Schema {
+	s[f.Field()] = &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: true,
+		// Changing the workspace does require force new, but adding it for an existing resource results in no diff.
 		Description: "The workspace id of the workspace, for example 1234567890. This can be retrieved from `databricks_mws_workspaces.<YOUR_WORKSPACE>.workspace_id`. This attribute is required when using an account-level provider.",
 	}
 	// Separate field to track the original workspace ID when using an account-level provider.
 	// Needed when changing the workspace ID, as `workspace_id` in state will reflect
 	// the new ID during apply.
-	s["original_workspace_id"] = &schema.Schema{
+	s[OriginalWorkspaceId.Field()] = &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: false,
 		Required: false,

@@ -179,5 +179,6 @@ func ResourceSchema() common.Resource {
 			}
 			return w.Schemas.DeleteByFullName(ctx, name)
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

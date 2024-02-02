@@ -97,5 +97,6 @@ func ResourceTable() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

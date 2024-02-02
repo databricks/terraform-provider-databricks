@@ -263,5 +263,6 @@ func ResourceShare() common.Resource {
 			}
 			return w.Shares.DeleteByName(ctx, d.Id())
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

@@ -229,5 +229,6 @@ func ResourceStorageCredential() common.Resource {
 				})
 			})
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

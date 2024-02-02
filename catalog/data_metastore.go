@@ -13,7 +13,7 @@ func DataSourceMetastore() common.Resource {
 		Id        string                 `json:"metastore_id"`
 		Metastore *catalog.MetastoreInfo `json:"metastore_info,omitempty" tf:"computed" `
 	}
-	return common.AccountData(func(ctx context.Context, data *AccountMetastoreByID, acc *databricks.AccountClient) error {
+	dataSource := common.AccountData(func(ctx context.Context, data *AccountMetastoreByID, acc *databricks.AccountClient) error {
 		metastore, err := acc.Metastores.GetByMetastoreId(ctx, data.Id)
 		if err != nil {
 			return err
@@ -21,4 +21,6 @@ func DataSourceMetastore() common.Resource {
 		data.Metastore = metastore.MetastoreInfo
 		return nil
 	})
+	dataSource.WorkspaceIdField = common.ManagementWorkspaceId
+	return dataSource
 }

@@ -115,6 +115,6 @@ func ResourceMwsNetworks() common.Resource {
 			}
 			return NewNetworksAPI(ctx, c).Delete(accountID, networkID)
 		},
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

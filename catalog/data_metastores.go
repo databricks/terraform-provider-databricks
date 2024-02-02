@@ -12,7 +12,7 @@ func DataSourceMetastores() common.Resource {
 	type metastoresData struct {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
-	return common.AccountData(func(ctx context.Context, data *metastoresData, acc *databricks.AccountClient) error {
+	dataSource := common.AccountData(func(ctx context.Context, data *metastoresData, acc *databricks.AccountClient) error {
 		metastores, err := acc.Metastores.ListAll(ctx)
 		if err != nil {
 			return err
@@ -28,4 +28,6 @@ func DataSourceMetastores() common.Resource {
 		}
 		return nil
 	})
+	dataSource.WorkspaceIdField = common.NoWorkspaceId
+	return dataSource
 }

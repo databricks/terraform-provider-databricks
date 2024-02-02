@@ -107,5 +107,6 @@ func ResourceArtifactAllowlist() common.Resource {
 
 			return nil
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

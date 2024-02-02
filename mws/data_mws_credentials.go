@@ -26,6 +26,6 @@ func DataSourceMwsCredentials() common.Resource {
 		}
 		return nil
 	})
-	resource.StrictProviderLevelResource = true
+	resource.WorkspaceIdField = common.NoWorkspaceId
 	return resource
 }

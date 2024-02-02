@@ -471,5 +471,6 @@ func ResourceSqlTable() common.Resource {
 			}
 			return ti.deleteTable()
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

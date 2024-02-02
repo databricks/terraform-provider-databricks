@@ -137,6 +137,6 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			}
 			return NewPermissionAssignmentAPI(ctx, c).Remove(workspaceId, principalId)
 		},
-		StrictProviderLevelResource: true,
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

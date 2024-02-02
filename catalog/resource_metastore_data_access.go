@@ -194,6 +194,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 				})
 			})
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }
 

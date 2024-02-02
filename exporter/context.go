@@ -758,7 +758,7 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	for i, r := range resources {
 		ic.waitGroup.Add(1)
 		resourcesChan <- r
-		if i%50 == 0 {
+		if i%500 == 0 {
 			log.Printf("[INFO] Submitted %d of %d resources", i+1, scopeSize)
 		}
 	}

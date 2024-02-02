@@ -49,9 +49,9 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 	}, step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
-			name = "name-def"
-			comment = "comment-def"
-			owner = "account users"
+			name = "name-abc"
+			comment = "comment-pqr"
+			owner = "{env.TEST_DATA_ENG_GROUP}"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
@@ -62,7 +62,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 		resource "databricks_volume" "this" {
 			name = "name-def"
 			comment = "comment-def"
-			owner = "{env.TEST_DATA_ENG_GROUP}"
+			owner = "account users"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
@@ -86,9 +86,9 @@ func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 	}, step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
-			name = "name-def"
-			comment = "comment-def"
-			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
+			name = "name-abc"
+			comment = "comment-abc"
+			owner = "{env.TEST_DATA_ENG_GROUP}"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"
@@ -99,7 +99,7 @@ func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 		resource "databricks_volume" "this" {
 			name = "name-def"
 			comment = "comment-def"
-			owner = "{env.TEST_DATA_ENG_GROUP}"
+			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
 			volume_type = "EXTERNAL"

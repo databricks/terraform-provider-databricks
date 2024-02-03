@@ -21,8 +21,8 @@ type volumeDataParams struct {
 func customizeVolumeParams(s map[string]*schema.Schema) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s, "full_name").SetExactlyOneOf([]string{"catalog_name"}).SetComputed()
 	common.CustomizeSchemaPath(s, "catalog_name").SetRequiredWith([]string{"schema_name", "name"}).SetComputed()
-	common.CustomizeSchemaPath(s, "schema_name").SetComputed()
-	common.CustomizeSchemaPath(s, "name").SetComputed()
+	common.CustomizeSchemaPath(s, "schema_name").SetRequiredWith([]string{"catalog_name", "name"}).SetComputed()
+	common.CustomizeSchemaPath(s, "name").SetRequiredWith([]string{"catalog_name", "schema_name"}).SetComputed()
 	return s
 }
 

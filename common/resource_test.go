@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
@@ -192,4 +193,30 @@ func TestNoCustomize(t *testing.T) {
 		},
 	}
 	assert.Equal(t, dummySchema, NoCustomize(dummySchema))
+}
+
+func TestWorkspaceDataWithCustomParams(t *testing.T) {
+	type baseStruct struct {
+		Id         string `json:"id,omitempty"`
+		TestParam1 string `json:"test_param1,omitempty"`
+		TestParam2 string `json:"test_param2,omitempty"`
+	}
+
+	type dataParams struct {
+		TestParam1 string `json:"test_param1,omitempty"`
+		TestParam2 string `json:"test_param2,omitempty"`
+	}
+
+	customizeParams := func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		CustomizeSchemaPath(s, "test_param1").SetExactlyOneOf([]string{"test_param2"})
+		CustomizeSchemaPath(s, "test_param2").SetExactlyOneOf([]string{"test_param1"})
+		return s
+	}
+
+	dummyDataRead := func(ctx context.Context, data dataParams, w *databricks.WorkspaceClient) (*baseStruct, error) {
+		return nil, nil
+	}
+
+	r := WorkspaceDataWithCustomParams(dummyDataRead, customizeParams)
+	assert.Equal(t, []string{"test_param2"}, r.Schema["test_param1"].ExactlyOneOf)
 }

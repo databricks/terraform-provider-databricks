@@ -1,6 +1,6 @@
 # Version changelog
 
-## 1.35.1
+## 1.36.0
 
 ### New Features and Improvements
 * Exporter: timestamps are now added to log entries ([#3146](https://github.com/databricks/terraform-provider-databricks/pull/3146)).

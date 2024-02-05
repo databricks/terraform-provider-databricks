@@ -158,7 +158,7 @@ type GitSource struct {
 type JobHealthRule struct {
 	Metric    string `json:"metric,omitempty"`
 	Operation string `json:"op,omitempty"`
-	Value     int32  `json:"value,omitempty"`
+	Value     int64  `json:"value,omitempty"`
 }
 
 type JobHealth struct {

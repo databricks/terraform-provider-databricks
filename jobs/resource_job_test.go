@@ -171,7 +171,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 									{
 										Metric:    "RUN_DURATION_SECONDS",
 										Operation: "GREATER_THAN",
-										Value:     3600,
+										Value:     50000000000, // 5 * 10^10
 									},
 								},
 							},
@@ -260,7 +260,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 				rules {
 					metric = "RUN_DURATION_SECONDS"
 					op     = "GREATER_THAN"
-					value  = 3600						  
+					value  = 50000000000				  
 				}
 			}
 	

@@ -366,7 +366,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
   * `subscriptions` - (Required) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `file` - (Optional) block consisting of single string fields: 
-  * `source` - (Optional) What is the source of this project. Possible values are `WORKSPACE` and `GIT`.
+  * `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.
   * `path` - If `source` is `GIT`, then it a relative path to the file (inside the Git repository) with SQL commands to execute.  If `source` is `WORKSPACE` then it should be absolute path to the file in the workspace.
 
 Example

@@ -57,7 +57,10 @@ The following arguments are supported:
     * `table_name_prefix` - The prefix of the table in Unity Catalog. NOTE: On update, you cannot change the prefix name if it was already set.
     * `enabled` - If inference tables are enabled or not. NOTE: If you have already disabled payload logging once, you cannot enable again.
 * `tags` - Tags to be attached to the serving endpoint and automatically propagated to billing logs.
-* `rate_limits` - Rate limits to be applied to the serving endpoint. NOTE: only external and foundation model endpoints are supported as of now.
+* `rate_limits` - A list of rate limits to be applied to the serving endpoint. NOTE: only external and foundation model endpoints are supported as of now.
+  * `calls` - (Required) Used to specify how many calls are allowed for a key within the renewal_period.
+  * `key` - Key field for a serving endpoint rate limit. Currently, only `user` and `endpoint` are supported, with `endpoint` being the default if not specified.
+  * `renewal_period` - (Required) Renewal period field for a serving endpoint rate limit. Currently, only `minute` is supported.
 
 ### served_entities Configuration Block
 

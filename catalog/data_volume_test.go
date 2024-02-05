@@ -43,13 +43,13 @@ func TestDataSourceVolume_InvalidConfigExclusivceInputs(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.Apply(t)
-	assert.Error(t,err)
+	assert.Error(t, err)
 }
 
 func TestDataSourceVolume_InvalidConfigOnlyCatalogName(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: DataSourceVolume(),
-		HCL: `catalog_name = "a"`,
+		Resource:    DataSourceVolume(),
+		HCL:         `catalog_name = "a"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -59,8 +59,8 @@ func TestDataSourceVolume_InvalidConfigOnlyCatalogName(t *testing.T) {
 
 func TestDataSourceVolume_InvalidConfigOnlySchemaName(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: DataSourceVolume(),
-		HCL: `schema_name = "b"`,
+		Resource:    DataSourceVolume(),
+		HCL:         `schema_name = "b"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -70,8 +70,8 @@ func TestDataSourceVolume_InvalidConfigOnlySchemaName(t *testing.T) {
 
 func TestDataSourceVolume_InvalidConfigOnlyName(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Resource: DataSourceVolume(),
-		HCL: `name = "c"`,
+		Resource:    DataSourceVolume(),
+		HCL:         `name = "c"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",

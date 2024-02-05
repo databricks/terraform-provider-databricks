@@ -4,17 +4,16 @@
 
 ### New Features and Improvements
 * Added `databricks_volumes` as data source  ([#3150](https://github.com/databricks/terraform-provider-databricks/pull/3150)).
-* Introduced Generic Settings Resource ([#2997](https://github.com/databricks/terraform-provider-databricks/pull/2997)).
 * Fixed updating owners for UC resources ([#3189](https://github.com/databricks/terraform-provider-databricks/pull/3189)).
 * Validated metastore id for databricks_grant and databricks_grants resources ([#3159](https://github.com/databricks/terraform-provider-databricks/pull/3159)).
-* Suppress diff should apply to new fields added in the same chained call to CustomizableSchema ([#3200](https://github.com/databricks/terraform-provider-databricks/pull/3200)).
 * Fixed `databricks_connection` regression when creating without owner ([#3186](https://github.com/databricks/terraform-provider-databricks/pull/3186)).
 * Allow using empty strings as job parameters ([#3158](https://github.com/databricks/terraform-provider-databricks/pull/3158)).
+* Changed type of value field of `JobsHealthRule` to `int64` ([#3215](https://github.com/databricks/terraform-provider-databricks/pull/3215)).
 
 
 ### Documentation Changes
 * Various documentation updates ([#3198](https://github.com/databricks/terraform-provider-databricks/pull/3198)).
-* Fix typo in docs ([#3166](https://github.com/databricks/terraform-provider-databricks/pull/3166)).
+* Fixed typo in docs ([#3166](https://github.com/databricks/terraform-provider-databricks/pull/3166)).
 
 ### Exporter
 * Timestamps are now added to log entries ([#3146](https://github.com/databricks/terraform-provider-databricks/pull/3146)).
@@ -34,6 +33,8 @@
 * Added unit test for `customizable_schema.go` ([#3192](https://github.com/databricks/terraform-provider-databricks/pull/3192)).
 * Extended customizable schema with `AtLeastOneOf`, `ExactlyOneOf`, `RequiredWith` ([#3182](https://github.com/databricks/terraform-provider-databricks/pull/3182)).
 * Fixed notebook parameters in acceptance test ([#3205](https://github.com/databricks/terraform-provider-databricks/pull/3205)).
+* Introduced Generic Settings Resource ([#2997](https://github.com/databricks/terraform-provider-databricks/pull/2997)).
+* Suppress diff should apply to new fields added in the same chained call to CustomizableSchema ([#3200](https://github.com/databricks/terraform-provider-databricks/pull/3200)).
 
 
 ## 1.35.0

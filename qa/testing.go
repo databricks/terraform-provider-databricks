@@ -236,7 +236,9 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 			Config: &config.Config{},
 		},
 	}
+	mw.WorkspaceClient.Config = c.Config
 	c.SetWorkspaceClient(mw.WorkspaceClient)
+	ma.AccountClient.Config = c.Config
 	c.SetAccountClient(ma.AccountClient)
 	c.Config.Credentials = testCredentialsProvider{token: token}
 	return c, server{

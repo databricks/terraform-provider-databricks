@@ -19,7 +19,7 @@ type WorkspaceIdField int
 const (
 	// WorkspaceId is the defalt value, since all non-UC workspace resources belong to a workspace.
 	WorkspaceId WorkspaceIdField = iota
-	// Do not expose a workspace_id field. This is used for account-level resources.
+	// Do not expose a workspace_id field. This is used for account-level-only resources.
 	NoWorkspaceId
 	// Use management_workspace_id to specify the workspace_id. This is used for UC resources,
 	// where resources do not belong to a workspace but are managed using a specific workspace's
@@ -123,6 +123,9 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 		// if r.WorkspaceIdField == WorkspaceId && rd.NewValueKnown("workspace_id") && !c.Config.IsAccountClient() {
 		//     ...
 		// }
+		// Note: you cannot clear workspace_id field because it is not computed.
+		// We could make it computed, but I think that would be too implicit for users.
+
 		// we don't propagate instance of SDK client to the diff function, because
 		// authentication is not deterministic at this stage with the recent Terraform
 		// versions. Diff customization must be limited to hermetic checks only anyway.

@@ -76,11 +76,7 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 }
 
 func (c *DatabricksClient) InConfiguredWorkspace(ctx context.Context, d *schema.ResourceData, f WorkspaceIdField) (*DatabricksClient, error) {
-	return c.inConfiguredWorkspace(ctx, d, f.Field())
-}
-
-func (c *DatabricksClient) inConfiguredWorkspace(ctx context.Context, d *schema.ResourceData, key string) (*DatabricksClient, error) {
-	workspaceId, ok := d.GetOk(key)
+	workspaceId, ok := d.GetOk(f.Field())
 	if !ok {
 		return c, nil
 	}
@@ -107,12 +103,23 @@ func (c *DatabricksClient) getConfiguredWorkspaceClient(ctx context.Context, wor
 	if w, ok := c.cachedWorkspaceClients[workspaceId]; ok {
 		return w, nil
 	}
+	if c.cachedWorkspaceClients == nil {
+		c.cachedWorkspaceClients = make(map[int64]*databricks.WorkspaceClient)
+	}
+	if !c.Config.IsAccountClient() {
+		// TODO: check if workspace ID of workspace client matches provided workspace ID
+		w, err := c.WorkspaceClient()
+		if err != nil {
+			return nil, err
+		}
+		c.cachedWorkspaceClients[workspaceId] = w
+		return w, nil
+	}
+	// If provider is configured at the account-level, construct the workspace client from the account
+	// client and cache it.
 	a, err := c.AccountClient()
 	if err != nil {
 		return nil, err
-	}
-	if c.cachedWorkspaceClients == nil {
-		c.cachedWorkspaceClients = make(map[int64]*databricks.WorkspaceClient)
 	}
 	ws, err := a.Workspaces.GetByWorkspaceId(ctx, workspaceId)
 	if err != nil {

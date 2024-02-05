@@ -367,7 +367,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `file` - (Optional) block consisting of single string fields: 
   * `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.
-  * `path` - If `source` is `GIT`, then it a relative path to the file (inside the Git repository) with SQL commands to execute.  If `source` is `WORKSPACE` then it should be absolute path to the file in the workspace.
+  * `path` - If `source` is `GIT`: Relative path to the file in the repository specified in the `git_source` block with SQL commands to execute. If `source` is `WORKSPACE`: Absolute path to the file in the workspace with SQL commands to execute.
 
 Example
 

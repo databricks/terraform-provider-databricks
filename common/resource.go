@@ -104,6 +104,9 @@ func recoverable(cb func(
 }
 
 func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
+	if !r.isResource() {
+		return nil
+	}
 	return func(ctx context.Context, rd *schema.ResourceDiff, m any) (err error) {
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
@@ -115,10 +118,11 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 					"customize diff for")
 			}
 		}()
-		c := m.(*DatabricksClient)
-		if r.WorkspaceIdField == WorkspaceId && rd.NewValueKnown("workspace_id") && !c.Config.IsAccountClient() {
-			// TODO: check that the provided workspace ID matches that for the provider
-		}
+		// TODO: check that the provided workspace ID matches that for the provider
+		// c := m.(*DatabricksClient)
+		// if r.WorkspaceIdField == WorkspaceId && rd.NewValueKnown("workspace_id") && !c.Config.IsAccountClient() {
+		//     ...
+		// }
 		// we don't propagate instance of SDK client to the diff function, because
 		// authentication is not deterministic at this stage with the recent Terraform
 		// versions. Diff customization must be limited to hermetic checks only anyway.
@@ -140,8 +144,15 @@ func (r Resource) getSchema() map[string]*schema.Schema {
 	return r.Schema
 }
 
+func (r Resource) isResource() bool {
+	return r.Create != nil || r.Update != nil || r.Delete != nil
+}
+
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
+	if r.WorkspaceIdField == OriginalWorkspaceId {
+		panic("OriginalWorkspaceId is not a valid value for WorkspaceIdField")
+	}
 	getClient := func(_ context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
 		return m.(*DatabricksClient), nil
 	}
@@ -154,49 +165,8 @@ func (r Resource) ToResource() *schema.Resource {
 			return m.(*DatabricksClient).InConfiguredWorkspace(ctx, d, OriginalWorkspaceId)
 		}
 	}
-	var update func(ctx context.Context, d *schema.ResourceData,
-		m any) diag.Diagnostics
-	if r.Update != nil {
-		update = func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
-			c, err := getClient(ctx, m, d)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if err := recoverable(r.Update)(ctx, d, c); err != nil {
-				err = nicerError(ctx, err, "update")
-				return diag.FromErr(err)
-			}
-			if err := recoverable(r.Read)(ctx, d, c); err != nil {
-				err = nicerError(ctx, err, "read")
-				return diag.FromErr(err)
-			}
-			return nil
-		}
-	} else {
-		// set ForceNew to all attributes with CRD
-		queue := []*schema.Resource{
-			{Schema: r.Schema},
-		}
-		for {
-			head := queue[0]
-			queue = queue[1:]
-			for _, v := range head.Schema {
-				if v.Computed {
-					continue
-				}
-				if nested, ok := v.Elem.(*schema.Resource); ok {
-					queue = append(queue, nested)
-				}
-				v.ForceNew = true
-			}
-			if len(queue) == 0 {
-				break
-			}
-		}
-	}
 	// Ignore missing for read for resources, but not for data sources.
-	ignoreMissingForRead := (r.Create != nil || r.Update != nil || r.Delete != nil)
+	ignoreMissingForRead := r.isResource()
 	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
@@ -226,7 +196,6 @@ func (r Resource) ToResource() *schema.Resource {
 		StateUpgraders:     r.StateUpgraders,
 		CustomizeDiff:      r.saferCustomizeDiff(),
 		ReadContext:        generateReadFunc(ignoreMissingForRead),
-		UpdateContext:      update,
 		Importer:           r.Importer,
 		Timeouts:           r.Timeouts,
 		DeprecationMessage: r.DeprecationMessage,
@@ -285,6 +254,45 @@ func (r Resource) ToResource() *schema.Resource {
 	}
 	if r.WorkspaceIdField != NoWorkspaceId {
 		resource.Schema = AddWorkspaceIdField(resource.Schema, r.WorkspaceIdField)
+	}
+	if r.Update != nil {
+		resource.UpdateContext = func(ctx context.Context, d *schema.ResourceData,
+			m any) diag.Diagnostics {
+			c, err := getClient(ctx, m, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := recoverable(r.Update)(ctx, d, c); err != nil {
+				err = nicerError(ctx, err, "update")
+				return diag.FromErr(err)
+			}
+			if err := recoverable(r.Read)(ctx, d, c); err != nil {
+				err = nicerError(ctx, err, "read")
+				return diag.FromErr(err)
+			}
+			return nil
+		}
+	} else {
+		// set ForceNew to all attributes with CRD
+		queue := []*schema.Resource{
+			{Schema: r.Schema},
+		}
+		for {
+			head := queue[0]
+			queue = queue[1:]
+			for _, v := range head.Schema {
+				if v.Computed {
+					continue
+				}
+				if nested, ok := v.Elem.(*schema.Resource); ok {
+					queue = append(queue, nested)
+				}
+				v.ForceNew = true
+			}
+			if len(queue) == 0 {
+				break
+			}
+		}
 	}
 	return resource
 }

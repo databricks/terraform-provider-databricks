@@ -158,6 +158,11 @@ func TestRecoverableFromPanic(t *testing.T) {
 
 func TestCustomizeDiffRobustness(t *testing.T) {
 	r := Resource{
+		Create: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			return d.Set("foo", 1)
+		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			return fmt.Errorf("nope")
 		},
@@ -170,6 +175,11 @@ func TestCustomizeDiffRobustness(t *testing.T) {
 	assert.EqualError(t, err, "cannot customize diff for sample: nope")
 
 	r = Resource{
+		Create: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			return d.Set("foo", 1)
+		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
 			panic("oops")
 		},

@@ -108,6 +108,10 @@ func ResourceExternalLocation() common.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			updateExternalLocationRequest.Owner = ""
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
 			if err != nil {

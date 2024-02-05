@@ -93,6 +93,8 @@ func TestUcAccSchemaUpdate(t *testing.T) {
 	}, step{
 		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment", "account users"),
 	}, step{
+		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment", "{env.TEST_DATA_ENG_GROUP}"),
+	}, step{
 		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

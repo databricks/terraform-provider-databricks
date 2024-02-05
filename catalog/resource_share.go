@@ -237,6 +237,10 @@ func ResourceShare() common.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
 				Updates: changes,
 			})

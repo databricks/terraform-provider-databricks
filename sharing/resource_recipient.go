@@ -85,6 +85,10 @@ func ResourceRecipient() common.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			updateRecipientRequest.Owner = ""
 			err = w.Recipients.Update(ctx, updateRecipientRequest)
 			if err != nil {

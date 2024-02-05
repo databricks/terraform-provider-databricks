@@ -93,6 +93,10 @@ func ResourceVolume() common.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			updateVolumeRequestContent.Owner = ""
 			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
 			if err != nil {

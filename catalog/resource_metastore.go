@@ -138,6 +138,11 @@ func ResourceMetastore() common.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
 					MetastoreId:   d.Id(),
@@ -171,6 +176,11 @@ func ResourceMetastore() common.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err := w.Metastores.Update(ctx, update)
 				if err != nil {

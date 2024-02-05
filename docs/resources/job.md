@@ -323,7 +323,7 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 ### dbt_task Configuration Block
 
 * `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
-* `source` - (Optional) What is the source of this project. Possible values are `WORKSPACE` and `GIT`.  Default value depends on if `git_source` block presents in the job definition or not - if it's present, then the default value is `GIT`.
+* `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.  Defaults to `GIT` if a `git_source` block is present in the job definition.
 * `project_directory` - (Optional  if `source` is `GIT`, Required when `source` is `WORKSPACE`) If `source` is `GIT`, then it should be a relative path to the directory in the repository specified in `git_source` where dbt should look in for the `dbt_project.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--project-dir` to a dbt command.  If `source` is `WORKSPACE`, then it should be absolute path to the folder in the workspace.
 * `profiles_directory` - (Optional) The relative path to the directory in the repository specified by `git_source` where dbt should look in for the `profiles.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--profile-dir` to a dbt command.
 * `catalog` - (Optional) The name of the catalog to use inside Unity Catalog.

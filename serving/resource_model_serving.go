@@ -32,6 +32,9 @@ func ResourceModelServing() *schema.Resource {
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
 			common.MustSchemaPath(m, "config", "served_models").Deprecated = "Please use 'config.served_entities' instead of 'config.served_models'."
 
+			common.MustSchemaPath(m, "config", "served_entities", "scale_to_zero_enabled").Required = false
+			common.MustSchemaPath(m, "config", "served_entities", "scale_to_zero_enabled").Optional = true
+			common.MustSchemaPath(m, "config", "served_entities", "scale_to_zero_enabled").Default = true
 			common.MustSchemaPath(m, "config", "served_entities", "name").Computed = true
 			common.MustSchemaPath(m, "config", "served_entities", "workload_type").Default = "CPU"
 			common.MustSchemaPath(m, "config", "served_entities", "workload_type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
@@ -50,6 +53,13 @@ func ResourceModelServing() *schema.Resource {
 		})
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			old, new := d.GetChange("config.0.auto_capture_config.0.enabled")
+			if old != nil && old == false && new == true {
+				d.ForceNew("config.0.auto_capture_config.0.enabled")
+			}
+			return nil
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -75,8 +85,6 @@ func ResourceModelServing() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			// WIP: There must be a way to know which resource the user is trying to create
-			// otherwise it will lead to a diff for existing resources in previous providers
 			if d.IsNewResource() || sOrig.Config == nil {
 				// If it is a new resource, then we only return ServedEntities
 				endpoint.Config.ServedModels = nil

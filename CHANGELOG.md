@@ -7,12 +7,9 @@
 * Introduced Generic Settings Resource ([#2997](https://github.com/databricks/terraform-provider-databricks/pull/2997)).
 * Fixed updating owners for UC resources ([#3189](https://github.com/databricks/terraform-provider-databricks/pull/3189)).
 * Validated metastore id for databricks_grant and databricks_grants resources ([#3159](https://github.com/databricks/terraform-provider-databricks/pull/3159)).
-* Updated ([#3192](https://github.com/databricks/terraform-provider-databricks/pull/3192)).
 * Suppress diff should apply to new fields added in the same chained call to CustomizableSchema ([#3200](https://github.com/databricks/terraform-provider-databricks/pull/3200)).
-* Extended customizable schema with `AtLeastOneOf`, `ExactlyOneOf`, `RequiredWith` ([#3182](https://github.com/databricks/terraform-provider-databricks/pull/3182)).
 * Fixed `databricks_connection` regression when creating without owner ([#3186](https://github.com/databricks/terraform-provider-databricks/pull/3186)).
 * Allow using empty strings as job parameters ([#3158](https://github.com/databricks/terraform-provider-databricks/pull/3158)).
-* Fixed notebook parameters in acceptance test ([#3205](https://github.com/databricks/terraform-provider-databricks/pull/3205)).
 
 
 ### Documentation Changes
@@ -34,6 +31,9 @@
 * Used common.Resource consistently throughout the provider ([#3193](https://github.com/databricks/terraform-provider-databricks/pull/3193)).
 * Fixed unit test ([#3201](https://github.com/databricks/terraform-provider-databricks/pull/3201)).
 * Added test code for job task order ([#3183](https://github.com/databricks/terraform-provider-databricks/pull/3183)).
+* Added unit test for `customizable_schema.go` ([#3192](https://github.com/databricks/terraform-provider-databricks/pull/3192)).
+* Extended customizable schema with `AtLeastOneOf`, `ExactlyOneOf`, `RequiredWith` ([#3182](https://github.com/databricks/terraform-provider-databricks/pull/3182)).
+* Fixed notebook parameters in acceptance test ([#3205](https://github.com/databricks/terraform-provider-databricks/pull/3205)).
 
 
 ## 1.35.0

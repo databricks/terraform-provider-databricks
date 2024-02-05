@@ -1,5 +1,41 @@
 # Version changelog
 
+## 1.35.1
+
+### New Features and Improvements
+* Exporter: timestamps are now added to log entries ([#3146](https://github.com/databricks/terraform-provider-databricks/pull/3146)).
+* Validate metastore id for databricks_grant and databricks_grants resources ([#3159](https://github.com/databricks/terraform-provider-databricks/pull/3159)).
+* Exporter: Skip emitting of clusters that come from more cluster sources ([#3161](https://github.com/databricks/terraform-provider-databricks/pull/3161)).
+* Fix typo in docs ([#3166](https://github.com/databricks/terraform-provider-databricks/pull/3166)).
+* Migrate cluster schema to use the go-sdk struct ([#3076](https://github.com/databricks/terraform-provider-databricks/pull/3076)).
+* Introduce Generic Settings Resource ([#2997](https://github.com/databricks/terraform-provider-databricks/pull/2997)).
+* Update actions/setup-go to v5 ([#3154](https://github.com/databricks/terraform-provider-databricks/pull/3154)).
+* Change default branch from `master` to `main` ([#3174](https://github.com/databricks/terraform-provider-databricks/pull/3174)).
+* Add .codegen.json configuration ([#3180](https://github.com/databricks/terraform-provider-databricks/pull/3180)).
+* Exporter: performance improvements for big workspaces ([#3167](https://github.com/databricks/terraform-provider-databricks/pull/3167)).
+* update ([#3192](https://github.com/databricks/terraform-provider-databricks/pull/3192)).
+* Exporter: fix generation of cluster policy resources ([#3185](https://github.com/databricks/terraform-provider-databricks/pull/3185)).
+* Fix unit test ([#3201](https://github.com/databricks/terraform-provider-databricks/pull/3201)).
+* Suppress diff should apply to new fields added in the same chained call to CustomizableSchema ([#3200](https://github.com/databricks/terraform-provider-databricks/pull/3200)).
+* Various documentation updates ([#3198](https://github.com/databricks/terraform-provider-databricks/pull/3198)).
+* Use common.Resource consistently throughout the provider ([#3193](https://github.com/databricks/terraform-provider-databricks/pull/3193)).
+* Extending customizable schema with `AtLeastOneOf`, `ExactlyOneOf`, `RequiredWith` ([#3182](https://github.com/databricks/terraform-provider-databricks/pull/3182)).
+* Fix `databricks_connection` regression when creating without owner ([#3186](https://github.com/databricks/terraform-provider-databricks/pull/3186)).
+* add test code for job task order ([#3183](https://github.com/databricks/terraform-provider-databricks/pull/3183)).
+* Allow using empty strings as job parameters ([#3158](https://github.com/databricks/terraform-provider-databricks/pull/3158)).
+* Fix notebook parameters in acceptance test ([#3205](https://github.com/databricks/terraform-provider-databricks/pull/3205)).
+* Exporter: Add retries for `Search`, `ReadContext` and `Import` operations when importing the resource ([#3202](https://github.com/databricks/terraform-provider-databricks/pull/3202)).
+* Fixed updating owners for UC resources ([#3189](https://github.com/databricks/terraform-provider-databricks/pull/3189)).
+* Adds `databricks_volumes` as data source  ([#3150](https://github.com/databricks/terraform-provider-databricks/pull/3150)).
+
+
+### Documentation Changes
+
+### Exporter
+
+### Internal Changes
+
+
 ## 1.35.0
 
 ### New Features and Improvements:

@@ -2320,7 +2320,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for _, v := range objList {
 				if v.Name != "" {
-					id := fmt.Sprintf("%s", v.Name)
+					id := v.Name
 					ic.Emit(&resource{
 						Resource: "databricks_storage_credential",
 						ID:       id,

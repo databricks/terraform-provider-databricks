@@ -44,18 +44,18 @@ func ResourceIPAccessList() common.Resource {
 					return err
 				}
 				ipAclId := status.IpAccessList.ListId
-				//need to enable the IP Access List with update
-				if d.Get("enabled").(bool) {
-					updateIacl.IpAccessListId = ipAclId
-					err = acc.IpAccessLists.Update(ctx, updateIacl)
-					if err != nil {
-						return err
-					}
-				}
 				// need to wait until the ip access list is available from get
 				return retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 					_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
 					if err == nil {
+						//need to enable the IP Access List with update
+						if d.Get("enabled").(bool) {
+							updateIacl.IpAccessListId = ipAclId
+							err = acc.IpAccessLists.Update(ctx, updateIacl)
+							if err != nil {
+								return retry.NonRetryableError(err)
+							}
+						}
 						d.SetId(ipAclId)
 						return nil
 					}

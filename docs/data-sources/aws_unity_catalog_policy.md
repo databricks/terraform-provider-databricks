@@ -11,15 +11,53 @@ This data source constructs necessary AWS Unity Catalog policy for you, which is
 
 ```hcl
 data "databricks_aws_unity_catalog_policy" "this" {
-  aws_account_id = "123456789098"
+  aws_account_id = var.aws_account_id
   bucket_name = "databricks-bucket"
   role_name = "databricks-role"
   kms_name = "databricks-kms"
 }
 
-resource "aws_iam_policy" "unity_catalog_policy" {
-  name   = "${var.prefix}-unity-catalog-iam-policy"
+data "aws_iam_policy_document" "passrole_for_uc" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = [
+        "arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL" # Databricks Account ID
+      ]
+      type = "AWS"
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalId"
+      values   = [var.databricks_account_id]
+    }
+  }
+  statement {
+    sid     = "ExplicitSelfRoleAssumption"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${var.aws_account_id}:root"]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::${var.aws_account_id}:role/${var.prefix}-uc-access"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "unity_metastore" {
+  name = "${var.prefix}-unity-catalog-metastore-access-iam-policy"
   policy = data.databricks_aws_unity_catalog_policy.this.json
+}
+
+resource "aws_iam_role" "metastore_data_access" {
+  name                = "${var.prefix}-uc-access"
+  assume_role_policy  = data.aws_iam_policy_document.passrole_for_uc.json
+  managed_policy_arns = [aws_iam_policy.unity_metastore.arn]
 }
 ```
 

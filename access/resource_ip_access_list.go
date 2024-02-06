@@ -63,7 +63,7 @@ func ResourceIPAccessList() common.Resource {
 					if !errors.As(err, &apiErr) {
 						return retry.NonRetryableError(err)
 					}
-					if apiErr.IsMissing() {
+					if apiErr.StatusCode == 404 {
 						return retry.RetryableError(err)
 					} else {
 						return retry.NonRetryableError(err)

@@ -45,20 +45,8 @@ func ResourceIPAccessList() common.Resource {
 				}
 				ipAclId := status.IpAccessList.ListId
 				// need to wait until the ip access list is available from get
-				return retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+				retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 					_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
-					if err == nil {
-						//need to enable the IP Access List with update
-						if d.Get("enabled").(bool) {
-							updateIacl.IpAccessListId = ipAclId
-							err = acc.IpAccessLists.Update(ctx, updateIacl)
-							if err != nil {
-								return retry.NonRetryableError(err)
-							}
-						}
-						d.SetId(ipAclId)
-						return nil
-					}
 					var apiErr *apierr.APIError
 					if !errors.As(err, &apiErr) {
 						return retry.NonRetryableError(err)
@@ -69,6 +57,27 @@ func ResourceIPAccessList() common.Resource {
 						return retry.NonRetryableError(err)
 					}
 				})
+				//need to enable the IP Access List with update
+				if d.Get("enabled").(bool) {
+					updateIacl.IpAccessListId = ipAclId
+					err = acc.IpAccessLists.Update(ctx, updateIacl)
+					if err != nil {
+						return err
+					}
+				}
+				// need to wait until the ip access list is enabled
+				retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+					status, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
+					if err != nil {
+						return retry.NonRetryableError(err)
+					}
+					if !status.IpAccessList.Enabled {
+						return retry.RetryableError(errors.New("access list not enabled yet"))
+					}
+					return nil
+				})
+				d.SetId(ipAclId)
+				return nil
 			}, func(w *databricks.WorkspaceClient) error {
 				status, err := w.IpAccessLists.Create(ctx, iacl)
 				if err != nil {

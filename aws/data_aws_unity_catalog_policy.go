@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"regexp"
+
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"regexp"
 )
 
-func generateReadContext(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 	bucket := d.Get("bucket_name").(string)
 	awsAccountId := d.Get("aws_account_id").(string)
 	roleName := d.Get("role_name").(string)
@@ -59,12 +60,12 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	policyJSON, err := json.MarshalIndent(policy, "", "  ")
 	if err != nil {
-		return diag.FromErr(err)
+		return err
 	}
 	d.SetId(fmt.Sprintf("%s-%s-%s", bucket, awsAccountId, roleName))
 	err = d.Set("json", string(policyJSON))
 	if err != nil {
-		return diag.FromErr(err)
+		return err
 	}
 	return nil
 }
@@ -100,9 +101,9 @@ func validateSchema() map[string]*schema.Schema {
 	}
 }
 
-func DataAwsUnityCatalogPolicy() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: generateReadContext,
-		Schema:      validateSchema(),
+func DataAwsUnityCatalogPolicy() common.Resource {
+	return common.Resource{
+		Read:   generateReadContext,
+		Schema: validateSchema(),
 	}
 }

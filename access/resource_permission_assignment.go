@@ -76,15 +76,12 @@ func mustInt64(s string) int64 {
 // ResourcePermissionAssignment performs of users to a workspace
 // from a workspace context, though it requires additional set
 // data resource for "workspace account scim", whicl will be added later.
-func ResourcePermissionAssignment() *schema.Resource {
+func ResourcePermissionAssignment() common.Resource {
 	type entity struct {
 		PrincipalId int64    `json:"principal_id"`
 		Permissions []string `json:"permissions" tf:"slice_as_set"`
 	}
-	s := common.StructToSchema(entity{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+	s := common.StructToSchema(entity{}, common.NoCustomize)
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -103,14 +100,18 @@ func ResourcePermissionAssignment() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			permissions, err := list.ForPrincipal(mustInt64(d.Id()))
+			data := entity{
+				PrincipalId: mustInt64(d.Id()),
+			}
+			permissions, err := list.ForPrincipal(data.PrincipalId)
 			if err != nil {
 				return err
 			}
-			return common.StructToData(permissions, s, d)
+			data.Permissions = permissions.Permissions
+			return common.StructToData(data, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewPermissionAssignmentAPI(ctx, c).Remove(d.Id())
 		},
-	}.ToResource()
+	}
 }

@@ -24,8 +24,10 @@ type QueryEntity struct {
 	Schedule  *QuerySchedule   `json:"schedule,omitempty"`
 	Tags      []string         `json:"tags,omitempty"`
 	Parameter []QueryParameter `json:"parameter,omitempty"`
-	RunAsRole string           `json:"run_as_role,omitempty"`
+	RunAsRole string           `json:"run_as_role,omitempty" tf:"suppress_diff"`
 	Parent    string           `json:"parent,omitempty" tf:"suppress_diff,force_new"`
+	CreatedAt string           `json:"created_at,omitempty" tf:"computed"`
+	UpdatedAt string           `json:"updated_at,omitempty" tf:"computed"`
 }
 
 // QuerySchedule ...
@@ -124,8 +126,8 @@ type QueryParameterDateRangeLike struct {
 
 // QueryParameterAllowMultiple ...
 type QueryParameterAllowMultiple struct {
-	Prefix    string `json:"prefix"`
-	Suffix    string `json:"suffix"`
+	Prefix    string `json:"prefix,omitempty"`
+	Suffix    string `json:"suffix,omitempty"`
 	Separator string `json:"separator"`
 }
 
@@ -288,10 +290,7 @@ func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema
 	}
 
 	if q.RunAsRole != "" {
-		if aq.Options == nil {
-			aq.Options = &api.QueryOptions{}
-		}
-		aq.Options.RunAsRole = q.RunAsRole
+		aq.RunAsRole = q.RunAsRole
 	}
 
 	return &aq, nil
@@ -305,6 +304,8 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 	q.Query = aq.Query
 	q.Tags = append([]string{}, aq.Tags...)
 	q.Parent = aq.Parent
+	q.UpdatedAt = aq.UpdatedAt
+	q.CreatedAt = aq.CreatedAt
 
 	if s := aq.Schedule; s != nil {
 		// Set `schedule` to non-empty value to ensure it's picked up by `StructToSchema`.
@@ -445,7 +446,7 @@ func (q *QueryEntity) fromAPIObject(aq *api.Query, schema map[string]*schema.Sch
 			q.Parameter = append(q.Parameter, p)
 		}
 
-		q.RunAsRole = aq.Options.RunAsRole
+		q.RunAsRole = aq.RunAsRole
 	}
 
 	// Transform to ResourceData.
@@ -509,7 +510,7 @@ func (a QueryAPI) Delete(queryID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil)
 }
 
-func ResourceSqlQuery() *schema.Resource {
+func ResourceSqlQuery() common.Resource {
 	s := common.StructToSchema(
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -586,5 +587,5 @@ func ResourceSqlQuery() *schema.Resource {
 			return NewQueryAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

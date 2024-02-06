@@ -100,6 +100,7 @@ type Workspace struct {
 	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
+	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -130,6 +131,12 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	}
 	if w.GCPManagedNetworkConfig != nil {
 		workspaceCreationRequest["gcp_managed_network_config"] = w.GCPManagedNetworkConfig
+	}
+	if w.ManagedServicesCustomerManagedKeyID != "" {
+		workspaceCreationRequest["managed_services_customer_managed_key_id"] = w.ManagedServicesCustomerManagedKeyID
+	}
+	if w.StorageCustomerManagedKeyID != "" {
+		workspaceCreationRequest["storage_customer_managed_key_id"] = w.StorageCustomerManagedKeyID
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -192,13 +199,13 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	if err != nil {
 		return resource.NonRetryableError(err)
 	}
-	// make a request to Tokens API, just to verify there are no errors
+	// make a request to SCIM API, just to verify there are no errors
 	var response map[string]any
-	err = wsClient.Get(ctx, "/token/list", nil, &response)
-	var apiError *apierr.APIError
-	if errors.As(err, &apiError) {
+	err = wsClient.Get(ctx, "/preview/scim/v2/Me", nil, &response)
+	var dnsError *net.DNSError
+	if errors.As(err, &dnsError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
-			ws.WorkspaceURL, apiError)
+			ws.WorkspaceURL, dnsError)
 		log.Printf("[INFO] %s", err)
 		// expected to retry on: dial tcp: lookup XXX: no such host
 		return resource.RetryableError(err)
@@ -251,12 +258,12 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id", "custom_tags"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
-	request := map[string]string{}
+	request := map[string]any{}
 
 	if ws.CredentialsID != "" {
 		request["credentials_id"] = ws.CredentialsID
@@ -275,6 +282,12 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
+	}
+	if ws.CustomTags != nil {
+		if !a.client.IsAws() {
+			return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
+		}
+		request["custom_tags"] = ws.CustomTags
 	}
 
 	if len(request) == 0 {
@@ -334,10 +347,20 @@ func (a WorkspacesAPI) List(mwsAcctID string) ([]Workspace, error) {
 }
 
 type Token struct {
-	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty" tf:"default:2592000"`
-	Comment         string `json:"comment,omitempty" tf:"default:Terraform PAT"`
-	TokenID         string `json:"token_id,omitempty" tf:"computed"`
-	TokenValue      string `json:"token_value,omitempty" tf:"computed,sensitive"`
+	LifetimeSeconds int32           `json:"lifetime_seconds,omitempty" tf:"default:2592000"`
+	Comment         string          `json:"comment,omitempty" tf:"default:Terraform PAT"`
+	TokenID         string          `json:"token_id,omitempty" tf:"computed"`
+	TokenValue      SensitiveString `json:"token_value,omitempty" tf:"computed,sensitive"`
+}
+
+type SensitiveString string
+
+func (s SensitiveString) GoString() string {
+	return "****"
+}
+
+func (s SensitiveString) String() string {
+	return "****"
 }
 
 // ephemeral entity to use with StructToData()
@@ -364,7 +387,7 @@ func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 		return fmt.Errorf("cannot create token: %w", err)
 	}
 	wsToken.Token.TokenID = token.TokenInfo.TokenID
-	wsToken.Token.TokenValue = token.TokenValue
+	wsToken.Token.TokenValue = SensitiveString(token.TokenValue)
 	return common.StructToData(wsToken, workspaceSchema, d)
 }
 
@@ -437,7 +460,7 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 }
 
 // ResourceMwsWorkspaces manages E2 workspaces
-func ResourceMwsWorkspaces() *schema.Resource {
+func ResourceMwsWorkspaces() common.Resource {
 	workspaceSchema := common.StructToSchema(Workspace{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			for name, fieldSchema := range s {
@@ -516,6 +539,9 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			if err := requireFields(c.IsGcp(), d, "location"); err != nil {
 				return err
 			}
+			if !c.IsAws() && workspace.CustomTags != nil {
+				return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
+			}
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
 				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID
@@ -587,7 +613,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			Read:   schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-	}.ToResource()
+	}
 }
 
 func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
@@ -842,6 +868,10 @@ func workspaceSchemaV2() cty.Type {
 						},
 					},
 				},
+			},
+			"custom_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
 			},
 		},
 	}).CoreConfigSchema().ImpliedType()

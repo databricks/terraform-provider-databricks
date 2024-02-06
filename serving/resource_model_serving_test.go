@@ -140,6 +140,137 @@ func TestModelServingCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestModelServingCreateGPU(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/serving-endpoints",
+				ExpectedRequest: serving.CreateServingEndpoint{
+					Name: "test-endpoint",
+					Config: serving.EndpointCoreConfigInput{
+						ServedModels: []serving.ServedModelInput{
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								WorkloadSize:       "Small",
+								WorkloadType:       "GPU_MEDIUM",
+								ScaleToZeroEnabled: true,
+							},
+							{
+								Name:               "candidate_model",
+								ModelName:          "ads1",
+								ModelVersion:       "4",
+								WorkloadSize:       "Small",
+								WorkloadType:       "GPU_MEDIUM",
+								ScaleToZeroEnabled: false,
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedModelName:   "prod_model",
+									TrafficPercentage: 90,
+								},
+								{
+									ServedModelName:   "candidate_model",
+									TrafficPercentage: 10,
+								},
+							},
+						},
+					},
+				},
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-endpoint",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-endpoint",
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+				Response: serving.ServingEndpointDetailed{
+					Id:   "test-endpoint",
+					Name: "test-endpoint",
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+					Config: &serving.EndpointCoreConfigOutput{
+						ServedModels: []serving.ServedModelOutput{
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								ScaleToZeroEnabled: true,
+							},
+							{
+								Name:               "candidate_model",
+								ModelName:          "ads1",
+								ModelVersion:       "4",
+								ScaleToZeroEnabled: false,
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedModelName:   "prod_model",
+									TrafficPercentage: 90,
+								},
+								{
+									ServedModelName:   "candidate_model",
+									TrafficPercentage: 10,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-endpoint"
+			config {
+				served_models {
+					name = "prod_model"
+					model_name = "ads1"
+					model_version = "2"
+					workload_size = "Small"
+					workload_type = "GPU_MEDIUM"
+					scale_to_zero_enabled = true
+				}
+				served_models {
+					name = "candidate_model"
+					model_name = "ads1"
+					model_version = "4"
+					workload_size = "Small"
+					workload_type = "GPU_MEDIUM"
+					scale_to_zero_enabled = false
+				}
+				traffic_config {
+					routes {
+						served_model_name = "prod_model"
+						traffic_percentage = 90
+					}
+					routes {
+						served_model_name = "candidate_model"
+						traffic_percentage = 10
+					}
+				}
+			}
+			`,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
 func TestModelServingCreate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

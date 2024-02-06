@@ -18,7 +18,7 @@ const (
 )
 
 // ResourceGlobalInitScript manages notebooks
-func ResourceGlobalInitScript() *schema.Resource {
+func ResourceGlobalInitScript() common.Resource {
 	extra := map[string]*schema.Schema{
 		"enabled": {
 			Type:     schema.TypeBool,
@@ -97,5 +97,5 @@ func ResourceGlobalInitScript() *schema.Resource {
 		Schema:        s,
 		SchemaVersion: 1,
 		Timeouts:      &schema.ResourceTimeout{},
-	}.ToResource()
+	}
 }

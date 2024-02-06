@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -185,7 +186,7 @@ func TestCreateShare(t *testing.T) {
 				ExpectedRequest: ShareInfo{
 					Name: "a",
 				},
-				Response: RecipientInfo{
+				Response: ShareInfo{
 					Name: "a",
 				},
 			},
@@ -193,6 +194,7 @@ func TestCreateShare(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/a",
 				ExpectedRequest: ShareUpdates{
+					Owner: "admin",
 					Updates: []ShareDataChange{
 						{
 							Action: "ADD",
@@ -212,7 +214,7 @@ func TestCreateShare(t *testing.T) {
 						},
 					},
 				},
-				Response: RecipientInfo{
+				Response: ShareInfo{
 					Name: "a",
 				},
 			},
@@ -220,7 +222,8 @@ func TestCreateShare(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/a?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "a",
+					Name:  "a",
+					Owner: "admin",
 					Objects: []SharedDataObject{
 						{
 							Name:           "main.a",
@@ -239,7 +242,8 @@ func TestCreateShare(t *testing.T) {
 		Resource: ResourceShare(),
 		Create:   true,
 		HCL: `
-			name = "a"
+			name  = "a"
+			owner = "admin"
 			object {
 				name = "main.a"
 				comment = "c"
@@ -272,6 +276,13 @@ func TestUpdateShare(t *testing.T) {
 							AddedBy:        "",
 						},
 					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Owner: "admin",
 				},
 			},
 			{
@@ -310,7 +321,8 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "abc",
+					Name:  "abc",
+					Owner: "admin",
 					Objects: []SharedDataObject{
 						{
 							Name:           "a",
@@ -339,7 +351,8 @@ func TestUpdateShare(t *testing.T) {
 			"name": "abc",
 		},
 		HCL: `
-			name = "abc"
+			name  = "abc"
+			owner = "admin"
 			object {
 				name = "a"
 				comment = "c"
@@ -353,6 +366,130 @@ func TestUpdateShare(t *testing.T) {
 		`,
 		Resource: ResourceShare(),
 	}.ApplyNoError(t)
+}
+
+func TestUpdateShareRollback(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "d",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Owner: "updatedOwner",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: ShareUpdates{
+					Updates: []ShareDataChange{
+						{
+							Action: "REMOVE",
+							DataObject: SharedDataObject{
+								Comment:        "d",
+								DataObjectType: "TABLE",
+								Name:           "d",
+							},
+						},
+						{
+							Action: "ADD",
+							DataObject: SharedDataObject{
+								Comment:        "c",
+								DataObjectType: "TABLE",
+								Name:           "a",
+							},
+						},
+						{
+							Action: "ADD",
+							DataObject: SharedDataObject{
+								Comment:        "c",
+								DataObjectType: "TABLE",
+								Name:           "b",
+							},
+						},
+					},
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Owner: "admin",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name:  "abc",
+					Owner: "admin",
+					Objects: []SharedDataObject{
+						{
+							Name:           "a",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+						{
+							Name:           "b",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+		},
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":  "abc",
+			"owner": "admin",
+		},
+		HCL: `
+			name  = "abc"
+			owner = "updatedOwner"
+			object {
+				name = "a"
+				comment = "c"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = "b"
+				comment = "c"
+				data_object_type = "TABLE"
+			}
+		`,
+		Resource: ResourceShare(),
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected happened")
 }
 
 func TestUpdateShare_NoChanges(t *testing.T) {
@@ -456,7 +593,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 				ExpectedRequest: ShareInfo{
 					Name: "a",
 				},
-				Response: RecipientInfo{
+				Response: ShareInfo{
 					Name: "a",
 				},
 			},

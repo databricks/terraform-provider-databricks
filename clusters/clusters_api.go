@@ -14,6 +14,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // AutoScale is a struct the describes auto scaling for clusters
@@ -171,6 +172,7 @@ type GcpAttributes struct {
 	Availability            Availability `json:"availability,omitempty"`
 	BootDiskSize            int32        `json:"boot_disk_size,omitempty"`
 	ZoneId                  string       `json:"zone_id,omitempty"`
+	LocalSsdCount           int32        `json:"local_ssd_count,omitempty"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS
@@ -218,12 +220,13 @@ type StorageInfo struct {
 
 // InitScriptStorageInfo captures the allowed sources of init scripts.
 type InitScriptStorageInfo struct {
-	Dbfs      *DbfsStorageInfo   `json:"dbfs,omitempty" tf:"group:storage"`
-	Gcs       *GcsStorageInfo    `json:"gcs,omitempty" tf:"group:storage"`
-	S3        *S3StorageInfo     `json:"s3,omitempty" tf:"group:storage"`
-	Abfss     *AbfssStorageInfo  `json:"abfss,omitempty" tf:"group:storage"`
-	File      *LocalFileInfo     `json:"file,omitempty"`
-	Workspace *WorkspaceFileInfo `json:"workspace,omitempty"`
+	Dbfs      *DbfsStorageInfo            `json:"dbfs,omitempty" tf:"group:storage"`
+	Gcs       *GcsStorageInfo             `json:"gcs,omitempty" tf:"group:storage"`
+	S3        *S3StorageInfo              `json:"s3,omitempty" tf:"group:storage"`
+	Abfss     *AbfssStorageInfo           `json:"abfss,omitempty" tf:"group:storage"`
+	File      *LocalFileInfo              `json:"file,omitempty"`
+	Workspace *WorkspaceFileInfo          `json:"workspace,omitempty"`
+	Volumes   *compute.VolumesStorageInfo `json:"volumes,omitempty"`
 }
 
 // SparkNodeAwsAttributes is the struct that determines if the node is a spot instance or not
@@ -448,6 +451,9 @@ func (cluster Cluster) Validate() error {
 func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	// Instance profile id does not exist or not set
 	if cluster.InstancePoolID == "" {
+		// Worker must use an instance pool if driver uses an instance pool,
+		// therefore empty the computed value for driver instance pool.
+		cluster.DriverInstancePoolID = ""
 		return
 	}
 	if cluster.AwsAttributes != nil {
@@ -458,7 +464,7 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 		cluster.AwsAttributes = &awsAttributes
 	}
 	if cluster.AzureAttributes != nil {
-		cluster.AzureAttributes = nil
+		cluster.AzureAttributes = &AzureAttributes{}
 	}
 	if cluster.GcpAttributes != nil {
 		gcpAttributes := GcpAttributes{
@@ -469,6 +475,17 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	cluster.EnableElasticDisk = false
 	cluster.NodeTypeID = ""
 	cluster.DriverNodeTypeID = ""
+}
+
+// https://github.com/databricks/terraform-provider-databricks/issues/824
+func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
+	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
+	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
+	if oldInstancePool != newInstancePool &&
+		oldDriverPool == oldInstancePool &&
+		oldDriverPool == newDriverPool {
+		cluster.DriverInstancePoolID = cluster.InstancePoolID
+	}
 }
 
 // ClusterList shows existing clusters
@@ -506,7 +523,7 @@ type ClusterInfo struct {
 	DriverInstancePoolID      string                  `json:"driver_instance_pool_id,omitempty" tf:"computed"`
 	PolicyID                  string                  `json:"policy_id,omitempty"`
 	SingleUserName            string                  `json:"single_user_name,omitempty"`
-	ClusterSource             Availability            `json:"cluster_source,omitempty"`
+	ClusterSource             Availability            `json:"cluster_source" tf:"computed"`
 	DockerImage               *DockerImage            `json:"docker_image,omitempty"`
 	State                     ClusterState            `json:"state"`
 	StateMessage              string                  `json:"state_message,omitempty"`

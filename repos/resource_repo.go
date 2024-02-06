@@ -167,7 +167,7 @@ func validatePath(i interface{}, k string) (_ []string, errors []error) {
 	return
 }
 
-func ResourceRepo() *schema.Resource {
+func ResourceRepo() common.Resource {
 	s := common.StructToSchema(ReposInformation{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["url"].ValidateFunc = validation.IsURLWithScheme([]string{"https", "http"})
 		s["git_provider"].DiffSuppressFunc = common.EqualFoldDiffSuppress
@@ -180,6 +180,10 @@ func ResourceRepo() *schema.Resource {
 			Optional:      true,
 			ConflictsWith: []string{"branch"},
 			ValidateFunc:  validation.StringIsNotWhiteSpace,
+		}
+		s["workspace_path"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
 		}
 
 		delete(s, "id")
@@ -217,7 +221,12 @@ func ResourceRepo() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(resp, s, d)
+			err = common.StructToData(resp, s, d)
+			if err != nil {
+				return err
+			}
+			d.Set("workspace_path", "/Workspace"+resp.Path)
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var repo ReposInformation
@@ -250,5 +259,5 @@ func ResourceRepo() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewReposAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

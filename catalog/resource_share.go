@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+
 	"reflect"
 	"sort"
 
@@ -27,6 +28,7 @@ const (
 
 type ShareInfo struct {
 	Name      string             `json:"name" tf:"force_new"`
+	Owner     string             `json:"owner,omitempty" tf:"suppress_diff"`
 	Objects   []SharedDataObject `json:"objects,omitempty" tf:"alias:object"`
 	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 	CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
@@ -52,6 +54,7 @@ type ShareDataChange struct {
 }
 
 type ShareUpdates struct {
+	Owner   string            `json:"owner,omitempty"`
 	Updates []ShareDataChange `json:"updates"`
 }
 
@@ -170,7 +173,7 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 	return changes
 }
 
-func ResourceShare() *schema.Resource {
+func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		return m
 	})
@@ -188,10 +191,11 @@ func ResourceShare() *schema.Resource {
 				return err
 			}
 
-			//can only create empty share, objects have to be added using update API
+			//can only create empty share, objects & owners have to be added using update API
 			var si ShareInfo
 			common.DataToStructPointer(d, shareSchema, &si)
 			shareChanges := si.shareChanges(ShareAdd)
+			shareChanges.Owner = si.Owner
 			if err := NewSharesAPI(ctx, c).update(si.Name, shareChanges); err != nil {
 				//delete orphaned share if update fails
 				if d_err := w.Shares.DeleteByName(ctx, si.Name); d_err != nil {
@@ -217,9 +221,44 @@ func ResourceShare() *schema.Resource {
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
 			changes := beforeSi.Diff(afterSi)
-			return NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
+
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+
+			if d.HasChange("owner") {
+				_, err = w.Shares.Update(ctx, sharing.UpdateShare{
+					Name:  afterSi.Name,
+					Owner: afterSi.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
+			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
 				Updates: changes,
 			})
+			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
+						Name:  beforeSi.Name,
+						Owner: old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
+				return err
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -228,5 +267,5 @@ func ResourceShare() *schema.Resource {
 			}
 			return w.Shares.DeleteByName(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

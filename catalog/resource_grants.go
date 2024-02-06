@@ -5,27 +5,14 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/permissions"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-type PermissionsAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-// permissionsDiff is the inner structure of updatePermissions RPC
-type permissionsDiff struct {
-	Changes []permissionsChange `json:"changes"`
-}
-
-type permissionsChange struct {
-	Principal string   `json:"principal"`
-	Add       []string `json:"add,omitempty"`
-	Remove    []string `json:"remove,omitempty"`
-}
 
 // PrivilegeAssignment reflects on `grant` block
 type PrivilegeAssignment struct {
@@ -39,30 +26,30 @@ type PermissionsList struct {
 	Assignments []PrivilegeAssignment `json:"privilege_assignments" tf:"slice_set,alias:grant"`
 }
 
-// diff returns permissionsDiff of this permissions list with `diff` privileges removed
-func (pl PermissionsList) diff(existing PermissionsList) (diff permissionsDiff) {
+// diffPermissions returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
+func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
 	// diffs change sets
 	configured := map[string]*schema.Set{}
-	for _, v := range pl.Assignments {
-		configured[v.Principal] = newStringSet(v.Privileges)
+	for _, v := range pl.PrivilegeAssignments {
+		configured[v.Principal] = permissions.SliceToSet(v.Privileges)
 	}
 	// existing permissions that needs removal
 	remote := map[string]*schema.Set{}
-	for _, v := range existing.Assignments {
-		remote[v.Principal] = newStringSet(v.Privileges)
+	for _, v := range existing.PrivilegeAssignments {
+		remote[v.Principal] = permissions.SliceToSet(v.Privileges)
 	}
 	// STEP 1: detect overlaps
 	for principal, confPrivs := range configured {
 		remotePrivs, ok := remote[principal]
 		if !ok {
-			remotePrivs = newStringSet([]string{})
+			remotePrivs = permissions.SliceToSet([]catalog.Privilege{})
 		}
-		add := setToStrings(confPrivs.Difference(remotePrivs))
-		remove := setToStrings(remotePrivs.Difference(confPrivs))
+		add := permissions.SetToSlice(confPrivs.Difference(remotePrivs))
+		remove := permissions.SetToSlice(remotePrivs.Difference(confPrivs))
 		if len(add) == 0 && len(remove) == 0 {
 			continue
 		}
-		diff.Changes = append(diff.Changes, permissionsChange{
+		diff = append(diff, catalog.PermissionsChange{
 			Principal: principal,
 			Add:       add,
 			Remove:    remove,
@@ -74,53 +61,32 @@ func (pl PermissionsList) diff(existing PermissionsList) (diff permissionsDiff) 
 		if ok { // already handled in STEP 1
 			continue
 		}
-		diff.Changes = append(diff.Changes, permissionsChange{
+		diff = append(diff, catalog.PermissionsChange{
 			Principal: principal,
-			Remove:    setToStrings(remove),
+			Remove:    permissions.SetToSlice(remove),
 		})
 	}
 	// so that we can deterministic tests
-	sort.Slice(diff.Changes, func(i, j int) bool {
-		return diff.Changes[i].Principal < diff.Changes[j].Principal
+	sort.Slice(diff, func(i, j int) bool {
+		return diff[i].Principal < diff[j].Principal
 	})
 	return diff
 }
 
-func newStringSet(in []string) *schema.Set {
-	var out []any
-	for _, v := range in {
-		out = append(out, v)
-	}
-	return schema.NewSet(schema.HashString, out)
-}
-
-func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
-	return PermissionsAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
-}
-
-func getPermissionEndpoint(securable, name string) string {
-	if securable == "share" {
-		return fmt.Sprintf("/unity-catalog/shares/%s/permissions", name)
-	}
-	return fmt.Sprintf("/unity-catalog/permissions/%s/%s", securable, name)
-}
-
-func (a PermissionsAPI) getPermissions(securable, name string) (list PermissionsList, err error) {
-	err = a.client.Get(a.context, getPermissionEndpoint(securable, name), nil, &list)
-	return
-}
-
-func (a PermissionsAPI) updatePermissions(securable, name string, diff permissionsDiff) error {
-	return a.client.Patch(a.context, getPermissionEndpoint(securable, name), diff)
-}
-
-// replacePermissions merges removal diff of existing permissions on the platform
-func (a PermissionsAPI) replacePermissions(securable, name string, list PermissionsList) error {
-	existing, err := a.getPermissions(securable, name)
+// replaceAllPermissions merges removal diff of existing permissions on the platform
+func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable string, name string, list catalog.PermissionsList) error {
+	securableType := permissions.Mappings.GetSecurableType(securable)
+	existing, err := a.GetPermissions(securableType, name)
 	if err != nil {
 		return err
 	}
-	return a.updatePermissions(securable, name, list.diff(existing))
+	err = a.UpdatePermissions(securableType, name, diffPermissions(list, *existing))
+	if err != nil {
+		return err
+	}
+	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.PermissionsList, desired catalog.PermissionsList) []catalog.PermissionsChange {
+		return diffPermissions(desired, *current)
+	})
 }
 
 type securableMapping map[string]map[string]bool
@@ -174,9 +140,8 @@ var mapping = securableMapping{
 
 		// v1.0
 		"ALL_PRIVILEGES": true,
-	},
-	"view": {
-		"SELECT": true,
+		"APPLY_TAG":      true,
+		"BROWSE":         true,
 	},
 	"catalog": {
 		"CREATE": true,
@@ -184,17 +149,22 @@ var mapping = securableMapping{
 
 		// v1.0
 		"ALL_PRIVILEGES":           true,
+		"APPLY_TAG":                true,
 		"USE_CATALOG":              true,
 		"USE_SCHEMA":               true,
 		"CREATE_SCHEMA":            true,
 		"CREATE_TABLE":             true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"CREATE_MODEL":             true,
 		"CREATE_VOLUME":            true,
+		"READ_VOLUME":              true,
+		"WRITE_VOLUME":             true,
 		"EXECUTE":                  true,
 		"MODIFY":                   true,
 		"SELECT":                   true,
 		"REFRESH":                  true,
+		"BROWSE":                   true,
 	},
 	"schema": {
 		"CREATE": true,
@@ -202,15 +172,20 @@ var mapping = securableMapping{
 
 		// v1.0
 		"ALL_PRIVILEGES":           true,
+		"APPLY_TAG":                true,
 		"USE_SCHEMA":               true,
 		"CREATE_TABLE":             true,
 		"CREATE_FUNCTION":          true,
 		"CREATE_MATERIALIZED_VIEW": true,
+		"CREATE_MODEL":             true,
 		"CREATE_VOLUME":            true,
+		"READ_VOLUME":              true,
+		"WRITE_VOLUME":             true,
 		"EXECUTE":                  true,
 		"MODIFY":                   true,
 		"SELECT":                   true,
 		"REFRESH":                  true,
+		"BROWSE":                   true,
 	},
 	"storage_credential": {
 		"CREATE_TABLE":             true,
@@ -232,30 +207,34 @@ var mapping = securableMapping{
 		"CREATE_EXTERNAL_TABLE":  true,
 		"CREATE_MANAGED_STORAGE": true,
 		"CREATE_EXTERNAL_VOLUME": true,
+		"BROWSE":                 true,
 	},
 	"metastore": {
 		// v1.0
 		"CREATE_CATALOG":            true,
+		"CREATE_CLEAN_ROOM":         true,
 		"CREATE_CONNECTION":         true,
 		"CREATE_EXTERNAL_LOCATION":  true,
 		"CREATE_STORAGE_CREDENTIAL": true,
 		"CREATE_SHARE":              true,
 		"CREATE_RECIPIENT":          true,
 		"CREATE_PROVIDER":           true,
+		"MANAGE_ALLOWLIST":          true,
 		"USE_CONNECTION":            true,
 		"USE_PROVIDER":              true,
 		"USE_SHARE":                 true,
 		"USE_RECIPIENT":             true,
+		"USE_MARKETPLACE_ASSETS":    true,
 		"SET_SHARE_PERMISSION":      true,
 	},
 	"function": {
 		"ALL_PRIVILEGES": true,
 		"EXECUTE":        true,
 	},
-	"materialized_view": {
+	"model": {
 		"ALL_PRIVILEGES": true,
-		"SELECT":         true,
-		"REFRESH":        true,
+		"APPLY_TAG":      true,
+		"EXECUTE":        true,
 	},
 	"share": {
 		"SELECT": true,
@@ -265,16 +244,53 @@ var mapping = securableMapping{
 		"READ_VOLUME":    true,
 		"WRITE_VOLUME":   true,
 	},
+	// avoid reserved field
+	"foreign_connection": {
+		"ALL_PRIVILEGES":         true,
+		"CREATE_FOREIGN_CATALOG": true,
+		"CREATE_FOREIGN_SCHEMA":  true,
+		"CREATE_FOREIGN_TABLE":   true,
+		"USE_CONNECTION":         true,
+	},
 }
 
-func setToStrings(set *schema.Set) (ss []string) {
-	for _, v := range set.List() {
-		ss = append(ss, v.(string))
+func (pl PermissionsList) toSdkPermissionsList() (out catalog.PermissionsList) {
+	for _, v := range pl.Assignments {
+		privileges := []catalog.Privilege{}
+		for _, p := range v.Privileges {
+			privileges = append(privileges, catalog.Privilege(p))
+		}
+		out.PrivilegeAssignments = append(out.PrivilegeAssignments, catalog.PrivilegeAssignment{
+			Principal:  v.Principal,
+			Privileges: privileges,
+		})
 	}
 	return
 }
 
-func ResourceGrants() *schema.Resource {
+func sdkPermissionsListToPermissionsList(sdkPermissionsList catalog.PermissionsList) (out PermissionsList) {
+	for _, v := range sdkPermissionsList.PrivilegeAssignments {
+		privileges := []string{}
+		for _, p := range v.Privileges {
+			privileges = append(privileges, p.String())
+		}
+		out.Assignments = append(out.Assignments, PrivilegeAssignment{
+			Principal:  v.Principal,
+			Privileges: privileges,
+		})
+	}
+	return
+}
+
+func parseId(d *schema.ResourceData) (string, string, error) {
+	split := strings.SplitN(d.Id(), "/", 2)
+	if len(split) != 2 {
+		return "", "", fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
+	}
+	return split[0], split[1], nil
+}
+
+func ResourceGrants() common.Resource {
 	s := common.StructToSchema(PermissionsList{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			alof := []string{}
@@ -303,10 +319,19 @@ func ResourceGrants() *schema.Resource {
 			return mapping.validate(d, grants)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			securable, name := mapping.kv(d)
-			err := NewPermissionsAPI(ctx, c).replacePermissions(securable, name, grants)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
+			err = replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 			if err != nil {
 				return err
 			}
@@ -314,31 +339,53 @@ func ResourceGrants() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			split := strings.SplitN(d.Id(), "/", 2)
-			if len(split) != 2 {
-				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
-			}
-			grants, err := NewPermissionsAPI(ctx, c).getPermissions(split[0], split[1])
+			securable, name, err := parseId(d)
 			if err != nil {
 				return err
 			}
-			if len(grants.Assignments) == 0 {
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
+			grants, err := unityCatalogPermissionsAPI.GetPermissions(permissions.Mappings.GetSecurableType(securable), name)
+			if err != nil {
+				return err
+			}
+			if len(grants.PrivilegeAssignments) == 0 {
 				return apierr.NotFound("got empty permissions list")
 			}
-			return common.StructToData(grants, s, d)
+			return common.StructToData(sdkPermissionsListToPermissionsList(*grants), s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			securable, name := mapping.kv(d)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
+			securable, name, err := parseId(d)
+			if err != nil {
+				return err
+			}
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
-			return NewPermissionsAPI(ctx, c).replacePermissions(securable, name, grants)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
+			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			split := strings.SplitN(d.Id(), "/", 2)
-			if len(split) != 2 {
-				return fmt.Errorf("ID must be two elements split by `/`: %s", d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
 			}
-			return NewPermissionsAPI(ctx, c).replacePermissions(split[0], split[1], PermissionsList{})
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
+			securable, name, err := parseId(d)
+			if err != nil {
+				return err
+			}
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
+			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.PermissionsList{})
 		},
-	}.ToResource()
+	}
 }

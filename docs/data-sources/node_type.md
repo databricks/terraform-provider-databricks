@@ -3,7 +3,7 @@ subcategory: "Compute"
 ---
 # databricks_node_type Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
+-> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
 
 Gets the smallest node type for [databricks_cluster](../resources/cluster.md) that fits search criteria, like amount of RAM or number of cores. [AWS](https://databricks.com/product/aws-pricing/instance-types) or [Azure](https://azure.microsoft.com/en-us/pricing/details/databricks/). Internally data source fetches [node types](https://docs.databricks.com/dev-tools/api/latest/clusters.html#list-node-types) available per cloud, similar to executing `databricks clusters list-node-types`, and filters it to return the smallest possible node with criteria.
 
@@ -46,7 +46,7 @@ Data source allows you to pick groups by the following attributes
 * `min_gpus` - (Optional) Minimum number of GPU's attached to instance. Defaults to *0*.
 * `local_disk` - (Optional) Pick only nodes with local storage. Defaults to *false*.
 * `local_disk_min_size` - (Optional) Pick only nodes that have size local storage greater or equal to given value. Defaults to *0*.
-* `category` - (Optional, case insensitive string) Node category, which can be one of (depending on the cloud environment, could be checked with `databricks clusters list-node-types|jq '.node_types[]|.category'|sort |uniq`):
+* `category` - (Optional, case insensitive string) Node category, which can be one of (depending on the cloud environment, could be checked with `databricks clusters list-node-types -o json|jq '.node_types[]|.category'|sort |uniq`):
   * `General Purpose` (all clouds)
   * `General Purpose (HDD)` (Azure)
   * `Compute Optimized` (all clouds)

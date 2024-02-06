@@ -3,6 +3,7 @@ package scim
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -33,8 +34,12 @@ func (a ServicePrincipalsAPI) Create(rsp User) (sp User, err error) {
 	return sp, err
 }
 
-func (a ServicePrincipalsAPI) Read(servicePrincipalID string) (sp User, err error) {
-	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
+func (a ServicePrincipalsAPI) Read(servicePrincipalID string, attributes string) (sp User, err error) {
+	attrs := ""
+	if attributes != "" {
+		attrs = "?attributes=" + attributes
+	}
+	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v%s", servicePrincipalID, attrs)
 	err = a.client.Scim(a.context, "GET", servicePrincipalPath, nil, &sp)
 	return
 }
@@ -64,7 +69,7 @@ func (a ServicePrincipalsAPI) Patch(servicePrincipalID string, r patchRequest) e
 
 // Update replaces resource-friendly-entity
 func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest User) error {
-	servicePrincipal, err := a.Read(servicePrincipalID)
+	servicePrincipal, err := a.Read(servicePrincipalID, "groups,roles")
 	if err != nil {
 		return err
 	}
@@ -72,6 +77,7 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest Us
 		updateRequest.Schemas = []URN{ServicePrincipalSchema}
 	}
 	updateRequest.Groups = servicePrincipal.Groups
+	updateRequest.Roles = servicePrincipal.Roles
 	return a.client.Scim(a.context, "PUT",
 		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
 		updateRequest, nil)
@@ -89,7 +95,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 }
 
 // ResourceServicePrincipal manages service principals within workspace
-func ResourceServicePrincipal() *schema.Resource {
+func ResourceServicePrincipal() common.Resource {
 	type entity struct {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
 		DisplayName   string `json:"display_name,omitempty" tf:"computed,force_new"`
@@ -126,6 +132,11 @@ func ResourceServicePrincipal() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			}
+			m["acl_principal_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			}
 			return m
 		})
 	spFromData := func(d *schema.ResourceData) User {
@@ -152,12 +163,14 @@ func ResourceServicePrincipal() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			sp, err := NewServicePrincipalsAPI(ctx, c).Read(d.Id())
+			sp, err := NewServicePrincipalsAPI(ctx, c).Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
 			}
+			log.Printf("[DEBUG] read SP '%s': %v", d.Id(), sp)
 			d.Set("home", fmt.Sprintf("/Users/%s", sp.ApplicationID))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", sp.ApplicationID))
+			d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID))
 			err = common.StructToData(sp, servicePrincipalSchema, d)
 			if err != nil {
 				return err
@@ -223,7 +236,7 @@ func ResourceServicePrincipal() *schema.Resource {
 			}
 			return err
 		},
-	}.ToResource()
+	}
 }
 
 func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.ResourceData, spAPI ServicePrincipalsAPI, u User) error {
@@ -239,7 +252,7 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 	if !slices.Contains(knownErrs, err.Error()) {
 		return err
 	}
-	spList, err := spAPI.Filter(fmt.Sprintf("applicationId eq '%s'", strings.ReplaceAll(u.ApplicationID, "'", "")), true)
+	spList, err := spAPI.Filter(fmt.Sprintf(`applicationId eq "%s"`, strings.ReplaceAll(u.ApplicationID, "'", "")), true)
 	if err != nil {
 		return err
 	}

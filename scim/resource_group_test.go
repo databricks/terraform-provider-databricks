@@ -73,6 +73,7 @@ func TestResourceGroupCreate(t *testing.T) {
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, true, d.Get("databricks_sql_access"))
+	assert.Equal(t, "groups/Data Scientists", d.Get("acl_principal_id"))
 }
 
 func TestResourceGroupCreate_Error(t *testing.T) {
@@ -354,14 +355,14 @@ func TestCreateForceOverwriteCannotListGroups(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22abc%22",
 			Status:   417,
 			Response: apierr.APIError{
 				Message: "cannot find group",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceGroup().TestResourceData()
+		d := ResourceGroup().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedGroup(
 			fmt.Errorf("Group with name abc already exists."),
@@ -376,7 +377,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22abc%22",
 			Response: GroupList{
 				Resources: []Group{
 					{
@@ -401,7 +402,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceGroup().TestResourceData()
+		d := ResourceGroup().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("display_name", "abc")
 		err := createForceOverridesManuallyAddedGroup(

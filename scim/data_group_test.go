@@ -18,7 +18,7 @@ func TestDataSourceGroup(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27ds%27",
+				Resource: `/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22ds%22`,
 				Response: GroupList{
 					Resources: []Group{
 						{
@@ -91,6 +91,7 @@ func TestDataSourceGroup(t *testing.T) {
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "eerste", d.Id())
+	assert.Equal(t, d.Get("acl_principal_id"), "groups/ds")
 	assertContains(t, d.Get("instance_profiles"), "a")
 	assertContains(t, d.Get("instance_profiles"), "b")
 	assertContains(t, d.Get("members"), "1112")

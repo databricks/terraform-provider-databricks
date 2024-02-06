@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_provider Resource
 
+-> **Note** This resource could be only used with workspace-level provider!
+
 Within a metastore, Unity Catalog provides the ability to create a provider which contains a list of shares that have been shared with you.
 
 A `databricks_provider` is contained within [databricks_metastore](metastore.md) and can contain a list of shares that have been shared with you.
@@ -36,10 +38,16 @@ The following arguments are required:
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN`.
 * `recipient_profile_str` - (Optional) This is the json file that is created from a recipient url.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of this provider - same as the `name`.
+
 ## Related Resources
 
 The following resources are used in the same context:
 
-* [databricks_table](../data-sources/tables.md) data to list tables within Unity Catalog.
-* [databricks_schema](../data-sources/schemas.md) data to list schemas within Unity Catalog.
-* [databricks_catalog](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.
+* [databricks_tables](../data-sources/tables.md) data to list tables within Unity Catalog.
+* [databricks_schemas](../data-sources/schemas.md) data to list schemas within Unity Catalog.
+* [databricks_catalogs](../data-sources/catalogs.md) data to list catalogs within Unity Catalog.

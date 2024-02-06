@@ -52,10 +52,12 @@ Databricks SQL
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
 * Provide [global configuration for all SQL warehouses](docs/resources/sql_global_config.md)
 
-MLFlow
+Machine Learning
 
-* Create [MLFlow models](resources/mlflow_model.md).
-* Create [MLFlow experiments](resources/mlflow_experiment.md).
+* Create [models in Unity Catalog](resources/registered_model.md).
+* Create [MLflow experiments](resources/mlflow_experiment.md).
+* Create [models in the workspace model registry](resources/mlflow_model.md).
+* Create [model serving endpoints](resources/model_serving.md).
 
 ## Example Usage
 
@@ -82,14 +84,18 @@ resource "databricks_notebook" "this" {
 resource "databricks_job" "this" {
   name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
 
-  new_cluster {
-    num_workers   = 1
-    spark_version = data.databricks_spark_version.latest.id
-    node_type_id  = data.databricks_node_type.smallest.id
-  }
+  task {
+    task_key = "task1"
 
-  notebook_task {
-    notebook_path = databricks_notebook.this.path
+    notebook_task {
+      notebook_path = databricks_notebook.this.path
+    }
+
+    new_cluster {
+      num_workers   = 1
+      spark_version = data.databricks_spark_version.latest.id
+      node_type_id  = data.databricks_node_type.smallest.id
+    }
   }
 }
 
@@ -127,15 +133,17 @@ In case of the problems using Databricks Terraform provider follow the steps out
 
 !> **Warning** Please be aware that hard coding any credentials in plain text is not something that is recommended. We strongly recommend using a Terraform backend that supports encryption. Please use [environment variables](#environment-variables), `~/.databrickscfg` file, encrypted `.tfvars` files or secret store of your choice (Hashicorp [Vault](https://www.vaultproject.io/), AWS [Secrets Manager](https://aws.amazon.com/secrets-manager/), AWS [Param Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), Azure [Key Vault](https://azure.microsoft.com/en-us/services/key-vault/))
 
-There are currently three supported methods to [authenticate](https://docs.databricks.com/dev-tools/api/latest/authentication.html) into the Databricks platform to create resources:
+There are currently a number of supported methods to [authenticate](https://docs.databricks.com/dev-tools/api/latest/authentication.html) into the Databricks platform to create resources:
 
-* [PAT Tokens](https://docs.databricks.com/dev-tools/api/latest/authentication.html)
-* Username and password pair
+* [PAT Tokens](#authenticating-with-hostname-and-token)
+* AWS via [Service Principals](#authenticating-with-service-principal)
+* GCP via [Google Cloud CLI](#special-configurations-for-gcp)
 * Azure Active Directory Tokens via [Azure CLI](#authenticating-with-azure-cli), [Service Principals](#authenticating-with-azure-service-principal), or [Managed Service Identities](#authenticating-with-azure-msi)
+* Username and password pair (legacy)
 
 ### Authenticating with Databricks CLI credentials
 
-No configuration options given to your provider will look up configured credentials in `~/.databrickscfg` file. It is created by the `databricks configure --token` command. Check [this page](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication)
+If no configuration option is given, the provider will look up configured credentials in `~/.databrickscfg` file. It is created by the `databricks configure --token` command. Check [this page](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication)
 for more details. The provider uses config file credentials only when `host`/`token` or `azure_auth` options are not specified.
 It is the recommended way to use Databricks Terraform provider, in case you're already using the same approach with
 [AWS Shared Credentials File](https://www.terraform.io/docs/providers/aws/index.html#shared-credentials-file)
@@ -175,7 +183,7 @@ provider "databricks" {
 
 ### Authenticating with hostname, username, and password
 
-!> **Warning** This approach is currently recommended only for provisioning account-level resources, e.g. AWS workspaces and should be avoided for regular use.
+!> **Warning** This approach is not recommended for regular use. Instead, authenticate with [service principal](#authenticating-with-service-principal)
 
 You can use the `username` + `password` attributes to authenticate the provider for E2 workspace setup. Respective `DATABRICKS_USERNAME` and `DATABRICKS_PASSWORD` environment variables are applicable as well.
 
@@ -201,8 +209,8 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/username/password/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`.
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to
 `DEFAULT`.
-* `account_id` - (optional) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
-* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-credentials`, and `google-id`.
+* `account_id` - (optional) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
+* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `oauth-m2m`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-credentials`, and `google-id`.
 
 ## Special configurations for AWS
 
@@ -253,7 +261,7 @@ resource "databricks_group" "cluster_admin" {
 
 ## Special configurations for Azure
 
-The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios a service principal auth is necessary (and specification of `azure_use_msi`, `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
+The below Azure authentication options are supported at both the account and workspace levels. The provider works with [Azure CLI authentication](https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest) to facilitate local development workflows, though for automated scenarios, managed identity or service principal auth is recommended (and specification of `azure_use_msi`, `azure_client_id`, `azure_client_secret` and `azure_tenant_id` parameters).
 
 ### Authenticating with Azure MSI
 
@@ -343,9 +351,13 @@ The provider works with [Google Cloud CLI authentication](https://cloud.google.c
 
 ## Special configuration for Unity Catalog
 
-Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
+Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
 
-If you are configuring a new Databricks account for the first time, please create at least one workspace and with an identity (user or service principal) that you intend to use for Unity Catalog rollout. You can then configure the provider using that identity and workspace to provision the required Unity Catalog resources.
+If you are configuring a new Databricks account for the first time, please create at least one workspace with an identity (user or service principal) that you intend to use for Unity Catalog rollout. You can then configure the provider using that identity and workspace to provision the required Unity Catalog resources.
+
+## Special considerations for Unity Catalog Resources
+
+When performing a single Terraform apply to update both the owner and other fields for Unity Catalog resources, the process first updates the owner, followed by the other fields using the new owner's permissions. If your principal is not the owner (specifically, the newly updated owner), you will not have the authority to modify those fields. In cases where you wish to change the owner to another individual and also update other fields, we recommend initially updating the fields using your principal, which should have owner permissions, and then updating the owner in a separate step.
 
 ## Miscellaneous configuration parameters
 
@@ -365,6 +377,7 @@ The following configuration attributes can be passed via environment variables:
 
 |                      Argument | Environment variable              |
 | ----------------------------: | --------------------------------- |
+|                   `auth_type` | `DATABRICKS_AUTH_TYPE`            |
 |                        `host` | `DATABRICKS_HOST`                 |
 |                       `token` | `DATABRICKS_TOKEN`                |
 |                    `username` | `DATABRICKS_USERNAME`             |
@@ -372,11 +385,16 @@ The following configuration attributes can be passed via environment variables:
 |                  `account_id` | `DATABRICKS_ACCOUNT_ID`           |
 |                 `config_file` | `DATABRICKS_CONFIG_FILE`          |
 |                     `profile` | `DATABRICKS_CONFIG_PROFILE`       |
+|                   `client_id` | `DATABRICKS_CLIENT_ID`            |
+|               `client_secret` | `DATABRICKS_CLIENT_SECRET`        |
 |         `azure_client_secret` | `ARM_CLIENT_SECRET`               |
 |             `azure_client_id` | `ARM_CLIENT_ID`                   |
 |             `azure_tenant_id` | `ARM_TENANT_ID`                   |
+| `azure_workspace_resource_id` | `DATABRICKS_AZURE_RESOURCE_ID`    |
 |               `azure_use_msi` | `ARM_USE_MSI`                     |
 |           `azure_environment` | `ARM_ENVIRONMENT`                 |
+|          `google_credentials` | `GOOGLE_CREDENTIALS`              |
+|      `google_service_account` | `GOOGLE_SERVICE_ACCOUNT`          |
 |        `debug_truncate_bytes` | `DATABRICKS_DEBUG_TRUNCATE_BYTES` |
 |               `debug_headers` | `DATABRICKS_DEBUG_HEADERS`        |
 |               `rate_limit`    | `DATABRICKS_RATE_LIMIT`           |

@@ -3,42 +3,20 @@ name: build
 on:
   pull_request:
     types: [opened, synchronize]
-  push:
-    branches: [master]
+  merge_group:
+    types: [checks_requested]
 
 jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Unshallow
-        run: git fetch --prune --unshallow
-
-      - name: Set up Go
-        uses: actions/setup-go@v1
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.19.x
-
-      - name: Cache packages
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-            /opt/hostedtoolcache/go
-            vendor
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Set go env
-        run: |
-          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-          go install gotest.tools/gotestsum@latest
-          go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
+          go-version: 1.21.x
 
       - name: Pull external libraries
         run: make vendor
@@ -54,12 +32,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.19.x
+          go-version: 1.21.x
 
           # No need to download cached dependencies when running gofmt.
           cache: false

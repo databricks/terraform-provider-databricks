@@ -4,42 +4,55 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceWarehouse() *schema.Resource {
-	type SQLWarehouseInfo struct {
-		ID                      string          `json:"id"`
-		Name                    string          `json:"name,omitempty" tf:"computed"`
-		ClusterSize             string          `json:"cluster_size,omitempty" tf:"computed"`
-		AutoStopMinutes         int             `json:"auto_stop_mins,omitempty" tf:"computed"`
-		MinNumClusters          int             `json:"min_num_clusters,omitempty" tf:"computed"`
-		MaxNumClusters          int             `json:"max_num_clusters,omitempty" tf:"computed"`
-		NumClusters             int             `json:"num_clusters,omitempty" tf:"computed"`
-		EnablePhoton            bool            `json:"enable_photon,omitempty" tf:"computed"`
-		EnableServerlessCompute bool            `json:"enable_serverless_compute,omitempty" tf:"computed"`
-		InstanceProfileARN      string          `json:"instance_profile_arn,omitempty" tf:"computed"`
-		State                   string          `json:"state,omitempty" tf:"computed"`
-		JdbcURL                 string          `json:"jdbc_url,omitempty" tf:"computed"`
-		OdbcParams              *OdbcParams     `json:"odbc_params,omitempty" tf:"computed"`
-		Tags                    *Tags           `json:"tags,omitempty" tf:"computed"`
-		SpotInstancePolicy      string          `json:"spot_instance_policy,omitempty" tf:"computed"`
-		Channel                 *ReleaseChannel `json:"channel,omitempty" tf:"computed"`
-		DataSourceID            string          `json:"data_source_id,omitempty" tf:"computed"`
-	}
+// Note that these fields are both marked as computed/optional because users can specify either the name or the ID
+// of the warehouse to retrieve.
+type sqlWarehouseDataParams struct {
+	Id   string `json:"id" tf:"computed,optional"`
+	Name string `json:"name" tf:"computed,optional"`
+}
 
-	return common.DataResource(SQLWarehouseInfo{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
-		data := e.(*SQLWarehouseInfo)
-		err := c.Get(ctx, fmt.Sprintf("/sql/warehouses/%s", data.ID), nil, data)
-		if err != nil {
-			return err
+func DataSourceWarehouse() common.Resource {
+	return common.WorkspaceDataWithParams(func(ctx context.Context, data sqlWarehouseDataParams, w *databricks.WorkspaceClient) (*SqlWarehouse, error) {
+		if data.Id == "" && data.Name == "" {
+			return nil, fmt.Errorf("either 'id' or 'name' should be provided")
 		}
-		endpointsAPI := NewSQLEndpointsAPI(ctx, c)
-		data.DataSourceID, err = endpointsAPI.ResolveDataSourceID(data.ID)
+		selected := []sql.DataSource{}
+		dataSources, err := w.DataSources.List(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		return nil
+		for _, source := range dataSources {
+			if data.Name != "" && source.Name == data.Name {
+				selected = append(selected, source)
+			} else if data.Id != "" && source.WarehouseId == data.Id {
+				selected = append(selected, source)
+				break
+			}
+		}
+		if len(selected) == 0 {
+			if data.Name != "" {
+				return nil, fmt.Errorf("can't find SQL warehouse with the name '%s'", data.Name)
+			} else {
+				return nil, fmt.Errorf("can't find SQL warehouse with the ID '%s'", data.Id)
+			}
+		}
+		if len(selected) > 1 {
+			if data.Name != "" {
+				return nil, fmt.Errorf("there are multiple SQL warehouses with the name '%s'", data.Name)
+			} else {
+				return nil, fmt.Errorf("there are multiple SQL warehouses with the ID '%s'", data.Id)
+			}
+		}
+		warehouse, err := getSqlWarehouse(ctx, w, selected[0].WarehouseId)
+		if err != nil {
+			return nil, err
+		}
+		warehouse.DataSourceId = selected[0].Id
+		return warehouse, nil
 	})
 }

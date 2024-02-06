@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type cachedMe struct {
@@ -42,7 +43,7 @@ func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 type DatabricksClient struct {
 	*client.DatabricksClient
 
-	// callback used to create API1.2 call wrapper, which simplifies unit tessting
+	// callback used to create API1.2 call wrapper, which simplifies unit testing
 	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
 	cachedWorkspaceClient *databricks.WorkspaceClient
 	cachedAccountClient   *databricks.AccountClient
@@ -67,6 +68,34 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	return w, nil
 }
 
+// Set the cached workspace client.
+func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedWorkspaceClient = w
+}
+
+// Set the cached account client.
+func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cachedAccountClient = a
+}
+
+func (c *DatabricksClient) setAccountId(accountId string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if accountId == "" {
+		return nil
+	}
+	oldAccountID := c.DatabricksClient.Config.AccountID
+	if oldAccountID != "" && oldAccountID != accountId {
+		return fmt.Errorf("account ID is already set to %s", oldAccountID)
+	}
+	c.DatabricksClient.Config.AccountID = accountId
+	return nil
+}
+
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -81,29 +110,82 @@ func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	return acc, nil
 }
 
+func (c *DatabricksClient) AccountClientWithAccountIdFromConfig(d *schema.ResourceData) (*databricks.AccountClient, error) {
+	accountID, ok := d.GetOk("account_id")
+	if ok {
+		err := c.setAccountId(accountID.(string))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c.AccountClient()
+}
+
+func (c *DatabricksClient) AccountClientWithAccountIdFromPair(d *schema.ResourceData, p *Pair) (*databricks.AccountClient, string, error) {
+	accountID, resourceId, err := p.Unpack(d)
+	if err != nil {
+		return nil, "", err
+	}
+	err = c.setAccountId(accountID)
+	if err != nil {
+		return nil, "", err
+	}
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, "", err
+	}
+	return a, resourceId, nil
+}
+
+func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databricks.AccountClient) error, wsCallback func(*databricks.WorkspaceClient) error) error {
+	if c.Config.IsAccountClient() {
+		a, err := c.AccountClient()
+		if err != nil {
+			return err
+		}
+		return accCallback(a)
+	} else {
+		ws, err := c.WorkspaceClient()
+		if err != nil {
+			return err
+		}
+		return wsCallback(ws)
+	}
+}
+
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodGet, path, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodGet, path, nil, request, response, c.addApiPrefix)
 }
 
 // Post on path
 func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPost, path, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPost, path, nil, request, response, c.addApiPrefix)
 }
 
-// Delete on path
+// Delete on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodDelete, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodDelete, path, nil, request, nil, c.addApiPrefix)
 }
 
-// Patch on path
+// Delete on path. Deserializes the response into the response parameter.
+func (c *DatabricksClient) DeleteWithResponse(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodDelete, path, nil, request, response, c.addApiPrefix)
+}
+
+// Patch on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPatch, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPatch, path, nil, request, nil, c.addApiPrefix)
+}
+
+// Patch on path. Deserializes the response into the response parameter.
+func (c *DatabricksClient) PatchWithResponse(ctx context.Context, path string, request any, response any) error {
+	return c.Do(ctx, http.MethodPatch, path, nil, request, response, c.addApiPrefix)
 }
 
 // Put on path
 func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPut, path, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPut, path, nil, request, nil, c.addApiPrefix)
 }
 
 type ApiVersion string
@@ -129,7 +211,6 @@ func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 
 // scimVisitor is a separate method for the sake of unit tests
 func (c *DatabricksClient) scimVisitor(r *http.Request) error {
-	r.Header.Set("Content-Type", "application/scim+json; charset=utf-8")
 	if c.Config.IsAccountClient() && c.Config.AccountID != "" {
 		// until `/preview` is there for workspace scim,
 		// `/api/2.0` is added by completeUrl visitor
@@ -141,7 +222,9 @@ func (c *DatabricksClient) scimVisitor(r *http.Request) error {
 
 // Scim sets SCIM headers
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
-	return c.Do(ctx, method, path, request, response, c.addApiPrefix, c.scimVisitor)
+	return c.Do(ctx, method, path, map[string]string{
+		"Content-Type": "application/scim+json; charset=utf-8",
+	}, request, response, c.addApiPrefix, c.scimVisitor)
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

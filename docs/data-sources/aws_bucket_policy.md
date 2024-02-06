@@ -3,7 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_aws_bucket_policy Data Source
 
-This datasource configures a simple access policy for AWS S3 buckets, so that Databricks can access data in it. 
+This datasource configures a simple access policy for AWS S3 buckets, so that Databricks can access data in it.
 
 ## Example Usage
 
@@ -28,15 +28,19 @@ Bucket policy with full access:
 
 ```hcl
 resource "aws_s3_bucket" "ds" {
-  bucket = "${var.prefix}-ds"
-  acl    = "private"
-  versioning {
-    enabled = false
-  }
+  bucket        = "${var.prefix}-ds"
+  acl           = "private"
   force_destroy = true
   tags = merge(var.tags, {
     Name = "${var.prefix}-ds"
   })
+}
+
+resource "aws_s3_bucket_versioning" "ds_versioning" {
+  bucket = aws_s3_bucket.ds.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 data "aws_iam_policy_document" "assume_role_for_ec2" {
@@ -74,7 +78,7 @@ resource "aws_s3_bucket_policy" "ds" {
 
 * `bucket` - (Required) AWS S3 Bucket name for which to generate the policy document.
 * `full_access_role` - (Optional) Data access role that can have full access for this bucket
-* `databricks_e2_account_id` - (Optional) Your Databricks E2 account ID. Used to generate  restrictive IAM policies that will increase the security of your root bucket 
+* `databricks_e2_account_id` - (Optional) Your Databricks E2 account ID. Used to generate  restrictive IAM policies that will increase the security of your root bucket
 
 ## Attribute Reference
 

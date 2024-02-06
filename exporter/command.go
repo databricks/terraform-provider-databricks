@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
@@ -20,8 +21,10 @@ var logLevel = levelWriter{"[INFO]", "[ERROR]", "[WARN]"}
 func (lw *levelWriter) Write(p []byte) (n int, err error) {
 	a := string(p)
 	for _, l := range *lw {
-		if strings.Contains(a, l) {
-			return os.Stdout.Write(p)
+		if strings.HasPrefix(a, l) {
+			timeStr := time.Now().Local().Format(time.RFC3339Nano)
+			logStr := a[0:len(l)] + " " + timeStr + ": " + strings.TrimLeft(a[len(l):len(a)-1], " ") + "\n"
+			return os.Stdout.WriteString(logStr)
 		}
 	}
 	return
@@ -76,6 +79,7 @@ func (ic *importContext) interactivePrompts() {
 // Run import according to flags
 func Run(args ...string) error {
 	log.SetOutput(&logLevel)
+	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
 	client, err := client.New(&config.Config{})
 	if err != nil {
 		return err
@@ -94,21 +98,31 @@ func Run(args ...string) error {
 	if err != nil {
 		return err
 	}
-	var skipInteractive bool
+	var skipInteractive, trace, debug bool
 	flags.BoolVar(&skipInteractive, "skip-interactive", false, "Skip interactive mode")
 	flags.BoolVar(&ic.includeUserDomains, "includeUserDomains", false, "Include domain portion in `databricks_user` resource name")
 	flags.BoolVar(&ic.importAllUsers, "importAllUsers", false,
 		"Import all users and service principals, even if they aren't referenced in any resource")
+	flags.BoolVar(&ic.exportDeletedUsersAssets, "exportDeletedUsersAssets", false,
+		"Export assets (notebooks, etc.) of deleted users & service principals")
 	flags.StringVar(&ic.Directory, "directory", cwd,
 		"Directory to generate sources in. Defaults to current directory.")
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
 		"Items with older than activity specified won't be imported.")
-	flags.BoolVar(&ic.debug, "debug", false, "Print extra debug information.")
+	flags.BoolVar(&ic.incremental, "incremental", false, "Incremental export of the data. Requires -updated-since parameter")
+	flags.BoolVar(&ic.noFormat, "noformat", false, "Don't run `terraform fmt` on exported files")
+	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
+		"Include only resources updated since a given timestamp (in ISO8601 format, i.e. 2023-07-01T00:00:00Z)")
+	flags.BoolVar(&debug, "debug", false, "Print extra debug information.")
+	flags.BoolVar(&trace, "trace", false, "Print full debug information.")
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
 		"Generate Databricks provider declaration.")
+	flags.StringVar(&ic.notebooksFormat, "notebooksFormat", "SOURCE",
+		"Format to export notebooks: SOURCE, DBC, JUPYTER. Default: SOURCE")
 	services, listing := ic.allServicesAndListing()
-	flags.StringVar(&ic.services, "services", services,
+	var configuredServices string
+	flags.StringVar(&configuredServices, "services", services,
 		"Comma-separated list of services to import. By default all services are imported.")
 	flags.StringVar(&ic.listing, "listing", listing,
 		"Comma-separated list of services to be listed and further passed on for importing. "+
@@ -133,8 +147,11 @@ func Run(args ...string) error {
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"
 	}
-	if ic.debug {
+	if trace {
+		logLevel = append(logLevel, "[DEBUG]", "[TRACE]")
+	} else if debug {
 		logLevel = append(logLevel, "[DEBUG]")
 	}
+	ic.enableServices(configuredServices)
 	return ic.Run()
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -22,7 +23,7 @@ func TestResourceSqlTableCreateStatement_External(t *testing.T) {
 		Comment:               "terraform managed",
 	}
 	stmt := ti.buildTableCreateStatement()
-	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE main.foo.bar")
+	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
 	assert.Contains(t, stmt, "USING DELTA")
 	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
@@ -44,11 +45,84 @@ func TestResourceSqlTableCreateStatement_View(t *testing.T) {
 		},
 	}
 	stmt := ti.buildTableCreateStatement()
-	assert.Contains(t, stmt, "CREATE VIEW main.foo.bar")
+	assert.Contains(t, stmt, "CREATE VIEW `main`.`foo`.`bar`")
 	assert.NotContains(t, stmt, "USING DELTA")
 	assert.NotContains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH CREDENTIAL somecred")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
 	assert.Contains(t, stmt, "'one'='two'")
+}
+
+func TestResourceSqlTableCreateStatement_ViewWithComments(t *testing.T) {
+	ti := &SqlTableInfo{
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "VIEW",
+		DataSourceFormat:      "DELTA",
+		StorageLocation:       "s3://ext-main/foo/bar1",
+		StorageCredentialName: "somecred",
+		Comment:               "terraform managed",
+		Properties: map[string]string{
+			"one":   "two",
+			"three": "four",
+		},
+		ColumnInfos: []SqlColumnInfo{
+			{
+				Name: "id",
+			},
+			{
+				Name:    "name",
+				Comment: "a comment",
+			},
+		},
+	}
+	stmt := ti.buildTableCreateStatement()
+	assert.Contains(t, stmt, "CREATE VIEW `main`.`foo`.`bar`")
+	assert.Contains(t, stmt, "(id  NOT NULL, name  NOT NULL COMMENT 'a comment')")
+	assert.NotContains(t, stmt, "USING DELTA")
+	assert.NotContains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH CREDENTIAL somecred")
+	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
+	assert.Contains(t, stmt, "'one'='two'")
+}
+
+func TestResourceSqlTableCreateStatement_Partition(t *testing.T) {
+	ti := &SqlTableInfo{
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "EXTERNAL",
+		DataSourceFormat:      "DELTA",
+		StorageLocation:       "s3://ext-main/foo/bar1",
+		StorageCredentialName: "somecred",
+		Comment:               "terraform managed",
+		Partitions:            []string{"baz", "bazz"},
+	}
+	stmt := ti.buildTableCreateStatement()
+	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
+	assert.Contains(t, stmt, "USING DELTA")
+	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
+	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
+	assert.Contains(t, stmt, "PARTITIONED BY (baz, bazz)")
+}
+
+func TestResourceSqlTableCreateStatement_Liquid(t *testing.T) {
+	ti := &SqlTableInfo{
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "EXTERNAL",
+		DataSourceFormat:      "DELTA",
+		StorageLocation:       "s3://ext-main/foo/bar1",
+		StorageCredentialName: "somecred",
+		Comment:               "terraform managed",
+		ClusterKeys:           []string{"baz", "bazz"},
+	}
+	stmt := ti.buildTableCreateStatement()
+	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
+	assert.Contains(t, stmt, "USING DELTA")
+	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
+	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
+	assert.Contains(t, stmt, "CLUSTER BY (baz, bazz)")
 }
 
 func TestResourceSqlTableSerializeProperties(t *testing.T) {
@@ -60,6 +134,17 @@ func TestResourceSqlTableSerializeProperties(t *testing.T) {
 	}
 	assert.Contains(t, ti.serializeProperties(), "'one'='two'")
 	assert.Contains(t, ti.serializeProperties(), "'three'='four'")
+}
+
+func TestResourceSqlTableSerializeOptions(t *testing.T) {
+	ti := &SqlTableInfo{
+		Options: map[string]string{
+			"one":   "two",
+			"three": "four",
+		},
+	}
+	assert.Contains(t, ti.serializeOptions(), "'one'='two'")
+	assert.Contains(t, ti.serializeOptions(), "'three'='four'")
 }
 
 func TestResourceSqlTableCreateTable(t *testing.T) {
@@ -113,6 +198,41 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 		Resource: ResourceSqlTable(),
 	}.Apply(t)
 	assert.NoError(t, err)
+}
+
+func TestResourceSqlTableCreateTable_Error(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "MANAGED"
+		data_source_format = "DELTA"
+		storage_location   = "abfss:container@account/somepath"
+	  
+		column {
+		  name      = "id"
+		  type      = "int"
+		}
+		column {
+		  name      = "name"
+		  type      = "string"
+		  comment   = "name of thing"
+		}
+		comment = "this table is managed by terraform"
+		partitions = ["baz", "bazz"]
+		cluster_keys = ["baz", "bazz"]
+		`,
+		Create:   true,
+		Resource: ResourceSqlTable(),
+	}.Apply(t)
+	assert.EqualError(t, err, "invalid config supplied. [cluster_keys] Conflicting configuration arguments. [partitions] Conflicting configuration arguments")
 }
 
 func TestResourceSqlTableUpdateTable(t *testing.T) {
@@ -213,10 +333,100 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 	assert.Equal(t, "bar", d.Get("name"))
 }
 
+func TestResourceSqlTableUpdateView(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "VIEW"
+		comment 		       = "this view is managed by terraform"
+		cluster_id         = "gone"
+		properties	       = {
+			"one" = "two"
+		}
+		column {
+			name      = "one"
+			comment   = "managed comment"
+			nullable  = false
+		}
+		column {
+			name      = "two"
+		}
+		`,
+		InstanceState: map[string]string{
+			"name":              "bar",
+			"catalog_name":      "main",
+			"schema_name":       "foo",
+			"table_type":        "VIEW",
+			"comment":           "this view is managed by terraform",
+			"column.#":          "2",
+			"column.0.name":     "one",
+			"column.0.type":     "string",
+			"column.0.comment":  "managed comment",
+			"column.0.nullable": "false",
+			"column.1.name":     "two",
+			"column.1.type":     "string",
+		},
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ReuseRequest: true,
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "VIEW",
+					StorageCredentialName: "somecred",
+					Comment:               "this view is managed by terraform",
+					Properties: map[string]string{
+						"delta.lastCommitTimestamp": "87698768",
+						"delta.minWriterVersion":    "1",
+					},
+					ColumnInfos: []SqlColumnInfo{
+						{
+							Name:     "one",
+							Type:     "string",
+							Comment:  "managed comment",
+							Nullable: false,
+						},
+						{
+							Name: "two",
+							Type: "string",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "gone",
+				},
+				Status: 404,
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", d.Get("name"))
+}
+
 func TestResourceSqlTableDeleteTable(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
-			assert.Equal(t, "DROP TABLE main.foo.bar", commandStr)
+			assert.Equal(t, "DROP TABLE `main`.`foo`.`bar`", commandStr)
 			return common.CommandResults{
 				ResultType: "",
 				Data:       nil,
@@ -377,6 +587,76 @@ func TestResourceSqlTableUpdateView_Comments(t *testing.T) {
 	assert.Equal(t, "barview", d.Get("name"))
 }
 
+func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "MANAGED"
+		data_source_format = "DELTA"
+		storage_location   = "abfss://container@account/somepath"
+		warehouse_id       = "existingwarehouse"
+	  
+		column {
+		  name      = "id"
+		  type      = "int"
+		}
+		column {
+		  name      = "name"
+		  type      = "string"
+		  comment   = "name of thing"
+		}
+		comment = "this table is managed by terraform"
+		`,
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/statements/",
+				ExpectedRequest: sql.ExecuteStatementRequest{
+					Statement:     "CREATE TABLE `main`.`foo`.`bar` (id int, name string COMMENT 'name of thing')\nUSING DELTA\nCOMMENT 'this table is managed by terraform'\nLOCATION 'abfss://container@account/somepath';",
+					WaitTimeout:   "50s",
+					WarehouseId:   "existingwarehouse",
+					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+				},
+				Response: sql.ExecuteStatementResponse{
+					StatementId: "statement1",
+					Status: &sql.StatementStatus{
+						State: "SUCCEEDED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					Properties: map[string]string{
+						"one":   "two",
+						"three": "four",
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceSqlTable(),
+	}.Apply(t)
+	assert.NoError(t, err)
+}
+
 var baseClusterFixture = []qa.HTTPFixture{
 	{
 		Method:       "GET",
@@ -484,4 +764,28 @@ var createClusterForSql = append([]qa.HTTPFixture{
 
 func TestResourceSqlTableCornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceSqlTable())
+}
+
+func TestParseComment_empty(t *testing.T) {
+	cmt := ""
+	prsd := parseComment(cmt)
+	assert.Equal(t, "", prsd)
+}
+
+func TestParseComment_noquote(t *testing.T) {
+	cmt := "Comment without single quote"
+	prsd := parseComment(cmt)
+	assert.Equal(t, "Comment without single quote", prsd)
+}
+
+func TestParseComment_escapedquote(t *testing.T) {
+	cmt := `\'Comment with\'escaped quotes\'`
+	prsd := parseComment(cmt)
+	assert.Equal(t, `\'Comment with\'escaped quotes\'`, prsd)
+}
+
+func TestParseComment_unescapedquote(t *testing.T) {
+	cmt := "Comment with' unescaped quotes '"
+	prsd := parseComment(cmt)
+	assert.Equal(t, `Comment with\' unescaped quotes \'`, prsd)
 }

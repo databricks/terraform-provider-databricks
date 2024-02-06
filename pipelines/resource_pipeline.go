@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/marshal"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -57,6 +58,16 @@ type pipelineCluster struct {
 	SSHPublicKeys  []string                         `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
 	InitScripts    []clusters.InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
 	ClusterLogConf *clusters.StorageInfo            `json:"cluster_log_conf,omitempty"`
+
+	ForceSendFields []string `json:"-"`
+}
+
+func (s *pipelineCluster) UnmarshalJSON(b []byte) error {
+	return marshal.Unmarshal(b, s)
+}
+
+func (s pipelineCluster) MarshalJSON() ([]byte, error) {
+	return marshal.Marshal(s)
 }
 
 type NotebookLibrary struct {
@@ -143,6 +154,7 @@ type PipelineInfo struct {
 	Name            string                `json:"name"`
 	Health          *PipelineHealthStatus `json:"health"`
 	CreatorUserName string                `json:"creator_user_name"`
+	LastModified    int64                 `json:"last_modified"`
 }
 
 type PipelineUpdateStateInfo struct {
@@ -178,6 +190,8 @@ func NewPipelinesAPI(ctx context.Context, m any) PipelinesAPI {
 }
 
 func (a PipelinesAPI) Create(s PipelineSpec, timeout time.Duration) (string, error) {
+	adjustForceSendFields(&s)
+
 	var resp createPipelineResponse
 	err := a.client.Post(a.ctx, "/pipelines", s, &resp)
 	if err != nil {
@@ -198,12 +212,27 @@ func (a PipelinesAPI) Create(s PipelineSpec, timeout time.Duration) (string, err
 	return id, nil
 }
 
+func adjustForceSendFields(s *PipelineSpec) {
+	for i := range s.Clusters {
+		cluster := &s.Clusters[i]
+		// TF Go SDK doesn't differentiate between the default and not set values.
+		// If nothing is specified, DLT creates a cluster with enhanced autoscaling
+		// from 1 to 5 nodes, which is different than sending a request for zero workers.
+		// The solution here is to look for the Spark configuration to determine
+		// if the user only wants a single node cluster (only master, no workers).
+		if cluster.SparkConf["spark.databricks.cluster.profile"] == "singleNode" {
+			cluster.ForceSendFields = append(cluster.ForceSendFields, "NumWorkers")
+		}
+	}
+}
+
 func (a PipelinesAPI) Read(id string) (p PipelineInfo, err error) {
 	err = a.client.Get(a.ctx, "/pipelines/"+id, nil, &p)
 	return
 }
 
 func (a PipelinesAPI) Update(id string, s PipelineSpec, timeout time.Duration) error {
+	adjustForceSendFields(&s)
 	err := a.client.Put(a.ctx, "/pipelines/"+id, s)
 	if err != nil {
 		return err
@@ -298,6 +327,8 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
 	common.MustSchemaPath(clustersSchema, "autoscale", "mode").DiffSuppressFunc = common.EqualFoldDiffSuppress
 
+	common.MustSchemaPath(clustersSchema, "init_scripts", "dbfs").Deprecated = clusters.DbfsDeprecationWarning
+
 	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
 	gcpAttributesSchema := gcpAttributes.Schema
 	delete(gcpAttributesSchema, "use_preemptible_executors")
@@ -320,7 +351,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 }
 
 // ResourcePipeline defines the Terraform resource for pipelines.
-func ResourcePipeline() *schema.Resource {
+func ResourcePipeline() common.Resource {
 	var pipelineSchema = common.StructToSchema(PipelineSpec{}, adjustPipelineResourceSchema)
 	return common.Resource{
 		Schema: pipelineSchema,
@@ -358,5 +389,5 @@ func ResourcePipeline() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),
 		},
-	}.ToResource()
+	}
 }

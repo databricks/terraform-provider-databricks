@@ -2,8 +2,11 @@ package exporter
 
 import (
 	"fmt"
+	"os"
+	"sync"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,21 +20,18 @@ func TestMatchesName(t *testing.T) {
 }
 
 func TestImportContextFindSkips(t *testing.T) {
-	_, traversal := (&importContext{
-		State: stateApproximation{
-			Resources: []resourceApproximation{
-				{
-					Type: "a",
-					Instances: []instanceApproximation{
-						{
-							Attributes: map[string]any{
-								"b": nil,
-							},
-						},
-					},
+	state := newStateApproximation([]string{"a"})
+	state.Append(resourceApproximation{
+		Type: "a",
+		Instances: []instanceApproximation{
+			{
+				Attributes: map[string]any{
+					"b": nil,
 				},
 			},
-		},
+		}})
+	_, traversal := (&importContext{
+		State: state,
 	}).Find(&resource{
 		Resource:  "a",
 		Attribute: "b",
@@ -41,22 +41,17 @@ func TestImportContextFindSkips(t *testing.T) {
 }
 
 func TestImportContextHas(t *testing.T) {
-	assert.True(t, (&importContext{
-		State: stateApproximation{
-			Resources: []resourceApproximation{
-				{
-					Type: "a",
-					Instances: []instanceApproximation{
-						{
-							Attributes: map[string]any{
-								"b": "d",
-							},
-						},
-					},
+	state := newStateApproximation([]string{"a"})
+	state.Append(resourceApproximation{
+		Type: "a",
+		Instances: []instanceApproximation{
+			{
+				Attributes: map[string]any{
+					"b": "d",
 				},
 			},
-		},
-	}).Has(&resource{
+		}})
+	assert.True(t, (&importContext{State: state}).Has(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
@@ -65,8 +60,10 @@ func TestImportContextHas(t *testing.T) {
 }
 
 func TestEmitNaResource(t *testing.T) {
+	state := newStateApproximation([]string{"a"})
 	(&importContext{
 		importing: map[string]bool{},
+		State:     state,
 	}).Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
@@ -76,11 +73,13 @@ func TestEmitNaResource(t *testing.T) {
 }
 
 func TestEmitNoImportable(t *testing.T) {
+	state := newStateApproximation([]string{"a"})
 	(&importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
 		},
+		State: state,
 	}).Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
@@ -90,7 +89,9 @@ func TestEmitNoImportable(t *testing.T) {
 }
 
 func TestEmitNoSearchAvail(t *testing.T) {
-	(&importContext{
+	ch := make(resourceChannel)
+	state := newStateApproximation([]string{"a"})
+	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
@@ -100,17 +101,33 @@ func TestEmitNoSearchAvail(t *testing.T) {
 				Service: "e",
 			},
 		},
-		services: "e",
-	}).Emit(&resource{
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+		ignoredResources: map[string]struct{}{},
+		State:            state,
+	}
+	ic.enableServices("e")
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
 		Name:      "c",
 	})
+	ic.waitGroup.Wait()
+	close(ch)
 }
 
 func TestEmitNoSearchFails(t *testing.T) {
-	(&importContext{
+	ch := make(resourceChannel, 10)
+	state := newStateApproximation([]string{"a"})
+	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
@@ -123,17 +140,32 @@ func TestEmitNoSearchFails(t *testing.T) {
 				},
 			},
 		},
-		services: "e",
-	}).Emit(&resource{
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+		State: state,
+	}
+	ic.enableServices("e")
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
 		Name:      "c",
 	})
+	ic.waitGroup.Wait()
+	close(ch)
 }
 
 func TestEmitNoSearchNoId(t *testing.T) {
-	(&importContext{
+	ch := make(resourceChannel, 10)
+	state := newStateApproximation([]string{"a"})
+	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
@@ -146,17 +178,77 @@ func TestEmitNoSearchNoId(t *testing.T) {
 				},
 			},
 		},
-		services: "e",
-	}).Emit(&resource{
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+		ignoredResources: map[string]struct{}{},
+		State:            state,
+	}
+	ic.enableServices("e")
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
 		Name:      "c",
 	})
+	ic.waitGroup.Wait()
+	close(ch)
+}
+
+func TestEmitNoSearchNoIdWithRetry(t *testing.T) {
+	ch := make(resourceChannel, 10)
+	state := newStateApproximation([]string{"a"})
+	i := 0
+	ic := &importContext{
+		importing: map[string]bool{},
+		Resources: map[string]*schema.Resource{
+			"a": {},
+		},
+		Importables: map[string]importable{
+			"a": {
+				Service: "e",
+				Search: func(ic *importContext, r *resource) error {
+					if i > 0 {
+						return nil
+					}
+					i = i + 1
+					return fmt.Errorf("context deadline exceeded (Client.Timeout exceeded while awaiting headers)")
+				},
+			},
+		},
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+		ignoredResources: map[string]struct{}{},
+		State:            state,
+	}
+	ic.enableServices("e")
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
+		Resource:  "a",
+		Attribute: "b",
+		Value:     "d",
+		Name:      "c",
+	})
+	ic.waitGroup.Wait()
+	close(ch)
 }
 
 func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
-	(&importContext{
+	ch := make(resourceChannel, 10)
+	state := newStateApproximation([]string{"a"})
+	ic := &importContext{
 		importing: map[string]bool{},
 		Resources: map[string]*schema.Resource{
 			"a": {},
@@ -173,12 +265,48 @@ func TestEmitNoSearchSucceedsImportFails(t *testing.T) {
 				},
 			},
 		},
-		services: "e",
-	}).Emit(&resource{
+		waitGroup: &sync.WaitGroup{},
+		channels: map[string]resourceChannel{
+			"a": ch,
+		},
+		State: state,
+	}
+	ic.enableServices("e")
+	go func() {
+		for r := range ch {
+			r.ImportResource(ic)
+		}
+	}()
+	ic.Emit(&resource{
 		Data:      &schema.ResourceData{},
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",
 		Name:      "c",
 	})
+	ic.waitGroup.Wait()
+	close(ch)
+}
+
+func TestLoadingLastRun(t *testing.T) {
+	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+	defer os.RemoveAll(tmpDir)
+
+	fname := tmpDir + "1.json"
+	// no file yet
+	s := getLastRunString(fname)
+	assert.Equal(t, "", s)
+
+	_ = os.WriteFile(fname, []byte("{"), 0755)
+	s = getLastRunString(fname)
+	assert.Equal(t, "", s)
+
+	// no required field
+	_ = os.WriteFile(fname, []byte("{}"), 0755)
+	s = getLastRunString(fname)
+	assert.Equal(t, "", s)
+
+	_ = os.WriteFile(fname, []byte(`{"startTime": "2023-07-24T00:00:00Z"}`), 0755)
+	s = getLastRunString(fname)
+	assert.Equal(t, "2023-07-24T00:00:00Z", s)
 }

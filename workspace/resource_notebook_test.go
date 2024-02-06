@@ -1,7 +1,6 @@
 package workspace
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestResourceNotebookRead(t *testing.T) {
@@ -100,7 +98,7 @@ func TestResourceNotebookRead_Error(t *testing.T) {
 	assert.Equal(t, "/test/path", d.Id(), "Id should not be empty for error reads")
 }
 
-func TestResourceNotebookCreate(t *testing.T) {
+func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -149,6 +147,116 @@ func TestResourceNotebookCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "/foo/path.py", d.Id())
+}
+
+func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/foo",
+				},
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: map[string]string{
+					"error_code": "RESOURCE_DOES_NOT_EXIST",
+					"message":    "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
+				Response: ExportPath{
+					Content: "YWJjCg==",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
+				Response: ObjectStatus{
+					ObjectID:   4567,
+					ObjectType: "NOTEBOOK",
+					Path:       "/foo/path.py",
+					Language:   "PYTHON",
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]any{
+			"content_base64": "YWJjCg==",
+			"language":       "PYTHON",
+			"path":           "/foo/path.py",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "/foo/path.py", d.Id())
+}
+
+func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/mkdirs",
+				ExpectedRequest: map[string]string{
+					"path": "/foo",
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: map[string]string{
+					"error_code": "RESOURCE_DOES_NOT_EXIST",
+					"message":    "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]any{
+			"content_base64": "YWJjCg==",
+			"language":       "PYTHON",
+			"path":           "/foo/path.py",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.Error(t, err, "Internal error happened")
 }
 
 func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
@@ -373,220 +481,8 @@ func TestResourceNotebookUpdate_DBC(t *testing.T) {
 
 func TestNotebookLanguageSuppressSourceDiff(t *testing.T) {
 	r := ResourceNotebook()
-	d := r.TestResourceData()
+	d := r.ToResource().TestResourceData()
 	d.Set("source", "this.PY")
 	suppress := r.Schema["language"].DiffSuppressFunc
 	assert.True(t, suppress("language", Python, Python, d))
-}
-
-func TestListDirectories(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   http.MethodGet,
-			Resource: "/api/2.0/workspace/list?path=%2F",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   1,
-						Path:       "/Parent",
-						ObjectType: "DIRECTORY",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2FParent",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   11,
-						ObjectType: Directory,
-						Path:       "/Parent/Kid1",
-					},
-					{
-						ObjectID:   12,
-						ObjectType: Directory,
-						Path:       "/Parent/Kid2",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid1",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   111,
-						ObjectType: Directory,
-						Path:       "/Parent/Kid1/GrandKid1",
-					},
-					{
-						ObjectID:   112,
-						ObjectType: Notebook,
-						Path:       "/Parent/Kid1/GrandKid2",
-						Language:   Python,
-					},
-				},
-			},
-		},
-
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid2",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid1%2FGrandKid1",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{},
-				},
-			},
-		},
-	})
-	defer server.Close()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	notebooksAPI := NewNotebooksAPI(ctx, client)
-
-	directoryList, err := notebooksAPI.ListDirectories("/", true, false)
-	var paths []string
-	for _, directory := range directoryList {
-		paths = append(paths, directory.Path)
-	}
-	assert.NoError(t, err, err)
-	assert.NotNil(t, directoryList)
-	assert.Len(t, directoryList, 4)
-	assert.Contains(t, paths, "/Parent")
-	assert.Contains(t, paths, "/Parent/Kid1")
-	assert.Contains(t, paths, "/Parent/Kid2")
-	assert.Contains(t, paths, "/Parent/Kid1/GrandKid1")
-}
-
-func TestListDirectories_NoneRecursive(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   http.MethodGet,
-			Resource: "/api/2.0/workspace/list?path=%2F",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   1,
-						Path:       "/Parent",
-						ObjectType: "DIRECTORY",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2FParent",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   11,
-						ObjectType: Directory,
-						Path:       "/Parent/Kid1",
-					},
-					{
-						ObjectID:   12,
-						ObjectType: Directory,
-						Path:       "/Parent/Kid2",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid1",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   111,
-						ObjectType: Directory,
-						Path:       "/Parent/Kid1/GrandKid1",
-					},
-					{
-						ObjectID:   112,
-						ObjectType: Notebook,
-						Path:       "/Parent/Kid1/GrandKid2",
-						Language:   Python,
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid2",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2FParent%2FKid1%2FGrandKid1",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{},
-				},
-			},
-		},
-	})
-	defer server.Close()
-	require.NoError(t, err)
-	ctx := context.Background()
-	notebooksAPI := NewNotebooksAPI(ctx, client)
-	directoryList_not_recursive, err := notebooksAPI.ListDirectories("/", false, false)
-	var paths []string
-	for _, directory := range directoryList_not_recursive {
-		paths = append(paths, directory.Path)
-	}
-	assert.NoError(t, err, err)
-	assert.NotNil(t, directoryList_not_recursive)
-	assert.Len(t, directoryList_not_recursive, 1)
-	assert.Contains(t, paths, "/Parent")
-}
-
-func TestListDirectoriesRecursive_Error(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   http.MethodGet,
-			Resource: "/api/2.0/workspace/list?path=%2F",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   1,
-						Path:       "/Parent",
-						ObjectType: "DIRECTORY",
-					},
-				},
-			},
-		},
-		{
-			Method:   http.MethodGet,
-			Resource: "/api/2.0/workspace/list?path=%2FParent",
-			Response: apierr.APIErrorBody{
-				ErrorCode: "Internal Error",
-				Message:   "Internal Error",
-			},
-			Status: 400,
-		},
-	})
-	defer server.Close()
-	require.NoError(t, err)
-	ctx := context.Background()
-	notebooksAPI := NewNotebooksAPI(ctx, client)
-	directoryList, err := notebooksAPI.ListDirectories("/", true, false)
-	assert.Error(t, err, err)
-	assert.Nil(t, directoryList)
 }

@@ -4,12 +4,10 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDataSourceDirectory(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -28,10 +26,11 @@ func TestDataSourceDirectory(t *testing.T) {
 		State: map[string]any{
 			"path": "/a/b/c",
 		},
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "/a/b/c", d.Id())
-	assert.Equal(t, 987, d.Get("object_id").(int))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":             "/a/b/c",
+		"object_id":      987,
+		"workspace_path": "/Workspace/a/b/c",
+	})
 }
 
 func TestDataSourceDirectory_NotDirectory(t *testing.T) {
@@ -68,5 +67,5 @@ func TestDataSourceDirectory_Error(t *testing.T) {
 		State: map[string]any{
 			"path": "/a/b/c",
 		},
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }

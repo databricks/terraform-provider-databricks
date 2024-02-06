@@ -8,7 +8,7 @@ import (
 
 var expectedUserDisablePatchRequest = patchRequest{
 	Operations: []patchOperation{
-		patchOperation{
+		{
 			Op:   "replace",
 			Path: "active",
 			Value: []ComplexValue{

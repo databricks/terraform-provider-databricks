@@ -3,7 +3,7 @@ subcategory: "Compute"
 ---
 # databricks_spark_version Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
+-> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
 
 Gets [Databricks Runtime (DBR)](https://docs.databricks.com/runtime/dbr.html) version that could be used for `spark_version` parameter in [databricks_cluster](../resources/cluster.md) and other resources that fits search criteria, like specific Spark or Scala version, ML or Genomics runtime, etc., similar to executing `databricks clusters spark-versions`, and filters it to return the latest version that matches criteria. Often used along [databricks_node_type](node_type.md) data source.
 
@@ -45,11 +45,11 @@ Data source allows you to pick groups by the following attributes:
 * `ml` - (boolean, optional) if we should limit the search only to ML runtimes. Default to `false`.
 * `genomics` - (boolean, optional)  if we should limit the search only to Genomics (HLS) runtimes. Default to `false`.
 * `gpu` - (boolean, optional)  if we should limit the search only to runtimes that support GPUs. Default to `false`.
-* `photon` - (boolean, optional)  if we should limit the search only to Photon runtimes. Default to `false`.
-* `graviton` - (boolean, optional)  if we should limit the search only to runtimes supporting AWS Graviton CPUs. Default to `false`.
 * `beta` - (boolean, optional) if we should limit the search only to runtimes that are in Beta stage. Default to `false`.
 * `scala` - (string, optional) if we should limit the search only to runtimes that are based on specific Scala version. Default to `2.12`.
 * `spark_version` - (string, optional) if we should limit the search only to runtimes that are based on specific Spark version. Default to empty string.  It could be specified as `3`, or `3.0`, or full version, like, `3.0.1`.
+* `photon` - (boolean, optional)  if we should limit the search only to Photon runtimes. Default to `false`. *Deprecated with DBR 14.0 release. Specify `runtime_engine=\"PHOTON\"` in the cluster configuration instead!*
+* `graviton` - (boolean, optional)  if we should limit the search only to runtimes supporting AWS Graviton CPUs. Default to `false`. *Deprecated with DBR 14.0 release. DBR version compiled for Graviton will be automatically installed when nodes with Graviton CPUs are specified in the cluster configuration.* 
 
 ## Attribute Reference
 

@@ -3,9 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_vpc_endpoint Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
-
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 Enables you to register [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) resources or gcp vpc_endpoint resources with Databricks such that they can be used as part of a [databricks_mws_networks](mws_networks.md) configuration.
 
@@ -111,7 +109,7 @@ resource "databricks_mws_workspaces" "this" {
 
 ### Databricks on GCP usage
 
-Before using this resource, you will need to create the necessary Private Service Connect (PSC) connections on your Google Cloud VPC networks. You can see [Enable Private Service Connect for your workspace](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) for more details. 
+Before using this resource, you will need to create the necessary Private Service Connect (PSC) connections on your Google Cloud VPC networks. You can see [Enable Private Service Connect for your workspace](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) for more details.
 
 Once you have created the necessary PSC connections, you need to register each of them via *this* Terraform resource, which calls out to the Databricks Account API.
 
@@ -198,7 +196,7 @@ In addition to all arguments above, the following attributes are exported:
 * `gcp_vpc_endpoint_info`- (GCP only) a block consists of Google Cloud specific information for this PSC endpoint. It has the following fields exported:
   * `psc_connection_id` - The unique ID of this PSC connection.
   * `service_attachment_id` - The service attachment this PSC connection connects to.
- 
+
 ## Import
 
 -> **Note** Importing this resource is not currently supported.

@@ -3,13 +3,13 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_warehouse Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../index.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
+-> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
 
 Retrieves information about a [databricks_sql_warehouse](../resources/sql_warehouse.md) using its id. This could be retrieved programmatically using [databricks_sql_warehouses](../data-sources/sql_warehouses.md) data source.
 
 ## Example usage
 
-Retrieve attributes of each SQL warehouses in a workspace
+* Retrieve attributes of each SQL warehouses in a workspace:
 
 ```hcl
 data "databricks_sql_warehouses" "all" {
@@ -19,37 +19,51 @@ data "databricks_sql_warehouse" "all" {
   for_each = data.databricks_sql.warehouses.ids
   id       = each.value
 }
+```
 
+* Search for a specific SQL Warehouse by name:
+
+```hcl
+data "databricks_sql_warehouse" "all" {
+  name = "Starter Warehouse"
+}
 ```
 
 ## Argument reference
 
-* `id` - (Required) The ID of the SQL warehouse
+* `id` - (Required, if `name` isn't specified) The ID of the SQL warehouse.
+* `name` - (Required, if `id` isn't specified) Name of the SQL warehouse to search (case-sensitive).
 
 ## Attribute reference
 
 This data source exports the following attributes:
 
-* `name` - Name of the SQL warehouse. Must be unique.
+* `id` - The ID of the SQL warehouse.
+* `name` - Name of the SQL warehouse.
 * `cluster_size` - The size of the clusters allocated to the warehouse: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large".
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops.
-* `tags` - Databricks tags all warehouse resources with these tags.
+* `tags` - tags used for SQL warehouse resources.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`.
-* `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine).
-* `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse. If this value is `true`,  `warehouse_type` must be `PRO`.
+* `enable_photon` - Whether [Photon](https://databricks.com/product/delta-engine) is enabled.
+* `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse.
 
     - **For AWS**:  If your account needs updated [terms of use](https://docs.databricks.com/sql/admin/serverless.html#accept-terms), workspace admins are prompted in the Databricks SQL UI. A workspace must meet the [requirements](https://docs.databricks.com/sql/admin/serverless.html#requirements) and might require an update its instance profile role to [add a trust relationship](https://docs.databricks.com/sql/admin/serverless.html#aws-instance-profile-setup).
 
     - **For Azure**, you must [enable your workspace for serverless SQL warehouse](https://learn.microsoft.com/azure/databricks/sql/admin/serverless).
 
-* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/index.html#warehouse-types) or [Azure](https://learn.microsoft.com/azure/databricks/sql/#warehouse-types). Set to `PRO` or `CLASSIC`.  If the field `enable_serverless_compute` has the value `true`, this needs to be set to `PRO`.
+* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/index.html#warehouse-types) or [Azure](https://learn.microsoft.com/azure/databricks/sql/#warehouse-types).
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
 * `data_source_id` - ID of the data source for this warehouse. This is used to bind an Databricks SQL query to an warehouse.
+* `creator_name` - The username of the user who created the endpoint.
+* `num_active_sessions` - The current number of clusters used by the endpoint.
+* `num_clusters` - The current number of clusters used by the endpoint.
+* `state` - The current state of the endpoint.
+* `health` - Health status of the endpoint.
 
 ## Related resources
 

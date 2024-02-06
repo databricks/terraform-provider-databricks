@@ -7,6 +7,8 @@ Directly manage [Service Principals](https://docs.databricks.com/administration-
 
 -> **Note** To assign account level service principals to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
 
+-> **Note** Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level service principals.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level service principals.
+
 To create service principals in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments
 
 ## Example Usage
@@ -51,11 +53,11 @@ Creating service principal in AWS Databricks account:
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias      = "mws"
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = "00000000-0000-0000-0000-000000000000"
-  username   = var.databricks_account_username
-  password   = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = "00000000-0000-0000-0000-000000000000"
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 resource "databricks_service_principal" "sp" {
@@ -105,8 +107,9 @@ The following arguments are available:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the service principal.
-- `home` - Home folder of the service principal, e.g. `/Users/00000000-0000-0000-0000-000000000000`.
-- `repos` - Personal Repos location of the service principal, e.g. `/Repos/00000000-0000-0000-0000-000000000000`.
+* `home` - Home folder of the service principal, e.g. `/Users/00000000-0000-0000-0000-000000000000`.
+* `repos` - Personal Repos location of the service principal, e.g. `/Repos/00000000-0000-0000-0000-000000000000`.
+* `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `servicePrincipals/00000000-0000-0000-0000-000000000000`.
 
 ## Import
 

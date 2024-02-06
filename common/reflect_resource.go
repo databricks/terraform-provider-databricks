@@ -38,12 +38,53 @@ var kindMap = map[reflect.Kind]string{
 	reflect.UnsafePointer: "UnsafePointer",
 }
 
+// Generic interface for resource provider struct. Using CustomizeSchema and Aliases functions to keep track of additional information
+// on top of the generated go-sdk struct. This is used to replace manually maintained structs with `tf` tags.
+type ResourceProviderStruct[T any] interface {
+	UnderlyingType() T
+	Aliases() map[string]string
+	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
+}
+
+// Takes in a ResourceProviderStruct and converts that into a map from string to schema.
+func ResourceProviderStructToSchema[T any](v ResourceProviderStruct[T]) map[string]*schema.Schema {
+	underlyingType := v.UnderlyingType()
+	rv := reflect.ValueOf(underlyingType)
+	scm := typeToSchema(rv, []string{}, v.Aliases())
+	scm = v.CustomizeSchema(scm)
+	return scm
+}
+
 func reflectKind(k reflect.Kind) string {
 	n, ok := kindMap[k]
 	if !ok {
 		return "other"
 	}
 	return n
+}
+
+func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath []string, aliases map[string]string) string {
+	jsonFieldName := getJsonFieldName(typeField)
+	if jsonFieldName == "-" {
+		return "-"
+	}
+
+	aliasKey := strings.Join(append(fieldNamePath, jsonFieldName), ".")
+
+	if value, ok := aliases[aliasKey]; ok {
+		return value
+	}
+	return jsonFieldName
+}
+
+func getJsonFieldName(typeField reflect.StructField) string {
+	jsonTag := typeField.Tag.Get("json")
+	// fields without JSON tags would be treated as if ignored,
+	// but keeping linters happy
+	if jsonTag == "" {
+		return "-"
+	}
+	return strings.Split(jsonTag, ",")[0]
 }
 
 // SchemaPath helps to navigate
@@ -77,11 +118,42 @@ func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema 
 // StructToSchema makes schema from a struct type & applies customizations from callback given
 func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, rv.Type(), []string{})
+	scm := typeToSchema(rv, []string{}, map[string]string{})
 	if customize != nil {
 		scm = customize(scm)
 	}
 	return scm
+}
+
+// SetSuppressDiff adds diff suppression to a schema. This is necessary for non-computed
+// fields for which the platform returns a value, but the user has not configured any value.
+// For example: the REST API returns `{"tags": {}}` for a resource with no tags.
+func SetSuppressDiff(v *schema.Schema) {
+	v.DiffSuppressFunc = diffSuppressor(v)
+}
+
+// SetDefault sets the default value for a schema.
+func SetDefault(v *schema.Schema, value any) {
+	v.Default = value
+	v.Optional = true
+	v.Required = false
+}
+
+// SetReadOnly sets the schema to be read-only (i.e. computed, non-optional).
+// This should be used for fields that are not user-configurable but are returned
+// by the platform.
+func SetReadOnly(v *schema.Schema) {
+	v.Optional = false
+	v.Required = false
+	v.MaxItems = 0
+	v.Computed = true
+}
+
+// SetRequired sets the schema to be required.
+func SetRequired(v *schema.Schema) {
+	v.Optional = false
+	v.Required = true
+	v.Computed = false
 }
 
 func isOptional(typeField reflect.StructField) bool {
@@ -110,6 +182,7 @@ func handleComputed(typeField reflect.StructField, schema *schema.Schema) {
 	for _, tag := range tfTags {
 		if tag == "computed" {
 			schema.Computed = true
+			schema.Required = false
 			break
 		}
 	}
@@ -139,7 +212,7 @@ func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
 		if tag == "suppress_diff" {
-			v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+			v.DiffSuppressFunc = diffSuppressor(v)
 			break
 		}
 	}
@@ -160,44 +233,68 @@ func chooseFieldName(typeField reflect.StructField) string {
 	if alias != "" {
 		return alias
 	}
-	jsonTag := typeField.Tag.Get("json")
-	// fields without JSON tags would be treated as if ignored,
-	// but keeping linters happy
-	if jsonTag == "" {
-		return "-"
-	}
-	return strings.Split(jsonTag, ",")[0]
+	return getJsonFieldName(typeField)
 }
 
-func diffSuppressor(zero string) func(k, old, new string, d *schema.ResourceData) bool {
+func diffSuppressor(v *schema.Schema) func(k, old, new string, d *schema.ResourceData) bool {
+	zero := fmt.Sprintf("%v", v.Type.Zero())
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		if new == zero && old != zero {
 			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
+			return true
+		}
+		if strings.HasSuffix(k, ".#") && new == "0" && old != "0" {
+			field := strings.TrimSuffix(k, ".#")
+			log.Printf("[DEBUG] Suppressing diff for list or set %v: no value configured but platform returned some value (likely {})", field)
 			return true
 		}
 		return false
 	}
 }
 
-// typeToSchema converts struct into terraform schema. `path` is used for block suppressions
-// special path element `"0"` is used to denote either arrays or sets of elements
-func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*schema.Schema {
+type field struct {
+	sf reflect.StructField
+	v  reflect.Value
+}
+
+func listAllFields(v reflect.Value) []field {
+	t := v.Type()
+	fields := make([]field, 0, v.NumField())
+	for i := 0; i < v.NumField(); i++ {
+		f := t.Field(i)
+		if f.Anonymous {
+			fields = append(fields, listAllFields(v.Field(i))...)
+		} else {
+			fields = append(fields, field{
+				sf: f,
+				v:  v.Field(i),
+			})
+		}
+	}
+	return fields
+}
+
+func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
 		v = v.Elem()
-		t = v.Type()
 		rk = v.Kind()
 	}
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
-	for i := 0; i < v.NumField(); i++ {
-		typeField := t.Field(i)
-
+	fields := listAllFields(v)
+	for _, field := range fields {
+		typeField := field.sf
 		tfTag := typeField.Tag.Get("tf")
 
-		fieldName := chooseFieldName(typeField)
+		var fieldName string
+		if len(aliases) == 0 {
+			fieldName = chooseFieldName(typeField)
+		} else {
+			fieldName = chooseFieldNameWithAliases(typeField, path, aliases)
+		}
 		if fieldName == "-" {
 			continue
 		}
@@ -260,13 +357,12 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			nestedSchema := typeToSchema(sv, append(path, fieldName), aliases)
 			if strings.Contains(tfTag, "suppress_diff") {
-				blockCount := strings.Join(append(path, fieldName, "#"), ".")
-				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
 					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+					v.DiffSuppressFunc = diffSuppressor(v)
 				}
 			}
 			scm[fieldName].Elem = &schema.Resource{
@@ -279,13 +375,12 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, elem, append(path, fieldName, "0"))
+			nestedSchema := typeToSchema(sv, append(path, fieldName), aliases)
 			if strings.Contains(tfTag, "suppress_diff") {
-				blockCount := strings.Join(append(path, fieldName, "#"), ".")
-				scm[fieldName].DiffSuppressFunc = makeEmptyBlockSuppressFunc(blockCount)
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
 					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(fmt.Sprintf("%v", v.Type.Zero()))
+					v.DiffSuppressFunc = diffSuppressor(v)
 				}
 			}
 			scm[fieldName].Elem = &schema.Resource{
@@ -310,7 +405,7 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, elem, append(path, fieldName, "0")),
+					Schema: typeToSchema(sv, append(path, fieldName), aliases),
 				}
 			}
 		default:
@@ -318,6 +413,41 @@ func typeToSchema(v reflect.Value, t reflect.Type, path []string) map[string]*sc
 		}
 	}
 	return scm
+}
+
+func IsRequestEmpty(v any) (bool, error) {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	if rv.Kind() != reflect.Struct {
+		return false, fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rv.Kind()), rv)
+	}
+	var isNotEmpty bool
+	err := iterFields(rv, []string{}, StructToSchema(v, nil), func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+		if isNotEmpty {
+			return nil
+		}
+		if !valueField.IsZero() {
+			isNotEmpty = true
+		}
+		return nil
+	})
+	return !isNotEmpty, err
+}
+
+// isGoSdk returns true if the struct is from databricks-sdk-go or embeds a struct from databricks-sdk-go.
+func isGoSdk(v reflect.Value) bool {
+	if strings.Contains(v.Type().PkgPath(), "databricks-sdk-go") {
+		return true
+	}
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Type().Field(i)
+		if f.Anonymous && isGoSdk(v.Field(i)) {
+			return true
+		}
+	}
+	return false
 }
 
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
@@ -329,9 +459,10 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 	if !rv.IsValid() {
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
 	}
-	isGoSDK := strings.Contains(rv.Type().PkgPath(), "databricks-sdk-go")
-	for i := 0; i < rv.NumField(); i++ {
-		typeField := rv.Type().Field(i)
+	isGoSDK := isGoSdk(rv)
+	fields := listAllFields(rv)
+	for _, field := range fields {
+		typeField := field.sf
 		fieldName := chooseFieldName(typeField)
 		if fieldName == "-" {
 			continue
@@ -349,7 +480,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema,
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
-		valueField := rv.Field(i)
+		valueField := field.v
 		err := cb(fieldSchema, append(path, fieldName), &valueField)
 		if err != nil {
 			return fmt.Errorf("%s: %s", fieldName, err)
@@ -372,13 +503,15 @@ func collectionToMaps(v any, s *schema.Schema) ([]any, error) {
 		return nil, fmt.Errorf("not resource")
 	}
 	var allItems []reflect.Value
-	if s.MaxItems == 1 {
-		allItems = append(allItems, reflect.ValueOf(v))
-	} else {
-		vs := reflect.ValueOf(v)
-		for i := 0; i < vs.Len(); i++ {
-			allItems = append(allItems, vs.Index(i))
+	rv := reflect.ValueOf(v)
+	rvType := rv.Type().Kind()
+	isList := rvType == reflect.Array || rvType == reflect.Slice
+	if isList {
+		for i := 0; i < rv.Len(); i++ {
+			allItems = append(allItems, rv.Index(i))
 		}
+	} else {
+		allItems = append(allItems, rv)
 	}
 	for _, v := range allItems {
 		data := map[string]any{}
@@ -487,6 +620,9 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 // TF SDK - feel free to replace the usages of this interface in a PR.
 type attributeGetter interface {
 	GetOk(key string) (any, bool)
+	// This method should only be used for optional boolean parameters according to the Terraform docs:
+	// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.GetOkExists
+	GetOkExists(key string) (any, bool)
 }
 
 // DiffToStructPointer reads resource diff with given schema onto result pointer. Panics.
@@ -518,8 +654,8 @@ func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, 
 }
 
 // DataToReflectValue reads reflect value from data
-func DataToReflectValue(d *schema.ResourceData, r *schema.Resource, rv reflect.Value) error {
-	return readReflectValueFromData([]string{}, d, rv, r.Schema)
+func DataToReflectValue(d *schema.ResourceData, s map[string]*schema.Schema, rv reflect.Value) error {
+	return readReflectValueFromData([]string{}, d, rv, s)
 }
 
 func readReflectValueFromData(path []string, d attributeGetter,

@@ -18,7 +18,7 @@ type ipAccessListUpdateRequest struct {
 }
 
 // ResourceIPAccessList manages IP access lists
-func ResourceIPAccessList() *schema.Resource {
+func ResourceIPAccessList() common.Resource {
 	s := common.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
@@ -53,7 +53,7 @@ func ResourceIPAccessList() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			common.StructToData(status, s, d)
+			common.StructToData(status.IpAccessList, s, d)
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -73,5 +73,5 @@ func ResourceIPAccessList() *schema.Resource {
 			}
 			return w.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

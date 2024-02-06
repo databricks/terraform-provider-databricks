@@ -10,7 +10,7 @@ import (
 )
 
 // ResourceGroup manages user groups
-func ResourceEntitlements() *schema.Resource {
+func ResourceEntitlements() common.Resource {
 	type entity struct {
 		GroupId string `json:"group_id,omitempty" tf:"force_new"`
 		UserId  string `json:"user_id,omitempty" tf:"force_new"`
@@ -51,7 +51,7 @@ func ResourceEntitlements() *schema.Resource {
 				user.Entitlements.generateEmpty(d)
 				return user.Entitlements.readIntoData(d)
 			case "spn":
-				spn, err := NewServicePrincipalsAPI(ctx, c).Read(split[1])
+				spn, err := NewServicePrincipalsAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
@@ -67,7 +67,7 @@ func ResourceEntitlements() *schema.Resource {
 			return patchEntitlements(ctx, d, c, "remove")
 		},
 		Schema: entitlementSchema,
-	}.ToResource()
+	}
 }
 
 func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, op string) error {

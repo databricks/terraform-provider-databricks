@@ -6,8 +6,13 @@ subcategory: "Unity Catalog"
 -> **Note**
   This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
 
--> **Notes**
+-> **Note**
   Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future. Account-level principal grants can be assigned with any valid workspace as the Unity Catalog is decoupled from specific workspaces. More information in [the official documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html).
+
+Two different resources help you manage your Unity Catalog grants for a securable. Each of these resources serves a different use case:
+
+- [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants): Authoritative. Sets the grants of a securable and replaces any existing grants defined inside or outside of Terraform.
+- [databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant): Authoritative for a given principal. Updates the grants of a securable to a single principal. Other principals within the grants for the securables are preserved.
 
 In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive `ALL_PRIVILEGES` on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
 
@@ -18,31 +23,18 @@ Every `databricks_grants` resource must have exactly one securable identifier an
 - `principal` - User name, group name or service principal application ID.
 - `privileges` - One or more privileges that are specific to a securable type.
 
-The securable objects are:
-
-- `METASTORE`: The top-level container for metadata. Each metastore exposes a three-level namespace (`catalog`.`schema`.`table`) that organizes your data.
-- `CATALOG`: The first layer of the object hierarchy, used to organize your data assets.
-- `SCHEMA`: Also known as databases, schemas are the second layer of the object hierarchy and contain tables, volumes and views.
-- `TABLE`: The lowest level in the object hierarchy, tables can be  _external_ (stored in external locations in your cloud storage of choice) or _managed_ tables (stored in a storage container in your cloud storage that you create expressly for UC).
-- `VIEW`: A read-only object created from one or more tables that is contained within a schema.
-- `VOLUME`: An object contained within a schema that allows accessing, storing, governing, and organizing files. Volumes unlock new processing capabilities for data governed by the Unity Catalog, including support for most machine learning and data science workloads.
-- `EXTERNAL LOCATION`: An object that contains a reference to a storage credential and a cloud storage path that is contained within a metatore.
-- `STORAGE CREDENTIAL`: An object that encapsulates a long-term cloud credential that provides access to cloud storage that is contained within a metatore.
-- `SHARE`: A logical grouping for the tables you intend to share using Delta Sharing. A share is contained within a Unity Catalog metastore.
+For the latest list of privilege types that apply to each securable object in Unity Catalog, please refer to the [official documentation](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/privileges.html#privilege-types-by-securable-object-in-unity-catalog)
 
 Terraform will handle any configuration drift on every `terraform apply` run, even when grants are changed outside of Terraform state.
-
-It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
 Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/sql-ref-privileges.html#privilege-types), all privileges to be written with underscore instead of space, e.g. `CREATE_TABLE` and not `CREATE TABLE`. Below summarizes which privilege types apply to each securable object in the catalog:
 
 ## Metastore grants
 
-You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `SET_SHARE_PERMISSION`, `USE_CONNECTION`, `USE_PROVIDER`, `USE_RECIPIENT` and `USE_SHARE` privileges to [databricks_metastore](metastore.md) id specified in `metastore` attribute.
+You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `CREATE_STORAGE_CREDENTIAL`, `MANAGE_ALLOWLIST`, `SET_SHARE_PERMISSION`, `USE_MARKETPLACE_ASSETS`, `USE_CONNECTION`, `USE_PROVIDER`, `USE_RECIPIENT` and `USE_SHARE` privileges to [databricks_metastore](metastore.md) assigned to the workspace.
 
 ```hcl
 resource "databricks_grants" "sandbox" {
-  metastore = databricks_metastore.this.id
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
@@ -56,13 +48,12 @@ resource "databricks_grants" "sandbox" {
 
 ## Catalog grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_SCHEMA`, `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME`, `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `CREATE_CONNECTION`, `CREATE_SCHEMA`, `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME`, `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }
@@ -87,7 +78,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Schema grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME` and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` at the schema level to apply them to the pertinent current and future securable objects within the schema:
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME` and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` at the schema level to apply them to the pertinent current and future securable objects within the schema:
 
 ```hcl
 resource "databricks_schema" "things" {
@@ -110,7 +101,7 @@ resource "databricks_grants" "things" {
 
 ## Table grants
 
-You can grant `ALL_PRIVILEGES`, `SELECT` and `MODIFY` privileges to [_`catalog.schema.table`_](tables.md) specified in the `table` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `SELECT` and `MODIFY` privileges to [_`catalog.schema.table`_](tables.md) specified in the `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customers" {
@@ -148,7 +139,7 @@ resource "databricks_grants" "things" {
 
 ## View grants
 
-You can grant `ALL_PRIVILEGES` and `SELECT` privileges to [_`catalog.schema.view`_](views.md) specified in `table` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG` and `SELECT` privileges to [_`catalog.schema.view`_](views.md) specified in `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customer360" {
@@ -203,9 +194,46 @@ resource "databricks_grants" "volume" {
 }
 ```
 
+## Registered model grants
+
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, and `EXECUTE` privileges to [_`catalog.schema.model`_](registered_model.md) specified in the `model` attribute.
+
+```hcl
+resource "databricks_grants" "customers" {
+  model = "main.reporting.customer_model"
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["APPLY_TAG", "EXECUTE"]
+  }
+  grant {
+    principal  = "Data Analysts"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
+## Function grants
+
+You can grant `ALL_PRIVILEGES` and `EXECUTE` privileges to _`catalog.schema.function`_ specified in the `function` attribute.
+
+```hcl
+resource "databricks_grants" "udf" {
+  function = "main.reporting.udf"
+
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["EXECUTE"]
+  }
+  grant {
+    principal  = "Data Analysts"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
 ## Storage credential grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -220,12 +248,12 @@ resource "databricks_grants" "external_creds" {
   storage_credential = databricks_storage_credential.external.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE"]
+    privileges = ["CREATE_EXTERNAL_TABLE"]
   }
 }
 ```
 
-## Storage location grants
+## External location grants
 
 You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `CREATE_MANAGED_STORAGE`, `CREATE EXTERNAL VOLUME`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
 
@@ -241,7 +269,48 @@ resource "databricks_grants" "some" {
   external_location = databricks_external_location.some.id
   grant {
     principal  = "Data Engineers"
-    privileges = ["CREATE_TABLE", "READ_FILES"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
+  }
+  grant {
+    principal  = databricks_service_principal.my_sp.application_id
+    privileges = ["USE_SCHEMA", "MODIFY"]
+  }
+  grant {
+    principal  = databricks_group.my_group.display_name
+    privileges = ["USE_SCHEMA", "MODIFY"]
+  }
+  grant {
+    principal  = databricks_group.my_user.user_name
+    privileges = ["USE_SCHEMA", "MODIFY"]
+  }
+}
+```
+
+## Connection grants
+
+You can grant `ALL_PRIVILEGES`, `USE_CONNECTION` and `CREATE_FOREIGN_CATALOG` to [databricks_connection](connection.md) specified in `foreign_connection` attribute:
+
+```hcl
+resource "databricks_connection" "mysql" {
+  name            = "mysql_connection"
+  connection_type = "MYSQL"
+  comment         = "this is a connection to mysql db"
+  options = {
+    host     = "test.mysql.database.azure.com"
+    port     = "3306"
+    user     = "user"
+    password = "password"
+  }
+  properties = {
+    purpose = "testing"
+  }
+}
+
+resource "databricks_grants" "some" {
+  foreign_connection = databricks_connection.mysql.name
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_FOREIGN_CATALOG", "USE_CONNECTION"]
   }
 }
 ```

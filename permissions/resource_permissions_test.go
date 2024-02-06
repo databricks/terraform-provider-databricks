@@ -2,13 +2,11 @@ package permissions
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -23,6 +21,7 @@ import (
 var (
 	TestingUser      = "ben"
 	TestingAdminUser = "admin"
+	TestingOwner     = "testOwner"
 	me               = qa.HTTPFixture{
 		ReuseRequest: true,
 		Method:       "GET",
@@ -468,7 +467,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 			Status: 400,
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourcePermissions()
+		r := ResourcePermissions().ToResource()
 		d := r.TestResourceData()
 		d.SetId("/clusters/abc")
 		diags := r.ReadContext(ctx, d, client)
@@ -869,6 +868,96 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
 }
 
+func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingOwner,
+							PermissionLevel: "IS_OWNER",
+						},
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
+				Response: ObjectACL{
+					ObjectID:   "/sql/dashboards/abc",
+					ObjectType: "dashboard",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+						{
+							UserName:        TestingOwner,
+							PermissionLevel: "IS_OWNER",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"sql_endpoint_id": "abc",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_USE",
+				},
+				map[string]any{
+					"user_name":        TestingOwner,
+					"permission_level": "IS_OWNER",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	accessControlList := ac.List()
+	require.Equal(t, 2, len(accessControlList))
+	foundTestingUser := false
+	foundTestingOwner := false
+
+	for _, entry := range accessControlList {
+		entryMap, ok := entry.(map[string]any)
+		if !ok {
+			t.Fatalf("Expected the entry to be of type map[string]any, got %T", entry)
+		}
+		if userName, exists := entryMap["user_name"].(string); exists {
+			switch userName {
+			case TestingUser:
+				foundTestingUser = true
+				assert.Equal(t, "CAN_USE", entryMap["permission_level"], "Permission level for TestingUser is not CAN_USE")
+			case TestingOwner:
+				foundTestingOwner = true
+				assert.Equal(t, "IS_OWNER", entryMap["permission_level"], "Permission level for TestingOwner is not IS_OWNER")
+			}
+		}
+	}
+	assert.True(t, foundTestingUser)
+	assert.True(t, foundTestingOwner)
+}
+
 func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1089,7 +1178,7 @@ func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_RUN"
 		}`,
-	}.ExpectError(t, "cannot load path /foo/bar: I'm a teapot")
+	}.ExpectError(t, "cannot load path /foo/bar: i'm a teapot")
 }
 
 func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
@@ -1106,7 +1195,7 @@ func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_MANAGE"
 		}`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourcePermissionsUpdate(t *testing.T) {
@@ -1373,11 +1462,10 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 			m = x
 		}
 	}
-	_, err := m.idRetriever(context.Background(), databricks.Must(databricks.NewWorkspaceClient(
-		(*databricks.Config)(config.NewMockConfig(func(r *http.Request) error {
-			return fmt.Errorf("nope")
-		})))), "x")
-	assert.EqualError(t, err, "cannot load path x: nope")
+	w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+	require.NoError(t, err)
+	_, err = m.idRetriever(context.Background(), w, "x")
+	assert.ErrorContains(t, err, "cannot load path x")
 }
 
 func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
@@ -1388,7 +1476,7 @@ func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
 				GroupName: "admins",
 			},
 		},
-	}).ToPermissionsEntity(ResourcePermissions().TestResourceData(), "me")
+	}).ToPermissionsEntity(ResourcePermissions().ToResource().TestResourceData(), "me")
 	assert.EqualError(t, err, "unknown object type bananas")
 }
 
@@ -1409,7 +1497,7 @@ func TestDeleteMissing(t *testing.T) {
 			Response: apierr.NotFound("missing"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		p := ResourcePermissions()
+		p := ResourcePermissions().ToResource()
 		d := p.TestResourceData()
 		d.SetId("x")
 		diags := p.DeleteContext(ctx, d, client)

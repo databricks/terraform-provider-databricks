@@ -27,18 +27,20 @@ func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.Reso
 }
 
 type CatalogInfo struct {
-	Name          string            `json:"name"`
-	Comment       string            `json:"comment,omitempty"`
-	StorageRoot   string            `json:"storage_root,omitempty" tf:"force_new"`
-	ProviderName  string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	ShareName     string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	Properties    map[string]string `json:"properties,omitempty"`
-	Owner         string            `json:"owner,omitempty" tf:"computed"`
-	IsolationMode string            `json:"isolation_mode,omitempty" tf:"computed"`
-	MetastoreID   string            `json:"metastore_id,omitempty" tf:"computed"`
+	Name           string            `json:"name"`
+	Comment        string            `json:"comment,omitempty"`
+	StorageRoot    string            `json:"storage_root,omitempty" tf:"force_new"`
+	ProviderName   string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	ShareName      string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	ConnectionName string            `json:"connection_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	Options        map[string]string `json:"options,omitempty" tf:"force_new"`
+	Properties     map[string]string `json:"properties,omitempty"`
+	Owner          string            `json:"owner,omitempty" tf:"computed"`
+	IsolationMode  string            `json:"isolation_mode,omitempty" tf:"computed"`
+	MetastoreID    string            `json:"metastore_id,omitempty" tf:"computed"`
 }
 
-func ResourceCatalog() *schema.Resource {
+func ResourceCatalog() common.Resource {
 	catalogSchema := common.StructToSchema(CatalogInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["force_destroy"] = &schema.Schema{
@@ -57,14 +59,19 @@ func ResourceCatalog() *schema.Resource {
 				return err
 			}
 
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			var createCatalogRequest catalog.CreateCatalog
 			common.DataToStructPointer(d, catalogSchema, &createCatalogRequest)
 			ci, err := w.Catalogs.Create(ctx, createCatalogRequest)
 			if err != nil {
 				return err
 			}
-			// only remove catalog default schema for non-Delta Sharing catalog
-			if ci.ShareName == "" {
+			// only remove catalog default schema for standard catalog (e.g. non-Delta Sharing, non-foreign)
+			if ci.ShareName == "" && ci.ConnectionName == "" {
 				if err := w.Schemas.DeleteByFullName(ctx, ci.Name+".default"); err != nil {
 					return fmt.Errorf("cannot remove new catalog default schema: %w", err)
 				}
@@ -78,6 +85,7 @@ func ResourceCatalog() *schema.Resource {
 			}
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
+			updateCatalogRequest.Name = d.Id()
 			_, err = w.Catalogs.Update(ctx, updateCatalogRequest)
 			if err != nil {
 				return err
@@ -91,15 +99,17 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = w.WorkspaceBindings.Update(ctx, catalog.UpdateWorkspaceBindings{
-				Name:             ci.Name,
-				AssignWorkspaces: []int64{currentMetastoreAssignment.WorkspaceId},
+			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: ci.Name,
+				SecurableType: "catalog",
+				Add: []catalog.WorkspaceBinding{
+					{
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+						WorkspaceId: currentMetastoreAssignment.WorkspaceId,
+					},
+				},
 			})
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return err
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -118,10 +128,45 @@ func ResourceCatalog() *schema.Resource {
 			if err != nil {
 				return err
 			}
+
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
+			updateCatalogRequest.Name = d.Id()
+
+			if d.HasChange("owner") {
+				_, err = w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+					Name:  updateCatalogRequest.Name,
+					Owner: updateCatalogRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
+			updateCatalogRequest.Owner = ""
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
+
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Catalogs.Update(ctx, catalog.UpdateCatalog{
+						Name:  updateCatalogRequest.Name,
+						Owner: old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
 
@@ -129,13 +174,37 @@ func ResourceCatalog() *schema.Resource {
 			// So if we don't update the field then the requests would be made to old Name which doesn't exists.
 			d.SetId(ci.Name)
 
-			return nil
+			if d.Get("isolation_mode") != "ISOLATED" {
+				return nil
+			}
+			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
+			currentMetastoreAssignment, err := w.Metastores.Current(ctx)
+			if err != nil {
+				return err
+			}
+			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: ci.Name,
+				SecurableType: "catalog",
+				Add: []catalog.WorkspaceBinding{
+					{
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+						WorkspaceId: currentMetastoreAssignment.WorkspaceId,
+					},
+				},
+			})
+			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
+
+			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+
 			force := d.Get("force_destroy").(bool)
 			// If the workspace has isolation mode ISOLATED, we need to add the current workspace to its
 			// bindings before deleting.
@@ -154,5 +223,5 @@ func ResourceCatalog() *schema.Resource {
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
-	}.ToResource()
+	}
 }

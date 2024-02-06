@@ -3,6 +3,7 @@ package workspace
 import (
 	"context"
 	"encoding/base64"
+	"log"
 	"path/filepath"
 
 	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
@@ -12,7 +13,7 @@ import (
 )
 
 // ResourceWorkspaceFile manages files in workspace
-func ResourceWorkspaceFile() *schema.Resource {
+func ResourceWorkspaceFile() common.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"url": {
 			Type:     schema.TypeString,
@@ -21,6 +22,10 @@ func ResourceWorkspaceFile() *schema.Resource {
 		"object_id": {
 			Type:     schema.TypeInt,
 			Optional: true,
+			Computed: true,
+		},
+		"workspace_path": {
+			Type:     schema.TypeString,
 			Computed: true,
 		},
 	})
@@ -37,21 +42,27 @@ func ResourceWorkspaceFile() *schema.Resource {
 				return err
 			}
 			path := d.Get("path").(string)
-			parent := filepath.ToSlash(filepath.Dir(path))
-			if parent != "/" {
-				err = client.Workspace.MkdirsByPath(ctx, parent)
+			importReq := ws_api.Import{
+				Content:         base64.StdEncoding.EncodeToString(content),
+				Format:          ws_api.ImportFormatAuto,
+				Path:            path,
+				Overwrite:       true,
+				ForceSendFields: []string{"Content"},
+			}
+			err = client.Workspace.Import(ctx, importReq)
+			if err != nil {
+				if isParentDoesntExistError(err) {
+					parent := filepath.ToSlash(filepath.Dir(path))
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
+					err = client.Workspace.MkdirsByPath(ctx, parent)
+					if err != nil {
+						return err
+					}
+					err = client.Workspace.Import(ctx, importReq)
+				}
 				if err != nil {
 					return err
 				}
-			}
-			err = client.Workspace.Import(ctx, ws_api.Import{
-				Content:   base64.StdEncoding.EncodeToString(content),
-				Format:    ws_api.ImportFormatAuto,
-				Path:      path,
-				Overwrite: true,
-			})
-			if err != nil {
-				return err
 			}
 			d.SetId(path)
 			return nil
@@ -66,6 +77,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 				return err
 			}
 			d.Set("url", c.FormatURL("#workspace", d.Id()))
+			d.Set("workspace_path", "/Workspace"+objectStatus.Path)
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -78,10 +90,11 @@ func ResourceWorkspaceFile() *schema.Resource {
 				return err
 			}
 			return client.Workspace.Import(ctx, ws_api.Import{
-				Content:   base64.StdEncoding.EncodeToString(content),
-				Format:    ws_api.ImportFormatAuto,
-				Overwrite: true,
-				Path:      d.Id(),
+				Content:         base64.StdEncoding.EncodeToString(content),
+				Format:          ws_api.ImportFormatAuto,
+				Overwrite:       true,
+				Path:            d.Id(),
+				ForceSendFields: []string{"Content"},
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -89,7 +102,7 @@ func ResourceWorkspaceFile() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return client.Workspace.Delete(ctx, ws_api.Delete{Path: d.Id(), Recursive: true})
+			return client.Workspace.Delete(ctx, ws_api.Delete{Path: d.Id(), Recursive: false})
 		},
-	}.ToResource()
+	}
 }

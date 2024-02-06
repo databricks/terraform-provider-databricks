@@ -1,6 +1,11 @@
 {
   "created_at_timestamp": 1606308550000,
-  "definition": "{\"aws_attributes.instance_profile_arn\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"arn:aws:iam::12345:instance-profile/shard-s3-access\"},\"instance_pool_id\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"pool1\"},\"autoscale.max_workers\":{\"defaultValue\":2,\"maxValue\":5,\"type\":\"range\"}}",
+  "definition": "{\"aws_attributes.instance_profile_arn\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"arn:aws:iam::12345:instance-profile/shard-s3-access\"},\"instance_pool_id\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"pool1\"},\"spark_conf.abc\":{\"hidden\":true,\"type\":\"fixed\",\"value\":\"{{secrets/some-kv-scope/secret}}\"},\"autoscale.max_workers\":{\"defaultValue\":2,\"maxValue\":5,\"type\":\"range\"},\"init_scripts.0.workspace.destination\":{\"type\":\"fixed\",\"value\": \"/Workspace/Repos/user@domain.com/repo/test.sh\",\"hidden\": true},\"init_scripts.1.workspace.destination\":{\"type\": \"fixed\",\"value\": \"/Workspace/Users/user@domain.com/repo/test.sh\",\"hidden\": true},\"init_scripts.1.dbfs.destination\":{\"type\": \"fixed\",\"value\": \"dbfs:/FileStore/jars/test.jar\",\"hidden\": true}}",
   "name": "users cluster policy",
-  "policy_id": "123"
+  "policy_id": "123",
+  "libraries":[
+      {"jar":"dbfs:/FileStore/jars/test.jar"},
+      {"whl":"/Workspace/Repos/user@domain.com/repo/test.whl"},
+      {"whl":"/Workspace/Users/user@domain.com/libs/test.whl"}
+  ]
 }

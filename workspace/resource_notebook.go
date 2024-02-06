@@ -3,6 +3,7 @@ package workspace
 import (
 	"context"
 	"encoding/base64"
+	"log"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -41,12 +42,21 @@ var extMap = map[string]notebookLanguageFormat{
 	".dbc":   {"", "DBC", false},
 }
 
+type ModifiedAtInteractive struct {
+	UserID     string `json:"user_id,omitempty"`
+	TimeMillis int64  `json:"time_millis,omitempty"`
+}
+
 // ObjectStatus contains information when doing a get request or list request on the workspace api
 type ObjectStatus struct {
-	ObjectID   int64  `json:"object_id,omitempty" tf:"computed"`
-	ObjectType string `json:"object_type,omitempty" tf:"computed"`
-	Path       string `json:"path"`
-	Language   string `json:"language,omitempty"`
+	ObjectID              int64                  `json:"object_id,omitempty" tf:"computed"`
+	ObjectType            string                 `json:"object_type,omitempty" tf:"computed"`
+	Path                  string                 `json:"path"`
+	Language              string                 `json:"language,omitempty"`
+	CreatedAt             int64                  `json:"created_at,omitempty"`
+	ModifiedAt            int64                  `json:"modified_at,omitempty"`
+	ModifiedAtInteractive *ModifiedAtInteractive `json:"modified_at_interactive,omitempty"`
+	Size                  int64                  `json:"size,omitempty"`
 }
 
 // ExportPath contains the base64 content of the notebook
@@ -88,8 +98,10 @@ var mtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
 func (a NotebooksAPI) Create(r ImportPath) error {
-	mtx.Lock()
-	defer mtx.Unlock()
+	if r.Format == "DBC" {
+		mtx.Lock()
+		defer mtx.Unlock()
+	}
 	return a.client.Post(a.context, "/workspace/import", r, nil)
 }
 
@@ -142,48 +154,18 @@ func (a NotebooksAPI) List(path string, recursive bool, ignoreErrors bool) ([]Ob
 		}
 		return paths, err
 	}
-	return a.list(path)
+	return a.ListInternalImpl(path)
 }
 
 func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
-	notebookInfoList, err := a.list(path)
+	notebookInfoList, err := a.ListInternalImpl(path)
 	if err != nil && !ignoreErrors {
 		return err
 	}
 	for _, v := range notebookInfoList {
-		if v.ObjectType == Notebook || v.ObjectType == File {
-			*pathList = append(*pathList, v)
-		} else if v.ObjectType == Directory {
-			err := a.recursiveAddPaths(v.Path, pathList, ignoreErrors)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (a NotebooksAPI) ListDirectories(path string, recursive bool, ignoreErrors bool) ([]ObjectStatus, error) {
-	if recursive {
-		var paths []ObjectStatus
-		err := a.recursiveAddDirectoryPaths(path, &paths, ignoreErrors)
-		if err != nil {
-			return nil, err
-		}
-		return paths, err
-	}
-	return a.list(path)
-}
-
-func (a NotebooksAPI) recursiveAddDirectoryPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
-	directoryInfoList, err := a.list(path)
-	if err != nil && !ignoreErrors {
-		return err
-	}
-	for _, v := range directoryInfoList {
+		*pathList = append(*pathList, v)
 		if v.ObjectType == Directory {
-			*pathList = append(*pathList, v)
-			err := a.recursiveAddDirectoryPaths(v.Path, pathList, ignoreErrors)
+			err := a.recursiveAddPaths(v.Path, pathList, ignoreErrors)
 			if err != nil {
 				return err
 			}
@@ -196,7 +178,7 @@ type ObjectList struct {
 	Objects []ObjectStatus `json:"objects,omitempty"`
 }
 
-func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
+func (a NotebooksAPI) ListInternalImpl(path string) ([]ObjectStatus, error) {
 	var notebookList ObjectList
 	err := a.client.Get(a.context, "/workspace/list", map[string]string{
 		"path": path,
@@ -206,8 +188,11 @@ func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
 
 // Delete will delete folders given a path and recursive flag
 func (a NotebooksAPI) Delete(path string, recursive bool) error {
-	mtx.Lock()
-	defer mtx.Unlock()
+	if recursive {
+		log.Printf("[DEBUG] Doing recursive delete of path '%s'", path)
+		mtx.Lock()
+		defer mtx.Unlock()
+	}
 	return a.client.Post(a.context, "/workspace/delete", DeletePath{
 		Path:      path,
 		Recursive: recursive,
@@ -215,7 +200,7 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 }
 
 // ResourceNotebook manages notebooks
-func ResourceNotebook() *schema.Resource {
+func ResourceNotebook() common.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"language": {
 			Type:     schema.TypeString,
@@ -272,13 +257,6 @@ func ResourceNotebook() *schema.Resource {
 			}
 			notebooksAPI := NewNotebooksAPI(ctx, c)
 			path := d.Get("path").(string)
-			parent := filepath.ToSlash(filepath.Dir(path))
-			if parent != "/" {
-				err = notebooksAPI.Mkdirs(parent)
-				if err != nil {
-					return err
-				}
-			}
 			createNotebook := ImportPath{
 				Content:   base64.StdEncoding.EncodeToString(content),
 				Language:  d.Get("language").(string),
@@ -298,7 +276,18 @@ func ResourceNotebook() *schema.Resource {
 			}
 			err = notebooksAPI.Create(createNotebook)
 			if err != nil {
-				return err
+				if isParentDoesntExistError(err) {
+					parent := filepath.ToSlash(filepath.Dir(path))
+					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
+					err = notebooksAPI.Mkdirs(parent)
+					if err != nil {
+						return err
+					}
+					err = notebooksAPI.Create(createNotebook)
+				}
+				if err != nil {
+					return err
+				}
 			}
 			d.SetId(path)
 			return nil
@@ -340,7 +329,13 @@ func ResourceNotebook() *schema.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewNotebooksAPI(ctx, c).Delete(d.Id(), true)
+			objType := d.Get("object_type")
+			return NewNotebooksAPI(ctx, c).Delete(d.Id(), !(objType == Notebook || objType == File))
 		},
-	}.ToResource()
+	}
+}
+
+func isParentDoesntExistError(err error) bool {
+	errStr := err.Error()
+	return strings.HasPrefix(errStr, "The parent folder ") && strings.HasSuffix(errStr, " does not exist.")
 }

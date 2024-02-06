@@ -2,7 +2,7 @@
 name: Docs Issue
 about: Use this to suggest enhancements or point out bugs for the documentation website.
 title: "[DOC] Issue Short Description"
-labels: documentation
+labels: docs
 ---
 
 <!-- Hi there,

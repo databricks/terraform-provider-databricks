@@ -11,14 +11,14 @@ func TestPermissionAssignmentCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PUT",
-				Resource: "/api/2.0/preview/accounts/abc/workspaces/123/permissionassignments/principals/345",
+				Resource: "/api/2.0/accounts/abc/workspaces/123/permissionassignments/principals/345",
 				ExpectedRequest: Permissions{
 					Permissions: []string{"USER"},
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/accounts/abc/workspaces/123/permissionassignments",
+				Resource: "/api/2.0/accounts/abc/workspaces/123/permissionassignments",
 				Response: PermissionAssignmentList{
 					PermissionAssignments: []PermissionAssignment{
 						{
@@ -47,7 +47,7 @@ func TestPermissionAssignmentReadNotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/accounts/abc/workspaces/123/permissionassignments",
+				Resource: "/api/2.0/accounts/abc/workspaces/123/permissionassignments",
 				Response: PermissionAssignmentList{
 					PermissionAssignments: []PermissionAssignment{
 						{
@@ -73,7 +73,7 @@ func TestPermissionAssignmentDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
-				Resource: "/api/2.0/preview/accounts/abc/workspaces/123/permissionassignments/principals/456",
+				Resource: "/api/2.0/accounts/abc/workspaces/123/permissionassignments/principals/456",
 			},
 		},
 		Resource:  ResourceMwsPermissionAssignment(),

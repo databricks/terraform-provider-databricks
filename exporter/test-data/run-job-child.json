@@ -1,0 +1,27 @@
+{
+  "created_time":1678702840675,
+  "job_id":932035899730845,
+  "settings": {
+    "format":"MULTI_TASK",
+    "max_concurrent_runs":1,
+    "name":"JarTask",
+    "tasks": [
+      {
+        "existing_cluster_id":"1234",
+        "libraries": [
+          {
+            "jar":"dbfs:/FileStore/jars/tests-0.0.1.jar"
+          }
+        ],
+        "spark_jar_task": {
+          "main_class_name":"tests.JarTask1",
+          "parameters": [
+            "param1",
+            "param2"
+          ]
+        },
+        "task_key":"JarTask"
+      }
+    ]
+  }
+}

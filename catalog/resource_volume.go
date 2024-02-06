@@ -13,22 +13,22 @@ import (
 // We also need to annotate tf:"computed" for the Owner field.
 type VolumeInfo struct {
 	// The name of the catalog where the schema and the volume are
-	CatalogName string `json:"catalog_name"`
+	CatalogName string `json:"catalog_name" tf:"force_new"`
 	// The comment attached to the volume
 	Comment string `json:"comment,omitempty"`
 	// The name of the schema where the volume is
-	SchemaName  string `json:"schema_name"`
+	SchemaName  string `json:"schema_name" tf:"force_new"`
 	FullNameArg string `json:"-" url:"-"`
 	// The name of the volume
 	Name string `json:"name"`
 	// The identifier of the user who owns the volume
 	Owner string `json:"owner,omitempty" tf:"computed"`
 	// The storage location on the cloud
-	StorageLocation string             `json:"storage_location,omitempty"`
-	VolumeType      catalog.VolumeType `json:"volume_type"`
+	StorageLocation string             `json:"storage_location,omitempty" tf:"force_new"`
+	VolumeType      catalog.VolumeType `json:"volume_type" tf:"force_new"`
 }
 
-func ResourceVolume() *schema.Resource {
+func ResourceVolume() common.Resource {
 	s := common.StructToSchema(VolumeInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
@@ -82,10 +82,38 @@ func ResourceVolume() *schema.Resource {
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
 			updateVolumeRequestContent.FullNameArg = d.Id()
+
+			if d.HasChange("owner") {
+				_, err := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+					FullNameArg: updateVolumeRequestContent.FullNameArg,
+					Owner:       updateVolumeRequestContent.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
+			updateVolumeRequestContent.Owner = ""
 			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+						FullNameArg: updateVolumeRequestContent.FullNameArg,
+						Owner:       old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
+
 			// We need to update the resource Id because Name is updatable and FullName consists of Name,
 			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
 			d.SetId(v.FullName)
@@ -98,5 +126,5 @@ func ResourceVolume() *schema.Resource {
 			}
 			return w.Volumes.DeleteByFullNameArg(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

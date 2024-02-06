@@ -3,10 +3,14 @@ package provider
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -71,26 +75,33 @@ func (tt providerFixture) rawConfig() map[string]any {
 	return rawConfig
 }
 
-func (tc providerFixture) apply(t *testing.T) {
+func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
 	c, err := configureProviderAndReturnClient(t, tc)
 	if tc.assertError != "" {
 		require.NotNilf(t, err, "Expected to have %s error", tc.assertError)
 		require.True(t, strings.HasPrefix(err.Error(), tc.assertError),
 			"Expected to have '%s' error, but got '%s'", tc.assertError, err)
-		return
+		return nil
 	}
 	if err != nil {
 		require.NoError(t, err)
-		return
+		return nil
 	}
 	assert.Equal(t, tc.assertAzure, c.IsAzure())
 	assert.Equal(t, tc.assertAuth, c.Config.AuthType)
 	assert.Equal(t, tc.assertHost, c.Config.Host)
+	return c
 }
 
 func TestConfig_NoParams(t *testing.T) {
+	if f, err := os.Stat("~/.databrickscfg"); err == nil && !f.IsDir() {
+		// the provider should fail to configure if no configuration options are available,
+		// either through environment or config file. However, many developers have a
+		// ~/.databrickscfg file, so we skip this test if that file exists.
+		t.Skip("Skipping no-params auth test because ~/.databrickscfg exists")
+	}
 	providerFixture{
-		assertError: "default auth: cannot configure default credentials",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 
@@ -99,7 +110,7 @@ func TestConfig_HostEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_HOST": "x",
 		},
-		assertError: "default auth: cannot configure default credentials",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 
@@ -108,7 +119,7 @@ func TestConfig_TokenEnv(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN": "x",
 		},
-		assertError: "default auth: cannot configure default credentials. Config: token=***. Env: DATABRICKS_TOKEN",
+		assertError: common.NoAuth + ". Config: token=***. Env: DATABRICKS_TOKEN",
 	}.apply(t)
 }
 
@@ -140,8 +151,8 @@ func TestConfig_UserPasswordEnv(t *testing.T) {
 			"DATABRICKS_USERNAME": "x",
 			"DATABRICKS_PASSWORD": "x",
 		},
-		assertError: "default auth: cannot configure default credentials. " +
-			"Config: username=x, password=***. Env: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
+		assertError: common.NoAuth +
+			". Config: username=x, password=***. Env: DATABRICKS_USERNAME, DATABRICKS_PASSWORD",
 		assertHost: "https://x",
 	}.apply(t)
 }
@@ -235,9 +246,9 @@ func TestConfig_ConflictingEnvs_AuthType(t *testing.T) {
 func TestConfig_ConfigFile(t *testing.T) {
 	providerFixture{
 		env: map[string]string{
-			"CONFIG_FILE": "x",
+			"DATABRICKS_CONFIG_FILE": "x",
 		},
-		assertError: "default auth: cannot configure default credentials",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 
@@ -259,8 +270,8 @@ func TestConfig_PatFromDatabricksCfg_NohostProfile(t *testing.T) {
 			"HOME":                      "../common/testdata",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 		},
-		assertError: "default auth: cannot configure default credentials. " +
-			"Config: token=***, profile=nohost. Env: DATABRICKS_CONFIG_PROFILE",
+		assertError: common.NoAuth +
+			". Config: token=***, profile=nohost. Env: DATABRICKS_CONFIG_PROFILE",
 	}.apply(t)
 }
 
@@ -271,8 +282,8 @@ func TestConfig_ConfigProfileAndToken(t *testing.T) {
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 			"HOME":                      "../common/testdata",
 		},
-		assertError: "default auth: cannot configure default credentials. " +
-			"Config: token=***, profile=nohost. Env: DATABRICKS_TOKEN, DATABRICKS_CONFIG_PROFILE",
+		assertError: common.NoAuth +
+			". Config: token=***, profile=nohost. Env: DATABRICKS_TOKEN, DATABRICKS_CONFIG_PROFILE",
 	}.apply(t)
 }
 
@@ -329,7 +340,7 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 			"PATH": "whatever",
 			"HOME": "../common/testdata",
 		},
-		assertError: "default auth: cannot configure default credentials.",
+		assertError: common.NoAuth,
 	}.apply(t)
 }
 
@@ -384,8 +395,61 @@ func TestConfig_CorruptConfig(t *testing.T) {
 		env: map[string]string{
 			"HOME": "../common/testdata/corrupt",
 		},
-		assertError: "default auth: cannot configure default credentials",
+		assertError: common.NoAuth,
 	}.apply(t)
+}
+
+func shortLivedOAuthHandler(w http.ResponseWriter, r *http.Request) {
+	if r.RequestURI == "/oidc/.well-known/oauth-authorization-server" {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"authorization_endpoint": "http://%s/authorize", "token_endpoint": "http://%s/token"}`, r.Host, r.Host)
+		return
+	} else if r.RequestURI == "/token" {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"access_token": "x", "token_type": "Bearer", "expires_in": 3}`)
+		return
+	} else if r.RequestURI == "/api/2.0/clusters/get?cluster_id=123" {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"cluster_id": "123"}`)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+}
+
+// Start a local webserver to serve tokens. Configure the CLI to fetch a token from this endpoint.
+// Then, using a context with a short timeout, call an API. Wait for 2x the timeout, then call
+// the API again with a new context with a short timeout. The second call should succeed without
+// the context being cancelled.
+func TestConfig_OAuthFetchesToken(t *testing.T) {
+	// Create a test server
+	ts := httptest.NewServer(http.HandlerFunc(shortLivedOAuthHandler))
+	defer ts.Close()
+
+	client := providerFixture{
+		env: map[string]string{
+			"DATABRICKS_HOST":          ts.URL,
+			"DATABRICKS_CLIENT_ID":     "x",
+			"DATABRICKS_CLIENT_SECRET": "y",
+		},
+		assertAuth: "oauth-m2m",
+		assertHost: ts.URL,
+	}.apply(t)
+
+	ws, err := client.WorkspaceClient()
+	require.NoError(t, err)
+	bgCtx := context.Background()
+	{
+		ctx, cancel := context.WithCancel(bgCtx)
+		_, err = ws.Clusters.GetByClusterId(ctx, "123")
+		require.NoError(t, err)
+		cancel()
+	}
+	log.Printf("[INFO] sleeping for 5 seconds to allow token to expire")
+	time.Sleep(5 * time.Second)
+	{
+		_, err = ws.Clusters.GetByClusterId(bgCtx, "123")
+		require.NoError(t, err)
+	}
 }
 
 func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
@@ -403,11 +467,13 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
 	client := p.Meta().(*common.DatabricksClient)
-	req, _ := http.NewRequest("GET", client.Config.Host, nil)
-	err := client.Config.Authenticate(req)
+	r, err := http.NewRequest("GET", "", nil)
 	if err != nil {
 		return nil, err
 	}
-
+	err = client.Config.Authenticate(r)
+	if err != nil {
+		return nil, err
+	}
 	return client, nil
 }

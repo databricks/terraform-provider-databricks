@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -33,6 +34,9 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 					NetworkID:                           "fgh",
 					ManagedServicesCustomerManagedKeyID: "def",
 					StorageCustomerManagedKeyID:         "def",
+					CustomTags: map[string]string{
+						"SoldToCode": "1234",
+					},
 				},
 				Response: Workspace{
 					WorkspaceID:    1234,
@@ -56,6 +60,9 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 					ManagedServicesCustomerManagedKeyID: "def",
 					StorageCustomerManagedKeyID:         "def",
 					AccountID:                           "abc",
+					CustomTags: map[string]string{
+						"SoldToCode": "1234",
+					},
 				},
 			},
 		},
@@ -70,6 +77,9 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 			"workspace_name":                           "labdata",
 			"network_id":                               "fgh",
 			"storage_configuration_id":                 "ghi",
+			"custom_tags": map[string]any{
+				"SoldToCode": "1234",
+			},
 		},
 		Create: true,
 	}.Apply(t)
@@ -152,6 +162,87 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":                   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id":                 "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
+					},
+					"workspace_name": "labdata",
+					"custom_tags": map[string]any{
+						"SoldToCode": "1234",
+					},
+				},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_PARAMETER_VALUE",
+					Message:   "custom_tags are only allowed for AWS workspaces",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
+			}
+		}
+		private_access_settings_id = "pas_id_a"
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+			master_ip_range = "e"
+		}
+		custom_tags = {
+			SoldToCode = "1234"
+		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ExpectError(t, "custom_tags are only allowed for AWS workspaces")
+}
+
 func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -223,6 +314,86 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
 			master_ip_range = "e"
 		}
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ApplyNoError(t)
+}
+
+func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":                   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id":                 "net_id_a",
+					"gke_config": map[string]any{
+						"master_ip_range":   "e",
+						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
+					},
+					"gcp_managed_network_config": map[string]any{
+						"gke_cluster_pod_ip_range":     "b",
+						"gke_cluster_service_ip_range": "c",
+						"subnet_cidr":                  "a",
+					},
+					"workspace_name": "labdata",
+					"managed_services_customer_managed_key_id": "managed_services_cmk",
+					"storage_customer_managed_key_id":          "storage_cmk",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
+			}
+		}
+		private_access_settings_id = "pas_id_a"
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+			gke_cluster_pod_ip_range = "b"
+			gke_cluster_service_ip_range = "c"
+		}
+		gke_config {
+			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+			master_ip_range = "e"
+		}
+		managed_services_customer_managed_key_id = "managed_services_cmk"
+		storage_customer_managed_key_id = "storage_cmk"
 		`,
 		Gcp:    true,
 		Create: true,
@@ -961,7 +1132,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}, func(ctx context.Context, wsClient *common.DatabricksClient) {
@@ -989,7 +1160,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 	})
 }
 
-func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+func updateWorkspaceScimFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
 	accountsAPI := []qa.HTTPFixture{
 		{
 			Method:       "GET",
@@ -997,16 +1168,16 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 			Resource:     "/api/2.0/accounts/c/workspaces/0",
 		},
 	}
-	tokensAPI := []qa.HTTPFixture{
+	scimAPI := []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}
-	tokensAPI = append(tokensAPI, fixtures...)
+	scimAPI = append(scimAPI, fixtures...)
 	// outer HTTP server is used for inner request for "just created" workspace
-	qa.HTTPFixturesApply(t, tokensAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[0].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
@@ -1031,7 +1202,7 @@ func updateWorkspaceTokenFixture(t *testing.T, fixtures []qa.HTTPFixture, state 
 	})
 }
 
-func updateWorkspaceTokenFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
 	accountsAPI := []qa.HTTPFixture{
 		{
 			Method:   "PATCH",
@@ -1043,16 +1214,16 @@ func updateWorkspaceTokenFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixtur
 			Resource:     "/api/2.0/accounts/c/workspaces/0",
 		},
 	}
-	tokensAPI := []qa.HTTPFixture{
+	scimAPI := []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/token/list",
+			Resource: "/api/2.0/preview/scim/v2/Me",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}
-	tokensAPI = append(tokensAPI, fixtures...)
+	scimAPI = append(scimAPI, fixtures...)
 	// outer HTTP server is used for inner request for "just created" workspace
-	qa.HTTPFixturesApply(t, tokensAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
 		// a bit hacky, but the whole thing is more readable
 		accountsAPI[1].Response = Workspace{
 			WorkspaceStatus: "RUNNING",
@@ -1078,7 +1249,7 @@ func updateWorkspaceTokenFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixtur
 }
 
 func TestUpdateWorkspace_AddToken(t *testing.T) {
-	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/create",
@@ -1099,7 +1270,7 @@ func TestUpdateWorkspace_AddToken(t *testing.T) {
 }
 
 func TestUpdateWorkspace_AddTokenAndChangeNetworkId(t *testing.T) {
-	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/create",
@@ -1124,7 +1295,7 @@ func TestUpdateWorkspace_AddTokenAndChangeNetworkId(t *testing.T) {
 }
 
 func TestUpdateWorkspace_DeleteTokenAndChangeNetworkId(t *testing.T) {
-	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
@@ -1146,7 +1317,7 @@ func TestUpdateWorkspace_DeleteTokenAndChangeNetworkId(t *testing.T) {
 }
 
 func TestUpdateWorkspace_DeleteToken(t *testing.T) {
-	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
@@ -1164,7 +1335,7 @@ func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 }
 
 func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
-	updateWorkspaceTokenFixtureWithPatch(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
@@ -1202,7 +1373,7 @@ func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
 }
 
 func TestUpdateWorkspace_ReplaceToken(t *testing.T) {
-	updateWorkspaceTokenFixture(t, []qa.HTTPFixture{
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/token/delete",
@@ -1258,7 +1429,7 @@ func TestEnsureTokenExists(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
@@ -1288,7 +1459,7 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
@@ -1309,7 +1480,7 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 		t.Fatal(err)
 	}
 	r := ResourceMwsWorkspaces()
-	d := r.TestResourceData()
+	d := r.ToResource().TestResourceData()
 	d.Set("workspace_url", client.Config.Host)
 	d.Set("token", []any{
 		map[string]any{
@@ -1323,7 +1494,8 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 		DatabricksClient: client,
 	})
 
-	noAuth := "cannot authenticate parent client: default auth: cannot configure default credentials"
+	noAuth := "cannot authenticate parent client: " + common.NoAuth
+
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
 	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")
@@ -1338,13 +1510,13 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			Response: apierr.APIError{
 				ErrorCode:  "NONSENSE",
 				StatusCode: 418,
-				Message:    "I'm a teapot",
+				Message:    "i'm a teapot",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		wsApi := NewWorkspacesAPI(context.Background(), client)
 		r := ResourceMwsWorkspaces()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("workspace_url", client.Config.Host)
 		d.Set("token", []any{
 			map[string]any{
@@ -1354,9 +1526,9 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 			},
 		})
 		for msg, err := range map[string]error{
-			"cannot create token: I'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
-			"cannot read token: I'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
-			"cannot remove token: I'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
+			"cannot create token: i'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
+			"cannot read token: i'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
+			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
 		} {
 			assert.EqualError(t, err, msg)
 		}
@@ -1577,4 +1749,19 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 		Gcp:    true,
 		Create: true,
 	}.ApplyNoError(t)
+}
+
+func TestSensitiveDataInLogs(t *testing.T) {
+	tk := Token{
+		Comment:         "comment",
+		LifetimeSeconds: 123,
+		TokenID:         "tokenID",
+		TokenValue:      "sensitive",
+	}
+	assert.Contains(t, fmt.Sprintf("%v", tk), "comment")
+	assert.Contains(t, fmt.Sprintf("%#v", tk), "comment")
+	assert.Contains(t, fmt.Sprintf("%+v", tk), "comment")
+	assert.NotContains(t, fmt.Sprintf("%v", tk), "sensitive")
+	assert.NotContains(t, fmt.Sprintf("%#v", tk), "sensitive")
+	assert.NotContains(t, fmt.Sprintf("%+v", tk), "sensitive")
 }

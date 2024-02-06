@@ -7,6 +7,8 @@ This resource allows you to manage [users in Databricks Workspace](https://docs.
 
 -> **Note** To assign account level users to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
 
+-> **Note** Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level users.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level users.
+
 To create users in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments
 
 ## Example Usage
@@ -47,14 +49,15 @@ resource "databricks_user" "me" {
 ```
 
 Creating user in AWS Databricks account:
+
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias      = "mws"
-  host       = "https://accounts.cloud.databricks.com"
-  account_id = "00000000-0000-0000-0000-000000000000"
-  username   = var.databricks_account_username
-  password   = var.databricks_account_password
+  alias         = "mws"
+  host          = "https://accounts.cloud.databricks.com"
+  account_id    = "00000000-0000-0000-0000-000000000000"
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 resource "databricks_user" "account_user" {
@@ -65,6 +68,7 @@ resource "databricks_user" "account_user" {
 ```
 
 Creating user in Azure Databricks account:
+
 ```hcl
 // initialize provider at Azure account-level
 provider "databricks" {
@@ -85,7 +89,7 @@ resource "databricks_user" "account_user" {
 
 The following arguments are available:
 
-* `user_name` - (Required) This is the username of the given user and will be their form of access and identity.
+* `user_name` - (Required) This is the username of the given user and will be their form of access and identity.  Provided username will be converted to lower case if it contains upper case characters.
 * `display_name` - (Optional) This is an alias for the username that can be the full name of the user.
 * `external_id` - (Optional) ID of the user in an external identity provider.
 * `allow_cluster_create` -  (Optional) Allow the user to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy.
@@ -102,15 +106,16 @@ The following arguments are available:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Canonical unique identifier for the user.
-- `home` - Home folder of the user, e.g. `/Users/mr.foo@example.com`.
-- `repos` - Personal Repos location of the user, e.g. `/Repos/mr.foo@example.com`.
+* `home` - Home folder of the user, e.g. `/Users/mr.foo@example.com`.
+* `repos` - Personal Repos location of the user, e.g. `/Repos/mr.foo@example.com`.
+* `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `users/mr.foo@example.com`.
 
 ## Import
 
 The resource scim user can be imported using id:
 
 ```bash
-$ terraform import databricks_user.me <user-id>
+terraform import databricks_user.me <user-id>
 ```
 
 ## Related Resources

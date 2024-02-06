@@ -3,9 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_workspaces resource
 
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
-
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
 
 ```hcl
 provider "databricks" {
@@ -95,7 +93,7 @@ By default, Databricks creates a VPC in your AWS account for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 resource "random_string" "naming" {
@@ -135,13 +133,17 @@ resource "databricks_mws_credentials" "this" {
 }
 
 resource "aws_s3_bucket" "root_storage_bucket" {
-  bucket = "${local.prefix}-rootbucket"
-  acl    = "private"
-  versioning {
-    enabled = false
-  }
+  bucket        = "${local.prefix}-rootbucket"
+  acl           = "private"
   force_destroy = true
   tags          = var.tags
+}
+
+resource "aws_s3_bucket_versioning" "root_versioning" {
+  bucket = aws_s3_bucket.root_storage_bucket.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "root_storage_bucket" {
@@ -190,6 +192,13 @@ resource "databricks_mws_workspaces" "this" {
   storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 
   token {}
+
+  # Optional Custom Tags
+  custom_tags = {
+
+    "SoldToCode" = "1234"
+
+  }
 }
 
 output "databricks_token" {
@@ -208,7 +217,7 @@ To get workspace running, you have to configure a network object:
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 variable "databricks_google_service_account" {}
 variable "google_project" {}
@@ -269,7 +278,7 @@ By default, Databricks creates a VPC in your GCP project for each workspace. Dat
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 data "google_client_openid_userinfo" "me" {
@@ -310,13 +319,14 @@ output "databricks_token" {
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `account_id` - Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
 * `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).
 * `aws_region` - (AWS only) region of VPC.
 * `storage_configuration_id` - (AWS only)`storage_configuration_id` from [storage configuration](mws_storage_configurations.md).
-* `managed_services_customer_managed_key_id` - (Optional, AWS only) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
+* `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
+* `storage_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster Volumes.
 * `location` - (GCP only) region of the subnet.
 * `cloud_resource_container` - (GCP only) A block that specifies GCP workspace configurations, consisting of following blocks:
   * `gcp` - A block that consists of the following field:
@@ -325,8 +335,9 @@ The following arguments are available:
   * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`.
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
+* `custom_tags` - (Optional / AWS only) - The custom tags key-value pairing that is attached to this workspace. These tags will be applied to clusters automatically in addition to any `default_tags` or `custom_tags` on a cluster level. Please note it can take up to an hour for custom_tags to be set due to scheduling on Control Plane. After custom tags are applied, they can be modified however they can never be completely removed.
 
-## token block
+### token block
 
 You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
 
@@ -335,12 +346,15 @@ You can specify a `token` block in the body of the workspace resource, so that T
 * `comment` - (Optional) Comment, that will appear in "User Settings / Access Tokens" page on Workspace UI. By default it's "Terraform PAT".
 * `lifetime_seconds` - (Optional) Token expiry lifetime. By default its 2592000 (30 days).
 
+### Updating workspaces
+
 On AWS, the following arguments could be modified after the workspace is running:
 
-* `network_id` - (Optional, AWS only) `network_id` from [networks](mws_networks.md). Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
-* `credentials_id` - (AWS only) `credentials_id` from [credentials](mws_credentials.md)
-* `storage_customer_managed_key_id` - (Optional, AWS only) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster EBS Volumes.
-* `private_access_settings_id` - (Optional, AWS only) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account
+* `network_id` - Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
+* `credentials_id`
+* `storage_customer_managed_key_id`
+* `private_access_settings_id`
+* `custom_tags`
 
 ## Attribute Reference
 
@@ -352,10 +366,7 @@ In addition to all arguments above, the following attributes are exported:
 * `workspace_status` - (String) workspace status
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
-
-## Import
-
--> **Note** Importing this resource is not currently supported.
+* `custom_tags` - (Map) Custom Tags (if present) added to workspace
 
 ## Timeouts
 
@@ -376,6 +387,10 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 * Mac OS X Yosemite - `sudo discoveryutil udnsflushcaches`
 * Mac OS X Snow Leopard - `sudo dscacheutil -flushcache`
 * Mac OS X Leopard and below - `sudo lookupd -flushcache`
+
+## Import
+
+-> **Note** Importing this resource is not currently supported.
 
 ## Related Resources
 

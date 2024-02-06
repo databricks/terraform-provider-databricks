@@ -18,8 +18,12 @@ func userExistsErrorMessage(userName string, isAccount bool) string {
 	}
 }
 
+const (
+	userAttributes = "userName,displayName,active,externalId,entitlements"
+)
+
 // ResourceUser manages users within workspace
-func ResourceUser() *schema.Resource {
+func ResourceUser() common.Resource {
 	type entity struct {
 		UserName    string `json:"user_name" tf:"force_new"`
 		DisplayName string `json:"display_name,omitempty" tf:"computed"`
@@ -29,6 +33,7 @@ func ResourceUser() *schema.Resource {
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(&m)
+			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -54,6 +59,11 @@ func ResourceUser() *schema.Resource {
 			}
 			m["disable_as_user_deletion"] = &schema.Schema{
 				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			}
+			m["acl_principal_id"] = &schema.Schema{
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			}
@@ -86,7 +96,7 @@ func ResourceUser() *schema.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(ctx, c).Read(d.Id(), "userName,displayName,active,externalId,entitlements")
+			user, err := NewUsersAPI(ctx, c).Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
 			}
@@ -96,6 +106,7 @@ func ResourceUser() *schema.Resource {
 			d.Set("external_id", user.ExternalID)
 			d.Set("home", fmt.Sprintf("/Users/%s", user.UserName))
 			d.Set("repos", fmt.Sprintf("/Repos/%s", user.UserName))
+			d.Set("acl_principal_id", fmt.Sprintf("users/%s", user.UserName))
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -103,7 +114,7 @@ func ResourceUser() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return NewUsersAPI(ctx, c).Update(d.Id(), "userName,displayName,active,externalId,entitlements", u)
+			return NewUsersAPI(ctx, c).Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			user := NewUsersAPI(ctx, c)
@@ -151,7 +162,7 @@ func ResourceUser() *schema.Resource {
 			}
 			return err
 		},
-	}.ToResource()
+	}
 }
 
 func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, usersAPI UsersAPI, u User) error {
@@ -161,10 +172,11 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	if (err.Error() != userExistsErrorMessage(userName, false)) && (err.Error() != userExistsErrorMessage(userName, true)) {
+	if (!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, false))) &&
+		(!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, true))) {
 		return err
 	}
-	userList, err := usersAPI.Filter(fmt.Sprintf("userName eq '%s'", userName), true)
+	userList, err := usersAPI.Filter(fmt.Sprintf(`userName eq "%s"`, userName), true)
 	if err != nil {
 		return err
 	}
@@ -173,5 +185,5 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	user := userList[0]
 	d.SetId(user.ID)
-	return usersAPI.Update(d.Id(), "userName,displayName,active,externalId,entitlements", u)
+	return usersAPI.Update(d.Id(), u)
 }

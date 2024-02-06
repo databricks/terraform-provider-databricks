@@ -16,7 +16,7 @@ func TestDataSourceUser(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27ds%27",
+				Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22ds%22",
 				Response: UserList{
 					Resources: []User{
 						{
@@ -39,6 +39,7 @@ func TestDataSourceUser(t *testing.T) {
 	assert.Equal(t, "123", d.Id())
 	assert.Equal(t, d.Get("user_name"), "mr.test@example.com")
 	assert.Equal(t, d.Get("home"), "/Users/mr.test@example.com")
+	assert.Equal(t, d.Get("acl_principal_id"), "users/mr.test@example.com")
 	assert.Equal(t, d.Get("alphanumeric"), "mr_test")
 }
 
@@ -53,7 +54,7 @@ func TestDataSourceUserGerUser(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27searching_error%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22searching_error%22",
 			Status:   404,
 			Response: apierr.APIError{
 				Message: "searching_error",
@@ -61,7 +62,7 @@ func TestDataSourceUserGerUser(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27empty_search%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22empty_search%22",
 			Response: UserList{},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {

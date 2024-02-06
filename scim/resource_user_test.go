@@ -49,6 +49,7 @@ func TestResourceUserRead(t *testing.T) {
 	assert.Equal(t, false, d.Get("allow_cluster_create"))
 	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
 	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
+	assert.Equal(t, "users/me@example.com", d.Get("acl_principal_id"))
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
@@ -271,7 +272,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 				Response: User{
 					DisplayName: "Example user",
 					Active:      true,
@@ -437,7 +438,7 @@ func TestResourceUserDelete_Error(t *testing.T) {
 		Resource: ResourceUser(),
 		Delete:   true,
 		ID:       "abc",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceUserDelete_NoErrorEmtpyParams(t *testing.T) {
@@ -591,8 +592,35 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
 }
 
+func TestResourceUserDelete_ForceDeleteHomeDir(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc",
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/workspace/delete",
+				ExpectedRequest: workspace.DeletePath{
+					Path:      "/Users/abc",
+					Recursive: true,
+				},
+				Status: 200,
+			},
+		},
+		Resource: ResourceUser(),
+		Delete:   true,
+		ID:       "abc",
+		HCL: `
+			user_name    = "abc"
+			force_delete_home_dir = true
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateForceOverridesManuallyAddedUserErrorNotMatched(t *testing.T) {
-	d := ResourceUser().TestResourceData()
+	d := ResourceUser().ToResource().TestResourceData()
 	d.Set("force", true)
 	rerr := createForceOverridesManuallyAddedUser(
 		fmt.Errorf("nonsense"), d,
@@ -604,14 +632,14 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Status:   417,
 			Response: apierr.APIErrorBody{
 				Message: "cannot find user",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
 			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
@@ -626,13 +654,13 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				TotalResults: 0,
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
 			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
@@ -647,7 +675,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				Resources: []User{
 					{
@@ -658,7 +686,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 			Response: User{
 				ID: "abc",
 			},
@@ -672,7 +700,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
@@ -689,7 +717,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%27me%40example.com%27",
+			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Response: UserList{
 				Resources: []User{
 					{
@@ -700,7 +728,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+			Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=groups,roles",
 			Response: User{
 				ID: "abc",
 			},
@@ -714,7 +742,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
@@ -725,4 +753,11 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "abc", d.Id())
 	})
+}
+
+func TestUserResource_SparkConfDiffSuppress(t *testing.T) {
+	jr := ResourceUser()
+	scs := jr.Schema["user_name"]
+	assert.True(t, scs.DiffSuppressFunc("user_name", "abcdef@example.com", "AbcDef@example.com", nil))
+	assert.False(t, scs.DiffSuppressFunc("user_name", "abcdef@example.com", "abcdef2@example.com", nil))
 }

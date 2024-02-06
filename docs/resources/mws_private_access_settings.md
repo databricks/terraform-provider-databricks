@@ -3,15 +3,15 @@ subcategory: "Deployment"
 ---
 # databricks_mws_private_access_settings Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
-
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
-
 Allows you to create a [Private Access Setting]that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or [GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html)
 
 It is strongly recommended that customers read the [Enable AWS Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) [Enable GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) documentation before trying to leverage this resource.
 
 ## Example Usage
+
+## Databricks on AWS usage
+
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 ```hcl
 resource "databricks_mws_private_access_settings" "pas" {
@@ -40,7 +40,11 @@ resource "databricks_mws_workspaces" "this" {
   depends_on                 = [databricks_mws_networks.this]
 }
 ```
-or 
+
+## Databricks on GCP usage
+
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.gcp.databricks.com"` and use `provider = databricks.mws`
+
 ```hcl
 resource "databricks_mws_workspaces" "this" {
   provider       = databricks.mws
@@ -69,7 +73,7 @@ The following arguments are available:
 
 * `account_id` - Account Id that could be found in the Accounts Console for [AWS](https://accounts.cloud.databricks.com/) or [GCP](https://accounts.gcp.databricks.com/)
 * `private_access_settings_name` - Name of Private Access Settings in Databricks Account
-* `public_access_enabled` (Boolean, Optional, `false` by default on AWS, `true` by default on GCP) - If `true`, the [databricks_mws_workspaces](mws_workspaces.md) can be accessed over the [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) as well as over the public network. In such a case, you could also configure an [databricks_ip_access_list](ip_access_list.md) for the workspace, to restrict the source networks that could be used to access it over the public network. If `false`, the workspace can be accessed only over VPC endpoints, and not over the public network.
+* `public_access_enabled` (Boolean, Optional, `false` by default on AWS, `true` by default on GCP) - If `true`, the [databricks_mws_workspaces](mws_workspaces.md) can be accessed over the [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) as well as over the public network. In such a case, you could also configure an [databricks_ip_access_list](ip_access_list.md) for the workspace, to restrict the source networks that could be used to access it over the public network. If `false`, the workspace can be accessed only over VPC endpoints, and not over the public network. Once explicitly set, this field becomes mandatory.
 * `region` - Region of AWS VPC or the Google Cloud VPC network
 * `private_access_level` - (Optional) The private access level controls which VPC endpoints can connect to the UI or API of any workspace that attaches this private access settings object. `ACCOUNT` level access _(default)_ lets only [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) that are registered in your Databricks account connect to your [databricks_mws_workspaces](mws_workspaces.md). `ENDPOINT` level access lets only specified [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) connect to your workspace. Please see the `allowed_vpc_endpoint_ids` documentation for more details.
 * `allowed_vpc_endpoint_ids` - (Optional) An array of [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md#vpc_endpoint_id) `vpc_endpoint_id` (not `id`). Only used when `private_access_level` is set to `ENDPOINT`. This is an allow list of [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) that in your account that can connect to your [databricks_mws_workspaces](mws_workspaces.md) over AWS PrivateLink. If hybrid access to your workspace is enabled by setting `public_access_enabled` to true, then this control only works for PrivateLink connections. To control how your workspace is accessed via public internet, see the article for [databricks_ip_access_list](ip_access_list.md).

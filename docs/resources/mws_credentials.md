@@ -3,9 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_credentials Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws` for all `databricks_mws_*` resources.
-
--> **Note** This resource has an evolving API, which will change in the upcoming versions of the provider in order to simplify user experience.
+-> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 This resource to configure the cross-account role for creation of new workspaces within AWS.
 
@@ -15,7 +13,7 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 ```hcl
 variable "databricks_account_id" {
-  description = "Account Id that could be found in the bottom left corner of https://accounts.cloud.databricks.com/"
+  description = "Account Id that could be found in the top right corner of https://accounts.cloud.databricks.com/"
 }
 
 data "databricks_aws_assume_role_policy" "this" {
@@ -49,7 +47,7 @@ resource "databricks_mws_credentials" "this" {
 
 The following arguments are required:
 
-* `account_id` - (Required) Account Id that could be found in the bottom left corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - (Optional) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `credentials_name` - (Required) name of credentials to register
 * `role_arn` - (Required) ARN of cross-account role
 
@@ -63,7 +61,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+This resource can be imported by the combination of its identifier and the account id:
+
+```bash
+terraform import databricks_mws_credentials.this <account_id>/<credentials_id>
+```
 
 ## Related Resources
 

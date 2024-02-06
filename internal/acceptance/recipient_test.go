@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -42,4 +43,32 @@ func TestUcAccCreateRecipientDb2DbAws(t *testing.T) {
 			data_recipient_global_metastore_id = databricks_metastore.recipient_metastore.global_metastore_id
 		}`,
 	})
+}
+
+func TestUcAccUpdateRecipientDb2Open(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: recipientTemplateWithOwner("made by terraform", "account users"),
+	}, step{
+		Template: recipientTemplateWithOwner("made by terraform -- updated comment", "account users"),
+	}, step{
+		Template: recipientTemplateWithOwner("made by terraform -- updated comment", "{env.TEST_DATA_ENG_GROUP}"),
+	}, step{
+		Template: recipientTemplateWithOwner("made by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
+	})
+}
+
+func recipientTemplateWithOwner(comment string, owner string) string {
+	return fmt.Sprintf(`
+		resource "databricks_recipient" "db2open" {
+			name = "{var.STICKY_RANDOM}-terraform-db2open-recipient"
+			comment = "%s"
+			owner = "%s" 
+			authentication_type = "TOKEN"
+			sharing_code = "{var.STICKY_RANDOM}"
+			ip_access_list {
+			// using private ip for acc testing
+			allowed_ip_addresses = ["10.0.0.0/16"]
+			}
+		}
+	`, comment, owner)
 }

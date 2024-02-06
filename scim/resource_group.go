@@ -11,7 +11,7 @@ import (
 )
 
 // ResourceGroup manages user groups
-func ResourceGroup() *schema.Resource {
+func ResourceGroup() common.Resource {
 	type entity struct {
 		DisplayName string `json:"display_name" tf:"force_new"`
 		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
@@ -26,6 +26,11 @@ func ResourceGroup() *schema.Resource {
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+			}
+			m["acl_principal_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			}
 			return m
 		})
@@ -52,7 +57,12 @@ func ResourceGroup() *schema.Resource {
 			}
 			d.Set("display_name", group.DisplayName)
 			d.Set("external_id", group.ExternalID)
-			d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
+			d.Set("acl_principal_id", fmt.Sprintf("groups/%s", group.DisplayName))
+			if c.Config.IsAccountClient() {
+				d.Set("url", c.FormatURL("users/groups/", d.Id(), "/information"))
+			} else {
+				d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
+			}
 			return group.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -64,7 +74,7 @@ func ResourceGroup() *schema.Resource {
 			return NewGroupsAPI(ctx, c).Delete(d.Id())
 		},
 		Schema: groupSchema,
-	}.ToResource()
+	}
 }
 
 func createForceOverridesManuallyAddedGroup(err error, d *schema.ResourceData, groupsAPI GroupsAPI, g Group) error {

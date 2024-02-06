@@ -3,17 +3,17 @@ package clusters
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // DataSourceClusterZones ...
-func DataSourceClusterZones() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func DataSourceClusterZones() common.Resource {
+	return common.Resource{
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			zonesInfo, err := NewClustersAPI(ctx, m).ListZones()
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(zonesInfo.DefaultZone)
 			d.Set("default_zone", zonesInfo.DefaultZone)

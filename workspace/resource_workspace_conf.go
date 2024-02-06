@@ -16,58 +16,80 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ResourceWorkspaceConf maintains workspace configuration for specified keys
-func ResourceWorkspaceConf() *schema.Resource {
-	create := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-		o, n := d.GetChange("custom_config")
-		old, okOld := o.(map[string]any)
-		new, okNew := n.(map[string]any)
-		if !okNew || !okOld {
-			return fmt.Errorf("internal type casting error")
+// This function applies configuration defined in the resource data to the workspace.
+func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	o, n := d.GetChange("custom_config")
+	old, okOld := o.(map[string]any)
+	new, okNew := n.(map[string]any)
+	if !okNew || !okOld {
+		return fmt.Errorf("internal type casting error")
+	}
+	log.Printf("[DEBUG] Old workspace config: %v, new: %v", old, new)
+	patch := settings.WorkspaceConf{}
+
+	// Add new configuration keys
+	for k, v := range new {
+		patch[k] = fmt.Sprint(v)
+	}
+
+	// Remove old configuration keys, that are no longer present in the new configuration
+	for k, v := range old {
+		_, keep := new[k]
+		if keep {
+			continue
 		}
-		log.Printf("[DEBUG] Old workspace config: %v, new: %v", old, new)
-		patch := settings.WorkspaceConf{}
-		for k, v := range new {
-			patch[k] = fmt.Sprint(v)
-		}
-		for k, v := range old {
-			_, keep := new[k]
-			if keep {
-				continue
-			}
-			log.Printf("[DEBUG] Erasing configuration of %s", k)
-			switch r := v.(type) {
-			default:
+		log.Printf("[DEBUG] Erasing configuration of %s", k)
+		switch r := v.(type) {
+		default:
+			patch[k] = ""
+		case string:
+			_, err := strconv.ParseBool(r)
+			if err != nil {
 				patch[k] = ""
-			case string:
-				_, err := strconv.ParseBool(r)
-				if err != nil {
-					patch[k] = ""
-				} else {
-					patch[k] = "false"
-				}
-			case bool:
+			} else {
 				patch[k] = "false"
 			}
+		case bool:
+			patch[k] = "false"
 		}
-		w, err := c.WorkspaceClient()
-		if err != nil {
-			return err
-		}
-		err = w.WorkspaceConf.SetStatus(ctx, patch)
-		if err != nil {
-			return err
-		}
-		newConfig := map[string]any{}
-		for k, v := range patch {
-			newConfig[k] = v
-		}
-		d.SetId("_")
-		return nil
 	}
+
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	err = w.WorkspaceConf.SetStatus(ctx, patch)
+	if err != nil {
+		return err
+	}
+	newConfig := map[string]any{}
+	for k, v := range patch {
+		newConfig[k] = v
+	}
+	d.SetId("_")
+	return nil
+
+}
+
+func updateWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	err := applyWorkspaceConf(ctx, d, c)
+	if err != nil {
+		// Update methods from the Terraform SDK persist terraform configuration
+		// changes to the state by default, even if update fails.
+		// We revert back to the previous version of the configuration to prevent an
+		// invalid workspace configuration from being persisted in the terraform state.
+		prevConf, _ := d.GetChange("custom_config")
+		d.Set("custom_config", prevConf)
+		return err
+	}
+	return nil
+}
+
+// ResourceWorkspaceConf maintains workspace configuration for specified keys
+func ResourceWorkspaceConf() common.Resource {
 	return common.Resource{
-		Create: create,
-		Update: create,
+		Create: applyWorkspaceConf,
+		Update: updateWorkspaceConf,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			config := d.Get("custom_config").(map[string]any)
 			log.Printf("[DEBUG] Config available in state: %v", config)
@@ -124,5 +146,5 @@ func ResourceWorkspaceConf() *schema.Resource {
 				Optional: true,
 			},
 		},
-	}.ToResource()
+	}
 }

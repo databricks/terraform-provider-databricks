@@ -50,18 +50,6 @@ func (ti TableInfo) FullName() string {
 	return fmt.Sprintf("%s.%s.%s", ti.CatalogName, ti.SchemaName, ti.Name)
 }
 
-type Tables struct {
-	Tables []TableInfo `json:"tables"`
-}
-
-func (a TablesAPI) listTables(catalogName, schemaName string) (tables Tables, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/tables/", map[string]string{
-		"catalog_name": catalogName,
-		"schema_name":  schemaName,
-	}, &tables)
-	return
-}
-
 func (a TablesAPI) createTable(ti *TableInfo) error {
 	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti)
 }
@@ -75,11 +63,9 @@ func (a TablesAPI) deleteTable(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
 }
 
-func ResourceTable() *schema.Resource {
+func ResourceTable() common.Resource {
 	tableSchema := common.StructToSchema(TableInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			return m
-		})
+		common.NoCustomize)
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
 		"owner", "name", "data_source_format", "columns", "storage_location",
 		"view_definition", "comment", "properties"})
@@ -111,5 +97,5 @@ func ResourceTable() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},
-	}.ToResource()
+	}
 }

@@ -73,10 +73,12 @@ func TestClustersDataSourceContainsName(t *testing.T) {
 
 func TestClustersDataSourceErrorsOut(t *testing.T) {
 	client, _ := client.New(&config.Config{
-		Host:  ".",
-		Token: ".",
+		Host:                ".",
+		Token:               ".",
+		RetryTimeoutSeconds: 1,
+		HTTPTimeoutSeconds:  1,
 	})
-	diag := DataSourceClusters().ReadContext(context.Background(), nil, &common.DatabricksClient{
+	diag := DataSourceClusters().ToResource().ReadContext(context.Background(), nil, &common.DatabricksClient{
 		DatabricksClient: client,
 	})
 	assert.NotNil(t, diag)

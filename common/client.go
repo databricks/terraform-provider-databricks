@@ -125,7 +125,7 @@ func (c *DatabricksClient) getConfiguredWorkspaceClient(ctx context.Context, wor
 	if err != nil {
 		return nil, err
 	}
-	w, err := a.GetWorkspaceClient(*ws)
+	w, err := a.Utilities.GetWorkspaceClient(*ws)
 	if err != nil {
 		return nil, err
 	}

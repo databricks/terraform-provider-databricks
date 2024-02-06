@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -202,4 +205,120 @@ func TestNoCustomize(t *testing.T) {
 		},
 	}
 	assert.Equal(t, dummySchema, NoCustomize(dummySchema))
+}
+
+// Tests:
+// - workspace-level provider with workspace-level resource with no workspace id
+// - workspace-level provider with workspace-level resource with correct workspace ID
+// - workspace-level provider with workspace-level resource with correct management workspace ID
+// - workspace-level provider with workspace-level resource with incorrect workspace ID
+// - workspace-level provider with account-level resource
+// - account-level provider with workspace-level resource with no workspace id
+// - account-level provider with workspace-level resource with workspace ID
+// - account-level provider with workspace-level resource with management workspace ID
+// - account-level provider with account-level resource
+type workspaceIdFieldTest struct {
+	name                string
+	mockAccountClient   func(*mocks.MockAccountClient)
+	mockWorkspaceClient func(*mocks.MockWorkspaceClient)
+	workspaceIdField    WorkspaceIdField
+	resourceData        func(*schema.ResourceData)
+	readFunc            func(*testing.T) func(context.Context, *schema.ResourceData, *DatabricksClient) error
+	errorAssertions     func(*testing.T, diag.Diagnostics)
+}
+
+func makeProviderResourceTest(t *testing.T, test workspaceIdFieldTest) {
+	var a *databricks.AccountClient
+	var w *databricks.WorkspaceClient
+	if test.mockAccountClient != nil {
+		mac := mocks.NewMockAccountClient(t)
+		test.mockAccountClient(mac)
+		a = mac.AccountClient
+	}
+	if test.mockWorkspaceClient != nil {
+		mwc := mocks.NewMockWorkspaceClient(t)
+		test.mockWorkspaceClient(mwc)
+		w = mwc.WorkspaceClient
+	}
+	c := &DatabricksClient{
+		cachedAccountClient:   a,
+		cachedWorkspaceClient: w,
+	}
+	r := Resource{
+		Schema: map[string]*schema.Schema{
+			"foo": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+		Read:             test.readFunc(t),
+		WorkspaceIdField: test.workspaceIdField,
+	}.ToResource()
+	d := r.TestResourceData()
+	if test.resourceData != nil {
+		test.resourceData(d)
+	}
+	res := r.ReadContext(context.Background(), d, c)
+	if test.errorAssertions != nil {
+		test.errorAssertions(t, res)
+	} else {
+		assert.False(t, res.HasError())
+	}
+}
+
+func readWithWorkspace(t *testing.T) func(_ context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+	return func(_ context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+		_, err := c.WorkspaceClient()
+		assert.NoError(t, err)
+		return nil
+	}
+}
+
+func readWithAccount(t *testing.T) func(_ context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+	return func(_ context.Context, d *schema.ResourceData, c *DatabricksClient) error {
+		_, err := c.AccountClient()
+		assert.NoError(t, err)
+		return nil
+	}
+}
+
+var testCases = []workspaceIdFieldTest{
+	{
+		name:                "WorkspaceLevelProvider/WorkspaceIdField/NoWorkspaceId",
+		mockWorkspaceClient: func(*mocks.MockWorkspaceClient) {},
+		workspaceIdField:    WorkspaceId,
+		readFunc:            readWithWorkspace,
+	},
+	{
+		name:                "WorkspaceLevelProvider/ManagementWorkspaceIdField/NoWorkspaceId",
+		mockWorkspaceClient: func(*mocks.MockWorkspaceClient) {},
+		workspaceIdField:    ManagementWorkspaceId,
+		readFunc:            readWithWorkspace,
+	},
+	// This case shouldn't happen in practice, as any workspace resource should support either workspace_id or
+	// management_workspace_id. It still shouldn't error.
+	{
+		name:                "WorkspaceLevelProvider/NoWorkspaceIdField/NoWorkspaceId",
+		mockWorkspaceClient: func(*mocks.MockWorkspaceClient) {},
+		workspaceIdField:    NoWorkspaceId,
+		readFunc:            readWithWorkspace,
+	},
+	{
+		name:                "AccountLevelProvider/WorkspaceIdField/WorkspaceId",
+		mockWorkspaceClient: func(*mocks.MockWorkspaceClient) {},
+		mockAccountClient:   func(*mocks.MockAccountClient) {},
+		workspaceIdField:    WorkspaceId,
+		resourceData: func(rd *schema.ResourceData) {
+			rd.Set("workspace_id", 123)
+		},
+		readFunc: readWithAccount,
+	},
+}
+
+func TestProviderResourceCombinations(t *testing.T) {
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			makeProviderResourceTest(t, test)
+		})
+	}
 }

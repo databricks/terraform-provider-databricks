@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	terraformProviderCatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -1468,4 +1469,56 @@ func TestEmitFilesFromMap(t *testing.T) {
 	assert.Equal(t, 2, len(ic.testEmits))
 	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
 	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+}
+
+func TestStorageCredentialName(t *testing.T) {
+	ic := importContextForTest()
+	d := terraformProviderCatalog.ResourceStorageCredential().ToResource().TestResourceData()
+	d.SetId("my_storage_cred")
+	assert.Equal(t, "my_storage_cred", resourcesMap["databricks_storage_credential"].Name(ic, d))
+	d.Set("name", "my_storage_cred")
+	assert.Equal(t, "my_storage_cred", resourcesMap["databricks_storage_credential"].Name(ic, d))
+}
+
+func TestStorageCredentialListFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/storage-credentials?",
+			Status:   200,
+			Response: &catalog.ListStorageCredentialsResponse{},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_storage_credential"].List(ic)
+		assert.NoError(t, err)
+	})
+}
+
+func TestImportStorageCredentialGrants(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Status:       200,
+			Resource:     "/api/2.1/unity-catalog/permissions/storage_credential/abc",
+			Response: catalog.PermissionsList{
+				PrivilegeAssignments: []catalog.PrivilegeAssignment{
+					{
+						Principal:  "principal",
+						Privileges: []catalog.Privilege{"CREATE EXTERNAL LOCATION"},
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		d := terraformProviderCatalog.ResourceStorageCredential().ToResource().TestResourceData()
+		d.SetId("abc")
+		err := resourcesMap["databricks_storage_credential"].Import(ic, &resource{
+			ID:   "abc",
+			Data: d,
+		})
+		assert.NoError(t, err)
+	})
 }

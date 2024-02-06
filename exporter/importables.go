@@ -2294,4 +2294,40 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		// TODO: add Depends & Import to emit corresponding UC Volumes when support for them is added
 	},
+	"databricks_storage_credential": {
+		WorkspaceLevel: true,
+		Service:        "storage_credentials",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				return d.Id()
+			}
+			return nameNormalizationRegex.ReplaceAllString(name, "_")
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_grants",
+					ID:       fmt.Sprintf("storage_credential/%s", r.ID),
+				})
+			}
+			return nil
+		},
+		List: func(ic *importContext) error {
+			objList, err := catalog.NewStorageCredentials(ic.Client.DatabricksClient).ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
+			if err != nil {
+				return err
+			}
+			for _, v := range objList {
+				if v.Name != "" {
+					id := fmt.Sprintf("%s", v.Name)
+					ic.Emit(&resource{
+						Resource: "databricks_storage_credential",
+						ID:       id,
+					})
+				}
+			}
+			return nil
+		},
+	},
 }

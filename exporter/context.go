@@ -151,6 +151,9 @@ type importContext struct {
 	ignoredResourcesMutex sync.Mutex
 	ignoredResources      map[string]struct{}
 
+	//
+	deletedResources map[string]struct{}
+
 	// emitting of users/SPs
 	emittedUsers      map[string]struct{}
 	emittedUsersMutex sync.RWMutex
@@ -261,6 +264,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		defaultHanlerChannelSize: defaultHanlerChannelSize,
 		defaultChannel:           make(resourceChannel, defaultHanlerChannelSize),
 		ignoredResources:         map[string]struct{}{},
+		deletedResources:         map[string]struct{}{},
 		emittedUsers:             map[string]struct{}{},
 		userOrSpDirectories:      map[string]bool{},
 	}
@@ -288,6 +292,7 @@ func getLastRunString(fileName string) string {
 func (ic *importContext) Run() error {
 	startTime := time.Now()
 	statsFileName := ic.Directory + "/exporter-run-stats.json"
+	wsObjectsFileName := ic.Directory + "/ws_objects.json"
 	if len(ic.services) == 0 {
 		return fmt.Errorf("no services to import")
 	}
@@ -398,9 +403,10 @@ func (ic *importContext) Run() error {
 	// close channels
 	ic.closeImportChannels()
 
-	// This should be single threaded...
-	if ic.Scope.Len() == 0 {
-		return fmt.Errorf("no resources to import")
+	// Generating the code
+	ic.findDeletedResources(wsObjectsFileName)
+	if ic.Scope.Len() == 0 && len(ic.deletedResources) == 0 {
+		return fmt.Errorf("no resources to import or delete")
 	}
 	shFileName := fmt.Sprintf("%s/import.sh", ic.Directory)
 	if ic.incremental {
@@ -460,7 +466,7 @@ func (ic *importContext) Run() error {
 		return err
 	}
 
-	//
+	// Write stats file
 	if stats, err := os.Create(statsFileName); err == nil {
 		defer stats.Close()
 		statsData := map[string]any{
@@ -470,12 +476,26 @@ func (ic *importContext) Run() error {
 		}
 		statsBytes, _ := json.Marshal(statsData)
 		if _, err = stats.Write(statsBytes); err != nil {
-			return err
+			log.Printf("[ERROR] can't write stats into the %s: %s", statsFileName, err.Error())
+		}
+	}
+
+	// Write workspace objects file
+	if len(ic.allWorkspaceObjects) > 0 {
+		if wsObjects, err := os.Create(wsObjectsFileName); err == nil {
+			defer wsObjects.Close()
+			wsObjectsBytes, _ := json.Marshal(ic.allWorkspaceObjects)
+			if _, err = wsObjects.Write(wsObjectsBytes); err != nil {
+				log.Printf("[ERROR] can't write workspace objects into the %s: %s", wsObjectsFileName, err.Error())
+			}
+		} else {
+			log.Printf("[ERROR] can't open %s: %s", wsObjectsFileName, err.Error())
 		}
 	}
 
 	// output ignored resources...
-	if ignored, err := os.Create(fmt.Sprintf("%s/ignored_resources.txt", ic.Directory)); err == nil {
+	ignoredResourcesFileName := fmt.Sprintf("%s/ignored_resources.txt", ic.Directory)
+	if ignored, err := os.Create(ignoredResourcesFileName); err == nil {
 		defer ignored.Close()
 		ic.ignoredResourcesMutex.Lock()
 		keys := maps.Keys(ic.ignoredResources)
@@ -483,6 +503,9 @@ func (ic *importContext) Run() error {
 		for _, s := range keys {
 			ignored.WriteString(s + "\n")
 		}
+		ic.ignoredResourcesMutex.Unlock()
+	} else {
+		log.Printf("[ERROR] can't open %s: %s", ignoredResourcesFileName, err.Error())
 	}
 
 	if !ic.noFormat {
@@ -497,6 +520,26 @@ func (ic *importContext) Run() error {
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil
+}
+
+func (ic *importContext) findDeletedResources(fileName string) {
+	if !ic.incremental || len(ic.allWorkspaceObjects) == 0 {
+		return
+	}
+	// // Read a list of resources from previous run
+	oldDataFile, err := os.ReadFile(fileName)
+	if err != nil {
+		log.Printf("[WARN] Can't open the file (%s) with previous list of workspace objects: %s", fileName, err.Error())
+		return
+	}
+
+	oldData := []workspace.ObjectStatus{}
+	err = json.Unmarshal(oldDataFile, &oldData)
+	if err != nil {
+		log.Printf("[WARN] Can't desereialize previous list of workspace objects: %s", err.Error())
+		return
+	}
+	log.Printf("[DEBUG] Read previous list of workspace objects. got %d objects", len(oldData))
 }
 
 func (ic *importContext) resourceHandler(num int, resourceType string, ch resourceChannel) {
@@ -615,8 +658,11 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 		for _, block := range existingFile.Body().Blocks() {
 			blockName := generateBlockFullName(block)
 			_, exists := newResources[blockName]
+			_, deleted := ic.deletedResources[blockName]
 			if exists {
 				log.Printf("[DEBUG] resource %s already generated, skipping...", blockName)
+			} else if deleted {
+				log.Printf("[DEBUG] resource %s is deleted, skipping...", blockName)
 			} else {
 				log.Printf("[DEBUG] resource %s doesn't exist, adding...", blockName)
 				f.Body().AppendBlock(block)
@@ -649,7 +695,17 @@ func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel
 	}
 	if sh != nil {
 		log.Printf("[DEBUG] Writing the rest of import commands. len=%d", len(ic.shImports))
+		// TODO: remove deleted imports...
 		for k := range ic.shImports {
+			parts := strings.Split(k, " ")
+			if len(parts) > 3 {
+				resource := parts[2]
+				_, deleted := ic.deletedResources[resource]
+				if deleted {
+					log.Printf("[DEBUG] Resource %s is deleted. Skipping import command for it", resource)
+					continue
+				}
+			}
 			sh.WriteString(k + "\n")
 		}
 	}

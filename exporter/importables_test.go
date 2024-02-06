@@ -48,6 +48,7 @@ func importContextForTest() *importContext {
 		channels:                 makeResourcesChannels(),
 		exportDeletedUsersAssets: false,
 		ignoredResources:         map[string]struct{}{},
+		deletedResources:         map[string]struct{}{},
 		State:                    newStateApproximation(supportedResources),
 		emittedUsers:             map[string]struct{}{},
 		userOrSpDirectories:      map[string]bool{},

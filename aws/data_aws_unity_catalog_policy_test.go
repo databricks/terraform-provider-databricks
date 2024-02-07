@@ -1,7 +1,7 @@
 package aws
 
 import (
-	"strings"
+	"encoding/json"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -22,8 +22,8 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
         `,
 	}.Apply(t)
 	assert.NoError(t, err)
-	j := strings.ReplaceAll(d.Get("json").(string), " ", "")
-	p := strings.ReplaceAll(`{
+	j := d.Get("json").(string)
+	p := `{
           "Version": "2012-10-17",
           "Statement": [
             {
@@ -61,8 +61,8 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
               ]
             }
           ]
-        }`, " ", "")
-	assert.EqualValues(t, j, p)
+        }`
+	compareJSON(t, j, p)
 }
 
 func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
@@ -78,8 +78,8 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
         `,
 	}.Apply(t)
 	assert.NoError(t, err)
-	j := strings.ReplaceAll(d.Get("json").(string), " ", "")
-	p := strings.ReplaceAll(`{
+	j := d.Get("json").(string)
+	p := `{
           "Version": "2012-10-17",
           "Statement": [
             {
@@ -106,6 +106,16 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
               ]
             }
           ]
-        }`, " ", "")
-	assert.EqualValues(t, j, p)
+        }`
+	compareJSON(t, j, p)
+}
+
+func compareJSON(t *testing.T, json1 string, json2 string) {
+	var i1 interface{}
+	var i2 interface{}
+	err := json.Unmarshal([]byte(json1), &i1)
+	assert.NoError(t, err, "error while unmarshalling")
+	err = json.Unmarshal([]byte(json2), &i2)
+	assert.NoError(t, err, "error while unmarshalling")
+	assert.Equal(t, i1, i2)
 }

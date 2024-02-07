@@ -452,19 +452,15 @@ func isGoSdk(v reflect.Value) bool {
 // For example
 //
 //	fieldName = "cluster"
-//	aliases = {"cluster.clusterName": "name"}
+//	aliases = {"cluster.clusterName": "name", "libraries": "library"}
 //	would return: {"clusterName": "name"}
 func unwrapAliasesMap(fieldName string, aliases map[string]string) map[string]string {
 	result := make(map[string]string)
 	prefix := fieldName + "."
 	for key, value := range aliases {
 		// Only keep the keys that have the prefix.
-		if strings.HasPrefix(key, prefix) {
-			// Trim the prefix to unwrap.
-			newKey := strings.TrimPrefix(key, prefix)
-			if newKey != "" {
-				result[newKey] = value
-			}
+		if strings.HasPrefix(key, prefix) && key != prefix {
+			result[key] = value
 		}
 	}
 	return result

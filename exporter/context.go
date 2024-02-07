@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -522,7 +523,40 @@ func (ic *importContext) Run() error {
 	return nil
 }
 
+func isSupportedWsObject(obj workspace.ObjectStatus) bool {
+	return obj.ObjectType == workspace.Directory || obj.ObjectType == workspace.Notebook || obj.ObjectType == workspace.File
+}
+
+func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatus) string {
+	var rtype string
+	switch obj.ObjectType {
+	case workspace.Directory:
+		rtype = "databricks_directory"
+	case workspace.File:
+		rtype = "databricks_workspace_file"
+	case workspace.Notebook:
+		rtype = "databricks_notebook"
+	default:
+		log.Printf("[WARN] Unsupported WS object type: %s in obj %v", obj.ObjectType, obj)
+		return ""
+	}
+	rData := ic.Resources[rtype].Data(
+		&terraform.InstanceState{
+			ID:         obj.Path,
+			Attributes: map[string]string{},
+		})
+	rData.Set("object_id", obj.ObjectID)
+	rData.Set("path", obj.Path)
+	name := ic.ResourceName(&resource{
+		ID:       obj.Path,
+		Resource: rtype,
+		Data:     rData,
+	})
+	return generateResourceName(rtype, name)
+}
+
 func (ic *importContext) findDeletedResources(fileName string) {
+	log.Print("[INFO] Starting detection of deleted workspace objects")
 	if !ic.incremental || len(ic.allWorkspaceObjects) == 0 {
 		return
 	}
@@ -533,13 +567,29 @@ func (ic *importContext) findDeletedResources(fileName string) {
 		return
 	}
 
-	oldData := []workspace.ObjectStatus{}
+	oldData := make([]workspace.ObjectStatus, 0, len(ic.allWorkspaceObjects))
 	err = json.Unmarshal(oldDataFile, &oldData)
 	if err != nil {
 		log.Printf("[WARN] Can't desereialize previous list of workspace objects: %s", err.Error())
 		return
 	}
+	if len(oldData) == 0 {
+		log.Print("[INFO] Previous list of workspace objects is empty")
+		return
+	}
 	log.Printf("[DEBUG] Read previous list of workspace objects. got %d objects", len(oldData))
+	// generate IDs of current objects
+	currentObjs := map[string]struct{}{}
+	for _, obj := range ic.allWorkspaceObjects {
+		obj := obj
+		if !isSupportedWsObject(obj) {
+			continue
+		}
+		currentObjs[ic.generateResourceIdForWsObject(obj)] = struct{}{}
+	}
+	// TODO: Loop through previous objects, and if it's missing from the current list, add it to deleted, including permission
+
+	log.Print("[INFO] Finished detection of deleted workspace objects")
 }
 
 func (ic *importContext) resourceHandler(num int, resourceType string, ch resourceChannel) {
@@ -588,8 +638,12 @@ func (ic *importContext) closeImportChannels() {
 	close(ic.defaultChannel)
 }
 
+func generateResourceName(rtype, rname string) string {
+	return rtype + "." + rname
+}
+
 func generateBlockFullName(block *hclwrite.Block) string {
-	return block.Type() + "_" + strings.Join(block.Labels(), "_")
+	return generateResourceName(block.Type(), strings.Join(block.Labels(), "_"))
 }
 
 type resourceWriteData struct {

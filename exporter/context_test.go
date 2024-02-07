@@ -6,7 +6,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -309,4 +311,39 @@ func TestLoadingLastRun(t *testing.T) {
 	_ = os.WriteFile(fname, []byte(`{"startTime": "2023-07-24T00:00:00Z"}`), 0755)
 	s = getLastRunString(fname)
 	assert.Equal(t, "2023-07-24T00:00:00Z", s)
+}
+
+func TestGenerateResourceIdForWsObject(t *testing.T) {
+	p := provider.DatabricksProvider()
+	ic := &importContext{
+		Importables: resourcesMap,
+		Resources:   p.ResourcesMap,
+	}
+	rid := ic.generateResourceIdForWsObject(workspace.ObjectStatus{
+		ObjectID:   123,
+		Path:       "Test",
+		ObjectType: "Unknown",
+	})
+	assert.Empty(t, rid)
+
+	rid = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
+		ObjectID:   123,
+		Path:       "/Users/user@domain.com/TestDir",
+		ObjectType: workspace.Directory,
+	})
+	assert.Equal(t, "databricks_directory.users_user_domain_com_testdir_123", rid)
+
+	rid = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
+		ObjectID:   123,
+		Path:       "/Users/user@domain.com/Test File",
+		ObjectType: workspace.File,
+	})
+	assert.Equal(t, "databricks_workspace_file.users_user_domain_com_test_file_123", rid)
+
+	rid = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
+		ObjectID:   123,
+		Path:       "/Users/user@domain.com/Test Notebook",
+		ObjectType: workspace.Notebook,
+	})
+	assert.Equal(t, "databricks_notebook.users_user_domain_com_test_notebook_123", rid)
 }

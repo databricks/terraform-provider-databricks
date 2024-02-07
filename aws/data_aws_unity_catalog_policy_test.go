@@ -33,9 +33,7 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
                 "s3:PutObject",
                 "s3:DeleteObject",
                 "s3:ListBucket",
-                "s3:GetBucketLocation",
-                "s3:GetLifecycleConfiguration",
-                "s3:PutLifecycleConfiguration"
+                "s3:GetBucketLocation"
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket/*",
@@ -91,9 +89,7 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
                 "s3:PutObject",
                 "s3:DeleteObject",
                 "s3:ListBucket",
-                "s3:GetBucketLocation",
-                "s3:GetLifecycleConfiguration",
-                "s3:PutLifecycleConfiguration"
+                "s3:GetBucketLocation"
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket/*",

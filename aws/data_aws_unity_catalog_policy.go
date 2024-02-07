@@ -26,8 +26,6 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 					"s3:DeleteObject",
 					"s3:ListBucket",
 					"s3:GetBucketLocation",
-					"s3:GetLifecycleConfiguration",
-					"s3:PutLifecycleConfiguration",
 				},
 				Resources: []string{
 					fmt.Sprintf("arn:aws:s3:::%s/*", bucket),

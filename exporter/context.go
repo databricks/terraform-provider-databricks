@@ -527,7 +527,7 @@ func isSupportedWsObject(obj workspace.ObjectStatus) bool {
 	return obj.ObjectType == workspace.Directory || obj.ObjectType == workspace.Notebook || obj.ObjectType == workspace.File
 }
 
-func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatus) string {
+func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatus) (string, string) {
 	var rtype string
 	switch obj.ObjectType {
 	case workspace.Directory:
@@ -538,7 +538,7 @@ func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatu
 		rtype = "databricks_notebook"
 	default:
 		log.Printf("[WARN] Unsupported WS object type: %s in obj %v", obj.ObjectType, obj)
-		return ""
+		return "", ""
 	}
 	rData := ic.Resources[rtype].Data(
 		&terraform.InstanceState{
@@ -552,7 +552,7 @@ func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatu
 		Resource: rtype,
 		Data:     rData,
 	})
-	return generateResourceName(rtype, name)
+	return generateResourceName(rtype, name), rtype
 }
 
 func (ic *importContext) findDeletedResources(fileName string) {
@@ -585,11 +585,42 @@ func (ic *importContext) findDeletedResources(fileName string) {
 		if !isSupportedWsObject(obj) {
 			continue
 		}
-		currentObjs[ic.generateResourceIdForWsObject(obj)] = struct{}{}
+		rid, _ := ic.generateResourceIdForWsObject(obj)
+		currentObjs[rid] = struct{}{}
 	}
-	// TODO: Loop through previous objects, and if it's missing from the current list, add it to deleted, including permission
+	// Loop through previous objects, and if it's missing from the current list, add it to deleted, including permission
+	for _, obj := range oldData {
+		obj := obj
+		if !isSupportedWsObject(obj) {
+			continue
+		}
+		rid, rtype := ic.generateResourceIdForWsObject(obj)
+		_, exists := currentObjs[rid]
+		if exists {
+			log.Printf("[DEBUG] object %s still exists", rid) // change to TRACE?
+			continue
+		}
+		log.Printf("[DEBUG] object %s is deleted!", rid)
+		ic.deletedResources[rid] = struct{}{}
+		// convert into permissions. This is quite fragile right now, need to think how to handle it better
+		var permId string
+		switch rtype {
+		case "databricks_notebook":
+			permId = "databricks_permissions.notebook_" + rid[len(rtype)+1:]
+		case "databricks_directory":
+			permId = "databricks_permissions.directory_" + rid[len(rtype)+1:]
+		case "databricks_workspace_file":
+			permId = "databricks_permissions.ws_file_" + rid[len(rtype)+1:]
+		}
+		log.Printf("[DEBUG] deleted permissions object %s", permId)
+		if permId != "" {
+			ic.deletedResources[permId] = struct{}{}
+		}
+	}
 
-	log.Print("[INFO] Finished detection of deleted workspace objects")
+	log.Printf("[INFO] Finished detection of deleted workspace objects. Detected %d deleted objects.",
+		len(ic.deletedResources))
+	log.Printf("[DEBUG] Deleted objects. %v", ic.deletedResources) // change to TRACE?
 }
 
 func (ic *importContext) resourceHandler(num int, resourceType string, ch resourceChannel) {
@@ -643,7 +674,8 @@ func generateResourceName(rtype, rname string) string {
 }
 
 func generateBlockFullName(block *hclwrite.Block) string {
-	return generateResourceName(block.Type(), strings.Join(block.Labels(), "_"))
+	labels := block.Labels()
+	return generateResourceName(labels[0], strings.Join(labels[1:], "_"))
 }
 
 type resourceWriteData struct {
@@ -670,6 +702,9 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 			existingFile, diags = hclwrite.ParseConfig(content, generatedFile, hcl.Pos{Line: 1, Column: 1})
 			if diags.HasErrors() {
 				log.Printf("[ERROR] parsing of existing file %s failed: %s", generatedFile, diags.Error())
+			} else {
+				log.Printf("[DEBUG] There are %d objects in existing file %s",
+					len(existingFile.Body().Blocks()), generatedFile)
 			}
 		}
 	}
@@ -685,6 +720,7 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 
 	//
 	newResources := make(map[string]struct{}, 100)
+	log.Printf("[DEBUG] started processing new writes for %s", generatedFile)
 	for f := range ch {
 		if f != nil {
 			log.Printf("[DEBUG] started writing resource body for %s", f.BlockName)
@@ -704,8 +740,9 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 		}
 		ic.waitGroup.Done()
 	}
-	// update existing file if incremental mode
 	numResources := len(newResources)
+	log.Printf("[DEBUG] finished processing new writes for %s. Wrote %d resources", generatedFile, numResources)
+	// update existing file if incremental mode
 	if ic.incremental {
 		log.Printf("[DEBUG] Starting to merge existing resources for %s", generatedFile)
 		f := hclwrite.NewEmptyFile()
@@ -843,9 +880,12 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		resourceWriters[imp.Service] = make(dataWriteChannel, defaultChannelSize)
 	}
 	importChan := make(importWriteChannel, defaultChannelSize)
+	writersWaitGroup := &sync.WaitGroup{}
 	//
+	writersWaitGroup.Add(1)
 	go func() {
 		ic.writeImports(sh, importChan)
+		writersWaitGroup.Done()
 	}()
 	for i := 0; i < resourceHandlersNumber; i++ {
 		i := i
@@ -854,13 +894,16 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 			ic.processSingleResource(resourcesChan, resourceWriters)
 		}()
 	}
+
 	for service, ch := range resourceWriters {
 		service := service
 		ch := ch
 		generatedFile := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
 		log.Printf("[DEBUG] starting writer for service %s", service)
+		writersWaitGroup.Add(1)
 		go func() {
 			ic.handleResourceWrite(generatedFile, ch, importChan)
+			writersWaitGroup.Done()
 		}()
 	}
 
@@ -880,6 +923,7 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		log.Printf("Closing writer for service %s", service)
 		close(ch)
 	}
+	writersWaitGroup.Wait()
 
 	log.Printf("[INFO] Finished generation of configuration for %d resources (took %v seconds)",
 		scopeSize, time.Since(t1).Seconds())

@@ -319,31 +319,35 @@ func TestGenerateResourceIdForWsObject(t *testing.T) {
 		Importables: resourcesMap,
 		Resources:   p.ResourcesMap,
 	}
-	rid := ic.generateResourceIdForWsObject(workspace.ObjectStatus{
+	rid, rtype := ic.generateResourceIdForWsObject(workspace.ObjectStatus{
 		ObjectID:   123,
 		Path:       "Test",
 		ObjectType: "Unknown",
 	})
 	assert.Empty(t, rid)
+	assert.Empty(t, rtype)
 
-	rid = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
+	rid, rtype = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
 		ObjectID:   123,
 		Path:       "/Users/user@domain.com/TestDir",
 		ObjectType: workspace.Directory,
 	})
 	assert.Equal(t, "databricks_directory.users_user_domain_com_testdir_123", rid)
+	assert.Equal(t, "databricks_directory", rtype)
 
-	rid = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
+	rid, rtype = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
 		ObjectID:   123,
 		Path:       "/Users/user@domain.com/Test File",
 		ObjectType: workspace.File,
 	})
 	assert.Equal(t, "databricks_workspace_file.users_user_domain_com_test_file_123", rid)
+	assert.Equal(t, "databricks_workspace_file", rtype)
 
-	rid = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
+	rid, rtype = ic.generateResourceIdForWsObject(workspace.ObjectStatus{
 		ObjectID:   123,
 		Path:       "/Users/user@domain.com/Test Notebook",
 		ObjectType: workspace.Notebook,
 	})
 	assert.Equal(t, "databricks_notebook.users_user_domain_com_test_notebook_123", rid)
+	assert.Equal(t, "databricks_notebook", rtype)
 }

@@ -156,7 +156,7 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPut,
-				Resource: "api/2.1/unity-catalog/tables/test_table/monitor",
+				Resource: "/api/2.1/unity-catalog/tables/test_table/monitor",
 				ExpectedRequest: &catalog.UpdateMonitor{
 					AssetsDir:        "new_assets.dir",
 					OutputSchemaName: "output.schema",
@@ -172,6 +172,22 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 					OutputSchemaName: "output.schema",
 					TableName:        "test_table",
 					Status:           catalog.MonitorInfoStatusMonitorStatusActive,
+					InferenceLog: &catalog.MonitorInferenceLogProfileType{
+						Granularities: []string{"1 week"},
+						TimestampCol:  "timestamp",
+						PredictionCol: "prediction",
+						ModelIdCol:    "model_id",
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/tables/test_table/monitor?",
+				Response: &catalog.MonitorInfo{
+					TableName:        "test_table",
+					Status:           catalog.MonitorInfoStatusMonitorStatusActive,
+					AssetsDir:        "new_assets.dir",
+					OutputSchemaName: "output.schema",
 					InferenceLog: &catalog.MonitorInferenceLogProfileType{
 						Granularities: []string{"1 week"},
 						TimestampCol:  "timestamp",
@@ -198,5 +214,20 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 				model_id_col = "model_id"
 			} 
 		`,
+	}.ApplyNoError(t)
+}
+
+func TestLakehouseMonitorDelete(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodDelete,
+				Resource: "/api/2.1/unity-catalog/tables/test_table/monitor?",
+				Response: "",
+			},
+		},
+		Resource: ResourceLakehouseMonitor(),
+		Delete:   true,
+		ID:       "test_table",
 	}.ApplyNoError(t)
 }

@@ -466,6 +466,8 @@ func unwrapAliasesMap(fieldName string, aliases map[string]string) map[string]st
 	return result
 }
 
+// Iterate through each field of the given reflect.Value object and execute a callback function with the corresponding
+// terraform schema object as the input.
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]string,
 	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
 	rk := rv.Kind()

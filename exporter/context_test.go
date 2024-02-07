@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -11,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNoServicesSkipsRun(t *testing.T) {
@@ -350,4 +352,48 @@ func TestGenerateResourceIdForWsObject(t *testing.T) {
 	})
 	assert.Equal(t, "databricks_notebook.users_user_domain_com_test_notebook_123", rid)
 	assert.Equal(t, "databricks_notebook", rtype)
+}
+
+func TestDeletedWsObjectsDetection(t *testing.T) {
+	ic := importContextForTest()
+	ic.incremental = true
+
+	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+	os.MkdirAll(tmpDir, 0755)
+	defer os.RemoveAll(tmpDir)
+
+	objects := []workspace.ObjectStatus{
+		{ObjectID: 123, ObjectType: "REPO", Path: "/Repos/user@domain.com/test"},
+		{ObjectID: 456, ObjectType: "NOTEBOOK", Path: "/Test/1234"},
+		// This is deleted objects
+		{ObjectID: 789, ObjectType: "DIRECTORY", Path: "/Test/TDir"},
+		{ObjectID: 12, ObjectType: "FILE", Path: "/Test/TDir"},
+		{ObjectID: 345, ObjectType: "NOTEBOOK", Path: "/Test/12345"},
+	}
+
+	bytes, _ := json.Marshal(objects)
+	fname := tmpDir + "/1.json"
+	os.WriteFile(fname, bytes, 0755)
+
+	ic.loadOldWorkspaceObjects(fname)
+	ic.allWorkspaceObjects = objects[0:2]
+	ic.findDeletedResources()
+	require.Equal(t, 6, len(ic.deletedResources))
+	assert.Contains(t, ic.deletedResources, "databricks_directory.test_tdir_789")
+	assert.Contains(t, ic.deletedResources, "databricks_permissions.directory_test_tdir_789")
+	assert.Contains(t, ic.deletedResources, "databricks_notebook.test_12345_345")
+	assert.Contains(t, ic.deletedResources, "databricks_permissions.notebook_test_12345_345")
+	assert.Contains(t, ic.deletedResources, "databricks_workspace_file.test_tdir_12")
+	assert.Contains(t, ic.deletedResources, "databricks_permissions.ws_file_test_tdir_12")
+
+	// errors/edge case handling
+	_ = os.WriteFile(fname, []byte("[]"), 0755)
+	ic.loadOldWorkspaceObjects(fname)
+	require.Equal(t, 0, len(ic.oldWorkspaceObjects))
+	ic.findDeletedResources()
+
+	// Incorrect data type
+	_ = os.WriteFile(fname, []byte("{}"), 0755)
+	ic.loadOldWorkspaceObjects(fname)
+	require.Equal(t, 0, len(ic.oldWorkspaceObjects))
 }

@@ -411,7 +411,7 @@ func (ic *importContext) Run() error {
 	ic.closeImportChannels()
 
 	// Generating the code
-	ic.findDeletedResources(wsObjectsFileName)
+	ic.findDeletedResources()
 	if ic.Scope.Len() == 0 && len(ic.deletedResources) == 0 {
 		return fmt.Errorf("no resources to import or delete")
 	}
@@ -562,6 +562,7 @@ func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatu
 }
 
 func (ic *importContext) loadOldWorkspaceObjects(fileName string) {
+	ic.oldWorkspaceObjects = []workspace.ObjectStatus{}
 	// Read a list of resources from previous run
 	oldDataFile, err := os.ReadFile(fileName)
 	if err != nil {
@@ -579,7 +580,7 @@ func (ic *importContext) loadOldWorkspaceObjects(fileName string) {
 	}
 }
 
-func (ic *importContext) findDeletedResources(fileName string) {
+func (ic *importContext) findDeletedResources() {
 	log.Print("[INFO] Starting detection of deleted workspace objects")
 	if !ic.incremental || len(ic.allWorkspaceObjects) == 0 {
 		return

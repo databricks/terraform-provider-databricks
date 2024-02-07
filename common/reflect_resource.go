@@ -62,6 +62,11 @@ func reflectKind(k reflect.Kind) string {
 }
 
 func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath []string, aliases map[string]string) string {
+	// If nothing in the aliases map, return the field name from plain chooseFieldName method.
+	if len(aliases) == 0 {
+		return chooseFieldName(typeField)
+	}
+
 	jsonFieldName := getJsonFieldName(typeField)
 	if jsonFieldName == "-" {
 		return "-"
@@ -287,12 +292,7 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 		typeField := field.sf
 		tfTag := typeField.Tag.Get("tf")
 
-		var fieldName string
-		if len(aliases) == 0 {
-			fieldName = chooseFieldName(typeField)
-		} else {
-			fieldName = chooseFieldNameWithAliases(typeField, path, aliases)
-		}
+		fieldName := chooseFieldNameWithAliases(typeField, path, aliases)
 		if fieldName == "-" {
 			continue
 		}
@@ -481,16 +481,11 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 	fields := listAllFields(rv)
 	for _, field := range fields {
 		typeField := field.sf
-		var fieldName string
-		if len(aliases) == 0 {
-			fieldName = chooseFieldName(typeField)
-		} else {
-			// Always pass in an empty list for path because we unwrap the aliases map on each call.
-			// We do not use the `path` variable in this function because it sometimes contains indices
-			// and sometimes it is empty. Thus we rely on the caller of iterFields to unwrap the keys
-			// of the aliases map.
-			fieldName = chooseFieldNameWithAliases(typeField, []string{}, aliases)
-		}
+		// Always pass in an empty list for path because we unwrap the aliases map on each call.
+		// We do not use the `path` variable in this function because it sometimes contains indices
+		// and sometimes it is empty. Thus we rely on the caller of iterFields to unwrap the keys
+		// of the aliases map.
+		fieldName := chooseFieldNameWithAliases(typeField, []string{}, aliases)
 		if fieldName == "-" {
 			continue
 		}

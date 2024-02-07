@@ -38,15 +38,15 @@ var kindMap = map[reflect.Kind]string{
 	reflect.UnsafePointer: "UnsafePointer",
 }
 
-// Generic interface for resource provider struct. Using CustomizeSchema and Aliases functions to keep track of additional information
+// Generic interface for ResourceProvider. Using CustomizeSchema and Aliases functions to keep track of additional information
 // on top of the generated go-sdk struct. This is used to replace manually maintained structs with `tf` tags.
-type ResourceProviderStruct interface {
+type ResourceProvider interface {
 	Aliases() map[string]string
 	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
-// Takes in a ResourceProviderStruct and converts that into a map from string to schema.
-func ResourceProviderStructToSchema(v ResourceProviderStruct) map[string]*schema.Schema {
+// Takes in a ResourceProvider and converts that into a map from string to schema.
+func ResourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, []string{}, v.Aliases())
 	scm = v.CustomizeSchema(scm)
@@ -694,7 +694,7 @@ func DataToReflectValue(d *schema.ResourceData, s map[string]*schema.Schema, rv 
 
 func getAliasesMapFromStruct(s any) map[string]string {
 	var aliases map[string]string
-	if v, ok := s.(ResourceProviderStruct); ok {
+	if v, ok := s.(ResourceProvider); ok {
 		aliases = v.Aliases()
 	} else {
 		aliases = map[string]string{}

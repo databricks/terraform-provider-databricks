@@ -963,9 +963,13 @@ func (ic *importContext) shouldSkipWorkspaceObject(object workspace.ObjectStatus
 	}
 	modifiedAt := wsObjectGetModifiedAt(object)
 	if ic.incremental && modifiedAt < updatedSinceMs {
-		log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
-			object.Path, modifiedAt, updatedSinceMs)
-		return true
+		p := ic.oldWorkspaceObjectMapping[object.ObjectID]
+		if p == "" || p == object.Path {
+			log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
+				object.Path, modifiedAt, updatedSinceMs)
+			return true
+		}
+		log.Printf("[DEBUG] Different path for object %d. Old='%s', New='%s'", object.ObjectID, p, object.Path)
 	}
 	if !ic.MatchesName(object.Path) {
 		return true

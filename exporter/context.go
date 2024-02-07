@@ -138,9 +138,11 @@ type importContext struct {
 	sqlDatasourcesMutex sync.Mutex
 
 	// workspace-related objects & corresponding mutex
-	allDirectories      []workspace.ObjectStatus
-	allWorkspaceObjects []workspace.ObjectStatus
-	wsObjectsMutex      sync.RWMutex
+	allDirectories            []workspace.ObjectStatus
+	allWorkspaceObjects       []workspace.ObjectStatus
+	wsObjectsMutex            sync.RWMutex
+	oldWorkspaceObjects       []workspace.ObjectStatus
+	oldWorkspaceObjectMapping map[int64]string
 
 	builtInPolicies      map[string]compute.PolicyFamily
 	builtInPoliciesMutex sync.Mutex
@@ -243,31 +245,33 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 
 	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
-		Client:                   c,
-		Context:                  ctx,
-		State:                    newStateApproximation(supportedResources),
-		Importables:              resourcesMap,
-		Resources:                p.ResourcesMap,
-		Scope:                    importedResources{},
-		importing:                map[string]bool{},
-		nameFixes:                nameFixes,
-		hclFixes:                 []regexFix{}, // Be careful with that! it may break working code
-		variables:                map[string]string{},
-		allDirectories:           []workspace.ObjectStatus{},
-		allWorkspaceObjects:      []workspace.ObjectStatus{},
-		workspaceConfKeys:        workspaceConfKeys,
-		shImports:                map[string]bool{},
-		notebooksFormat:          "SOURCE",
-		allUsers:                 map[string]scim.User{},
-		allSps:                   map[string]scim.User{},
-		waitGroup:                &sync.WaitGroup{},
-		channels:                 makeResourcesChannels(),
-		defaultHanlerChannelSize: defaultHanlerChannelSize,
-		defaultChannel:           make(resourceChannel, defaultHanlerChannelSize),
-		ignoredResources:         map[string]struct{}{},
-		deletedResources:         map[string]struct{}{},
-		emittedUsers:             map[string]struct{}{},
-		userOrSpDirectories:      map[string]bool{},
+		Client:                    c,
+		Context:                   ctx,
+		State:                     newStateApproximation(supportedResources),
+		Importables:               resourcesMap,
+		Resources:                 p.ResourcesMap,
+		Scope:                     importedResources{},
+		importing:                 map[string]bool{},
+		nameFixes:                 nameFixes,
+		hclFixes:                  []regexFix{}, // Be careful with that! it may break working code
+		variables:                 map[string]string{},
+		allDirectories:            []workspace.ObjectStatus{},
+		allWorkspaceObjects:       []workspace.ObjectStatus{},
+		oldWorkspaceObjects:       []workspace.ObjectStatus{},
+		oldWorkspaceObjectMapping: map[int64]string{},
+		workspaceConfKeys:         workspaceConfKeys,
+		shImports:                 map[string]bool{},
+		notebooksFormat:           "SOURCE",
+		allUsers:                  map[string]scim.User{},
+		allSps:                    map[string]scim.User{},
+		waitGroup:                 &sync.WaitGroup{},
+		channels:                  makeResourcesChannels(),
+		defaultHanlerChannelSize:  defaultHanlerChannelSize,
+		defaultChannel:            make(resourceChannel, defaultHanlerChannelSize),
+		ignoredResources:          map[string]struct{}{},
+		deletedResources:          map[string]struct{}{},
+		emittedUsers:              map[string]struct{}{},
+		userOrSpDirectories:       map[string]bool{},
 	}
 }
 
@@ -314,6 +318,8 @@ func (ic *importContext) Run() error {
 		ic.updatedSinceStr = tm.UTC().Format(time.RFC3339)
 		tm, _ = time.Parse(time.RFC3339, ic.updatedSinceStr)
 		ic.updatedSinceMs = tm.UnixMilli()
+		//
+		ic.loadOldWorkspaceObjects(wsObjectsFileName)
 	}
 
 	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
@@ -555,29 +561,33 @@ func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatu
 	return generateResourceName(rtype, name), rtype
 }
 
-func (ic *importContext) findDeletedResources(fileName string) {
-	log.Print("[INFO] Starting detection of deleted workspace objects")
-	if !ic.incremental || len(ic.allWorkspaceObjects) == 0 {
-		return
-	}
-	// // Read a list of resources from previous run
+func (ic *importContext) loadOldWorkspaceObjects(fileName string) {
+	// Read a list of resources from previous run
 	oldDataFile, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Printf("[WARN] Can't open the file (%s) with previous list of workspace objects: %s", fileName, err.Error())
 		return
 	}
-
-	oldData := make([]workspace.ObjectStatus, 0, len(ic.allWorkspaceObjects))
-	err = json.Unmarshal(oldDataFile, &oldData)
+	err = json.Unmarshal(oldDataFile, &ic.oldWorkspaceObjects)
 	if err != nil {
 		log.Printf("[WARN] Can't desereialize previous list of workspace objects: %s", err.Error())
 		return
 	}
-	if len(oldData) == 0 {
+	log.Printf("[DEBUG] Read previous list of workspace objects. got %d objects", len(ic.oldWorkspaceObjects))
+	for _, obj := range ic.oldWorkspaceObjects {
+		ic.oldWorkspaceObjectMapping[obj.ObjectID] = obj.Path
+	}
+}
+
+func (ic *importContext) findDeletedResources(fileName string) {
+	log.Print("[INFO] Starting detection of deleted workspace objects")
+	if !ic.incremental || len(ic.allWorkspaceObjects) == 0 {
+		return
+	}
+	if len(ic.oldWorkspaceObjects) == 0 {
 		log.Print("[INFO] Previous list of workspace objects is empty")
 		return
 	}
-	log.Printf("[DEBUG] Read previous list of workspace objects. got %d objects", len(oldData))
 	// generate IDs of current objects
 	currentObjs := map[string]struct{}{}
 	for _, obj := range ic.allWorkspaceObjects {
@@ -589,7 +599,7 @@ func (ic *importContext) findDeletedResources(fileName string) {
 		currentObjs[rid] = struct{}{}
 	}
 	// Loop through previous objects, and if it's missing from the current list, add it to deleted, including permission
-	for _, obj := range oldData {
+	for _, obj := range ic.oldWorkspaceObjects {
 		obj := obj
 		if !isSupportedWsObject(obj) {
 			continue
@@ -617,7 +627,6 @@ func (ic *importContext) findDeletedResources(fileName string) {
 			ic.deletedResources[permId] = struct{}{}
 		}
 	}
-
 	log.Printf("[INFO] Finished detection of deleted workspace objects. Detected %d deleted objects.",
 		len(ic.deletedResources))
 	log.Printf("[DEBUG] Deleted objects. %v", ic.deletedResources) // change to TRACE?

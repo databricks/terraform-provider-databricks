@@ -1,5 +1,16 @@
 # Version changelog
 
+## 1.36.1
+
+### New Features and Improvements
+* Fixed create storage credentials with owner for account ([#3184](https://github.com/databricks/terraform-provider-databricks/pull/3184)).
+
+### Documentation Changes
+* Removed AWS-only note for [databricks_service_principal_secret](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal_secret) resource ([#3213](https://github.com/databricks/terraform-provider-databricks/pull/3213)).
+
+### Internal Changes
+* Fixed test: TestUcAccResourceSqlTable_Managed ([#3226](https://github.com/databricks/terraform-provider-databricks/pull/3226)).
+
 ## 1.36.0
 
 ### New Features and Improvements

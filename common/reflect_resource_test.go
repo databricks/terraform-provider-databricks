@@ -248,6 +248,7 @@ func (DummyResourceProvider) Aliases() map[string]string {
 }
 
 func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+	CustomizeSchemaPath(s, "addresses").SetMinItems(1)
 	CustomizeSchemaPath(s, "addresses").SetMaxItems(10)
 	CustomizeSchemaPath(s, "tags").SetMaxItems(5)
 	CustomizeSchemaPath(s, "home").SetSuppressDiff()

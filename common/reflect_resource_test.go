@@ -230,12 +230,12 @@ type DummyNoTfTag struct {
 	Enabled     bool              `json:"enabled"`
 	Workers     int               `json:"workers,omitempty"`
 	Description string            `json:"description,omitempty"`
-	Addresses   []Address         `json:"addresses,omitempty"`
+	Addresses   []AddressNoTfTag  `json:"addresses,omitempty"`
 	Things      []string          `json:"things,omitempty"`
 	Tags        map[string]string `json:"tags,omitempty"`
-	Home        *Address          `json:"home,omitempty"`
-	House       *Address          `json:"house,omitempty"`
-	Other       *Address          `json:"other,omitempty"`
+	Home        *AddressNoTfTag   `json:"home,omitempty"`
+	House       *AddressNoTfTag   `json:"house,omitempty"`
+	Other       *AddressNoTfTag   `json:"other,omitempty"`
 }
 
 type DummyResourceProvider struct {
@@ -260,7 +260,7 @@ var dummy = DummyNoTfTag{
 	Enabled:     true,
 	Workers:     1004,
 	Description: "something",
-	Addresses: []Address{
+	Addresses: []AddressNoTfTag{
 		{
 			Line:      "abc",
 			IsPrimary: false,
@@ -274,7 +274,7 @@ var dummy = DummyNoTfTag{
 	Tags: map[string]string{
 		"Foo": "Bar",
 	},
-	Home: &Address{
+	Home: &AddressNoTfTag{
 		Line:      "bcd",
 		IsPrimary: true,
 	},

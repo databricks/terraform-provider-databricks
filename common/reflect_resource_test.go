@@ -255,6 +255,30 @@ func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[st
 	return s
 }
 
+var dummy = DummyNoTfTag{
+	Enabled:     true,
+	Workers:     1004,
+	Description: "something",
+	Addresses: []Address{
+		{
+			Line:      "abc",
+			IsPrimary: false,
+		},
+		{
+			Line:      "def",
+			IsPrimary: true,
+		},
+	},
+	Things: []string{"one", "two", "two"},
+	Tags: map[string]string{
+		"Foo": "Bar",
+	},
+	Home: &Address{
+		Line:      "bcd",
+		IsPrimary: true,
+	},
+}
+
 func TestStructToDataAndBack(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, scm, map[string]any{})
 	d.MarkNewResource()
@@ -382,49 +406,31 @@ func TestCollectionToMaps(t *testing.T) {
 	assert.EqualError(t, err, "not resource")
 }
 
-func TestStructToDataWithResourceProviderStruct(t *testing.T) {
+func TestStructToSchemaWithResourceProviderCustomization(t *testing.T) {
 	s := StructToSchema(DummyResourceProvider{}, nil)
 	assert.NotNil(t, s)
 	assert.Equal(t, 5, s["tags"].MaxItems)
 	assert.Equal(t, 10, s["addresses"].MaxItems)
+}
 
-	sp, err := SchemaPath(s, "addresses", "line")
+func TestStructToSchemaWithResourceProviderAliases(t *testing.T) {
+	s := StructToSchema(DummyResourceProvider{}, nil)
+	sp, err := SchemaPath(s, "enabled_alias")
 	assert.NoError(t, err)
-	assert.Equal(t, schema.TypeString, sp.Type)
+	assert.Equal(t, schema.TypeBool, sp.Type)
+}
 
-	dummy := DummyNoTfTag{
-		Enabled:     false,
-		Workers:     1004,
-		Description: "something",
-		Addresses: []Address{
-			{
-				Line:      "abc",
-				IsPrimary: false,
-			},
-			{
-				Line:      "def",
-				IsPrimary: true,
-			},
-		},
-		Things: []string{"one", "two", "two"},
-		Tags: map[string]string{
-			"Foo": "Bar",
-		},
-		Home: &Address{
-			Line:      "bcd",
-			IsPrimary: true,
-		},
-	}
+func TestStructToDataWithResourceProviderStruct(t *testing.T) {
+	s := StructToSchema(DummyResourceProvider{}, nil)
 
 	dummyResourceProvider := DummyResourceProvider{DummyNoTfTag: dummy}
-
 	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	d.MarkNewResource()
-	err = StructToData(dummyResourceProvider, s, d)
+	err := StructToData(dummyResourceProvider, s, d)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "something", d.Get("description"))
-	assert.Equal(t, false, d.Get("enabled_alias"))
+	assert.Equal(t, true, d.Get("enabled_alias")) // Testing aliases.
 	assert.Equal(t, 2, d.Get("addresses.#"))
 
 	assert.NotNil(t, s["home"].DiffSuppressFunc)
@@ -433,22 +439,30 @@ func TestStructToDataWithResourceProviderStruct(t *testing.T) {
 
 	{
 		//lint:ignore SA1019 Empty optional string should not be set.
-		_, ok := d.GetOkExists("addresses.0.optional_string")
+		_, ok := d.GetOk("addresses.0.optional_string")
 		assert.Falsef(t, ok, "Empty optional string should not be set in ResourceData")
 	}
 
 	{
 		//lint:ignore SA1019 Empty required string should be set.
-		_, ok := d.GetOkExists("addresses.0.required_string")
+		_, ok := d.GetOk("addresses.0.required_string")
 		assert.Truef(t, ok, "Empty required string should be set in ResourceData")
 	}
+}
 
+func TestDataToStructPointerWithResourceProviderStruct(t *testing.T) {
+	s := StructToSchema(DummyResourceProvider{}, nil)
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	d.MarkNewResource()
+	dummyResourceProvider := DummyResourceProvider{DummyNoTfTag: dummy}
+	err := StructToData(dummyResourceProvider, s, d)
+	assert.NoError(t, err)
 	var dummyCopy DummyResourceProvider
 	DataToStructPointer(d, s, &dummyCopy)
 
 	assert.Equal(t, len(dummyCopy.Addresses), len(dummy.Addresses))
+	assert.Equal(t, dummyCopy.Enabled, dummy.Enabled)
 	assert.Len(t, dummyCopy.Things, 2)
-	assert.Len(t, dummy.Things, 3)
 
 	err = d.Set("addresses", []any{
 		map[string]string{

@@ -68,7 +68,7 @@ func (a NetworksAPI) List(mwsAcctID string) ([]Network, error) {
 	return mwsNetworkList, err
 }
 
-func ResourceMwsNetworks() *schema.Resource {
+func ResourceMwsNetworks() common.Resource {
 	s := common.StructToSchema(Network{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["account_id"].Sensitive = true
 		// nolint
@@ -115,5 +115,5 @@ func ResourceMwsNetworks() *schema.Resource {
 			}
 			return NewNetworksAPI(ctx, c).Delete(accountID, networkID)
 		},
-	}.ToResource()
+	}
 }

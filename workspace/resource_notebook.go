@@ -4,12 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"log"
-	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -145,110 +142,6 @@ func (a NotebooksAPI) Mkdirs(path string) error {
 	}, nil)
 }
 
-type syncAnswer struct {
-	MU   sync.Mutex
-	data []ObjectStatus
-}
-
-func (a *syncAnswer) append(objs []ObjectStatus) {
-	a.MU.Lock()
-	a.data = append(a.data, objs...)
-	a.MU.Unlock()
-}
-
-type directoryInfo struct {
-	Path     string
-	Attempts int
-}
-
-// constants related to the parallel listing
-const (
-	directoryListingMaxAttempts = 3
-	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
-	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
-	defaultWorkersPoolSize      = 10
-	defaultDirectoryChannelSize = 100000
-)
-
-func (a NotebooksAPI) recursiveAddPathsParallel(directory directoryInfo, dirChannel chan directoryInfo,
-	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(ObjectStatus) bool) {
-	defer wg.Done()
-	notebookInfoList, err := a.list(directory.Path)
-	if err != nil {
-		log.Printf("[WARN] error listing '%s': %v", directory.Path, err)
-		if directory.Attempts < directoryListingMaxAttempts {
-			wg.Add(1)
-			dirChannel <- directoryInfo{Path: directory.Path, Attempts: directory.Attempts + 1}
-		}
-	}
-
-	newList := make([]ObjectStatus, 0, len(notebookInfoList))
-	directories := make([]ObjectStatus, 0, len(notebookInfoList))
-	for _, v := range notebookInfoList {
-		if v.ObjectType == Directory {
-			if shouldIncludeDir(v) {
-				newList = append(newList, v)
-				directories = append(directories, v)
-			}
-		} else {
-			newList = append(newList, v)
-		}
-	}
-	answer.append(newList)
-	for _, v := range directories {
-		wg.Add(1)
-		log.Printf("[DEBUG] putting directory '%s' into channel. Channel size: %d",
-			v.Path, len(dirChannel))
-		dirChannel <- directoryInfo{Path: v.Path}
-		time.Sleep(15 * time.Millisecond)
-	}
-}
-
-func getEnvAsInt(envName string, defaultValue int) int {
-	if val, exists := os.LookupEnv(envName); exists {
-		parsedVal, err := strconv.Atoi(val)
-		if err == nil {
-			return parsedVal
-		}
-	}
-	return defaultValue
-}
-
-func (a NotebooksAPI) ListParallel(path string, shouldIncludeDir func(ObjectStatus) bool) ([]ObjectStatus, error) {
-	var answer syncAnswer
-	wg := &sync.WaitGroup{}
-
-	if shouldIncludeDir == nil {
-		shouldIncludeDir = func(ObjectStatus) bool { return true }
-	}
-
-	numWorkers := getEnvAsInt(envVarListParallelism, defaultWorkersPoolSize)
-	channelSize := getEnvAsInt(envVarDirectoryChannelSize, defaultDirectoryChannelSize)
-	dirChannel := make(chan directoryInfo, channelSize)
-	for i := 0; i < numWorkers; i++ {
-		t := i
-		go func() {
-			log.Printf("[DEBUG] starting go routine %d", t)
-			for directory := range dirChannel {
-				log.Printf("[DEBUG] processing directory %s", directory.Path)
-				a.recursiveAddPathsParallel(directory, dirChannel, &answer, wg, shouldIncludeDir)
-			}
-		}()
-
-	}
-	log.Print("[DEBUG] pushing initial path to channel")
-	wg.Add(1)
-	a.recursiveAddPathsParallel(directoryInfo{Path: path}, dirChannel, &answer, wg, shouldIncludeDir)
-	log.Print("[DEBUG] starting to wait")
-	wg.Wait()
-	log.Print("[DEBUG] closing the directory channel")
-	close(dirChannel)
-
-	answer.MU.Lock()
-	defer answer.MU.Unlock()
-	return answer.data, nil
-}
-
 // List will list all objects in a path on the workspace
 // and with the recursive flag it will recursively list
 // all the objects
@@ -261,11 +154,11 @@ func (a NotebooksAPI) List(path string, recursive bool, ignoreErrors bool) ([]Ob
 		}
 		return paths, err
 	}
-	return a.list(path)
+	return a.ListInternalImpl(path)
 }
 
 func (a NotebooksAPI) recursiveAddPaths(path string, pathList *[]ObjectStatus, ignoreErrors bool) error {
-	notebookInfoList, err := a.list(path)
+	notebookInfoList, err := a.ListInternalImpl(path)
 	if err != nil && !ignoreErrors {
 		return err
 	}
@@ -285,7 +178,7 @@ type ObjectList struct {
 	Objects []ObjectStatus `json:"objects,omitempty"`
 }
 
-func (a NotebooksAPI) list(path string) ([]ObjectStatus, error) {
+func (a NotebooksAPI) ListInternalImpl(path string) ([]ObjectStatus, error) {
 	var notebookList ObjectList
 	err := a.client.Get(a.context, "/workspace/list", map[string]string{
 		"path": path,
@@ -307,7 +200,7 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 }
 
 // ResourceNotebook manages notebooks
-func ResourceNotebook() *schema.Resource {
+func ResourceNotebook() common.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"language": {
 			Type:     schema.TypeString,
@@ -439,7 +332,7 @@ func ResourceNotebook() *schema.Resource {
 			objType := d.Get("object_type")
 			return NewNotebooksAPI(ctx, c).Delete(d.Id(), !(objType == Notebook || objType == File))
 		},
-	}.ToResource()
+	}
 }
 
 func isParentDoesntExistError(err error) bool {

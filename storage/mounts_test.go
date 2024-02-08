@@ -333,20 +333,22 @@ func TestMountCRD(t *testing.T) {
 			Response:     apierr.NotFound("nope"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourceMount()
+		r := ResourceMount().ToResource()
 		d := r.TestResourceData()
+		d.Set("name", "a name")
+		d.Set("uri", "a uri")
 		client.WithCommandMock(func(commandStr string) common.CommandResults {
 			return common.CommandResults{}
 		})
-		diags := mountCreate(nil, r)(ctx, d, client)
+		diags := r.CreateContext(ctx, d, client)
 		assert.True(t, diags.HasError())
 		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
 
-		diags = mountRead(nil, r)(ctx, d, client)
+		diags = r.ReadContext(ctx, d, client)
 		assert.True(t, diags.HasError())
 		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
 
-		diags = mountDelete(nil, r)(ctx, d, client)
+		diags = r.DeleteContext(ctx, d, client)
 		assert.True(t, diags.HasError())
 		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
 	})

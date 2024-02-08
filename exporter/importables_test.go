@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
-	"strings"
 	"sync"
 	"testing"
 
@@ -31,22 +31,27 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/maps"
 )
 
 func importContextForTest() *importContext {
 	p := provider.DatabricksProvider()
+	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
 		Importables:              resourcesMap,
 		Resources:                p.ResourcesMap,
-		Files:                    map[string]*hclwrite.File{},
 		testEmits:                map[string]bool{},
 		nameFixes:                nameFixes,
 		waitGroup:                &sync.WaitGroup{},
 		allUsers:                 map[string]scim.User{},
 		allSps:                   map[string]scim.User{},
-		channels:                 makeResourcesChannels(p),
+		channels:                 makeResourcesChannels(),
 		exportDeletedUsersAssets: false,
 		ignoredResources:         map[string]struct{}{},
+		State:                    newStateApproximation(supportedResources),
+		emittedUsers:             map[string]struct{}{},
+		userOrSpDirectories:      map[string]bool{},
+		defaultChannel:           make(resourceChannel, defaultChannelSize),
 	}
 }
 
@@ -63,14 +68,15 @@ func importContextForTestWithClient(ctx context.Context, client *common.Databric
 }
 
 func TestInstancePool(t *testing.T) {
-	d := pools.ResourceInstancePool().TestResourceData()
+	d := pools.ResourceInstancePool().ToResource().TestResourceData()
 	d.Set("instance_pool_name", "blah-bah")
 	ic := importContextForTest()
+	ic.enableServices("access,pools")
 
 	name := resourcesMap["databricks_instance_pool"].Name(ic, d)
 	assert.Equal(t, "blah-bah", name)
 
-	d = pools.ResourceInstancePool().TestResourceData()
+	d = pools.ResourceInstancePool().ToResource().TestResourceData()
 	d.SetId("abc-bcd-def")
 	name = resourcesMap["databricks_instance_pool"].Name(ic, d)
 	assert.Equal(t, "def", name)
@@ -85,7 +91,7 @@ func TestInstancePool(t *testing.T) {
 }
 
 func TestClusterPolicy(t *testing.T) {
-	d := policies.ResourceClusterPolicy().TestResourceData()
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
 	d.Set("name", "bcd")
 	definition := map[string]map[string]string{
 		"aws_attributes.instance_profile_arn": {
@@ -102,6 +108,7 @@ func TestClusterPolicy(t *testing.T) {
 	policy, _ := json.Marshal(definition)
 	d.Set("definition", string(policy))
 	ic := importContextForTest()
+	ic.enableServices("storage,pools,policies,access")
 	ic.meAdmin = true
 	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{
 		ID:   "abc",
@@ -116,8 +123,9 @@ func TestClusterPolicy(t *testing.T) {
 }
 
 func TestPredefinedClusterPolicy(t *testing.T) {
-	d := policies.ResourceClusterPolicy().TestResourceData()
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
 	d.Set("policy_family_id", "job-cluster")
+	d.Set("name", "Job Compute")
 	policy, _ := json.Marshal(map[string]map[string]string{})
 	d.Set("definition", string(policy))
 	ic := importContextForTest()
@@ -133,6 +141,7 @@ func TestPredefinedClusterPolicy(t *testing.T) {
 
 func TestGroup(t *testing.T) {
 	ic := importContextForTest()
+	ic.enableServices("groups,access")
 	ic.allGroups = []scim.Group{
 		{
 			DisplayName: "foo",
@@ -165,7 +174,7 @@ func TestGroup(t *testing.T) {
 			},
 		},
 	}
-	d := scim.ResourceGroup().TestResourceData()
+	d := scim.ResourceGroup().ToResource().TestResourceData()
 	d.Set("display_name", "foo")
 	r := &resource{
 		Value:     "foo",
@@ -187,9 +196,10 @@ func TestGroup(t *testing.T) {
 
 func TestPermissions(t *testing.T) {
 	p := permissions.ResourcePermissions()
-	d := p.TestResourceData()
+	d := p.ToResource().TestResourceData()
 	d.SetId("abc")
 	ic := importContextForTest()
+	ic.enableServices("access,users,groups")
 	name := ic.Importables["databricks_permissions"].Name(ic, d)
 	assert.Equal(t, "abc", name)
 
@@ -220,7 +230,7 @@ func TestPermissions(t *testing.T) {
 }
 
 func TestSecretScope(t *testing.T) {
-	d := secrets.ResourceSecretScope().TestResourceData()
+	d := secrets.ResourceSecretScope().ToResource().TestResourceData()
 	d.Set("name", "abc")
 	ic := importContextForTest()
 	name := ic.Importables["databricks_secret_scope"].Name(ic, d)
@@ -229,7 +239,7 @@ func TestSecretScope(t *testing.T) {
 
 func TestInstancePoolNameFromID(t *testing.T) {
 	ic := importContextForTest()
-	d := pools.ResourceInstancePool().TestResourceData()
+	d := pools.ResourceInstancePool().ToResource().TestResourceData()
 	d.SetId("a-b-c")
 	d.Set("instance_pool_name", "")
 	assert.Equal(t, "c", resourcesMap["databricks_instance_pool"].Name(ic, d))
@@ -237,14 +247,14 @@ func TestInstancePoolNameFromID(t *testing.T) {
 
 func TestClusterNameFromID(t *testing.T) {
 	ic := importContextForTest()
-	d := clusters.ResourceCluster().TestResourceData()
+	d := clusters.ResourceCluster().ToResource().TestResourceData()
 	d.SetId("a-b-c")
 	assert.Equal(t, "c", resourcesMap["databricks_cluster"].Name(ic, d))
 }
 
 func TestRepoName(t *testing.T) {
 	ic := importContextForTest()
-	d := repos.ResourceRepo().TestResourceData()
+	d := repos.ResourceRepo().ToResource().TestResourceData()
 	d.SetId("12345")
 	// Repo without path
 	assert.Equal(t, "repo_12345", resourcesMap["databricks_repo"].Name(ic, d))
@@ -255,7 +265,7 @@ func TestRepoName(t *testing.T) {
 
 func TestRepoIgnore(t *testing.T) {
 	ic := importContextForTest()
-	d := repos.ResourceRepo().TestResourceData()
+	d := repos.ResourceRepo().ToResource().TestResourceData()
 	d.SetId("12345")
 	d.Set("path", "/Repos/user/test")
 	r := &resource{ID: "12345", Data: d}
@@ -269,7 +279,7 @@ func TestRepoIgnore(t *testing.T) {
 
 func TestDLTIgnore(t *testing.T) {
 	ic := importContextForTest()
-	d := pipelines.ResourcePipeline().TestResourceData()
+	d := pipelines.ResourcePipeline().ToResource().TestResourceData()
 	d.SetId("12345")
 	r := &resource{ID: "12345", Data: d}
 	// job without libraries
@@ -279,7 +289,7 @@ func TestDLTIgnore(t *testing.T) {
 
 func TestJobsIgnore(t *testing.T) {
 	ic := importContextForTest()
-	d := jobs.ResourceJob().TestResourceData()
+	d := jobs.ResourceJob().ToResource().TestResourceData()
 	d.SetId("12345")
 	r := &resource{ID: "12345", Data: d}
 	// job without tasks
@@ -289,7 +299,7 @@ func TestJobsIgnore(t *testing.T) {
 
 func TestJobName(t *testing.T) {
 	ic := importContextForTest()
-	d := jobs.ResourceJob().TestResourceData()
+	d := jobs.ResourceJob().ToResource().TestResourceData()
 	d.SetId("12345")
 	// job without name
 	assert.Equal(t, "job_12345", resourcesMap["databricks_job"].Name(ic, d))
@@ -318,7 +328,7 @@ func TestImportClusterLibraries(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		d := clusters.ResourceCluster().TestResourceData()
+		d := clusters.ResourceCluster().ToResource().TestResourceData()
 		d.SetId("abc")
 		err := resourcesMap["databricks_cluster"].Import(ic, &resource{
 			ID:   "abc",
@@ -339,7 +349,7 @@ func TestImportClusterLibrariesFails(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		d := clusters.ResourceCluster().TestResourceData()
+		d := clusters.ResourceCluster().ToResource().TestResourceData()
 		d.SetId("abc")
 		err := resourcesMap["databricks_cluster"].Import(ic, &resource{
 			ID:   "abc",
@@ -406,6 +416,7 @@ func TestInstnacePoolsListWithMatch(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("pools")
 		ic.match = "bcd"
 		err := resourcesMap["databricks_instance_pool"].List(ic)
 		assert.NoError(t, err)
@@ -427,7 +438,7 @@ func TestJobListNoNameMatch(t *testing.T) {
 }
 
 func TestClusterPolicyWrongDef(t *testing.T) {
-	d := policies.ResourceClusterPolicy().TestResourceData()
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
 	d.Set("name", "abc")
 	d.Set("definition", "..")
 	ic := importContextForTest()
@@ -439,10 +450,11 @@ func TestClusterPolicyWrongDef(t *testing.T) {
 }
 
 func TestClusterPolicyNoValues(t *testing.T) {
-	d := policies.ResourceClusterPolicy().TestResourceData()
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
 	d.Set("name", "abc")
 	d.Set("definition", `{"foo": {}}`)
 	ic := importContextForTest()
+	ic.enableServices("access")
 	ic.meAdmin = true
 	err := resourcesMap["databricks_cluster_policy"].Import(ic, &resource{
 		ID:   "x",
@@ -470,7 +482,7 @@ func TestGroupCacheError(t *testing.T) {
 			ID: "nonsense",
 		})
 		assert.EqualError(t, err, "nope")
-		d := scim.ResourceGroup().TestResourceData()
+		d := scim.ResourceGroup().ToResource().TestResourceData()
 		d.Set("display_name", "nonsense")
 		err = resourcesMap["databricks_group"].Import(ic, &resource{
 			ID:   "nonsense",
@@ -515,7 +527,7 @@ func TestUserSearchFails(t *testing.T) {
 		userFixture[0],
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		d := scim.ResourceUser().TestResourceData()
+		d := scim.ResourceUser().ToResource().TestResourceData()
 		d.Set("user_name", "dbc")
 		r := &resource{
 			Attribute: "display_name",
@@ -535,7 +547,7 @@ func TestSpnSearchFails(t *testing.T) {
 		qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{})[0],
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		d := scim.ResourceServicePrincipal().TestResourceData()
+		d := scim.ResourceServicePrincipal().ToResource().TestResourceData()
 		d.Set("application_id", "dbc")
 		r := &resource{
 			Attribute: "application_id",
@@ -567,7 +579,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		d := scim.ResourceServicePrincipal().TestResourceData()
+		d := scim.ResourceServicePrincipal().ToResource().TestResourceData()
 		d.Set("application_id", "dbc")
 		d.Set("display_name", "dbc")
 		r := &resource{
@@ -588,7 +600,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 			scim.ResourceServicePrincipal().Schema["display_name"], d))
 
 		// test for different branches in Name function
-		d2 := scim.ResourceServicePrincipal().TestResourceData()
+		d2 := scim.ResourceServicePrincipal().ToResource().TestResourceData()
 		d2.SetId("123")
 		d2.Set("application_id", "dbc")
 		assert.Equal(t, "dbc_123", resourcesMap["databricks_service_principal"].Name(ic, d2))
@@ -601,7 +613,7 @@ func TestSpnSearchSuccess(t *testing.T) {
 }
 
 func TestShouldOmitForUsers(t *testing.T) {
-	d := scim.ResourceUser().TestResourceData()
+	d := scim.ResourceUser().ToResource().TestResourceData()
 	d.SetId("user1")
 	d.Set("user_name", "user@domain.com")
 	d.Set("display_name", "")
@@ -616,7 +628,7 @@ func TestShouldOmitForUsers(t *testing.T) {
 }
 
 func TestShouldOmitFoRepos(t *testing.T) {
-	d := repos.ResourceRepo().TestResourceData()
+	d := repos.ResourceRepo().ToResource().TestResourceData()
 	d.SetId("1234")
 	d.Set("path", "/Repos/Test/repo")
 	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "path",
@@ -662,7 +674,7 @@ func TestUserImportSkipNonDirectGroups(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		d := scim.ResourceUser().TestResourceData()
+		d := scim.ResourceUser().ToResource().TestResourceData()
 		d.Set("user_name", "dbc")
 		r := &resource{
 			Attribute: "display_name",
@@ -731,6 +743,7 @@ func TestPoliciesListing(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("policies")
 		err := resourcesMap["databricks_cluster_policy"].List(ic)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(ic.testEmits))
@@ -756,6 +769,7 @@ func TestPoliciesListNoNameMatch(t *testing.T) {
 		emptyPolicyFamilies,
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("policies")
 		ic.match = "bcd"
 		err := resourcesMap["databricks_cluster_policy"].List(ic)
 		assert.NoError(t, err)
@@ -767,6 +781,7 @@ func TestAwsS3MountProfile(t *testing.T) {
 	ic := importContextForTest()
 	ic.mounts = true
 	ic.match = "abc"
+	ic.enableServices("mounts,access")
 	ic.mountMap = map[string]mount{}
 	ic.mountMap["/mnt/abc"] = mount{
 		URL:             "s3a://abc",
@@ -870,7 +885,7 @@ func TestMountsBodyGeneration(t *testing.T) {
 
 func TestGlobalInitScriptNameFromId(t *testing.T) {
 	ic := importContextForTest()
-	d := workspace.ResourceGlobalInitScript().TestResourceData()
+	d := workspace.ResourceGlobalInitScript().ToResource().TestResourceData()
 	d.SetId("abc")
 	assert.Equal(t, "abc", resourcesMap["databricks_global_init_script"].Name(ic, d))
 }
@@ -946,15 +961,26 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAd
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		os.MkdirAll(ic.Directory, 0755)
 		defer os.RemoveAll(ic.Directory)
 		ic.testEmits = nil
 		ic.meAdmin = asAdmin
 		ic.importing = map[string]bool{}
 		ic.variables = map[string]string{}
-		ic.services = strings.Split(services, ",")
+		ic.enableServices(services)
 		ic.startImportChannels()
 		cb(ic)
 	})
+}
+
+func getGeneratedFile(ic *importContext, service string) string {
+	fileName := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
+	content, err := os.ReadFile(fileName)
+	if err != nil {
+		log.Printf("[ERROR] can't read file %s", fileName)
+		return ""
+	}
+	return string(content)
 }
 
 func TestNotebookGeneration(t *testing.T) {
@@ -984,6 +1010,7 @@ func TestNotebookGeneration(t *testing.T) {
 				Path:       "/First/Second",
 				Language:   "PYTHON",
 			},
+			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -991,6 +1018,7 @@ func TestNotebookGeneration(t *testing.T) {
 			Response: workspace.ExportPath{
 				Content: "YWJj",
 			},
+			ReuseRequest: true,
 		},
 	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
@@ -998,12 +1026,12 @@ func TestNotebookGeneration(t *testing.T) {
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
 		  source = "${path.module}/notebooks/First/Second_123.py"
 		  path   = "/First/Second"
-		}`), string(ic.Files["notebooks"].Bytes()))
+		}`), getGeneratedFile(ic, "notebooks"))
 	})
 }
 
@@ -1034,6 +1062,7 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 				Path:       "/First/Second",
 				Language:   "PYTHON",
 			},
+			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1041,6 +1070,7 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 			Response: workspace.ExportPath{
 				Content: "YWJj",
 			},
+			ReuseRequest: true,
 		},
 	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "JUPYTER"
@@ -1048,14 +1078,14 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "first_second_123" {
 		  source   = "${path.module}/notebooks/First/Second_123.ipynb"
 		  path     = "/First/Second"
 		  language = "PYTHON"
 		  format   = "JUPYTER"
-		}`), string(ic.Files["notebooks"].Bytes()))
+		}`), getGeneratedFile(ic, "notebooks"))
 	})
 }
 
@@ -1086,6 +1116,7 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 				ObjectType: "DIRECTORY",
 				Path:       "/Fir\"st\\",
 			},
+			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1096,6 +1127,7 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 				Path:       "/Fir\"st\\/Second",
 				Language:   "PYTHON",
 			},
+			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1103,20 +1135,21 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 			Response: workspace.ExportPath{
 				Content: "YWJj",
 			},
+			ReuseRequest: true,
 		},
 	}, "notebooks,directories", true, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
-		ic.services = []string{"notebooks"}
+		ic.enableServices("notebooks")
 		err := resourcesMap["databricks_notebook"].List(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_notebook" "fir_st_second_123" {
 		  source = "${path.module}/notebooks/Fir_st_/Second_123.py"
 		  path   = "/Fir\"st\\/Second"
-		}`), string(ic.Files["notebooks"].Bytes()))
+		}`), getGeneratedFile(ic, "notebooks"))
 	})
 }
 
@@ -1159,15 +1192,15 @@ func TestDirectoryGeneration(t *testing.T) {
 
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_directory" "first_1234" {
 		  path = "/first"
-		}`), string(ic.Files["directories"].Bytes()))
+		}`), getGeneratedFile(ic, "directories"))
 	})
 }
 
-func TestGlobalInitScriptGen(t *testing.T) {
+func TestGlobalInitScriptGeneration(t *testing.T) {
 	testGenerate(t, []qa.HTTPFixture{
 		{
 			Method:       "GET",
@@ -1187,17 +1220,17 @@ func TestGlobalInitScriptGen(t *testing.T) {
 
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_global_init_script" "new_importing_things" {
 		  source  = "${path.module}/files/new_importing_things.sh"
 		  name    = "New: Importing ^ Things"
 		  enabled = true
-		}`), string(ic.Files["workspace"].Bytes()))
+		}`), getGeneratedFile(ic, "workspace"))
 	})
 }
 
-func TestSecretGen(t *testing.T) {
+func TestSecretGeneration(t *testing.T) {
 	testGenerate(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
@@ -1219,17 +1252,17 @@ func TestSecretGen(t *testing.T) {
 
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_secret" "a_b_eb2980a5a2" {
 		  string_value = var.string_value_a_b_eb2980a5a2
 		  scope        = "a"
 		  key          = "b"
-		}`), string(ic.Files["secrets"].Bytes()))
+		}`), getGeneratedFile(ic, "secrets"))
 	})
 }
 
-func TestDbfsFileGen(t *testing.T) {
+func TestDbfsFileGeneration(t *testing.T) {
 	testGenerate(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
@@ -1254,12 +1287,12 @@ func TestDbfsFileGen(t *testing.T) {
 
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
-		ic.generateHclForResources(nil)
+		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_dbfs_file" "_0cc175b9c0f1b6a831c399e269772661_a" {
 		  source = "${path.module}/files/_0cc175b9c0f1b6a831c399e269772661_a"
 		  path   = "a"
-		}`), string(ic.Files["storage"].Bytes()))
+		}`), getGeneratedFile(ic, "storage"))
 	})
 }
 
@@ -1323,6 +1356,7 @@ func TestIncrementalListDLT(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("dlt")
 		ic.incremental = true
 		ic.updatedSinceStr = "2023-07-24T00:00:00Z"
 		ic.updatedSinceMs = 1690156700000
@@ -1355,6 +1389,7 @@ func TestListSystemSchemasSuccess(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-system-schemas")
 		ic.currentMetastore = currentMetastoreResponse
 		err := resourcesMap["databricks_system_schema"].List(ic)
 		assert.NoError(t, err)
@@ -1392,6 +1427,7 @@ func TestListUcAllowListError(t *testing.T) {
 
 func TestListUcAllowListSuccess(t *testing.T) {
 	ic := importContextForTest()
+	ic.enableServices("uc-artifact-allowlist")
 	ic.currentMetastore = currentMetastoreResponse
 	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
 	assert.NoError(t, err)
@@ -1400,6 +1436,7 @@ func TestListUcAllowListSuccess(t *testing.T) {
 
 func TestEmitSqlParent(t *testing.T) {
 	ic := importContextForTest()
+	ic.enableServices("directories")
 	ic.emitSqlParentDirectory("")
 	assert.Equal(t, 0, len(ic.testEmits))
 	ic.emitSqlParentDirectory("folders/12345")
@@ -1409,6 +1446,7 @@ func TestEmitSqlParent(t *testing.T) {
 
 func TestEmitFilesFromSlice(t *testing.T) {
 	ic := importContextForTest()
+	ic.enableServices("storage,notebooks")
 	ic.emitFilesFromSlice([]string{
 		"dbfs:/FileStore/test.txt",
 		"/Workspace/Shared/test.txt",
@@ -1421,6 +1459,7 @@ func TestEmitFilesFromSlice(t *testing.T) {
 
 func TestEmitFilesFromMap(t *testing.T) {
 	ic := importContextForTest()
+	ic.enableServices("storage,notebooks")
 	ic.emitFilesFromMap(map[string]string{
 		"k1": "dbfs:/FileStore/test.txt",
 		"k2": "/Workspace/Shared/test.txt",

@@ -7,7 +7,7 @@
 * Bumped github.com/zclconf/go-cty from 1.14.1 to 1.14.2 ([#3144](https://github.com/databricks/terraform-provider-databricks/pull/3144)).
 * Bumped golang.org/x/mod from 0.14.0 to 0.15.0 ([#3229](https://github.com/databricks/terraform-provider-databricks/pull/3229)).
 * Exporter: Omitted `git_provider` only for well-known Git URLs ([#3216](https://github.com/databricks/terraform-provider-databricks/pull/3216)).
-* Removed omitempty in destination fields in clustes_api ([#3232](https://github.com/databricks/terraform-provider-databricks/pull/3232)).
+* Removed `omitempty` in `destination` fields in `clustes_api.go` ([#3232](https://github.com/databricks/terraform-provider-databricks/pull/3232)).
 
 
 ## 1.36.1

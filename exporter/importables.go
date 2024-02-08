@@ -1317,6 +1317,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return d.Get("branch").(string) == ""
 			case "tag":
 				return d.Get("tag").(string) == ""
+			case "git_provider":
+				url := d.Get("url").(string)
+				provider := repos.GetGitProviderFromUrl(url)
+				return provider != "" // omit git_provider only for well-known URLs
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},

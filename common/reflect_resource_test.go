@@ -383,7 +383,7 @@ func TestCollectionToMaps(t *testing.T) {
 }
 
 func TestStructToDataWithResourceProviderStruct(t *testing.T) {
-	s := ResourceProviderStructToSchema(DummyResourceProvider{})
+	s := StructToSchema(DummyResourceProvider{}, nil)
 	assert.NotNil(t, s)
 	assert.Equal(t, 5, s["tags"].MaxItems)
 	assert.Equal(t, 10, s["addresses"].MaxItems)

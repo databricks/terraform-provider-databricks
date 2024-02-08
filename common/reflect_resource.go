@@ -46,7 +46,7 @@ type ResourceProvider interface {
 }
 
 // Takes in a ResourceProvider and converts that into a map from string to schema.
-func ResourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
+func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, []string{}, v.Aliases())
 	scm = v.CustomizeSchema(scm)
@@ -120,6 +120,10 @@ func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema 
 
 // StructToSchema makes schema from a struct type & applies customizations from callback given
 func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
+	// If the input 'v' is an instance of ResourceProvider, call resourceProviderStructToSchema instead.
+	if rp, ok := v.(ResourceProvider); ok {
+		return resourceProviderStructToSchema(rp)
+	}
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, []string{}, map[string]string{})
 	if customize != nil {

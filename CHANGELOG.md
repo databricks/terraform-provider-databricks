@@ -4,7 +4,7 @@
 
 ### New Features and Improvements
 * Added [databricks_aws_unity_catalog_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/aws_unity_catalog_policy) data source ([#2483](https://github.com/databricks/terraform-provider-databricks/pull/2483)).
-* Removed `omitempty` in `destination` fields in `clustes_api.go` ([#3232](https://github.com/databricks/terraform-provider-databricks/pull/3232)).
+* Removed `omitempty` in `destination` fields in `clustes_api.go` ([#3232](https://github.com/databricks/terraform-provider-databricks/pull/3232)), to address ([#3231](https://github.com/databricks/terraform-provider-databricks/issues/3231))
 
 ### Exporter
 * Omitted `git_provider` only for well-known Git URLs ([#3216](https://github.com/databricks/terraform-provider-databricks/pull/3216)).

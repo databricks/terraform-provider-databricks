@@ -79,6 +79,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
 * `sql-queries` - **listing** [databricks_sql_query](../resources/sql_query.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
+* `uc` - **listing** [databricks_catalog](../resources/catalog.md) and nested resources - schemas, volumes, etc.
 * `uc-artifact-allowlist` - exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-system-schemas` - exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `uc-storage-credentials` - exports [databricks_storage_credential](../resources/storage_credential) resources on workspace or account level.

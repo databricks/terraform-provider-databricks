@@ -1168,6 +1168,26 @@ func (ic *importContext) isServiceEnabled(service string) bool {
 	return exists
 }
 
+func (ic *importContext) EmitIfUpdatedAfterMillis(r *resource, modifiedAt int64, message string) {
+	updatedSinceMs := ic.getUpdatedSinceMs()
+	if ic.incremental && modifiedAt < updatedSinceMs {
+		log.Printf("[DEBUG] skipping %s that was modified at %d (last active=%d)",
+			message, modifiedAt, updatedSinceMs)
+		return
+	}
+	ic.Emit(r)
+}
+
+func (ic *importContext) EmitIfUpdatedAfterIsoString(r *resource, updatedAt, message string) {
+	updatedSinceStr := ic.getUpdatedSinceStr()
+	if ic.incremental && updatedAt < updatedSinceStr {
+		log.Printf("[DEBUG] skipping %s that was modified at %s (updatedSince=%s)", message,
+			updatedAt, updatedSinceStr)
+		return
+	}
+	ic.Emit(r)
+}
+
 func (ic *importContext) Emit(r *resource) {
 	// TODO: change into channels, if stack trace depth issues would surface
 	_, v := r.MatchPair()

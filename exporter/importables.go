@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	tfuc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
@@ -1246,18 +1247,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, gis := range globalInitScripts {
-				modifiedAt := gis.UpdatedAt
-				if ic.incremental && modifiedAt < updatedSinceMs {
-					log.Printf("[DEBUG] skipping global init script '%s' that was modified at %d (last active=%d)",
-						gis.Name, modifiedAt, updatedSinceMs)
-					continue
-				}
-				ic.Emit(&resource{
+				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_global_init_script",
 					ID:       gis.ScriptID,
-				})
+				}, gis.UpdatedAt, fmt.Sprintf("global init script '%s'", gis.Name))
 				log.Printf("[INFO] Scanned %d of %d global init scripts", offset+1, len(globalInitScripts))
 			}
 			return nil
@@ -1427,18 +1421,11 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			ipLists := ipListsResp.IpAccessLists
-			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, ipList := range ipLists {
-				modifiedAt := ipList.UpdatedAt
-				if ic.incremental && modifiedAt < updatedSinceMs {
-					log.Printf("[DEBUG] skipping IP access list '%s' that was modified at %d (last active=%d)",
-						ipList.Label, modifiedAt, updatedSinceMs)
-					continue
-				}
-				ic.Emit(&resource{
+				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_ip_access_list",
 					ID:       ipList.ListId,
-				})
+				}, ipList.UpdatedAt, fmt.Sprintf("IP access list '%s'", ipList.Label))
 				log.Printf("[INFO] Scanned %d of %d IP Access Lists", offset+1, len(ipLists))
 			}
 			if len(ipLists) > 0 {
@@ -1586,25 +1573,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
-			updatedSinceStr := ic.getUpdatedSinceStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
 					continue
 				}
-				updatedAt := q["updated_at"].(string)
-				if ic.incremental && updatedAt < updatedSinceStr {
-					log.Printf("[DEBUG] skipping query '%s' that was modified at %s (updatedSince=%s)", name,
-						updatedAt, updatedSinceStr)
-					continue
-				}
-				log.Printf("[DEBUG] emitting query '%s' that was modified at %s (updatedSince=%s)", name,
-					updatedAt, updatedSinceStr)
-				ic.Emit(&resource{
+				ic.EmitIfUpdatedAfterIsoString(&resource{
 					Resource:    "databricks_sql_query",
 					ID:          q["id"].(string),
 					Incremental: ic.incremental,
-				})
+				}, q["updated_at"].(string), fmt.Sprintf("query '%s'", name))
 				log.Printf("[INFO] Imported %d of %d SQL queries", i+1, len(qs))
 			}
 
@@ -1731,25 +1709,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return nil
 			}
-			updatedSinceStr := ic.getUpdatedSinceStr()
 			for i, q := range qs {
 				name := q["name"].(string)
 				if !ic.MatchesName(name) {
 					continue
 				}
-				updatedAt := q["updated_at"].(string)
-				if ic.incremental && updatedAt < updatedSinceStr {
-					log.Printf("[DEBUG] skipping dashboard '%s' that was modified at %s (updatedSince=%s)", name,
-						updatedAt, updatedSinceStr)
-					continue
-				}
-				log.Printf("[DEBUG] emitting dashboard '%s' that was modified at %s (updatedSince=%s)", name,
-					updatedAt, updatedSinceStr)
-				ic.Emit(&resource{
+				ic.EmitIfUpdatedAfterIsoString(&resource{
 					Resource:    "databricks_sql_dashboard",
 					ID:          q["id"].(string),
 					Incremental: ic.incremental,
-				})
+				}, q["updated_at"].(string), fmt.Sprintf("dashboard '%s'", name))
 				log.Printf("[INFO] Imported %d of %d SQL dashboards", i+1, len(qs))
 			}
 			return nil
@@ -1856,7 +1825,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string) + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			updatedSinceStr := ic.getUpdatedSinceStr()
 			alerts, err := ic.workspaceClient.Alerts.List(ic.Context)
 			if err != nil {
 				return err
@@ -1866,18 +1834,11 @@ var resourcesMap map[string]importable = map[string]importable{
 				if !ic.MatchesName(name) {
 					continue
 				}
-				if ic.incremental && alert.UpdatedAt < updatedSinceStr {
-					log.Printf("[DEBUG] skipping alert '%s' that was modified at %s (last active=%s)", name,
-						alert.UpdatedAt, updatedSinceStr)
-					continue
-				}
-				log.Printf("[DEBUG] emitting alert '%s' that was modified at %s (last active=%s)", name,
-					alert.UpdatedAt, updatedSinceStr)
-				ic.Emit(&resource{
+				ic.EmitIfUpdatedAfterIsoString(&resource{
 					Resource:    "databricks_sql_alert",
 					ID:          alert.Id,
 					Incremental: ic.incremental,
-				})
+				}, alert.UpdatedAt, fmt.Sprintf("alert '%s'", name))
 				log.Printf("[INFO] Imported %d of %d SQL alerts", i+1, len(alerts))
 			}
 			return nil
@@ -1920,27 +1881,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			updatedSinceMs := ic.getUpdatedSinceMs()
 			for i, q := range pipelinesList {
 				if !ic.MatchesName(q.Name) {
 					continue
 				}
+				var modifiedAt int64
 				if ic.incremental {
 					pipeline, err := api.Read(q.PipelineID)
 					if err != nil {
 						return err
 					}
-					modifiedAt := pipeline.LastModified
-					if modifiedAt < updatedSinceMs {
-						log.Printf("[DEBUG] skipping DLT Pipeline '%s' that was modified at %d (last active=%d)",
-							pipeline.Name, modifiedAt, updatedSinceMs)
-						continue
-					}
+					modifiedAt = pipeline.LastModified
 				}
-				ic.Emit(&resource{
+				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_pipeline",
 					ID:       q.PipelineID,
-				})
+				}, modifiedAt, fmt.Sprintf("DLT Pipeline '%s'", q.Name))
 				log.Printf("[INFO] Imported %d of %d DLT Pipelines", i+1, len(pipelinesList))
 			}
 			return nil
@@ -2325,6 +2281,168 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		// TODO: add Depends & Import to emit corresponding UC Volumes when support for them is added
+	},
+	"databricks_catalog": {
+		WorkspaceLevel: true,
+		Service:        "uc",
+		List: func(ic *importContext) error {
+			if ic.currentMetastore == nil {
+				return fmt.Errorf("there is no UC metastore information")
+			}
+			catalogs, err := ic.workspaceClient.Catalogs.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+			for _, v := range catalogs {
+				switch v.CatalogType {
+				case "MANAGED_CATALOG", "FOREIGN_CATALOG", "DELTASHARING_CATALOG":
+					{
+						name := fmt.Sprintf("%s_%s_%s", v.Name, ic.currentMetastore.Name, v.CatalogType)
+						ic.EmitIfUpdatedAfterMillis(&resource{
+							Resource: "databricks_catalog",
+							ID:       v.Name,
+							Name:     nameNormalizationRegex.ReplaceAllString(name, "_"),
+						}, v.UpdatedAt, fmt.Sprintf("catalog '%s'", v.Name))
+					}
+				default:
+					log.Printf("[INFO] Skipping catalog %s of type %s", v.Name, v.CatalogType)
+				}
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			var cat tfuc.CatalogInfo
+			s := ic.Resources["databricks_catalog"].Schema
+			common.DataToStructPointer(r.Data, s, &cat)
+
+			// Emit: UC Connection, List schemas, Catalog grants, ...
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       "catalog/" + cat.Name,
+			})
+			// TODO: emit owner?  Should we do this? Because it's a account-level identity... Create a separate function for that...
+			if cat.ConnectionName != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_connection",
+					ID:       cat.MetastoreID + "|" + cat.ConnectionName,
+				})
+			} else if cat.ProviderName == "" { // We need to be careful here if we add more catalog types...
+				schemas, err := ic.workspaceClient.Schemas.ListAll(ic.Context, catalog.ListSchemasRequest{CatalogName: r.ID})
+				if err != nil {
+					return err
+				}
+				ignoredSchemas := []string{"information_schema"}
+				for _, schema := range schemas {
+					if schema.CatalogType != "MANAGED_CATALOG" || slices.Contains(ignoredSchemas, schema.Name) {
+						continue
+					}
+					ic.EmitIfUpdatedAfterMillis(&resource{
+						Resource: "databricks_schema",
+						ID:       schema.FullName,
+					}, schema.UpdatedAt, fmt.Sprintf("schema '%s'", schema.FullName))
+				}
+			}
+
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "owner":
+				return d.Get(pathString).(string) != ""
+			case "isolation_mode":
+				return d.Get(pathString).(string) != "ISOLATED"
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		// TODO: add Depends & Import to emit corresponding UC Volumes, Connections, etc. when support for them is added
+		// TODO: reference from `storage_root` to the external location using MatchPrefix?
+		// TODO: convert `main` catalog into the data source as it's automatically created?
+		//   This will require addition of the databricks_catalog data source
+	},
+	"databricks_schema": {
+		WorkspaceLevel: true,
+		Service:        "uc",
+		Import: func(ic *importContext, r *resource) error {
+			schemaFullName := r.ID
+			catalogName := r.Data.Get("catalog_name").(string)
+			schemaName := r.Data.Get("name").(string)
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       "schema/" + schemaFullName,
+			})
+			// TODO: emit owner? See comment in catalog resource
+			// TODO: list tables
+			// list registered models
+			models, err := ic.workspaceClient.RegisteredModels.ListAll(ic.Context,
+				catalog.ListRegisteredModelsRequest{
+					CatalogName: catalogName,
+					SchemaName:  schemaName,
+				})
+			if err != nil { // TODO: should we continue?
+				return err
+			}
+			for _, model := range models {
+				ic.EmitIfUpdatedAfterMillis(&resource{
+					Resource: "databricks_registered_model",
+					ID:       model.FullName,
+				}, model.UpdatedAt, fmt.Sprintf("registered model '%s'", model.FullName))
+			}
+			// list volumes
+			volumes, err := ic.workspaceClient.Volumes.ListAll(ic.Context,
+				catalog.ListVolumesRequest{
+					CatalogName: catalogName,
+					SchemaName:  schemaName,
+				})
+			if err != nil {
+				return err
+			}
+			for _, volume := range volumes {
+				ic.EmitIfUpdatedAfterMillis(&resource{
+					Resource: "databricks_volume",
+					ID:       volume.FullName,
+				}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
+			}
+
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "owner" {
+				return d.Get(pathString).(string) != ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+		},
+	},
+	"databricks_volume": {
+		WorkspaceLevel: true,
+		Service:        "uc",
+		Import: func(ic *importContext, r *resource) error {
+			volumeFullName := r.ID
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       "volume/" + volumeFullName,
+			})
+			// TODO: emit owner? See comment in catalog resource
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "owner":
+				return d.Get(pathString).(string) != ""
+			case "storage_location", "volume_type":
+				return d.Get("volume_type").(string) == "MANAGED"
+			}
+
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name"},
+			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+		},
 	},
 	"databricks_storage_credential": {
 		WorkspaceLevel: true,

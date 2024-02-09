@@ -440,7 +440,7 @@ func TestStructToDataWithResourceProviderStruct(t *testing.T) {
 
 	{
 		//lint:ignore SA1019 Empty optional string should not be set.
-		_, ok := d.GetOk("addresses.0.optional_string")
+		_, ok := d.GetOkExists("addresses.0.optional_string")
 		assert.Falsef(t, ok, "Empty optional string should not be set in ResourceData")
 	}
 
@@ -539,7 +539,7 @@ func TestStructToData(t *testing.T) {
 
 	{
 		//lint:ignore SA1019 Empty required string should be set.
-		_, ok := d.GetOk("addresses.0.required_string")
+		_, ok := d.GetOkExists("addresses.0.required_string")
 		assert.Truef(t, ok, "Empty required string should be set in ResourceData")
 	}
 

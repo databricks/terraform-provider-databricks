@@ -190,6 +190,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of VPC Endpoint in form of `account_id/vpc_endpoint_id`
 * `vpc_endpoint_id` - Canonical unique identifier of VPC Endpoint in Databricks Account
 * `aws_endpoint_service_id` - (AWS Only) The ID of the Databricks endpoint service that this VPC endpoint is connected to. Please find the list of endpoint service IDs for each supported region in the [Databricks PrivateLink documentation](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html)
 * `state` - (AWS Only) State of VPC Endpoint

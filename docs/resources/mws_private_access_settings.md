@@ -82,6 +82,7 @@ The following arguments are available:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of the Private Access Settings in form of `account_id/private_access_settings_id`.
 * `private_access_settings_id` - Canonical unique identifier of Private Access Settings in Databricks Account
 * `status` - (AWS only) Status of Private Access Settings
 

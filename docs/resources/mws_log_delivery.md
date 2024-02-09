@@ -145,6 +145,7 @@ resource "databricks_mws_log_delivery" "audit_logs" {
 
 Resource exports the following attributes:
 
+* `id` - the ID of log delivery configuration in form of `account_id|config_id`.
 * `config_id` - Databricks log delivery configuration ID.
 
 ## Import

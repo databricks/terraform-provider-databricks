@@ -297,7 +297,7 @@ resource "aws_iam_policy" "external_data_access" {
           "${aws_s3_bucket.external.arn}/*"
         ],
         "Effect" : "Allow"
-      }, 
+      },
       {
         "Action" : [
           "sts:AssumeRole"

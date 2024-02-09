@@ -52,6 +52,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the unique ID of the SQL warehouse.
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
 * `data_source_id` - ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.

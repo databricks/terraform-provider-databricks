@@ -148,7 +148,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Canonical unique identifier for the cluster policy. This is equal to policy_id.
+* `id` - Canonical unique identifier for the cluster policy. This is equal to `policy_id`.
 * `policy_id` - Canonical unique identifier for the cluster policy.
 
 ## Import

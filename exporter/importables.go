@@ -2068,18 +2068,11 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 
-			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, endpoint := range endpointsList {
-				modifiedAt := endpoint.LastUpdatedTimestamp
-				if ic.incremental && modifiedAt < updatedSinceMs {
-					log.Printf("[DEBUG] skipping serving endpoint '%s' that was modified at %d (last active=%d)",
-						endpoint.Name, modifiedAt, updatedSinceMs)
-					continue
-				}
-				ic.Emit(&resource{
+				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_model_serving",
 					ID:       endpoint.Name,
-				})
+				}, endpoint.LastUpdatedTimestamp, fmt.Sprintf("serving endpoint '%s'", endpoint.Name))
 				if offset%50 == 0 {
 					log.Printf("[INFO] Scanned %d of %d Serving Endpoints", offset+1, len(endpointsList))
 				}
@@ -2117,21 +2110,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-
-			updatedSinceMs := ic.getUpdatedSinceMs()
 			for offset, webhook := range webhooks {
-				modifiedAt := webhook.LastUpdatedTimestamp
-				if ic.incremental && modifiedAt < updatedSinceMs {
-					log.Printf("[DEBUG] skipping MLflow webhook '%s' that was modified at %d (last active=%d)",
-						webhook.Id, modifiedAt, updatedSinceMs)
-					continue
-				}
-				log.Printf("[DEBUG] emitting MLflow webhook '%s' that was modified at %d (last active=%d)",
-					webhook.Id, modifiedAt, updatedSinceMs)
-				ic.Emit(&resource{
+				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_mlflow_webhook",
 					ID:       webhook.Id,
-				})
+				}, webhook.LastUpdatedTimestamp, fmt.Sprintf("webhook '%s'", webhook.Id))
 				if webhook.JobSpec != nil && webhook.JobSpec.JobId != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_job",

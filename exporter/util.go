@@ -947,12 +947,16 @@ func (ic *importContext) enableServices(services string) {
 	for _, s := range strings.Split(services, ",") {
 		ic.services[strings.TrimSpace(s)] = struct{}{}
 	}
+	for s := range ic.listing { // Add all services mentioned in the listing
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
 }
 
 func (ic *importContext) enableListing(listing string) {
 	ic.listing = map[string]struct{}{}
 	for _, s := range strings.Split(listing, ",") {
 		ic.listing[strings.TrimSpace(s)] = struct{}{}
+		ic.services[strings.TrimSpace(s)] = struct{}{}
 	}
 }
 

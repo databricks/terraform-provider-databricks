@@ -101,7 +101,7 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 			output_schema_name = "output.schema",
 			inference_log = {
 				granularities = ["1 day"],
-				timestamp_col = "timestamp"
+				timestamp_col = "timestamp",
 				prediction_col = "prediction",
 				model_id_col = "model_id"
 			} 

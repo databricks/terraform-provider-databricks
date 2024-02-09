@@ -52,6 +52,12 @@ The following arguments are available:
 * `parent` - (Optional, String) The identifier of the workspace folder containing the alert. The default is ther user's home folder. The folder identifier is formatted as `folder/<folder_id>`.
 * `rearm` - (Optional, Integer) Number of seconds after being triggered before the alert rearms itself and can be triggered again. If not defined, alert will never be triggered again. 
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - unique ID of the SQL Alert.
+
 ## Related Resources
 
 The following resources are often used in the same context:

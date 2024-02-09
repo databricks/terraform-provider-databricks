@@ -94,6 +94,12 @@ DLT allows to specify one or more notification blocks to get notifications about
   * `on-update-fatal-failure` - a pipeline update fails with a non-retryable (fatal) error.
   * `on-flow-failure` - a single data flow fails.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Canonical unique identifier of the DLT pipeline.
+* `url` - URL of the DLT pipeline on the given workspace.
 
 ## Import
 

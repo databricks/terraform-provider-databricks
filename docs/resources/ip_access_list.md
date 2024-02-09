@@ -40,6 +40,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - Canonical unique identifier for the IP Access List, same as `list_id`.
 * `list_id` - Canonical unique identifier for the IP Access List.
 
 ## Import

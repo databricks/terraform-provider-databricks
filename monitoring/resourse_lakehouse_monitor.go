@@ -44,7 +44,7 @@ type MonitorInfo struct {
 	TableName               string                    `json:"table_name,omitempty"`
 }
 
-func ResourceLakehouseMonitor() *schema.Resource {
+func ResourceLakehouseMonitor() common.Resource {
 	monitorSchema := common.StructToSchema(
 		Monitor{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -135,5 +135,5 @@ func ResourceLakehouseMonitor() *schema.Resource {
 			return w.LakehouseMonitors.DeleteByFullName(ctx, d.Id())
 		},
 		Schema: readSchema,
-	}.ToResource()
+	}
 }

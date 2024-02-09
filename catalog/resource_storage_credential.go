@@ -38,7 +38,7 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 		return adjustDataAccessSchema(m)
 	})
 
-func ResourceStorageCredential() *schema.Resource {
+func ResourceStorageCredential() common.Resource {
 	return common.Resource{
 		Schema: storageCredentialSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -75,7 +75,7 @@ func ResourceStorageCredential() *schema.Resource {
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
 					MetastoreId:           metastoreId,
-					StorageCredentialName: storageCredential.CredentialInfo.Id,
+					StorageCredentialName: storageCredential.CredentialInfo.Name,
 				})
 				if err != nil {
 					return err
@@ -152,6 +152,11 @@ func ResourceStorageCredential() *schema.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
@@ -191,6 +196,11 @@ func ResourceStorageCredential() *schema.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {
@@ -229,5 +239,5 @@ func ResourceStorageCredential() *schema.Resource {
 				})
 			})
 		},
-	}.ToResource()
+	}
 }

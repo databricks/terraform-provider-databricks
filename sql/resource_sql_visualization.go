@@ -145,7 +145,7 @@ func suppressWhitespaceChangesInJSON(_, old, new string, d *schema.ResourceData)
 	return bytes.Equal(oldp, newp)
 }
 
-func ResourceSqlVisualization() *schema.Resource {
+func ResourceSqlVisualization() common.Resource {
 	p := common.NewPairSeparatedID("query_id", "visualization_id", "/")
 	s := common.StructToSchema(
 		VisualizationEntity{},
@@ -217,5 +217,5 @@ func ResourceSqlVisualization() *schema.Resource {
 			return NewVisualizationAPI(ctx, c).Delete(visualizationID)
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

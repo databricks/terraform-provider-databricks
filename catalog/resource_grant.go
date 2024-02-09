@@ -119,7 +119,7 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 	return split[0], split[1], split[2], nil
 }
 
-func ResourceGrant() *schema.Resource {
+func ResourceGrant() common.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 
@@ -144,6 +144,14 @@ func ResourceGrant() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			principal := d.Get("principal").(string)
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
 			var grants = catalog.PermissionsList{
@@ -156,7 +164,7 @@ func ResourceGrant() *schema.Resource {
 			}
 			securable, name := permissions.Mappings.KeyValue(d)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			err := replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
+			err = replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 			if err != nil {
 				return err
 			}
@@ -179,6 +187,14 @@ func ResourceGrant() *schema.Resource {
 			return common.StructToData(*grantsForPrincipal, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			securable, name, principal, err := parseSecurableId(d)
 			if err != nil {
 				return err
@@ -196,6 +212,14 @@ func ResourceGrant() *schema.Resource {
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			err = validateMetastoreId(ctx, w, d.Get("metastore").(string))
+			if err != nil {
+				return err
+			}
 			securable, name, principal, err := parseSecurableId(d)
 			if err != nil {
 				return err
@@ -203,5 +227,5 @@ func ResourceGrant() *schema.Resource {
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
 		},
-	}.ToResource()
+	}
 }

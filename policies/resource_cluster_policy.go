@@ -25,7 +25,7 @@ func isBuiltinPolicyFamily(ctx context.Context, w *databricks.WorkspaceClient, f
 }
 
 // ResourceClusterPolicy ...
-func ResourceClusterPolicy() *schema.Resource {
+func ResourceClusterPolicy() common.Resource {
 	s := common.StructToSchema(
 		compute.CreatePolicy{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -128,5 +128,5 @@ func ResourceClusterPolicy() *schema.Resource {
 			}
 			return w.ClusterPolicies.DeleteByPolicyId(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

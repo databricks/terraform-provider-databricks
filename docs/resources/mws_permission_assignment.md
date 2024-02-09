@@ -74,6 +74,12 @@ The following arguments are required:
   * `"USER"` - Can access the workspace with basic privileges.
   * `"ADMIN"` - Can access the workspace and has workspace admin privileges to manage users and groups, workspace configurations, and more.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of the permission assignment in form of `workspace_id|principal_id`.
+
 ## Import
 
 The resource `databricks_mws_permission_assignment` can be imported using the workspace id and principal id

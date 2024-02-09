@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceSystemSchema() *schema.Resource {
+func ResourceSystemSchema() common.Resource {
 	systemSchema := common.StructToSchema(catalog.SystemSchemaInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["metastore_id"] = &schema.Schema{
 			Type:     schema.TypeString,
@@ -109,5 +109,5 @@ func ResourceSystemSchema() *schema.Resource {
 				SchemaName:  catalog.DisableSchemaName(schemaName),
 			})
 		},
-	}.ToResource()
+	}
 }

@@ -543,7 +543,7 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 }
 
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {
-	d := ResourceUser().TestResourceData()
+	d := ResourceUser().ToResource().TestResourceData()
 	d.Set("force", true)
 	rerr := createForceOverridesManuallyAddedServicePrincipal(
 		fmt.Errorf("nonsense"), d,
@@ -563,7 +563,7 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
 			fmt.Errorf("Service principal with application ID %s already exists.", appID),
@@ -585,7 +585,7 @@ func TestCreateForceOverwriteCannotListAccServicePrincipals(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
 			fmt.Errorf("Service principal with application ID %s already exists.", appID),
@@ -626,7 +626,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("application_id", appID)
 		err := createForceOverridesManuallyAddedServicePrincipal(

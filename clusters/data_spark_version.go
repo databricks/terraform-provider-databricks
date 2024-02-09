@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"golang.org/x/mod/semver"
 )
@@ -125,7 +124,7 @@ func (a ClustersAPI) LatestSparkVersionOrDefault(svr SparkVersionRequest) string
 }
 
 // DataSourceSparkVersion returns DBR version matching to the specification
-func DataSourceSparkVersion() *schema.Resource {
+func DataSourceSparkVersion() common.Resource {
 	s := common.StructToSchema(SparkVersionRequest{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 
@@ -134,14 +133,14 @@ func DataSourceSparkVersion() *schema.Resource {
 		return s
 	})
 
-	return &schema.Resource{
+	return common.Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			var this SparkVersionRequest
 			common.DataToStructPointer(d, s, &this)
 			version, err := NewClustersAPI(ctx, m).LatestSparkVersion(this)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(version)
 			return nil

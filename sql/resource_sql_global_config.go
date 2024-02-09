@@ -111,7 +111,7 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 	return gc, nil
 }
 
-func ResourceSqlGlobalConfig() *schema.Resource {
+func ResourceSqlGlobalConfig() common.Resource {
 	s := common.StructToSchema(GlobalConfig{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["enable_serverless_compute"].Deprecated = "This field is intended as an internal API " +
@@ -142,5 +142,5 @@ func ResourceSqlGlobalConfig() *schema.Resource {
 			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{SecurityPolicy: "DATA_ACCESS_CONTROL"})
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

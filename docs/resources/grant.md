@@ -32,15 +32,11 @@ See [databricks_grants Metastore grants](grants.md#metastore-grants) for the lis
 
 ```hcl
 resource "databricks_grant" "sandbox_data_engineers" {
-  metastore = databricks_metastore.this.id
-
   principal  = "Data Engineers"
   privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
 }
 
 resource "databricks_grant" "sandbox_data_sharer" {
-  metastore = databricks_metastore.this.id
-
   principal  = "Data Sharer"
   privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
 }
@@ -209,6 +205,26 @@ resource "databricks_grant" "customers_data_engineers" {
 
 resource "databricks_grant" "customers_data_analysts" {
   model = "main.reporting.customer_model"
+
+  principal  = "Data Analysts"
+  privileges = ["EXECUTE"]
+}
+```
+
+## Function grants
+
+See [databricks_grants Function grants](grants.md#function-grants) for the list of privileges that apply to Registered models.
+
+```hcl
+resource "databricks_grant" "udf_data_engineers" {
+  function = "main.reporting.udf"
+
+  principal  = "Data Engineers"
+  privileges = ["EXECUTE"]
+}
+
+resource "databricks_grant" "udf_data_analysts" {
+  function = "main.reporting.udf"
 
   principal  = "Data Analysts"
   privileges = ["EXECUTE"]

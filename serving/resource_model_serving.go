@@ -12,7 +12,7 @@ import (
 
 const DefaultProvisionTimeout = 45 * time.Minute
 
-func ResourceModelServing() *schema.Resource {
+func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
 		serving.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -94,5 +94,5 @@ func ResourceModelServing() *schema.Resource {
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-	}.ToResource()
+	}
 }

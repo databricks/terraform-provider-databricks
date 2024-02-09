@@ -41,12 +41,18 @@ In addition to all arguments above, the following attributes are exported:
 * `created_at` -  Time at which this artifact allowlist was set.
 * `created_by` -  Identity that set the artifact allowlist.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of the artifact allow list in form of `metastore_id|artifact_type`.
+
 ## Import
 
 This resource can be imported by name:
 
 ```bash
-terraform import databricks_artifact_allowlist.this <metastore_id>|<artifact_type>
+terraform import databricks_artifact_allowlist.this '<metastore_id>|<artifact_type>'
 ```
 
 ## Related Resources

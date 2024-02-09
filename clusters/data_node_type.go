@@ -6,7 +6,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databricks/databricks-sdk-go"
 )
@@ -41,7 +40,7 @@ func (a ClustersAPI) GetSmallestNodeType(request compute.NodeTypeRequest) string
 }
 
 // DataSourceNodeType returns smallest node depedning on the cloud
-func DataSourceNodeType() *schema.Resource {
+func DataSourceNodeType() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *compute.NodeTypeRequest, w *databricks.WorkspaceClient) error {
 		data.Id = smallestNodeType(ctx, *data, w)
 		log.Printf("[DEBUG] smallest node: %s", data.Id)

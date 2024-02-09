@@ -949,6 +949,13 @@ func (ic *importContext) enableServices(services string) {
 	}
 }
 
+func (ic *importContext) enableListing(listing string) {
+	ic.listing = map[string]struct{}{}
+	for _, s := range strings.Split(listing, ",") {
+		ic.listing[strings.TrimSpace(s)] = struct{}{}
+	}
+}
+
 func (ic *importContext) emitSqlParentDirectory(parent string) {
 	if parent == "" {
 		return

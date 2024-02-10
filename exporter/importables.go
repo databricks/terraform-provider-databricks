@@ -1061,10 +1061,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
-			var permissions permissions.PermissionsEntity
-			s := ic.Resources["databricks_permissions"].Schema
-			common.DataToStructPointer(r.Data, s, &permissions)
-			return (len(permissions.AccessControlList) == 0)
+			return (r.Data.Get("access_control.#").(int) == 0)
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var permissions permissions.PermissionsEntity
@@ -2267,7 +2264,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_catalog": {
 		WorkspaceLevel: true,
-		Service:        "uc",
+		Service:        "uc-catalogs",
 		List: func(ic *importContext) error {
 			if ic.currentMetastore == nil {
 				return fmt.Errorf("there is no UC metastore information")
@@ -2344,7 +2341,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_schema": {
 		WorkspaceLevel: true,
-		Service:        "uc",
+		Service:        "uc-schemas",
 		Import: func(ic *importContext, r *resource) error {
 			schemaFullName := r.ID
 			catalogName := r.Data.Get("catalog_name").(string)
@@ -2401,7 +2398,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_volume": {
 		WorkspaceLevel: true,
-		Service:        "uc",
+		Service:        "uc-volumes",
 		Import: func(ic *importContext, r *resource) error {
 			volumeFullName := r.ID
 			ic.Emit(&resource{
@@ -2425,6 +2422,29 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name"},
 			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+		},
+	},
+	"databricks_grants": {
+		WorkspaceLevel: true,
+		Service:        "uc-grants", // TODO: use uc-volumes?
+		// TODO: Should we try to make name unique?
+		Import: func(ic *importContext, r *resource) error {
+			// TODO: do we need to emit principals? See comment for the owner...
+			// If not, we don't need this function
+			return nil
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			return r.Data.Get("grant.#").(int) == 0
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "catalog", Resource: "databricks_catalog"},
+			{Path: "schema", Resource: "databricks_schema"},
+			{Path: "volume", Resource: "databricks_volume"},
+			//			{Path: "", Resource: ""},
+			//			{Path: "", Resource: ""},
 		},
 	},
 	"databricks_storage_credential": {

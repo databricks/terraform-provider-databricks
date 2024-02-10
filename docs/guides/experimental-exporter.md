@@ -79,11 +79,15 @@ Services are just logical groups of resources used for filtering and organizatio
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
 * `sql-queries` - **listing** [databricks_sql_query](../resources/sql_query.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
-* `uc` - **listing** [databricks_catalog](../resources/catalog.md) and nested resources - schemas, volumes, etc.
 * `uc-artifact-allowlist` - exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
+* `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md)
+* `uc-connections` -  [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
+* `uc-grants` -  [databricks_grants](../resources/grants.md)
+* `uc-schemas` -  [databricks_schema](../resources/schema.md)
 * `uc-system-schemas` - exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `uc-storage-credentials` - exports [databricks_storage_credential](../resources/storage_credential) resources on workspace or account level.
 * `uc-external-locations` - exports [databricks_external_location[(../resources/external_location) resource.
+* `uc-volumes` -  [databricks_volume](../resources/volume.md)
 * `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
 * `workspace` - [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
 

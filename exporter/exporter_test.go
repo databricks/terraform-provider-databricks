@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/aws"
@@ -298,6 +299,13 @@ var emptyRepos = qa.HTTPFixture{
 	Response:     repos.ReposListResponse{},
 }
 
+var emptyShares = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/unity-catalog/shares",
+	Response:     sharing.ListSharesResponse{},
+}
+
 var emptyGitCredentials = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/git-credentials",
@@ -432,6 +440,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			noCurrentMetastoreAttached,
 			meAdminFixture,
 			emptyRepos,
+			emptyShares,
 			emptyGitCredentials,
 			emptyWorkspace,
 			emptyIpAccessLIst,
@@ -691,6 +700,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyRepos,
 			emptyExternalLocations,
 			emptyStorageCrdentials,
+			emptyShares,
 			emptyModelServing,
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,

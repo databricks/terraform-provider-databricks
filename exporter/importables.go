@@ -2352,6 +2352,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_grants",
 				ID:       "schema/" + schemaFullName,
 			})
+			ic.Emit(&resource{
+				Resource: "databricks_catalog",
+				ID:       catalogName,
+			})
 			// TODO: emit owner? See comment in catalog resource
 			// TODO: list tables
 			// list registered models
@@ -2406,6 +2410,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.Emit(&resource{
 				Resource: "databricks_grants",
 				ID:       "volume/" + volumeFullName,
+			})
+			catalogName := r.Data.Get("catalog_name").(string)
+			ic.Emit(&resource{
+				Resource: "databricks_schema",
+				ID:       catalogName + "." + r.Data.Get("catalog_name").(string),
+			})
+			ic.Emit(&resource{
+				Resource: "databricks_catalog",
+				ID:       catalogName,
 			})
 			// TODO: emit owner? See comment in catalog resource
 			return nil
@@ -2565,6 +2578,62 @@ var resourcesMap map[string]importable = map[string]importable{
 				return d.Get(pathString).(string) != ""
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+	},
+	"databricks_share": {
+		WorkspaceLevel: true,
+		Service:        "uc-shares",
+		List: func(ic *importContext) error {
+			shares, err := ic.workspaceClient.Shares.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+			for _, share := range shares {
+				ic.EmitIfUpdatedAfterMillis(&resource{
+					Resource: "databricks_share",
+					ID:       share.Name,
+				}, share.UpdatedAt, fmt.Sprintf("share '%s'", share.Name))
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			// TODO: do we need to emit the owner See comment for the owner...
+			var share tfuc.ShareInfo
+			s := ic.Resources["databricks_share"].Schema
+			common.DataToStructPointer(r.Data, s, &share)
+			// TODO: how to link recipients to share?
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       "share/" + r.ID,
+			})
+			for _, obj := range share.Objects {
+				switch obj.DataObjectType {
+				case "TABLE":
+					ic.Emit(&resource{
+						Resource: "databricks_sql_table",
+						ID:       obj.Name,
+					})
+				case "VOLUME":
+					ic.Emit(&resource{
+						Resource: "databricks_volume",
+						ID:       obj.Name,
+					})
+				default:
+					log.Printf("[DEBUG] Object type %s isn't supported in share %s", obj.DataObjectType, r.ID)
+				}
+			}
+
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "owner" {
+				return d.Get(pathString).(string) != ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{ // think how to distinguish them?
+			{Path: "object.name", Resource: "databricks_volume"},
+			// {Path: "name", Resource: "databricks_sql_table"},
 		},
 	},
 }

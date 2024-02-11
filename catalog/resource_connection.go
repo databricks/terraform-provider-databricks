@@ -64,7 +64,7 @@ func ResourceConnection() common.Resource {
 			if d.Get("owner") != "" {
 				var updateConnectionRequest catalog.UpdateConnection
 				common.DataToStructPointer(d, s, &updateConnectionRequest)
-				updateConnectionRequest.NameArg = updateConnectionRequest.Name
+				updateConnectionRequest.NameArg = d.Get("name").(string)
 				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
 				if err != nil {
 					return err
@@ -120,8 +120,7 @@ func ResourceConnection() common.Resource {
 
 			if d.HasChange("owner") {
 				_, err = w.Connections.Update(ctx, catalog.UpdateConnection{
-					Name:    updateConnectionRequest.Name,
-					NameArg: updateConnectionRequest.Name,
+					NameArg: updateConnectionRequest.NameArg,
 					Owner:   updateConnectionRequest.Owner,
 				})
 				if err != nil {
@@ -136,8 +135,7 @@ func ResourceConnection() common.Resource {
 					// Rollback
 					old, new := d.GetChange("owner")
 					_, rollbackErr := w.Connections.Update(ctx, catalog.UpdateConnection{
-						Name:    updateConnectionRequest.Name,
-						NameArg: updateConnectionRequest.Name,
+						NameArg: updateConnectionRequest.NameArg,
 						Owner:   old.(string),
 					})
 					if rollbackErr != nil {

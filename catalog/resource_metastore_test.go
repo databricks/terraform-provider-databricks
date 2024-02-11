@@ -27,8 +27,8 @@ func TestCreateMetastore(t *testing.T) {
 				MetastoreId: "abc",
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
-				Id:   "abc",
-				Name: "a",
+				Id:      "abc",
+				NewName: "a",
 			}).Return(&catalog.MetastoreInfo{
 				Name: "a",
 			}, nil)
@@ -57,9 +57,9 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 				MetastoreId: "abc",
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
-				Id:    "abc",
-				Name:  "a",
-				Owner: "administrators",
+				Id:      "abc",
+				NewName: "a",
+				Owner:   "administrators",
 			}).Return(&catalog.MetastoreInfo{
 				Name:  "a",
 				Owner: "administrators",
@@ -92,7 +92,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "a",
+				NewName:           "a",
 				Owner:             "administrators",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 0,
@@ -246,7 +246,7 @@ func TestUpdateMetastore_OwnerAndOtherChanges(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "abc",
+				NewName:           "abc",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -296,7 +296,7 @@ func TestUpdateMetastore_Rollback(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "abc",
+				NewName:           "abc",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -337,7 +337,7 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 			e := w.GetMockMetastoresAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "abc",
+				NewName:           "abc",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -390,7 +390,7 @@ func TestCreateAccountMetastore(t *testing.T) {
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
-					Name: "a",
+					NewName: "a",
 				},
 			}).Return(&catalog.AccountsMetastoreInfo{
 				MetastoreInfo: &catalog.MetastoreInfo{
@@ -431,8 +431,8 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
-					Name:  "a",
-					Owner: "administrators",
+					NewName: "a",
+					Owner:   "administrators",
 				},
 			}).Return(&catalog.AccountsMetastoreInfo{
 				MetastoreInfo: &catalog.MetastoreInfo{
@@ -476,7 +476,7 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
-					Name:                         "a",
+					NewName:                      "a",
 					Owner:                        "administrators",
 					DeltaSharingOrganizationName: "acme",
 					DeltaSharingScope:            "INTERNAL_AND_EXTERNAL",
@@ -630,7 +630,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
 					Id:                "abc",
-					Name:              "abc",
+					NewName:           "abc",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -680,7 +680,7 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
 					Id:                "abc",
-					Name:              "abc",
+					NewName:           "abc",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},

@@ -150,7 +150,6 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 					"customize diff for")
 			}
 		}()
-		// TODO: check that the provided workspace ID matches that for the provider
 		c := m.(*DatabricksClient)
 		err = r.verifyWorkspaceId(ctx, rd, c)
 		if err != nil {
@@ -182,6 +181,17 @@ func (r Resource) getSchema() map[string]*schema.Schema {
 
 func (r Resource) isResource() bool {
 	return r.Create != nil || r.Update != nil || r.Delete != nil
+}
+
+func (r Resource) setOriginalWorkspaceId(d *schema.ResourceData) error {
+	if !r.WorkspaceIdField.IsUserSpecified() {
+		return nil
+	}
+	id, ok := d.GetOk(r.WorkspaceIdField.Field())
+	if !ok {
+		return nil
+	}
+	return d.Set(OriginalWorkspaceId.Field(), id)
 }
 
 // ToResource converts to Terraform resource definition
@@ -250,6 +260,10 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
 			}
+			err = r.setOriginalWorkspaceId(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			return nil
 		}
 	}
@@ -288,7 +302,7 @@ func (r Resource) ToResource() *schema.Resource {
 			},
 		}
 	}
-	if r.WorkspaceIdField != NoWorkspaceId {
+	if r.WorkspaceIdField.IsUserSpecified() {
 		resource.Schema = AddWorkspaceIdField(resource.Schema, r.WorkspaceIdField)
 	}
 	if r.Update != nil {

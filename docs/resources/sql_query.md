@@ -111,6 +111,12 @@ For `text`, `number`, `date`, `datetime`, `datetimesec` block
 
 * `value` - The default value for this parameter.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - the unique ID of the SQL Query.
+
 ## Import
 
 You can import a `databricks_sql_query` resource with ID like the following:

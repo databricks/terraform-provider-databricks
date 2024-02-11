@@ -12,7 +12,7 @@ Listing all volumes in a _things_ [databricks_schema](../resources/schema.md) of
 ```hcl
 data "databricks_volumes" "this" {
   catalog_name = "sandbox"
-  schema_name = "things"
+  schema_name  = "things"
 }
 
 output "all_volumes" {

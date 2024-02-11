@@ -248,6 +248,12 @@ Arguments of the `grant_rules` block are:
   * `groups/{groupname}` (also exposed as `acl_principal_id` attribute of `databricks_group` resource).
   * `servicePrincipals/{applicationId}` (also exposed as `acl_principal_id` attribute of `databricks_service_principal` resource).
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of the access control rule set - the same as `name`.
+
 ## Related Resources
 
 The following resources are often used in the same context:

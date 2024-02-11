@@ -44,6 +44,17 @@ func (w WorkspaceIdField) Field() string {
 	}
 }
 
+func (w WorkspaceIdField) IsUserSpecified() bool {
+	switch w {
+	case WorkspaceId:
+		return true
+	case ManagementWorkspaceId:
+		return true
+	default:
+		return false
+	}
+}
+
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
 	Create             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
@@ -103,6 +114,27 @@ func recoverable(cb func(
 	}
 }
 
+func (r Resource) verifyWorkspaceId(ctx context.Context, rd *schema.ResourceDiff, c *DatabricksClient) error {
+	if !r.WorkspaceIdField.IsUserSpecified() {
+		return nil
+	}
+	if !rd.NewValueKnown(r.WorkspaceIdField.Field()) {
+		return nil
+	}
+	if c.Config.IsAccountClient() {
+		return nil
+	}
+	configuredWorkspaceId := rd.Get(r.WorkspaceIdField.Field()).(int64)
+	currentWorkspaceId, err := c.CurrentWorkspaceID(ctx)
+	if err != nil {
+		return err
+	}
+	if configuredWorkspaceId != currentWorkspaceId {
+		return fmt.Errorf("configured %s (%d) does not match current workspace ID (%d)", r.WorkspaceIdField.Field(), configuredWorkspaceId, currentWorkspaceId)
+	}
+	return nil
+}
+
 func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 	if !r.isResource() {
 		return nil
@@ -119,10 +151,11 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 			}
 		}()
 		// TODO: check that the provided workspace ID matches that for the provider
-		// c := m.(*DatabricksClient)
-		// if r.WorkspaceIdField == WorkspaceId && rd.NewValueKnown("workspace_id") && !c.Config.IsAccountClient() {
-		//     ...
-		// }
+		c := m.(*DatabricksClient)
+		err = r.verifyWorkspaceId(ctx, rd, c)
+		if err != nil {
+			return err
+		}
 		// Note: you cannot clear workspace_id field because it is not computed.
 		// We could make it computed, but I think that would be too implicit for users.
 

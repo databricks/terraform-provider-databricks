@@ -51,6 +51,9 @@ type DatabricksClient struct {
 
 	cachedWorkspaceClients   map[int64]*databricks.WorkspaceClient
 	cachedWorkspaceClientsMu sync.Mutex
+
+	currentWorkspaceID   int64
+	currentWorkspaceIDMu sync.Mutex
 }
 
 func addCachedMe(w *databricks.WorkspaceClient) {
@@ -73,6 +76,26 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	addCachedMe(w)
 	c.cachedWorkspaceClient = w
 	return w, nil
+}
+
+func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
+	if c.currentWorkspaceID != 0 {
+		return c.currentWorkspaceID, nil
+	}
+	c.currentWorkspaceIDMu.Lock()
+	defer c.currentWorkspaceIDMu.Unlock()
+	if c.currentWorkspaceID != 0 {
+		return c.currentWorkspaceID, nil
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return 0, err
+	}
+	c.currentWorkspaceID, err = w.CurrentWorkspaceID(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return c.currentWorkspaceID, nil
 }
 
 func (c *DatabricksClient) InConfiguredWorkspace(ctx context.Context, d *schema.ResourceData, f WorkspaceIdField) (*DatabricksClient, error) {

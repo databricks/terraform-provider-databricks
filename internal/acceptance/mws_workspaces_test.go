@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -100,10 +101,12 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 		}`,
 		Check: resourceCheckWithState("databricks_mws_workspaces.this",
 			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
-				workspaceUrl, ok := state.Attributes["workspace_url"]
+				workspaceIdStr, ok := state.Attributes["workspace_id"]
 				assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
 
-				workspaceClient, err := client.ClientForHost(ctx, workspaceUrl)
+				workspaceId, err := strconv.ParseInt(workspaceIdStr, 10, 64)
+				assert.NoError(t, err)
+				workspaceClient, err := client.InWorkspace(ctx, workspaceId)
 				assert.NoError(t, err)
 
 				tokensAPI := tokens.NewTokensAPI(ctx, workspaceClient)
@@ -160,10 +163,12 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 		}`,
 			Check: resourceCheckWithState("databricks_mws_workspaces.this",
 				func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
-					workspaceUrl, ok := state.Attributes["workspace_url"]
+					workspaceIdStr, ok := state.Attributes["workspace_id"]
 					assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
 
-					workspaceClient, err := client.ClientForHost(ctx, workspaceUrl)
+					workspaceId, err := strconv.ParseInt(workspaceIdStr, 10, 64)
+					assert.NoError(t, err)
+					workspaceClient, err := client.InWorkspace(ctx, workspaceId)
 					assert.NoError(t, err)
 
 					tokensAPI := tokens.NewTokensAPI(ctx, workspaceClient)

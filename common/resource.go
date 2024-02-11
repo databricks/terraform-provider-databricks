@@ -205,10 +205,18 @@ func (r Resource) ToResource() *schema.Resource {
 	getDeleteClient := getClient
 	if r.WorkspaceIdField != NoWorkspaceId {
 		getClient = func(ctx context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
-			return m.(*DatabricksClient).InConfiguredWorkspace(ctx, d, r.WorkspaceIdField)
+			workspaceId, ok := d.GetOk(r.WorkspaceIdField.Field())
+			if !ok {
+				return c, nil
+			}
+			return m.(*DatabricksClient).InWorkspace(ctx, int64(workspaceId.(int)))
 		}
 		getDeleteClient = func(ctx context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
-			return m.(*DatabricksClient).InConfiguredWorkspace(ctx, d, OriginalWorkspaceId)
+			workspaceId, ok := d.GetOk(OriginalWorkspaceId.Field())
+			if !ok {
+				return c, nil
+			}
+			return m.(*DatabricksClient).InWorkspace(ctx, int64(workspaceId.(int)))
 		}
 	}
 	// Ignore missing for read for resources, but not for data sources.

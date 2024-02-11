@@ -195,7 +195,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	defer cancel()
 	// wait for DNS caches to refresh, as sometimes we cannot make
 	// API calls to new workspaces immediately after it's created
-	wsClient, err := a.client.ClientForHost(a.context, ws.WorkspaceURL)
+	wsClient, err := a.client.InWorkspace(a.context, ws.WorkspaceID)
 	if err != nil {
 		return resource.NonRetryableError(err)
 	}
@@ -365,8 +365,8 @@ func (s SensitiveString) String() string {
 
 // ephemeral entity to use with StructToData()
 type WorkspaceToken struct {
-	WorkspaceURL string `json:"workspace_url,omitempty"`
-	Token        *Token `json:"token,omitempty"`
+	WorkspaceID int64  `json:"workspace_id,omitempty" tf:"computed"`
+	Token       *Token `json:"token,omitempty"`
 }
 
 func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
@@ -376,7 +376,7 @@ func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 	if wsToken.Token == nil {
 		return nil
 	}
-	client, err := workspacesAPI.client.ClientForHost(workspacesAPI.context, wsToken.WorkspaceURL)
+	client, err := workspacesAPI.client.InWorkspace(workspacesAPI.context, wsToken.WorkspaceID)
 	if err != nil {
 		return err
 	}
@@ -398,7 +398,7 @@ func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 	if wsToken.Token == nil {
 		return nil
 	}
-	client, err := a.client.ClientForHost(a.context, wsToken.WorkspaceURL)
+	client, err := a.client.InWorkspace(a.context, wsToken.WorkspaceID)
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,12 @@ func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 
 func removeTokenIfNeeded(a WorkspacesAPI,
 	workspaceSchema map[string]*schema.Schema, tokenID string, d *schema.ResourceData) error {
-	client, err := a.client.ClientForHost(a.context, d.Get("workspace_url").(string))
+	var wsToken WorkspaceToken
+	common.DataToStructPointer(d, workspaceSchema, &wsToken)
+	if wsToken.Token == nil {
+		return nil
+	}
+	client, err := a.client.InWorkspace(a.context, wsToken.WorkspaceID)
 	if err != nil {
 		return err
 	}

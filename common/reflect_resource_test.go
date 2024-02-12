@@ -397,13 +397,13 @@ func TestIterFields(t *testing.T) {
 }
 
 func TestCollectionToMaps(t *testing.T) {
-	v, err := collectionToMaps([]string{"a", "b"}, nil, map[string]string{})
+	v, err := collectionToMaps([]string{"a", "b"}, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, []any{"a", "b"}, v)
 
 	_, err = collectionToMaps([]int{1, 2}, &schema.Schema{
 		Elem: schema.TypeBool,
-	}, map[string]string{})
+	}, nil)
 	assert.EqualError(t, err, "not resource")
 }
 
@@ -647,11 +647,11 @@ func TestDiffToStructPointer(t *testing.T) {
 }
 
 func TestReadListFromData(t *testing.T) {
-	err := readListFromData([]string{}, data{}, []any{}, nil, nil, map[string]string{}, nil)
+	err := readListFromData([]string{}, data{}, []any{}, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	x := reflect.ValueOf(0)
-	err = readListFromData([]string{}, data{}, []any{1}, &x, nil, map[string]string{}, nil)
+	err = readListFromData([]string{}, data{}, []any{1}, &x, nil, nil, nil)
 	assert.EqualError(t, err, "[[1]] unknown collection field")
 }
 
@@ -673,7 +673,7 @@ func TestReadReflectValueFromDataCornerCases(t *testing.T) {
 	var n Nonsense
 	v := reflect.ValueOf(&n)
 	rv := v.Elem()
-	err := readReflectValueFromData([]string{}, data{"new": 0.123, "invalid": 1}, rv, s, map[string]string{})
+	err := readReflectValueFromData([]string{}, data{"new": 0.123, "invalid": 1}, rv, s, nil)
 	assert.EqualError(t, err, "invalid: invalid[1] unsupported field type")
 }
 

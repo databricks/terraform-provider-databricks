@@ -13,6 +13,7 @@ func TestUcAccLakehouseMonitor(t *testing.T) {
 				properties = {
 					purpose = "testing"
 				}
+				force_destroy = true
 			}
 
 			resource "databricks_schema" "things" {

@@ -364,7 +364,7 @@ func TestPrimitiveReflectValueFromInterface(t *testing.T) {
 
 func TestIterFields(t *testing.T) {
 	v := reflect.ValueOf("x")
-	err := iterFields(v, []string{"x"}, scm, map[string]string{}, nil)
+	err := iterFields(v, []string{"x"}, scm, nil, nil)
 	assert.EqualError(t, err, "value of Struct is expected, but got String: \"x\"")
 
 	v = reflect.ValueOf(testStruct{})
@@ -372,7 +372,7 @@ func TestIterFields(t *testing.T) {
 		"integer": {
 			Type: schema.TypeInt,
 		},
-	}, map[string]string{}, nil)
+	}, nil, nil)
 	assert.EqualError(t, err, "inconsistency: integer has omitempty, but is not optional")
 
 	err = iterFields(v, []string{}, map[string]*schema.Schema{
@@ -381,7 +381,7 @@ func TestIterFields(t *testing.T) {
 			Default:  nil,
 			Optional: true,
 		},
-	}, map[string]string{}, nil)
+	}, nil, nil)
 	assert.EqualError(t, err, "inconsistency: non_optional is optional, default is empty, but has no omitempty")
 
 	err = iterFields(v, []string{}, map[string]*schema.Schema{
@@ -390,7 +390,7 @@ func TestIterFields(t *testing.T) {
 			Default:  "_",
 			Optional: true,
 		},
-	}, map[string]string{}, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	}, nil, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
 		return fmt.Errorf("test error")
 	})
 	assert.EqualError(t, err, "non_optional: test error")

@@ -48,7 +48,7 @@ type ResourceProvider interface {
 // Takes in a ResourceProvider and converts that into a map from string to schema.
 func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, []string{}, v.Aliases())
+	scm := typeToSchema(rv, v.Aliases())
 	scm = v.CustomizeSchema(scm)
 	return scm
 }
@@ -61,7 +61,7 @@ func reflectKind(k reflect.Kind) string {
 	return n
 }
 
-func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath []string, aliases map[string]string) string {
+func chooseFieldNameWithAliases(typeField reflect.StructField, aliases map[string]string) string {
 	// If nothing in the aliases map, return the field name from plain chooseFieldName method.
 	if len(aliases) == 0 {
 		return chooseFieldName(typeField)
@@ -72,9 +72,7 @@ func chooseFieldNameWithAliases(typeField reflect.StructField, fieldNamePath []s
 		return "-"
 	}
 
-	aliasKey := strings.Join(append(fieldNamePath, jsonFieldName), ".")
-
-	if value, ok := aliases[aliasKey]; ok {
+	if value, ok := aliases[jsonFieldName]; ok {
 		return value
 	}
 	return jsonFieldName
@@ -128,7 +126,7 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		return resourceProviderStructToSchema(rp)
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, []string{}, map[string]string{})
+	scm := typeToSchema(rv, map[string]string{})
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -284,7 +282,7 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -299,7 +297,8 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 		typeField := field.sf
 		tfTag := typeField.Tag.Get("tf")
 
-		fieldName := chooseFieldNameWithAliases(typeField, path, aliases)
+		fieldName := chooseFieldNameWithAliases(typeField, aliases)
+		unwrappedAliases := unwrapAliasesMap(fieldName, aliases)
 		if fieldName == "-" {
 			continue
 		}
@@ -362,7 +361,7 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, append(path, fieldName), aliases)
+			nestedSchema := typeToSchema(sv, unwrappedAliases)
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -380,7 +379,7 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, append(path, fieldName), aliases)
+			nestedSchema := typeToSchema(sv, unwrappedAliases)
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -410,7 +409,7 @@ func typeToSchema(v reflect.Value, path []string, aliases map[string]string) map
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, append(path, fieldName), aliases),
+					Schema: typeToSchema(sv, unwrappedAliases),
 				}
 			}
 		default:
@@ -456,6 +455,8 @@ func isGoSdk(v reflect.Value) bool {
 }
 
 // Unwraps aliases map given a fieldname. Should be called everytime we recursively call iterFields.
+//
+// NOTE: If the target field has an alias, we expect `fieldname` argument to be the alias.
 // For example
 //
 //	fieldName = "cluster"
@@ -488,11 +489,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 	fields := listAllFields(rv)
 	for _, field := range fields {
 		typeField := field.sf
-		// Always pass in an empty list for path because we unwrap the aliases map on each call.
-		// We do not use the `path` variable in this function because it sometimes contains indices
-		// and sometimes it is empty. Thus we rely on the caller of iterFields to unwrap the keys
-		// of the aliases map.
-		fieldName := chooseFieldNameWithAliases(typeField, []string{}, aliases)
+		fieldName := chooseFieldNameWithAliases(typeField, aliases)
 		if fieldName == "-" {
 			continue
 		}

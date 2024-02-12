@@ -358,7 +358,12 @@ func ResourceGrants() common.Resource {
 			if len(grants.PrivilegeAssignments) == 0 {
 				return apierr.NotFound("got empty permissions list")
 			}
-			return common.StructToData(sdkPermissionsListToPermissionsList(*grants), s, d)
+
+			err = common.StructToData(sdkPermissionsListToPermissionsList(*grants), s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

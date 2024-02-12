@@ -110,30 +110,24 @@ type importContext struct {
 	// TODO: protect by mutex?
 	mountMap map[string]mount
 
-	//
 	testEmits      map[string]bool
 	testEmitsMutex sync.Mutex
 
-	//
 	allGroups   []scim.Group
 	groupsMutex sync.Mutex
 
-	//
 	allUsers        map[string]scim.User
 	usersMutex      sync.RWMutex
 	allUsersMapping map[string]string // maps user_name -> internal ID
 	allUsersMutex   sync.RWMutex
 
-	//
 	allSps        map[string]scim.User
 	allSpsMapping map[string]string // maps application_id -> internal ID
 	spsMutex      sync.RWMutex
 
-	//
 	importing      map[string]bool
 	importingMutex sync.RWMutex
 
-	//
 	sqlDatasources      map[string]string
 	sqlDatasourcesMutex sync.Mutex
 
@@ -154,14 +148,12 @@ type importContext struct {
 	ignoredResourcesMutex sync.Mutex
 	ignoredResources      map[string]struct{}
 
-	//
 	deletedResources map[string]struct{}
 
 	// emitting of users/SPs
 	emittedUsers      map[string]struct{}
 	emittedUsersMutex sync.RWMutex
 
-	//
 	userOrSpDirectories      map[string]bool
 	userOrSpDirectoriesMutex sync.RWMutex
 }
@@ -318,7 +310,7 @@ func (ic *importContext) Run() error {
 		ic.updatedSinceStr = tm.UTC().Format(time.RFC3339)
 		tm, _ = time.Parse(time.RFC3339, ic.updatedSinceStr)
 		ic.updatedSinceMs = tm.UnixMilli()
-		//
+
 		ic.loadOldWorkspaceObjects(wsObjectsFileName)
 	}
 
@@ -530,7 +522,11 @@ func (ic *importContext) Run() error {
 }
 
 func isSupportedWsObject(obj workspace.ObjectStatus) bool {
-	return obj.ObjectType == workspace.Directory || obj.ObjectType == workspace.Notebook || obj.ObjectType == workspace.File
+	switch obj.ObjectType {
+	case workspace.Directory, workspace.Notebook, workspace.File:
+		return true
+	}
+	return false
 }
 
 func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatus) (string, string) {
@@ -796,7 +792,6 @@ func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel
 	}
 	if sh != nil {
 		log.Printf("[DEBUG] Writing the rest of import commands. len=%d", len(ic.shImports))
-		// TODO: remove deleted imports...
 		for k := range ic.shImports {
 			parts := strings.Split(k, " ")
 			if len(parts) > 3 {

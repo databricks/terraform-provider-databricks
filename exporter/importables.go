@@ -18,6 +18,7 @@ import (
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	tfuc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -2455,8 +2456,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "catalog", Resource: "databricks_catalog"},
 			{Path: "schema", Resource: "databricks_schema"},
 			{Path: "volume", Resource: "databricks_volume"},
+			{Path: "share", Resource: "databricks_share"},
 			{Path: "foreign_connection", Resource: "databricks_connection"},
-			//			{Path: "", Resource: ""},
+			{Path: "grant.principal", Resource: "databricks_recipient"},
+			//	{Path: "", Resource: ""},
+			//	{Path: "", Resource: ""},
 		},
 	},
 	"databricks_storage_credential": {
@@ -2618,8 +2622,13 @@ var resourcesMap map[string]importable = map[string]importable{
 						Resource: "databricks_volume",
 						ID:       obj.Name,
 					})
+				case "MODEL":
+					ic.Emit(&resource{
+						Resource: "databricks_registered_model",
+						ID:       obj.Name,
+					})
 				default:
-					log.Printf("[DEBUG] Object type %s isn't supported in share %s", obj.DataObjectType, r.ID)
+					log.Printf("[INFO] Object type '%s' (name: '%s') isn't supported in share '%s'", obj.DataObjectType, obj.Name, r.ID)
 				}
 			}
 
@@ -2631,9 +2640,33 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
-		Depends: []reference{ // think how to distinguish them?
+		Depends: []reference{ // think how to distinguish tables from volumes?
 			{Path: "object.name", Resource: "databricks_volume"},
 			// {Path: "name", Resource: "databricks_sql_table"},
+			// {Path: "name", Resource: "databricks_registered_model"},
 		},
+	},
+	"databricks_recipient": {
+		WorkspaceLevel: true,
+		Service:        "uc-shares",
+		List: func(ic *importContext) error {
+			recipients, err := ic.workspaceClient.Recipients.ListAll(ic.Context, sharing.ListRecipientsRequest{})
+			if err != nil {
+				return err
+			}
+			for _, rec := range recipients {
+				ic.EmitIfUpdatedAfterMillis(&resource{
+					Resource: "databricks_recipient",
+					ID:       rec.Name,
+				}, rec.UpdatedAt, fmt.Sprintf("recipient '%s'", rec.Name))
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			// TODO: do we need to emit the owner See comment for the owner...
+			// TODO: emit variable for sharing_code ...
+			return nil
+		},
+		// TODO: add depends for sharing_code
 	},
 }

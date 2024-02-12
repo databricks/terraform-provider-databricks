@@ -47,7 +47,7 @@ resource "databricks_mws_credentials" "this" {
 
 The following arguments are required:
 
-* `account_id` - (Optional) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
+* `account_id` - (required, for account-level provider) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)
 * `credentials_name` - (Required) name of credentials to register
 * `role_arn` - (Required) ARN of cross-account role
 

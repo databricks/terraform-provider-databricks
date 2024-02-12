@@ -122,6 +122,9 @@ func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema 
 func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
 	// If the input 'v' is an instance of ResourceProvider, call resourceProviderStructToSchema instead.
 	if rp, ok := v.(ResourceProvider); ok {
+		if customize != nil {
+			panic("Customize should be nil if the input struct is an instance of ResourceProvider, use CustomizeSchema of ResourceProvider instead.")
+		}
 		return resourceProviderStructToSchema(rp)
 	}
 	rv := reflect.ValueOf(v)
@@ -689,14 +692,13 @@ func DataToReflectValue(d *schema.ResourceData, s map[string]*schema.Schema, rv 
 	return readReflectValueFromData([]string{}, d, rv, s, map[string]string{})
 }
 
+// Get the aliases map from the given struct if it is an instance of ResourceProvider.
+// NOTE: This does not return aliases defined on `tf` tags.
 func getAliasesMapFromStruct(s any) map[string]string {
-	var aliases map[string]string
 	if v, ok := s.(ResourceProvider); ok {
-		aliases = v.Aliases()
-	} else {
-		aliases = map[string]string{}
+		return v.Aliases()
 	}
-	return aliases
+	return map[string]string{}
 }
 
 func readReflectValueFromData(path []string, d attributeGetter,

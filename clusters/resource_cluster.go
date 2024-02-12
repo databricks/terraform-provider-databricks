@@ -58,15 +58,15 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-type ClusterResourceProvider struct {
+type ClusterSpec struct {
 	compute.ClusterSpec
 }
 
-func (ClusterResourceProvider) Aliases() map[string]string {
+func (ClusterSpec) Aliases() map[string]string {
 	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
 }
 
-func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()
 	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetComputed()
 	common.CustomizeSchemaPath(s, "enable_local_disk_encryption").SetComputed()
@@ -169,7 +169,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 }
 
 func resourceClusterSchema() map[string]*schema.Schema {
-	return common.StructToSchema(ClusterResourceProvider{}, nil)
+	return common.StructToSchema(ClusterSpec{}, nil)
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -2436,7 +2436,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
-			{Path: "schema_name", Resource: "databricks_schema", Match: "name"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name"}, // TODO: this doesn't work correctly because we need full name
 			// TODO: reference from `storage_root` to the external location using MatchPrefix?
 		},
 	},
@@ -2640,10 +2640,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
-		Depends: []reference{ // think how to distinguish tables from volumes?
-			{Path: "object.name", Resource: "databricks_volume"},
-			// {Path: "name", Resource: "databricks_sql_table"},
-			// {Path: "name", Resource: "databricks_registered_model"},
+		Depends: []reference{ // think how to distinguish tables from volumes from models?
+			//{Path: "object.name", Resource: "databricks_volume"},
+			//{Path: "object.name", Resource: "databricks_registered_model"},
+			// {Path: "object.name", Resource: "databricks_sql_table"},
 		},
 	},
 	"databricks_recipient": {
@@ -2668,5 +2668,58 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		// TODO: add depends for sharing_code
+	},
+	"databricks_registered_model": {
+		WorkspaceLevel: true,
+		Service:        "uc-models",
+		// TODO: it doesn't work right now, need a fix in the Go SDK
+		// List: func(ic *importContext) error {
+		// 	models, err := ic.workspaceClient.RegisteredModels.ListAll(ic.Context, catalog.ListRegisteredModelsRequest{})
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// 	for _, model := range models {
+		// 		ic.EmitIfUpdatedAfterMillis(&resource{
+		// 			Resource: "databricks_registered_model",
+		// 			ID:       model.FullName,
+		// 		}, model.UpdatedAt, fmt.Sprintf("registered model '%s'", model.FullName))
+		// 	}
+		// 	return nil
+		// },
+		Import: func(ic *importContext, r *resource) error {
+			modelFullName := r.ID
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       "model/" + modelFullName,
+			})
+			catalogName := r.Data.Get("catalog_name").(string)
+			ic.Emit(&resource{
+				Resource: "databricks_schema",
+				ID:       catalogName + "." + r.Data.Get("catalog_name").(string),
+			})
+			ic.Emit(&resource{
+				Resource: "databricks_catalog",
+				ID:       catalogName,
+			})
+			// TODO: emit owner? See comment in catalog resource
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "owner":
+				return d.Get(pathString).(string) != ""
+			case "storage_location":
+				location := d.Get(pathString).(string)
+				// TODO: don't generate it if it's managed.
+				// check if string contains metastore_id/models/model_id (although we don't have model_id in the state)
+				return location != ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name"}, // TODO: this doesn't work correctly because we need full name
+			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+		},
 	},
 }

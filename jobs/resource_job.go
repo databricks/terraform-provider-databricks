@@ -118,7 +118,8 @@ type RunJobTask struct {
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
 }
 
-// TODO: migrate to go sdk
+// TODO: As TF does not support recursive nesting, limit the nesting depth. Example:
+// https://github.com/hashicorp/terraform-provider-aws/blob/b4a9f93a2b7323202c8904e86cff03d3f2cb006b/internal/service/wafv2/rule_group.go#L110
 type ForEachTask struct {
 	Concurrency int               `json:"concurrency,omitempty"`
 	Inputs      string            `json:"inputs"`

@@ -116,6 +116,7 @@ This block describes individual tasks:
   * `spark_python_task`
   * `spark_submit_task`
   * `sql_task`
+  * `for_each_task`
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
 * `depends_on` - (Optional) block specifying dependency(-ies) for a given task.
 * `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. When omitted, defaults to `ALL_SUCCESS`.
@@ -345,6 +346,12 @@ The `condition_task` specifies a condition with an outcome that can be used to c
 * `op` - The string specifying the operation used to compare operands.  Currently, following operators are supported: `EQUAL_TO`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`. (Check the [API docs](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
 
 This task does not require a cluster to execute and does not support retries or notifications.
+
+### for_each_task Configuration Block
+
+* `concurrency` - (Optional) Controls the number of active iteration task runs. Default is 100 (maximal value).
+* `inputs` - (Required) (String) Array for task to iterate on. This can be a JSON string or a reference to an array parameter.
+* `task` - (Required) Task to run against the `inputs` list. 
 
 ### sql_task Configuration Block
 

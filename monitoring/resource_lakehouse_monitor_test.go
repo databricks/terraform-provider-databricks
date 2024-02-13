@@ -74,6 +74,7 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 						TimestampCol:  "timestamp",
 						PredictionCol: "prediction",
 						ModelIdCol:    "model_id",
+						ProblemType:   catalog.MonitorInferenceLogProfileTypeProblemTypeProblemTypeRegression,
 					},
 				},
 				Response: &catalog.MonitorInfo{
@@ -103,7 +104,8 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 				granularities = ["1 day"],
 				timestamp_col = "timestamp",
 				prediction_col = "prediction",
-				model_id_col = "model_id"
+				model_id_col = "model_id",
+				problem_type = "PROBLEM_TYPE_REGRESSION"
 			} 
 		`,
 		Create: true,
@@ -165,6 +167,7 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 						TimestampCol:  "timestamp",
 						PredictionCol: "prediction",
 						ModelIdCol:    "model_id",
+						ProblemType:   catalog.MonitorInferenceLogProfileTypeProblemTypeProblemTypeRegression,
 					},
 				},
 				Response: catalog.MonitorInfo{
@@ -211,7 +214,8 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 				granularities = ["1 week"],
 				timestamp_col = "timestamp"
 				prediction_col = "prediction",
-				model_id_col = "model_id"
+				model_id_col = "model_id",
+				problem_type = "PROBLEM_TYPE_REGRESSION"
 			} 
 		`,
 	}.ApplyNoError(t)

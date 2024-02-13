@@ -46,7 +46,7 @@ type MonitorInfo struct {
 
 func ResourceLakehouseMonitor() common.Resource {
 	monitorSchema := common.StructToSchema(
-		Monitor{},
+		MonitorInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.MustSchemaPath(m, "output_schema_name").Required = true
 
@@ -67,12 +67,12 @@ func ResourceLakehouseMonitor() common.Resource {
 			common.MustSchemaPath(m, "time_series", "timestamp_col").Required = true
 			common.MustSchemaPath(m, "time_series", "timestamp_col").Optional = false
 
-			return m
-		})
+			common.MustSchemaPath(m, "drift_metrics_table_name").Computed = true
+			common.MustSchemaPath(m, "profile_metrics_table_name").Computed = true
+			common.MustSchemaPath(m, "status").Computed = true
 
-	readSchema := common.StructToSchema(
-		MonitorInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema { return m },
+			return m
+		},
 	)
 
 	return common.Resource{
@@ -107,7 +107,7 @@ func ResourceLakehouseMonitor() common.Resource {
 				return err
 
 			}
-			err = common.StructToData(*endpoint, readSchema, d)
+			err = common.StructToData(*endpoint, monitorSchema, d)
 			if err != nil {
 				return err
 			}
@@ -134,6 +134,6 @@ func ResourceLakehouseMonitor() common.Resource {
 			}
 			return w.LakehouseMonitors.DeleteByFullName(ctx, d.Id())
 		},
-		Schema: readSchema,
+		Schema: monitorSchema,
 	}
 }

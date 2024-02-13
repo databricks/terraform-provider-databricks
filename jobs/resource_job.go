@@ -118,6 +118,46 @@ type RunJobTask struct {
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
 }
 
+// TODO: migrate to go sdk
+type ForEachTask struct {
+	Concurrency int               `json:"concurrency,omitempty"`
+	Inputs      string            `json:"inputs"`
+	Task        ForEachNestedTask `json:"task"`
+}
+
+type ForEachNestedTask struct {
+	TaskKey     string                `json:"task_key,omitempty"`
+	Description string                `json:"description,omitempty"`
+	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
+	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
+
+	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+
+	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
+	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+
+	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings   *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
+	TimeoutSeconds         int32                          `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32                          `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
+	Health                 *JobHealth                     `json:"health,omitempty"`
+}
+
 func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 	if wn == nil {
 		return
@@ -187,6 +227,7 @@ type JobTaskSettings struct {
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+	ForEachTask     *ForEachTask        `json:"for_each_task,omitempty" tf:"group:task_type"`
 
 	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`

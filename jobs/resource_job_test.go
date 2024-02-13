@@ -536,6 +536,80 @@ func TestResourceJobCreate_ConditionTask(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "231", d.Id())
 }
+
+func TestResourceJobCreate_ForEachTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "Foreach-task-testing",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "for_each_task_key",
+							ForEachTask: &ForEachTask{
+								Concurrency: 1,
+								Inputs:      "[1, 2, 3, 4, 5, 6]",
+								Task: ForEachNestedTask{
+									TaskKey:           "nested_task_key",
+									ExistingClusterID: "abc",
+									NotebookTask: &NotebookTask{
+										NotebookPath: "/Stuff",
+									},
+								},
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "for_each_task_key",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "Foreach-task-testing"
+
+		task {
+			task_key = "for_each_task_key"
+			for_each_task {
+				concurrency = 1
+
+				inputs = "[1, 2, 3, 4, 5, 6]"
+
+				task {
+
+					task_key = "nested_task_key"
+
+					existing_cluster_id = "abc"
+					
+						notebook_task {
+							notebook_path = "/Stuff"
+						}
+				}
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

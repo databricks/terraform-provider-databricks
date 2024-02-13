@@ -21,10 +21,11 @@ resource "databricks_registered_model" "this" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the registered model.
-* `catalog_name` - (Required) The name of the catalog where the schema and the registered model reside.
-* `schema_name` - (Required) The name of the schema where the registered model resides.
-* `comment` - The comment attached to the registered model.
+* `name` - (Required) The name of the registered model.  *Change of this parameter forces recreation of the resource.*
+* `catalog_name` - (Required) The name of the catalog where the schema and the registered model reside. *Change of this parameter forces recreation of the resource.*
+* `schema_name` - (Required) The name of the schema where the registered model resides. *Change of this parameter forces recreation of the resource.*
+* `comment` - The comment attached to the registered model. 
+* `storage_location` - The storage location under which model version data files are stored. *Change of this parameter forces recreation of the resource.*
 
 ## Attribute Reference
 

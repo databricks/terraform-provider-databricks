@@ -1,5 +1,21 @@
 # Version changelog
 
+## 1.36.3
+
+### New Features and Improvements
+ * Explicitly set securable field when reading [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) or [databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant) ([#3246](https://github.com/databricks/terraform-provider-databricks/pull/3246)).
+
+### Documentation Changes
+ * Added information on `id` and other exposed attributes where appropriate ([#3237](https://github.com/databricks/terraform-provider-databricks/pull/3237)).
+ * Fixed docs in metastore databricks_grants example ([#3239](https://github.com/databricks/terraform-provider-databricks/pull/3239)).
+
+### Exporter
+ * Detect & handle deleted workspace objects (notebooks/files/directories) when running in incremental mode ([#3225](https://github.com/databricks/terraform-provider-databricks/pull/3225)).
+
+### Internal Changes
+ * Make IterFields take in aliases ([#3207](https://github.com/databricks/terraform-provider-databricks/pull/3207)).
+
+
 ## 1.36.2
 
 ### New Features and Improvements

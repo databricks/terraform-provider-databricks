@@ -121,7 +121,7 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 	// If the input 'v' is an instance of ResourceProvider, call resourceProviderStructToSchema instead.
 	if rp, ok := v.(ResourceProvider); ok {
 		if customize != nil {
-			panic("Customize should be nil if the input struct is an instance of ResourceProvider, use CustomizeSchema of ResourceProvider instead.")
+			panic("customize should be nil if the input implements the ResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
 		}
 		return resourceProviderStructToSchema(rp)
 	}

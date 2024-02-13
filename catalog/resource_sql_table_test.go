@@ -423,6 +423,64 @@ func TestResourceSqlTableUpdateView(t *testing.T) {
 	assert.Equal(t, "bar", d.Get("name"))
 }
 
+func TestResourceSqlTableUpdateViewTrimDefinition(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "VIEW"
+		comment 		       = "this view is managed by terraform"
+		view_definition   = " select * from all "
+		`,
+		InstanceState: map[string]string{
+			"name":            "bar",
+			"catalog_name":    "main",
+			"schema_name":     "foo",
+			"table_type":      "VIEW",
+			"comment":         "this view is managed by terraform",
+			"view_definition": "select * from all",
+		},
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ReuseRequest: true,
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "VIEW",
+					StorageCredentialName: "somecred",
+					Comment:               "this view is managed by terraform",
+					ViewDefinition:        "select * from all",
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "gone",
+				},
+				Status: 404,
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", d.Get("name"))
+}
+
 func TestResourceSqlTableDeleteTable(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {

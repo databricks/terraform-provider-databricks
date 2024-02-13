@@ -299,7 +299,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 
 	if ti.TableType == "VIEW" {
 		// View only attributes
-		if ti.ViewDefinition != oldti.ViewDefinition {
+		if strings.TrimSpace(ti.ViewDefinition) != strings.TrimSpace(oldti.ViewDefinition) {
 			statements = append(statements, fmt.Sprintf("ALTER VIEW %s AS %s", ti.SQLFullName(), ti.ViewDefinition))
 		}
 	} else {

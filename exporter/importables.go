@@ -1027,6 +1027,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			// TODO: can we fill _path component for it, and then match on user/SP home instead?
 			{Path: "directory_id", Resource: "databricks_directory", Match: "object_id"},
 			{Path: "notebook_id", Resource: "databricks_notebook", Match: "object_id"},
+			{Path: "workspace_file_id", Resource: "databricks_workspace_file", Match: "object_id"},
 			{Path: "access_control.group_name", Resource: "databricks_group", Match: "display_name"},
 			{Path: "access_control.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "access_control.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
@@ -1317,6 +1318,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return d.Get("branch").(string) == ""
 			case "tag":
 				return d.Get("tag").(string) == ""
+			case "git_provider":
+				url := d.Get("url").(string)
+				provider := repos.GetGitProviderFromUrl(url)
+				return provider != "" // omit git_provider only for well-known URLs
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},

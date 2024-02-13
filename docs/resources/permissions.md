@@ -819,7 +819,7 @@ Exactly one of the below arguments is required:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - Canonical unique identifier for the permissions.
+- `id` - Canonical unique identifier for the permissions in form of `/object_type/object_id`.
 - `object_type` - type of permissions.
 
 ## Import

@@ -218,6 +218,9 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, 
 }
 
 func (ic *importContext) emitRepoByPath(path string) {
+	// Path to Repos objects consits of following parts: /Repos, folder, repository, path inside Repo.
+	// Because it starts with `/`, it will produce empty string as first element in the slice.
+	// And we're stopping splitting to avoid producing too many not necessary parts, so we have 5 parts only.
 	parts := strings.SplitN(path, "/", 5)
 	if len(parts) >= 4 {
 		ic.Emit(&resource{

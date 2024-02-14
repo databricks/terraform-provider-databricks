@@ -511,6 +511,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						if strings.HasPrefix(directory, "/Repos") {
 							ic.emitRepoByPath(directory)
 						} else {
+							// Traverse the dbt project directory and emit all objects found in it
 							nbAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
 							objects, err := nbAPI.List(directory, true, true)
 							if err == nil {

@@ -1,14 +1,10 @@
 package storage
 
 import (
-	"bufio"
 	"bytes"
 	"context"
-	"crypto/md5"
 	"encoding/base64"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/databricks/databricks-sdk-go/service/files"
@@ -41,7 +37,7 @@ func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
 	return reader, err
 }
 
-func ResourceFile() *schema.Resource {
+func ResourceFile() common.Resource {
 	s := workspace.FileContentSchema(map[string]*schema.Schema{
 		"modification_time": {
 			Type:     schema.TypeInt,
@@ -69,6 +65,13 @@ func ResourceFile() *schema.Resource {
 				return err
 			}
 
+			metadata, err := w.Files.GetMetadata(ctx, files.GetMetadataRequest{FilePath: path})
+			if err != nil {
+				return err
+			}
+			data.Set("modification_time", metadata.LastModified)
+			data.Set("file_size", metadata.ContentLength)
+
 			data.SetId(path)
 			return nil
 		},
@@ -79,27 +82,13 @@ func ResourceFile() *schema.Resource {
 			}
 
 			path := data.Id()
-			fileInfo, err := w.Files.GetStatus(ctx, files.GetStatusRequest{Path: path})
+			metadata, err := w.Files.GetMetadata(ctx, files.GetMetadataRequest{FilePath: path})
 			if err != nil {
 				return err
 			}
-			data.Set("modification_time", fileInfo.ModificationTime)
-			data.Set("file_size", fileInfo.FileSize)
-
-			downloadResponse, err := w.Files.Download(ctx, files.DownloadRequest{FilePath: path})
-			if err != nil {
-				return err
-			}
-
-			dataReadCloser := downloadResponse.Contents
-			defer dataReadCloser.Close()
-			reader := bufio.NewReader(dataReadCloser)
-			dataByte, err := ioutil.ReadAll(reader)
-			if err != nil {
-				return err
-			}
-			data.Set("md5", fmt.Sprintf("%x", md5.Sum(dataByte)))
-			return common.StructToData(fileInfo, s, data)
+			data.Set("modification_time", metadata.LastModified)
+			data.Set("file_size", metadata.ContentLength)
+			return common.StructToData(metadata, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -112,6 +101,16 @@ func ResourceFile() *schema.Resource {
 				return err
 			}
 			err = w.Files.Upload(ctx, files.UploadRequest{Contents: reader, FilePath: path})
+			if err != nil {
+				return err
+			}
+			metadata, err := w.Files.GetMetadata(ctx, files.GetMetadataRequest{FilePath: path})
+			if err != nil {
+				return err
+			}
+			data.Set("modification_time", metadata.LastModified)
+			data.Set("file_size", metadata.ContentLength)
+
 			return err
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
@@ -123,5 +122,5 @@ func ResourceFile() *schema.Resource {
 			err = w.Files.Delete(ctx, files.DeleteFileRequest{FilePath: path})
 			return err
 		},
-	}.ToResource()
+	}
 }

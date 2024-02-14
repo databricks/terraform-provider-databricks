@@ -150,14 +150,6 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 					"customize diff for")
 			}
 		}()
-		c := m.(*DatabricksClient)
-		err = r.verifyWorkspaceId(ctx, rd, c)
-		if err != nil {
-			return err
-		}
-		// Note: you cannot clear workspace_id field because it is not computed.
-		// We could make it computed, but I think that would be too implicit for users.
-
 		// we don't propagate instance of SDK client to the diff function, because
 		// authentication is not deterministic at this stage with the recent Terraform
 		// versions. Diff customization must be limited to hermetic checks only anyway.
@@ -168,6 +160,15 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 				return
 			}
 		}
+
+		c := m.(*DatabricksClient)
+		err = r.verifyWorkspaceId(ctx, rd, c)
+		if err != nil {
+			return err
+		}
+		// Note: you cannot clear workspace_id field because it is not computed.
+		// We could make it computed, but I think that would be too implicit for users.
+
 		return
 	}
 }
@@ -199,22 +200,22 @@ func (r Resource) ToResource() *schema.Resource {
 	if r.WorkspaceIdField == OriginalWorkspaceId {
 		panic("OriginalWorkspaceId is not a valid value for WorkspaceIdField")
 	}
-	getClient := func(_ context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
+	getClient := func(_ context.Context, m any, d *schema.ResourceData) (*DatabricksClient, error) {
 		return m.(*DatabricksClient), nil
 	}
 	getDeleteClient := getClient
 	if r.WorkspaceIdField != NoWorkspaceId {
-		getClient = func(ctx context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
+		getClient = func(ctx context.Context, m any, d *schema.ResourceData) (*DatabricksClient, error) {
 			workspaceId, ok := d.GetOk(r.WorkspaceIdField.Field())
 			if !ok {
-				return c, nil
+				return m.(*DatabricksClient), nil
 			}
 			return m.(*DatabricksClient).InWorkspace(ctx, int64(workspaceId.(int)))
 		}
-		getDeleteClient = func(ctx context.Context, m any, d *schema.ResourceData) (c *DatabricksClient, err error) {
+		getDeleteClient = func(ctx context.Context, m any, d *schema.ResourceData) (*DatabricksClient, error) {
 			workspaceId, ok := d.GetOk(OriginalWorkspaceId.Field())
 			if !ok {
-				return c, nil
+				return m.(*DatabricksClient), nil
 			}
 			return m.(*DatabricksClient).InWorkspace(ctx, int64(workspaceId.(int)))
 		}

@@ -122,6 +122,13 @@ func (c *DatabricksClient) InWorkspace(ctx context.Context, workspaceId int64) (
 // the account client if the provider is configured at the account level, or from the existing
 // workspace client if the provider is configured at the workspace level.
 func (c *DatabricksClient) getConfiguredWorkspaceClient(ctx context.Context, workspaceId int64) (*cachedWorkspaceClient, error) {
+	if c.cachedWorkspaceClients == nil {
+		c.cachedWorkspaceClientsMu.Lock()
+		if c.cachedWorkspaceClients == nil {
+			c.cachedWorkspaceClients = make(map[int64]*cachedWorkspaceClient)
+		}
+		c.cachedWorkspaceClientsMu.Unlock()
+	}
 	if clients, ok := c.cachedWorkspaceClients[workspaceId]; ok {
 		return clients, nil
 	}
@@ -129,9 +136,6 @@ func (c *DatabricksClient) getConfiguredWorkspaceClient(ctx context.Context, wor
 	defer c.cachedWorkspaceClientsMu.Unlock()
 	if w, ok := c.cachedWorkspaceClients[workspaceId]; ok {
 		return w, nil
-	}
-	if c.cachedWorkspaceClients == nil {
-		c.cachedWorkspaceClients = make(map[int64]*cachedWorkspaceClient)
 	}
 	w, err := c.makeWorkspaceClient(ctx, workspaceId)
 	if err != nil {

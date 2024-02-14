@@ -100,6 +100,7 @@ func ResourceVolume() common.Resource {
 			if storedName != userProvidedName {
 				updateVolumeRequestContent.NewName = userProvidedName
 			}
+			updateVolumeRequestContent.Name = d.Id()
 
 			if d.HasChange("owner") {
 				_, err := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{

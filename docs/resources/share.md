@@ -95,6 +95,7 @@ To share only part of a table when you add the table to a share, you can provide
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of the share, the same as `name`.
 * `created_at` - Time when the share was created.
 * `created_by` - The principal that created the share.
 * `status` - Status of the object, one of: `ACTIVE`, `PERMISSION_DENIED`.

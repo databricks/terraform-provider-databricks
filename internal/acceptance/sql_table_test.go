@@ -32,7 +32,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 			}
 			column {
 				name      = "name"
-				type      = "varchar(64)"
+				type      = "string"
 			}
 			comment = "this table is managed by terraform"
 		}`,

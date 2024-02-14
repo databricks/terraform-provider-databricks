@@ -729,7 +729,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			ic.enableServices(services)
 
 			err := ic.Run()
-			assert.EqualError(t, err, "no resources to import")
+			assert.EqualError(t, err, "no resources to import or delete")
 		})
 }
 

@@ -75,7 +75,7 @@ func ResourceStorageCredential() common.Resource {
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
 					MetastoreId:           metastoreId,
-					StorageCredentialName: storageCredential.CredentialInfo.Id,
+					StorageCredentialName: storageCredential.CredentialInfo.Name,
 				})
 				if err != nil {
 					return err

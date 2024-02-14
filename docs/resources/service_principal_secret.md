@@ -3,9 +3,9 @@ subcategory: "Security"
 ---
 # databricks_service_principal_secret Resource
 
--> **Note** This resource is only available in Databricks AWS.
+-> **Note** This resource can only be used with an account-level provider.
 
-With this resource you can create a secret under the given [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html)
+With this resource you can create a secret for a given [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html).
 
 This secret can be used to configure the Databricks Terraform Provider to authenticate with the service principal. See [Authenticating with service principal](../index.md#authenticating-with-service-principal).
 
@@ -26,7 +26,7 @@ resource "databricks_service_principal_secret" "terraform_sp" {
 
 The following arguments are available:
 
-* `service_principal_id` - ID of the [databricks_service_principal](service_principal.md)
+* `service_principal_id` - ID of the [databricks_service_principal](service_principal.md) (not application ID).
 
 
 ## Attribute Reference

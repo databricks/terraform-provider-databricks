@@ -87,7 +87,8 @@ type SqlAlertTask struct {
 }
 
 type SqlFileTask struct {
-	Path string `json:"path"`
+	Path   string `json:"path"`
+	Source string `json:"source,omitempty" tf:"suppress_diff"`
 }
 
 // SqlTask contains information about DBSQL task
@@ -110,6 +111,7 @@ type DbtTask struct {
 	Schema            string   `json:"schema,omitempty" tf:"default:default"`
 	Catalog           string   `json:"catalog,omitempty"`
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
+	Source            string   `json:"source,omitempty" tf:"suppress_diff"`
 }
 
 // RunJobTask contains information about RunJobTask

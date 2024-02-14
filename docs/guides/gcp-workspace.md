@@ -271,21 +271,4 @@ We assume that you have a terraform module in your project that creates a worksp
 
 ### More than one authorization method configured error
 
-If you notice the below error:
-
-```sh
-Error: validate: more than one authorization method configured
-```
-
-Ensure that you only have one authorization method set. All available authorization methods are documented [here](https://registry.terraform.io/providers/databricks/databricks/latest/docs#auth_type).
-
-If you want to enforce a specific authorization method, you can set the `auth_type` attribute in the provider block:
-
-```hcl
-provider "databricks" {
-  ...
-  auth_type = "pat"
-}
-```
-
-The above would enforce the use of PAT authorization.
+See the [troubleshooting guide](https://registry.terraform.io/providers/databricks/databricks/latest/docs/guides/troubleshooting#more-than-one-authorization-method-configured)

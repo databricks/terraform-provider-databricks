@@ -45,6 +45,30 @@ func TestVectorSearchEndpointCreate(t *testing.T) {
 	assert.Equal(t, "1234-5678", d.Get("endpoint_id"))
 }
 
+func TestVectorSearchEndpointRead(t *testing.T) {
+	ei := &vectorsearch.EndpointInfo{
+		Name:           "abc",
+		EndpointStatus: &vectorsearch.EndpointStatus{State: "ONLINE"},
+		Id:             "1234-5678",
+	}
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockVectorSearchEndpointsAPI().EXPECT()
+			e.GetEndpointByEndpointName(mock.Anything, "abc").Return(ei, nil)
+		},
+		Resource: ResourceVectorSearchEndpoint(),
+		ID:       "abc",
+		HCL: `
+		name          = "abc"
+		endpoint_type = "STANDARD"
+		`,
+		Read: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "1234-5678", d.Get("endpoint_id"))
+}
+
 func TestResourcePASDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {

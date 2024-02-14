@@ -22,7 +22,7 @@ resource "databricks_vector_search_endpoint" "this" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the Vector Search Endpoint to create.  If name is changed, Vector Search Endpoint is recreated.
-* `endpoint_type` (Required) type of Vector Search Endpoint.  Currently only accepting single value: `STANDARD` (See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values).  If it changed, Vector Search Endpoint is recreated.
+* `endpoint_type` (Required) type of Vector Search Endpoint.  Currently only accepting single value: `STANDARD` (See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values).  If it's changed, Vector Search Endpoint is recreated.
 
 ## Attribute Reference
 
@@ -33,8 +33,8 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_timestamp` - Timestamp of endpoint creation (milliseconds).
 * `last_updated_user` - User who last updated the endpoint.
 * `last_updated_timestamp` - Timestamp of last update to the endpoint (milliseconds).
-* `endpoint_id` - Unique identifier of the endpoint.
-* `num_indexes` - Current status of the endpoint.
+* `endpoint_id` - Unique internal identifier of the endpoint (UUID).
+* `num_indexes` - Number of indexes on the endpoint.
 * `endpoint_status` - Object describing the current status of the endpoint consisting of following fields:
   * `state` - Current state of the endpoint. Currently following values are supported: `PROVISIONING`, `ONLINE`, `OFFLINE`.
   * `message` - Additional status message.

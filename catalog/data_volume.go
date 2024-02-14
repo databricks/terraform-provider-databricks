@@ -18,7 +18,10 @@ type volumeDataParams struct {
 	Name        string `json:"name,omitempty"`
 }
 
-func customizeVolumeParams(s map[string]*schema.Schema) map[string]*schema.Schema {
+func (volumeDataParams) Aliases() map[string]string {
+	return map[string]string{"Id": "FullName"}
+}
+func (volumeDataParams) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s, "full_name").SetExactlyOneOf([]string{"catalog_name"}).SetComputed()
 	common.CustomizeSchemaPath(s, "catalog_name").SetRequiredWith([]string{"schema_name", "name"}).SetComputed()
 	common.CustomizeSchemaPath(s, "schema_name").SetRequiredWith([]string{"catalog_name", "name"}).SetComputed()
@@ -38,9 +41,10 @@ func volumeDataRead(ctx context.Context, data volumeDataParams, w *databricks.Wo
 	if err != nil {
 		return nil, err
 	}
+
 	return volume, nil
 }
 
 func DataSourceVolume() common.Resource {
-	return common.WorkspaceDataWithCustomParams(volumeDataRead, customizeVolumeParams)
+	return common.WorkspaceDataWithParams(volumeDataRead)
 }

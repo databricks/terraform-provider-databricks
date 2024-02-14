@@ -331,7 +331,7 @@ resource "time_sleep" "wait" {
 }
 ```
 
-#### IAM policy error
+### IAM policy error
 
 If you notice the below error:
 
@@ -341,8 +341,29 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 
 - Try creating workspace from UI:
 
-![create_workspace_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png)
+![create_workspace_error](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/create_workspace_error.png)
 
 - Verify if the role and policy exist (assume role should allow external ID)
 
-![iam_role_trust_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png)
+![iam_role_trust_error](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/iam_role_trust_error.png)
+
+### More than one authorization method configured error
+
+If you notice the below error:
+
+```sh
+Error: validate: more than one authorization method configured
+```
+
+Ensure that you only have one authorization method set in the provider block. All available authorization methods are documented [here](https://registry.terraform.io/providers/databricks/databricks/latest/docs#auth_type).
+
+If you want to enforce a specific authorization method, you can set the `auth_type` attribute in the provider block:
+
+```hcl
+provider "databricks" {
+  ...
+  auth_type = "pat"
+}
+```
+
+The above would enforce the use of PAT authorization.

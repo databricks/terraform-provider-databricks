@@ -268,3 +268,24 @@ provider "databricks" {
 ```
 
 We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#creating-a-databricks-workspace) section), and you named it as `dbx_gcp` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
+
+### More than one authorization method configured error
+
+If you notice the below error:
+
+```sh
+Error: validate: more than one authorization method configured
+```
+
+Ensure that you only have one authorization method set in the provider block. All available authorization methods are documented [here](https://registry.terraform.io/providers/databricks/databricks/latest/docs#auth_type).
+
+If you want to enforce a specific authorization method, you can set the `auth_type` attribute in the provider block:
+
+```hcl
+provider "databricks" {
+  ...
+  auth_type = "pat"
+}
+```
+
+The above would enforce the use of PAT authorization.

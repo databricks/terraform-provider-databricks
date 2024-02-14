@@ -305,12 +305,13 @@ In [the next step](workspace-management.md), please use the following configurat
 
 ```hcl
 provider "databricks" {
-  host  = module.e2.workspace_url
-  token = module.e2.token_value
+  host      = module.e2.workspace_url
+  token     = module.e2.token_value
+  auth_type = "pat"
 }
 ```
 
-We assume that you have a terraform module in your project that creates a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
+We assume that you have a terraform module in your project that creates a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project, and `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation. Adding the `auth_type = "pat"` is recommended to prevent other Databricks authentication methods used in your Terraform code from interfiering with the one used in this module.
 
 ### Credentials validation checks errors
 

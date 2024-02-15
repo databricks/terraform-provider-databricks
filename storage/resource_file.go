@@ -40,12 +40,17 @@ func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
 func ResourceFile() common.Resource {
 	s := workspace.FileContentSchema(map[string]*schema.Schema{
 		"modification_time": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeString,
 			Computed: true,
+			//Optional: true,
 		},
 		"file_size": {
 			Type:     schema.TypeInt,
 			Computed: true,
+		},
+		"has_been_modified": {
+			Type:     schema.TypeBool,
+			Optional: true,
 		},
 	})
 	return common.Resource{
@@ -71,7 +76,7 @@ func ResourceFile() common.Resource {
 			}
 			data.Set("modification_time", metadata.LastModified)
 			data.Set("file_size", metadata.ContentLength)
-
+			data.Set("has_been_modified", false)
 			data.SetId(path)
 			return nil
 		},
@@ -86,8 +91,12 @@ func ResourceFile() common.Resource {
 			if err != nil {
 				return err
 			}
-			data.Set("modification_time", metadata.LastModified)
-			data.Set("file_size", metadata.ContentLength)
+			storedModificationTime := data.Get("modification_time").(string)
+
+			data.Set("has_been_modified", storedModificationTime != metadata.LastModified)
+
+			// Do not store here the modification time. If the update fails, we will keep the wrong one in the state.
+
 			return common.StructToData(metadata, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
@@ -110,6 +119,7 @@ func ResourceFile() common.Resource {
 			}
 			data.Set("modification_time", metadata.LastModified)
 			data.Set("file_size", metadata.ContentLength)
+			data.Set("has_been_modified", false)
 
 			return err
 		},

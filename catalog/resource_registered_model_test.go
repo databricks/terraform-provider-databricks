@@ -131,7 +131,6 @@ func TestRegisteredModelUpdate(t *testing.T) {
 				ExpectedRequest: catalog.UpdateRegisteredModelRequest{
 					FullName: "catalog.schema.model",
 					Comment:  "new comment",
-					Name:     "model",
 				},
 				Response: catalog.RegisteredModelInfo{
 					Name:        "model",

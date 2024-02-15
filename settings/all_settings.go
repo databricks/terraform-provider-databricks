@@ -16,5 +16,9 @@ import (
 func AllSettingsResources() map[string]common.Resource {
 	return map[string]common.Resource{
 		"default_namespace": makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
+		"compliance_security_profile_account": makeSettingResource[settings.CSPEnablementAccount, *databricks.AccountClient](cspEnablementAccountSetting),
+		"enhanced_security_monitoring_account": makeSettingResource[settings.ESMEnablementAccount, *databricks.AccountClient](esmEnablementAccountSetting),
+		"compliance_security_profile_workspace": makeSettingResource[settings.CSPEnablement, *databricks.AccountClient](cspEnablementWorkspaceSetting),
+		"enhanced_security_monitoring_workspace": makeSettingResource[settings.CSPEnablement, *databricks.AccountClient](esmEnablementWorkspaceSetting),
 	}
 }

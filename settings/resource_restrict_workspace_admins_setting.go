@@ -20,7 +20,7 @@ var restrictWsAdminsSetting = workspaceSetting[settings.RestrictWorkspaceAdminsS
 		res, err := w.Settings.UpdateRestrictWorkspaceAdminsSetting(ctx, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
 			AllowMissing: true,
 			Setting:      t,
-			FieldMask:    "restrict_workspace_admins",
+			FieldMask:    "restrict_workspace_admins.status",
 		})
 		if err != nil {
 			return "", err

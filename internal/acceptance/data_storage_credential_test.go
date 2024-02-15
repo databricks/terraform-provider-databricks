@@ -32,7 +32,7 @@ func TestUcAccDataSourceStorageCredential(t *testing.T) {
 		}
 
 		data "databricks_storage_credential" "this" {
-			catalog_name = databricks_storage_credential.external.name
+			name = databricks_storage_credential.external.name
 		}`,
 		Check: checkStorageCredentialDataSourcePopulated(t),
 	})

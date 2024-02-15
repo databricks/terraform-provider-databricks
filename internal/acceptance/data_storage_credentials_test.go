@@ -10,7 +10,7 @@ import (
 func TestUcAccDataSourceStorageCredentials(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
-		data "databricks_metastores" "this" {
+		data "databricks_storage_credentials" "this" {
 		}`,
 		Check: func(s *terraform.State) error {
 			r, ok := s.RootModule().Resources["data.databricks_storage_credentials.this"]

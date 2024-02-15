@@ -17,7 +17,7 @@ func TestUcAccDataSourceStorageCredentials(t *testing.T) {
 			if !ok {
 				return fmt.Errorf("data not found in state")
 			}
-			names := r.Primary.Attributes["names.%"]
+			names := r.Primary.Attributes["names.#"]
 			if names == "" {
 				return fmt.Errorf("names are empty: %v", r.Primary.Attributes)
 			}

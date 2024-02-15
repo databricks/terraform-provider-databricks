@@ -1522,3 +1522,55 @@ func TestImportStorageCredentialGrants(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestExternalLocationName(t *testing.T) {
+	ic := importContextForTest()
+	d := terraformProviderCatalog.ResourceExternalLocation().ToResource().TestResourceData()
+	d.SetId("abc")
+	assert.Equal(t, "abc", resourcesMap["databricks_external_location"].Name(ic, d))
+	d.Set("name", "abc")
+	assert.Equal(t, "abc", resourcesMap["databricks_external_location"].Name(ic, d))
+}
+
+func TestExternalLocationListFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/external-locations",
+			Status:   200,
+			Response: &catalog.ListExternalLocationsResponse{},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_external_location"].List(ic)
+		assert.NoError(t, err)
+	})
+}
+
+func TestImportExternalLocationGrants(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Status:       200,
+			Resource:     "/api/2.1/unity-catalog/permissions/external-locations/abc",
+			Response: catalog.PermissionsList{
+				PrivilegeAssignments: []catalog.PrivilegeAssignment{
+					{
+						Principal:  "principal",
+						Privileges: []catalog.Privilege{"ALL PRIVILEGES"},
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		d := terraformProviderCatalog.ResourceExternalLocation().ToResource().TestResourceData()
+		d.SetId("abc")
+		err := resourcesMap["databricks_external_location"].Import(ic, &resource{
+			ID:   "abc",
+			Data: d,
+		})
+		assert.NoError(t, err)
+	})
+}

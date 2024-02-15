@@ -2336,7 +2336,49 @@ var resourcesMap map[string]importable = map[string]importable{
 				if v.Name != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_storage_credential",
-						ID:       v.Id,
+						ID:       v.Name,
+					})
+				}
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "owner" {
+				return d.Get(pathString).(string) != ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+	},
+	"databricks_external_location": {
+		WorkspaceLevel: true,
+		Service:        "uc-external-location",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				return d.Id()
+			}
+			return nameNormalizationRegex.ReplaceAllString(name, "_")
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_grants",
+					ID:       fmt.Sprintf("external_location/%s", r.ID),
+				})
+			}
+			return nil
+		},
+		List: func(ic *importContext) error {
+			objList, err := ic.workspaceClient.ExternalLocations.ListAll(ic.Context, catalog.ListExternalLocationsRequest{})
+			if err != nil {
+				return err
+			}
+			for _, v := range objList {
+				if v.Name != "" {
+					id := fmt.Sprintf("%s", v.Name)
+					ic.Emit(&resource{
+						Resource: "databricks_external_location",
+						ID:       id,
 					})
 				}
 			}

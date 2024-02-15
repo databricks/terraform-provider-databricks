@@ -58,17 +58,15 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-type ClusterResourceProvider struct{}
-
-func (ClusterResourceProvider) UnderlyingType() compute.ClusterSpec {
-	return compute.ClusterSpec{}
+type ClusterSpec struct {
+	compute.ClusterSpec
 }
 
-func (ClusterResourceProvider) Aliases() map[string]string {
+func (ClusterSpec) Aliases() map[string]string {
 	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
 }
 
-func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()
 	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetComputed()
 	common.CustomizeSchemaPath(s, "enable_local_disk_encryption").SetComputed()
@@ -76,7 +74,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 	common.CustomizeSchemaPath(s, "driver_node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
 	common.CustomizeSchemaPath(s, "driver_instance_pool_id").SetComputed().SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
 	common.CustomizeSchemaPath(s, "ssh_public_keys").SetMaxItems(10)
-	common.CustomizeSchemaPath(s, "init_scripts").SetMaxItems(10).AddNewField("abfss", common.StructToSchema(InitScriptStorageInfo{}, nil)["abfss"]).AddNewField("gcs", common.StructToSchema(InitScriptStorageInfo{}, nil)["gcs"])
+	common.CustomizeSchemaPath(s, "init_scripts").SetMaxItems(10)
 	common.CustomizeSchemaPath(s, "init_scripts", "dbfs").SetDeprecated(DbfsDeprecationWarning)
 	common.CustomizeSchemaPath(s, "init_scripts", "dbfs", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "init_scripts", "s3", "destination").SetRequired()
@@ -98,20 +96,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 	common.CustomizeSchemaPath(s, "aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
 	common.CustomizeSchemaPath(s, "aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
 	common.CustomizeSchemaPath(s, "azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
-	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"}).AddNewField(
-		"use_preemptible_executors",
-		&schema.Schema{
-			Type:       schema.TypeBool,
-			Optional:   true,
-			Deprecated: "Please use 'availability' instead.",
-		},
-	).AddNewField(
-		"zone_id",
-		&schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-	)
+	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
 
 	common.CustomizeSchemaPath(s).AddNewField("library", common.StructToSchema(libraries.ClusterLibraryList{},
 		func(ss map[string]*schema.Schema) map[string]*schema.Schema {
@@ -171,7 +156,7 @@ func (ClusterResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[
 }
 
 func resourceClusterSchema() map[string]*schema.Schema {
-	return common.ResourceProviderStructToSchema[compute.ClusterSpec](ClusterResourceProvider{})
+	return common.StructToSchema(ClusterSpec{}, nil)
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

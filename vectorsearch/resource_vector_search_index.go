@@ -18,14 +18,14 @@ func ResourceVectorSearchIndex() common.Resource {
 			common.CustomizeSchemaPath(s, "primary_key").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(s, "index_type").SetRequired().SetForceNew()
 
-			common.CustomizeSchemaPath(s, "status").SetReadOnly()
-			common.CustomizeSchemaPath(s, "creator").SetReadOnly()
+			// common.CustomizeSchemaPath(s, "status").SetReadOnly()
+			// common.CustomizeSchemaPath(s, "creator").SetReadOnly()
 
-			common.CustomizeSchemaPath(s, "delta_sync_index_spec", "pipeline_id").SetReadOnly()
-			// common.MustSchemaPath(s, "delta_sync_vector_index_spec", "embedding_vector_columns").MinItems = 1
+			// common.CustomizeSchemaPath(s, "delta_sync_index_spec", "pipeline_id").SetReadOnly()
+			// // common.MustSchemaPath(s, "delta_sync_vector_index_spec", "embedding_vector_columns").MinItems = 1
 
-			s["delta_sync_index_spec"].ExactlyOneOf = []string{"delta_sync_index_spec", "direct_access_index_spec"}
-			s["direct_access_index_spec"].ExactlyOneOf = []string{"delta_sync_index_spec", "direct_access_index_spec"}
+			// s["delta_sync_index_spec"].ExactlyOneOf = []string{"delta_sync_index_spec", "direct_access_index_spec"}
+			// s["direct_access_index_spec"].ExactlyOneOf = []string{"delta_sync_index_spec", "direct_access_index_spec"}
 
 			return s
 		})

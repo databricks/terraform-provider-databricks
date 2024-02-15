@@ -3,7 +3,7 @@ subcategory: "Storage"
 ---
 # databricks_file Resource
 
-This resource allows uploading and downloading files in [databricks_volume](volume.md) up to 2GB in octet-stream.
+This resource allows uploading and downloading files in [databricks_volume](volume.md) up to 5GiB in octet-stream.
 
 ## Example Usage
 

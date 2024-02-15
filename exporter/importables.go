@@ -2327,17 +2327,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			switch pathString {
-			case "owner":
-				return d.Get(pathString).(string) != ""
-			case "isolation_mode":
+			if pathString == "isolation_mode" {
 				return d.Get(pathString).(string) != "ISOLATED"
 			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
 		Depends: []reference{
 			{Path: "connection_name", Resource: "databricks_connection", Match: "name"},
-			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
 		},
 		// TODO: convert `main` catalog into the data source as it's automatically created?
 		//   This will require addition of the databricks_catalog data source
@@ -2392,15 +2389,10 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			return nil
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "owner" {
-				return d.Get(pathString).(string) != ""
-			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-		},
+		ShouldOmitField: shouldOmitForUnityCatalog,
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
-			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
 		},
 	},
 	"databricks_volume": {
@@ -2426,18 +2418,15 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 			switch pathString {
-			case "owner":
-				return d.Get(pathString).(string) != ""
 			case "storage_location", "volume_type":
 				return d.Get("volume_type").(string) == "MANAGED"
 			}
-
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name"}, // TODO: this doesn't work correctly because we need full name
-			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+			{Path: "storage_location", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
 		},
 	},
 	"databricks_grants": {
@@ -2467,13 +2456,6 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		AccountLevel:   true,
 		Service:        "uc-storage-credentials",
-		Name: func(ic *importContext, d *schema.ResourceData) string {
-			name := d.Get("name").(string)
-			if name == "" {
-				return d.Id()
-			}
-			return nameNormalizationRegex.ReplaceAllString(name, "_")
-		},
 		Import: func(ic *importContext, r *resource) error {
 			ic.Emit(&resource{
 				Resource: "databricks_grants",
@@ -2496,7 +2478,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			} else {
 				objList, err = ic.workspaceClient.StorageCredentials.ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
 			}
-
 			if err != nil {
 				return err
 			}
@@ -2509,30 +2490,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "owner" {
-				return d.Get(pathString).(string) != ""
-			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-		},
+		ShouldOmitField: shouldOmitForUnityCatalog,
 	},
 	"databricks_external_location": {
 		WorkspaceLevel: true,
 		Service:        "uc-external-locations",
-		Name: func(ic *importContext, d *schema.ResourceData) string {
-			name := d.Get("name").(string)
-			if name == "" {
-				return d.Id()
-			}
-			return nameNormalizationRegex.ReplaceAllString(name, "_")
-		},
 		Import: func(ic *importContext, r *resource) error {
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_grants",
-					ID:       fmt.Sprintf("external_location/%s", r.ID),
-				})
-			}
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       fmt.Sprintf("external_location/%s", r.ID),
+			})
+			ic.Emit(&resource{
+				Resource: "databricks_storage_credential",
+				ID:       r.Data.Get("credential_name").(string),
+			})
 			return nil
 		},
 		List: func(ic *importContext) error {
@@ -2548,11 +2519,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "owner" {
-				return d.Get(pathString).(string) != ""
-			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		ShouldOmitField: shouldOmitForUnityCatalog,
+		Depends: []reference{
+			{Path: "credential_name", Resource: "databricks_storage_credential", Match: "name"},
 		},
 	},
 	"databricks_connection": {
@@ -2577,12 +2546,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "owner" {
-				return d.Get(pathString).(string) != ""
-			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-		},
+		ShouldOmitField: shouldOmitForUnityCatalog,
 	},
 	"databricks_share": {
 		WorkspaceLevel: true,
@@ -2634,13 +2598,8 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			return nil
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "owner" {
-				return d.Get(pathString).(string) != ""
-			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-		},
-		Depends: []reference{ // think how to distinguish tables from volumes from models?
+		ShouldOmitField: shouldOmitForUnityCatalog,
+		Depends:         []reference{ // think how to distinguish tables from volumes from models?
 			//{Path: "object.name", Resource: "databricks_volume"},
 			//{Path: "object.name", Resource: "databricks_registered_model"},
 			// {Path: "object.name", Resource: "databricks_sql_table"},
@@ -2705,21 +2664,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			switch pathString {
-			case "owner":
-				return d.Get(pathString).(string) != ""
-			case "storage_location":
+			if pathString == "storage_location" {
 				location := d.Get(pathString).(string)
 				// TODO: don't generate it if it's managed.
 				// check if string contains metastore_id/models/model_id (although we don't have model_id in the state)
 				return location != ""
 			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name"}, // TODO: this doesn't work correctly because we need full name
-			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
 		},
 	},
 }

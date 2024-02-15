@@ -1475,15 +1475,6 @@ func TestEmitFilesFromMap(t *testing.T) {
 	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
 }
 
-func TestStorageCredentialName(t *testing.T) {
-	ic := importContextForTest()
-	d := terraformProviderCatalog.ResourceStorageCredential().ToResource().TestResourceData()
-	d.SetId("my_storage_cred")
-	assert.Equal(t, "my_storage_cred", resourcesMap["databricks_storage_credential"].Name(ic, d))
-	d.Set("name", "my_storage_cred")
-	assert.Equal(t, "my_storage_cred", resourcesMap["databricks_storage_credential"].Name(ic, d))
-}
-
 func TestStorageCredentialListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -1525,15 +1516,6 @@ func TestImportStorageCredentialGrants(t *testing.T) {
 		})
 		assert.NoError(t, err)
 	})
-}
-
-func TestExternalLocationName(t *testing.T) {
-	ic := importContextForTest()
-	d := terraformProviderCatalog.ResourceExternalLocation().ToResource().TestResourceData()
-	d.SetId("abc")
-	assert.Equal(t, "abc", resourcesMap["databricks_external_location"].Name(ic, d))
-	d.Set("name", "abc")
-	assert.Equal(t, "abc", resourcesMap["databricks_external_location"].Name(ic, d))
 }
 
 func TestExternalLocationListFails(t *testing.T) {

@@ -1231,3 +1231,10 @@ func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
 	}
 	return err
 }
+
+func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "owner" {
+		return d.Get(pathString).(string) != ""
+	}
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}

@@ -2491,6 +2491,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
+		Depends: []reference{
+			{Path: "azure_service_principal.client_secret", Variable: true},
+		},
 	},
 	"databricks_external_location": {
 		WorkspaceLevel: true,

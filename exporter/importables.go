@@ -2296,7 +2296,8 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_storage_credential": {
 		WorkspaceLevel: true,
-		Service:        "storage_credentials",
+		AccountLevel:   true,
+		Service:        "uc-storage-credentials",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -2305,29 +2306,47 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nameNormalizationRegex.ReplaceAllString(name, "_")
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_grants",
-					ID:       fmt.Sprintf("storage_credential/%s", r.ID),
-				})
-			}
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       fmt.Sprintf("storage_credential/%s", r.ID),
+			})
 			return nil
 		},
 		List: func(ic *importContext) error {
-			objList, err := catalog.NewStorageCredentials(ic.Client.DatabricksClient).ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
+			var objList []catalog.StorageCredentialInfo
+			var err error
+
+			if ic.accountLevel {
+				if ic.currentMetastore == nil {
+					return fmt.Errorf("there is no UC metastore information")
+				}
+				currentMetastore := ic.currentMetastore.MetastoreId
+				objList, err = ic.accountClient.StorageCredentials.List(ic.Context, catalog.ListAccountStorageCredentialsRequest{
+					MetastoreId: currentMetastore,
+				})
+			} else {
+				objList, err = ic.workspaceClient.StorageCredentials.ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
+			}
+
 			if err != nil {
 				return err
 			}
+
 			for _, v := range objList {
 				if v.Name != "" {
-					id := v.Name
 					ic.Emit(&resource{
 						Resource: "databricks_storage_credential",
-						ID:       id,
+						ID:       v.Id,
 					})
 				}
 			}
 			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "owner" {
+				return d.Get(pathString).(string) != ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 	},
 }

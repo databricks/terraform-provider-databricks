@@ -38,20 +38,22 @@ func importContextForTest() *importContext {
 	p := provider.DatabricksProvider()
 	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
-		Importables:              resourcesMap,
-		Resources:                p.ResourcesMap,
-		testEmits:                map[string]bool{},
-		nameFixes:                nameFixes,
-		waitGroup:                &sync.WaitGroup{},
-		allUsers:                 map[string]scim.User{},
-		allSps:                   map[string]scim.User{},
-		channels:                 makeResourcesChannels(),
-		exportDeletedUsersAssets: false,
-		ignoredResources:         map[string]struct{}{},
-		State:                    newStateApproximation(supportedResources),
-		emittedUsers:             map[string]struct{}{},
-		userOrSpDirectories:      map[string]bool{},
-		defaultChannel:           make(resourceChannel, defaultChannelSize),
+		Importables:               resourcesMap,
+		Resources:                 p.ResourcesMap,
+		testEmits:                 map[string]bool{},
+		nameFixes:                 nameFixes,
+		waitGroup:                 &sync.WaitGroup{},
+		allUsers:                  map[string]scim.User{},
+		allSps:                    map[string]scim.User{},
+		channels:                  makeResourcesChannels(),
+		oldWorkspaceObjectMapping: map[int64]string{},
+		exportDeletedUsersAssets:  false,
+		ignoredResources:          map[string]struct{}{},
+		deletedResources:          map[string]struct{}{},
+		State:                     newStateApproximation(supportedResources),
+		emittedUsers:              map[string]struct{}{},
+		userOrSpDirectories:       map[string]bool{},
+		defaultChannel:            make(resourceChannel, defaultChannelSize),
 	}
 }
 

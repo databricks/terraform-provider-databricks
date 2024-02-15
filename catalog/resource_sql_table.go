@@ -43,6 +43,7 @@ type SqlTableInfo struct {
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
 	WarehouseID           string            `json:"warehouse_id,omitempty"`
+	Tags                  map[string]string `json:"tags,omitempty" tf:"computed"`
 
 	exec    common.CommandExecutor
 	sqlExec sql.StatementExecutionInterface
@@ -200,23 +201,25 @@ func (ti *SqlTableInfo) serializeColumnInfos() string {
 }
 
 func (ti *SqlTableInfo) serializeProperties() string {
-	propsMap := make([]string, 0, len(ti.Properties))
-	for key, value := range ti.Properties {
+	return serializeMapField(ti.Properties)
+}
+
+func (ti *SqlTableInfo) serializeOptions() string {
+	return serializeMapField(ti.Options)
+}
+
+func (ti *SqlTableInfo) serializeTags() string {
+	return serializeMapField(ti.Tags)
+}
+
+func serializeMapField(field map[string]string) string {
+	propsMap := make([]string, 0, len(field))
+	for key, value := range field {
 		if !sqlTableIsManagedProperty(key) {
 			propsMap = append(propsMap, fmt.Sprintf("'%s'='%s'", key, value))
 		}
 	}
 	return strings.Join(propsMap[:], ", ") // 'foo'='bar', 'this'='that'
-}
-
-func (ti *SqlTableInfo) serializeOptions() string {
-	optionsMap := make([]string, 0, len(ti.Options))
-	for key, value := range ti.Options {
-		if !sqlTableIsManagedProperty(key) {
-			optionsMap = append(optionsMap, fmt.Sprintf("'%s'='%s'", key, value))
-		}
-	}
-	return strings.Join(optionsMap[:], ", ") // 'foo'='bar', 'this'='that'
 }
 
 func (ti *SqlTableInfo) buildLocationStatement() string {
@@ -237,7 +240,7 @@ func (ti *SqlTableInfo) getTableTypeString() string {
 }
 
 func (ti *SqlTableInfo) buildTableCreateStatement() string {
-	statements := make([]string, 0, 10)
+	statements := make([]string, 0, 11)
 
 	isView := ti.TableType == "VIEW"
 
@@ -290,6 +293,10 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	statements = append(statements, ";")
 
+	if len(ti.Tags) > 0 {
+		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TAGS (%s);", createType, ti.SQLFullName(), ti.serializeTags()))
+	}
+
 	return strings.Join(statements, "")
 }
 
@@ -330,6 +337,23 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		}
 		// Next handle property changes and additions
 		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.SQLFullName(), ti.serializeProperties()))
+	}
+
+	if !reflect.DeepEqual(ti.Tags, oldti.Tags) {
+		// First handle removal of tags
+		removeTags := make([]string, 0)
+		for key := range oldti.Tags {
+			if _, ok := ti.Tags[key]; !ok {
+				// These come from the terraform state rather than the api so they aren't escaped
+				removeTags = append(removeTags, fmt.Sprintf("'%s'", key))
+			}
+		}
+
+		if len(removeTags) > 0 {
+			statements = append(statements, fmt.Sprintf("ALTER %s %s UNSET TAGS (%s)", typestring, ti.SQLFullName(), strings.Join(removeTags, ",")))
+		}
+		// Next handle property changes and additions
+		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TAGS (%s)", typestring, ti.SQLFullName(), ti.serializeTags()))
 	}
 
 	return statements, nil
@@ -458,6 +482,17 @@ func ResourceSqlTable() common.Resource {
 				return err
 			}
 			oldti, err := NewSqlTablesAPI(ctx, c).getTable(d.Id())
+
+			// The databricks API doesn't return tags with the table object so we use the terraform state
+			if d.HasChange("tags") && oldti.Tags == nil {
+				oldti.Tags = make(map[string]string)
+				old, _ := d.GetChange("tags")
+				oldProps := old.(map[string]any)
+				for key := range oldProps {
+					oldti.Tags[key] = oldProps[key].(string)
+				}
+			}
+
 			if err != nil {
 				return err
 			}

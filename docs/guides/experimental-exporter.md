@@ -81,6 +81,8 @@ Services are just logical groups of resources used for filtering and organizatio
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
 * `uc-artifact-allowlist` - exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-system-schemas` - exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
+* `uc-storage-credentials` - exports [databricks_storage_credential](../resources/storage_credential) resources on workspace or account level.
+* `uc-external-locations` - exports [databricks_external_location[(../resources/external_location) resource.
 * `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
 * `workspace` - [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
 

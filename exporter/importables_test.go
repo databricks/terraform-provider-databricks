@@ -1536,7 +1536,7 @@ func TestExternalLocationListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/external-locations",
+			Resource: "/api/2.1/unity-catalog/external-locations?",
 			Status:   200,
 			Response: &catalog.ListExternalLocationsResponse{},
 		},

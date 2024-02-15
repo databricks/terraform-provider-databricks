@@ -2333,12 +2333,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 
 			for _, v := range objList {
-				if v.Name != "" {
-					ic.Emit(&resource{
-						Resource: "databricks_storage_credential",
-						ID:       v.Name,
-					})
-				}
+				ic.Emit(&resource{
+					Resource: "databricks_storage_credential",
+					ID:       v.Name,
+				})
 			}
 			return nil
 		},
@@ -2351,7 +2349,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_external_location": {
 		WorkspaceLevel: true,
-		Service:        "uc-external-location",
+		Service:        "uc-external-locations",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -2374,13 +2372,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, v := range objList {
-				if v.Name != "" {
-					id := fmt.Sprintf("%s", v.Name)
-					ic.Emit(&resource{
-						Resource: "databricks_external_location",
-						ID:       id,
-					})
-				}
+				ic.Emit(&resource{
+					Resource: "databricks_external_location",
+					ID:       v.Name,
+				})
 			}
 			return nil
 		},

@@ -25,3 +25,8 @@ func TestGetTerraformVersionFromContext(t *testing.T) {
 	//
 	assert.True(t, IsExporter(ctx))
 }
+
+func TestSuppressDiffWhitespaceChange(t *testing.T) {
+	assert.True(t, SuppressDiffWhitespaceChange("k", "value", "  value  ", nil))
+	assert.False(t, SuppressDiffWhitespaceChange("k", "value", "new_value", nil))
+}

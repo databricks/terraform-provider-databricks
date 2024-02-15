@@ -278,6 +278,20 @@ var emptyMlflowWebhooks = qa.HTTPFixture{
 	Response:     ml.ListRegistryWebhooks{},
 }
 
+var emptyExternalLocations = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.1/unity-catalog/external-locations?",
+	Status:   200,
+	Response: &catalog.ListExternalLocationsResponse{},
+}
+
+var emptyStorageCrdentials = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.1/unity-catalog/storage-credentials?",
+	Status:   200,
+	Response: &catalog.ListStorageCredentialsResponse{},
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -424,6 +438,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyIpAccessLIst,
 			emptyInstancePools,
 			emptyModelServing,
+			emptyExternalLocations,
+			emptyStorageCrdentials,
 			emptyMlflowWebhooks,
 			emptySqlDashboards,
 			emptySqlEndpoints,
@@ -675,6 +691,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			noCurrentMetastoreAttached,
 			emptyRepos,
+			emptyExternalLocations,
+			emptyStorageCrdentials,
 			emptyModelServing,
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,

@@ -2326,4 +2326,96 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		// TODO: add Depends & Import to emit corresponding UC Volumes when support for them is added
 	},
+	"databricks_storage_credential": {
+		WorkspaceLevel: true,
+		AccountLevel:   true,
+		Service:        "uc-storage-credentials",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				return d.Id()
+			}
+			return nameNormalizationRegex.ReplaceAllString(name, "_")
+		},
+		Import: func(ic *importContext, r *resource) error {
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       fmt.Sprintf("storage_credential/%s", r.ID),
+			})
+			return nil
+		},
+		List: func(ic *importContext) error {
+			var objList []catalog.StorageCredentialInfo
+			var err error
+
+			if ic.accountLevel {
+				if ic.currentMetastore == nil {
+					return fmt.Errorf("there is no UC metastore information")
+				}
+				currentMetastore := ic.currentMetastore.MetastoreId
+				objList, err = ic.accountClient.StorageCredentials.List(ic.Context, catalog.ListAccountStorageCredentialsRequest{
+					MetastoreId: currentMetastore,
+				})
+			} else {
+				objList, err = ic.workspaceClient.StorageCredentials.ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
+			}
+
+			if err != nil {
+				return err
+			}
+
+			for _, v := range objList {
+				ic.Emit(&resource{
+					Resource: "databricks_storage_credential",
+					ID:       v.Name,
+				})
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "owner" {
+				return d.Get(pathString).(string) != ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+	},
+	"databricks_external_location": {
+		WorkspaceLevel: true,
+		Service:        "uc-external-locations",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				return d.Id()
+			}
+			return nameNormalizationRegex.ReplaceAllString(name, "_")
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_grants",
+					ID:       fmt.Sprintf("external_location/%s", r.ID),
+				})
+			}
+			return nil
+		},
+		List: func(ic *importContext) error {
+			objList, err := ic.workspaceClient.ExternalLocations.ListAll(ic.Context, catalog.ListExternalLocationsRequest{})
+			if err != nil {
+				return err
+			}
+			for _, v := range objList {
+				ic.Emit(&resource{
+					Resource: "databricks_external_location",
+					ID:       v.Name,
+				})
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "owner" {
+				return d.Get(pathString).(string) != ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+	},
 }

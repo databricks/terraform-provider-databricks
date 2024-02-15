@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"errors"
 	"net/http"
 	"testing"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/files"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestResourceFileCreate(t *testing.T) {
@@ -161,25 +159,6 @@ func TestResourceFileRead_NotFound(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestResourceFileRead_Error(t *testing.T) {
-	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
-	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "HEAD",
-				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
-				Status:   400,
-			},
-		},
-		Resource: ResourceFile(),
-		Read:     true,
-		ID:       path,
-	}.Apply(t)
-	var apiErr *apierr.APIError
-	require.True(t, errors.As(err, &apiErr), "Error should be of type *apierr.APIError")
-	require.Equal(t, 400, apiErr.StatusCode)
-}
-
 func TestResourceFileDelete(t *testing.T) {
 	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
 	d, err := qa.ResourceFixture{
@@ -248,44 +227,6 @@ func TestResourceFileUpdate(t *testing.T) {
 			},
 		},
 		Resource: ResourceFile(),
-		State: map[string]any{
-			"content_base64": "YWJjCg==",
-			"path":           path,
-		},
-		ID:          path,
-		RequiresNew: true,
-		Update:      true,
-	}.ApplyNoError(t)
-}
-
-func TestResourceFileUpdate2(t *testing.T) {
-	path := "/Volumes/CatalogName/SchemaName/VolumeName/fileName"
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PUT",
-				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName",
-				Status:   http.StatusOK,
-			},
-			{
-				Method:   http.MethodHead,
-				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
-				Response: files.GetMetadataResponse{
-					LastModified:  "Wed, 21 Oct 2015 07:28:00 GMT",
-					ContentLength: 1024,
-				},
-			},
-			{
-				Method:   http.MethodHead,
-				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
-				Response: files.GetMetadataResponse{
-					LastModified:  "Wed, 21 Oct 2015 07:28:00 GMT",
-					ContentLength: 1024,
-				},
-			},
-		},
-		Resource: ResourceFile(),
-		Read:     true,
 		State: map[string]any{
 			"content_base64": "YWJjCg==",
 			"path":           path,

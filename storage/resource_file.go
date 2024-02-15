@@ -42,7 +42,6 @@ func ResourceFile() common.Resource {
 		"modification_time": {
 			Type:     schema.TypeString,
 			Computed: true,
-			//Optional: true,
 		},
 		"file_size": {
 			Type:     schema.TypeInt,

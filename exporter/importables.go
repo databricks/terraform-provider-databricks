@@ -2515,10 +2515,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, v := range objList {
-				ic.Emit(&resource{
-					Resource: "databricks_external_location",
-					ID:       v.Name,
-				})
+				if v.Name != "metastore_default_location" {
+					ic.Emit(&resource{
+						Resource: "databricks_external_location",
+						ID:       v.Name,
+					})
+				}
 			}
 			return nil
 		},

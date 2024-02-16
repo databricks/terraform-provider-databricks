@@ -18,6 +18,8 @@ With the status set to `RESTRICT_TOKENS_AND_JOB_RUN_AS`, workspace admins can:
 2. Only change a job owner to themselves.
 3. Only change the job run_as setting to themselves a service principal on which they have the Service Principal User role.
 
+-> **Note** Only account admins can update the setting. And the account admin must be part of the workspace to change the setting status.
+
 ## Example Usage
 
 ```hcl

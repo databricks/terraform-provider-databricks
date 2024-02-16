@@ -2434,8 +2434,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-grants",
 		// TODO: Should we try to make name unique?
 		Import: func(ic *importContext, r *resource) error {
-			// TODO: do we need to emit principals? See comment for the owner...
-			// If not, we don't need this function
+			// TODO: do we need to emit principals? Maybe only on account level? See comment for the owner...
+			// If not, we don't need this function.
 			return nil
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
@@ -2448,7 +2448,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "share", Resource: "databricks_share"},
 			{Path: "foreign_connection", Resource: "databricks_connection"},
 			{Path: "grant.principal", Resource: "databricks_recipient"},
-			//	{Path: "", Resource: ""},
+			{Path: "metastore", Resource: "databricks_metastore"},
 			//	{Path: "", Resource: ""},
 		},
 	},
@@ -2679,6 +2679,84 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name"}, // TODO: this doesn't work correctly because we need full name
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
+		},
+	},
+	"databricks_metastore": {
+		WorkspaceLevel: true,
+		AccountLevel:   true,
+		Service:        "uc-metastores",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("name").(string)
+			if name == "" {
+				return d.Id()
+			}
+			return name
+		},
+		List: func(ic *importContext) error {
+			var err error
+			var metastores []catalog.MetastoreInfo
+			if ic.accountLevel {
+				metastores, err = ic.accountClient.Metastores.ListAll(ic.Context)
+			} else {
+				metastores, err = ic.workspaceClient.Metastores.ListAll(ic.Context)
+			}
+			if err != nil {
+				return err
+			}
+			for _, mstore := range metastores {
+				if !ic.MatchesName(mstore.Name) {
+					continue
+				}
+				ic.EmitIfUpdatedAfterMillis(&resource{
+					Resource: "databricks_metastore",
+					ID:       mstore.MetastoreId,
+				}, mstore.UpdatedAt, fmt.Sprintf("metastore '%s'", mstore.Name))
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       "metastore/" + r.ID,
+			})
+			// TODO: emit owner? See comment in catalog resource
+			if ic.accountLevel { // emit metastore assignments
+				assignments, err := ic.accountClient.MetastoreAssignments.ListByMetastoreId(ic.Context, r.ID)
+				if err == nil {
+					for _, workspaceID := range assignments.WorkspaceIds {
+						ic.Emit(&resource{
+							Resource: "databricks_metastore_assignment",
+							ID:       fmt.Sprintf("%d|%s", workspaceID, r.ID),
+						})
+					}
+				} else {
+					log.Printf("[ERROR] listing metastore assignments: %s", err.Error())
+				}
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "default_data_access_config_id" || pathString == "storage_root_credential_id" {
+				// technically, both should be marked as `computed`
+				return true
+			}
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		},
+	},
+	"databricks_metastore_assignment": {
+		AccountLevel: true,
+		Service:      "uc-metastores",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			return fmt.Sprintf("ws_%d", d.Get("workspace_id").(int))
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "default_catalog_name" {
+				return d.Get(pathString).(string) == ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "metastore_id", Resource: "databricks_metastore"},
 		},
 	},
 }

@@ -83,6 +83,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md)
 * `uc-connections` -  [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
 * `uc-grants` -  [databricks_grants](../resources/grants.md)
+* `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only metastores from the workspace's region are listed!*
 * `uc-models` - [databricks_registered_model](../resources/registered_model.md)
 * `uc-schemas` -  [databricks_schema](../resources/schema.md)
 * `uc-shares` - **listing** [databricks_share](../resources/share.md) and [databricks_recipient](../resources/recipient.md)

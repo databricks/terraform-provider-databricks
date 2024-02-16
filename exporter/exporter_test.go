@@ -424,6 +424,13 @@ var currentMetastoreSuccess = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyMetastoreList = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/unity-catalog/metastores",
+	Response:     catalog.ListMetastoresResponse{},
+	ReuseRequest: true,
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
 		{
@@ -445,6 +452,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			noCurrentMetastoreAttached,
+			emptyMetastoreList,
 			meAdminFixture,
 			emptyRepos,
 			emptyShares,
@@ -705,6 +713,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 				},
 			},
 			noCurrentMetastoreAttached,
+			emptyMetastoreList,
 			emptyRepos,
 			emptyExternalLocations,
 			emptyStorageCrdentials,

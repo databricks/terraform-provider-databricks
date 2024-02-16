@@ -2523,6 +2523,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
+		// This external location is automatically created when metastore is created with the `storage_root`
+		Ignore: func(ic *importContext, r *resource) bool {
+			return r.ID == "metastore_default_location"
+		},
 		Depends: []reference{
 			{Path: "credential_name", Resource: "databricks_storage_credential", Match: "name"},
 		},

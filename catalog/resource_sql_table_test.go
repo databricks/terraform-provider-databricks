@@ -135,7 +135,7 @@ func TestResourceSqlTableCreateStatement_Tags(t *testing.T) {
 		StorageLocation:       "s3://ext-main/foo/bar1",
 		StorageCredentialName: "somecred",
 		Comment:               "terraform managed",
-		Tags:                  map[string]string{"foo":"bar", "fizz":"buzz"},
+		Tags:                  map[string]string{"foo": "bar", "fizz": "buzz"},
 	}
 	stmt := ti.buildTableCreateStatement()
 	assert.Contains(t, stmt, "CREATE TABLE `main`.`foo`.`bar`")

@@ -890,7 +890,7 @@ func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource
 	}
 	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
 	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+		[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 }
 
 func generateUniqueID(v string) string {

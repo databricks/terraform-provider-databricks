@@ -1194,7 +1194,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 					ic.Importables["databricks_job"],
 					[]string{},
 					ic.Resources["databricks_job"],
-					res.Data,
+					res,
 					hclwrite.NewEmptyFile().Body())
 
 				assert.NoError(t, err)
@@ -1441,12 +1441,8 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 					continue
 				}
 				// simulate complex HCL write
-				err = ic.dataToHcl(
-					ic.Importables["databricks_job"],
-					[]string{},
-					ic.Resources["databricks_job"],
-					res.Data,
-					hclwrite.NewEmptyFile().Body())
+				err = ic.dataToHcl(ic.Importables["databricks_job"], []string{}, ic.Resources["databricks_job"],
+					res, hclwrite.NewEmptyFile().Body())
 
 				assert.NoError(t, err)
 			}

@@ -839,8 +839,7 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 			}
 		} else {
 			resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
-			err = ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource],
-				r.Data, resourceBlock.Body())
+			err = ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 			if err != nil {
 				log.Printf("[ERROR] error generating body for %v: %s", r, err.Error())
 			}
@@ -1332,7 +1331,8 @@ type fieldTuple struct {
 }
 
 func (ic *importContext) dataToHcl(i importable, path []string,
-	pr *schema.Resource, d *schema.ResourceData, body *hclwrite.Body) error {
+	pr *schema.Resource, res *resource, body *hclwrite.Body) error {
+	d := res.Data
 	ss := []fieldTuple{}
 	for a, as := range pr.Schema {
 		ss = append(ss, fieldTuple{a, as})
@@ -1342,6 +1342,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		// makes the most beautiful configs
 		return ss[i].Field > ss[j].Field
 	})
+	var_cnt := 0
 	for _, tuple := range ss {
 		a, as := tuple.Field, tuple.Schema
 		pathString := strings.Join(append(path, a), ".")
@@ -1355,12 +1356,16 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			continue
 		}
 		mpath := dependsRe.ReplaceAllString(pathString, "")
-		for _, r := range i.Depends {
-			if r.Path == mpath && r.Variable {
+		for _, ref := range i.Depends {
+			if ref.Path == mpath && ref.Variable {
 				// sensitive fields are moved to variable depends, variable name is normalized
 				// TODO: handle a case when we have multiple blocks, so names won't be unique
-				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
+				raw = ic.regexFix(ic.ResourceName(res), simpleNameFixes)
+				if var_cnt > 0 {
+					raw = fmt.Sprintf("%s_%d", raw, var_cnt)
+				}
 				nonZero = true
+				var_cnt++
 			}
 		}
 		shouldSkip := !nonZero
@@ -1405,7 +1410,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		case schema.TypeSet:
 			if rawSet, ok := raw.(*schema.Set); ok {
 				rawList := rawSet.List()
-				err := ic.readListFromData(i, append(path, a), d, rawList, body, as, func(i int) string {
+				err := ic.readListFromData(i, append(path, a), res, rawList, body, as, func(i int) string {
 					return strconv.Itoa(rawSet.F(rawList[i]))
 				})
 				if err != nil {
@@ -1414,7 +1419,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			}
 		case schema.TypeList:
 			if rawList, ok := raw.([]any); ok {
-				err := ic.readListFromData(i, append(path, a), d, rawList, body, as, strconv.Itoa)
+				err := ic.readListFromData(i, append(path, a), res, rawList, body, as, strconv.Itoa)
 				if err != nil {
 					return err
 				}
@@ -1426,9 +1431,8 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 	return nil
 }
 
-func (ic *importContext) readListFromData(i importable, path []string, d *schema.ResourceData,
-	rawList []any, body *hclwrite.Body, as *schema.Schema,
-	offsetConverter func(i int) string) error {
+func (ic *importContext) readListFromData(i importable, path []string, res *resource,
+	rawList []any, body *hclwrite.Body, as *schema.Schema, offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
 		return nil
 	}
@@ -1438,12 +1442,12 @@ func (ic *importContext) readListFromData(i importable, path []string, d *schema
 		if as.MaxItems == 1 {
 			nestedPath := append(path, offsetConverter(0))
 			confBlock := body.AppendNewBlock(name, []string{})
-			return ic.dataToHcl(i, nestedPath, elem, d, confBlock.Body())
+			return ic.dataToHcl(i, nestedPath, elem, res, confBlock.Body())
 		}
 		for offset := range rawList {
 			confBlock := body.AppendNewBlock(name, []string{})
 			nestedPath := append(path, offsetConverter(offset))
-			err := ic.dataToHcl(i, nestedPath, elem, d, confBlock.Body())
+			err := ic.dataToHcl(i, nestedPath, elem, res, confBlock.Body())
 			if err != nil {
 				return err
 			}

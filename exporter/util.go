@@ -1238,3 +1238,32 @@ func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.
 	}
 	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 }
+
+func appendEndingSlashToDirName(dir string) string {
+	if dir == "" || dir[len(dir)-1] == '/' {
+		return dir
+	}
+	return dir + "/"
+}
+
+func matchingCatalogAndSchema(res *resource, ra *resourceApproximation, origPath string) bool {
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, origPath=%s", res.Resource, origPath)
+	res_catalog_name := res.Data.Get("catalog_name").(string)
+	res_schema_name := res.Data.Get("schema_name").(string)
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, catalog='%s' schema='%s'",
+	// 	res.Resource, res_catalog_name, res_schema_name)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v)",
+	// 	ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found)
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: result: %v approximation: catalog='%v' schema='%v', res: catalog='%s' schema='%s'",
+	// 	result, ra_catalog_name, ra_schema_name, res_catalog_name, res_schema_name)
+	return result
+}

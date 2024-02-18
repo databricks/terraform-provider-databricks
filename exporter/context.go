@@ -1040,7 +1040,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 	if (ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp ||
 		ref.MatchType == MatchCaseInsensitive) && !ref.SkipDirectLookup {
 		sr := ic.State.Get(ref.Resource, attr, matchValue)
-		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(origResource, sr, origPath)) {
+		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) {
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
 			return matchValue, genTraversalTokens(sr, attr), sr.Mode == "data"
@@ -1086,7 +1086,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			default:
 				log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 			}
-			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(origResource, sr, origPath)) {
+			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(ic, origResource, sr, origPath)) {
 				continue
 			}
 			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
@@ -1096,7 +1096,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 		}
 	}
 	if ref.MatchType == MatchLongestPrefix && maxPrefixResource != nil &&
-		(ref.IsValidApproximation == nil || ref.IsValidApproximation(origResource, maxPrefixResource, origPath)) {
+		(ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, maxPrefixResource, origPath)) {
 		log.Printf("[DEBUG] Finished searching longest prefix for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 			ref.Resource, attr, value, ref, maxPrefixResource.Type, maxPrefixResource.Name)
 		return maxPrefixOrigValue, genTraversalTokens(maxPrefixResource, attr), maxPrefixResource.Mode == "data"

@@ -2455,7 +2455,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
-				IsValidApproximation: matchingCatalogAndSchema, SkipDirectLookup: true},
+				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
 			{Path: "storage_location", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
 		},
 	},
@@ -2477,9 +2477,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "volume", Resource: "databricks_volume"},
 			{Path: "share", Resource: "databricks_share"},
 			{Path: "foreign_connection", Resource: "databricks_connection", Match: "name"},
-			{Path: "grant.principal", Resource: "databricks_recipient"},
 			{Path: "metastore", Resource: "databricks_metastore"},
+			{Path: "model", Resource: "databricks_registered_model"},
 			{Path: "external_location", Resource: "databricks_external_location", Match: "name"},
+			// TODO: add similar matchers for users/groups/SPs on account level...
+			{Path: "grant.principal", Resource: "databricks_recipient", IsValidApproximation: isMatchingShareRecipient},
 			//	{Path: "", Resource: ""},
 		},
 	},
@@ -2639,9 +2641,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
-		Depends:         []reference{ // think how to distinguish tables from volumes from models?
-			//{Path: "object.name", Resource: "databricks_volume"},
-			//{Path: "object.name", Resource: "databricks_registered_model"},
+		Depends: []reference{
+			{Path: "object.name", Resource: "databricks_volume", IsValidApproximation: isMatchignShareObject("VOLUME")},
+			{Path: "object.name", Resource: "databricks_registered_model", IsValidApproximation: isMatchignShareObject("MODEL")},
+			{Path: "object.name", Resource: "databricks_schema", IsValidApproximation: isMatchignShareObject("SCHEMA")},
 			// {Path: "object.name", Resource: "databricks_sql_table"},
 		},
 	},
@@ -2715,7 +2718,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
-				IsValidApproximation: matchingCatalogAndSchema, SkipDirectLookup: true},
+				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
 		},
 	},

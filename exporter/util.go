@@ -1246,7 +1246,7 @@ func appendEndingSlashToDirName(dir string) string {
 	return dir + "/"
 }
 
-func matchingCatalogAndSchema(res *resource, ra *resourceApproximation, origPath string) bool {
+func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
 	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, origPath=%s", res.Resource, origPath)
 	res_catalog_name := res.Data.Get("catalog_name").(string)
 	res_schema_name := res.Data.Get("schema_name").(string)
@@ -1266,4 +1266,25 @@ func matchingCatalogAndSchema(res *resource, ra *resourceApproximation, origPath
 	// log.Printf("[DEBUG] matchingCatalogAndSchema: result: %v approximation: catalog='%v' schema='%v', res: catalog='%s' schema='%s'",
 	// 	result, ra_catalog_name, ra_schema_name, res_catalog_name, res_schema_name)
 	return result
+}
+
+func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	shareName, ok := res.Data.GetOk("share")
+	// principal := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingShareRecipient: origPath='%s', ra.Type='%s', shareName='%v', ok? %v, principal='%v'",
+	// 	origPath, ra.Type, shareName, ok, principal)
+
+	return ok && shareName.(string) != ""
+}
+
+func isMatchignShareObject(obj string) isValidAproximationFunc {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
+		objType, ok := res.Data.GetOk(objPath)
+		// name := res.Data.Get(origPath)
+		// log.Printf("[DEBUG] isMatchignShareObject: %s origPath='%s', ra.Type='%s', name='%v', objPath='%s' objType='%v' ok? %v",
+		// 	obj, origPath, ra.Type, name, objPath, objType, ok)
+
+		return ok && objType.(string) == obj
+	}
 }

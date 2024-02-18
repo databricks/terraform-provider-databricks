@@ -180,6 +180,7 @@ const (
 )
 
 type valueTransformFunc func(string) string
+type isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
 
 type reference struct {
 	// path to a given field, like, `cluster_id`, `access_control.user_name``, ... For references blocks/arrays, the `.N` component isn't required
@@ -200,7 +201,7 @@ type reference struct {
 	MatchValueTransformFunc  valueTransformFunc
 	SearchValueTransformFunc valueTransformFunc
 	// function to evaluate fit of the resource approximation found to the resource...
-	IsValidApproximation func(res *resource, sr *resourceApproximation, origPath string) bool
+	IsValidApproximation isValidAproximationFunc
 	// if we should skip direct lookups (for example, we need it for UC schemas matching)
 	SkipDirectLookup bool
 }

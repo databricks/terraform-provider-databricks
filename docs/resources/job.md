@@ -352,7 +352,7 @@ This task does not require a cluster to execute and does not support retries or 
 
 ### for_each_task Configuration Block
 
-* `concurrency` - (Optional) Controls the number of active iteration task runs. Default is 100 (maximal value).
+* `concurrency` - (Optional) Controls the number of active iteration task runs. Default is 20, maximum allowed is 100.
 * `inputs` - (Required) (String) Array for task to iterate on. This can be a JSON string or a reference to an array parameter.
 * `task` - (Required) Task to run against the `inputs` list. 
 

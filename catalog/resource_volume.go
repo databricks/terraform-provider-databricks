@@ -42,6 +42,10 @@ func ResourceVolume() common.Resource {
 	s := common.StructToSchema(VolumeInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
+			m["volume_path"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
 			return m
 		})
 	return common.Resource{
@@ -82,7 +86,11 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(v, s, d)
+			err = common.StructToData(v, s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(v.FullName, ".", "/"))
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -135,6 +143,7 @@ func ResourceVolume() common.Resource {
 			// We need to update the resource Id because Name is updatable and FullName consists of Name,
 			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
 			d.SetId(v.FullName)
+			d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(v.FullName, ".", "/"))
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

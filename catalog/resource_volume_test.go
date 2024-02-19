@@ -307,7 +307,7 @@ func TestVolumesUpdate(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testNameNew",
+					NewName: "testNameNew",
 					Comment: "This is a new test comment.",
 				},
 				Response: catalog.VolumeInfo{
@@ -386,7 +386,7 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testNameNew",
+					NewName: "testNameNew",
 					Comment: "This is a new test comment.",
 				},
 				Response: catalog.VolumeInfo{

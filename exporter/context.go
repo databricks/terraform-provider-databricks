@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -91,7 +92,7 @@ type importContext struct {
 	mounts                   bool
 	noFormat                 bool
 	services                 map[string]struct{}
-	listing                  string
+	listing                  map[string]struct{}
 	match                    string
 	lastActiveDays           int64
 	lastActiveMs             int64
@@ -109,37 +110,33 @@ type importContext struct {
 	// TODO: protect by mutex?
 	mountMap map[string]mount
 
-	//
 	testEmits      map[string]bool
 	testEmitsMutex sync.Mutex
 
-	//
 	allGroups   []scim.Group
 	groupsMutex sync.Mutex
 
-	//
 	allUsers        map[string]scim.User
 	usersMutex      sync.RWMutex
 	allUsersMapping map[string]string // maps user_name -> internal ID
 	allUsersMutex   sync.RWMutex
 
-	//
 	allSps        map[string]scim.User
 	allSpsMapping map[string]string // maps application_id -> internal ID
 	spsMutex      sync.RWMutex
 
-	//
 	importing      map[string]bool
 	importingMutex sync.RWMutex
 
-	//
 	sqlDatasources      map[string]string
 	sqlDatasourcesMutex sync.Mutex
 
 	// workspace-related objects & corresponding mutex
-	allDirectories      []workspace.ObjectStatus
-	allWorkspaceObjects []workspace.ObjectStatus
-	wsObjectsMutex      sync.RWMutex
+	allDirectories            []workspace.ObjectStatus
+	allWorkspaceObjects       []workspace.ObjectStatus
+	wsObjectsMutex            sync.RWMutex
+	oldWorkspaceObjects       []workspace.ObjectStatus
+	oldWorkspaceObjectMapping map[int64]string
 
 	builtInPolicies      map[string]compute.PolicyFamily
 	builtInPoliciesMutex sync.Mutex
@@ -151,11 +148,12 @@ type importContext struct {
 	ignoredResourcesMutex sync.Mutex
 	ignoredResources      map[string]struct{}
 
+	deletedResources map[string]struct{}
+
 	// emitting of users/SPs
 	emittedUsers      map[string]struct{}
 	emittedUsersMutex sync.RWMutex
 
-	//
 	userOrSpDirectories      map[string]bool
 	userOrSpDirectoriesMutex sync.RWMutex
 }
@@ -239,30 +237,35 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 
 	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
-		Client:                   c,
-		Context:                  ctx,
-		State:                    newStateApproximation(supportedResources),
-		Importables:              resourcesMap,
-		Resources:                p.ResourcesMap,
-		Scope:                    importedResources{},
-		importing:                map[string]bool{},
-		nameFixes:                nameFixes,
-		hclFixes:                 []regexFix{}, // Be careful with that! it may break working code
-		variables:                map[string]string{},
-		allDirectories:           []workspace.ObjectStatus{},
-		allWorkspaceObjects:      []workspace.ObjectStatus{},
-		workspaceConfKeys:        workspaceConfKeys,
-		shImports:                map[string]bool{},
-		notebooksFormat:          "SOURCE",
-		allUsers:                 map[string]scim.User{},
-		allSps:                   map[string]scim.User{},
-		waitGroup:                &sync.WaitGroup{},
-		channels:                 makeResourcesChannels(),
-		defaultHanlerChannelSize: defaultHanlerChannelSize,
-		defaultChannel:           make(resourceChannel, defaultHanlerChannelSize),
-		ignoredResources:         map[string]struct{}{},
-		emittedUsers:             map[string]struct{}{},
-		userOrSpDirectories:      map[string]bool{},
+		Client:                    c,
+		Context:                   ctx,
+		State:                     newStateApproximation(supportedResources),
+		Importables:               resourcesMap,
+		Resources:                 p.ResourcesMap,
+		Scope:                     importedResources{},
+		importing:                 map[string]bool{},
+		nameFixes:                 nameFixes,
+		hclFixes:                  []regexFix{}, // Be careful with that! it may break working code
+		variables:                 map[string]string{},
+		allDirectories:            []workspace.ObjectStatus{},
+		allWorkspaceObjects:       []workspace.ObjectStatus{},
+		oldWorkspaceObjects:       []workspace.ObjectStatus{},
+		oldWorkspaceObjectMapping: map[int64]string{},
+		workspaceConfKeys:         workspaceConfKeys,
+		shImports:                 map[string]bool{},
+		notebooksFormat:           "SOURCE",
+		allUsers:                  map[string]scim.User{},
+		allSps:                    map[string]scim.User{},
+		waitGroup:                 &sync.WaitGroup{},
+		channels:                  makeResourcesChannels(),
+		defaultHanlerChannelSize:  defaultHanlerChannelSize,
+		defaultChannel:            make(resourceChannel, defaultHanlerChannelSize),
+		ignoredResources:          map[string]struct{}{},
+		deletedResources:          map[string]struct{}{},
+		emittedUsers:              map[string]struct{}{},
+		userOrSpDirectories:       map[string]bool{},
+		services:                  map[string]struct{}{},
+		listing:                   map[string]struct{}{},
 	}
 }
 
@@ -288,6 +291,7 @@ func getLastRunString(fileName string) string {
 func (ic *importContext) Run() error {
 	startTime := time.Now()
 	statsFileName := ic.Directory + "/exporter-run-stats.json"
+	wsObjectsFileName := ic.Directory + "/ws_objects.json"
 	if len(ic.services) == 0 {
 		return fmt.Errorf("no services to import")
 	}
@@ -308,10 +312,12 @@ func (ic *importContext) Run() error {
 		ic.updatedSinceStr = tm.UTC().Format(time.RFC3339)
 		tm, _ = time.Parse(time.RFC3339, ic.updatedSinceStr)
 		ic.updatedSinceMs = tm.UnixMilli()
+
+		ic.loadOldWorkspaceObjects(wsObjectsFileName)
 	}
 
-	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
-		ic.Module, ic.Directory, maps.Keys(ic.services))
+	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services. Listing %s",
+		ic.Module, ic.Directory, maps.Keys(ic.services), maps.Keys(ic.listing))
 
 	ic.notebooksFormat = strings.ToUpper(ic.notebooksFormat)
 	_, supportedFormat := fileExtensionFormatMapping[ic.notebooksFormat]
@@ -372,7 +378,8 @@ func (ic *importContext) Run() error {
 		if ir.List == nil {
 			continue
 		}
-		if !strings.Contains(ic.listing, ir.Service) {
+		_, exists := ic.listing[ir.Service]
+		if !exists {
 			log.Printf("[DEBUG] %s (%s service) is not part of listing", resourceName, ir.Service)
 			continue
 		}
@@ -398,9 +405,10 @@ func (ic *importContext) Run() error {
 	// close channels
 	ic.closeImportChannels()
 
-	// This should be single threaded...
-	if ic.Scope.Len() == 0 {
-		return fmt.Errorf("no resources to import")
+	// Generating the code
+	ic.findDeletedResources()
+	if ic.Scope.Len() == 0 && len(ic.deletedResources) == 0 {
+		return fmt.Errorf("no resources to import or delete")
 	}
 	shFileName := fmt.Sprintf("%s/import.sh", ic.Directory)
 	if ic.incremental {
@@ -460,7 +468,7 @@ func (ic *importContext) Run() error {
 		return err
 	}
 
-	//
+	// Write stats file
 	if stats, err := os.Create(statsFileName); err == nil {
 		defer stats.Close()
 		statsData := map[string]any{
@@ -470,12 +478,26 @@ func (ic *importContext) Run() error {
 		}
 		statsBytes, _ := json.Marshal(statsData)
 		if _, err = stats.Write(statsBytes); err != nil {
-			return err
+			log.Printf("[ERROR] can't write stats into the %s: %s", statsFileName, err.Error())
+		}
+	}
+
+	// Write workspace objects file
+	if len(ic.allWorkspaceObjects) > 0 {
+		if wsObjects, err := os.Create(wsObjectsFileName); err == nil {
+			defer wsObjects.Close()
+			wsObjectsBytes, _ := json.Marshal(ic.allWorkspaceObjects)
+			if _, err = wsObjects.Write(wsObjectsBytes); err != nil {
+				log.Printf("[ERROR] can't write workspace objects into the %s: %s", wsObjectsFileName, err.Error())
+			}
+		} else {
+			log.Printf("[ERROR] can't open %s: %s", wsObjectsFileName, err.Error())
 		}
 	}
 
 	// output ignored resources...
-	if ignored, err := os.Create(fmt.Sprintf("%s/ignored_resources.txt", ic.Directory)); err == nil {
+	ignoredResourcesFileName := fmt.Sprintf("%s/ignored_resources.txt", ic.Directory)
+	if ignored, err := os.Create(ignoredResourcesFileName); err == nil {
 		defer ignored.Close()
 		ic.ignoredResourcesMutex.Lock()
 		keys := maps.Keys(ic.ignoredResources)
@@ -483,6 +505,9 @@ func (ic *importContext) Run() error {
 		for _, s := range keys {
 			ignored.WriteString(s + "\n")
 		}
+		ic.ignoredResourcesMutex.Unlock()
+	} else {
+		log.Printf("[ERROR] can't open %s: %s", ignoredResourcesFileName, err.Error())
 	}
 
 	if !ic.noFormat {
@@ -497,6 +522,114 @@ func (ic *importContext) Run() error {
 	}
 	log.Printf("[INFO] Done. Please edit the files and roll out new environment.")
 	return nil
+}
+
+func isSupportedWsObject(obj workspace.ObjectStatus) bool {
+	switch obj.ObjectType {
+	case workspace.Directory, workspace.Notebook, workspace.File:
+		return true
+	}
+	return false
+}
+
+func (ic *importContext) generateResourceIdForWsObject(obj workspace.ObjectStatus) (string, string) {
+	var rtype string
+	switch obj.ObjectType {
+	case workspace.Directory:
+		rtype = "databricks_directory"
+	case workspace.File:
+		rtype = "databricks_workspace_file"
+	case workspace.Notebook:
+		rtype = "databricks_notebook"
+	default:
+		log.Printf("[WARN] Unsupported WS object type: %s in obj %v", obj.ObjectType, obj)
+		return "", ""
+	}
+	rData := ic.Resources[rtype].Data(
+		&terraform.InstanceState{
+			ID:         obj.Path,
+			Attributes: map[string]string{},
+		})
+	rData.Set("object_id", obj.ObjectID)
+	rData.Set("path", obj.Path)
+	name := ic.ResourceName(&resource{
+		ID:       obj.Path,
+		Resource: rtype,
+		Data:     rData,
+	})
+	return generateResourceName(rtype, name), rtype
+}
+
+func (ic *importContext) loadOldWorkspaceObjects(fileName string) {
+	ic.oldWorkspaceObjects = []workspace.ObjectStatus{}
+	// Read a list of resources from previous run
+	oldDataFile, err := os.ReadFile(fileName)
+	if err != nil {
+		log.Printf("[WARN] Can't open the file (%s) with previous list of workspace objects: %s", fileName, err.Error())
+		return
+	}
+	err = json.Unmarshal(oldDataFile, &ic.oldWorkspaceObjects)
+	if err != nil {
+		log.Printf("[WARN] Can't desereialize previous list of workspace objects: %s", err.Error())
+		return
+	}
+	log.Printf("[DEBUG] Read previous list of workspace objects. got %d objects", len(ic.oldWorkspaceObjects))
+	for _, obj := range ic.oldWorkspaceObjects {
+		ic.oldWorkspaceObjectMapping[obj.ObjectID] = obj.Path
+	}
+}
+
+func (ic *importContext) findDeletedResources() {
+	log.Print("[INFO] Starting detection of deleted workspace objects")
+	if !ic.incremental || len(ic.allWorkspaceObjects) == 0 {
+		return
+	}
+	if len(ic.oldWorkspaceObjects) == 0 {
+		log.Print("[INFO] Previous list of workspace objects is empty")
+		return
+	}
+	// generate IDs of current objects
+	currentObjs := map[string]struct{}{}
+	for _, obj := range ic.allWorkspaceObjects {
+		obj := obj
+		if !isSupportedWsObject(obj) {
+			continue
+		}
+		rid, _ := ic.generateResourceIdForWsObject(obj)
+		currentObjs[rid] = struct{}{}
+	}
+	// Loop through previous objects, and if it's missing from the current list, add it to deleted, including permission
+	for _, obj := range ic.oldWorkspaceObjects {
+		obj := obj
+		if !isSupportedWsObject(obj) {
+			continue
+		}
+		rid, rtype := ic.generateResourceIdForWsObject(obj)
+		_, exists := currentObjs[rid]
+		if exists {
+			log.Printf("[DEBUG] object %s still exists", rid) // change to TRACE?
+			continue
+		}
+		log.Printf("[DEBUG] object %s is deleted!", rid)
+		ic.deletedResources[rid] = struct{}{}
+		// convert into permissions. This is quite fragile right now, need to think how to handle it better
+		var permId string
+		switch rtype {
+		case "databricks_notebook":
+			permId = "databricks_permissions.notebook_" + rid[len(rtype)+1:]
+		case "databricks_directory":
+			permId = "databricks_permissions.directory_" + rid[len(rtype)+1:]
+		case "databricks_workspace_file":
+			permId = "databricks_permissions.ws_file_" + rid[len(rtype)+1:]
+		}
+		log.Printf("[DEBUG] deleted permissions object %s", permId)
+		if permId != "" {
+			ic.deletedResources[permId] = struct{}{}
+		}
+	}
+	log.Printf("[INFO] Finished detection of deleted workspace objects. Detected %d deleted objects.",
+		len(ic.deletedResources))
+	log.Printf("[DEBUG] Deleted objects. %v", ic.deletedResources) // change to TRACE?
 }
 
 func (ic *importContext) resourceHandler(num int, resourceType string, ch resourceChannel) {
@@ -545,8 +678,13 @@ func (ic *importContext) closeImportChannels() {
 	close(ic.defaultChannel)
 }
 
+func generateResourceName(rtype, rname string) string {
+	return rtype + "." + rname
+}
+
 func generateBlockFullName(block *hclwrite.Block) string {
-	return block.Type() + "_" + strings.Join(block.Labels(), "_")
+	labels := block.Labels()
+	return generateResourceName(labels[0], strings.Join(labels[1:], "_"))
 }
 
 type resourceWriteData struct {
@@ -573,6 +711,9 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 			existingFile, diags = hclwrite.ParseConfig(content, generatedFile, hcl.Pos{Line: 1, Column: 1})
 			if diags.HasErrors() {
 				log.Printf("[ERROR] parsing of existing file %s failed: %s", generatedFile, diags.Error())
+			} else {
+				log.Printf("[DEBUG] There are %d objects in existing file %s",
+					len(existingFile.Body().Blocks()), generatedFile)
 			}
 		}
 	}
@@ -588,6 +729,7 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 
 	//
 	newResources := make(map[string]struct{}, 100)
+	log.Printf("[DEBUG] started processing new writes for %s", generatedFile)
 	for f := range ch {
 		if f != nil {
 			log.Printf("[DEBUG] started writing resource body for %s", f.BlockName)
@@ -607,16 +749,20 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 		}
 		ic.waitGroup.Done()
 	}
-	// update existing file if incremental mode
 	numResources := len(newResources)
+	log.Printf("[DEBUG] finished processing new writes for %s. Wrote %d resources", generatedFile, numResources)
+	// update existing file if incremental mode
 	if ic.incremental {
 		log.Printf("[DEBUG] Starting to merge existing resources for %s", generatedFile)
 		f := hclwrite.NewEmptyFile()
 		for _, block := range existingFile.Body().Blocks() {
 			blockName := generateBlockFullName(block)
 			_, exists := newResources[blockName]
+			_, deleted := ic.deletedResources[blockName]
 			if exists {
 				log.Printf("[DEBUG] resource %s already generated, skipping...", blockName)
+			} else if deleted {
+				log.Printf("[DEBUG] resource %s is deleted, skipping...", blockName)
 			} else {
 				log.Printf("[DEBUG] resource %s doesn't exist, adding...", blockName)
 				f.Body().AppendBlock(block)
@@ -650,6 +796,15 @@ func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel
 	if sh != nil {
 		log.Printf("[DEBUG] Writing the rest of import commands. len=%d", len(ic.shImports))
 		for k := range ic.shImports {
+			parts := strings.Split(k, " ")
+			if len(parts) > 3 {
+				resource := parts[2]
+				_, deleted := ic.deletedResources[resource]
+				if deleted {
+					log.Printf("[DEBUG] Resource %s is deleted. Skipping import command for it", resource)
+					continue
+				}
+			}
 			sh.WriteString(k + "\n")
 		}
 	}
@@ -729,13 +884,16 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	resourcesChan := make(resourceChannel, defaultChannelSize)
 
 	resourceWriters := make(map[string]dataWriteChannel, len(ic.Resources))
-	for _, imp := range ic.Importables {
-		resourceWriters[imp.Service] = make(dataWriteChannel, defaultChannelSize)
+	for service := range ic.services {
+		resourceWriters[service] = make(dataWriteChannel, defaultChannelSize)
 	}
 	importChan := make(importWriteChannel, defaultChannelSize)
+	writersWaitGroup := &sync.WaitGroup{}
 	//
+	writersWaitGroup.Add(1)
 	go func() {
 		ic.writeImports(sh, importChan)
+		writersWaitGroup.Done()
 	}()
 	for i := 0; i < resourceHandlersNumber; i++ {
 		i := i
@@ -744,13 +902,16 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 			ic.processSingleResource(resourcesChan, resourceWriters)
 		}()
 	}
+
 	for service, ch := range resourceWriters {
 		service := service
 		ch := ch
 		generatedFile := fmt.Sprintf("%s/%s.tf", ic.Directory, service)
 		log.Printf("[DEBUG] starting writer for service %s", service)
+		writersWaitGroup.Add(1)
 		go func() {
 			ic.handleResourceWrite(generatedFile, ch, importChan)
+			writersWaitGroup.Done()
 		}()
 	}
 
@@ -770,6 +931,7 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		log.Printf("Closing writer for service %s", service)
 		close(ch)
 	}
+	writersWaitGroup.Wait()
 
 	log.Printf("[INFO] Finished generation of configuration for %d resources (took %v seconds)",
 		scopeSize, time.Since(t1).Seconds())

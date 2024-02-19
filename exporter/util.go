@@ -218,17 +218,27 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, 
 }
 
 func (ic *importContext) emitRepoByPath(path string) {
-	ic.Emit(&resource{
-		Resource:  "databricks_repo",
-		Attribute: "path",
-		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-	})
+	// Path to Repos objects consits of following parts: /Repos, folder, repository, path inside Repo.
+	// Because it starts with `/`, it will produce empty string as first element in the slice.
+	// And we're stopping splitting to avoid producing too many not necessary parts, so we have 5 parts only.
+	parts := strings.SplitN(path, "/", 5)
+	if len(parts) >= 4 {
+		ic.Emit(&resource{
+			Resource:  "databricks_repo",
+			Attribute: "path",
+			Value:     strings.Join(parts[:4], "/"),
+		})
+	} else {
+		log.Printf("[WARN] Incorrect Repos path")
+	}
 }
 
 func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: wrap this into ic.shouldEmit...
+		// TODO: strip /Workspace prefix if it's provided
 		ic.Emit(&resource{
 			Resource: "databricks_workspace_file",
 			ID:       path,
@@ -240,6 +250,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: strip /Workspace prefix if it's provided
 		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
 }
@@ -936,6 +947,17 @@ func (ic *importContext) enableServices(services string) {
 	for _, s := range strings.Split(services, ",") {
 		ic.services[strings.TrimSpace(s)] = struct{}{}
 	}
+	for s := range ic.listing { // Add all services mentioned in the listing
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+}
+
+func (ic *importContext) enableListing(listing string) {
+	ic.listing = map[string]struct{}{}
+	for _, s := range strings.Split(listing, ",") {
+		ic.listing[strings.TrimSpace(s)] = struct{}{}
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
 }
 
 func (ic *importContext) emitSqlParentDirectory(parent string) {
@@ -963,9 +985,13 @@ func (ic *importContext) shouldSkipWorkspaceObject(object workspace.ObjectStatus
 	}
 	modifiedAt := wsObjectGetModifiedAt(object)
 	if ic.incremental && modifiedAt < updatedSinceMs {
-		log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
-			object.Path, modifiedAt, updatedSinceMs)
-		return true
+		p := ic.oldWorkspaceObjectMapping[object.ObjectID]
+		if p == "" || p == object.Path {
+			log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
+				object.Path, modifiedAt, updatedSinceMs)
+			return true
+		}
+		log.Printf("[DEBUG] Different path for object %d. Old='%s', New='%s'", object.ObjectID, p, object.Path)
 	}
 	if !ic.MatchesName(object.Path) {
 		return true

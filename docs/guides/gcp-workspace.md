@@ -268,3 +268,7 @@ provider "databricks" {
 ```
 
 We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#creating-a-databricks-workspace) section), and you named it as `dbx_gcp` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
+
+### More than one authorization method configured error
+
+See the [troubleshooting guide](https://registry.terraform.io/providers/databricks/databricks/latest/docs/guides/troubleshooting#more-than-one-authorization-method-configured)

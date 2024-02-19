@@ -45,7 +45,7 @@ func TestChooseFieldName(t *testing.T) {
 func TestChooseFieldNameWithAliasesMap(t *testing.T) {
 	assert.Equal(t, "foo", chooseFieldNameWithAliases(reflect.StructField{
 		Tag: `json:"bar"`,
-	}, []string{"a"}, map[string]string{"a.bar": "foo"}))
+	}, map[string]string{"bar": "foo"}))
 }
 
 type testSliceItem struct {
@@ -217,6 +217,69 @@ type Dummy struct {
 	Other       *Address          `json:"other,omitempty"`
 }
 
+type AddressNoTfTag struct {
+	Line      string `json:"line"`
+	Lijn      string `json:"lijn"`
+	IsPrimary bool   `json:"primary"`
+
+	OptionalString string `json:"optional_string,omitempty"`
+	RequiredString string `json:"required_string"`
+}
+
+type DummyNoTfTag struct {
+	Enabled     bool              `json:"enabled"`
+	Workers     int               `json:"workers,omitempty"`
+	Description string            `json:"description,omitempty"`
+	Addresses   []AddressNoTfTag  `json:"addresses,omitempty"`
+	Things      []string          `json:"things,omitempty"`
+	Tags        map[string]string `json:"tags,omitempty"`
+	Home        *AddressNoTfTag   `json:"home,omitempty"`
+	House       *AddressNoTfTag   `json:"house,omitempty"`
+	Other       *AddressNoTfTag   `json:"other,omitempty"`
+}
+
+type DummyResourceProvider struct {
+	DummyNoTfTag
+}
+
+func (DummyResourceProvider) Aliases() map[string]string {
+	return map[string]string{"enabled": "enabled_alias",
+		"addresses.primary": "primary_alias"}
+}
+
+func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+	CustomizeSchemaPath(s, "addresses").SetMinItems(1)
+	CustomizeSchemaPath(s, "addresses").SetMaxItems(10)
+	CustomizeSchemaPath(s, "tags").SetMaxItems(5)
+	CustomizeSchemaPath(s, "home").SetSuppressDiff()
+	CustomizeSchemaPath(s, "things").Schema.Type = schema.TypeSet
+	return s
+}
+
+var dummy = DummyNoTfTag{
+	Enabled:     true,
+	Workers:     1004,
+	Description: "something",
+	Addresses: []AddressNoTfTag{
+		{
+			Line:      "abc",
+			IsPrimary: false,
+		},
+		{
+			Line:      "def",
+			IsPrimary: true,
+		},
+	},
+	Things: []string{"one", "two", "two"},
+	Tags: map[string]string{
+		"Foo": "Bar",
+	},
+	Home: &AddressNoTfTag{
+		Line:      "bcd",
+		IsPrimary: true,
+	},
+}
+
 func TestStructToDataAndBack(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, scm, map[string]any{})
 	d.MarkNewResource()
@@ -301,7 +364,7 @@ func TestPrimitiveReflectValueFromInterface(t *testing.T) {
 
 func TestIterFields(t *testing.T) {
 	v := reflect.ValueOf("x")
-	err := iterFields(v, []string{"x"}, scm, nil)
+	err := iterFields(v, []string{"x"}, scm, nil, nil)
 	assert.EqualError(t, err, "value of Struct is expected, but got String: \"x\"")
 
 	v = reflect.ValueOf(testStruct{})
@@ -309,7 +372,7 @@ func TestIterFields(t *testing.T) {
 		"integer": {
 			Type: schema.TypeInt,
 		},
-	}, nil)
+	}, nil, nil)
 	assert.EqualError(t, err, "inconsistency: integer has omitempty, but is not optional")
 
 	err = iterFields(v, []string{}, map[string]*schema.Schema{
@@ -318,7 +381,7 @@ func TestIterFields(t *testing.T) {
 			Default:  nil,
 			Optional: true,
 		},
-	}, nil)
+	}, nil, nil)
 	assert.EqualError(t, err, "inconsistency: non_optional is optional, default is empty, but has no omitempty")
 
 	err = iterFields(v, []string{}, map[string]*schema.Schema{
@@ -327,21 +390,90 @@ func TestIterFields(t *testing.T) {
 			Default:  "_",
 			Optional: true,
 		},
-	}, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	}, nil, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
 		return fmt.Errorf("test error")
 	})
 	assert.EqualError(t, err, "non_optional: test error")
 }
 
 func TestCollectionToMaps(t *testing.T) {
-	v, err := collectionToMaps([]string{"a", "b"}, nil)
+	v, err := collectionToMaps([]string{"a", "b"}, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, []any{"a", "b"}, v)
 
 	_, err = collectionToMaps([]int{1, 2}, &schema.Schema{
 		Elem: schema.TypeBool,
-	})
+	}, nil)
 	assert.EqualError(t, err, "not resource")
+}
+
+func TestStructToSchemaWithResourceProviderCustomization(t *testing.T) {
+	s := StructToSchema(DummyResourceProvider{}, nil)
+	assert.NotNil(t, s)
+	assert.Equal(t, 5, s["tags"].MaxItems)
+	assert.Equal(t, 10, s["addresses"].MaxItems)
+}
+
+func TestStructToSchemaWithResourceProviderAliases(t *testing.T) {
+	s := StructToSchema(DummyResourceProvider{}, nil)
+	sp, err := SchemaPath(s, "enabled_alias")
+	assert.NoError(t, err)
+	assert.Equal(t, schema.TypeBool, sp.Type)
+}
+
+func TestStructToDataWithResourceProviderStruct(t *testing.T) {
+	s := StructToSchema(DummyResourceProvider{}, nil)
+
+	dummyResourceProvider := DummyResourceProvider{DummyNoTfTag: dummy}
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	d.MarkNewResource()
+	err := StructToData(dummyResourceProvider, s, d)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "something", d.Get("description"))
+	assert.Equal(t, true, d.Get("enabled_alias")) // Testing aliases.
+	assert.Equal(t, 2, d.Get("addresses.#"))
+
+	assert.NotNil(t, s["home"].DiffSuppressFunc)
+	assert.True(t, s["home"].DiffSuppressFunc("home.#", "1", "0", d))
+	assert.False(t, s["home"].DiffSuppressFunc("home.#", "1", "1", d))
+
+	{
+		//lint:ignore SA1019 Empty optional string should not be set.
+		_, ok := d.GetOkExists("addresses.0.optional_string")
+		assert.Falsef(t, ok, "Empty optional string should not be set in ResourceData")
+	}
+
+	{
+		//lint:ignore SA1019 Empty required string should be set.
+		_, ok := d.GetOkExists("addresses.0.required_string")
+		assert.Truef(t, ok, "Empty required string should be set in ResourceData")
+	}
+}
+
+func TestDataToStructPointerWithResourceProviderStruct(t *testing.T) {
+	s := StructToSchema(DummyResourceProvider{}, nil)
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	d.MarkNewResource()
+	dummyResourceProvider := DummyResourceProvider{DummyNoTfTag: dummy}
+	err := StructToData(dummyResourceProvider, s, d)
+	assert.NoError(t, err)
+	var dummyCopy DummyResourceProvider
+	DataToStructPointer(d, s, &dummyCopy)
+
+	assert.Equal(t, len(dummyCopy.Addresses), len(dummy.Addresses))
+	assert.Equal(t, dummyCopy.Enabled, dummy.Enabled)
+	assert.Len(t, dummyCopy.Things, 2)
+
+	err = d.Set("addresses", []any{
+		map[string]string{
+			"line": "ABC",
+			"lijn": "CBA",
+		},
+	})
+	assert.NoError(t, err)
+
+	DataToStructPointer(d, s, &dummyCopy)
 }
 
 func TestStructToData(t *testing.T) {
@@ -454,7 +586,7 @@ func TestTypeToSchemaNoStruct(t *testing.T) {
 			fmt.Sprintf("%s", p))
 	}()
 	v := reflect.ValueOf(1)
-	typeToSchema(v, []string{}, map[string]string{})
+	typeToSchema(v, nil)
 }
 
 func TestTypeToSchemaUnsupported(t *testing.T) {
@@ -467,7 +599,7 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 		New chan int `json:"new"`
 	}
 	v := reflect.ValueOf(nonsense{})
-	typeToSchema(v, []string{}, map[string]string{})
+	typeToSchema(v, nil)
 }
 
 type data map[string]any
@@ -515,11 +647,11 @@ func TestDiffToStructPointer(t *testing.T) {
 }
 
 func TestReadListFromData(t *testing.T) {
-	err := readListFromData([]string{}, data{}, []any{}, nil, nil, nil)
+	err := readListFromData([]string{}, data{}, []any{}, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	x := reflect.ValueOf(0)
-	err = readListFromData([]string{}, data{}, []any{1}, &x, nil, nil)
+	err = readListFromData([]string{}, data{}, []any{1}, &x, nil, nil, nil)
 	assert.EqualError(t, err, "[[1]] unknown collection field")
 }
 
@@ -541,7 +673,7 @@ func TestReadReflectValueFromDataCornerCases(t *testing.T) {
 	var n Nonsense
 	v := reflect.ValueOf(&n)
 	rv := v.Elem()
-	err := readReflectValueFromData([]string{}, data{"new": 0.123, "invalid": 1}, rv, s)
+	err := readReflectValueFromData([]string{}, data{"new": 0.123, "invalid": 1}, rv, s, nil)
 	assert.EqualError(t, err, "invalid: invalid[1] unsupported field type")
 }
 

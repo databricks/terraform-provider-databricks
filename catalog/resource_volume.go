@@ -2,6 +2,8 @@ package catalog
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -26,6 +28,14 @@ type VolumeInfo struct {
 	// The storage location on the cloud
 	StorageLocation string             `json:"storage_location,omitempty" tf:"force_new"`
 	VolumeType      catalog.VolumeType `json:"volume_type" tf:"force_new"`
+}
+
+func getNameFromId(id string) (string, error) {
+	split := strings.Split(id, ".")
+	if len(split) != 3 {
+		return "", fmt.Errorf("invalid id <%s>: id should be in the format catalog.schema.volume", id)
+	}
+	return split[2], nil
 }
 
 func ResourceVolume() common.Resource {
@@ -56,7 +66,7 @@ func ResourceVolume() common.Resource {
 
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
-			updateVolumeRequestContent.FullNameArg = d.Id()
+			updateVolumeRequestContent.Name = d.Id()
 			_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
 			if err != nil {
 				return err
@@ -68,7 +78,7 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			v, err := w.Volumes.ReadByFullNameArg(ctx, d.Id())
+			v, err := w.Volumes.ReadByName(ctx, d.Id())
 			if err != nil {
 				return err
 			}
@@ -81,12 +91,20 @@ func ResourceVolume() common.Resource {
 			}
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
-			updateVolumeRequestContent.FullNameArg = d.Id()
+			updateVolumeRequestContent.Name = d.Id()
+			userProvidedName := d.Get("name").(string)
+			storedName, err := getNameFromId(d.Id())
+			if err != nil {
+				return err
+			}
+			if storedName != userProvidedName {
+				updateVolumeRequestContent.NewName = userProvidedName
+			}
 
 			if d.HasChange("owner") {
 				_, err := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
-					FullNameArg: updateVolumeRequestContent.FullNameArg,
-					Owner:       updateVolumeRequestContent.Owner,
+					Name:  updateVolumeRequestContent.Name,
+					Owner: updateVolumeRequestContent.Owner,
 				})
 				if err != nil {
 					return err
@@ -104,8 +122,8 @@ func ResourceVolume() common.Resource {
 					// Rollback
 					old, new := d.GetChange("owner")
 					_, rollbackErr := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
-						FullNameArg: updateVolumeRequestContent.FullNameArg,
-						Owner:       old.(string),
+						Name:  updateVolumeRequestContent.Name,
+						Owner: old.(string),
 					})
 					if rollbackErr != nil {
 						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
@@ -124,7 +142,7 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Volumes.DeleteByFullNameArg(ctx, d.Id())
+			return w.Volumes.DeleteByName(ctx, d.Id())
 		},
 	}
 }

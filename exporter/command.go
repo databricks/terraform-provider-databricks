@@ -6,12 +6,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"golang.org/x/exp/maps"
 )
 
 type levelWriter []string
@@ -31,23 +33,15 @@ func (lw *levelWriter) Write(p []byte) (n int, err error) {
 }
 
 func (ic *importContext) allServicesAndListing() (string, string) {
-	services := ""
-	listing := ""
+	services := map[string]struct{}{}
+	listing := map[string]struct{}{}
 	for _, ir := range ic.Importables {
-		if !strings.Contains(services, ir.Service) {
-			if len(services) > 0 {
-				services += ","
-			}
-			services += ir.Service
-		}
-		if ir.List != nil && !strings.Contains(listing, ir.Service) {
-			if len(listing) > 0 {
-				listing += ","
-			}
-			listing += ir.Service
+		services[ir.Service] = struct{}{}
+		if ir.List != nil {
+			listing[ir.Service] = struct{}{}
 		}
 	}
-	return services, listing
+	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")
 }
 
 func (ic *importContext) interactivePrompts() {
@@ -57,23 +51,35 @@ func (ic *importContext) interactivePrompts() {
 		ic.Client.DatabricksClient.Config.Token = askFor("🔑 Databricks Workspace PAT:")
 	}
 	ic.match = askFor("🔍 Match entity names (optional):")
-	listing := ""
+
+	services := map[string][]string{}
 	for r, ir := range ic.Importables {
 		if ir.List == nil {
 			continue
 		}
-		if !askFlag(fmt.Sprintf("✅ Generate `%s` and related resources?", r)) {
+		service := ir.Service
+		v, exists := services[service]
+		if exists {
+			services[service] = append(v, r)
+		} else {
+			services[service] = []string{r}
+		}
+	}
+
+	ic.listing = map[string]struct{}{}
+	keys := maps.Keys(services)
+	slices.Sort(keys)
+	for _, service := range keys {
+		resources := services[service]
+		if !askFlag(fmt.Sprintf("✅ Generate for service `%s` (%s) and related resources?",
+			service, strings.Join(resources, ","))) {
 			continue
 		}
-		if len(listing) > 0 {
-			listing += ","
-		}
-		listing += ir.Service
-		if ir.Service == "mounts" {
+		ic.listing[service] = struct{}{}
+		if service == "mounts" {
 			ic.mounts = true
 		}
 	}
-	ic.listing = listing
 }
 
 // Run import according to flags
@@ -124,7 +130,8 @@ func Run(args ...string) error {
 	var configuredServices string
 	flags.StringVar(&configuredServices, "services", services,
 		"Comma-separated list of services to import. By default all services are imported.")
-	flags.StringVar(&ic.listing, "listing", listing,
+	var configuredListing string
+	flags.StringVar(&configuredListing, "listing", listing,
 		"Comma-separated list of services to be listed and further passed on for importing. "+
 			"`-services` parameter controls which transitive dependencies will be processed. "+
 			"We recommend limiting services with `-listing` more often, than `-services`.")
@@ -153,5 +160,6 @@ func Run(args ...string) error {
 		logLevel = append(logLevel, "[DEBUG]")
 	}
 	ic.enableServices(configuredServices)
+	ic.enableListing(configuredListing)
 	return ic.Run()
 }

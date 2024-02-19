@@ -86,5 +86,4 @@ The following resources are often used in the same context:
 
 * [databricks_workspace_file](./workspace_file.md)
 * [End to end workspace management](../guides/workspace-management.md) guide.
-* [databricks_dbfs_file](../data-sources/dbfs_file.md) data to get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
-* [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data to get list of file names from get file content from [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html).
+* [databricks_volume](../resources/volume.md) to manage [volumes within Unity Catalog](https://docs.databricks.com/en/connect/unity-catalog/volumes.html).

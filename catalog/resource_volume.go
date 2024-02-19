@@ -45,7 +45,6 @@ func ResourceVolume() common.Resource {
 			m["volume_path"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			}
 			return m
 		})
@@ -144,6 +143,7 @@ func ResourceVolume() common.Resource {
 			// We need to update the resource Id because Name is updatable and FullName consists of Name,
 			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
 			d.SetId(v.FullName)
+			d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(v.FullName, ".", "/"))
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

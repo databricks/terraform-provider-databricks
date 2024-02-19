@@ -358,6 +358,7 @@ func TestVolumesUpdate(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+	assert.Equal(t, "/Volumes/testCatalogName/testSchemaName/testNameNew", d.Get("volume_path"))
 }
 
 func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {

@@ -22,28 +22,12 @@ func TestUcAccFileDontUpdateIfNoChange(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -70,28 +54,12 @@ func TestUcAccFileDontUpdateIfNoChange(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -122,28 +90,12 @@ func TestUcAccFileUpdateOnLocalChange(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -170,28 +122,12 @@ func TestUcAccFileUpdateOnLocalChange(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -222,28 +158,12 @@ func TestUcAccFileUpdateServerChange(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -279,28 +199,12 @@ func TestUcAccFileUpdateServerChange(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -337,28 +241,12 @@ func TestUcAccFileFullLifeCycle(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -372,28 +260,12 @@ func TestUcAccFileFullLifeCycle(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -411,28 +283,12 @@ func TestUcAccFileBase64FullLifeCycle(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {
@@ -446,28 +302,12 @@ func TestUcAccFileBase64FullLifeCycle(t *testing.T) {
 			catalog_name = "main"
 		}
 
-		resource "databricks_storage_credential" "external" {
-			name = "cred-{var.STICKY_RANDOM}"
-			aws_iam_role {
-				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
-			}
-			comment = "Managed by TF"
-		}
-
-		resource "databricks_external_location" "some" {
-			name            = "external-{var.STICKY_RANDOM}"
-			url             = "s3://{env.TEST_BUCKET}/somepath-{var.STICKY_RANDOM}"
-			credential_name = databricks_storage_credential.external.id
-			comment         = "Managed by TF"
-		}
-
 		resource "databricks_volume" "this" {
 			name = "name-abc"
 			comment = "comment-abc"
 			catalog_name = "main"
 			schema_name = databricks_schema.this.name 
-			volume_type = "EXTERNAL"
-			storage_location   = databricks_external_location.some.url
+			volume_type = "MANAGED"
 		}
 		
 		resource "databricks_file" "this" {

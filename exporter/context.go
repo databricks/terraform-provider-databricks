@@ -1207,6 +1207,12 @@ func (ic *importContext) EmitIfUpdatedAfterMillis(r *resource, modifiedAt int64,
 	ic.Emit(r)
 }
 
+func (ic *importContext) EmitIfUpdatedAfterMillisAndNameMatches(r *resource, name string, modifiedAt int64, message string) {
+	if ic.MatchesName(name) {
+		ic.EmitIfUpdatedAfterMillis(r, modifiedAt, message)
+	}
+}
+
 func (ic *importContext) EmitIfUpdatedAfterIsoString(r *resource, updatedAt, message string) {
 	updatedSinceStr := ic.getUpdatedSinceStr()
 	if ic.incremental && updatedAt < updatedSinceStr {

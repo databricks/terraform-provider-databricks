@@ -13,7 +13,8 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	terraformProviderCatalog "github.com/databricks/terraform-provider-databricks/catalog"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
+	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -32,6 +33,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 )
 
@@ -1508,7 +1510,7 @@ func TestImportStorageCredentialGrants(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		d := terraformProviderCatalog.ResourceStorageCredential().ToResource().TestResourceData()
+		d := tfcatalog.ResourceStorageCredential().ToResource().TestResourceData()
 		d.SetId("abc")
 		err := resourcesMap["databricks_storage_credential"].Import(ic, &resource{
 			ID:   "abc",
@@ -1551,7 +1553,7 @@ func TestImportExternalLocationGrants(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		d := terraformProviderCatalog.ResourceExternalLocation().ToResource().TestResourceData()
+		d := tfcatalog.ResourceExternalLocation().ToResource().TestResourceData()
 		d.SetId("abc")
 		err := resourcesMap["databricks_external_location"].Import(ic, &resource{
 			ID:   "abc",
@@ -1559,4 +1561,215 @@ func TestImportExternalLocationGrants(t *testing.T) {
 		})
 		assert.NoError(t, err)
 	})
+}
+
+func TestListMetastores(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/metastores",
+			Response: catalog.ListMetastoresResponse{
+				Metastores: []catalog.MetastoreInfo{
+					{
+						Name:        "test",
+						MetastoreId: "1234",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-metastores")
+		err := resourcesMap["databricks_metastore"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_metastore[<unknown>] (id: 1234)"])
+	})
+}
+
+func TestListCatalogs(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/catalogs",
+			Response: catalog.ListCatalogsResponse{
+				Catalogs: []catalog.CatalogInfo{
+					{
+						Name:        "cat1",
+						CatalogType: "MANAGED_CATALOG",
+					},
+					{
+						Name:        "cat2",
+						CatalogType: "UNKNOWN",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_catalog"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_catalog[cat1_test_MANAGED_CATALOG] (id: cat1)"])
+	})
+}
+
+func TestListConnections(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/connections",
+			Response: catalog.ListConnectionsResponse{
+				Connections: []catalog.ConnectionInfo{
+					{
+						Name:        "test",
+						MetastoreId: "12345",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-connections")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_connection"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_connection[<unknown>] (id: 12345|test)"])
+	})
+}
+
+func TestListExternalLocations(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/external-locations?",
+			Response: catalog.ListExternalLocationsResponse{
+				ExternalLocations: []catalog.ExternalLocationInfo{
+					{
+						Name: "test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-external-locations")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_external_location"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_external_location[<unknown>] (id: test)"])
+	})
+}
+
+func TestListStorageCredentials(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/storage-credentials?",
+			Response: catalog.ListStorageCredentialsResponse{
+				StorageCredentials: []catalog.StorageCredentialInfo{
+					{
+						Name: "test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-storage-credentials")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_storage_credential"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_storage_credential[<unknown>] (id: test)"])
+	})
+}
+
+func TestListRecipients(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/recipients?",
+			Response: sharing.ListRecipientsResponse{
+				Recipients: []sharing.RecipientInfo{
+					{
+						Name: "test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-shares")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_recipient"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_recipient[<unknown>] (id: test)"])
+	})
+}
+
+func TestListShares(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/shares",
+			Response: sharing.ListSharesResponse{
+				Shares: []sharing.ShareInfo{
+					{
+						Name: "test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-shares")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_share"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_share[<unknown>] (id: test)"])
+	})
+}
+
+func TestAuxUcFunctions(t *testing.T) {
+	// Metastore Assignment
+	d := tfcatalog.ResourceMetastoreAssignment().ToResource().TestResourceData()
+	d.Set("workspace_id", 123)
+	assert.Equal(t, "ws_123", resourcesMap["databricks_metastore_assignment"].Name(nil, d))
+
+	shouldOmitFunc := resourcesMap["databricks_metastore_assignment"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	d.Set("default_catalog_name", "")
+
+	scm := tfcatalog.ResourceMetastoreAssignment().Schema
+	assert.True(t, shouldOmitFunc(nil, "default_catalog_name", scm["default_catalog_name"], d))
+	assert.False(t, shouldOmitFunc(nil, "metastore_id", scm["metastore_id"], d))
+
+	// Metastore
+	d = tfcatalog.ResourceMetastore().ToResource().TestResourceData()
+	d.SetId("1234")
+	assert.Equal(t, "1234", resourcesMap["databricks_metastore"].Name(nil, d))
+	d.Set("name", "test")
+	assert.Equal(t, "test", resourcesMap["databricks_metastore"].Name(nil, d))
+
+	shouldOmitFunc = resourcesMap["databricks_metastore"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm = tfcatalog.ResourceMetastore().Schema
+	assert.True(t, shouldOmitFunc(nil, "default_data_access_config_id", scm["default_data_access_config_id"], d))
+	assert.True(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
+	d.Set("owner", "test")
+	assert.False(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
 }

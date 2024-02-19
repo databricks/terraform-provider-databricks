@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zclconf/go-cty/cty"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
 
@@ -1117,8 +1118,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if scopes, err := ssAPI.List(); err == nil {
 				for i, scope := range scopes {
 					if !ic.MatchesName(scope.Name) {
-						log.Printf("[INFO] Secret scope %s doesn't match %s filter",
-							scope.Name, ic.match)
+						log.Printf("[INFO] Secret scope %s doesn't match %s filter", scope.Name, ic.match)
 						continue
 					}
 					ic.Emit(&resource{
@@ -1281,7 +1281,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			fileName, err := ic.createFile(fmt.Sprintf("%s.sh", r.Name), content)
-			log.Printf("Creating %s for %s", fileName, r)
 			if err != nil {
 				return err
 			}
@@ -1403,11 +1402,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			loaded := map[string]any{}
-			keyNames := []string{}
-			for k := range ic.workspaceConfKeys {
-				keyNames = append(keyNames, k)
-			}
+			keyNames := maps.Keys(ic.workspaceConfKeys)
 			sort.Strings(keyNames)
 			conf, err := ic.workspaceClient.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
 				Keys: strings.Join(keyNames, ","),
@@ -1415,6 +1410,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
+			loaded := map[string]any{}
 			for k, v := range *conf {
 				if v == "" {
 					continue
@@ -2307,15 +2303,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				switch v.CatalogType {
 				case "MANAGED_CATALOG", "FOREIGN_CATALOG", "DELTASHARING_CATALOG":
 					{
-						if !ic.MatchesName(v.Name) {
-							continue
-						}
 						name := fmt.Sprintf("%s_%s_%s", v.Name, ic.currentMetastore.Name, v.CatalogType)
-						ic.EmitIfUpdatedAfterMillis(&resource{
+						ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 							Resource: "databricks_catalog",
 							ID:       v.Name,
 							Name:     nameNormalizationRegex.ReplaceAllString(name, "_"),
-						}, v.UpdatedAt, fmt.Sprintf("catalog '%s'", v.Name))
+						}, v.Name, v.UpdatedAt, fmt.Sprintf("catalog '%s'", v.Name))
 					}
 				default:
 					log.Printf("[INFO] Skipping catalog %s of type %s", v.Name, v.CatalogType)
@@ -2483,9 +2476,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "metastore", Resource: "databricks_metastore"},
 			{Path: "model", Resource: "databricks_registered_model"},
 			{Path: "external_location", Resource: "databricks_external_location", Match: "name"},
+			{Path: "storage_credential", Resource: "databricks_storage_credential"},
 			// TODO: add similar matchers for users/groups/SPs on account level...
 			{Path: "grant.principal", Resource: "databricks_recipient", IsValidApproximation: isMatchingShareRecipient},
-			{Path: "storage_credential", Resource: "databricks_storage_credential"},
 			//	{Path: "", Resource: ""},
 			//	{Path: "", Resource: ""},
 		},
@@ -2521,13 +2514,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 
 			for _, v := range objList {
-				if !ic.MatchesName(v.Name) {
-					continue
-				}
-				ic.EmitIfUpdatedAfterMillis(&resource{
+				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_storage_credential",
 					ID:       v.Name,
-				}, v.UpdatedAt, fmt.Sprintf("storage credential %s", v.Name))
+				}, v.Name, v.UpdatedAt, fmt.Sprintf("storage credential %s", v.Name))
 			}
 			return nil
 		},
@@ -2556,14 +2546,11 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, v := range objList {
-				if !ic.MatchesName(v.Name) {
-					continue
-				}
 				if v.Name != "metastore_default_location" {
-					ic.EmitIfUpdatedAfterMillis(&resource{
+					ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 						Resource: "databricks_external_location",
 						ID:       v.Name,
-					}, v.UpdatedAt, fmt.Sprintf("external location %s", v.Name))
+					}, v.Name, v.UpdatedAt, fmt.Sprintf("external location %s", v.Name))
 				}
 			}
 			return nil
@@ -2594,13 +2581,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, conn := range connections {
-				if !ic.MatchesName(conn.Name) {
-					continue
-				}
-				ic.EmitIfUpdatedAfterMillis(&resource{
+				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_connection",
 					ID:       conn.MetastoreId + "|" + conn.Name,
-				}, conn.UpdatedAt, fmt.Sprintf("connection '%s'", conn.Name))
+				}, conn.Name, conn.UpdatedAt, fmt.Sprintf("connection '%s'", conn.Name))
 			}
 			return nil
 		},
@@ -2625,13 +2609,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, share := range shares {
-				if !ic.MatchesName(share.Name) {
-					continue
-				}
-				ic.EmitIfUpdatedAfterMillis(&resource{
+				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_share",
 					ID:       share.Name,
-				}, share.UpdatedAt, fmt.Sprintf("share '%s'", share.Name))
+				}, share.Name, share.UpdatedAt, fmt.Sprintf("share '%s'", share.Name))
 			}
 			return nil
 		},
@@ -2687,13 +2668,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, rec := range recipients {
-				if !ic.MatchesName(rec.Name) {
-					continue
-				}
-				ic.EmitIfUpdatedAfterMillis(&resource{
+				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_recipient",
 					ID:       rec.Name,
-				}, rec.UpdatedAt, fmt.Sprintf("recipient '%s'", rec.Name))
+				}, rec.Name, rec.UpdatedAt, fmt.Sprintf("recipient '%s'", rec.Name))
 			}
 			return nil
 		},
@@ -2779,13 +2757,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, mstore := range metastores {
-				if !ic.MatchesName(mstore.Name) {
-					continue
-				}
-				ic.EmitIfUpdatedAfterMillis(&resource{
+				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_metastore",
 					ID:       mstore.MetastoreId,
-				}, mstore.UpdatedAt, fmt.Sprintf("metastore '%s'", mstore.Name))
+				}, mstore.Name, mstore.UpdatedAt, fmt.Sprintf("metastore '%s'", mstore.Name))
 			}
 			return nil
 		},

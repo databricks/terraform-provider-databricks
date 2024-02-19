@@ -270,6 +270,7 @@ func TestVolumesRead(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
+	assert.Equal(t, "/Volumes/testCatalogName/testSchemaName/testName", d.Get("volume_path"))
 }
 
 func TestResourceVolumeRead_Error(t *testing.T) {

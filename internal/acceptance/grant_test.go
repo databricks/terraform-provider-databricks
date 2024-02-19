@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -54,13 +55,6 @@ resource "databricks_external_location" "some" {
 	comment         = "Managed by TF"
 }
 
-# resource "databricks_grant" "metastore" {
-# 	metastore = "{env.TEST_METASTORE_ID}"
-#
-# 	principal  = "%s"
-# 	privileges = ["CREATE_STORAGE_CREDENTIAL"]
-# }
-
 resource "databricks_grant" "catalog" {
 	catalog = databricks_catalog.sandbox.id
 
@@ -102,5 +96,32 @@ func TestUcAccGrant(t *testing.T) {
 	},
 		step{
 			Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
+		})
+}
+
+func grantTemplateForNameChange(suffix string) string {
+	return fmt.Sprintf(`
+	resource "databricks_storage_credential" "external" {
+		name = "cred-{var.STICKY_RANDOM}%s"
+		aws_iam_role {
+			role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
+		}
+		comment = "Managed by TF"
+	}
+	
+	resource "databricks_grant" "cred" {
+		storage_credential = databricks_storage_credential.external.id
+		principal  = "{env.TEST_DATA_ENG_GROUP}"
+		privileges = ["ALL_PRIVILEGES"]
+	}
+	`, suffix)
+}
+
+func TestUcAccGrantForIdChange(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: grantTemplateForNameChange("-old"),
+	},
+		step{
+			Template: grantTemplateForNameChange("-new"),
 		})
 }

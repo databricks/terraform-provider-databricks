@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -108,5 +109,34 @@ func TestUcAccGrants(t *testing.T) {
 	},
 		step{
 			Template: strings.ReplaceAll(grantsTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
+		})
+}
+
+func grantsTemplateForNameChange(suffix string) string {
+	return fmt.Sprintf(`
+	resource "databricks_storage_credential" "external" {
+		name = "cred-{var.STICKY_RANDOM}%s"
+		aws_iam_role {
+			role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
+		}
+		comment = "Managed by TF"
+	}
+	
+	resource "databricks_grants" "cred" {
+		storage_credential = databricks_storage_credential.external.id
+		grant {
+			principal  = "{env.TEST_DATA_ENG_GROUP}"
+			privileges = ["ALL_PRIVILEGES"]
+		}
+	}
+	`, suffix)
+}
+
+func TestUcAccGrantsForIdChange(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: grantsTemplateForNameChange("-old"),
+	},
+		step{
+			Template: grantsTemplateForNameChange("-new"),
 		})
 }

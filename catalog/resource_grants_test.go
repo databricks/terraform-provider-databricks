@@ -600,7 +600,7 @@ func TestShareGrantUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestGrantForIdChange(t *testing.T) {
+func TestGrantsForIdChange(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

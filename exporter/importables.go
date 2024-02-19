@@ -2432,7 +2432,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			catalogName := r.Data.Get("catalog_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
-				ID:       catalogName + "." + r.Data.Get("catalog_name").(string),
+				ID:       catalogName + "." + r.Data.Get("schema_name").(string),
 			})
 			ic.Emit(&resource{
 				Resource: "databricks_catalog",
@@ -2459,11 +2459,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-grants",
 		// TODO: Should we try to make name unique?
-		Import: func(ic *importContext, r *resource) error {
-			// TODO: do we need to emit principals? Maybe only on account level? See comment for the owner...
-			// If not, we don't need this function.
-			return nil
-		},
+		// TODO: do we need to emit principals? Maybe only on account level? See comment for the owner...
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.Data.Get("grant.#").(int) == 0
 		},
@@ -2570,7 +2566,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			connectionName := d.Get("name").(string)
 			connectionType := d.Get("connection_type").(string)
-			if connectionName == "" && connectionType == "" {
+			if connectionName == "" || connectionType == "" {
 				return d.Id()
 			}
 			return connectionType + "_" + connectionName
@@ -2675,11 +2671,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Import: func(ic *importContext, r *resource) error {
-			// TODO: do we need to emit the owner See comment for the owner...
-			// TODO: emit variable for sharing_code ...
-			return nil
-		},
+		// TODO: do we need to emit the owner See comment for the owner...
+		// TODO: emit variable for sharing_code ...
 		// TODO: add depends for sharing_code?
 	},
 	"databricks_registered_model": {
@@ -2723,7 +2716,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				location := d.Get(pathString).(string)
 				// TODO: don't generate it if it's managed.
 				// check if string contains metastore_id/models/model_id (although we don't have model_id in the state)
-				return location != ""
+				return location == ""
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},

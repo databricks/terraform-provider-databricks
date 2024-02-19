@@ -1669,7 +1669,7 @@ func TestListExternalLocations(t *testing.T) {
 	})
 }
 
-func TestListStorageCredentials(t *testing.T) {
+func TestStorageCredentials(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			ReuseRequest: true,
@@ -1685,12 +1685,20 @@ func TestListStorageCredentials(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		ic.enableServices("uc-storage-credentials")
+		ic.enableServices("uc-storage-credentials,uc-grants")
 		ic.currentMetastore = currentMetastoreResponse
+		// Test listing
 		err := resourcesMap["databricks_storage_credential"].List(ic)
 		assert.NoError(t, err)
 		require.Equal(t, 1, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_storage_credential[<unknown>] (id: test)"])
+		// Test import
+		err = resourcesMap["databricks_storage_credential"].Import(ic, &resource{
+			ID: "1234",
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: storage_credential/1234)"])
 	})
 }
 
@@ -1717,6 +1725,62 @@ func TestListRecipients(t *testing.T) {
 		require.Equal(t, 1, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_recipient[<unknown>] (id: test)"])
 	})
+}
+
+func TestVolumes(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-volumes,uc-catalogs,uc-schemas,uc-grants")
+	// Test importing
+	d := tfcatalog.ResourceVolume().ToResource().TestResourceData()
+	d.SetId("vtest")
+	d.Set("catalog_name", "ctest")
+	d.Set("schema_name", "stest")
+	err := resourcesMap["databricks_volume"].Import(ic, &resource{
+		ID:   "vtest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: volume/vtest)"])
+	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
+	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+
+	//
+	shouldOmitFunc := resourcesMap["databricks_volume"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm := tfcatalog.ResourceVolume().Schema
+	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
+	d.Set("volume_type", "MANAGED")
+	d.Set("storage_location", "s3://abc/")
+	assert.True(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+}
+
+func TestRegisteredModels(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-models,uc-catalogs,uc-schemas,uc-grants")
+	// Test importing
+	d := tfcatalog.ResourceRegisteredModel().ToResource().TestResourceData()
+	d.SetId("mtest")
+	d.Set("catalog_name", "ctest")
+	d.Set("schema_name", "stest")
+	err := resourcesMap["databricks_registered_model"].Import(ic, &resource{
+		ID:   "mtest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: model/mtest)"])
+	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.ctest)"])
+	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+
+	//
+	shouldOmitFunc := resourcesMap["databricks_registered_model"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm := tfcatalog.ResourceRegisteredModel().Schema
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	d.Set("storage_location", "s3://abc/")
+	assert.False(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
 }
 
 func TestListShares(t *testing.T) {
@@ -1772,4 +1836,23 @@ func TestAuxUcFunctions(t *testing.T) {
 	assert.True(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
 	d.Set("owner", "test")
 	assert.False(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
+
+	// Connections
+	d = tfcatalog.ResourceConnection().ToResource().TestResourceData()
+	d.SetId("1234")
+	assert.Equal(t, "1234", resourcesMap["databricks_connection"].Name(nil, d))
+	d.Set("name", "test")
+	d.Set("connection_type", "db")
+	assert.Equal(t, "db_test", resourcesMap["databricks_connection"].Name(nil, d))
+
+	// Catalogs
+	d = tfcatalog.ResourceCatalog().ToResource().TestResourceData()
+	d.SetId("test")
+	shouldOmitFunc = resourcesMap["databricks_catalog"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm = tfcatalog.ResourceCatalog().Schema
+	d.Set("isolation_mode", "OPEN")
+	assert.True(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
+	d.Set("isolation_mode", "ISOLATED")
+	assert.False(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
 }

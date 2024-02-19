@@ -314,13 +314,13 @@ func ResourceGrants() common.Resource {
 				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
 				return nil
 			}
-			// fieldSetAsId := strings.Split(d.Id(), "/")[0]
-			// old, new := d.GetChange(fieldSetAsId)
-			// if old.(string) != "" && new.(string) == "" {
-			// 	// First pass of forced new. From CustomizeDiff in schema.Resource:
-			// 	// "Existing resource, forced new: One run with state (before ForceNew), then one run without state (as if new resource)"
-			// 	return nil
-			// }
+			fieldSetAsId := strings.Split(d.Id(), "/")[0]
+			old, new := d.GetChange(fieldSetAsId)
+			if old.(string) != "" && new.(string) == "" {
+				// First pass of forced new. From CustomizeDiff in schema.Resource:
+				// "Existing resource, forced new: One run with state (before ForceNew), then one run without state (as if new resource)"
+				return nil
+			}
 			var grants PermissionsList
 			common.DiffToStructPointer(d, s, &grants)
 			return mapping.validate(d, grants)
@@ -381,7 +381,12 @@ func ResourceGrants() common.Resource {
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
+			err = replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
+			if err != nil {
+				return err
+			}
+			d.SetId(mapping.id(d))
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

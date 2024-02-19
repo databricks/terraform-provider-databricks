@@ -600,7 +600,7 @@ func TestShareGrantUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestGrantsForIdChange(t *testing.T) {
+func TestGrantForIdChange(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -636,7 +636,7 @@ func TestGrantsForIdChange(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/external_location/old.location?",
+				Resource: "/api/2.1/unity-catalog/permissions/external_location/new.location?",
 				Response: catalog.PermissionsList{
 					PrivilegeAssignments: []catalog.PrivilegeAssignment{
 						{

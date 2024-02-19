@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/aws"
@@ -291,11 +292,31 @@ var emptyStorageCrdentials = qa.HTTPFixture{
 	Response: &catalog.ListStorageCredentialsResponse{},
 }
 
+var emptyConnections = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.1/unity-catalog/connections",
+	Response: catalog.ListConnectionsResponse{},
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/repos?",
 	Response:     repos.ReposListResponse{},
+}
+
+var emptyShares = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/unity-catalog/shares",
+	Response:     sharing.ListSharesResponse{},
+}
+
+var emptyRecipients = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/unity-catalog/recipients?",
+	Response:     sharing.ListRecipientsResponse{},
 }
 
 var emptyGitCredentials = qa.HTTPFixture{
@@ -409,6 +430,13 @@ var currentMetastoreSuccess = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyMetastoreList = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.1/unity-catalog/metastores",
+	Response:     catalog.ListMetastoresResponse{},
+	ReuseRequest: true,
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
 		{
@@ -430,8 +458,12 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			noCurrentMetastoreAttached,
+			emptyMetastoreList,
 			meAdminFixture,
 			emptyRepos,
+			emptyShares,
+			emptyConnections,
+			emptyRecipients,
 			emptyGitCredentials,
 			emptyWorkspace,
 			emptyIpAccessLIst,
@@ -688,9 +720,13 @@ func TestImportingNoResourcesError(t *testing.T) {
 				},
 			},
 			noCurrentMetastoreAttached,
+			emptyMetastoreList,
 			emptyRepos,
 			emptyExternalLocations,
 			emptyStorageCrdentials,
+			emptyShares,
+			emptyConnections,
+			emptyRecipients,
 			emptyModelServing,
 			emptyMlflowWebhooks,
 			emptyWorkspaceConf,
@@ -1175,7 +1211,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 					ic.Importables["databricks_job"],
 					[]string{},
 					ic.Resources["databricks_job"],
-					res.Data,
+					res,
 					hclwrite.NewEmptyFile().Body())
 
 				assert.NoError(t, err)
@@ -1422,12 +1458,8 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 					continue
 				}
 				// simulate complex HCL write
-				err = ic.dataToHcl(
-					ic.Importables["databricks_job"],
-					[]string{},
-					ic.Resources["databricks_job"],
-					res.Data,
-					hclwrite.NewEmptyFile().Body())
+				err = ic.dataToHcl(ic.Importables["databricks_job"], []string{}, ic.Resources["databricks_job"],
+					res, hclwrite.NewEmptyFile().Body())
 
 				assert.NoError(t, err)
 			}

@@ -2332,7 +2332,8 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_connection",
 					ID:       cat.MetastoreID + "|" + cat.ConnectionName,
 				})
-			} else if cat.ProviderName == "" { // We need to be careful here if we add more catalog types...
+			} else if cat.ShareName == "" {
+				// TODO: We need to be careful here if we add more catalog types... Really we need to have CatalogType in resource
 				schemas, err := ic.workspaceClient.Schemas.ListAll(ic.Context, catalog.ListSchemasRequest{CatalogName: r.ID})
 				if err != nil {
 					return err

@@ -1618,7 +1618,156 @@ func TestListCatalogs(t *testing.T) {
 	})
 }
 
-func TestListConnections(t *testing.T) {
+func TestImportManagedCatalog(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest",
+			Response: catalog.ListSchemasResponse{
+				Schemas: []catalog.SchemaInfo{
+					{
+						CatalogType: "MANAGED_CATALOG",
+						Name:        "schema1",
+						FullName:    "ctest.schema1",
+					},
+					{
+						CatalogType: "MANAGED_CATALOG",
+						Name:        "information_schema",
+						FullName:    "ctest.schema1",
+					},
+					{
+						CatalogType: "UNKNOWN",
+						FullName:    "ctest.schema2",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
+		d.SetId("ctest")
+		d.Set("name", "ctest")
+		err := resourcesMap["databricks_catalog"].Import(ic, &resource{
+			ID:   "ctest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/ctest)"])
+		assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.schema1)"])
+	})
+}
+
+func TestImportForeignCatalog(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-catalogs,uc-grants,uc-connections")
+	ic.currentMetastore = currentMetastoreResponse
+	d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
+	d.SetId("fctest")
+	d.Set("metastore_id", "1234")
+	d.Set("connection_name", "conn")
+	d.Set("name", "fctest")
+	err := resourcesMap["databricks_catalog"].Import(ic, &resource{
+		ID:   "fctest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 2, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/fctest)"])
+	assert.True(t, ic.testEmits["databricks_connection[<unknown>] (id: 1234|conn)"])
+}
+
+func TestImportSchema(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/models?catalog_name=ctest&schema_name=stest",
+			Response: catalog.ListRegisteredModelsResponse{
+				RegisteredModels: []catalog.RegisteredModelInfo{
+					{
+						Name:     "model1",
+						FullName: "ctest.stest.model1",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/volumes?catalog_name=ctest&schema_name=stest",
+			Response: catalog.ListVolumesResponseContent{
+				Volumes: []catalog.VolumeInfo{
+					{
+						Name:     "volume1",
+						FullName: "ctest.stest.volume1",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-volumes,uc-models")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tfcatalog.ResourceSchema().ToResource().TestResourceData()
+		d.SetId("ctest.stest")
+		d.Set("catalog_name", "ctest")
+		d.Set("name", "stest")
+		err := resourcesMap["databricks_schema"].Import(ic, &resource{
+			ID:   "ctest.stest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 4, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: schema/ctest.stest)"])
+		assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+		assert.True(t, ic.testEmits["databricks_registered_model[<unknown>] (id: ctest.stest.model1)"])
+		assert.True(t, ic.testEmits["databricks_volume[<unknown>] (id: ctest.stest.volume1)"])
+	})
+}
+
+func TestImportShare(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-grants,uc-volumes,uc-models")
+	d := tfcatalog.ResourceShare().ToResource().TestResourceData()
+	scm := tfcatalog.ResourceShare().Schema
+	share := tfcatalog.ShareInfo{
+		Name: "stest",
+		Objects: []tfcatalog.SharedDataObject{
+			{
+				DataObjectType: "TABLE",
+				Name:           "ctest.stest.table1",
+			},
+			{
+				DataObjectType: "MODEL",
+				Name:           "ctest.stest.model1",
+			},
+			{
+				DataObjectType: "VOLUME",
+				Name:           "ctest.stest.vol1",
+			},
+			{
+				DataObjectType: "NOTEBOOK",
+				Name:           "Test",
+			},
+		},
+	}
+	d.MarkNewResource()
+	common.StructToData(share, scm, d)
+	err := common.StructToData(share, scm, d)
+	require.NoError(t, err)
+	err = resourcesMap["databricks_share"].Import(ic, &resource{
+		ID:   "stest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: share/stest)"])
+	assert.True(t, ic.testEmits["databricks_registered_model[<unknown>] (id: ctest.stest.model1)"])
+	assert.True(t, ic.testEmits["databricks_volume[<unknown>] (id: ctest.stest.vol1)"])
+}
+
+func TestConnections(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			ReuseRequest: true,
@@ -1635,12 +1784,23 @@ func TestListConnections(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		ic.enableServices("uc-connections")
-		ic.currentMetastore = currentMetastoreResponse
+		ic.enableServices("uc-connections,uc-grants")
+		// Test Listing
 		err := resourcesMap["databricks_connection"].List(ic)
 		assert.NoError(t, err)
 		require.Equal(t, 1, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_connection[<unknown>] (id: 12345|test)"])
+		// Test Importing
+		d := tfcatalog.ResourceConnection().ToResource().TestResourceData()
+		d.SetId("ctest")
+		d.Set("name", "ctest")
+		err = resourcesMap["databricks_connection"].Import(ic, &resource{
+			ID:   "ctest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: foreign_connection/ctest)"])
 	})
 }
 
@@ -1660,12 +1820,25 @@ func TestListExternalLocations(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		ic.enableServices("uc-external-locations")
+		ic.enableServices("uc-external-locations,uc-storage-credentials,uc-grants")
 		ic.currentMetastore = currentMetastoreResponse
+		// Test listing
 		err := resourcesMap["databricks_external_location"].List(ic)
 		assert.NoError(t, err)
 		require.Equal(t, 1, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_external_location[<unknown>] (id: test)"])
+		// Test import
+		d := tfcatalog.ResourceExternalLocation().ToResource().TestResourceData()
+		d.SetId("ext_loc")
+		d.Set("credential_name", "stest")
+		err = resourcesMap["databricks_external_location"].Import(ic, &resource{
+			ID:   "ext_loc",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 3, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: external_location/ext_loc)"])
+		assert.True(t, ic.testEmits["databricks_storage_credential[<unknown>] (id: stest)"])
 	})
 }
 

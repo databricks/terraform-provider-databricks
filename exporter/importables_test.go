@@ -1923,9 +1923,11 @@ func TestVolumes(t *testing.T) {
 	require.NotNil(t, shouldOmitFunc)
 	scm := tfcatalog.ResourceVolume().Schema
 	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
 	d.Set("volume_type", "MANAGED")
 	d.Set("storage_location", "s3://abc/")
 	assert.True(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
 	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
 }
 
@@ -1954,6 +1956,7 @@ func TestRegisteredModels(t *testing.T) {
 	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
 	d.Set("storage_location", "s3://abc/")
 	assert.False(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
 }
 
 func TestListShares(t *testing.T) {
@@ -2009,6 +2012,7 @@ func TestAuxUcFunctions(t *testing.T) {
 	assert.True(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
 	d.Set("owner", "test")
 	assert.False(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
 
 	// Connections
 	d = tfcatalog.ResourceConnection().ToResource().TestResourceData()
@@ -2028,4 +2032,5 @@ func TestAuxUcFunctions(t *testing.T) {
 	assert.True(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
 	d.Set("isolation_mode", "ISOLATED")
 	assert.False(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
 }

@@ -75,7 +75,7 @@ The following arguments are supported:
 
 * `source` - The full absolute path to the file. Conflicts with `content_base64`.
 * `content_base64` - Contents in base 64 format. Conflicts with `source`.
-* `path` - The path of the file in which you wish to save. For example, g`/Volumes/main/default/volume1/file.txt`.
+* `path` - The path of the file in which you wish to save. For example, `/Volumes/main/default/volume1/file.txt`.
 
 ## Attribute Reference
 

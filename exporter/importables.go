@@ -2307,6 +2307,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				switch v.CatalogType {
 				case "MANAGED_CATALOG", "FOREIGN_CATALOG", "DELTASHARING_CATALOG":
 					{
+						if !ic.MatchesName(v.Name) {
+							continue
+						}
 						name := fmt.Sprintf("%s_%s_%s", v.Name, ic.currentMetastore.Name, v.CatalogType)
 						ic.EmitIfUpdatedAfterMillis(&resource{
 							Resource: "databricks_catalog",
@@ -2516,10 +2519,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 
 			for _, v := range objList {
-				ic.Emit(&resource{
+				if !ic.MatchesName(v.Name) {
+					continue
+				}
+				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_storage_credential",
 					ID:       v.Name,
-				})
+				}, v.UpdatedAt, fmt.Sprintf("storage credential %s", v.Name))
 			}
 			return nil
 		},
@@ -2548,11 +2554,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, v := range objList {
+				if !ic.MatchesName(v.Name) {
+					continue
+				}
 				if v.Name != "metastore_default_location" {
-					ic.Emit(&resource{
+					ic.EmitIfUpdatedAfterMillis(&resource{
 						Resource: "databricks_external_location",
 						ID:       v.Name,
-					})
+					}, v.UpdatedAt, fmt.Sprintf("external location %s", v.Name))
 				}
 			}
 			return nil
@@ -2577,6 +2586,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return connectionType + "_" + connectionName
 		},
+		List: func(ic *importContext) error {
+			connections, err := ic.workspaceClient.Connections.ListAll(ic.Context)
+			if err != nil {
+				return err
+			}
+			for _, conn := range connections {
+				if !ic.MatchesName(conn.Name) {
+					continue
+				}
+				ic.EmitIfUpdatedAfterMillis(&resource{
+					Resource: "databricks_connection",
+					ID:       conn.MetastoreId + "|" + conn.Name,
+				}, conn.UpdatedAt, fmt.Sprintf("connection '%s'", conn.Name))
+			}
+			return nil
+		},
 		// TODO: think what to do with the sensitive fields in the `options`?
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
@@ -2587,7 +2612,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			})
 			return nil
 		},
-
 		ShouldOmitField: shouldOmitForUnityCatalog,
 	},
 	"databricks_share": {
@@ -2599,6 +2623,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, share := range shares {
+				if !ic.MatchesName(share.Name) {
+					continue
+				}
 				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_share",
 					ID:       share.Name,
@@ -2634,7 +2661,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       obj.Name,
 					})
 				default:
-					log.Printf("[INFO] Object type '%s' (name: '%s') isn't supported in share '%s'", obj.DataObjectType, obj.Name, r.ID)
+					log.Printf("[INFO] Object type '%s' (name: '%s') isn't supported in share '%s'",
+						obj.DataObjectType, obj.Name, r.ID)
 				}
 			}
 
@@ -2657,6 +2685,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, rec := range recipients {
+				if !ic.MatchesName(rec.Name) {
+					continue
+				}
 				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_recipient",
 					ID:       rec.Name,
@@ -2669,7 +2700,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			// TODO: emit variable for sharing_code ...
 			return nil
 		},
-		// TODO: add depends for sharing_code
+		// TODO: add depends for sharing_code?
 	},
 	"databricks_registered_model": {
 		WorkspaceLevel: true,
@@ -2681,6 +2712,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		// 		return err
 		// 	}
 		// 	for _, model := range models {
+		// TODO: Add name matching...
 		// 		ic.EmitIfUpdatedAfterMillis(&resource{
 		// 			Resource: "databricks_registered_model",
 		// 			ID:       model.FullName,

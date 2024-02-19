@@ -337,6 +337,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
+	if f.Update || f.Create || f.Read {
+		assert.Nil(t, diff)
+	}
 	if diff == nil || f.InstanceState == nil {
 		return resourceData, nil
 	}

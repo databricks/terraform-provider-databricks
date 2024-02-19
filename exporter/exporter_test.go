@@ -292,6 +292,12 @@ var emptyStorageCrdentials = qa.HTTPFixture{
 	Response: &catalog.ListStorageCredentialsResponse{},
 }
 
+var emptyConnections = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.1/unity-catalog/connections",
+	Response: catalog.ListConnectionsResponse{},
+}
+
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -456,6 +462,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			meAdminFixture,
 			emptyRepos,
 			emptyShares,
+			emptyConnections,
 			emptyRecipients,
 			emptyGitCredentials,
 			emptyWorkspace,
@@ -718,6 +725,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyExternalLocations,
 			emptyStorageCrdentials,
 			emptyShares,
+			emptyConnections,
 			emptyRecipients,
 			emptyModelServing,
 			emptyMlflowWebhooks,

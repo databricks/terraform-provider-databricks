@@ -2485,6 +2485,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "external_location", Resource: "databricks_external_location", Match: "name"},
 			// TODO: add similar matchers for users/groups/SPs on account level...
 			{Path: "grant.principal", Resource: "databricks_recipient", IsValidApproximation: isMatchingShareRecipient},
+			{Path: "storage_credential", Resource: "databricks_storage_credential"},
+			//	{Path: "", Resource: ""},
 			//	{Path: "", Resource: ""},
 		},
 	},

@@ -1679,6 +1679,44 @@ func TestImportForeignCatalog(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_connection[<unknown>] (id: 1234|conn)"])
 }
 
+func TestImportIsolatedManagedCatalog(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest",
+			Response: catalog.ListSchemasResponse{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/bindings/catalog/ctest?",
+			Response: catalog.WorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						BindingType: "BINDING_TYPE_READ",
+						WorkspaceId: 1234,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
+		d.SetId("ctest")
+		d.Set("name", "ctest")
+		d.Set("isolation_mode", "ISOLATED")
+		err := resourcesMap["databricks_catalog"].Import(ic, &resource{
+			ID:   "ctest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/ctest)"])
+		assert.True(t, ic.testEmits["databricks_catalog_workspace_binding[catalog_ctest_ws_1234] (id: 1234|catalog|ctest)"])
+	})
+}
+
 func TestImportSchema(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

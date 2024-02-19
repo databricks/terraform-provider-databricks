@@ -2349,7 +2349,36 @@ var resourcesMap map[string]importable = map[string]importable{
 					}, schema.UpdatedAt, fmt.Sprintf("schema '%s'", schema.FullName))
 				}
 			}
-
+			if cat.IsolationMode == "ISOLATED" {
+				securable := "catalog"
+				bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindings(ic.Context, catalog.GetBindingsRequest{
+					SecurableName: cat.Name,
+					SecurableType: securable,
+				})
+				if err == nil {
+					for _, binding := range bindings.Bindings {
+						id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securable, cat.Name)
+						d := ic.Resources["databricks_catalog_workspace_binding"].Data(
+							&terraform.InstanceState{
+								ID: id,
+								Attributes: map[string]string{
+									"workspace_id":   fmt.Sprintf("%d", binding.WorkspaceId),
+									"securable_type": securable,
+									"securable_name": cat.Name,
+									"binding_type":   binding.BindingType.String(),
+								},
+							})
+						ic.Emit(&resource{
+							Resource: "databricks_catalog_workspace_binding",
+							ID:       id,
+							Name:     fmt.Sprintf("%s_%s_ws_%d", securable, cat.Name, binding.WorkspaceId),
+							Data:     d,
+						})
+					}
+				} else {
+					log.Printf("[ERROR] listing catalog bindings: %s", err.Error())
+				}
+			}
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -2801,6 +2830,13 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "metastore_id", Resource: "databricks_metastore"},
+		},
+	},
+	"databricks_catalog_workspace_binding": {
+		WorkspaceLevel: true,
+		Service:        "uc-catalogs",
+		Depends: []reference{
+			{Path: "securable_name", Resource: "databricks_catalog", Match: "name"},
 		},
 	},
 }

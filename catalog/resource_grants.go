@@ -290,6 +290,18 @@ func parseId(d *schema.ResourceData) (string, string, error) {
 	return split[0], split[1], nil
 }
 
+// Check whether it's a first pass of forced new. From CustomizeDiff in schema.Resource:
+// "Existing resource, forced new: One run with state (before ForceNew), then one run without state (as if new resource)"
+func firstPassOfForcedNew(d *schema.ResourceDiff) bool {
+	fieldSetAsId := strings.Split(d.Id(), "/")[0]
+	old, new := d.GetChange(fieldSetAsId)
+	if old.(string) != "" && new.(string) == "" {
+		// First pass of forced new
+		return true
+	}
+	return false
+}
+
 func ResourceGrants() common.Resource {
 	s := common.StructToSchema(PermissionsList{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -314,15 +326,11 @@ func ResourceGrants() common.Resource {
 				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
 				return nil
 			}
-			fieldSetAsId := strings.Split(d.Id(), "/")[0]
-			old, new := d.GetChange(fieldSetAsId)
-			if old.(string) != "" && new.(string) == "" {
-				// First pass of forced new. From CustomizeDiff in schema.Resource:
-				// "Existing resource, forced new: One run with state (before ForceNew), then one run without state (as if new resource)"
-				return nil
-			}
 			var grants PermissionsList
 			common.DiffToStructPointer(d, s, &grants)
+			if firstPassOfForcedNew(d) {
+				return nil
+			}
 			return mapping.validate(d, grants)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

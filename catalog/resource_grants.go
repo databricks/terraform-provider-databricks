@@ -108,6 +108,7 @@ func (sm securableMapping) kv(d attributeGetter) (string, string) {
 		// We need this check because:
 		// "AsString returns the native string from a non-null, non-unknown cty.String value, or panics if called on any other value."
 		if !value.IsKnown() {
+			// This is the case when the new value isn't known but the field is required for validation
 			return field, "unknown"
 		}
 		return field, value.AsString()

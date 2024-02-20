@@ -173,8 +173,10 @@ func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, err
 			return nil, fmt.Errorf("ID must be set for Delete")
 		}
 		return resourceCRUD(r.DeleteContext).withId(f.ID), nil
+	case f.ExpectedDiff != nil:
+		return nil, nil
 	}
-	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
+	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` or `ExpectedDiff` specificed")
 }
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {

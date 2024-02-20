@@ -37,6 +37,31 @@ func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
 	return reader, err
 }
 
+func upload(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient, path string) error {
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	reader, err := getContentReader(data)
+	if err != nil {
+		return err
+	}
+	err = w.Files.Upload(ctx, files.UploadRequest{Contents: reader, FilePath: path})
+	if err != nil {
+		return err
+	}
+
+	metadata, err := w.Files.GetMetadata(ctx, files.GetMetadataRequest{FilePath: path})
+	if err != nil {
+		return err
+	}
+	data.Set("modification_time", metadata.LastModified)
+	data.Set("file_size", metadata.ContentLength)
+	data.Set("remote_file_modified", false)
+	data.SetId(path)
+	return nil
+}
+
 func ResourceFile() common.Resource {
 	s := workspace.FileContentSchema(map[string]*schema.Schema{
 		"modification_time": {
@@ -55,27 +80,11 @@ func ResourceFile() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			path := data.Get("path").(string)
-			reader, err := getContentReader(data)
+			err := upload(ctx, data, c, path)
 			if err != nil {
 				return err
 			}
-			err = w.Files.Upload(ctx, files.UploadRequest{Contents: reader, FilePath: path})
-			if err != nil {
-				return err
-			}
-
-			metadata, err := w.Files.GetMetadata(ctx, files.GetMetadataRequest{FilePath: path})
-			if err != nil {
-				return err
-			}
-			data.Set("modification_time", metadata.LastModified)
-			data.Set("file_size", metadata.ContentLength)
-			data.Set("remote_file_modified", false)
 			data.SetId(path)
 			return nil
 		},
@@ -99,28 +108,8 @@ func ResourceFile() common.Resource {
 			return common.StructToData(metadata, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			path := data.Id()
-			reader, err := getContentReader(data)
-			if err != nil {
-				return err
-			}
-			err = w.Files.Upload(ctx, files.UploadRequest{Contents: reader, FilePath: path})
-			if err != nil {
-				return err
-			}
-			metadata, err := w.Files.GetMetadata(ctx, files.GetMetadataRequest{FilePath: path})
-			if err != nil {
-				return err
-			}
-			data.Set("modification_time", metadata.LastModified)
-			data.Set("file_size", metadata.ContentLength)
-			data.Set("remote_file_modified", false)
-
-			return err
+			return upload(ctx, data, c, path)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

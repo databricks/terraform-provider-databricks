@@ -40,6 +40,37 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 	assert.Equal(t, "DATA_ACCESS_CONTROL", d.Get("security_policy"))
 }
 
+func TestResourceSQLGlobalConfigUpdateServerlessNotSet(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/sql/config/warehouses",
+				ExpectedRequest: map[string]any{
+					"data_access_config":        []any{},
+					"enable_serverless_compute": false,
+					"security_policy":           "DATA_ACCESS_CONTROL",
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/sql/config/warehouses",
+				ReuseRequest: true,
+				Response: GlobalConfigForRead{
+					SecurityPolicy: "DATA_ACCESS_CONTROL",
+				},
+			},
+		},
+		Resource: ResourceSqlGlobalConfig(),
+		ID:       "config",
+		Update:   true,
+		InstanceState: map[string]string{
+			"enable_serverless_compute": "false",
+		},
+		HCL: ``,
+	}.ApplyNoError(t)
+}
+
 func TestResourceSQLGlobalConfigCreateDisableServerless(t *testing.T) {
 	for _, enabled := range []bool{true, false} {
 		t.Run("enabled="+fmt.Sprint(enabled), func(t *testing.T) {

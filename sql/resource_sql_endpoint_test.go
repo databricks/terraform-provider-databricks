@@ -261,8 +261,8 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 			"num_clusters":              "",
 			"odbc_params.#":             "",
 		},
-		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{"state":*terraform.ResourceAttrDiff{Old:"", New:"", NewComputed:true, NewRemoved:false, RequiresNew:false, Sensitive:false},
-		HCL: `
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{"state": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false}},
+		HCL: `g
 		name = "foo"
   		cluster_size = "Small"
 		`,

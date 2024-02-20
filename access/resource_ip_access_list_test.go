@@ -222,9 +222,14 @@ func TestIPACLRead(t *testing.T) {
 			},
 		},
 		Resource: ResourceIPAccessList(),
-		Read:     true,
-		New:      true,
-		ID:       TestingId,
+		HCL: `
+		ip_address = ["1.2.3.4", "1.2.4.0/24"]
+		label = "Naughty"
+		list_type = "BLOCK"
+		`,
+		Read: true,
+		New:  true,
+		ID:   TestingId,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, TestingId, d.Id())

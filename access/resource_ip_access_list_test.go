@@ -253,9 +253,12 @@ func TestIPACLRead_NotFound(t *testing.T) {
 			},
 		},
 		Resource: ResourceIPAccessList(),
-		Read:     true,
-		Removed:  true,
-		ID:       TestingId,
+		HCL: `
+		enabled = true
+		`,
+		Read:    true,
+		Removed: true,
+		ID:      TestingId,
 	}.ApplyNoError(t)
 }
 

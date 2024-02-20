@@ -175,7 +175,8 @@ func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, err
 	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
 }
 
-func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
+func (f ResourceFixture) setDatabricksEnvironmentForTest(t *testing.T, client *common.DatabricksClient, host string) {
+	t.Setenv("DATABRICKS_UNIT_TEST_INTERNAL_ONLY", "For internal testing purposes only")
 	if f.Azure || f.AzureSPN {
 		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:              config.CloudAzure,
@@ -247,7 +248,6 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 
 // Apply runs tests from fixture
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
-	t.Setenv("DATABRICKS_UNIT_TEST_INTERNAL_ONLY", "For internal testing purposes only")
 	err := f.validateMocks()
 	if err != nil {
 		return nil, err
@@ -276,7 +276,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.AccountID != "" {
 		config.AccountID = f.AccountID
 	}
-	f.setDatabricksEnvironmentForTest(client, server.URL)
+	f.setDatabricksEnvironmentForTest(t, client, server.URL)
 	if len(f.HCL) > 0 {
 		var out any
 		// TODO: update to HCLv2 somehow, so that importer and this use the same stuff

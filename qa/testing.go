@@ -309,7 +309,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
 	if f.ExpectedDiff != nil {
-		assert.Equal(t, diff.Attributes, f.ExpectedDiff)
+		assert.Equal(t, f.ExpectedDiff, diff.Attributes)
 		return nil, err
 	}
 	// TODO: f.Resource.Data(is) - check why it doesn't work

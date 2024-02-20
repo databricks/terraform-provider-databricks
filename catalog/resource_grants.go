@@ -99,16 +99,20 @@ type attributeGetter interface {
 	GetRawConfig() cty.Value
 }
 
-func (sm securableMapping) kv(d attributeGetter) (string, string) {
-	if os.Getenv("DATABRICKS_UNIT_TESTS_INTERNAL_ONLY") == "For internal testing purposes only" {
-		for field := range sm {
-			v := d.Get(field).(string)
-			if v == "" {
-				continue
-			}
-			return field, v
+func (sm securableMapping) kv_legacy(d attributeGetter) (string, string) {
+	for field := range sm {
+		v := d.Get(field).(string)
+		if v == "" {
+			continue
 		}
-		return "unknown", "unknown"
+		return field, v
+	}
+	return "unknown", "unknown"
+}
+
+func (sm securableMapping) kv(d attributeGetter) (string, string) {
+	if os.Getenv("DATABRICKS_UNIT_TEST_INTERNAL_ONLY") == "For internal testing purposes only" {
+		return sm.kv_legacy(d)
 	}
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsNull() {

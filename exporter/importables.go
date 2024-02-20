@@ -2286,7 +2286,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		// TODO: add Depends & Import to emit corresponding UC Volumes when support for them is added
+		Depends: []reference{
+			{Path: "artifact_matcher.artifact", Resource: "databricks_volume", Match: "volume_path",
+				IsValidApproximation: isMatchingAllowListArtifact},
+			{Path: "artifact_matcher.artifact", Resource: "databricks_external_location", Match: "url",
+				IsValidApproximation: isMatchingAllowListArtifact},
+			{Path: "artifact_matcher.artifact", Resource: "databricks_volume", Match: "volume_path",
+				MatchType: MatchLongestPrefix, IsValidApproximation: isMatchingAllowListArtifact},
+			{Path: "artifact_matcher.artifact", Resource: "databricks_external_location", Match: "url",
+				MatchType: MatchLongestPrefix, IsValidApproximation: isMatchingAllowListArtifact},
+		},
 	},
 	"databricks_catalog": {
 		WorkspaceLevel: true,
@@ -2389,7 +2398,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "connection_name", Resource: "databricks_connection", Match: "name"},
-			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
+			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
 		},
 		// TODO: convert `main` catalog into the data source as it's automatically created?
 		//   This will require addition of the databricks_catalog data source
@@ -2442,12 +2451,31 @@ var resourcesMap map[string]importable = map[string]importable{
 				}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
 			}
 
+			tables, err := ic.workspaceClient.Tables.ListAll(ic.Context, catalog.ListTablesRequest{
+				CatalogName: catalogName,
+				SchemaName:  schemaName,
+			})
+			if err != nil {
+				return err
+			}
+			for _, table := range tables {
+				switch table.TableType {
+				case "MANAGED", "EXTERNAL", "VIEW":
+					ic.EmitIfUpdatedAfterMillis(&resource{
+						Resource: "databricks_sql_table",
+						ID:       table.FullName,
+					}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+				default:
+					log.Printf("[DEBUG] Skipping table %s of type %s", table.FullName, table.TableType)
+				}
+			}
+
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
-			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
+			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
 		},
 	},
 	"databricks_volume": {
@@ -2482,7 +2510,44 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
-			{Path: "storage_location", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
+			{Path: "storage_location", Resource: "databricks_external_location",
+				Match: "url", MatchType: MatchLongestPrefix},
+		},
+	},
+	"databricks_sql_table": {
+		WorkspaceLevel: true,
+		Service:        "uc-tables",
+		Import: func(ic *importContext, r *resource) error {
+			tableFullName := r.ID
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       "table/" + tableFullName,
+			})
+			catalogName := r.Data.Get("catalog_name").(string)
+			ic.Emit(&resource{
+				Resource: "databricks_schema",
+				ID:       catalogName + "." + r.Data.Get("schema_name").(string),
+			})
+			ic.Emit(&resource{
+				Resource: "databricks_catalog",
+				ID:       catalogName,
+			})
+			// TODO: emit owner? See comment in catalog resource
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "storage_location":
+				return d.Get("table_type").(string) == "MANAGED"
+			}
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
+			{Path: "storage_location", Resource: "databricks_external_location",
+				Match: "url", MatchType: MatchLongestPrefix},
 		},
 	},
 	"databricks_grants": {
@@ -2498,6 +2563,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "schema", Resource: "databricks_schema"},
 			{Path: "volume", Resource: "databricks_volume"},
 			{Path: "share", Resource: "databricks_share"},
+			{Path: "table", Resource: "databricks_sql_table"},
 			{Path: "foreign_connection", Resource: "databricks_connection", Match: "name"},
 			{Path: "metastore", Resource: "databricks_metastore"},
 			{Path: "model", Resource: "databricks_registered_model"},
@@ -2682,7 +2748,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "object.name", Resource: "databricks_volume", IsValidApproximation: isMatchignShareObject("VOLUME")},
 			{Path: "object.name", Resource: "databricks_registered_model", IsValidApproximation: isMatchignShareObject("MODEL")},
 			{Path: "object.name", Resource: "databricks_schema", IsValidApproximation: isMatchignShareObject("SCHEMA")},
-			// {Path: "object.name", Resource: "databricks_sql_table"},
+			{Path: "object.name", Resource: "databricks_sql_table", IsValidApproximation: isMatchignShareObject("TABLE")},
 		},
 	},
 	"databricks_recipient": {
@@ -2744,8 +2810,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 			if pathString == "storage_location" {
 				location := d.Get(pathString).(string)
-				// TODO: don't generate it if it's managed.
-				// check if string contains metastore_id/models/model_id (although we don't have model_id in the state)
+				if ic != nil && ic.currentMetastore != nil { // don't generate location it if it's managed...
+					return strings.Contains(location, "/"+ic.currentMetastore.MetastoreId+"/models/")
+				}
 				return location == ""
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
@@ -2754,7 +2821,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
-			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchPrefix},
+			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
 		},
 	},
 	"databricks_metastore": {

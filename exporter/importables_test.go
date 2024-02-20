@@ -1743,9 +1743,27 @@ func TestImportSchema(t *testing.T) {
 				},
 			},
 		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/tables?catalog_name=ctest&schema_name=stest",
+			Response: catalog.ListTablesResponse{
+				Tables: []catalog.TableInfo{
+					{
+						Name:      "table1",
+						TableType: "MANAGED",
+						FullName:  "ctest.stest.table1",
+					},
+					{
+						Name:      "table2",
+						TableType: "UNKNOWN",
+						FullName:  "ctest.stest.table2",
+					},
+				},
+			},
+		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-volumes,uc-models")
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-volumes,uc-models,uc-tables")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceSchema().ToResource().TestResourceData()
 		d.SetId("ctest.stest")
@@ -1756,17 +1774,18 @@ func TestImportSchema(t *testing.T) {
 			Data: d,
 		})
 		assert.NoError(t, err)
-		require.Equal(t, 4, len(ic.testEmits))
+		require.Equal(t, 5, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: schema/ctest.stest)"])
 		assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
 		assert.True(t, ic.testEmits["databricks_registered_model[<unknown>] (id: ctest.stest.model1)"])
 		assert.True(t, ic.testEmits["databricks_volume[<unknown>] (id: ctest.stest.volume1)"])
+		assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: ctest.stest.table1)"])
 	})
 }
 
 func TestImportShare(t *testing.T) {
 	ic := importContextForTest()
-	ic.enableServices("uc-grants,uc-volumes,uc-models")
+	ic.enableServices("uc-grants,uc-volumes,uc-models,uc-tables")
 	d := tfcatalog.ResourceShare().ToResource().TestResourceData()
 	scm := tfcatalog.ResourceShare().Schema
 	share := tfcatalog.ShareInfo{
@@ -1799,10 +1818,11 @@ func TestImportShare(t *testing.T) {
 		Data: d,
 	})
 	assert.NoError(t, err)
-	require.Equal(t, 3, len(ic.testEmits))
+	require.Equal(t, 4, len(ic.testEmits))
 	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: share/stest)"])
 	assert.True(t, ic.testEmits["databricks_registered_model[<unknown>] (id: ctest.stest.model1)"])
 	assert.True(t, ic.testEmits["databricks_volume[<unknown>] (id: ctest.stest.vol1)"])
+	assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: ctest.stest.table1)"])
 }
 
 func TestConnections(t *testing.T) {
@@ -1969,6 +1989,37 @@ func TestVolumes(t *testing.T) {
 	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
 }
 
+func TestSqlTables(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-tables,uc-catalogs,uc-schemas,uc-grants")
+	// Test importing
+	d := tfcatalog.ResourceSqlTable().ToResource().TestResourceData()
+	d.SetId("ttest")
+	d.Set("catalog_name", "ctest")
+	d.Set("schema_name", "stest")
+	err := resourcesMap["databricks_sql_table"].Import(ic, &resource{
+		ID:   "ttest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: table/ttest)"])
+	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
+	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+
+	//
+	shouldOmitFunc := resourcesMap["databricks_sql_table"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm := tfcatalog.ResourceSqlTable().Schema
+	assert.False(t, shouldOmitFunc(nil, "table_type", scm["table_type"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+	d.Set("table_type", "MANAGED")
+	d.Set("storage_location", "s3://abc/")
+	assert.False(t, shouldOmitFunc(nil, "table_type", scm["table_type"], d))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+}
+
 func TestRegisteredModels(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("uc-models,uc-catalogs,uc-schemas,uc-grants")
@@ -1995,6 +2046,10 @@ func TestRegisteredModels(t *testing.T) {
 	d.Set("storage_location", "s3://abc/")
 	assert.False(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
 	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+
+	ic.currentMetastore = currentMetastoreResponse
+	d.Set("storage_location", "s3://abc/"+currentMetastoreResponse.MetastoreId+"/models/123456")
+	assert.True(t, shouldOmitFunc(ic, "storage_location", scm["storage_location"], d))
 }
 
 func TestListShares(t *testing.T) {

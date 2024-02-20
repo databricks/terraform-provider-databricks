@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -16,9 +17,8 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: map[string]any{
-					"data_access_config":        []any{},
-					"enable_serverless_compute": false,
-					"security_policy":           "DATA_ACCESS_CONTROL",
+					"data_access_config": []any{},
+					"security_policy":    "DATA_ACCESS_CONTROL",
 				},
 			},
 			{
@@ -40,6 +40,38 @@ func TestResourceSQLGlobalConfigCreateDefault(t *testing.T) {
 	assert.Equal(t, "DATA_ACCESS_CONTROL", d.Get("security_policy"))
 }
 
+func TestResourceSQLGlobalConfigCreateDisableServerless(t *testing.T) {
+	for _, enabled := range []bool{true, false} {
+		t.Run("enabled="+fmt.Sprint(enabled), func(t *testing.T) {
+			qa.ResourceFixture{
+				Fixtures: []qa.HTTPFixture{
+					{
+						Method:   "PUT",
+						Resource: "/api/2.0/sql/config/warehouses",
+						ExpectedRequest: map[string]any{
+							"data_access_config":        []any{},
+							"enable_serverless_compute": enabled,
+							"security_policy":           "DATA_ACCESS_CONTROL",
+						},
+					},
+					{
+						Method:       "GET",
+						Resource:     "/api/2.0/sql/config/warehouses",
+						ReuseRequest: true,
+						Response: GlobalConfigForRead{
+							SecurityPolicy: "DATA_ACCESS_CONTROL",
+						},
+					},
+				},
+				Resource: ResourceSqlGlobalConfig(),
+				Create:   true,
+				HCL: `
+				enable_serverless_compute = ` + fmt.Sprint(enabled),
+			}.ApplyNoError(t)
+		})
+	}
+}
+
 func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -47,9 +79,8 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: map[string]any{
-					"data_access_config":        []any{},
-					"enable_serverless_compute": false,
-					"security_policy":           "DATA_ACCESS_CONTROL",
+					"data_access_config": []any{},
+					"security_policy":    "DATA_ACCESS_CONTROL",
 				},
 			},
 			{
@@ -81,7 +112,6 @@ func TestResourceSQLGlobalConfigCreateWithData(t *testing.T) {
 				ExpectedRequest: GlobalConfigForRead{
 					DataAccessConfig:           []confPair{{Key: "spark.sql.session.timeZone", Value: "UTC"}},
 					SqlConfigurationParameters: &repeatedEndpointConfPairs{ConfigPairs: []confPair{{Key: "ANSI_MODE", Value: "true"}}},
-					EnableServerlessCompute:    false,
 					SecurityPolicy:             "PASSTHROUGH",
 					InstanceProfileARN:         "arn:...",
 				},
@@ -147,7 +177,6 @@ func TestResourceSQLGlobalConfigCreateWithDataGCP(t *testing.T) {
 				ExpectedRequest: GlobalConfigForRead{
 					DataAccessConfig:           []confPair{{Key: "spark.sql.session.timeZone", Value: "UTC"}},
 					SqlConfigurationParameters: &repeatedEndpointConfPairs{ConfigPairs: []confPair{{Key: "ANSI_MODE", Value: "true"}}},
-					EnableServerlessCompute:    false,
 					SecurityPolicy:             "DATA_ACCESS_CONTROL",
 					GoogleServiceAccount:       "poc@databricks.iam.gserviceaccount.com",
 				},

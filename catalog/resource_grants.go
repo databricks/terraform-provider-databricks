@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/catalog/permissions"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -94,15 +95,22 @@ type securableMapping map[string]map[string]bool
 // reuse ResourceDiff and ResourceData
 type attributeGetter interface {
 	Get(key string) any
+	GetRawConfig() cty.Value
 }
 
 func (sm securableMapping) kv(d attributeGetter) (string, string) {
+	rawConfigValues := d.GetRawConfig().AsValueMap()
 	for field := range sm {
-		v := d.Get(field).(string)
-		if v == "" {
+		value := rawConfigValues[field]
+		if value.IsNull() {
 			continue
 		}
-		return field, v
+		// We need this check because:
+		// "AsString returns the native string from a non-null, non-unknown cty.String value, or panics if called on any other value."
+		if !value.IsKnown() {
+			return field, "unknown"
+		}
+		return field, value.AsString()
 	}
 	return "unknown", "unknown"
 }
@@ -290,18 +298,6 @@ func parseId(d *schema.ResourceData) (string, string, error) {
 	return split[0], split[1], nil
 }
 
-// Check whether it's a first pass of forced new. From CustomizeDiff in schema.Resource:
-// "Existing resource, forced new: One run with state (before ForceNew), then one run without state (as if new resource)"
-func firstPassOfForcedNew(d *schema.ResourceDiff) bool {
-	fieldSetAsId := strings.Split(d.Id(), "/")[0]
-	old, new := d.GetChange(fieldSetAsId)
-	if old.(string) != "" && new.(string) == "" {
-		// First pass of forced new
-		return true
-	}
-	return false
-}
-
 func ResourceGrants() common.Resource {
 	s := common.StructToSchema(PermissionsList{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -328,9 +324,6 @@ func ResourceGrants() common.Resource {
 			}
 			var grants PermissionsList
 			common.DiffToStructPointer(d, s, &grants)
-			if firstPassOfForcedNew(d) {
-				return nil
-			}
 			return mapping.validate(d, grants)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -389,12 +382,7 @@ func ResourceGrants() common.Resource {
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			err = replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
-			if err != nil {
-				return err
-			}
-			d.SetId(mapping.id(d))
-			return nil
+			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

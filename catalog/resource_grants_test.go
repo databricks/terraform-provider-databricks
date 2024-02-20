@@ -366,8 +366,8 @@ func (a data) GetRawConfig() cty.Value {
 	for k, v := range a {
 		ctyMap[k] = cty.StringVal(v)
 	}
-	myCtyValue := cty.ObjectVal(ctyMap)
-	return myCtyValue
+	ctyValue := cty.ObjectVal(ctyMap)
+	return ctyValue
 }
 
 func TestMappingUnsupported(t *testing.T) {

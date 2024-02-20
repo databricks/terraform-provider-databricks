@@ -95,6 +95,7 @@ type securableMapping map[string]map[string]bool
 
 // reuse ResourceDiff and ResourceData
 type attributeGetter interface {
+	// TODO: Remove once RawConfig() is supported in testing framework
 	Get(key string) any
 	GetRawConfig() cty.Value
 }
@@ -111,6 +112,7 @@ func (sm securableMapping) kv_legacy(d attributeGetter) (string, string) {
 }
 
 func (sm securableMapping) kv(d attributeGetter) (string, string) {
+	// TODO: Remove once RawConfig() is supported in testing framework
 	if os.Getenv("DATABRICKS_UNIT_TEST_INTERNAL_ONLY") == "For internal testing purposes only" {
 		return sm.kv_legacy(d)
 	}

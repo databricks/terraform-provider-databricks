@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -360,8 +361,13 @@ func TestGrantReadMalformedId(t *testing.T) {
 
 type data map[string]string
 
-func (a data) Get(k string) any {
-	return a[k]
+func (a data) GetRawConfig() cty.Value {
+	ctyMap := make(map[string]cty.Value)
+	for k, v := range a {
+		ctyMap[k] = cty.StringVal(v)
+	}
+	myCtyValue := cty.ObjectVal(ctyMap)
+	return myCtyValue
 }
 
 func TestMappingUnsupported(t *testing.T) {

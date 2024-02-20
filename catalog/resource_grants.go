@@ -94,12 +94,15 @@ type securableMapping map[string]map[string]bool
 
 // reuse ResourceDiff and ResourceData
 type attributeGetter interface {
-	Get(key string) any
 	GetRawConfig() cty.Value
 }
 
 func (sm securableMapping) kv(d attributeGetter) (string, string) {
-	rawConfigValues := d.GetRawConfig().AsValueMap()
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() {
+		return "unknown", "unknown"
+	}
+	rawConfigValues := rawConfig.AsValueMap()
 	for field := range sm {
 		value := rawConfigValues[field]
 		if value.IsNull() {

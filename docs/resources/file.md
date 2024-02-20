@@ -3,7 +3,11 @@ subcategory: "Storage"
 ---
 # databricks_file Resource
 
-This resource allows uploading and downloading files in [databricks_volume](volume.md) up to 5GiB in octet-stream.
+This resource allows uploading and downloading files in [databricks_volume](volume.md). 
+
+Notes: 
+* Currently the limit is 5GiB in octet-stream.
+* Currently, only UC volumes are supported. The list of destinations may change.
 
 ## Example Usage
 
@@ -38,7 +42,7 @@ resource "databricks_volume" "this" {
 
 resource "databricks_file" "this" {
   source = "/full/path/on/local/system"
-  path   = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/{databricks_volume.this.name}/fileName"
+  path   = "${databricks_volume.this.volume_path}/fileName"
 }
 ```
 
@@ -51,7 +55,7 @@ resource "databricks_file" "init_script" {
     echo "Hello World"
     EOT
   )
-  path   = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/{databricks_volume.this.name}/fileName"
+  path   = "${databricks_volume.this.volume_path}/fileName"
 }
 ```
 

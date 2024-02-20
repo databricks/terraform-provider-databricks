@@ -176,7 +176,7 @@ func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, err
 	case f.ExpectedDiff != nil:
 		return nil, nil
 	}
-	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` or `ExpectedDiff` specificed")
+	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` or `ExpectedDiff` specified")
 }
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {

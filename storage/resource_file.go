@@ -47,7 +47,7 @@ func ResourceFile() common.Resource {
 			Type:     schema.TypeInt,
 			Computed: true,
 		},
-		"has_been_modified": {
+		"remote_file_modified": {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
@@ -75,7 +75,7 @@ func ResourceFile() common.Resource {
 			}
 			data.Set("modification_time", metadata.LastModified)
 			data.Set("file_size", metadata.ContentLength)
-			data.Set("has_been_modified", false)
+			data.Set("remote_file_modified", false)
 			data.SetId(path)
 			return nil
 		},
@@ -92,7 +92,7 @@ func ResourceFile() common.Resource {
 			}
 			storedModificationTime := data.Get("modification_time").(string)
 
-			data.Set("has_been_modified", storedModificationTime != metadata.LastModified)
+			data.Set("remote_file_modified", storedModificationTime != metadata.LastModified)
 
 			// Do not store here the modification time. If the update fails, we will keep the wrong one in the state.
 
@@ -118,7 +118,7 @@ func ResourceFile() common.Resource {
 			}
 			data.Set("modification_time", metadata.LastModified)
 			data.Set("file_size", metadata.ContentLength)
-			data.Set("has_been_modified", false)
+			data.Set("remote_file_modified", false)
 
 			return err
 		},

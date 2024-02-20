@@ -223,7 +223,7 @@ func TestIPACLRead(t *testing.T) {
 		},
 		Resource: ResourceIPAccessList(),
 		HCL: `
-		ip_address = ["1.2.3.4", "1.2.4.0/24"]
+		ip_addresses = ["1.2.3.4", "1.2.4.0/24"]
 		label = "Naughty"
 		list_type = "BLOCK"
 		`,

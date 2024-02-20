@@ -145,5 +145,8 @@ func ResourceSqlEndpoint() common.Resource {
 			return w.Warehouses.DeleteById(ctx, d.Id())
 		},
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			return d.Clear("health")
+		},
 	}
 }

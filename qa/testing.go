@@ -104,11 +104,13 @@ type ResourceFixture struct {
 	CommandMock common.CommandMock
 
 	// Set one of them to true to test the corresponding CRUD function for the
-	// terraform resource.
-	Create bool
-	Read   bool
-	Update bool
-	Delete bool
+	// terraform resource. Or set ExpectedDiff to skip execution and only test
+	// that the diff is expected.
+	Create       bool
+	Read         bool
+	Update       bool
+	Delete       bool
+	ExpectedDiff map[string]*terraform.ResourceAttrDiff
 
 	Removed     bool
 	ID          string
@@ -304,6 +306,10 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
+	if f.ExpectedDiff != nil {
+		assert.Equal(t, diff.Attributes, f.ExpectedDiff)
+		return nil, err
+	}
 	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err

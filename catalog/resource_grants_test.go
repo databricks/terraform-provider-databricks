@@ -361,6 +361,10 @@ func TestGrantReadMalformedId(t *testing.T) {
 
 type data map[string]string
 
+func (a data) Get(k string) any {
+	return a[k]
+}
+
 func (a data) GetRawConfig() cty.Value {
 	ctyMap := make(map[string]cty.Value)
 	for k, v := range a {

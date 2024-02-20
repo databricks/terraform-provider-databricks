@@ -247,6 +247,7 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 
 // Apply runs tests from fixture
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
+	t.Setenv("DATABRICKS_UNIT_TESTS_INTERNAL_ONLY", "For internal testing purposes only")
 	err := f.validateMocks()
 	if err != nil {
 		return nil, err

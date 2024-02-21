@@ -154,6 +154,6 @@ func TestUcAccUpdateLakehouseMonitor(t *testing.T) {
 			  problem_type = "PROBLEM_TYPE_REGRESSION"
 			} 
 		}
-		`
+		`,
 	})
 }

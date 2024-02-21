@@ -839,8 +839,7 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 			}
 		} else {
 			resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
-			err = ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource],
-				r.Data, resourceBlock.Body())
+			err = ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 			if err != nil {
 				log.Printf("[ERROR] error generating body for %v: %s", r, err.Error())
 			}
@@ -1008,72 +1007,102 @@ func genTraversalTokens(sr *resourceApproximation, pick string) hcl.Traversal {
 	}
 }
 
-// this will run single threaded
-func (ic *importContext) Find(r *resource, pick string, ref reference) (string, hcl.Traversal) {
-	log.Printf("[DEBUG] Starting searching for reference for resource %s %s, pick=%s, ref=%v", r.Resource, r.ID, pick, ref)
-	// TODO: Can we cache findings?
+func (ic *importContext) Find(value, attr string, ref reference, origResource *resource, origPath string) (string, hcl.Traversal, bool) {
+	log.Printf("[DEBUG] Starting searching for reference for resource %s, attr='%s', value='%s', ref=%v",
+		ref.Resource, attr, value, ref)
 	// optimize performance by avoiding doing regexp matching multiple times
 	matchValue := ""
-	if ref.MatchType == MatchRegexp {
+	switch ref.MatchType {
+	case MatchRegexp:
 		if ref.Regexp == nil {
 			log.Printf("[WARN] you must provide regular expression for 'regexp' match type")
-			return "", nil
+			return "", nil, false
 		}
-		res := ref.Regexp.FindStringSubmatch(r.Value)
+		res := ref.Regexp.FindStringSubmatch(value)
 		if len(res) < 2 {
-			log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, r.Value)
-			return "", nil
+			log.Printf("[WARN] no match for regexp: %v in string %s", ref.Regexp, value)
+			return "", nil, false
 		}
 		matchValue = res[1]
-	} else if ref.MatchType == MatchCaseInsensitive {
-		matchValue = strings.ToLower(r.Value) // performance optimization to avoid doing it in the loop
-	} else if ref.MatchType == MatchExact || ref.MatchType == MatchDefault {
-		matchValue = r.Value
+	case MatchCaseInsensitive:
+		matchValue = strings.ToLower(value) // performance optimization to avoid doing it in the loop
+	case MatchExact, MatchDefault:
+		matchValue = value
+	case MatchPrefix, MatchLongestPrefix:
+		if ref.MatchValueTransformFunc != nil {
+			matchValue = ref.MatchValueTransformFunc(value)
+		} else {
+			matchValue = value
+		}
 	}
-	// doing explicit lookup in the state.  For case insensitive matches, first attempt to lookup for the value, and do iteration if it's not found
-	if ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp || ref.MatchType == MatchCaseInsensitive {
-		sr := ic.State.Get(r.Resource, r.Attribute, matchValue)
-		if sr != nil {
-			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s %s, pick=%s, ref=%v. Found: type=%s name=%s",
-				r.Resource, r.ID, pick, ref, sr.Type, sr.Name)
-			return matchValue, genTraversalTokens(sr, pick)
+	// doing explicit lookup in the state.  For case insensitive matches, first attempt to lookup for the value,
+	// and do iteration if it's not found
+	if (ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp ||
+		ref.MatchType == MatchCaseInsensitive) && !ref.SkipDirectLookup {
+		sr := ic.State.Get(ref.Resource, attr, matchValue)
+		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) {
+			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
+				ref.Resource, attr, value, ref, sr.Type, sr.Name)
+			return matchValue, genTraversalTokens(sr, attr), sr.Mode == "data"
 		}
 		if ref.MatchType != MatchCaseInsensitive { // for case-insensitive matching we'll try iteration
-			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s %s, pick=%s, ref=%v. Not found",
-				r.Resource, r.ID, pick, ref)
-			return "", nil
+			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Not found",
+				ref.Resource, attr, value, ref)
+			return "", nil, false
 		}
 	}
 
-	for _, sr := range *ic.State.Resources(r.Resource) {
+	maxPrefixLen := 0
+	maxPrefixOrigValue := ""
+	var maxPrefixResource *resourceApproximation
+	srs := *ic.State.Resources(ref.Resource)
+	for _, sr := range srs {
 		for _, i := range sr.Instances {
-			v := i.Attributes[r.Attribute]
+			v := i.Attributes[attr]
 			if v == nil {
-				log.Printf("[WARN] Can't find instance attribute '%v' in resource: '%v' with name '%v', ID: '%v'",
-					r.Attribute, r.Resource, r.Name, r.ID)
+				log.Printf("[WARN] Can't find instance attribute '%v' in resource: '%v'", attr, ref.Resource)
 				continue
 			}
 			strValue := v.(string)
+			origValue := strValue
+			if ref.SearchValueTransformFunc != nil {
+				strValue = ref.SearchValueTransformFunc(strValue)
+				log.Printf("[DEBUG] Resource %s. Transformed value from '%s' to '%s'", ref.Resource, origValue, strValue)
+			}
 			matched := false
 			switch ref.MatchType {
 			case MatchCaseInsensitive:
 				matched = (strings.ToLower(strValue) == matchValue)
 			case MatchPrefix:
-				matched = strings.HasPrefix(r.Value, strValue)
+				matched = strings.HasPrefix(matchValue, strValue)
+			case MatchLongestPrefix:
+				if strings.HasPrefix(matchValue, strValue) && len(origValue) > maxPrefixLen {
+					maxPrefixLen = len(origValue)
+					maxPrefixOrigValue = origValue
+					maxPrefixResource = sr
+				}
+			case MatchExact, MatchDefault:
+				matched = (strValue == matchValue)
 			default:
 				log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 			}
-			if !matched {
+			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(ic, origResource, sr, origPath)) {
 				continue
 			}
 			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
-			log.Printf("[DEBUG] Finished searching for reference for resource %s %s, pick=%s, ref=%v. Found: type=%s name=%s",
-				r.Resource, r.ID, pick, ref, sr.Type, sr.Name)
-			return strValue, genTraversalTokens(sr, pick)
+			log.Printf("[DEBUG] Finished searching for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
+				ref.Resource, attr, value, ref, sr.Type, sr.Name)
+			return origValue, genTraversalTokens(sr, attr), sr.Mode == "data"
 		}
 	}
-	log.Printf("[DEBUG] Finished searching for reference for resource %s %s, pick=%s, ref=%v. Not found", r.Resource, r.ID, pick, ref)
-	return "", nil
+	if ref.MatchType == MatchLongestPrefix && maxPrefixResource != nil &&
+		(ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, maxPrefixResource, origPath)) {
+		log.Printf("[DEBUG] Finished searching longest prefix for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
+			ref.Resource, attr, value, ref, maxPrefixResource.Type, maxPrefixResource.Name)
+		return maxPrefixOrigValue, genTraversalTokens(maxPrefixResource, attr), maxPrefixResource.Mode == "data"
+	}
+	log.Printf("[DEBUG] Finished searching for reference for resource %s, pick=%s, ref=%v. Not found", ref.Resource, attr, ref)
+	return "", nil, false
 }
 
 // This function checks if resource exist in any state (already added or in process of addition)
@@ -1168,6 +1197,32 @@ func (ic *importContext) isServiceEnabled(service string) bool {
 	return exists
 }
 
+func (ic *importContext) EmitIfUpdatedAfterMillis(r *resource, modifiedAt int64, message string) {
+	updatedSinceMs := ic.getUpdatedSinceMs()
+	if ic.incremental && modifiedAt < updatedSinceMs {
+		log.Printf("[DEBUG] skipping %s that was modified at %d (last active=%d)",
+			message, modifiedAt, updatedSinceMs)
+		return
+	}
+	ic.Emit(r)
+}
+
+func (ic *importContext) EmitIfUpdatedAfterMillisAndNameMatches(r *resource, name string, modifiedAt int64, message string) {
+	if ic.MatchesName(name) {
+		ic.EmitIfUpdatedAfterMillis(r, modifiedAt, message)
+	}
+}
+
+func (ic *importContext) EmitIfUpdatedAfterIsoString(r *resource, updatedAt, message string) {
+	updatedSinceStr := ic.getUpdatedSinceStr()
+	if ic.incremental && updatedAt < updatedSinceStr {
+		log.Printf("[DEBUG] skipping %s that was modified at %s (updatedSince=%s)", message,
+			updatedAt, updatedSinceStr)
+		return
+	}
+	ic.Emit(r)
+}
+
 func (ic *importContext) Emit(r *resource) {
 	// TODO: change into channels, if stack trace depth issues would surface
 	_, v := r.MatchPair()
@@ -1227,29 +1282,26 @@ func maybeAddQuoteCharacter(s string) string {
 	return s
 }
 
-func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrite.Tokens {
+func (ic *importContext) getTraversalTokens(ref reference, value string, origResource *resource, origPath string) (hclwrite.Tokens, bool) {
 	matchType := ref.MatchTypeValue()
 	attr := ref.MatchAttribute()
-	attrValue, traversal := ic.Find(&resource{
-		Resource:  ref.Resource,
-		Attribute: attr,
-		Value:     value,
-	}, attr, ref)
+	attrValue, traversal, isData := ic.Find(value, attr, ref, origResource, origPath)
 	// at least one invocation of ic.Find will assign Nil to traversal if resource with value is not found
 	if traversal == nil {
-		return nil
+		return nil, isData
 	}
+	// capture if it's data?
 	switch matchType {
 	case MatchExact, MatchDefault, MatchCaseInsensitive:
-		return hclwrite.TokensForTraversal(traversal)
-	case MatchPrefix:
+		return hclwrite.TokensForTraversal(traversal), isData
+	case MatchPrefix, MatchLongestPrefix:
 		rest := value[len(attrValue):]
 		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"', '$', '{'}}}
 		tokens = append(tokens, hclwrite.TokensForTraversal(traversal)...)
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(rest))})
 		tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
-		return tokens
+		return tokens, isData
 	case MatchRegexp:
 		indices := ref.Regexp.FindStringSubmatchIndex(value)
 		if len(indices) == 4 {
@@ -1260,21 +1312,23 @@ func (ic *importContext) getTraversalTokens(ref reference, value string) hclwrit
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[indices[3]:]))})
 			tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
-			return tokens
+			return tokens, isData
 		}
 		log.Printf("[WARN] Can't match found data in '%s'. Indices: %v", value, indices)
 	default:
 		log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 	}
-	return nil
+	return nil, false
 }
 
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
-func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value) hclwrite.Tokens {
-	match := dependsRe.ReplaceAllString(strings.Join(path, "."), "")
-	// TODO: get reference candidate, but if it's a `data`, then look for another non-data reference if possible..
+func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value, origResource *resource) hclwrite.Tokens {
+	pathString := strings.Join(path, ".")
+	match := dependsRe.ReplaceAllString(pathString, "")
+	// get reference candidate, but if it's a `data`, then look for another non-data reference if possible..
+	var dataTokens hclwrite.Tokens
 	for _, d := range i.Depends {
 		if d.Path != match {
 			continue
@@ -1291,9 +1345,18 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 			return ic.variable(fmt.Sprintf("%s_%s", path[0], value), "")
 		}
 
-		if tokens := ic.getTraversalTokens(d, value); tokens != nil {
-			return tokens
+		tokens, isData := ic.getTraversalTokens(d, value, origResource, pathString)
+		if tokens != nil {
+			if isData {
+				dataTokens = tokens
+				log.Printf("[DEBUG] Got reference to data for dependency %v", d)
+			} else {
+				return tokens
+			}
 		}
+	}
+	if len(dataTokens) > 0 {
+		return dataTokens
 	}
 	return hclwrite.TokensForValue(ctyValue)
 }
@@ -1312,7 +1375,8 @@ type fieldTuple struct {
 }
 
 func (ic *importContext) dataToHcl(i importable, path []string,
-	pr *schema.Resource, d *schema.ResourceData, body *hclwrite.Body) error {
+	pr *schema.Resource, res *resource, body *hclwrite.Body) error {
+	d := res.Data
 	ss := []fieldTuple{}
 	for a, as := range pr.Schema {
 		ss = append(ss, fieldTuple{a, as})
@@ -1322,6 +1386,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		// makes the most beautiful configs
 		return ss[i].Field > ss[j].Field
 	})
+	var_cnt := 0
 	for _, tuple := range ss {
 		a, as := tuple.Field, tuple.Schema
 		pathString := strings.Join(append(path, a), ".")
@@ -1335,12 +1400,16 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			continue
 		}
 		mpath := dependsRe.ReplaceAllString(pathString, "")
-		for _, r := range i.Depends {
-			if r.Path == mpath && r.Variable {
+		for _, ref := range i.Depends {
+			if ref.Path == mpath && ref.Variable {
 				// sensitive fields are moved to variable depends, variable name is normalized
 				// TODO: handle a case when we have multiple blocks, so names won't be unique
-				raw = ic.regexFix(i.Name(ic, d), simpleNameFixes)
+				raw = ic.regexFix(ic.ResourceName(res), simpleNameFixes)
+				if var_cnt > 0 {
+					raw = fmt.Sprintf("%s_%d", raw, var_cnt)
+				}
 				nonZero = true
+				var_cnt++
 			}
 		}
 		shouldSkip := !nonZero
@@ -1356,7 +1425,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		switch as.Type {
 		case schema.TypeString:
 			value := raw.(string)
-			tokens := ic.reference(i, append(path, a), value, cty.StringVal(value))
+			tokens := ic.reference(i, append(path, a), value, cty.StringVal(value), res)
 			body.SetAttributeRaw(a, tokens)
 		case schema.TypeBool:
 			body.SetAttributeValue(a, cty.BoolVal(raw.(bool)))
@@ -1371,7 +1440,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 				num = iv
 			}
 			body.SetAttributeRaw(a, ic.reference(i, append(path, a),
-				strconv.FormatInt(num, 10), cty.NumberIntVal(num)))
+				strconv.FormatInt(num, 10), cty.NumberIntVal(num), res))
 		case schema.TypeFloat:
 			body.SetAttributeValue(a, cty.NumberFloatVal(raw.(float64)))
 		case schema.TypeMap:
@@ -1385,7 +1454,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 		case schema.TypeSet:
 			if rawSet, ok := raw.(*schema.Set); ok {
 				rawList := rawSet.List()
-				err := ic.readListFromData(i, append(path, a), d, rawList, body, as, func(i int) string {
+				err := ic.readListFromData(i, append(path, a), res, rawList, body, as, func(i int) string {
 					return strconv.Itoa(rawSet.F(rawList[i]))
 				})
 				if err != nil {
@@ -1394,7 +1463,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			}
 		case schema.TypeList:
 			if rawList, ok := raw.([]any); ok {
-				err := ic.readListFromData(i, append(path, a), d, rawList, body, as, strconv.Itoa)
+				err := ic.readListFromData(i, append(path, a), res, rawList, body, as, strconv.Itoa)
 				if err != nil {
 					return err
 				}
@@ -1406,9 +1475,8 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 	return nil
 }
 
-func (ic *importContext) readListFromData(i importable, path []string, d *schema.ResourceData,
-	rawList []any, body *hclwrite.Body, as *schema.Schema,
-	offsetConverter func(i int) string) error {
+func (ic *importContext) readListFromData(i importable, path []string, res *resource,
+	rawList []any, body *hclwrite.Body, as *schema.Schema, offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
 		return nil
 	}
@@ -1418,12 +1486,12 @@ func (ic *importContext) readListFromData(i importable, path []string, d *schema
 		if as.MaxItems == 1 {
 			nestedPath := append(path, offsetConverter(0))
 			confBlock := body.AppendNewBlock(name, []string{})
-			return ic.dataToHcl(i, nestedPath, elem, d, confBlock.Body())
+			return ic.dataToHcl(i, nestedPath, elem, res, confBlock.Body())
 		}
 		for offset := range rawList {
 			confBlock := body.AppendNewBlock(name, []string{})
 			nestedPath := append(path, offsetConverter(offset))
-			err := ic.dataToHcl(i, nestedPath, elem, d, confBlock.Body())
+			err := ic.dataToHcl(i, nestedPath, elem, res, confBlock.Body())
 			if err != nil {
 				return err
 			}
@@ -1444,7 +1512,7 @@ func (ic *importContext) readListFromData(i importable, path []string, d *schema
 			switch x := raw.(type) {
 			case string:
 				value := raw.(string)
-				toks = append(toks, ic.reference(i, path, value, cty.StringVal(value))...)
+				toks = append(toks, ic.reference(i, path, value, cty.StringVal(value), res)...)
 			case int:
 				// probably we don't even use integer lists?...
 				toks = append(toks, hclwrite.TokensForValue(

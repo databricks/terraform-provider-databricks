@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -245,47 +246,52 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	}, nil
 }
 
-func (f ResourceFixture) getRawConfig(data map[string]interface{}) cty.Value {
+// Quoting from: https://github.com/hashicorp/terraform-plugin-sdk/blob/main/internal/configs/hcl2shim/values.go#L19
+// "UnknownVariableValue is a sentinel value that can be used
+// to denote that the value of a variable is unknown at this time.
+// RawConfig uses this information to build up data about
+// unknown keys.""
+const UnknownVariableValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
+
+func GetRawConfig(data interface{}) cty.Value {
 	if data == nil {
-		return cty.NullVal(cty.NilType)
+		return cty.NullVal(cty.DynamicPseudoType)
 	}
-	ctyMap := make(map[string]cty.Value)
-	for k, v := range data {
-		ctyMap[k] = convertToCtyString(v)
+	if data == UnknownVariableValue {
+		return cty.DynamicVal
 	}
-	return cty.ObjectVal(ctyMap)
+	return convertToCtyValue(data)
 }
 
-func convertToCtyString(value interface{}) cty.Value {
+func convertToCtyValue(value interface{}) cty.Value {
 	switch val := value.(type) {
+	case int, int8, int16, int32, int64:
+		return cty.NumberIntVal(reflect.ValueOf(val).Int())
+	case uint, uint8, uint16, uint32, uint64:
+		return cty.NumberUIntVal(reflect.ValueOf(val).Uint())
+	case float32, float64:
+		return cty.NumberFloatVal(reflect.ValueOf(val).Float())
 	case string:
 		return cty.StringVal(val)
+	case bool:
+		return cty.BoolVal(val)
 	case map[string]interface{}:
-		str := convertMapToString(val)
-		return cty.StringVal(str)
+		mapVal := make(map[string]cty.Value)
+		for k, v := range val {
+			ctyVal := convertToCtyValue(v)
+			mapVal[k] = ctyVal
+		}
+		return cty.ObjectVal(mapVal)
 	case []interface{}:
-		str := convertSliceToString(val)
-		return cty.StringVal(str)
+		var listVal []cty.Value
+		for _, item := range val {
+			convertedCtyVal := convertToCtyValue(item)
+			listVal = append(listVal, convertedCtyVal)
+		}
+		return cty.TupleVal(listVal)
 	default:
-		// Convert any other type to a string representation
-		return cty.StringVal(fmt.Sprintf("%v", val))
+		panic("This type isn't supported currently\n")
 	}
-}
-
-func convertMapToString(data map[string]interface{}) string {
-	elements := make([]string, 0, len(data))
-	for k, v := range data {
-		elements = append(elements, fmt.Sprintf("%s: %v", k, v))
-	}
-	return fmt.Sprintf("{%s}", strings.Join(elements, ", "))
-}
-
-func convertSliceToString(slice []interface{}) string {
-	var elements []string
-	for _, item := range slice {
-		elements = append(elements, fmt.Sprintf("%v", item))
-	}
-	return fmt.Sprintf("[%s]", strings.Join(elements, ", "))
 }
 
 // Apply runs tests from fixture
@@ -342,7 +348,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 	}
 	schemaMap := schema.InternalMap(f.Resource.Schema)
-	rawConfig := f.getRawConfig(resourceConfig.Raw)
+	rawConfig := GetRawConfig(resourceConfig.Raw)
 	is := &terraform.InstanceState{
 		Attributes: f.InstanceState,
 	}

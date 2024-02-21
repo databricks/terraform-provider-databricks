@@ -359,15 +359,10 @@ func TestGrantReadMalformedId(t *testing.T) {
 	}.ExpectError(t, "ID must be two elements split by `/`: foo.bar")
 }
 
-type data map[string]string
+type data map[string]interface{}
 
 func (a data) GetRawConfig() cty.Value {
-	ctyMap := make(map[string]cty.Value)
-	for k, v := range a {
-		ctyMap[k] = cty.StringVal(v)
-	}
-	ctyValue := cty.ObjectVal(ctyMap)
-	return ctyValue
+	return qa.GetRawConfig(map[string]interface{}(a))
 }
 
 func TestMappingUnsupported(t *testing.T) {

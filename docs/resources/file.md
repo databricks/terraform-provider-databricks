@@ -3,9 +3,10 @@ subcategory: "Storage"
 ---
 # databricks_file Resource
 
-This resource allows uploading and downloading files in [databricks_volume](volume.md). 
+This resource allows uploading and downloading files in [databricks_volume](volume.md).
 
-Notes: 
+Notes:
+
 * Currently the limit is 5GiB in octet-stream.
 * Currently, only UC volumes are supported. The list of destinations may change.
 
@@ -75,13 +76,12 @@ In addition to all arguments above, the following attributes are exported:
 * `file_size` - The file size of the file that is being tracked by this resource in bytes.
 * `modification_time` - The last time stamp when the file was modified
 
-
 ## Import
 
 The resource `databricks_file` can be imported using the path of the file:
 
 ```bash
-$ terraform import databricks_file.this <path>
+terraform import databricks_file.this <path>
 ```
 
 ## Related Resources

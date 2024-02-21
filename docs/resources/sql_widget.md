@@ -42,7 +42,7 @@ resource "databricks_sql_widget" "d1w2" {
 You can import a `databricks_sql_widget` resource with ID like the following:
 
 ```bash
-$ terraform import databricks_sql_widget.this <dashboard-id>/<widget-id>
+terraform import databricks_sql_widget.this <dashboard-id>/<widget-id>
 ```
 
 ## Related Resources

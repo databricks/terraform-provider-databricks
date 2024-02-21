@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 The experiment resource can be imported using the id of the experiment
 
 ```bash
-$ terraform import databricks_mlflow_experiment.this <experiment-id>
+terraform import databricks_mlflow_experiment.this <experiment-id>
 ```
 
 ## Related Resources

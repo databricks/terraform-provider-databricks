@@ -158,7 +158,6 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateMonitor{
 				FullName:         "test_table",
-				AssetsDir:        "new_assets.dir",
 				OutputSchemaName: "output.schema",
 				InferenceLog: &catalog.MonitorInferenceLogProfileType{
 					Granularities: []string{"1 week"},

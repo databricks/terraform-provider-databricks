@@ -921,7 +921,7 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/global-init-scripts/sad-emoji",
+			Resource: "/api/2.0/global-init-scripts/sad-emoji?",
 			Response: workspace.GlobalInitScriptInfo{
 				Name:          "x.sh",
 				ContentBase64: "🥺",
@@ -929,7 +929,7 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/global-init-scripts/second",
+			Resource: "/api/2.0/global-init-scripts/second?",
 			Response: workspace.GlobalInitScriptInfo{
 				Name:          "x.sh",
 				ContentBase64: "YWJj",
@@ -1212,11 +1212,12 @@ func TestGlobalInitScriptGeneration(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/global-init-scripts/a",
-			Response: workspace.GlobalInitScriptInfo{
-				Name:          "New: Importing ^ Things",
-				Enabled:       true,
-				ContentBase64: "YWJj",
+			Resource:     "/api/2.0/global-init-scripts/a?",
+			Response: compute.GlobalInitScriptDetailsWithContent{
+				ScriptId: "a",
+				Name:     "New: Importing ^ Things",
+				Enabled:  true,
+				Script:   "YWJj",
 			},
 		},
 	}, "workspace", false, func(ic *importContext) {

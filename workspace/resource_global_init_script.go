@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/databricks/databricks-sdk-go/service/globalinitscripts"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -58,7 +58,7 @@ func ResourceGlobalInitScript() common.Resource {
 			if err != nil {
 				return err
 			}
-			created, err := w.GlobalInitScripts.Create(ctx, globalinitscripts.GlobalInitScriptCreateRequest{
+			created, err := w.GlobalInitScripts.Create(ctx, compute.GlobalInitScriptCreateRequest{
 				Script:   base64.StdEncoding.EncodeToString(content),
 				Enabled:  d.Get("enabled").(bool),
 				Position: d.Get("position").(int),
@@ -94,7 +94,7 @@ func ResourceGlobalInitScript() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.GlobalInitScripts.Update(ctx, globalinitscripts.GlobalInitScriptUpdateRequest{
+			return w.GlobalInitScripts.Update(ctx, compute.GlobalInitScriptUpdateRequest{
 				ScriptId: d.Id(),
 				Script:   base64.StdEncoding.EncodeToString(content),
 				Enabled:  d.Get("enabled").(bool),

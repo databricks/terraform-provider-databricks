@@ -1575,13 +1575,13 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts/C39FD6BAC8088BBC",
+				Resource:     "/api/2.0/global-init-scripts/C39FD6BAC8088BBC?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/global-init-script-get1.json"),
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts/F931E63C248C1D8C",
+				Resource:     "/api/2.0/global-init-scripts/F931E63C248C1D8C?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/global-init-script-get2.json"),
 			},

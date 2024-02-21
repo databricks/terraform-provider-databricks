@@ -23,6 +23,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"golang.org/x/exp/maps"
 
+	"github.com/databricks/terraform-provider-databricks/access"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -157,6 +158,8 @@ type importContext struct {
 
 	userOrSpDirectories      map[string]bool
 	userOrSpDirectoriesMutex sync.RWMutex
+
+	pemissionAssignments []access.PermissionAssignment
 }
 
 type mount struct {
@@ -358,11 +361,20 @@ func (ic *importContext) Run() error {
 				break
 			}
 		}
+
 		currentMetastore, err := ic.workspaceClient.Metastores.Summary(ic.Context)
 		if err == nil {
 			ic.currentMetastore = currentMetastore
 		} else {
 			log.Printf("[WARN] can't get current UC metastore: %v", err)
+		}
+
+		// handling workspaces with identity federation... TODO: add support for workspace-level user permission assignments?
+		assignmentsList, err := access.NewPermissionAssignmentAPI(ic.Context, ic.Client).List()
+		if err == nil {
+			ic.pemissionAssignments = assignmentsList.PermissionAssignments
+		} else {
+			log.Printf("[INFO] Can't get permissions assignment: %v", err)
 		}
 	}
 	// Concurrent execution part

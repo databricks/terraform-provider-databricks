@@ -816,6 +816,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					log.Printf("[INFO] Group %s doesn't match %s filter", g.DisplayName, ic.match)
 					continue
 				}
+				if ic.isAssignedGroup(g.DisplayName) {
+					log.Printf("[DEBUG] Skipping assigned group %s", g.DisplayName)
+					continue
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_group",
 					ID:       g.ID,
@@ -838,20 +842,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			groupName := r.Data.Get("display_name").(string)
-			if (!ic.accountLevel && (groupName == "admins" || groupName == "users")) ||
+			if (!ic.accountLevel && (groupName == "admins" || groupName == "users" || ic.isAssignedGroup(groupName))) ||
 				(ic.accountLevel && groupName == "account users") {
 				// Workspace admins & users or Account users are to be imported through "data block"
 				r.Mode = "data"
-				r.Data.Set("workspace_access", false)
-				r.Data.Set("databricks_sql_access", false)
-				r.Data.Set("allow_instance_pool_create", false)
-				r.Data.Set("allow_cluster_create", false)
-				r.Data.State().Set(&terraform.InstanceState{
-					ID: r.ID,
-					Attributes: map[string]string{
-						"display_name": r.Name,
-					},
-				})
+				resetAccessFields(r.Data)
 			} else if r.Data != nil {
 				r.Data.Set("force", true)
 			}
@@ -862,6 +857,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				if r.ID != g.ID {
 					continue
 				}
+				isAssignedGroup := ic.isAssignedGroup(g.DisplayName)
+				mode := ""
+				if isAssignedGroup {
+					mode = "data"
+				}
+				log.Printf("[DEBUG] group %s, is assigned? %v", g.DisplayName, isAssignedGroup)
 				ic.emitRoles("group", g.ID, g.Roles)
 				builtInUserGroup := (ic.accountLevel && g.DisplayName == "account users") || (!ic.accountLevel && g.DisplayName == "users")
 				if builtInUserGroup && !ic.importAllUsers {
@@ -869,15 +870,15 @@ var resourcesMap map[string]importable = map[string]importable{
 					continue
 				}
 				if len(g.Members) > 10 {
-					log.Printf("[INFO] Importing %d members of %s",
-						len(g.Members), g.DisplayName)
+					log.Printf("[INFO] Importing %d members of %s", len(g.Members), g.DisplayName)
 				}
 				for _, parent := range g.Groups {
 					ic.Emit(&resource{
 						Resource: "databricks_group",
+						Mode:     mode, // TODO: check - parent could be not assigned
 						ID:       parent.Value,
 					})
-					if parent.Type == "direct" {
+					if parent.Type == "direct" && !ic.isAssignedGroup(parent.Display) {
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
 							ID:       fmt.Sprintf("%s|%s", parent.Value, g.ID),
@@ -889,9 +890,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					if strings.HasPrefix(x.Ref, "Users/") {
 						ic.Emit(&resource{
 							Resource: "databricks_user",
+							Mode:     mode,
 							ID:       x.Value,
 						})
-						if !builtInUserGroup {
+						if !builtInUserGroup && !isAssignedGroup {
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
 								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
@@ -902,9 +904,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					if strings.HasPrefix(x.Ref, "ServicePrincipals/") {
 						ic.Emit(&resource{
 							Resource: "databricks_service_principal",
+							Mode:     mode,
 							ID:       x.Value,
 						})
-						if !builtInUserGroup {
+						if !builtInUserGroup && !isAssignedGroup {
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
 								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
@@ -915,9 +918,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					if strings.HasPrefix(x.Ref, "Groups/") {
 						ic.Emit(&resource{
 							Resource: "databricks_group",
+							Mode:     mode,
 							ID:       x.Value,
 						})
-						if !builtInUserGroup {
+						if !builtInUserGroup && !isAssignedGroup {
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
 								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
@@ -976,13 +980,19 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			username := r.Data.Get("user_name").(string)
-			r.Data.Set("force", true)
 			u, err := ic.findUserByName(username, false)
 			if err != nil {
 				return err
 			}
 			ic.emitGroups(u)
 			ic.emitRoles("user", u.ID, u.Roles)
+			if r.Mode == "data" {
+				resetAccessFields(r.Data)
+				r.Data.Set("display_name", "")
+				r.Data.Set("external_id", "")
+			} else {
+				r.Data.Set("force", true)
+			}
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -1034,13 +1044,19 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			applicationID := r.Data.Get("application_id").(string)
-			r.Data.Set("force", true)
 			u, err := ic.findSpnByAppID(applicationID, false)
 			if err != nil {
 				return err
 			}
 			ic.emitGroups(u)
 			ic.emitRoles("service_principal", u.ID, u.Roles)
+			if r.Mode == "data" {
+				resetAccessFields(r.Data)
+				r.Data.Set("display_name", "")
+				r.Data.Set("external_id", "")
+			} else {
+				r.Data.Set("force", true)
+			}
 			if ic.accountLevel {
 				ic.Emit(&resource{
 					Resource: "databricks_access_control_rule_set",
@@ -2904,6 +2920,52 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-catalogs",
 		Depends: []reference{
 			{Path: "securable_name", Resource: "databricks_catalog", Match: "name"},
+		},
+	},
+	"databricks_permission_assignment": {
+		WorkspaceLevel: true,
+		Service:        "access",
+		List: func(ic *importContext) error {
+			if ic.pemissionAssignments == nil {
+				return fmt.Errorf("there is no permission assignments information")
+			}
+			for _, v := range ic.pemissionAssignments {
+				perm := "unknown"
+				if len(v.Permissions) > 0 {
+					perm = strings.Join(v.Permissions, "_")
+				}
+				nm := fmt.Sprintf("%s_%s_%d", v.Principal.DisplayName, perm, v.Principal.PrincipalID)
+				// technically, we can generate Data directly, and avoid calling APIs
+				ic.Emit(&resource{
+					Resource: "databricks_permission_assignment",
+					ID:       fmt.Sprintf("%d", v.Principal.PrincipalID),
+					Name:     nameNormalizationRegex.ReplaceAllString(nm, "_"),
+				})
+				// emit users/groups/SPs as data...
+				if v.Principal.ServicePrincipalName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_service_principal",
+						Mode:      "data",
+						Attribute: "application_id",
+						Value:     v.Principal.ServicePrincipalName,
+					})
+				} else if v.Principal.UserName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_user",
+						Mode:      "data",
+						Attribute: "user_name",
+						Value:     v.Principal.UserName,
+					})
+				} else if v.Principal.GroupName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_group",
+						Mode:      "data",
+						Attribute: "display_name",
+						Value:     v.Principal.GroupName,
+					})
+				}
+			}
+			return nil
 		},
 	},
 }

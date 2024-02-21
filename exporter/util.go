@@ -159,6 +159,13 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	ic.emittedUsersMutex.Unlock()
 }
 
+func resetAccessFields(d *schema.ResourceData) {
+	d.Set("workspace_access", false)
+	d.Set("databricks_sql_access", false)
+	d.Set("allow_instance_pool_create", false)
+	d.Set("allow_cluster_create", false)
+}
+
 func getUserOrSpNameAndDirectory(path, prefix string) (string, string) {
 	if !strings.HasPrefix(path, prefix) {
 		return "", ""
@@ -308,15 +315,23 @@ func (ic *importContext) emitGroups(u scim.User) {
 			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, u.DisplayName)
 			continue
 		}
+		isAssignedGroup := ic.isAssignedGroup(g.Display)
+		mode := ""
+		if isAssignedGroup {
+			mode = "data"
+		}
 		ic.Emit(&resource{
 			Resource: "databricks_group",
+			Mode:     mode,
 			ID:       g.Value,
 		})
-		ic.Emit(&resource{
-			Resource: "databricks_group_member",
-			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
-		})
+		if mode == "" {
+			ic.Emit(&resource{
+				Resource: "databricks_group_member",
+				ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
+				Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
+			})
+		}
 	}
 }
 
@@ -373,6 +388,18 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 		ic.emitIfDbfsFile(lib.Library.Whl)
 	}
 	return nil
+}
+
+func (ic *importContext) isAssignedGroup(name string) bool {
+	if ic.pemissionAssignments == nil {
+		return true
+	}
+	for _, v := range ic.pemissionAssignments {
+		if v.Principal.GroupName == name {
+			return true
+		}
+	}
+	return false
 }
 
 func (ic *importContext) cacheGroups() error {

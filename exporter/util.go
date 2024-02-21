@@ -29,7 +29,6 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -908,16 +907,6 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 
 		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 	}
-}
-
-func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource) error {
-	blockType := "resource"
-	if r.Mode == "data" {
-		blockType = r.Mode
-	}
-	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
-	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 }
 
 func generateUniqueID(v string) string {

@@ -798,7 +798,6 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		// TODO: special formatting required, where JSON is written line by line
 		// so that we're able to do the references
-		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group": {
 		Service:        "groups",
@@ -944,7 +943,6 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			return nil
 		},
-		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group_member": {
 		Service:        "groups",
@@ -2085,7 +2083,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 
 		},
-		Body: resourceOrDataBlockBody,
 		Depends: []reference{
 			// TODO: it should try to find longest reference to another directory object that it not itself...
 			{Path: "path", Resource: "databricks_user", Match: "home",

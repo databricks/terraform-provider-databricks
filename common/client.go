@@ -68,7 +68,9 @@ type DatabricksClient struct {
 	currentWorkspaceIDMu sync.Mutex
 }
 
-var defaultWorkspaceId int64 = -1
+// No workspace has a workspace ID of 0, so this is used as a sentinel value to indicate that
+// the provider is configured at the workspace level.
+var defaultWorkspaceId int64 = 0
 
 // WorkspaceClient() returns a WorkspaceClient for the current workspace. Fails if the provider is
 // configured at the account level.
@@ -184,12 +186,12 @@ func (c *DatabricksClient) makeWorkspaceClient(ctx context.Context, workspaceId 
 	if workspaceId != defaultWorkspaceId {
 		return w, nil
 	}
-	id, err := w.CurrentWorkspaceID(ctx)
+	actualWorkspaceId, err := w.CurrentWorkspaceID(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if workspaceId != id {
-		return nil, fmt.Errorf("workspace ID %d does not match current workspace ID %d", workspaceId, id)
+	if workspaceId != actualWorkspaceId {
+		return nil, fmt.Errorf("requested workspace ID %d does not match actual workspace ID %d", workspaceId, actualWorkspaceId)
 	}
 	return w, nil
 }

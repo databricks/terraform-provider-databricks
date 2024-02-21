@@ -246,6 +246,9 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 }
 
 func (f ResourceFixture) getRawConfig(data map[string]interface{}) cty.Value {
+	if data == nil {
+		return cty.NullVal(cty.NilType)
+	}
 	ctyMap := make(map[string]cty.Value)
 	for k, v := range data {
 		ctyMap[k] = convertToCtyString(v)
@@ -342,7 +345,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	rawConfig := f.getRawConfig(resourceConfig.Raw)
 	is := &terraform.InstanceState{
 		Attributes: f.InstanceState,
-		RawConfig:  rawConfig,
+	}
+	if !rawConfig.IsNull() {
+		is.RawConfig = rawConfig
 	}
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
@@ -375,7 +380,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
-	newState.RawConfig = rawConfig
+	if newState != nil && !rawConfig.IsNull() {
+		newState.RawConfig = rawConfig
+	}
 	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, resource.CustomizeDiff, client, true)
 	if err != nil {
 		return nil, err

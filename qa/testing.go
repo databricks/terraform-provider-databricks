@@ -175,7 +175,7 @@ func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, err
 	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
 }
 
-func (f ResourceFixture) setDatabricksEnvironmentForTest(t *testing.T, client *common.DatabricksClient, host string) {
+func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
 	if f.Azure || f.AzureSPN {
 		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:              config.CloudAzure,
@@ -315,7 +315,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if f.AccountID != "" {
 		config.AccountID = f.AccountID
 	}
-	f.setDatabricksEnvironmentForTest(t, client, server.URL)
+	f.setDatabricksEnvironmentForTest(client, server.URL)
 	if len(f.HCL) > 0 {
 		var out any
 		// TODO: update to HCLv2 somehow, so that importer and this use the same stuff

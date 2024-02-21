@@ -120,13 +120,8 @@ func ResourceConnection() common.Resource {
 
 			if d.HasChange("owner") {
 				_, err = w.Connections.Update(ctx, catalog.UpdateConnection{
-<<<<<<< HEAD
-					NameArg: updateConnectionRequest.NameArg,
-					Owner:   updateConnectionRequest.Owner,
-=======
 					Name:  updateConnectionRequest.Name,
 					Owner: updateConnectionRequest.Owner,
->>>>>>> main
 				})
 				if err != nil {
 					return err
@@ -140,13 +135,8 @@ func ResourceConnection() common.Resource {
 					// Rollback
 					old, new := d.GetChange("owner")
 					_, rollbackErr := w.Connections.Update(ctx, catalog.UpdateConnection{
-<<<<<<< HEAD
-						NameArg: updateConnectionRequest.NameArg,
-						Owner:   old.(string),
-=======
 						Name:  updateConnectionRequest.Name,
 						Owner: old.(string),
->>>>>>> main
 					})
 					if rollbackErr != nil {
 						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))

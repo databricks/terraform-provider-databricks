@@ -71,10 +71,13 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 		Template: `
 		data "databricks_spark_version" "latest" {
 		}
+                 data "databricks_node_type" "smallest" {
+                     local_disk = true
+                 }
 		resource "databricks_cluster" "this" {
 			cluster_name = "singlenode-{var.RANDOM}"
 			spark_version = data.databricks_spark_version.latest.id
-			node_type_id = "{env.TEST_INSTANCE_POOL_ID}"
+			node_type_id = data.databricks_node_type.smallest.id
 			num_workers = 0
 			autotermination_minutes = 10
 			spark_conf = {

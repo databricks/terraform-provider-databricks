@@ -242,7 +242,7 @@ func TestConnectionsUpdate(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
-					NameArg: "testConnectionName",
+					Name: "testConnectionName",
 					Options: map[string]string{
 						"host": "test.com",
 					},

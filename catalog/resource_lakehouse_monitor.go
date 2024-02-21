@@ -98,11 +98,7 @@ func ResourceLakehouseMonitor() common.Resource {
 				return err
 
 			}
-			tmpSchema := removeSnapshotField(monitorSchema)
-			err = common.StructToData(endpoint, tmpSchema, d)
-			if endpoint.Snapshot != nil {
-				d.Set("snapshot", struct{}{})
-			}
+			err = common.StructToData(endpoint, monitorSchema, d)
 			if err != nil {
 				return err
 			}

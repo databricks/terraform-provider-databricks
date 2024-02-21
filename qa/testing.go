@@ -176,7 +176,6 @@ func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, err
 }
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(t *testing.T, client *common.DatabricksClient, host string) {
-	t.Setenv("DATABRICKS_UNIT_TEST_INTERNAL_ONLY", "For internal testing purposes only")
 	if f.Azure || f.AzureSPN {
 		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
 			Cloud:              config.CloudAzure,
@@ -246,6 +245,46 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	}, nil
 }
 
+func (f ResourceFixture) getRawConfig(data map[string]interface{}) cty.Value {
+	ctyMap := make(map[string]cty.Value)
+	for k, v := range data {
+		ctyMap[k] = convertToCtyString(v)
+	}
+	return cty.ObjectVal(ctyMap)
+}
+
+func convertToCtyString(value interface{}) cty.Value {
+	switch val := value.(type) {
+	case string:
+		return cty.StringVal(val)
+	case map[string]interface{}:
+		str := convertMapToString(val)
+		return cty.StringVal(str)
+	case []interface{}:
+		str := convertSliceToString(val)
+		return cty.StringVal(str)
+	default:
+		// Convert any other type to a string representation
+		return cty.StringVal(fmt.Sprintf("%v", val))
+	}
+}
+
+func convertMapToString(data map[string]interface{}) string {
+	elements := make([]string, 0, len(data))
+	for k, v := range data {
+		elements = append(elements, fmt.Sprintf("%s: %v", k, v))
+	}
+	return fmt.Sprintf("{%s}", strings.Join(elements, ", "))
+}
+
+func convertSliceToString(slice []interface{}) string {
+	var elements []string
+	for _, item := range slice {
+		elements = append(elements, fmt.Sprintf("%v", item))
+	}
+	return fmt.Sprintf("[%s]", strings.Join(elements, ", "))
+}
+
 // Apply runs tests from fixture
 func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	err := f.validateMocks()
@@ -300,8 +339,10 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 	}
 	schemaMap := schema.InternalMap(f.Resource.Schema)
+	rawConfig := f.getRawConfig(resourceConfig.Raw)
 	is := &terraform.InstanceState{
 		Attributes: f.InstanceState,
+		RawConfig:  rawConfig,
 	}
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
@@ -334,6 +375,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
+	newState.RawConfig = rawConfig
 	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, resource.CustomizeDiff, client, true)
 	if err != nil {
 		return nil, err

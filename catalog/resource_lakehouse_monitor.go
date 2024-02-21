@@ -1,4 +1,4 @@
-package monitoring
+package catalog
 
 import (
 	"context"
@@ -29,7 +29,7 @@ type Monitor struct {
 	Notifications            []catalog.MonitorNotificationsConfig     `json:"notifications,omitempty"`
 	OutputSchemaName         string                                   `json:"output_schema_name"`
 	Schedule                 *catalog.MonitorCronSchedule             `json:"schedule,omitempty"`
-	Snapshot                 Snapshot                                 `json:"snapshot,omitempty"`
+	Snapshot                 *Snapshot                                `json:"snapshot,omitempty"`
 	SkipBuiltinDashboard     bool                                     `json:"skip_builtin_dashboard,omitempty"`
 	SlicingExprs             []string                                 `json:"slicing_exprs,omitempty"`
 	TimeSeries               *catalog.MonitorTimeSeriesProfileType    `json:"time_series,omitempty"`
@@ -48,28 +48,19 @@ func ResourceLakehouseMonitor() common.Resource {
 	monitorSchema := common.StructToSchema(
 		MonitorInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			common.MustSchemaPath(m, "output_schema_name").Required = true
+			common.CustomizeSchemaPath(m, "output_schema_name").SetRequired()
 
-			common.MustSchemaPath(m, "inference_log", "granularities").Required = true
-			common.MustSchemaPath(m, "inference_log", "granularities").Optional = false
+			common.CustomizeSchemaPath(m, "inference_log", "granularities").SetOptional()
+			common.CustomizeSchemaPath(m, "inference_log", "problem_type").SetOptional()
+			common.CustomizeSchemaPath(m, "inference_log", "timestamp_col").SetOptional()
+			common.CustomizeSchemaPath(m, "inference_log", "prediction_col").SetDefault("prediction")
 
-			common.MustSchemaPath(m, "inference_log", "problem_type").Required = true
-			common.MustSchemaPath(m, "inference_log", "problem_type").Optional = false
+			common.CustomizeSchemaPath(m, "time_series", "granularities").SetOptional()
+			common.CustomizeSchemaPath(m, "time_series", "timestamp_col").SetOptional()
 
-			common.MustSchemaPath(m, "inference_log", "timestamp_col").Required = true
-			common.MustSchemaPath(m, "inference_log", "timestamp_col").Optional = false
-
-			common.MustSchemaPath(m, "inference_log", "prediction_col").Default = "prediction"
-
-			common.MustSchemaPath(m, "time_series", "granularities").Required = true
-			common.MustSchemaPath(m, "time_series", "granularities").Optional = false
-
-			common.MustSchemaPath(m, "time_series", "timestamp_col").Required = true
-			common.MustSchemaPath(m, "time_series", "timestamp_col").Optional = false
-
-			common.MustSchemaPath(m, "drift_metrics_table_name").Computed = true
-			common.MustSchemaPath(m, "profile_metrics_table_name").Computed = true
-			common.MustSchemaPath(m, "status").Computed = true
+			common.CustomizeSchemaPath(m, "drift_metrics_table_name").SetComputed()
+			common.CustomizeSchemaPath(m, "profile_metrics_table_name").SetComputed()
+			common.CustomizeSchemaPath(m, "status").SetComputed()
 
 			return m
 		},
@@ -107,7 +98,11 @@ func ResourceLakehouseMonitor() common.Resource {
 				return err
 
 			}
-			err = common.StructToData(*endpoint, monitorSchema, d)
+			tmpSchema := removeSnapshotField(monitorSchema)
+			err = common.StructToData(endpoint, tmpSchema, d)
+			if endpoint.Snapshot != nil {
+				d.Set("snapshot", struct{}{})
+			}
 			if err != nil {
 				return err
 			}

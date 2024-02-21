@@ -48,7 +48,7 @@ Since `options` field contains the full JSON encoded string definition of how to
 
 If you have lots of visualizations to declare, it might be cleaner to separate the `options` field and store them as separate `.json` files to be referenced.
 
-### Example Usage
+### Example
 
 - directory tree
 
@@ -71,7 +71,6 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
       name        = "My Table"
       description = "Some Description"
       options     = file("${path.module}/visualizations/q1v1.json")
-      )
     }
 
     resource "databricks_sql_visualization" "q1v2" {
@@ -80,7 +79,6 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
       name        = "My Chart"
       description = "Some Description"
       options     = file("${path.module}/visualizations/q1v2.json")
-      )
     }
     ```
 

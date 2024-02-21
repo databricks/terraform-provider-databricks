@@ -11,7 +11,7 @@ A widget is always tied to a [dashboard](sql_dashboard.md). Every dashboard may 
 
 ## Example Usage
 
-```
+```hcl
 resource "databricks_sql_widget" "d1w1" {
   dashboard_id = databricks_sql_dashboard.d1.id
   text = "Hello! I'm a **text widget**!"

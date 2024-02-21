@@ -922,17 +922,17 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/global-init-scripts/sad-emoji?",
-			Response: workspace.GlobalInitScriptInfo{
-				Name:          "x.sh",
-				ContentBase64: "🥺",
+			Response: compute.GlobalInitScriptDetailsWithContent{
+				Name:   "x.sh",
+				Script: "🥺",
 			},
 		},
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/global-init-scripts/second?",
-			Response: workspace.GlobalInitScriptInfo{
-				Name:          "x.sh",
-				ContentBase64: "YWJj",
+			Response: compute.GlobalInitScriptDetailsWithContent{
+				Name:   "x.sh",
+				Script: "YWJj",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {

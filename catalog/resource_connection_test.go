@@ -68,7 +68,7 @@ func TestConnectionsCreate(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
-					NameArg: "testConnectionName",
+					Name: "testConnectionName",
 					Options: map[string]string{
 						"host": "test.com",
 					},
@@ -310,7 +310,7 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
-					NameArg:  "testConnectionName",
+					Name:  "testConnectionName",
 					Owner: "admin",
 				},
 				Response: catalog.ConnectionInfo{
@@ -328,7 +328,7 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
-					NameArg: "testConnectionName",
+					Name: "testConnectionName",
 					Options: map[string]string{
 						"host": "test.com",
 					},
@@ -390,7 +390,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
 				ExpectedRequest: catalog.UpdateConnection{
-					NameArg: "testConnectionName",
+					Name: "testConnectionName",
 					Options: map[string]string{
 						"host": "test.com",
 					},

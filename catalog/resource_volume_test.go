@@ -113,7 +113,7 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					NewName: "testName",
+					Name:    "testName",
 					Comment: "This is a test comment.",
 					Owner:   "testOwner",
 				},
@@ -450,7 +450,7 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					NewName: "testName",
+					Name:    "testName",
 					Comment: "This is a new test comment.",
 				},
 				Response: catalog.VolumeInfo{
@@ -517,7 +517,7 @@ func TestVolumesUpdateWithOwner(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					NewName: "testName",
+					Name:    "testName",
 					Comment: "This is a new test comment.",
 				},
 				Response: catalog.VolumeInfo{
@@ -571,7 +571,7 @@ func TestVolumesUpdateRollback(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					NewName: "testName",
+					Name:    "testName",
 					Comment: "This is a new test comment.",
 				},
 				Response: apierr.APIErrorBody{
@@ -625,7 +625,7 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					NewName: "testName",
+					Name:    "testName",
 					Comment: "This is a new test comment.",
 				},
 				Response: apierr.APIErrorBody{

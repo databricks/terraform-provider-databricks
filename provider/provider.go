@@ -39,6 +39,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/tokens"
+	"github.com/databricks/terraform-provider-databricks/vectorsearch"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
@@ -88,6 +89,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_spark_version":            clusters.DataSourceSparkVersion().ToResource(),
 			"databricks_sql_warehouse":            sql.DataSourceWarehouse().ToResource(),
 			"databricks_sql_warehouses":           sql.DataSourceWarehouses().ToResource(),
+			"databricks_storage_credential":       catalog.DataSourceStorageCredential().ToResource(),
+			"databricks_storage_credentials":      catalog.DataSourceStorageCredentials().ToResource(),
 			"databricks_tables":                   catalog.DataSourceTables().ToResource(),
 			"databricks_views":                    catalog.DataSourceViews().ToResource(),
 			"databricks_volumes":                  catalog.DataSourceVolumes().ToResource(),
@@ -173,6 +176,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_user":                        scim.ResourceUser().ToResource(),
 			"databricks_user_instance_profile":       aws.ResourceUserInstanceProfile().ToResource(),
 			"databricks_user_role":                   aws.ResourceUserRole().ToResource(),
+			"databricks_vector_search_endpoint":      vectorsearch.ResourceVectorSearchEndpoint().ToResource(),
 			"databricks_volume":                      catalog.ResourceVolume().ToResource(),
 			"databricks_workspace_conf":              workspace.ResourceWorkspaceConf().ToResource(),
 			"databricks_workspace_file":              workspace.ResourceWorkspaceFile().ToResource(),

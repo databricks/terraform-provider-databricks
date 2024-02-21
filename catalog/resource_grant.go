@@ -184,7 +184,11 @@ func ResourceGrant() common.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(*grantsForPrincipal, s, d)
+			err = common.StructToData(*grantsForPrincipal, s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

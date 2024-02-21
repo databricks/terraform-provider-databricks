@@ -121,7 +121,11 @@ func (r Resource) verifyWorkspaceId(ctx context.Context, rd *schema.ResourceDiff
 	if c.Config.IsAccountClient() {
 		return nil
 	}
-	configuredWorkspaceId := rd.Get(r.WorkspaceIdField.Field()).(int64)
+	configuredWorkspaceIdRaw, ok := rd.GetOk(r.WorkspaceIdField.Field())
+	if !ok {
+		return nil
+	}
+	configuredWorkspaceId := int64(configuredWorkspaceIdRaw.(int))
 	currentWorkspaceId, err := c.CurrentWorkspaceID(ctx)
 	if err != nil {
 		return err

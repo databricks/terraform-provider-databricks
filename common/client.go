@@ -183,7 +183,7 @@ func (c *DatabricksClient) makeWorkspaceClient(ctx context.Context, workspaceId 
 		return nil, err
 	}
 	// Only check current workspace ID if it isn't defaultWorkspaceId
-	if workspaceId != defaultWorkspaceId {
+	if workspaceId == defaultWorkspaceId {
 		return w, nil
 	}
 	actualWorkspaceId, err := w.CurrentWorkspaceID(ctx)

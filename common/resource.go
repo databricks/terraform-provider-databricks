@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// The WorkspaceIdField indicates which attribute should be used to specify the workspace that
+// a particular resource belongs to.
 type WorkspaceIdField int
 
 const (
@@ -25,7 +27,9 @@ const (
 	// where resources do not belong to a workspace but are managed using a specific workspace's
 	// API.
 	ManagementWorkspaceId
-	// Used for deletion.
+	// The internal attribute used to store the original value of the workspace_id field. Used if
+	// resources are moved from one workspace to another. This should not be used in resource
+	// definitions directly.
 	OriginalWorkspaceId
 )
 
@@ -46,9 +50,7 @@ func (w WorkspaceIdField) Field() string {
 
 func (w WorkspaceIdField) IsUserSpecified() bool {
 	switch w {
-	case WorkspaceId:
-		return true
-	case ManagementWorkspaceId:
+	case WorkspaceId, ManagementWorkspaceId:
 		return true
 	default:
 		return false
@@ -80,11 +82,6 @@ type Resource struct {
 	// When false, the resource will include a workspace_id field that can be set when using an
 	// account-level provider to target a specific workspace in the account.
 	WorkspaceIdField WorkspaceIdField
-	// workspace_id = check that specified workspace_id matches current workspace ID when using workspace-level provider
-	// What happens if your workspace client still doesn't work yet for existing resource?
-	//   We could always block and ask to apply once cleanly, then future applies should work.
-	// can only be skipped if workspace_id is known after apply (new resource case)
-	// management_workspace_id = should never be in the diff.
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -175,9 +172,30 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 
 func (r Resource) getSchema() map[string]*schema.Schema {
 	if r.Schema == nil {
-		return make(map[string]*schema.Schema)
+		r.Schema = make(map[string]*schema.Schema)
+	}
+	if r.WorkspaceIdField.IsUserSpecified() {
+		r.addWorkspaceIdField()
 	}
 	return r.Schema
+}
+
+func (r Resource) addWorkspaceIdField() {
+	r.Schema[r.WorkspaceIdField.Field()] = &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: true,
+		// Changing the workspace does require force new, but adding it for an existing resource results in no diff.
+		Description: "The workspace id of the workspace, for example 1234567890. This can be retrieved from `databricks_mws_workspaces.<YOUR_WORKSPACE>.workspace_id`. This attribute is required when using an account-level provider.",
+	}
+	// Separate field to track the original workspace ID when using an account-level provider.
+	// Needed when changing the workspace ID, as `workspace_id` in state will reflect
+	// the new ID during apply.
+	r.Schema[OriginalWorkspaceId.Field()] = &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: false,
+		Required: false,
+		Computed: true,
+	}
 }
 
 func (r Resource) isResource() bool {
@@ -310,9 +328,6 @@ func (r Resource) ToResource() *schema.Resource {
 				return []*schema.ResourceData{d}, err
 			},
 		}
-	}
-	if r.WorkspaceIdField.IsUserSpecified() {
-		resource.Schema = AddWorkspaceIdField(resource.Schema, r.WorkspaceIdField)
 	}
 	if r.Update != nil {
 		resource.UpdateContext = func(ctx context.Context, d *schema.ResourceData,
@@ -598,25 +613,6 @@ func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 		Type:       schema.TypeString,
 		Optional:   true,
 		Deprecated: "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
-	}
-	return s
-}
-
-func AddWorkspaceIdField(s map[string]*schema.Schema, f WorkspaceIdField) map[string]*schema.Schema {
-	s[f.Field()] = &schema.Schema{
-		Type:     schema.TypeInt,
-		Optional: true,
-		// Changing the workspace does require force new, but adding it for an existing resource results in no diff.
-		Description: "The workspace id of the workspace, for example 1234567890. This can be retrieved from `databricks_mws_workspaces.<YOUR_WORKSPACE>.workspace_id`. This attribute is required when using an account-level provider.",
-	}
-	// Separate field to track the original workspace ID when using an account-level provider.
-	// Needed when changing the workspace ID, as `workspace_id` in state will reflect
-	// the new ID during apply.
-	s[OriginalWorkspaceId.Field()] = &schema.Schema{
-		Type:     schema.TypeInt,
-		Optional: false,
-		Required: false,
-		Computed: true,
 	}
 	return s
 }

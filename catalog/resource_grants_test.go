@@ -741,3 +741,49 @@ func TestModelGrantCreate(t *testing.T) {
 		}`,
 	}.ApplyNoError(t)
 }
+
+func TestGrantCreateSpaces(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		foreign_connection = "myconn"
+
+		grant {
+			principal = "me"
+			privileges = ["USE CONNECTION"]
+		}`,
+	}.ExpectError(t, "USE CONNECTION is not allowed on foreign_connection. Did you mean USE_CONNECTION?")
+}
+
+func TestGrantUpdateSpaces(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/volumes/myvolume/permissions?",
+				Response: catalog.PermissionsList{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"ALL_PRIVILEGES"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Update:   true,
+		ID:       "volumes/myvolume",
+		InstanceState: map[string]string{
+			"volume": "myvolume",
+		},
+		HCL: `
+		volume = "myvolume"
+
+		grant {
+			principal = "me"
+			privileges = ["ALL PRIVILEGES"]
+		}`,
+	}.ExpectError(t, "ALL PRIVILEGES is not allowed on volume. Did you mean ALL_PRIVILEGES?")
+}

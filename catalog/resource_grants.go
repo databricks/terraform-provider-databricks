@@ -155,7 +155,7 @@ func ResourceGrants() common.Resource {
 			}
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
-      err = mapping.validate(d, grants)
+			err = mapping.validate(d, grants)
 			if err != nil {
 				return err
 			}

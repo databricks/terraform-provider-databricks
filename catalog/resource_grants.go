@@ -104,32 +104,13 @@ func (sm securableMapping) kv(d attributeGetter) (string, string) {
 		}
 		return field, v
 	}
+	fmt.Printf("[WARN] Unexpected resource or permissions. Please proceed at your own risk.")
 	return "unknown", "unknown"
 }
 
 func (sm securableMapping) id(d *schema.ResourceData) string {
 	securable, name := sm.kv(d)
 	return fmt.Sprintf("%s/%s", securable, name)
-}
-
-func (sm securableMapping) validate(d attributeGetter, pl PermissionsList) error {
-	securable, _ := sm.kv(d)
-	allowed, ok := sm[securable]
-	if !ok {
-		return fmt.Errorf(`%s is not fully supported yet`, securable)
-	}
-	for _, v := range pl.Assignments {
-		for _, priv := range v.Privileges {
-			if !allowed[strings.ToUpper(priv)] {
-				// check if user uses spaces instead of underscores
-				if allowed[strings.ReplaceAll(priv, " ", "_")] {
-					return fmt.Errorf(`%s is not allowed on %s. Did you mean %s?`, priv, securable, strings.ReplaceAll(priv, " ", "_"))
-				}
-				return fmt.Errorf(`%s is not allowed on %s`, priv, securable)
-			}
-		}
-	}
-	return nil
 }
 
 var mapping = securableMapping{
@@ -309,15 +290,6 @@ func ResourceGrants() common.Resource {
 		})
 	return common.Resource{
 		Schema: s,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			if d.Id() == "" {
-				// unfortunately we cannot do validation before dependent resources exist with tfsdkv2
-				return nil
-			}
-			var grants PermissionsList
-			common.DiffToStructPointer(d, s, &grants)
-			return mapping.validate(d, grants)
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {

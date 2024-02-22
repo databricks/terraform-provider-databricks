@@ -362,7 +362,7 @@ func TestGrantReadMalformedId(t *testing.T) {
 type data map[string]interface{}
 
 func (a data) GetRawConfig() cty.Value {
-	return qa.GetRawConfig(map[string]interface{}(a))
+	return qa.ConvertToValue(map[string]interface{}(a))
 }
 
 func TestMappingUnsupported(t *testing.T) {

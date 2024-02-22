@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -93,13 +94,12 @@ resource "databricks_grant" "some" {
 func TestUcAccGrant(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_ENG_GROUP}"),
-	},
-		step{
-			Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
-		})
+	}, step{
+		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
+	})
 }
 
-func grantTemplateForNameChange(suffix string) string {
+func grantTemplateForNamePermissionChange(suffix string, permission string) string {
 	return fmt.Sprintf(`
 	resource "databricks_storage_credential" "external" {
 		name = "cred-{var.STICKY_RANDOM}%s"
@@ -112,16 +112,18 @@ func grantTemplateForNameChange(suffix string) string {
 	resource "databricks_grant" "cred" {
 		storage_credential = databricks_storage_credential.external.id
 		principal  = "{env.TEST_DATA_ENG_GROUP}"
-		privileges = ["ALL_PRIVILEGES"]
+		privileges = ["%s"]
 	}
-	`, suffix)
+	`, suffix, permission)
 }
 
 func TestUcAccGrantForIdChange(t *testing.T) {
 	unityWorkspaceLevel(t, step{
-		Template: grantTemplateForNameChange("-old"),
-	},
-		step{
-			Template: grantTemplateForNameChange("-new"),
-		})
+		Template: grantTemplateForNamePermissionChange("-old", "ALL_PRIVILEGES"),
+	}, step{
+		Template: grantTemplateForNamePermissionChange("-new", "ALL_PRIVILEGES"),
+	}, step{
+		Template:    grantTemplateForNamePermissionChange("-fail", "abc"),
+		ExpectError: regexp.MustCompile(`cannot create grant: Privilege abc is not applicable to this entity`),
+	})
 }

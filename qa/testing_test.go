@@ -329,58 +329,87 @@ func TestResourceCornerCases(t *testing.T) {
 		CornerCaseSkipCRUD("head"))
 }
 
-func TestAssertErrorStartsWith(t *testing.T) {
-	AssertErrorStartsWith(t, fmt.Errorf("abc"), "a")
+type convertToValueTestCase struct {
+	name        string
+	input       any
+	expected    cty.Value
+	shouldPanic bool
 }
 
-func TestGetRawConfig(t *testing.T) {
-	// Test nil input
-	ctyVal := GetRawConfig(nil)
-	assert.Equal(t, cty.NullVal(cty.DynamicPseudoType), ctyVal)
-
-	// Test UnknownVariableValue
-	ctyVal = GetRawConfig(UnknownVariableValue)
-	assert.Equal(t, cty.DynamicVal, ctyVal)
-
-	// Test boolean value
-	ctyVal = GetRawConfig(true)
-	assert.Equal(t, cty.BoolVal(true), ctyVal)
-
-	// Test string value
-	ctyVal = GetRawConfig("testString")
-	assert.Equal(t, cty.StringVal("testString"), ctyVal)
-
-	// Test int value
-	ctyVal = GetRawConfig(42)
-	assert.Equal(t, cty.NumberIntVal(42), ctyVal)
-
-	// Test float64 value
-	ctyVal = GetRawConfig(3.14)
-	assert.Equal(t, cty.NumberFloatVal(3.14), ctyVal)
-
-	// Test slice value
-	slice := []interface{}{"foo", 42, true}
-	ctyVal = GetRawConfig(slice)
-	expectedSlice := []cty.Value{cty.StringVal("foo"), cty.NumberIntVal(42), cty.BoolVal(true)}
-	assert.Equal(t, cty.TupleVal(expectedSlice), ctyVal)
-
-	// Test map value
-	mapInput := map[string]interface{}{
-		"key1": "value1",
-		"key2": 42,
+func TestConvertToValue(t *testing.T) {
+	testCases := []convertToValueTestCase{
+		{
+			name:     "nil input",
+			input:    nil,
+			expected: cty.NullVal(cty.DynamicPseudoType),
+		},
+		{
+			name:     "UnknownVariableValue",
+			input:    UnknownVariableValue,
+			expected: cty.DynamicVal,
+		},
+		{
+			name:     "boolean value",
+			input:    true,
+			expected: cty.BoolVal(true),
+		},
+		{
+			name:     "string value",
+			input:    "testString",
+			expected: cty.StringVal("testString"),
+		},
+		{
+			name:     "int value",
+			input:    42,
+			expected: cty.NumberIntVal(42),
+		},
+		{
+			name:     "float64 value",
+			input:    3.14,
+			expected: cty.NumberFloatVal(3.14),
+		},
+		{
+			name:     "slice value",
+			input:    []interface{}{"foo", 42, true},
+			expected: cty.TupleVal([]cty.Value{cty.StringVal("foo"), cty.NumberIntVal(42), cty.BoolVal(true)}),
+		},
+		{
+			name: "map value",
+			input: map[string]interface{}{
+				"key1": "value1",
+				"key2": 42,
+			},
+			expected: cty.ObjectVal(map[string]cty.Value{
+				"key1": cty.StringVal("value1"),
+				"key2": cty.NumberIntVal(42),
+			}),
+		},
+		{
+			name:        "unsupported type",
+			input:       0.0 + 0.0i,
+			shouldPanic: true,
+		},
 	}
-	ctyVal = GetRawConfig(mapInput)
-	expectedMap := map[string]cty.Value{
-		"key1": cty.StringVal("value1"),
-		"key2": cty.NumberIntVal(42),
-	}
-	assert.Equal(t, cty.ObjectVal(expectedMap), ctyVal)
 
-	// Test unsupported type (complex numbers are not supported)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
-		}
-	}()
-	GetRawConfig(0.0 + 0.0i)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.shouldPanic {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Errorf("The code did not panic for %s", tc.name)
+					}
+				}()
+			}
+
+			ctyVal := ConvertToValue(tc.input)
+
+			if !tc.shouldPanic {
+				assert.Equal(t, tc.expected, ctyVal)
+			}
+		})
+	}
+}
+
+func TestAssertErrorStartsWith(t *testing.T) {
+	AssertErrorStartsWith(t, fmt.Errorf("abc"), "a")
 }

@@ -257,7 +257,7 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 const UnknownVariableValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
 
 // Reference: HCL2ValueFromConfigValue from https://github.com/hashicorp/terraform-plugin-sdk/blob/main/internal/configs/hcl2shim/values.go#L199
-func GetRawConfig(v interface{}) cty.Value {
+func ConvertToValue(v interface{}) cty.Value {
 	if v == nil {
 		return cty.NullVal(cty.DynamicPseudoType)
 	}
@@ -276,13 +276,13 @@ func GetRawConfig(v interface{}) cty.Value {
 	case []interface{}:
 		vals := make([]cty.Value, len(tv))
 		for i, ev := range tv {
-			vals[i] = GetRawConfig(ev)
+			vals[i] = ConvertToValue(ev)
 		}
 		return cty.TupleVal(vals)
 	case map[string]interface{}:
 		vals := map[string]cty.Value{}
 		for k, ev := range tv {
-			vals[k] = GetRawConfig(ev)
+			vals[k] = ConvertToValue(ev)
 		}
 		return cty.ObjectVal(vals)
 	default:
@@ -346,7 +346,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		}
 	}
 	schemaMap := schema.InternalMap(f.Resource.Schema)
-	rawConfig := GetRawConfig(resourceConfig.Raw)
+	rawConfig := ConvertToValue(resourceConfig.Raw)
 	is := &terraform.InstanceState{
 		Attributes: f.InstanceState,
 	}

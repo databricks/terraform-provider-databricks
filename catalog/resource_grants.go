@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"golang.org/x/exp/slices"
 )
 
 // PrivilegeAssignment reflects on `grant` block
@@ -97,10 +98,24 @@ type attributeGetter interface {
 	GetRawConfig() cty.Value
 }
 
-func (sm securableMapping) kv(d attributeGetter) (string, string) {
+func (sm securableMapping) getValidResouceList() []string {
+	var validResources []string
+	for key := range sm {
+		validResources = append(validResources, key)
+	}
+	slices.Sort(validResources)
+	return validResources
+}
+
+func (sm securableMapping) kv(d attributeGetter) (string, string, error) {
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsNull() {
-		return "unknown", "unknown"
+		var validResources []string
+		for key := range mapping {
+			validResources = append(validResources, key)
+		}
+		sort.Strings(validResources)
+		return "", "", fmt.Errorf("Specify one of the resources: %s", sm.getValidResouceList())
 	}
 	rawConfigValues := rawConfig.AsValueMap()
 	for field := range sm {
@@ -112,20 +127,26 @@ func (sm securableMapping) kv(d attributeGetter) (string, string) {
 		// "AsString returns the native string from a non-null, non-unknown cty.String value, or panics if called on any other value."
 		if !value.IsKnown() {
 			// This is the case when the new value isn't known but the field is required for validation
-			return field, "unknown"
+			return field, "unknown", nil
 		}
-		return field, value.AsString()
+		return field, value.AsString(), nil
 	}
-	return "unknown", "unknown"
+	return "unknown", "unknown", nil
 }
 
-func (sm securableMapping) id(d *schema.ResourceData) string {
-	securable, name := sm.kv(d)
-	return fmt.Sprintf("%s/%s", securable, name)
+func (sm securableMapping) id(d *schema.ResourceData) (string, error) {
+	securable, name, err := sm.kv(d)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", securable, name), nil
 }
 
 func (sm securableMapping) validate(d attributeGetter, pl PermissionsList) error {
-	securable, _ := sm.kv(d)
+	securable, _, err := sm.kv(d)
+	if err != nil {
+		return err
+	}
 	allowed, ok := sm[securable]
 	if !ok {
 		return fmt.Errorf(`%s is not fully supported yet`, securable)
@@ -341,13 +362,20 @@ func ResourceGrants() common.Resource {
 			}
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
-			securable, name := mapping.kv(d)
+			securable, name, err := mapping.kv(d)
+			if err != nil {
+				return err
+			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			err = replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 			if err != nil {
 				return err
 			}
-			d.SetId(mapping.id(d))
+			idFromMapping, err := mapping.id(d)
+			if err != nil {
+				return err
+			}
+			d.SetId(idFromMapping)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

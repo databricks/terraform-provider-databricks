@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -258,43 +257,42 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 const UnknownVariableValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
 
 func GetRawConfig(data interface{}) cty.Value {
-	if data == nil {
-		return cty.NullVal(cty.DynamicPseudoType)
-	}
-	if data == UnknownVariableValue {
-		return cty.DynamicVal
-	}
-	return convertToCtyValue(data)
+	return HCL2ValueFromConfigValue(data)
 }
 
-func convertToCtyValue(value interface{}) cty.Value {
-	switch val := value.(type) {
-	case int, int8, int16, int32, int64:
-		return cty.NumberIntVal(reflect.ValueOf(val).Int())
-	case uint, uint8, uint16, uint32, uint64:
-		return cty.NumberUIntVal(reflect.ValueOf(val).Uint())
-	case float32, float64:
-		return cty.NumberFloatVal(reflect.ValueOf(val).Float())
-	case string:
-		return cty.StringVal(val)
+func HCL2ValueFromConfigValue(v interface{}) cty.Value {
+	if v == nil {
+		return cty.NullVal(cty.DynamicPseudoType)
+	}
+	if v == UnknownVariableValue {
+		return cty.DynamicVal
+	}
+
+	switch tv := v.(type) {
 	case bool:
-		return cty.BoolVal(val)
-	case map[string]interface{}:
-		mapVal := make(map[string]cty.Value)
-		for k, v := range val {
-			ctyVal := convertToCtyValue(v)
-			mapVal[k] = ctyVal
-		}
-		return cty.ObjectVal(mapVal)
+		return cty.BoolVal(tv)
+	case string:
+		return cty.StringVal(tv)
+	case int:
+		return cty.NumberIntVal(int64(tv))
+	case float64:
+		return cty.NumberFloatVal(tv)
 	case []interface{}:
-		var listVal []cty.Value
-		for _, item := range val {
-			convertedCtyVal := convertToCtyValue(item)
-			listVal = append(listVal, convertedCtyVal)
+		vals := make([]cty.Value, len(tv))
+		for i, ev := range tv {
+			vals[i] = HCL2ValueFromConfigValue(ev)
 		}
-		return cty.TupleVal(listVal)
+		return cty.TupleVal(vals)
+	case map[string]interface{}:
+		vals := map[string]cty.Value{}
+		for k, ev := range tv {
+			vals[k] = HCL2ValueFromConfigValue(ev)
+		}
+		return cty.ObjectVal(vals)
 	default:
-		panic("This type isn't supported currently\n")
+		// HCL/HIL should never generate anything that isn't caught by
+		// the above, so if we get here something has gone very wrong.
+		panic(fmt.Errorf("can't convert %#v to cty.Value", v))
 	}
 }
 

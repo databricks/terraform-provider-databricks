@@ -1,5 +1,16 @@
 # Version changelog
 
+## 1.37.1
+
+### New Features and Improvements
+ * Removed `CustomizeDiff` and Client Side Validation for [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) ([#3290](https://github.com/databricks/terraform-provider-databricks/pull/3290)).
+ * Added terraform support for restrict ws admins setting ([#3243](https://github.com/databricks/terraform-provider-databricks/pull/3243)).
+
+### Internal Changes
+ * Migrated [databricks_global_init_script](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/global_init_script) to Go SDK ([#2036](https://github.com/databricks/terraform-provider-databricks/pull/2036)).
+ * Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.31.0 to 2.32.0 ([#3177](https://github.com/databricks/terraform-provider-databricks/pull/3177)).
+
+
 ## 1.37.0
 
 ### New Features and Improvements

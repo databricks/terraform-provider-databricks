@@ -353,4 +353,3 @@ The resource can be imported using combination of securable type (`table`, `cata
 ```bash
 terraform import databricks_grant.this catalog/abc/user_name
 ```
-

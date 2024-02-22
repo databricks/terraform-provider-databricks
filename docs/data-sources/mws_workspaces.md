@@ -11,7 +11,7 @@ Lists all [databricks_mws_workspaces](../resources/mws_workspaces.md) in Databri
 
 ## Example Usage
 
-Listing all workspaces in 
+Listing all workspaces in
 
 ```hcl
 provider "databricks" {

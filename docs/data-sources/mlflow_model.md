@@ -63,10 +63,10 @@ resource "databricks_model_serving" "this" {
 This data source exports the following attributes:
 
 * `model` - Model object
-    * `description` - User-specified description for the object.
-    * `id` - Unique identifier for the object.
-    * `latest_versions` - Array of model versions, each the latest version for its stage.
-    * `name` - Name of the model.
-    * `permission_level` - Permission level of the requesting user on the object. For what is allowed at each level, see MLflow Model permissions.
-    * `tags` - Array of tags associated with the model.
-    * `user_id` - The username of the user that created the object.
+  * `description` - User-specified description for the object.
+  * `id` - Unique identifier for the object.
+  * `latest_versions` - Array of model versions, each the latest version for its stage.
+  * `name` - Name of the model.
+  * `permission_level` - Permission level of the requesting user on the object. For what is allowed at each level, see MLflow Model permissions.
+  * `tags` - Array of tags associated with the model.
+  * `user_id` - The username of the user that created the object.

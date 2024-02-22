@@ -58,16 +58,16 @@ terraform {
 │   │   ├── main.tf
 │   │   └── versions.tf
 │   └── production
-│	   ├── README.md
-│	   ├── main.tf
-│   	└── versions.tf
+│    ├── README.md
+│    ├── main.tf
+│    └── versions.tf
 └── modules
-	├── first-module
-	│   ├── ...
-	│   └── versions.tf
-	└── second-module
- 	   ├── ...
- 	   └── versions.tf
+ ├── first-module
+ │   ├── ...
+ │   └── versions.tf
+ └── second-module
+     ├── ...
+     └── versions.tf
 ```
 
 ### Error: Failed to install provider
@@ -134,7 +134,6 @@ GET /login.html?error=private-link-validation-error:NNNNNNNNNN
 then it means that you're trying to access a workspace that uses private link with private access set to disabled, but you're trying to reach it via public endpoint.  Make sure that domain names resolution is configured correctly to resolve workspace URL to a private endpoint.
 
 ### Error: ....: Unauthorized access to Org: NNNNNNNNNN
-
 
 There are a few possible reasons for this error:
 

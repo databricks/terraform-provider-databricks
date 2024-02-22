@@ -89,8 +89,6 @@ func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable s
 	})
 }
 
-type securablesList []catalog.SecurableType
-
 // reuse ResourceDiff and ResourceData
 type attributeGetter interface {
 	Get(key string) any

@@ -115,7 +115,7 @@ func (sm securableMapping) kv(d attributeGetter) (string, string, error) {
 			validResources = append(validResources, key)
 		}
 		sort.Strings(validResources)
-		return "", "", fmt.Errorf("Specify one of the resources: %s", sm.getValidResouceList())
+		return "", "", fmt.Errorf("specify one of the resources: %s", sm.getValidResouceList())
 	}
 	rawConfigValues := rawConfig.AsValueMap()
 	for field := range sm {

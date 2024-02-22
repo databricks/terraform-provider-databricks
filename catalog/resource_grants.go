@@ -30,8 +30,14 @@ type PermissionsList struct {
 func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
 	// diffs change sets
 	configured := map[string]*schema.Set{}
+	// normalize the configured privileges to match API behavior by treating spaces as underscores
 	for _, v := range pl.PrivilegeAssignments {
-		configured[v.Principal] = permissions.SliceToSet(v.Privileges)
+		normalizedPrivileges := []catalog.Privilege{}
+		for _, p := range v.Privileges {
+			normalizedPriv := strings.ReplaceAll(p.String(), " ", "_")
+			normalizedPrivileges = append(normalizedPrivileges, catalog.Privilege(normalizedPriv))
+		}
+		configured[v.Principal] = permissions.SliceToSet(normalizedPrivileges)
 	}
 	// existing permissions that needs removal
 	remote := map[string]*schema.Set{}
@@ -80,6 +86,7 @@ func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable s
 	if err != nil {
 		return err
 	}
+
 	err = a.UpdatePermissions(securableType, name, diffPermissions(list, *existing))
 	if err != nil {
 		return err
@@ -155,10 +162,6 @@ func ResourceGrants() common.Resource {
 			}
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
-			err = mapping.validate(d, grants)
-			if err != nil {
-				return err
-			}
 			securable, name := permissions.Mappings.KeyValue(d)
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			err = replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
@@ -203,10 +206,6 @@ func ResourceGrants() common.Resource {
 			}
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
-			err = mapping.validate(d, grants)
-			if err != nil {
-				return err
-			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 		},

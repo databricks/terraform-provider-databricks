@@ -9,7 +9,7 @@ import (
 )
 
 func TestPermissionsCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceGrants(), qa.CornerCaseSkipCRUD("Validation prevents CRUD"))
+	qa.ResourceCornerCases(t, ResourceGrants(), qa.CornerCaseID("schema/sandbox"))
 }
 
 func TestGrantCreate(t *testing.T) {
@@ -444,6 +444,28 @@ func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	assert.Equal(t, catalog.Privilege("c"), diff[0].Remove[0])
 }
 
+func TestPermissionsList_Diff_Spaces(t *testing.T) {
+	diff := diffPermissions(
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a b"},
+				},
+			},
+		},
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a_b"},
+				},
+			},
+		},
+	)
+	assert.Len(t, diff, 0)
+}
+
 func TestShareGrantCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -691,50 +713,4 @@ func TestModelGrantCreate(t *testing.T) {
 			privileges = ["EXECUTE"]
 		}`,
 	}.ApplyNoError(t)
-}
-
-func TestGrantCreateSpaces(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: ResourceGrants(),
-		Create:   true,
-		HCL: `
-		foreign_connection = "myconn"
-
-		grant {
-			principal = "me"
-			privileges = ["USE CONNECTION"]
-		}`,
-	}.ExpectError(t, "USE CONNECTION is not allowed on foreign_connection. Did you mean USE_CONNECTION?")
-}
-
-func TestGrantUpdateSpaces(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/volumes/myvolume/permissions?",
-				Response: catalog.PermissionsList{
-					PrivilegeAssignments: []catalog.PrivilegeAssignment{
-						{
-							Principal:  "me",
-							Privileges: []catalog.Privilege{"ALL_PRIVILEGES"},
-						},
-					},
-				},
-			},
-		},
-		Resource: ResourceGrants(),
-		Update:   true,
-		ID:       "volumes/myvolume",
-		InstanceState: map[string]string{
-			"volume": "myvolume",
-		},
-		HCL: `
-		volume = "myvolume"
-
-		grant {
-			principal = "me"
-			privileges = ["ALL PRIVILEGES"]
-		}`,
-	}.ExpectError(t, "ALL PRIVILEGES is not allowed on volume. Did you mean ALL_PRIVILEGES?")
 }

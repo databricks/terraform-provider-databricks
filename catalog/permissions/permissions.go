@@ -10,7 +10,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -93,8 +92,7 @@ func (sm SecurableMapping) KeyValue(d attributeGetter) (string, string) {
 		}
 		return field, v
 	}
-	ctx := context.Background()
-	tflog.Warn(ctx, "[WARN] Unexpected resource or permissions. Please proceed at your own risk.")
+	log.Printf("[WARN] Unexpected resource or permissions. Please proceed at your own risk.")
 	return "unknown", "unknown"
 }
 func (sm SecurableMapping) Id(d *schema.ResourceData) string {

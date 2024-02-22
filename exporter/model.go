@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -33,6 +34,16 @@ type resourceApproximation struct {
 	Mode      string                  `json:"mode"`
 	Module    string                  `json:"module,omitempty"`
 	Instances []instanceApproximation `json:"instances"`
+}
+
+func (ra *resourceApproximation) Get(attr string) (any, bool) {
+	for _, i := range ra.Instances {
+		v, found := i.Attributes[attr]
+		if found {
+			return v, found
+		}
+	}
+	return nil, false
 }
 
 // TODO: think if something like trie may help here...
@@ -162,9 +173,14 @@ const (
 	MatchCaseInsensitive = "caseinsensitive"
 	// MatchPrefix is to specify that prefix of value should match
 	MatchPrefix = "prefix"
+	// MatchLongestPrefix is to specify that prefix of value should match, and select the longest value from list of candidates
+	MatchLongestPrefix = "longestprefix"
 	// MatchRegexp is to specify that the group extracted from value should match
 	MatchRegexp = "regexp"
 )
+
+type valueTransformFunc func(string) string
+type isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
 
 type reference struct {
 	// path to a given field, like, `cluster_id`, `access_control.user_name``, ... For references blocks/arrays, the `.N` component isn't required
@@ -181,6 +197,13 @@ type reference struct {
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match
 	Regexp *regexp.Regexp
+	// functions to transform match and current search value
+	MatchValueTransformFunc  valueTransformFunc
+	SearchValueTransformFunc valueTransformFunc
+	// function to evaluate fit of the resource approximation found to the resource...
+	IsValidApproximation isValidAproximationFunc
+	// if we should skip direct lookups (for example, we need it for UC schemas matching)
+	SkipDirectLookup bool
 }
 
 func (r reference) MatchAttribute() string {
@@ -265,8 +288,12 @@ func (r *resource) ImportResource(ic *importContext) {
 			log.Printf("[ERROR] Searching %s is not available", r)
 			return
 		}
-		if err := ir.Search(ic, r); err != nil {
-			log.Printf("[ERROR] Cannot search for a resource %s: %v", err, r)
+		err := runWithRetries(func() error {
+			return ir.Search(ic, r)
+		},
+			fmt.Sprintf("searching of %v", r))
+		if err != nil {
+			log.Printf("[ERROR] Error searching %s#%s: %v", r.Resource, r.ID, err)
 			return
 		}
 		if r.ID == "" {
@@ -288,7 +315,11 @@ func (r *resource) ImportResource(ic *importContext) {
 		if apiVersion != "" {
 			ctx = context.WithValue(ctx, common.Api, apiVersion)
 		}
-		if dia := pr.ReadContext(ctx, r.Data, ic.Client); dia != nil {
+		dia := runWithRetries(func() diag.Diagnostics {
+			return pr.ReadContext(ctx, r.Data, ic.Client)
+		},
+			fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
+		if dia != nil {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
@@ -298,7 +329,11 @@ func (r *resource) ImportResource(ic *importContext) {
 	}
 	r.Name = ic.ResourceName(r)
 	if ir.Import != nil {
-		if err := ir.Import(ic, r); err != nil {
+		err := runWithRetries(func() error {
+			return ir.Import(ic, r)
+		},
+			fmt.Sprintf("importing of %s#%s", r.Resource, r.ID))
+		if err != nil {
 			log.Printf("[ERROR] Failed custom import of %s: %s", r, err)
 			return
 		}

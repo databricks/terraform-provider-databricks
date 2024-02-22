@@ -73,6 +73,20 @@ func TestCustomizableSchemaSetConflictsWith(t *testing.T) {
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].ConflictsWith) == 1, "conflictsWith should be set in field: non_optional")
 }
 
+func TestCustomizableSchemaSetExactlyOneOf(t *testing.T) {
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetExactlyOneOf([]string{"abc"})
+	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].ExactlyOneOf) == 1, "ExactlyOneOf should be set in field: non_optional")
+}
+
+func TestCustomizableSchemaAtLeastOneOf(t *testing.T) {
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetAtLeastOneOf([]string{"abc"})
+	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].AtLeastOneOf) == 1, "AtLeastOneOf should be set in field: non_optional")
+}
+
+func TestCustomizableSchemaSetRequiredWith(t *testing.T) {
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetRequiredWith([]string{"abc"})
+	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].RequiredWith) == 1, "RequiredWith should be set in field: non_optional")
+}
 func TestCustomizableSchemaSetDeprecated(t *testing.T) {
 	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetDeprecated("test reason")
 	assert.Truef(t, testCustomizableSchemaScm["non_optional"].Deprecated == "test reason", "deprecated should be overriden in field: non_optional")

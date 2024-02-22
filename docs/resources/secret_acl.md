@@ -48,7 +48,7 @@ The following arguments are required:
 The resource secret acl can be imported using `scopeName|||principalName` combination.
 
 ```bash
-$ terraform import databricks_secret_acl.object `scopeName|||principalName`
+terraform import databricks_secret_acl.object `scopeName|||principalName`
 ```
 
 ## Related Resources

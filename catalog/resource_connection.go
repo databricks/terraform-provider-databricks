@@ -56,20 +56,19 @@ func ResourceConnection() common.Resource {
 			}
 			var createConnectionRequest catalog.CreateConnection
 			common.DataToStructPointer(d, s, &createConnectionRequest)
-			_, err = w.Connections.Create(ctx, createConnectionRequest)
+			conn, err := w.Connections.Create(ctx, createConnectionRequest)
 			if err != nil {
 				return err
 			}
 			// Update owner if it is provided
-			if d.Get("owner") == "" {
-				return nil
-			}
-			var updateConnectionRequest catalog.UpdateConnection
-			common.DataToStructPointer(d, s, &updateConnectionRequest)
-			updateConnectionRequest.NameArg = updateConnectionRequest.Name
-			conn, err := w.Connections.Update(ctx, updateConnectionRequest)
-			if err != nil {
-				return err
+			if d.Get("owner") != "" {
+				var updateConnectionRequest catalog.UpdateConnection
+				common.DataToStructPointer(d, s, &updateConnectionRequest)
+				updateConnectionRequest.Name = createConnectionRequest.Name
+				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
+				if err != nil {
+					return err
+				}
 			}
 			d.Set("metastore_id", conn.MetastoreId)
 			pi.Pack(d)
@@ -84,13 +83,17 @@ func ResourceConnection() common.Resource {
 			if err != nil {
 				return err
 			}
-			conn, err := w.Connections.GetByNameArg(ctx, connName)
+			conn, err := w.Connections.GetByName(ctx, connName)
 			if err != nil {
 				return err
 			}
 			// We need to preserve original sensitive options as API doesn't return them
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)
+			// If there are no options returned, need to initialize the map
+			if conn.Options == nil {
+				conn.Options = map[string]string{}
+			}
 			for key, element := range cOrig.Options {
 				if slices.Contains(sensitiveOptions, key) {
 					conn.Options[key] = element
@@ -113,13 +116,12 @@ func ResourceConnection() common.Resource {
 			if err != nil {
 				return err
 			}
-			updateConnectionRequest.NameArg = connName
+			updateConnectionRequest.Name = connName
 
 			if d.HasChange("owner") {
 				_, err = w.Connections.Update(ctx, catalog.UpdateConnection{
-					Name:    updateConnectionRequest.Name,
-					NameArg: updateConnectionRequest.Name,
-					Owner:   updateConnectionRequest.Owner,
+					Name:  updateConnectionRequest.Name,
+					Owner: updateConnectionRequest.Owner,
 				})
 				if err != nil {
 					return err
@@ -133,9 +135,8 @@ func ResourceConnection() common.Resource {
 					// Rollback
 					old, new := d.GetChange("owner")
 					_, rollbackErr := w.Connections.Update(ctx, catalog.UpdateConnection{
-						Name:    updateConnectionRequest.Name,
-						NameArg: updateConnectionRequest.Name,
-						Owner:   old.(string),
+						Name:  updateConnectionRequest.Name,
+						Owner: old.(string),
 					})
 					if rollbackErr != nil {
 						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
@@ -154,7 +155,7 @@ func ResourceConnection() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Connections.DeleteByNameArg(ctx, connName)
+			return w.Connections.DeleteByName(ctx, connName)
 		},
 	}
 }

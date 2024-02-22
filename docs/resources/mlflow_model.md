@@ -34,12 +34,18 @@ The following arguments are supported:
 * `description` - The description of the MLflow model.
 * `tags` - Tags for the MLflow model.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of the MLflow model, the same as `name`.
+
 ## Import
 
 The model resource can be imported using the name
 
 ```bash
-$ terraform import databricks_mlflow_model.this <name>
+terraform import databricks_mlflow_model.this <name>
 ```
 
 ## Access Control

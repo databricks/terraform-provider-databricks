@@ -345,3 +345,11 @@ resource "databricks_grant" "some" {
 ## Other access control
 
 You can control Databricks General Permissions through [databricks_permissions](permissions.md) resource.
+
+## Import
+
+The resource can be imported using combination of securable type (`table`, `catalog`, `foreign_connection`, ...), it's name and `principal`:
+
+```bash
+terraform import databricks_grant.this catalog/abc/user_name
+```

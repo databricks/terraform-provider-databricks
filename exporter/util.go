@@ -218,17 +218,27 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, 
 }
 
 func (ic *importContext) emitRepoByPath(path string) {
-	ic.Emit(&resource{
-		Resource:  "databricks_repo",
-		Attribute: "path",
-		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-	})
+	// Path to Repos objects consits of following parts: /Repos, folder, repository, path inside Repo.
+	// Because it starts with `/`, it will produce empty string as first element in the slice.
+	// And we're stopping splitting to avoid producing too many not necessary parts, so we have 5 parts only.
+	parts := strings.SplitN(path, "/", 5)
+	if len(parts) >= 4 {
+		ic.Emit(&resource{
+			Resource:  "databricks_repo",
+			Attribute: "path",
+			Value:     strings.Join(parts[:4], "/"),
+		})
+	} else {
+		log.Printf("[WARN] Incorrect Repos path")
+	}
 }
 
 func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: wrap this into ic.shouldEmit...
+		// TODO: strip /Workspace prefix if it's provided
 		ic.Emit(&resource{
 			Resource: "databricks_workspace_file",
 			ID:       path,
@@ -240,6 +250,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: strip /Workspace prefix if it's provided
 		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
 }
@@ -879,7 +890,7 @@ func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource
 	}
 	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
 	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+		[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 }
 
 func generateUniqueID(v string) string {
@@ -936,6 +947,17 @@ func (ic *importContext) enableServices(services string) {
 	for _, s := range strings.Split(services, ",") {
 		ic.services[strings.TrimSpace(s)] = struct{}{}
 	}
+	for s := range ic.listing { // Add all services mentioned in the listing
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+}
+
+func (ic *importContext) enableListing(listing string) {
+	ic.listing = map[string]struct{}{}
+	for _, s := range strings.Split(listing, ",") {
+		ic.listing[strings.TrimSpace(s)] = struct{}{}
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
 }
 
 func (ic *importContext) emitSqlParentDirectory(parent string) {
@@ -963,9 +985,13 @@ func (ic *importContext) shouldSkipWorkspaceObject(object workspace.ObjectStatus
 	}
 	modifiedAt := wsObjectGetModifiedAt(object)
 	if ic.incremental && modifiedAt < updatedSinceMs {
-		log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
-			object.Path, modifiedAt, updatedSinceMs)
-		return true
+		p := ic.oldWorkspaceObjectMapping[object.ObjectID]
+		if p == "" || p == object.Path {
+			log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
+				object.Path, modifiedAt, updatedSinceMs)
+			return true
+		}
+		log.Printf("[DEBUG] Different path for object %d. Old='%s', New='%s'", object.ObjectID, p, object.Path)
 	}
 	if !ic.MatchesName(object.Path) {
 		return true
@@ -1088,7 +1114,6 @@ type directoryInfo struct {
 
 // constants related to the parallel listing
 const (
-	directoryListingMaxAttempts = 3
 	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
 	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
 	defaultWorkersPoolSize      = 10
@@ -1101,8 +1126,11 @@ func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo
 	notebookInfoList, err := a.ListInternalImpl(directory.Path)
 	if err != nil {
 		log.Printf("[WARN] error listing '%s': %v", directory.Path, err)
-		if directory.Attempts < directoryListingMaxAttempts {
+		if isRetryableError(err.Error(), directory.Attempts) {
 			wg.Add(1)
+			log.Printf("[INFO] attempt %d of retrying listing of '%s' after error: %v",
+				directory.Attempts+1, directory.Path, err)
+			time.Sleep(time.Duration(retryDelaySeconds) * time.Second)
 			dirChannel <- directoryInfo{Path: directory.Path, Attempts: directory.Attempts + 1}
 		}
 	}
@@ -1165,4 +1193,98 @@ func ListParallel(a workspace.NotebooksAPI, path string, shouldIncludeDir func(w
 	answer.MU.Lock()
 	defer answer.MU.Unlock()
 	return answer.data, nil
+}
+
+var (
+	maxRetries        = 5
+	retryDelaySeconds = 2
+	retriableErrors   = []string{"context deadline exceeded", "Error handling request", "Timed out after "}
+)
+
+func isRetryableError(err string, i int) bool {
+	if i < (maxRetries - 1) {
+		for _, msg := range retriableErrors {
+			if strings.Contains(err, msg) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
+	var err ERR
+	delay := 1
+	for i := 0; i < maxRetries; i++ {
+		err = runFunc()
+		valOf := reflect.ValueOf(&err).Elem()
+		if valOf.IsNil() || valOf.IsZero() {
+			break
+		}
+		if !isRetryableError(fmt.Sprintf("%v", err), i) {
+			log.Printf("[ERROR] Error %s after %d retries: %v", msg, i, err)
+			return err
+		}
+		delay = delay * retryDelaySeconds
+		log.Printf("[INFO] next retry (%d) for %s after %d seconds", (i + 1), msg, delay)
+		time.Sleep(time.Duration(delay) * time.Second)
+	}
+	return err
+}
+
+func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "owner" {
+		return d.Get(pathString).(string) == ""
+	}
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
+func appendEndingSlashToDirName(dir string) string {
+	if dir == "" || dir[len(dir)-1] == '/' {
+		return dir
+	}
+	return dir + "/"
+}
+
+func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, origPath=%s", res.Resource, origPath)
+	res_catalog_name := res.Data.Get("catalog_name").(string)
+	res_schema_name := res.Data.Get("schema_name").(string)
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, catalog='%s' schema='%s'",
+	// 	res.Resource, res_catalog_name, res_schema_name)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v)",
+	// 	ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found)
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: result: %v approximation: catalog='%v' schema='%v', res: catalog='%s' schema='%s'",
+	// 	result, ra_catalog_name, ra_schema_name, res_catalog_name, res_schema_name)
+	return result
+}
+
+func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	shareName, ok := res.Data.GetOk("share")
+	// principal := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingShareRecipient: origPath='%s', ra.Type='%s', shareName='%v', ok? %v, principal='%v'",
+	// 	origPath, ra.Type, shareName, ok, principal)
+
+	return ok && shareName.(string) != ""
+}
+
+func isMatchignShareObject(obj string) isValidAproximationFunc {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
+		objType, ok := res.Data.GetOk(objPath)
+		// name := res.Data.Get(origPath)
+		// log.Printf("[DEBUG] isMatchignShareObject: %s origPath='%s', ra.Type='%s', name='%v', objPath='%s' objType='%v' ok? %v",
+		// 	obj, origPath, ra.Type, name, objPath, objType, ok)
+
+		return ok && objType.(string) == obj
+	}
 }

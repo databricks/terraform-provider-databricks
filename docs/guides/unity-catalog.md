@@ -250,13 +250,13 @@ data "aws_iam_policy_document" "passrole_for_uc" {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
     principals {
-      identifiers = [databricks_storage_credential.external.aws_iam_role.unity_catalog_iam_arn]
+      identifiers = [databricks_storage_credential.external.aws_iam_role[0].unity_catalog_iam_arn]
       type        = "AWS"
     }
     condition {
       test     = "StringEquals"
       variable = "sts:ExternalId"
-      values   = [databricks_storage_credential.external.aws_iam_role.external_id]
+      values   = [databricks_storage_credential.external.aws_iam_role[0].external_id]
     }
   }
   statement {

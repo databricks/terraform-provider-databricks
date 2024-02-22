@@ -256,18 +256,14 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 // unknown keys.""
 const UnknownVariableValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
 
-func GetRawConfig(data interface{}) cty.Value {
-	return HCL2ValueFromConfigValue(data)
-}
-
-func HCL2ValueFromConfigValue(v interface{}) cty.Value {
+// Reference: HCL2ValueFromConfigValue from https://github.com/hashicorp/terraform-plugin-sdk/blob/main/internal/configs/hcl2shim/values.go#L199
+func GetRawConfig(v interface{}) cty.Value {
 	if v == nil {
 		return cty.NullVal(cty.DynamicPseudoType)
 	}
 	if v == UnknownVariableValue {
 		return cty.DynamicVal
 	}
-
 	switch tv := v.(type) {
 	case bool:
 		return cty.BoolVal(tv)
@@ -280,13 +276,13 @@ func HCL2ValueFromConfigValue(v interface{}) cty.Value {
 	case []interface{}:
 		vals := make([]cty.Value, len(tv))
 		for i, ev := range tv {
-			vals[i] = HCL2ValueFromConfigValue(ev)
+			vals[i] = GetRawConfig(ev)
 		}
 		return cty.TupleVal(vals)
 	case map[string]interface{}:
 		vals := map[string]cty.Value{}
 		for k, ev := range tv {
-			vals[k] = HCL2ValueFromConfigValue(ev)
+			vals[k] = GetRawConfig(ev)
 		}
 		return cty.ObjectVal(vals)
 	default:
@@ -392,6 +388,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
+	// Note: We need to set the rawConfig for new state because CustomizeDiff is called while calling schemaMap.Diff which further validates the keys and fields based on RawConfig()
 	if newState != nil && !rawConfig.IsNull() {
 		newState.RawConfig = rawConfig
 	}

@@ -332,3 +332,55 @@ func TestResourceCornerCases(t *testing.T) {
 func TestAssertErrorStartsWith(t *testing.T) {
 	AssertErrorStartsWith(t, fmt.Errorf("abc"), "a")
 }
+
+func TestGetRawConfig(t *testing.T) {
+	// Test nil input
+	ctyVal := GetRawConfig(nil)
+	assert.Equal(t, cty.NullVal(cty.DynamicPseudoType), ctyVal)
+
+	// Test UnknownVariableValue
+	ctyVal = GetRawConfig(UnknownVariableValue)
+	assert.Equal(t, cty.DynamicVal, ctyVal)
+
+	// Test boolean value
+	ctyVal = GetRawConfig(true)
+	assert.Equal(t, cty.BoolVal(true), ctyVal)
+
+	// Test string value
+	ctyVal = GetRawConfig("testString")
+	assert.Equal(t, cty.StringVal("testString"), ctyVal)
+
+	// Test int value
+	ctyVal = GetRawConfig(42)
+	assert.Equal(t, cty.NumberIntVal(42), ctyVal)
+
+	// Test float64 value
+	ctyVal = GetRawConfig(3.14)
+	assert.Equal(t, cty.NumberFloatVal(3.14), ctyVal)
+
+	// Test slice value
+	slice := []interface{}{"foo", 42, true}
+	ctyVal = GetRawConfig(slice)
+	expectedSlice := []cty.Value{cty.StringVal("foo"), cty.NumberIntVal(42), cty.BoolVal(true)}
+	assert.Equal(t, cty.TupleVal(expectedSlice), ctyVal)
+
+	// Test map value
+	mapInput := map[string]interface{}{
+		"key1": "value1",
+		"key2": 42,
+	}
+	ctyVal = GetRawConfig(mapInput)
+	expectedMap := map[string]cty.Value{
+		"key1": cty.StringVal("value1"),
+		"key2": cty.NumberIntVal(42),
+	}
+	assert.Equal(t, cty.ObjectVal(expectedMap), ctyVal)
+
+	// Test unsupported type (complex numbers are not supported)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+	GetRawConfig(0.0 + 0.0i)
+}

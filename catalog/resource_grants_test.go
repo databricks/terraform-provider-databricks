@@ -9,7 +9,7 @@ import (
 )
 
 func TestPermissionsCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceGrants(), qa.CornerCaseID("schema/sandbox"))
+	qa.ResourceCornerCases(t, ResourceGrants(), qa.CornerCaseSkipCRUD("Validation prevents CRUD"))
 }
 
 func TestGrantCreate(t *testing.T) {

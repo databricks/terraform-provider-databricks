@@ -1258,25 +1258,25 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		List: func(ic *importContext) error {
-			globalInitScripts, err := workspace.NewGlobalInitScriptsAPI(ic.Context, ic.Client).List()
+			globalInitScripts, err := ic.workspaceClient.GlobalInitScripts.ListAll(ic.Context)
 			if err != nil {
 				return err
 			}
 			for offset, gis := range globalInitScripts {
 				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_global_init_script",
-					ID:       gis.ScriptID,
-				}, gis.UpdatedAt, fmt.Sprintf("global init script '%s'", gis.Name))
+					ID:       gis.ScriptId,
+				}, int64(gis.UpdatedAt), fmt.Sprintf("global init script '%s'", gis.Name))
 				log.Printf("[INFO] Scanned %d of %d global init scripts", offset+1, len(globalInitScripts))
 			}
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			gis, err := workspace.NewGlobalInitScriptsAPI(ic.Context, ic.Client).Get(r.ID)
+			gis, err := ic.workspaceClient.GlobalInitScripts.GetByScriptId(ic.Context, r.ID)
 			if err != nil {
 				return err
 			}
-			content, err := base64.StdEncoding.DecodeString(gis.ContentBase64)
+			content, err := base64.StdEncoding.DecodeString(gis.Script)
 			if err != nil {
 				return err
 			}

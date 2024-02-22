@@ -26,7 +26,6 @@ output "job_num_workers" {
 
 This data source exports the following attributes:
 
-
 * `id` - the id of [databricks_job](../resources/job.md) if the resource was matched by name.
 * `name` - the job name of [databricks_job](../resources/job.md) if the resource was matched by id.
 * `job_settings` - the same fields as in [databricks_job](../resources/job.md).

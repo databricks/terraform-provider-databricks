@@ -23,6 +23,7 @@ resource "databricks_user_instance_profile" "my_user_instance_profile" {
   instance_profile_id = databricks_instance_profile.instance_profile.id
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -34,7 +35,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-*  `id` - The id in the format `<user_id>|<instance_profile_id>`.
+* `id` - The id in the format `<user_id>|<instance_profile_id>`.
 
 ## Import
 

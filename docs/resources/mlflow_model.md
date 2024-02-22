@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 The model resource can be imported using the name
 
 ```bash
-$ terraform import databricks_mlflow_model.this <name>
+terraform import databricks_mlflow_model.this <name>
 ```
 
 ## Access Control

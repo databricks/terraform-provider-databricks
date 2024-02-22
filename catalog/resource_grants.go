@@ -89,11 +89,6 @@ func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable s
 	})
 }
 
-// reuse ResourceDiff and ResourceData
-type attributeGetter interface {
-	Get(key string) any
-}
-
 func (pl PermissionsList) toSdkPermissionsList() (out catalog.PermissionsList) {
 	for _, v := range pl.Assignments {
 		privileges := []catalog.Privilege{}

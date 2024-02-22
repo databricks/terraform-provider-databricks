@@ -23,6 +23,7 @@ resource "databricks_service_principal_role" "my_service_principal_instance_prof
   role                 = databricks_instance_profile.instance_profile.id
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -34,7 +35,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-*  `id` - The id in the format `<service_principal_id>|<role>`.
+* `id` - The id in the format `<service_principal_id>|<role>`.
 
 ## Import
 

@@ -60,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 The workspace file resource can be imported using workspace file path
 
 ```bash
-$ terraform import databricks_workspace_file.this /path/to/file
+terraform import databricks_workspace_file.this /path/to/file
 ```
 
 ## Related Resources

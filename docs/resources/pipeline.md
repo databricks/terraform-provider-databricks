@@ -3,7 +3,7 @@ subcategory: "Compute"
 ---
 # databricks_pipeline Resource
 
-Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 
 ## Example Usage
 
@@ -106,7 +106,7 @@ In addition to all arguments above, the following attributes are exported:
 The resource job can be imported using the id of the pipeline
 
 ```bash
-$ terraform import databricks_pipeline.this <pipeline-id>
+terraform import databricks_pipeline.this <pipeline-id>
 ```
 
 ## Related Resources

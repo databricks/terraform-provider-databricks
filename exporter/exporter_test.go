@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"sort"
@@ -1575,13 +1576,13 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts/C39FD6BAC8088BBC",
+				Resource:     "/api/2.0/global-init-scripts/C39FD6BAC8088BBC?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/global-init-script-get1.json"),
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts/F931E63C248C1D8C",
+				Resource:     "/api/2.0/global-init-scripts/F931E63C248C1D8C?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/global-init-script-get2.json"),
 			},
@@ -2469,6 +2470,18 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 				`terraform import databricks_pipeline.abc "abc"
 terraform import databricks_pipeline.def "def"
 `), 0700)
+
+			os.WriteFile(tmpDir+"/import.tf", []byte(
+				`import {
+  id = "abc"
+  to = databricks_pipeline.abc 
+}
+import {
+  id = "def"
+  to = databricks_pipeline.def
+}
+`), 0700)
+
 			os.WriteFile(tmpDir+"/dlt.tf", []byte(`resource "databricks_pipeline" "abc" {
 }
 			
@@ -2487,6 +2500,7 @@ resource "databricks_pipeline" "def" {
 			ic.incremental = true
 			ic.updatedSinceStr = "2023-07-24T00:00:00Z"
 			ic.meAdmin = false
+			ic.nativeImportSupported = true
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2496,6 +2510,13 @@ resource "databricks_pipeline" "def" {
 			contentStr := string(content)
 			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
 			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+
+			content, err = os.ReadFile(tmpDir + "/import.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			log.Printf("[DEBUG] contentStr: %s", contentStr)
+			assert.True(t, strings.Contains(contentStr, `id = "abc"`))
+			assert.True(t, strings.Contains(contentStr, `to = databricks_pipeline.def`))
 
 			content, err = os.ReadFile(tmpDir + "/dlt.tf")
 			assert.NoError(t, err)

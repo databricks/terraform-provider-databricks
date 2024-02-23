@@ -433,3 +433,22 @@ func TestDeletedWsObjectsDetection(t *testing.T) {
 	ic.loadOldWorkspaceObjects(fname)
 	require.Equal(t, 0, len(ic.oldWorkspaceObjects))
 }
+
+func TestExtractResourceIdFromImportBlockString(t *testing.T) {
+	id := extractResourceIdFromImportBlockString(`import {
+		id = "64ed13ad-5772-4871-b23d-660ad014ea1e"
+		to = databricks_pipeline.test_pipeline
+	  }`)
+	assert.Equal(t, "databricks_pipeline.test_pipeline", id)
+
+	id = extractResourceIdFromImportBlockString(``)
+	assert.Equal(t, "", id)
+
+	id = extractResourceIdFromImportBlockString(`aaaa`)
+	assert.Equal(t, "", id)
+
+	id = extractResourceIdFromImportBlockString(`import {
+		id = "64ed13ad-5772-4871-b23d-660ad014ea1e"
+	  }`)
+	assert.Equal(t, "", id)
+}

@@ -122,7 +122,7 @@ In addition to all arguments above, the following attributes are exported:
 You can import a `databricks_sql_query` resource with ID like the following:
 
 ```bash
-$ terraform import databricks_sql_query.this <query-id>
+terraform import databricks_sql_query.this <query-id>
 ```
 
 ## Troubleshooting

@@ -21,10 +21,10 @@ Exporter can also be used in a non-interactive mode:
 export DATABRICKS_HOST=...
 export DATABRICKS_TOKEN=...
 ./terraform-provider-databricks exporter -skip-interactive \
-	-services=groups,secrets,access,compute,users,jobs,storage \
-	-listing=jobs,compute \
-	-last-active-days=90 \
-	-debug
+ -services=groups,secrets,access,compute,users,jobs,storage \
+ -listing=jobs,compute \
+ -last-active-days=90 \
+ -debug
 ```
 
 ## Argument Reference
@@ -52,6 +52,7 @@ All arguments are optional, and they tune what code is being generated.
 * `-noformat` - optionally turn off the execution of `terraform fmt` on the exported files (enabled by default).
 * `-debug` - turn on debug output.
 * `-trace` - turn on trace output (includes debug level as well).
+* `-native-import` - turns on generation of [native import blocks](https://developer.hashicorp.com/terraform/language/import) (requires Terraform 1.5+).  This option is recommended for cases when you want to start to manage existing workspace.
 
 ## Services
 
@@ -107,7 +108,6 @@ To speed up export, Terraform Exporter performs many operations, such as listing
 * `EXPORTER_DEDICATED_RESOUSE_CHANNELS` - by default, only specific resources (`databricks_user`, `databricks_service_principal`, `databricks_group`) have dedicated channels - the rest are handled by the shared channel.  This is done to prevent throttling by specific APIs.  You can override this by providing a comma-separated list of resources as this environment variable.
 * `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of a specific type (replace `NNN` with the exact resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets the number of Goroutines for `databricks_notebook` resource to `10`).  There is a shared channel (with name `default`) for handling of resources for which there are no dedicated channels - use `EXPORTER_PARALLELISM_default` to increase it's size (default size is `15`).   Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go` or equal to `2` if there is no value.  *Don't increase default values too much to avoid REST API throttling!*
 * `EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE` - the size of the shared channel (default: `200000`) - you may need to increase it if you have a huge workspace.
-
 
 ## Support Matrix
 
@@ -174,4 +174,4 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 
 Notes:
 
-- \* - libraries are exported as blocks inside the cluster definition instead of generating `databricks_library` resources.  This is done to decrease the number of generated resources.
+* \* - libraries are exported as blocks inside the cluster definition instead of generating `databricks_library` resources.  This is done to decrease the number of generated resources.

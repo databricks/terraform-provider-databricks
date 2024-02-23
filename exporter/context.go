@@ -811,6 +811,33 @@ func (ic *importContext) writeShellImports(sh *os.File, importChan importWriteCh
 	}
 }
 
+func extractResourceIdFromImportBlock(block *hclwrite.Block) string {
+	if block.Type() != "import" {
+		log.Print("[WARN] it's not an import block!")
+		return ""
+	}
+	idAttr := block.Body().GetAttribute("to")
+	if idAttr == nil {
+		log.Printf("[WARN] Can't find `to` attribute in the import block")
+		return ""
+	}
+	idVal := string(idAttr.Expr().BuildTokens(nil).Bytes())
+	return strings.TrimSpace(idVal)
+}
+
+func extractResourceIdFromImportBlockString(importBlock string) string {
+	block, diags := hclwrite.ParseConfig([]byte(importBlock), "test.tf", hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() {
+		log.Printf("[WARN] parsing of import block %s has failed: %s", importBlock, diags.Error())
+		return ""
+	}
+	if len(block.Body().Blocks()) == 0 {
+		log.Printf("[WARN] import block %s has 0 blocks!", importBlock)
+		return ""
+	}
+	return extractResourceIdFromImportBlock(block.Body().Blocks()[0])
+}
+
 func (ic *importContext) writeNativeImports(importChan importWriteChannel) {
 	if !ic.nativeImportSupported {
 		log.Print("[DEBUG] Native import is not enabled, skipping...")
@@ -818,6 +845,29 @@ func (ic *importContext) writeNativeImports(importChan importWriteChannel) {
 	}
 	importsFileName := fmt.Sprintf("%s/import.tf", ic.Directory)
 	// TODO: in incremental mode read existing file with imports and append them for not processed & not deleted resources
+	var existingFile *hclwrite.File
+	if ic.incremental {
+		log.Printf("[DEBUG] Going to read existing file %s", importsFileName)
+		content, err := os.ReadFile(importsFileName)
+		if errors.Is(err, os.ErrNotExist) {
+			log.Printf("[WARN] File %s doesn't exist when using incremental export", importsFileName)
+		} else if err != nil {
+			log.Printf("[ERROR] error opening %s", importsFileName)
+		} else {
+			log.Printf("[DEBUG] Going to parse existing file %s", importsFileName)
+			var diags hcl.Diagnostics
+			existingFile, diags = hclwrite.ParseConfig(content, importsFileName, hcl.Pos{Line: 1, Column: 1})
+			if diags.HasErrors() {
+				log.Printf("[ERROR] parsing of existing file %s failed: %s", importsFileName, diags.Error())
+			} else {
+				log.Printf("[DEBUG] There are %d objects in existing file %s",
+					len(existingFile.Body().Blocks()), importsFileName)
+			}
+		}
+	}
+	if existingFile == nil {
+		existingFile = hclwrite.NewEmptyFile()
+	}
 
 	// do actual writes
 	importsFile, err := os.Create(importsFileName)
@@ -826,19 +876,56 @@ func (ic *importContext) writeNativeImports(importChan importWriteChannel) {
 		return
 	}
 	defer importsFile.Close()
-	// write imports
+
+	newImports := make(map[string]struct{}, 100)
+	log.Printf("[DEBUG] started processing new writes for %s", importsFileName)
+	// write native imports
 	for importBlock := range importChan {
 		if importBlock != "" {
-			log.Printf("[DEBUG] writing import command %s", importBlock)
-			importsFile.WriteString(importBlock + "\n")
-			// TODO: extract the resource ID and put it into the map
-			// delete(ic.shImports, importBlock)
+			log.Printf("[TRACE] writing import command %s", importBlock)
+			importsFile.WriteString(importBlock)
+			id := extractResourceIdFromImportBlockString(importBlock)
+			if id != "" {
+				newImports[id] = struct{}{}
+			}
 		} else {
-			log.Print("[WARN] got empty import command... or file is nil")
+			log.Print("[WARN] got empty import command...")
 		}
 		ic.waitGroup.Done()
 	}
-	// TODO: write the rest of import blocks
+	// write the rest of import blocks
+	numResources := len(newImports)
+	log.Printf("[DEBUG] finished processing new writes for %s. Wrote %d resources", importsFileName, numResources)
+	// update existing file if incremental mode
+	if ic.incremental {
+		log.Printf("[DEBUG] Starting to merge existing resources for %s", importsFileName)
+		f := hclwrite.NewEmptyFile()
+		for _, block := range existingFile.Body().Blocks() {
+			blockName := extractResourceIdFromImportBlock(block)
+			if blockName == "" {
+				log.Printf("[WARN] can't extract resource ID from import block: %s",
+					string(block.BuildTokens(nil).Bytes()))
+				continue
+			}
+			_, exists := newImports[blockName]
+			_, deleted := ic.deletedResources[blockName]
+			if exists {
+				log.Printf("[DEBUG] resource %s already generated, skipping...", blockName)
+			} else if deleted {
+				log.Printf("[DEBUG] resource %s is deleted, skipping...", blockName)
+			} else {
+				log.Printf("[DEBUG] resource %s doesn't exist, adding...", blockName)
+				f.Body().AppendBlock(block)
+				numResources = numResources + 1
+			}
+		}
+		_, err = importsFile.WriteString(string(f.Bytes()))
+		if err != nil {
+			log.Printf("[ERROR] error when writing existing resources for file %s: %v", importsFileName, err)
+		}
+		log.Printf("[DEBUG] Finished merging existing resources for %s", importsFileName)
+	}
+
 }
 
 func (ic *importContext) processSingleResource(resourcesChan resourceChannel,

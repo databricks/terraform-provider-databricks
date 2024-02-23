@@ -57,7 +57,7 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 		return old == "false" && new == "true"
 	}
 
-	m["name"].DiffSuppressFunc = supressCaseSensitivity
+	m["name"].DiffSuppressFunc = common.SupressCaseSensitivity
 
 	return m
 }

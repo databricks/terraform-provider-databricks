@@ -3,10 +3,8 @@ package catalog
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // UC catalog resources accept an optional metastore_id parameter. This is required for account-level operations, but it is not used
@@ -27,8 +25,4 @@ func validateMetastoreId(ctx context.Context, w *databricks.WorkspaceClient, met
 			"If the metastore assigned to the workspace has changed, the new metastore id must be explicitly set", cat.MetastoreId)
 	}
 	return nil
-}
-
-func supressCaseSensitivity(k, old, new string, d *schema.ResourceData) bool {
-	return strings.EqualFold(old, new)
 }

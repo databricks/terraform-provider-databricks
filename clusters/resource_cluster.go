@@ -63,7 +63,7 @@ type ClusterSpec struct {
 }
 
 func (ClusterSpec) Aliases() map[string]string {
-	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
+	return map[string]string{}
 }
 
 func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {

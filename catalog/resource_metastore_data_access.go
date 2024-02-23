@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -58,9 +57,7 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 		return old == "false" && new == "true"
 	}
 
-	m["name"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-		return strings.EqualFold(old, new)
-	}
+	m["name"].DiffSuppressFunc = supressCaseSensitivity
 
 	return m
 }

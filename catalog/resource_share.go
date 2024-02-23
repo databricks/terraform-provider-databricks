@@ -175,6 +175,7 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 
 func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["name"].DiffSuppressFunc = supressCaseSensitivity
 		return m
 	})
 	return common.Resource{

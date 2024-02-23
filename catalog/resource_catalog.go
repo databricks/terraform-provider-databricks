@@ -49,6 +49,7 @@ func ResourceCatalog() common.Resource {
 				Default:  false,
 			}
 			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
+			m["name"].DiffSuppressFunc = supressCaseSensitivity
 			return m
 		})
 	return common.Resource{

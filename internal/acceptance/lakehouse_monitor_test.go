@@ -81,6 +81,27 @@ func TestUcAccLakehouseMonitor(t *testing.T) {
 				  timestamp_col = "timestamp"
 				} 
 			}
+
+			esource "databricks_sql_table" "mySnapshot" {
+				catalog_name = databricks_catalog.sandbox.id
+				schema_name = databricks_schema.things.name
+				name = "bar${var.RANDOM}_snapshot"
+				table_type = "MANAGED"
+				data_source_format = "DELTA"
+
+				column {
+					name = "timestamp"
+					type = "int"
+				}
+			}
+
+			resource "databricks_lakehouse_monitor" "testMonitorSnapshot" {
+				table_name = databricks_sql_table.mySnapshot.id
+				assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_sql_table.myTimeseries.name}"
+				output_schema_name = databricks_schema.things.id
+				snapshot  {
+				} 
+			}
 		`,
 	})
 }

@@ -91,6 +91,7 @@ type importContext struct {
 	incremental              bool
 	mounts                   bool
 	noFormat                 bool
+	nativeImportSupported    bool
 	services                 map[string]struct{}
 	listing                  map[string]struct{}
 	match                    string
@@ -782,7 +783,7 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 	}
 }
 
-func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel) {
+func (ic *importContext) writeShellImports(sh *os.File, importChan importWriteChannel) {
 	for importCommand := range importChan {
 		if importCommand != "" && sh != nil {
 			log.Printf("[DEBUG] writing import command %s", importCommand)
@@ -810,7 +811,38 @@ func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel
 	}
 }
 
-func (ic *importContext) processSingleResource(resourcesChan resourceChannel, writerChannels map[string]dataWriteChannel) {
+func (ic *importContext) writeNativeImports(importChan importWriteChannel) {
+	if !ic.nativeImportSupported {
+		log.Print("[DEBUG] Native import is not enabled, skipping...")
+		return
+	}
+	importsFileName := fmt.Sprintf("%s/import.tf", ic.Directory)
+	// TODO: in incremental mode read existing file with imports and append them for not processed & not deleted resources
+
+	// do actual writes
+	importsFile, err := os.Create(importsFileName)
+	if err != nil {
+		log.Printf("[ERROR] Can't create %s: %v", importsFileName, err)
+		return
+	}
+	defer importsFile.Close()
+	// write imports
+	for importBlock := range importChan {
+		if importBlock != "" {
+			log.Printf("[DEBUG] writing import command %s", importBlock)
+			importsFile.WriteString(importBlock + "\n")
+			// TODO: extract the resource ID and put it into the map
+			// delete(ic.shImports, importBlock)
+		} else {
+			log.Print("[WARN] got empty import command... or file is nil")
+		}
+		ic.waitGroup.Done()
+	}
+	// TODO: write the rest of import blocks
+}
+
+func (ic *importContext) processSingleResource(resourcesChan resourceChannel,
+	writerChannels map[string]dataWriteChannel, nativeImportChannel importWriteChannel) {
 	processed := 0
 	generated := 0
 	ignored := 0
@@ -854,6 +886,21 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 			}
 			if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil {
 				writeData.ImportCommand = r.ImportCommand(ic)
+				if ic.nativeImportSupported { // generate import block for native import
+					imp := hclwrite.NewEmptyFile()
+					imoBlock := imp.Body().AppendNewBlock("import", []string{})
+					imoBlock.Body().SetAttributeValue("id", cty.StringVal(r.ID))
+					traversal := hcl.Traversal{
+						hcl.TraverseRoot{Name: r.Resource},
+						hcl.TraverseAttr{Name: r.Name},
+					}
+					tokens := hclwrite.TokensForTraversal(traversal)
+					imoBlock.Body().SetAttributeRaw("to", tokens)
+					formattedImp := hclwrite.Format(imp.Bytes())
+					//log.Printf("[DEBUG] Import block for %s: %s", r.ID, string(formattedImp))
+					ic.waitGroup.Add(1)
+					nativeImportChannel <- string(formattedImp)
+				}
 			}
 			ch, exists := writerChannels[ir.Service]
 			if exists {
@@ -886,22 +933,30 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	for service := range ic.services {
 		resourceWriters[service] = make(dataWriteChannel, defaultChannelSize)
 	}
-	importChan := make(importWriteChannel, defaultChannelSize)
 	writersWaitGroup := &sync.WaitGroup{}
-	//
+	// write shell script for importing
+	shellImportChan := make(importWriteChannel, defaultChannelSize)
 	writersWaitGroup.Add(1)
 	go func() {
-		ic.writeImports(sh, importChan)
+		ic.writeShellImports(sh, shellImportChan)
 		writersWaitGroup.Done()
 	}()
+	//
+	nativeImportChan := make(importWriteChannel, defaultChannelSize)
+	writersWaitGroup.Add(1)
+	go func() {
+		ic.writeNativeImports(nativeImportChan)
+		writersWaitGroup.Done()
+	}()
+	// start resource handlers
 	for i := 0; i < resourceHandlersNumber; i++ {
 		i := i
 		go func() {
 			log.Printf("[DEBUG] Starting resource handler %d", i)
-			ic.processSingleResource(resourcesChan, resourceWriters)
+			ic.processSingleResource(resourcesChan, resourceWriters, nativeImportChan)
 		}()
 	}
-
+	// start writers for specific services
 	for service, ch := range resourceWriters {
 		service := service
 		ch := ch
@@ -909,12 +964,11 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		log.Printf("[DEBUG] starting writer for service %s", service)
 		writersWaitGroup.Add(1)
 		go func() {
-			ic.handleResourceWrite(generatedFile, ch, importChan)
+			ic.handleResourceWrite(generatedFile, ch, shellImportChan)
 			writersWaitGroup.Done()
 		}()
 	}
-
-	//
+	// submit all extracted resources...
 	for i, r := range resources {
 		ic.waitGroup.Add(1)
 		resourcesChan <- r
@@ -924,7 +978,8 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	}
 	ic.waitGroup.Wait()
 	// close all channels
-	close(importChan)
+	close(shellImportChan)
+	close(nativeImportChan)
 	close(resourcesChan)
 	for service, ch := range resourceWriters {
 		log.Printf("Closing writer for service %s", service)

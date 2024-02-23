@@ -7,6 +7,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -987,4 +988,25 @@ func TestUcDirectoryPathSuppressDiff(t *testing.T) {
 		"", nil))
 	assert.False(t, ucDirectoryPathSlashOnlySuppressDiff("", "abfss://test@test.dfs.core.windows.net/new_dir",
 		"abfss://test@test.dfs.core.windows.net/OTHER/", nil))
+}
+
+func TestCatalogSuppressCaseSensitivity(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceCatalog(),
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"comment":      "c",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"force_destroy":  {Old: "", New: "false", NewComputed: false, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"isolation_mode": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"owner":          {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+		},
+		HCL: `
+		name = "A"
+		comment = "c"
+		`,
+	}.ApplyNoError(t)
 }

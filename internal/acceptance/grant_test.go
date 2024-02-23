@@ -1,6 +1,8 @@
 package acceptance
 
 import (
+	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -99,8 +101,36 @@ resource "databricks_grant" "some" {
 func TestUcAccGrant(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_ENG_GROUP}"),
-	},
-		step{
-			Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
-		})
+	}, step{
+		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
+	})
+}
+
+func grantTemplateForNamePermissionChange(suffix string, permission string) string {
+	return fmt.Sprintf(`
+	resource "databricks_storage_credential" "external" {
+		name = "cred-{var.STICKY_RANDOM}%s"
+		aws_iam_role {
+			role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
+		}
+		comment = "Managed by TF"
+	}
+	
+	resource "databricks_grant" "cred" {
+		storage_credential = databricks_storage_credential.external.id
+		principal  = "{env.TEST_DATA_ENG_GROUP}"
+		privileges = ["%s"]
+	}
+	`, suffix, permission)
+}
+
+func TestUcAccGrantForIdChange(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: grantTemplateForNamePermissionChange("-old", "ALL_PRIVILEGES"),
+	}, step{
+		Template: grantTemplateForNamePermissionChange("-new", "ALL_PRIVILEGES"),
+	}, step{
+		Template:    grantTemplateForNamePermissionChange("-fail", "abc"),
+		ExpectError: regexp.MustCompile(`cannot create grant: Privilege abc is not applicable to this entity`),
+	})
 }

@@ -12,9 +12,9 @@ This data source constructs necessary AWS Unity Catalog policy for you, which is
 ```hcl
 data "databricks_aws_unity_catalog_policy" "this" {
   aws_account_id = var.aws_account_id
-  bucket_name = "databricks-bucket"
-  role_name = "databricks-role"
-  kms_name = "databricks-kms"
+  bucket_name    = "databricks-bucket"
+  role_name      = "databricks-role"
+  kms_name       = "databricks-kms"
 }
 
 data "aws_iam_policy_document" "passrole_for_uc" {
@@ -50,7 +50,7 @@ data "aws_iam_policy_document" "passrole_for_uc" {
 }
 
 resource "aws_iam_policy" "unity_metastore" {
-  name = "${var.prefix}-unity-catalog-metastore-access-iam-policy"
+  name   = "${var.prefix}-unity-catalog-metastore-access-iam-policy"
   policy = data.databricks_aws_unity_catalog_policy.this.json
 }
 

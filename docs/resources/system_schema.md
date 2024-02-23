@@ -29,6 +29,7 @@ The following arguments are available:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of system schema in form of `metastore_id|schema_name`.
 * `state` - The current state of enablement for the system schema.
 
 ## Import

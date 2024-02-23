@@ -35,7 +35,10 @@ func ResourceClusterPolicy() common.Resource {
 			}
 			m["definition"].ConflictsWith = []string{"policy_family_definition_overrides", "policy_family_id"}
 			m["definition"].Computed = true
+			m["definition"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
+
 			m["policy_family_definition_overrides"].ConflictsWith = []string{"definition"}
+			m["policy_family_definition_overrides"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 			m["policy_family_id"].ConflictsWith = []string{"definition"}
 			m["policy_family_definition_overrides"].RequiredWith = []string{"policy_family_id"}
 

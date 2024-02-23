@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -237,6 +238,37 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
 	assert.Equal(t, "d7c9d05c-7496-4c69-b089-48823edad40c", d.Get("data_source_id"))
+}
+
+// Testing the customizeDiff on clearing "health" diff is working as expected.
+func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceSqlEndpoint(),
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":                 "foo",
+			"cluster_size":         "Small",
+			"auto_stop_mins":       "120",
+			"enable_photon":        "true",
+			"max_num_clusters":     "1",
+			"spot_instance_policy": "COST_OPTIMIZED",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"jdbc_url":                  {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"id":                        {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+		},
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		`,
+	}.ApplyNoError(t)
 }
 
 func TestResourceSQLEndpointDelete(t *testing.T) {

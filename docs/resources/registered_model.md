@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 The registered model resource can be imported using the full (3-level) name of the model.
 
 ```bash
-$ terraform import databricks_registered_model.this <catalog_name.schema_name.model_name>
+terraform import databricks_registered_model.this <catalog_name.schema_name.model_name>
 ```
 
 ## Related Resources

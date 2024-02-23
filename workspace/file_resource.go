@@ -146,6 +146,15 @@ func FileContentSchema(extra map[string]*schema.Schema) map[string]*schema.Schem
 						},
 					}
 				}
+				if strings.HasPrefix(v, "Volume") {
+					return diag.Diagnostics{
+						{
+							Summary:       "Path should start with /Volumes",
+							Severity:      diag.Error,
+							AttributePath: p,
+						},
+					}
+				}
 				if strings.HasPrefix(v, "dbfs:") {
 					return diag.Diagnostics{
 						{

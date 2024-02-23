@@ -94,6 +94,7 @@ Exactly one of the below arguments is required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of the recipient - the same as the `name`.
 * `tokens` - List of Recipient Tokens. This field is only present when the authentication_type is TOKEN. Each list element is an object with following attributes:
   * `id` - Unique ID of the recipient token.
   * `created_at` - Time at which this recipient Token was created, in epoch milliseconds.

@@ -109,5 +109,6 @@ func ResourceSystemSchema() common.Resource {
 				SchemaName:  catalog.DisableSchemaName(schemaName),
 			})
 		},
+		WorkspaceIdField: common.WorkspaceId,
 	}
 }

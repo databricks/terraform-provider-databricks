@@ -3,7 +3,7 @@ set -eo pipefail
 
 source scripts/libschema.sh
 
-BASE=${BASE_COMMIT:-"master"}
+BASE=${BASE_COMMIT:-"main"}
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 checkout() {

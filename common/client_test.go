@@ -1,7 +1,6 @@
 package common
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -217,39 +216,6 @@ func TestIsAzure_Error(t *testing.T) {
 		},
 	}
 	assert.Equal(t, false, dc.IsAzure())
-}
-
-func TestClientForHost(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:     "https://accounts.cloud.databricks.com/",
-				Username: "abc",
-				Password: "bcd",
-			},
-		},
-	})
-	assert.NoError(t, err)
-	assert.True(t, dc.IsAws())
-	cc, err := dc.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
-	assert.NoError(t, err)
-	assert.Equal(t, dc.Config.Username, cc.Config.Username)
-	assert.Equal(t, dc.Config.Password, cc.Config.Password)
-	assert.NotEqual(t, dc.Config.Host, cc.Config.Host)
-}
-
-func TestClientForHostAuthError(t *testing.T) {
-	c := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Token:      "connfigured",
-				ConfigFile: "testdata/.databrickscfg",
-				Profile:    "notoken",
-			},
-		},
-	}
-	_, err := c.ClientForHost(context.Background(), "https://e2-workspace.cloud.databricks.com/")
-	assert.NoError(t, err)
 }
 
 func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {

@@ -115,5 +115,6 @@ func ResourceMetastoreAssignment() common.Resource {
 				})
 			})
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

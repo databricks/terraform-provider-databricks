@@ -113,6 +113,7 @@ func ResourceMwsCustomerManagedKeys() common.Resource {
 				Upgrade: migrateResourceCustomerManagedKeyV0,
 			},
 		},
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }
 

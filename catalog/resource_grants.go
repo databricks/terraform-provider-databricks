@@ -218,5 +218,6 @@ func ResourceGrants() common.Resource {
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.PermissionsList{})
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

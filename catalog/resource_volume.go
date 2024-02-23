@@ -153,5 +153,6 @@ func ResourceVolume() common.Resource {
 			}
 			return w.Volumes.DeleteByName(ctx, d.Id())
 		},
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

@@ -113,5 +113,6 @@ func ResourceMwsStorageConfigurations() common.Resource {
 				Computed: true,
 			},
 		},
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

@@ -13,7 +13,7 @@ func DataSourceShare() common.Resource {
 		CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 		CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
 	}
-	return common.DataResource(ShareDetail{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	dataSource := common.DataResource(ShareDetail{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*ShareDetail)
 		sharesAPI := NewSharesAPI(ctx, c)
 		share, err := sharesAPI.get(data.Name)
@@ -25,4 +25,6 @@ func DataSourceShare() common.Resource {
 		data.CreatedBy = share.CreatedBy
 		return nil
 	})
+	dataSource.WorkspaceIdField = common.ManagementWorkspaceId
+	return dataSource
 }

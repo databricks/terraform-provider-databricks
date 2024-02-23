@@ -65,8 +65,9 @@ func ResourceRegisteredModel() common.Resource {
 			}
 			return w.RegisteredModels.DeleteByFullName(ctx, d.Id())
 		},
-		StateUpgraders: []schema.StateUpgrader{},
-		Schema:         s,
-		SchemaVersion:  0,
+		StateUpgraders:   []schema.StateUpgrader{},
+		Schema:           s,
+		SchemaVersion:    0,
+		WorkspaceIdField: common.ManagementWorkspaceId,
 	}
 }

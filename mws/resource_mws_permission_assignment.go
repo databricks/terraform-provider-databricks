@@ -137,5 +137,6 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			}
 			return NewPermissionAssignmentAPI(ctx, c).Remove(workspaceId, principalId)
 		},
+		WorkspaceIdField: common.NoWorkspaceId,
 	}
 }

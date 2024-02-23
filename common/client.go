@@ -36,6 +36,11 @@ func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 	return user, err
 }
 
+type cachedWorkspaceClient struct {
+	apiClient *client.DatabricksClient
+	client    *databricks.WorkspaceClient
+}
+
 // DatabricksClient holds properties needed for authentication and HTTP client setup
 // fields with `name` struct tags become Terraform provider attributes. `env` struct tag
 // can hold one or more coma-separated env variable names to find value, if not specified
@@ -44,19 +49,97 @@ type DatabricksClient struct {
 	*client.DatabricksClient
 
 	// callback used to create API1.2 call wrapper, which simplifies unit testing
-	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
-	cachedWorkspaceClient *databricks.WorkspaceClient
-	cachedAccountClient   *databricks.AccountClient
-	mu                    sync.Mutex
+	commandFactory      func(context.Context, *DatabricksClient) CommandExecutor
+	cachedAccountClient *databricks.AccountClient
+	mu                  sync.Mutex
+
+	// cachedWorkspaceClients is a cache of WorkspaceClients by workspace ID. This is used
+	// when the provider is configured at the account-level and used to manage workspace-
+	// level resources.
+	cachedWorkspaceClients   map[int64]*cachedWorkspaceClient
+	cachedWorkspaceClientsMu sync.Mutex
+
+	// currentWorkspaceID is a cache of the workspace ID for the current cached workspace
+	// client. It should only be set either when the provider is configured at the workspace-
+	// level (in which case it is lazily loaded) or when getting a workspace-level client
+	// from a provider configured at the account-level (in which case it is eagerly
+	// initialized).
+	currentWorkspaceID   int64
+	currentWorkspaceIDMu sync.Mutex
 }
 
+// No workspace has a workspace ID of 0, so this is used as a sentinel value to indicate that
+// the provider is configured at the workspace level.
+var defaultWorkspaceId int64 = 0
+
+// WorkspaceClient() returns a WorkspaceClient for the current workspace. Fails if the provider is
+// configured at the account level.
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.cachedWorkspaceClient != nil {
-		return c.cachedWorkspaceClient, nil
+	clients, err := c.getConfiguredWorkspaceClient(context.Background(), defaultWorkspaceId)
+	if err != nil {
+		return nil, err
 	}
-	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
+	return clients.client, nil
+}
+
+// CurrentWorkspaceID() returns the workspace ID of the workspace that this client is connected to.
+func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
+	if c.currentWorkspaceID != 0 {
+		return c.currentWorkspaceID, nil
+	}
+	c.currentWorkspaceIDMu.Lock()
+	defer c.currentWorkspaceIDMu.Unlock()
+	if c.currentWorkspaceID != 0 {
+		return c.currentWorkspaceID, nil
+	}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return 0, err
+	}
+	c.currentWorkspaceID, err = w.CurrentWorkspaceID(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return c.currentWorkspaceID, nil
+}
+
+// InWorkspace() returns a new DatabricksClient instance configured to interact with the specified
+// workspace. The underlying WorkspaceClient and DatabricksClient instances are shared by all callers
+// of this method.
+func (c *DatabricksClient) InWorkspace(ctx context.Context, workspaceId int64) (*DatabricksClient, error) {
+	clients, err := c.getConfiguredWorkspaceClient(ctx, workspaceId)
+	if err != nil {
+		return nil, err
+	}
+	return &DatabricksClient{
+		DatabricksClient:       clients.apiClient,
+		commandFactory:         c.commandFactory,
+		cachedWorkspaceClients: c.cachedWorkspaceClients,
+		currentWorkspaceID:     workspaceId,
+	}, nil
+}
+
+// getConfiguredWorkspaceClient gets the workspace client for the given workspace ID. This will be
+// retrieved from the cache if it has already been created. Otherwise, it will be constructed from
+// the account client if the provider is configured at the account level, or from the existing
+// workspace client if the provider is configured at the workspace level.
+func (c *DatabricksClient) getConfiguredWorkspaceClient(ctx context.Context, workspaceId int64) (*cachedWorkspaceClient, error) {
+	if c.cachedWorkspaceClients == nil {
+		c.cachedWorkspaceClientsMu.Lock()
+		if c.cachedWorkspaceClients == nil {
+			c.cachedWorkspaceClients = make(map[int64]*cachedWorkspaceClient)
+		}
+		c.cachedWorkspaceClientsMu.Unlock()
+	}
+	if clients, ok := c.cachedWorkspaceClients[workspaceId]; ok {
+		return clients, nil
+	}
+	c.cachedWorkspaceClientsMu.Lock()
+	defer c.cachedWorkspaceClientsMu.Unlock()
+	if w, ok := c.cachedWorkspaceClients[workspaceId]; ok {
+		return w, nil
+	}
+	w, err := c.makeWorkspaceClient(ctx, workspaceId)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +147,52 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	w.CurrentUser.WithImpl(&cachedMe{
 		internalImpl: internalImpl,
 	})
-	c.cachedWorkspaceClient = w
+	apiClient, err := client.New(w.Config)
+	if err != nil {
+		return nil, err
+	}
+	clients := cachedWorkspaceClient{
+		apiClient: apiClient,
+		client:    w,
+	}
+	c.cachedWorkspaceClients[workspaceId] = &clients
+	return &clients, nil
+}
+
+func (c *DatabricksClient) makeWorkspaceClient(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
+	if c.Config.IsAccountClient() {
+		// If provider is configured at the account-level, construct the workspace client from the account
+		// client and cache it.
+		a, err := c.AccountClient()
+		if err != nil {
+			return nil, err
+		}
+		ws, err := a.Workspaces.GetByWorkspaceId(ctx, workspaceId)
+		if err != nil {
+			return nil, err
+		}
+		w, err := a.GetWorkspaceClient(*ws)
+		if err != nil {
+			return nil, err
+		}
+		return w, nil
+	}
+	// If configured at the workspace level, verify that the specified workspace ID matches the current workspace ID.
+	w, err := databricks.NewWorkspaceClient((*databricks.Config)(c.DatabricksClient.Config))
+	if err != nil {
+		return nil, err
+	}
+	// Only check current workspace ID if it isn't defaultWorkspaceId
+	if workspaceId == defaultWorkspaceId {
+		return w, nil
+	}
+	actualWorkspaceId, err := w.CurrentWorkspaceID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if workspaceId != actualWorkspaceId {
+		return nil, fmt.Errorf("requested workspace ID %d does not match actual workspace ID %d", workspaceId, actualWorkspaceId)
+	}
 	return w, nil
 }
 
@@ -72,7 +200,12 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.cachedWorkspaceClient = w
+	c.cachedWorkspaceClients = map[int64]*cachedWorkspaceClient{
+		defaultWorkspaceId: {
+			apiClient: c.DatabricksClient,
+			client:    w,
+		},
+	}
 }
 
 // Set the cached account client.
@@ -97,6 +230,9 @@ func (c *DatabricksClient) setAccountId(accountId string) error {
 }
 
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
+	if c.cachedAccountClient != nil {
+		return c.cachedAccountClient, nil
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.cachedAccountClient != nil {
@@ -250,44 +386,6 @@ func (c *DatabricksClient) FormatURL(strs ...string) string {
 	}
 	data := append([]string{host}, strs...)
 	return strings.Join(data, "")
-}
-
-// ClientForHost creates a new DatabricksClient instance with the same auth parameters,
-// but for the given host. Authentication has to be reinitialized, as Google OIDC has
-// different authorizers, depending if it's workspace or Accounts API we're talking to.
-func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*DatabricksClient, error) {
-	// create dummy http request
-	req, _ := http.NewRequestWithContext(ctx, "GET", "/", nil)
-	// Ensure that client is authenticated
-	err := c.DatabricksClient.Config.Authenticate(req)
-	if err != nil {
-		return nil, fmt.Errorf("cannot authenticate parent client: %w", err)
-	}
-	cfg := &config.Config{
-		Host:                 url,
-		Username:             c.Config.Username,
-		Password:             c.Config.Password,
-		AuthType:             c.Config.AuthType,
-		Token:                c.Config.Token,
-		ClientID:             c.Config.ClientID,
-		ClientSecret:         c.Config.ClientSecret,
-		GoogleServiceAccount: c.Config.GoogleServiceAccount,
-		GoogleCredentials:    c.Config.GoogleCredentials,
-		InsecureSkipVerify:   c.Config.InsecureSkipVerify,
-		HTTPTimeoutSeconds:   c.Config.HTTPTimeoutSeconds,
-		DebugTruncateBytes:   c.Config.DebugTruncateBytes,
-		DebugHeaders:         c.Config.DebugHeaders,
-		RateLimitPerSecond:   c.Config.RateLimitPerSecond,
-	}
-	client, err := client.New(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("cannot configure new client: %w", err)
-	}
-	// copy all client configuration options except Databricks CLI profile
-	return &DatabricksClient{
-		DatabricksClient: client,
-		commandFactory:   c.commandFactory,
-	}, nil
 }
 
 func (aa *DatabricksClient) GetAzureJwtProperty(key string) (any, error) {

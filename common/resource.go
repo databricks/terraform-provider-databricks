@@ -14,6 +14,49 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// The WorkspaceIdField indicates which attribute should be used to specify the workspace that
+// a particular resource belongs to.
+type WorkspaceIdField int
+
+const (
+	// WorkspaceId is the defalt value, since all non-UC workspace resources belong to a workspace.
+	WorkspaceId WorkspaceIdField = iota
+	// Do not expose a workspace_id field. This is used for account-level-only resources.
+	NoWorkspaceId
+	// Use management_workspace_id to specify the workspace_id. This is used for UC resources,
+	// where resources do not belong to a workspace but are managed using a specific workspace's
+	// API.
+	ManagementWorkspaceId
+	// The internal attribute used to store the original value of the workspace_id field. Used if
+	// resources are moved from one workspace to another. This should not be used in resource
+	// definitions directly.
+	OriginalWorkspaceId
+)
+
+func (w WorkspaceIdField) Field() string {
+	switch w {
+	case WorkspaceId:
+		return "workspace_id"
+	case NoWorkspaceId:
+		return ""
+	case ManagementWorkspaceId:
+		return "management_workspace_id"
+	case OriginalWorkspaceId:
+		return "original_workspace_id"
+	default:
+		panic(fmt.Sprintf("unknown workspace_id field type: %d", w))
+	}
+}
+
+func (w WorkspaceIdField) IsUserSpecified() bool {
+	switch w {
+	case WorkspaceId, ManagementWorkspaceId:
+		return true
+	default:
+		return false
+	}
+}
+
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
 	Create             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
@@ -27,6 +70,18 @@ type Resource struct {
 	Timeouts           *schema.ResourceTimeout
 	DeprecationMessage string
 	Importer           *schema.ResourceImporter
+
+	// WorkspaceIdField indicates whether a resource can only be managed using a
+	// provider at the appropriate level, i.e. workspace-level resources that can only be
+	// managed with a workspace-level provider, and if so, what the name is of the field
+	// that should be used to specify the workspace_id.
+	//
+	// All account-level resources can only be managed with an account-level provider, so this
+	// must be set to `true` for all account-level resources.
+	//
+	// When false, the resource will include a workspace_id field that can be set when using an
+	// account-level provider to target a specific workspace in the account.
+	WorkspaceIdField WorkspaceIdField
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -56,11 +111,36 @@ func recoverable(cb func(
 	}
 }
 
-func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
-	if r.CustomizeDiff == nil {
+func (r Resource) verifyWorkspaceId(ctx context.Context, rd *schema.ResourceDiff, c *DatabricksClient) error {
+	if !r.WorkspaceIdField.IsUserSpecified() {
 		return nil
 	}
-	return func(ctx context.Context, rd *schema.ResourceDiff, _ any) (err error) {
+	if !rd.NewValueKnown(r.WorkspaceIdField.Field()) {
+		return nil
+	}
+	if c.Config.IsAccountClient() {
+		return nil
+	}
+	configuredWorkspaceIdRaw, ok := rd.GetOk(r.WorkspaceIdField.Field())
+	if !ok {
+		return nil
+	}
+	configuredWorkspaceId := int64(configuredWorkspaceIdRaw.(int))
+	currentWorkspaceId, err := c.CurrentWorkspaceID(ctx)
+	if err != nil {
+		return err
+	}
+	if configuredWorkspaceId != currentWorkspaceId {
+		return fmt.Errorf("configured %s (%d) does not match current workspace ID (%d)", r.WorkspaceIdField.Field(), configuredWorkspaceId, currentWorkspaceId)
+	}
+	return nil
+}
+
+func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
+	if !r.isResource() {
+		return nil
+	}
+	return func(ctx context.Context, rd *schema.ResourceDiff, m any) (err error) {
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
 			// so that any unforeseen bug would we visible to end-user
@@ -74,22 +154,192 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 		// we don't propagate instance of SDK client to the diff function, because
 		// authentication is not deterministic at this stage with the recent Terraform
 		// versions. Diff customization must be limited to hermetic checks only anyway.
-		err = r.CustomizeDiff(ctx, rd)
-		if err != nil {
-			err = nicerError(ctx, err, "customize diff for")
+		if r.CustomizeDiff != nil {
+			err = r.CustomizeDiff(ctx, rd)
+			if err != nil {
+				err = nicerError(ctx, err, "customize diff for")
+				return
+			}
 		}
+
+		c := m.(*DatabricksClient)
+		err = r.verifyWorkspaceId(ctx, rd, c)
+		if err != nil {
+			return err
+		}
+		// Note: you cannot clear workspace_id field because it is not computed.
+		// We could make it computed, but I think that would be too implicit for users.
+
 		return
 	}
 }
 
+func (r Resource) getSchema() map[string]*schema.Schema {
+	if r.Schema == nil {
+		r.Schema = make(map[string]*schema.Schema)
+	}
+	if r.WorkspaceIdField.IsUserSpecified() {
+		r.addWorkspaceIdField()
+	}
+	return r.Schema
+}
+
+func (r Resource) addWorkspaceIdField() {
+	r.Schema[r.WorkspaceIdField.Field()] = &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: true,
+		// Changing the workspace does require force new, but adding it for an existing resource results in no diff.
+		Description: "The workspace id of the workspace, for example 1234567890. This can be retrieved from `databricks_mws_workspaces.<YOUR_WORKSPACE>.workspace_id`. This attribute is required when using an account-level provider.",
+	}
+	// Separate field to track the original workspace ID when using an account-level provider.
+	// Needed when changing the workspace ID, as `workspace_id` in state will reflect
+	// the new ID during apply.
+	r.Schema[OriginalWorkspaceId.Field()] = &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: false,
+		Required: false,
+		Computed: true,
+	}
+}
+
+func (r Resource) isResource() bool {
+	return r.Create != nil || r.Update != nil || r.Delete != nil
+}
+
+func (r Resource) setOriginalWorkspaceId(d *schema.ResourceData) error {
+	if !r.WorkspaceIdField.IsUserSpecified() {
+		return nil
+	}
+	id, ok := d.GetOk(r.WorkspaceIdField.Field())
+	if !ok {
+		return nil
+	}
+	return d.Set(OriginalWorkspaceId.Field(), id)
+}
+
 // ToResource converts to Terraform resource definition
 func (r Resource) ToResource() *schema.Resource {
-	var update func(ctx context.Context, d *schema.ResourceData,
-		m any) diag.Diagnostics
-	if r.Update != nil {
-		update = func(ctx context.Context, d *schema.ResourceData,
+	if r.WorkspaceIdField == OriginalWorkspaceId {
+		panic("OriginalWorkspaceId is not a valid value for WorkspaceIdField")
+	}
+	getClient := func(_ context.Context, m any, d *schema.ResourceData) (*DatabricksClient, error) {
+		return m.(*DatabricksClient), nil
+	}
+	getDeleteClient := getClient
+	if r.WorkspaceIdField != NoWorkspaceId {
+		getClient = func(ctx context.Context, m any, d *schema.ResourceData) (*DatabricksClient, error) {
+			workspaceId, ok := d.GetOk(r.WorkspaceIdField.Field())
+			if !ok {
+				return m.(*DatabricksClient), nil
+			}
+			return m.(*DatabricksClient).InWorkspace(ctx, int64(workspaceId.(int)))
+		}
+		getDeleteClient = func(ctx context.Context, m any, d *schema.ResourceData) (*DatabricksClient, error) {
+			workspaceId, ok := d.GetOk(OriginalWorkspaceId.Field())
+			if !ok {
+				return m.(*DatabricksClient), nil
+			}
+			return m.(*DatabricksClient).InWorkspace(ctx, int64(workspaceId.(int)))
+		}
+	}
+	// Ignore missing for read for resources, but not for data sources.
+	ignoreMissingForRead := r.isResource()
+	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
+		m any) diag.Diagnostics {
+		return func(ctx context.Context, d *schema.ResourceData,
 			m any) diag.Diagnostics {
-			c := m.(*DatabricksClient)
+			c, err := getClient(ctx, m, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = recoverable(r.Read)(ctx, d, c)
+			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
+			if ignoreMissing && apierr.IsMissing(err) {
+				log.Printf("[INFO] %s[id=%s] is removed on backend",
+					ResourceName.GetOrUnknown(ctx), d.Id())
+				d.SetId("")
+				return nil
+			}
+			if err != nil {
+				err = nicerError(ctx, err, "read")
+				return diag.FromErr(err)
+			}
+			return nil
+		}
+	}
+	resource := &schema.Resource{
+		Schema:             r.getSchema(),
+		SchemaVersion:      r.SchemaVersion,
+		StateUpgraders:     r.StateUpgraders,
+		CustomizeDiff:      r.saferCustomizeDiff(),
+		ReadContext:        generateReadFunc(ignoreMissingForRead),
+		Importer:           r.Importer,
+		Timeouts:           r.Timeouts,
+		DeprecationMessage: r.DeprecationMessage,
+	}
+	if r.Create != nil {
+		resource.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+			c, err := getClient(ctx, m, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err = recoverable(r.Create)(ctx, d, c); err != nil {
+				err = nicerError(ctx, err, "create")
+				return diag.FromErr(err)
+			}
+			if err = recoverable(r.Read)(ctx, d, c); err != nil {
+				err = nicerError(ctx, err, "read")
+				return diag.FromErr(err)
+			}
+			err = r.setOriginalWorkspaceId(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			return nil
+		}
+	}
+	if r.Delete != nil {
+		resource.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+			c, err := getDeleteClient(ctx, m, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = recoverable(r.Delete)(ctx, d, c)
+			if apierr.IsMissing(err) {
+				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
+				log.Printf("[INFO] %s[id=%s] is removed on backend",
+					ResourceName.GetOrUnknown(ctx), d.Id())
+				d.SetId("")
+				return nil
+			}
+			if err != nil {
+				err = nicerError(ctx, err, "delete")
+				return diag.FromErr(err)
+			}
+			return nil
+		}
+	}
+	if resource.Importer == nil {
+		resource.Importer = &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData,
+				m any) (data []*schema.ResourceData, e error) {
+				d.MarkNewResource()
+				diags := generateReadFunc(false)(ctx, d, m)
+				var err error
+				if diags.HasError() {
+					err = diags[0].Validate()
+				}
+				return []*schema.ResourceData{d}, err
+			},
+		}
+	}
+	if r.Update != nil {
+		resource.UpdateContext = func(ctx context.Context, d *schema.ResourceData,
+			m any) diag.Diagnostics {
+			c, err := getClient(ctx, m, d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
@@ -120,84 +370,6 @@ func (r Resource) ToResource() *schema.Resource {
 			if len(queue) == 0 {
 				break
 			}
-		}
-	}
-	// Ignore missing for read for resources, but not for data sources.
-	ignoreMissingForRead := (r.Create != nil || r.Update != nil || r.Delete != nil)
-	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
-		m any) diag.Diagnostics {
-		return func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
-			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
-			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
-			if ignoreMissing && apierr.IsMissing(err) {
-				log.Printf("[INFO] %s[id=%s] is removed on backend",
-					ResourceName.GetOrUnknown(ctx), d.Id())
-				d.SetId("")
-				return nil
-			}
-			if err != nil {
-				err = nicerError(ctx, err, "read")
-				return diag.FromErr(err)
-			}
-			return nil
-		}
-	}
-	resource := &schema.Resource{
-		Schema:             r.Schema,
-		SchemaVersion:      r.SchemaVersion,
-		StateUpgraders:     r.StateUpgraders,
-		CustomizeDiff:      r.saferCustomizeDiff(),
-		ReadContext:        generateReadFunc(ignoreMissingForRead),
-		UpdateContext:      update,
-		Importer:           r.Importer,
-		Timeouts:           r.Timeouts,
-		DeprecationMessage: r.DeprecationMessage,
-	}
-	if r.Create != nil {
-		resource.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			c := m.(*DatabricksClient)
-			err := recoverable(r.Create)(ctx, d, c)
-			if err != nil {
-				err = nicerError(ctx, err, "create")
-				return diag.FromErr(err)
-			}
-			if err = recoverable(r.Read)(ctx, d, c); err != nil {
-				err = nicerError(ctx, err, "read")
-				return diag.FromErr(err)
-			}
-			return nil
-		}
-	}
-	if r.Delete != nil {
-		resource.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
-			if apierr.IsMissing(err) {
-				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
-				log.Printf("[INFO] %s[id=%s] is removed on backend",
-					ResourceName.GetOrUnknown(ctx), d.Id())
-				d.SetId("")
-				return nil
-			}
-			if err != nil {
-				err = nicerError(ctx, err, "delete")
-				return diag.FromErr(err)
-			}
-			return nil
-		}
-	}
-	if resource.Importer == nil {
-		resource.Importer = &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData,
-				m any) (data []*schema.ResourceData, e error) {
-				d.MarkNewResource()
-				diags := generateReadFunc(false)(ctx, d, m)
-				var err error
-				if diags.HasError() {
-					err = diags[0].Validate()
-				}
-				return []*schema.ResourceData{d}, err
-			},
 		}
 	}
 	return resource

@@ -52,6 +52,7 @@ All arguments are optional, and they tune what code is being generated.
 * `-noformat` - optionally turn off the execution of `terraform fmt` on the exported files (enabled by default).
 * `-debug` - turn on debug output.
 * `-trace` - turn on trace output (includes debug level as well).
+* `-native-import` - turns on generation of [native import blocks](https://developer.hashicorp.com/terraform/language/import) (requires Terraform 1.5+).  This option is recommended for cases when you want to start to manage existing workspace.
 
 ## Services
 

@@ -91,6 +91,7 @@ type importContext struct {
 	incremental              bool
 	mounts                   bool
 	noFormat                 bool
+	nativeImportSupported    bool
 	services                 map[string]struct{}
 	listing                  map[string]struct{}
 	match                    string
@@ -782,7 +783,7 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 	}
 }
 
-func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel) {
+func (ic *importContext) writeShellImports(sh *os.File, importChan importWriteChannel) {
 	for importCommand := range importChan {
 		if importCommand != "" && sh != nil {
 			log.Printf("[DEBUG] writing import command %s", importCommand)
@@ -810,7 +811,125 @@ func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel
 	}
 }
 
-func (ic *importContext) processSingleResource(resourcesChan resourceChannel, writerChannels map[string]dataWriteChannel) {
+func extractResourceIdFromImportBlock(block *hclwrite.Block) string {
+	if block.Type() != "import" {
+		log.Print("[WARN] it's not an import block!")
+		return ""
+	}
+	idAttr := block.Body().GetAttribute("to")
+	if idAttr == nil {
+		log.Printf("[WARN] Can't find `to` attribute in the import block")
+		return ""
+	}
+	idVal := string(idAttr.Expr().BuildTokens(nil).Bytes())
+	return strings.TrimSpace(idVal)
+}
+
+func extractResourceIdFromImportBlockString(importBlock string) string {
+	block, diags := hclwrite.ParseConfig([]byte(importBlock), "test.tf", hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() {
+		log.Printf("[WARN] parsing of import block %s has failed: %s", importBlock, diags.Error())
+		return ""
+	}
+	if len(block.Body().Blocks()) == 0 {
+		log.Printf("[WARN] import block %s has 0 blocks!", importBlock)
+		return ""
+	}
+	return extractResourceIdFromImportBlock(block.Body().Blocks()[0])
+}
+
+func (ic *importContext) writeNativeImports(importChan importWriteChannel) {
+	if !ic.nativeImportSupported {
+		log.Print("[DEBUG] Native import is not enabled, skipping...")
+		return
+	}
+	importsFileName := fmt.Sprintf("%s/import.tf", ic.Directory)
+	// TODO: in incremental mode read existing file with imports and append them for not processed & not deleted resources
+	var existingFile *hclwrite.File
+	if ic.incremental {
+		log.Printf("[DEBUG] Going to read existing file %s", importsFileName)
+		content, err := os.ReadFile(importsFileName)
+		if errors.Is(err, os.ErrNotExist) {
+			log.Printf("[WARN] File %s doesn't exist when using incremental export", importsFileName)
+		} else if err != nil {
+			log.Printf("[ERROR] error opening %s", importsFileName)
+		} else {
+			log.Printf("[DEBUG] Going to parse existing file %s", importsFileName)
+			var diags hcl.Diagnostics
+			existingFile, diags = hclwrite.ParseConfig(content, importsFileName, hcl.Pos{Line: 1, Column: 1})
+			if diags.HasErrors() {
+				log.Printf("[ERROR] parsing of existing file %s failed: %s", importsFileName, diags.Error())
+			} else {
+				log.Printf("[DEBUG] There are %d objects in existing file %s",
+					len(existingFile.Body().Blocks()), importsFileName)
+			}
+		}
+	}
+	if existingFile == nil {
+		existingFile = hclwrite.NewEmptyFile()
+	}
+
+	// do actual writes
+	importsFile, err := os.Create(importsFileName)
+	if err != nil {
+		log.Printf("[ERROR] Can't create %s: %v", importsFileName, err)
+		return
+	}
+	defer importsFile.Close()
+
+	newImports := make(map[string]struct{}, 100)
+	log.Printf("[DEBUG] started processing new writes for %s", importsFileName)
+	// write native imports
+	for importBlock := range importChan {
+		if importBlock != "" {
+			log.Printf("[TRACE] writing import command %s", importBlock)
+			importsFile.WriteString(importBlock)
+			id := extractResourceIdFromImportBlockString(importBlock)
+			if id != "" {
+				newImports[id] = struct{}{}
+			}
+		} else {
+			log.Print("[WARN] got empty import command...")
+		}
+		ic.waitGroup.Done()
+	}
+	// write the rest of import blocks
+	numResources := len(newImports)
+	log.Printf("[DEBUG] finished processing new writes for %s. Wrote %d resources", importsFileName, numResources)
+	// update existing file if incremental mode
+	if ic.incremental {
+		log.Printf("[DEBUG] Starting to merge existing resources for %s", importsFileName)
+		f := hclwrite.NewEmptyFile()
+		for _, block := range existingFile.Body().Blocks() {
+			blockName := extractResourceIdFromImportBlock(block)
+			if blockName == "" {
+				log.Printf("[WARN] can't extract resource ID from import block: %s",
+					string(block.BuildTokens(nil).Bytes()))
+				continue
+			}
+			_, exists := newImports[blockName]
+			_, deleted := ic.deletedResources[blockName]
+			if exists {
+				log.Printf("[DEBUG] resource %s already generated, skipping...", blockName)
+			} else if deleted {
+				log.Printf("[DEBUG] resource %s is deleted, skipping...", blockName)
+			} else {
+				log.Printf("[DEBUG] resource %s doesn't exist, adding...", blockName)
+				f.Body().AppendBlock(block)
+				numResources = numResources + 1
+			}
+		}
+		_, err = importsFile.WriteString(string(f.Bytes()))
+		if err != nil {
+			log.Printf("[ERROR] error when writing existing resources for file %s: %v", importsFileName, err)
+		}
+		log.Printf("[DEBUG] Finished merging existing resources for %s", importsFileName)
+	}
+
+}
+
+func (ic *importContext) processSingleResource(resourcesChan resourceChannel,
+	writerChannels map[string]dataWriteChannel, nativeImportChannel importWriteChannel) {
 	processed := 0
 	generated := 0
 	ignored := 0
@@ -854,6 +973,21 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 			}
 			if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil {
 				writeData.ImportCommand = r.ImportCommand(ic)
+				if ic.nativeImportSupported { // generate import block for native import
+					imp := hclwrite.NewEmptyFile()
+					imoBlock := imp.Body().AppendNewBlock("import", []string{})
+					imoBlock.Body().SetAttributeValue("id", cty.StringVal(r.ID))
+					traversal := hcl.Traversal{
+						hcl.TraverseRoot{Name: r.Resource},
+						hcl.TraverseAttr{Name: r.Name},
+					}
+					tokens := hclwrite.TokensForTraversal(traversal)
+					imoBlock.Body().SetAttributeRaw("to", tokens)
+					formattedImp := hclwrite.Format(imp.Bytes())
+					//log.Printf("[DEBUG] Import block for %s: %s", r.ID, string(formattedImp))
+					ic.waitGroup.Add(1)
+					nativeImportChannel <- string(formattedImp)
+				}
 			}
 			ch, exists := writerChannels[ir.Service]
 			if exists {
@@ -886,22 +1020,30 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	for service := range ic.services {
 		resourceWriters[service] = make(dataWriteChannel, defaultChannelSize)
 	}
-	importChan := make(importWriteChannel, defaultChannelSize)
 	writersWaitGroup := &sync.WaitGroup{}
-	//
+	// write shell script for importing
+	shellImportChan := make(importWriteChannel, defaultChannelSize)
 	writersWaitGroup.Add(1)
 	go func() {
-		ic.writeImports(sh, importChan)
+		ic.writeShellImports(sh, shellImportChan)
 		writersWaitGroup.Done()
 	}()
+	//
+	nativeImportChan := make(importWriteChannel, defaultChannelSize)
+	writersWaitGroup.Add(1)
+	go func() {
+		ic.writeNativeImports(nativeImportChan)
+		writersWaitGroup.Done()
+	}()
+	// start resource handlers
 	for i := 0; i < resourceHandlersNumber; i++ {
 		i := i
 		go func() {
 			log.Printf("[DEBUG] Starting resource handler %d", i)
-			ic.processSingleResource(resourcesChan, resourceWriters)
+			ic.processSingleResource(resourcesChan, resourceWriters, nativeImportChan)
 		}()
 	}
-
+	// start writers for specific services
 	for service, ch := range resourceWriters {
 		service := service
 		ch := ch
@@ -909,12 +1051,11 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		log.Printf("[DEBUG] starting writer for service %s", service)
 		writersWaitGroup.Add(1)
 		go func() {
-			ic.handleResourceWrite(generatedFile, ch, importChan)
+			ic.handleResourceWrite(generatedFile, ch, shellImportChan)
 			writersWaitGroup.Done()
 		}()
 	}
-
-	//
+	// submit all extracted resources...
 	for i, r := range resources {
 		ic.waitGroup.Add(1)
 		resourcesChan <- r
@@ -924,7 +1065,8 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	}
 	ic.waitGroup.Wait()
 	// close all channels
-	close(importChan)
+	close(shellImportChan)
+	close(nativeImportChan)
 	close(resourcesChan)
 	for service, ch := range resourceWriters {
 		log.Printf("Closing writer for service %s", service)

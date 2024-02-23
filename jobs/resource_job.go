@@ -726,7 +726,7 @@ func gitSourceSchema(r *schema.Resource, prefix string) {
 	(*r.Schema["commit"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
 }
 
-var newSchema = common.StructToSchema(JobSettingsResource{})
+var newSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {

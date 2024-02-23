@@ -128,7 +128,7 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		return resourceProviderStructToSchema(rp)
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]string{})
+	scm := typeToSchema(rv, map[string]string{}, map[string]int{})
 	if customize != nil {
 		scm = customize(scm)
 	}

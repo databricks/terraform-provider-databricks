@@ -34,3 +34,11 @@ func SuppressDiffWhitespaceChange(k, old, new string, d *schema.ResourceData) bo
 	log.Printf("[DEBUG] Suppressing diff for %v: old=%#v new=%#v", k, old, new)
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }
+
+func CopyMap[K comparable, V any](originalMap map[K]V) map[K]V {
+	newMap := make(map[K]V)
+	for key, value := range originalMap {
+		newMap[key] = value
+	}
+	return newMap
+}

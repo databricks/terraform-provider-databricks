@@ -24,6 +24,42 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 )
 
+type JobSettingsResource struct {
+	jobs.JobSettings
+}
+
+func (JobSettingsResource) Aliases() map[string]string {
+	aliases := map[string]string{
+		"libraries":                         "library", // Don't need this, need to add it
+		"task.for_each_task.task.libraries": "library", // Recursive
+
+		"job_clusters":            "job_cluster",
+		"tasks":                   "task",
+		"task.libraries":          "library",
+		"parameters":              "parameter",
+		"git_source.git_url":      "url",
+		"git_source.git_provider": "provider",
+		"git_source.git_branch":   "branch",
+		"git_source.git_tag":      "tag",
+		"git_source.git_commit":   "commit",
+	}
+
+	// Adding aliases for referenced compute.ClusterSpec
+	clusterAliases := clusters.ClusterSpec{}.Aliases()
+	for k, v := range clusterAliases {
+		aliases[fmt.Sprintf("job_cluster.new_cluster.%s", k)] = v
+		aliases[fmt.Sprintf("task.new_cluster.%s", k)] = v
+	}
+
+	return aliases
+}
+
+func (JobSettingsResource) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+	// Add Library
+	// Port Cluster's customizations over
+	return s
+}
+
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
@@ -690,6 +726,8 @@ func gitSourceSchema(r *schema.Resource, prefix string) {
 	(*r.Schema["commit"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
 }
 
+var newSchema = common.StructToSchema(JobSettingsResource{})
+
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		jobSettingsSchema(&s, "")
@@ -890,7 +928,7 @@ func ResourceJob() common.Resource {
 		return ctx
 	}
 	return common.Resource{
-		Schema:        jobSchema,
+		Schema:        newSchema,
 		SchemaVersion: 2,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),

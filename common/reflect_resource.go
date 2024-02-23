@@ -38,6 +38,8 @@ var kindMap = map[reflect.Kind]string{
 	reflect.UnsafePointer: "UnsafePointer",
 }
 
+var maxRecursionDepth = 3
+
 // Generic interface for ResourceProvider. Using CustomizeSchema and Aliases functions to keep track of additional information
 // on top of the generated go-sdk struct. This is used to replace manually maintained structs with `tf` tags.
 type ResourceProvider interface {
@@ -282,7 +284,7 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[string]int) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -292,6 +294,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
+	timesVisited[v.Type().Name()] += 1
 	fields := listAllFields(v)
 	for _, field := range fields {
 		typeField := field.sf
@@ -330,6 +333,10 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 		handleComputed(typeField, scm[fieldName])
 		handleForceNew(typeField, scm[fieldName])
 		handleSensitive(typeField, scm[fieldName])
+		if maxRecursionDepthExceeded(typeField, timesVisited) {
+			// Skip the field if recursion depth is over the limit.
+			continue
+		}
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
@@ -361,7 +368,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, unwrappedAliases)
+			nestedSchema := typeToSchema(sv, unwrappedAliases, CopyMap[string, int](timesVisited))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -379,7 +386,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, unwrappedAliases)
+			nestedSchema := typeToSchema(sv, unwrappedAliases, CopyMap[string, int](timesVisited))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -409,7 +416,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, unwrappedAliases),
+					Schema: typeToSchema(sv, unwrappedAliases, CopyMap[string, int](timesVisited)),
 				}
 			}
 		default:
@@ -417,6 +424,11 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 		}
 	}
 	return scm
+}
+
+func maxRecursionDepthExceeded(typeField reflect.StructField, timesVisited map[string]int) bool {
+	typeName := typeField.Type.Name()
+	return timesVisited[typeName] >= maxRecursionDepth
 }
 
 func IsRequestEmpty(v any) (bool, error) {

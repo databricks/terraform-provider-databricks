@@ -1288,3 +1288,14 @@ func isMatchignShareObject(obj string) isValidAproximationFunc {
 		return ok && objType.(string) == obj
 	}
 }
+
+func isMatchingAllowListArtifact(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	objPath := strings.Replace(origPath, ".artifact", ".match_type", 1)
+	matchType, ok := res.Data.GetOk(objPath)
+	artifactType := res.Data.Get("artifact_type").(string)
+	// artifact := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingAllowListArtifact: origPath='%s', ra.Type='%s', artifactType='%v' artifact='%v', objPath='%s' matchType='%v' ok? %v",
+	// 	origPath, ra.Type, artifactType, artifact, objPath, matchType, ok)
+
+	return ok && matchType.(string) == "PREFIX_MATCH" && (artifactType == "LIBRARY_JAR" || artifactType == "INIT_SCRIPT")
+}

@@ -298,6 +298,10 @@ func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[s
 	fields := listAllFields(v)
 	for _, field := range fields {
 		typeField := field.sf
+		if maxRecursionDepthExceeded(typeField, timesVisited) {
+			// Skip the field if recursion depth is over the limit.
+			continue
+		}
 		tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldNameWithAliases(typeField, aliases)
@@ -333,10 +337,6 @@ func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[s
 		handleComputed(typeField, scm[fieldName])
 		handleForceNew(typeField, scm[fieldName])
 		handleSensitive(typeField, scm[fieldName])
-		if maxRecursionDepthExceeded(typeField, timesVisited) {
-			// Skip the field if recursion depth is over the limit.
-			continue
-		}
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt

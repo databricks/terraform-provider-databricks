@@ -37,7 +37,7 @@ func ResourceExternalLocation() common.Resource {
 				return old == "false" && new == "true"
 			}
 			m["url"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
-			m["name"].DiffSuppressFunc = common.SupressCaseSensitivity
+			m["name"].DiffSuppressFunc = common.SuppressCaseSensitivity
 			return m
 		})
 	return common.Resource{

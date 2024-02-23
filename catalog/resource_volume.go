@@ -46,7 +46,7 @@ func ResourceVolume() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			}
-			m["name"].DiffSuppressFunc = common.SupressCaseSensitivity
+			m["name"].DiffSuppressFunc = common.SuppressCaseSensitivity
 			return m
 		})
 	return common.Resource{

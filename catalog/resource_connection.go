@@ -39,7 +39,7 @@ var sensitiveOptions = []string{"user", "password", "personalAccessToken", "acce
 func ResourceConnection() common.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["name"].DiffSuppressFunc = common.SupressCaseSensitivity
+			m["name"].DiffSuppressFunc = common.SuppressCaseSensitivity
 			return m
 		})
 	pi := common.NewPairID("metastore_id", "name").Schema(

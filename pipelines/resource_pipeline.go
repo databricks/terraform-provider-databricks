@@ -346,7 +346,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 	m["storage"].DiffSuppressFunc = suppressStorageDiff
 	m["storage"].ConflictsWith = []string{"catalog"}
 	m["catalog"].ConflictsWith = []string{"storage"}
-	m["name"].DiffSuppressFunc = common.SupressCaseSensitivity
+	m["name"].DiffSuppressFunc = common.SuppressCaseSensitivity
 	return m
 }
 

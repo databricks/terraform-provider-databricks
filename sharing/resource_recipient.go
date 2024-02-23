@@ -37,7 +37,7 @@ type RecipientInfo struct {
 func ResourceRecipient() common.Resource {
 	recipientSchema := common.StructToSchema(RecipientInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false)
-		m["name"].DiffSuppressFunc = common.SupressCaseSensitivity
+		m["name"].DiffSuppressFunc = common.SuppressCaseSensitivity
 		return m
 	})
 	return common.Resource{

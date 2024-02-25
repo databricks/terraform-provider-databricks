@@ -701,7 +701,7 @@ func DataToStructPointer(d *schema.ResourceData, scm map[string]*schema.Schema, 
 // DataToReflectValue reads reflect value from data
 func DataToReflectValue(d *schema.ResourceData, s map[string]*schema.Schema, rv reflect.Value) error {
 	// TODO: Pass in the right aliases map.
-	return readReflectValueFromData([]string{}, d, rv, s, map[string]string{})
+	return readReflectValueFromData([]string{}, d, rv, s, map[string]map[string]string{})
 }
 
 // Get the aliases map from the given struct if it is an instance of ResourceProvider.

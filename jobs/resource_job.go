@@ -929,37 +929,37 @@ func ResourceJob() common.Resource {
 			Create: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
-		// CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-		// 	var js JobSettings
-		// 	common.DiffToStructPointer(d, jobSchema, &js)
-		// 	alwaysRunning := d.Get("always_running").(bool)
-		// 	if alwaysRunning && js.MaxConcurrentRuns > 1 {
-		// 		return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
-		// 	}
-		// 	controlRunState := d.Get("control_run_state").(bool)
-		// 	if controlRunState {
-		// 		if js.Continuous == nil {
-		// 			return fmt.Errorf("`control_run_state` must be specified only with `continuous`")
-		// 		}
-		// 		if js.MaxConcurrentRuns > 1 {
-		// 			return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
-		// 		}
-		// 	}
-		// 	for _, task := range js.Tasks {
-		// 		if task.NewCluster == nil {
-		// 			continue
-		// 		}
-		// 		if err := task.NewCluster.Validate(); err != nil {
-		// 			return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
-		// 		}
-		// 	}
-		// 	if js.NewCluster != nil {
-		// 		if err := js.NewCluster.Validate(); err != nil {
-		// 			return fmt.Errorf("invalid job cluster: %w", err)
-		// 		}
-		// 	}
-		// 	return nil
-		// },
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			var js JobSettings
+			common.DiffToStructPointer(d, jobSchema, &js)
+			alwaysRunning := d.Get("always_running").(bool)
+			if alwaysRunning && js.MaxConcurrentRuns > 1 {
+				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
+			}
+			controlRunState := d.Get("control_run_state").(bool)
+			if controlRunState {
+				if js.Continuous == nil {
+					return fmt.Errorf("`control_run_state` must be specified only with `continuous`")
+				}
+				if js.MaxConcurrentRuns > 1 {
+					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
+				}
+			}
+			for _, task := range js.Tasks {
+				if task.NewCluster == nil {
+					continue
+				}
+				if err := task.NewCluster.Validate(); err != nil {
+					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
+				}
+			}
+			if js.NewCluster != nil {
+				if err := js.NewCluster.Validate(); err != nil {
+					return fmt.Errorf("invalid job cluster: %w", err)
+				}
+			}
+			return nil
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
 			common.DataToStructPointer(d, jobSchema, &js)

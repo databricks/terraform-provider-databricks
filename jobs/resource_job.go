@@ -28,29 +28,24 @@ type JobSettingsResource struct {
 	jobs.JobSettings
 }
 
-func (JobSettingsResource) Aliases() map[string]string {
-	aliases := map[string]string{
-		"libraries":                         "library", // Don't need this, need to add it
-		"task.for_each_task.task.libraries": "library", // Recursive
-		"jobs.Task":                         "library",
-		"job_clusters":                      "job_cluster",
-		"tasks":                             "task",
-		"task.libraries":                    "library",
-		"parameters":                        "parameter",
-		"git_source.git_url":                "url",
-		"git_source.git_provider":           "provider",
-		"git_source.git_branch":             "branch",
-		"git_source.git_tag":                "tag",
-		"git_source.git_commit":             "commit",
+func (JobSettingsResource) Aliases() map[string]map[string]string {
+	aliases := map[string]map[string]string{
+		"JobSettings": map[string]string{
+			"tasks":        "task",
+			"parameters":   "parameter",
+			"job_clusters": "job_cluster",
+		},
+		"GitSource": map[string]string{
+			"git_url":      "url",
+			"git_provider": "provider",
+			"git_branch":   "branch",
+			"git_tag":      "tag",
+			"git_commit":   "commit",
+		},
+		"Task": map[string]string{
+			"libraries": "library",
+		},
 	}
-
-	// Adding aliases for referenced compute.ClusterSpec
-	clusterAliases := clusters.ClusterSpec{}.Aliases()
-	for k, v := range clusterAliases {
-		aliases[fmt.Sprintf("job_cluster.new_cluster.%s", k)] = v
-		aliases[fmt.Sprintf("task.new_cluster.%s", k)] = v
-	}
-
 	return aliases
 }
 

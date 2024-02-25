@@ -43,7 +43,7 @@ var maxRecursionDepth = 3
 // Generic interface for ResourceProvider. Using CustomizeSchema and Aliases functions to keep track of additional information
 // on top of the generated go-sdk struct. This is used to replace manually maintained structs with `tf` tags.
 type ResourceProvider interface {
-	Aliases() map[string]string
+	Aliases() map[string]map[string]string
 	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
@@ -63,7 +63,7 @@ func reflectKind(k reflect.Kind) string {
 	return n
 }
 
-func chooseFieldNameWithAliases(typeField reflect.StructField, aliases map[string]string) string {
+func chooseFieldNameWithAliases(parentTypeName string, typeField reflect.StructField, aliases map[string]map[string]string) string {
 	// If nothing in the aliases map, return the field name from plain chooseFieldName method.
 	if len(aliases) == 0 {
 		return chooseFieldName(typeField)
@@ -74,8 +74,10 @@ func chooseFieldNameWithAliases(typeField reflect.StructField, aliases map[strin
 		return "-"
 	}
 
-	if value, ok := aliases[jsonFieldName]; ok {
-		return value
+	if parentMap, ok := aliases[parentTypeName]; ok {
+		if value, ok := parentMap[jsonFieldName]; ok {
+			return value
+		}
 	}
 	return jsonFieldName
 }
@@ -128,7 +130,7 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		return resourceProviderStructToSchema(rp)
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]string{}, map[string]int{})
+	scm := typeToSchema(rv, map[string]map[string]string{}, map[string]int{})
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -284,7 +286,7 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[string]int) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]map[string]string, timesVisited map[string]int) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -294,6 +296,8 @@ func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[s
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
+	// TODO: do we need package prefix?
+	parentTypeName := v.Type().Name()
 	timesVisited[v.Type().Name()] += 1
 	fields := listAllFields(v)
 	for _, field := range fields {
@@ -304,8 +308,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[s
 		}
 		tfTag := typeField.Tag.Get("tf")
 
-		fieldName := chooseFieldNameWithAliases(typeField, aliases)
-		unwrappedAliases := unwrapAliasesMap(fieldName, aliases)
+		fieldName := chooseFieldNameWithAliases(parentTypeName, typeField, aliases)
 		if fieldName == "-" {
 			continue
 		}
@@ -368,7 +371,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[s
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, unwrappedAliases, CopyMap[string, int](timesVisited))
+			nestedSchema := typeToSchema(sv, aliases, CopyMap[string, int](timesVisited))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -386,7 +389,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[s
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, unwrappedAliases, CopyMap[string, int](timesVisited))
+			nestedSchema := typeToSchema(sv, aliases, CopyMap[string, int](timesVisited))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -416,7 +419,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string, timesVisited map[s
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, unwrappedAliases, CopyMap[string, int](timesVisited)),
+					Schema: typeToSchema(sv, aliases, CopyMap[string, int](timesVisited)),
 				}
 			}
 		default:
@@ -440,7 +443,7 @@ func IsRequestEmpty(v any) (bool, error) {
 		return false, fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rv.Kind()), rv)
 	}
 	var isNotEmpty bool
-	err := iterFields(rv, []string{}, StructToSchema(v, nil), map[string]string{}, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	err := iterFields(rv, []string{}, StructToSchema(v, nil), map[string]map[string]string{}, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
 		if isNotEmpty {
 			return nil
 		}
@@ -488,7 +491,7 @@ func unwrapAliasesMap(fieldName string, aliases map[string]string) map[string]st
 
 // Iterate through each field of the given reflect.Value object and execute a callback function with the corresponding
 // terraform schema object as the input.
-func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]string,
+func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]map[string]string,
 	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
 	rk := rv.Kind()
 	if rk != reflect.Struct {
@@ -498,10 +501,11 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
 	}
 	isGoSDK := isGoSdk(rv)
+	parentTypeName := rv.Type().Name()
 	fields := listAllFields(rv)
 	for _, field := range fields {
 		typeField := field.sf
-		fieldName := chooseFieldNameWithAliases(typeField, aliases)
+		fieldName := chooseFieldNameWithAliases(parentTypeName, typeField, aliases)
 		if fieldName == "-" {
 			continue
 		}
@@ -527,7 +531,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 	return nil
 }
 
-func collectionToMaps(v any, s *schema.Schema, aliases map[string]string) ([]any, error) {
+func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]string) ([]any, error) {
 	resultList := []any{}
 	if sl, ok := v.([]string); ok {
 		// most likely list of parameters to job task
@@ -562,12 +566,11 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]string) ([]any
 		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema,
 			path []string, valueField *reflect.Value) error {
 			fieldName := path[len(path)-1]
-			newAliases := unwrapAliasesMap(fieldName, aliases)
 			fieldValue := valueField.Interface()
 			fieldPath := strings.Join(path, ".")
 			switch fieldSchema.Type {
 			case schema.TypeList, schema.TypeSet:
-				nv, err := collectionToMaps(fieldValue, fieldSchema, newAliases)
+				nv, err := collectionToMaps(fieldValue, fieldSchema, aliases)
 				if err != nil {
 					return fmt.Errorf("%s: %v", path, err)
 				}
@@ -703,20 +706,18 @@ func DataToReflectValue(d *schema.ResourceData, s map[string]*schema.Schema, rv 
 
 // Get the aliases map from the given struct if it is an instance of ResourceProvider.
 // NOTE: This does not return aliases defined on `tf` tags.
-func getAliasesMapFromStruct(s any) map[string]string {
+func getAliasesMapFromStruct(s any) map[string]map[string]string {
 	if v, ok := s.(ResourceProvider); ok {
 		return v.Aliases()
 	}
-	return map[string]string{}
+	return map[string]map[string]string{}
 }
 
 func readReflectValueFromData(path []string, d attributeGetter,
-	rv reflect.Value, s map[string]*schema.Schema, aliases map[string]string) error {
+	rv reflect.Value, s map[string]*schema.Schema, aliases map[string]map[string]string) error {
 	return iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema,
 		path []string, valueField *reflect.Value) error {
 		fieldPath := strings.Join(path, ".")
-		fieldName := path[len(path)-1]
-		newAliases := unwrapAliasesMap(fieldName, aliases)
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
 			return nil
@@ -753,13 +754,13 @@ func readReflectValueFromData(path []string, d attributeGetter,
 			rawSet := raw.(*schema.Set)
 			rawList := rawSet.List()
 			return readListFromData(path, d, rawList, valueField,
-				fieldSchema, newAliases, func(i int) string {
+				fieldSchema, aliases, func(i int) string {
 					return strconv.Itoa(rawSet.F(rawList[i]))
 				})
 		case schema.TypeList:
 			// here we rely on Terraform SDK to perform validation, so we don't to it twice
 			rawList := raw.([]any)
-			return readListFromData(path, d, rawList, valueField, fieldSchema, newAliases, strconv.Itoa)
+			return readListFromData(path, d, rawList, valueField, fieldSchema, aliases, strconv.Itoa)
 		default:
 			return fmt.Errorf("%s[%v] unsupported field type", fieldPath, raw)
 		}
@@ -812,7 +813,7 @@ func primitiveReflectValueFromInterface(rk reflect.Kind,
 }
 
 func readListFromData(path []string, d attributeGetter,
-	rawList []any, valueField *reflect.Value, fieldSchema *schema.Schema, aliases map[string]string,
+	rawList []any, valueField *reflect.Value, fieldSchema *schema.Schema, aliases map[string]map[string]string,
 	offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
 		return nil

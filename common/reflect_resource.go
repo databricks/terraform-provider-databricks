@@ -49,7 +49,10 @@ type ResourceProvider interface {
 
 // Takes in a ResourceProvider and converts that into a map from string to schema.
 func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
+	println("rp!!!")
+	println(len(v.Aliases()))
 	rv := reflect.ValueOf(v)
+	println(rv.Type().Name())
 	scm := typeToSchema(rv, v.Aliases(), map[string]int{})
 	scm = v.CustomizeSchema(scm)
 	return scm
@@ -298,6 +301,12 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, timesVi
 	}
 	// TODO: do we need package prefix?
 	parentTypeName := v.Type().Name()
+	if parentTypeName == "JobSettings" {
+		println(parentTypeName)
+		println("here!!!")
+		println(len(aliases))
+		println(len(aliases["JobSettings"]))
+	}
 	timesVisited[v.Type().Name()] += 1
 	fields := listAllFields(v)
 	for _, field := range fields {

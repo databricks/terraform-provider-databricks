@@ -30,19 +30,19 @@ type JobSettingsResource struct {
 
 func (JobSettingsResource) Aliases() map[string]map[string]string {
 	aliases := map[string]map[string]string{
-		"JobSettings": map[string]string{
+		"JobSettingsResource": {
 			"tasks":        "task",
 			"parameters":   "parameter",
 			"job_clusters": "job_cluster",
 		},
-		"GitSource": map[string]string{
+		"GitSource": {
 			"git_url":      "url",
 			"git_provider": "provider",
 			"git_branch":   "branch",
 			"git_tag":      "tag",
 			"git_commit":   "commit",
 		},
-		"Task": map[string]string{
+		"Task": {
 			"libraries": "library",
 		},
 	}
@@ -923,8 +923,8 @@ func ResourceJob() common.Resource {
 		return ctx
 	}
 	return common.Resource{
-		Schema: newSchema,
-		// SchemaVersion: 2,
+		Schema:        newSchema,
+		SchemaVersion: 2,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),

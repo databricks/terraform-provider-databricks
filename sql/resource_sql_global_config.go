@@ -29,7 +29,7 @@ type GlobalConfig struct {
 	DataAccessConfig        map[string]string `json:"data_access_config,omitempty"`
 	InstanceProfileARN      string            `json:"instance_profile_arn,omitempty"`
 	GoogleServiceAccount    string            `json:"google_service_account,omitempty"`
-	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"computed"`
+	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"computed,optional"`
 	SqlConfigParams         map[string]string `json:"sql_config_params,omitempty"`
 }
 
@@ -139,7 +139,18 @@ func ResourceSqlGlobalConfig() common.Resource {
 		return nil
 	}
 	return common.Resource{
-		Create: setGlobalConfig,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			if _, ok := d.GetOk("enable_serverless_compute"); !ok {
+				// Read the current global config and use the current value of enable_serverless_compute as
+				// the default value if not specified.
+				gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
+				if err != nil {
+					return err
+				}
+				d.Set("enable_serverless_compute", gc.EnableServerlessCompute)
+			}
+			return setGlobalConfig(ctx, d, c)
+		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
 			if err != nil {

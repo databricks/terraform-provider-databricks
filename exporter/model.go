@@ -36,6 +36,16 @@ type resourceApproximation struct {
 	Instances []instanceApproximation `json:"instances"`
 }
 
+func (ra *resourceApproximation) Get(attr string) (any, bool) {
+	for _, i := range ra.Instances {
+		v, found := i.Attributes[attr]
+		if found {
+			return v, found
+		}
+	}
+	return nil, false
+}
+
 // TODO: think if something like trie may help here...
 type resourceApproximationHolder struct {
 	mutex      sync.RWMutex
@@ -163,9 +173,14 @@ const (
 	MatchCaseInsensitive = "caseinsensitive"
 	// MatchPrefix is to specify that prefix of value should match
 	MatchPrefix = "prefix"
+	// MatchLongestPrefix is to specify that prefix of value should match, and select the longest value from list of candidates
+	MatchLongestPrefix = "longestprefix"
 	// MatchRegexp is to specify that the group extracted from value should match
 	MatchRegexp = "regexp"
 )
+
+type valueTransformFunc func(string) string
+type isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
 
 type reference struct {
 	// path to a given field, like, `cluster_id`, `access_control.user_name``, ... For references blocks/arrays, the `.N` component isn't required
@@ -182,6 +197,13 @@ type reference struct {
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match
 	Regexp *regexp.Regexp
+	// functions to transform match and current search value
+	MatchValueTransformFunc  valueTransformFunc
+	SearchValueTransformFunc valueTransformFunc
+	// function to evaluate fit of the resource approximation found to the resource...
+	IsValidApproximation isValidAproximationFunc
+	// if we should skip direct lookups (for example, we need it for UC schemas matching)
+	SkipDirectLookup bool
 }
 
 func (r reference) MatchAttribute() string {

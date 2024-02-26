@@ -12,6 +12,7 @@ This data source allows you to fetch all available AWS availability zones on you
 ```hcl
 data "databricks_zones" "zones" {}
 ```
+
 ## Argument Reference
 
 There are no arguments to this data source and only attributes that are computed.

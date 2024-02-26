@@ -436,7 +436,7 @@ The following options are available:
 * `google_service_account` - (Optional, string) Google Service Account email address that the cluster uses to authenticate with Google Identity. This field is used for authentication with the GCS and BigQuery data sources.
 * `availability` - (Optional) Availability type used for all nodes. Valid values are `PREEMPTIBLE_GCP`, `PREEMPTIBLE_WITH_FALLBACK_GCP` and `ON_DEMAND_GCP`, default: `ON_DEMAND_GCP`.
 * `boot_disk_size` (optional, int) Boot disk size in GB
-* `local_ssd_count` (optional, int) Number of local SSD disks (each is 375GB in size) that will be attached to each node of the cluster. 
+* `local_ssd_count` (optional, int) Number of local SSD disks (each is 375GB in size) that will be attached to each node of the cluster.
 * `zone_id` (optional)  Identifier for the availability zone in which the cluster resides. This can be one of the following:
   * `HA` (default): High availability, spread nodes across availability zones for a Databricks deployment region.
   * `AUTO`: Databricks picks an availability zone to schedule the cluster on.
@@ -553,7 +553,7 @@ terraform import databricks_cluster.this <cluster-id>
 
 The following resources are often used in the same context:
 
-* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide.
+* [Dynamic Passthrough Clusters for a Group](../guides/workspace-management.md) guide.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_clusters](../data-sources/clusters.md) data to retrieve a list of [databricks_cluster](cluster.md) ids.
 * [databricks_cluster_policy](cluster_policy.md) to create a [databricks_cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules.

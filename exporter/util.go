@@ -890,7 +890,7 @@ func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource
 	}
 	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
 	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+		[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 }
 
 func generateUniqueID(v string) string {
@@ -945,6 +945,17 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
 func (ic *importContext) enableServices(services string) {
 	ic.services = map[string]struct{}{}
 	for _, s := range strings.Split(services, ",") {
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+	for s := range ic.listing { // Add all services mentioned in the listing
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+}
+
+func (ic *importContext) enableListing(listing string) {
+	ic.listing = map[string]struct{}{}
+	for _, s := range strings.Split(listing, ",") {
+		ic.listing[strings.TrimSpace(s)] = struct{}{}
 		ic.services[strings.TrimSpace(s)] = struct{}{}
 	}
 }
@@ -1219,4 +1230,72 @@ func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
 		time.Sleep(time.Duration(delay) * time.Second)
 	}
 	return err
+}
+
+func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "owner" {
+		return d.Get(pathString).(string) == ""
+	}
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
+func appendEndingSlashToDirName(dir string) string {
+	if dir == "" || dir[len(dir)-1] == '/' {
+		return dir
+	}
+	return dir + "/"
+}
+
+func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, origPath=%s", res.Resource, origPath)
+	res_catalog_name := res.Data.Get("catalog_name").(string)
+	res_schema_name := res.Data.Get("schema_name").(string)
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, catalog='%s' schema='%s'",
+	// 	res.Resource, res_catalog_name, res_schema_name)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v)",
+	// 	ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found)
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: result: %v approximation: catalog='%v' schema='%v', res: catalog='%s' schema='%s'",
+	// 	result, ra_catalog_name, ra_schema_name, res_catalog_name, res_schema_name)
+	return result
+}
+
+func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	shareName, ok := res.Data.GetOk("share")
+	// principal := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingShareRecipient: origPath='%s', ra.Type='%s', shareName='%v', ok? %v, principal='%v'",
+	// 	origPath, ra.Type, shareName, ok, principal)
+
+	return ok && shareName.(string) != ""
+}
+
+func isMatchignShareObject(obj string) isValidAproximationFunc {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
+		objType, ok := res.Data.GetOk(objPath)
+		// name := res.Data.Get(origPath)
+		// log.Printf("[DEBUG] isMatchignShareObject: %s origPath='%s', ra.Type='%s', name='%v', objPath='%s' objType='%v' ok? %v",
+		// 	obj, origPath, ra.Type, name, objPath, objType, ok)
+
+		return ok && objType.(string) == obj
+	}
+}
+
+func isMatchingAllowListArtifact(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	objPath := strings.Replace(origPath, ".artifact", ".match_type", 1)
+	matchType, ok := res.Data.GetOk(objPath)
+	artifactType := res.Data.Get("artifact_type").(string)
+	// artifact := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingAllowListArtifact: origPath='%s', ra.Type='%s', artifactType='%v' artifact='%v', objPath='%s' matchType='%v' ok? %v",
+	// 	origPath, ra.Type, artifactType, artifact, objPath, matchType, ok)
+
+	return ok && matchType.(string) == "PREFIX_MATCH" && (artifactType == "LIBRARY_JAR" || artifactType == "INIT_SCRIPT")
 }

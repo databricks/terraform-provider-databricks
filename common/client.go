@@ -267,6 +267,7 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 		Host:                 url,
 		Username:             c.Config.Username,
 		Password:             c.Config.Password,
+		AuthType:             c.Config.AuthType,
 		Token:                c.Config.Token,
 		ClientID:             c.Config.ClientID,
 		ClientSecret:         c.Config.ClientSecret,

@@ -569,7 +569,7 @@ func TestCreateStorageCredentialWithDbGcpSA(t *testing.T) {
 				ExpectedRequest: catalog.CreateStorageCredential{
 					Name:                        "a",
 					Comment:                     "c",
-					DatabricksGcpServiceAccount: struct{}{},
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountRequest{},
 				},
 				Response: catalog.StorageCredentialInfo{
 					Name: "a",

@@ -64,24 +64,24 @@ func ResourceModelServing() common.Resource {
 			_, e := d.GetOk("config.0.served_entities.0.external_model")
 			provider, p := d.GetOk("config.0.served_entities.0.external_model.0.provider")
 			if e && p {
-				providerName := strings.ReplaceAll(provider.(string), "-", "_")
-				config := d.Get(fmt.Sprintf("config.0.served_entities.0.external_model.0.%s_config", providerName)).([]interface{})
+				name := strings.ReplaceAll(provider.(string), "-", "_")
+				config := d.Get(fmt.Sprintf("config.0.served_entities.0.external_model.0.%s_config", name)).([]interface{})
 
 				if len(config) == 0 {
-					return fmt.Errorf("external_model provider is set to \"%s\" but \"%s_config\" block is missing", providerName, providerName)
+					return fmt.Errorf("external_model provider is set to \"%s\" but \"%s_config\" block is missing", name, name)
 				}
 
 				if configBlock, ok := d.Get("config.0.served_entities.0.external_model.0").(map[string]interface{}); ok {
-					var configsFound []string
+					var found []string
 					for key, value := range configBlock {
 						if strings.HasSuffix(key, "_config") {
 							if len(value.([]interface{})) > 0 {
-								configsFound = append(configsFound, key)
+								found = append(found, key)
 							}
 						}
 					}
-					if len(configsFound) > 1 {
-						msg := strings.Join(configsFound, ", ")
+					if len(found) > 1 {
+						msg := strings.Join(found, ", ")
 						return fmt.Errorf("only one external_model config block is allowed. Found: %s", msg)
 					}
 				}

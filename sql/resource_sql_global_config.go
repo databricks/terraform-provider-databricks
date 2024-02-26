@@ -162,7 +162,10 @@ func ResourceSqlGlobalConfig() common.Resource {
 		},
 		Update: setGlobalConfig,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{SecurityPolicy: "DATA_ACCESS_CONTROL"}, d)
+			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{
+				SecurityPolicy:          "DATA_ACCESS_CONTROL",
+				EnableServerlessCompute: d.Get("enable_serverless_compute").(bool),
+			}, d)
 		},
 		Schema: s,
 	}

@@ -27,11 +27,14 @@ func getSqlGlobalConfigLockable(t *testing.T) core.Lockable {
 	return lock.NewLockable(SqlGlobalConfigLock{WorkspaceHost: GetEnvOrSkipTest(t, "DATABRICKS_HOST")})
 }
 
-func checkServerlessEnabled(t *testing.T, state *terraform.State, enabled bool) {
-	enableServerlessComputeStr := state.Modules[0].Resources["databricks_sql_global_config.this"].Primary.Attributes["enable_serverless_compute"]
-	enableServerlessCompute, err := strconv.ParseBool(enableServerlessComputeStr)
-	require.NoError(t, err)
-	assert.Equal(t, enabled, enableServerlessCompute)
+func makeSqlGlobalConfig(extraConfig string) string {
+	return fmt.Sprintf(`
+resource "databricks_sql_global_config" "this" {
+	data_access_config = {
+		"spark.sql.session.timeZone": "UTC"
+	}
+	%s
+}`, extraConfig)
 }
 
 func TestAccSQLGlobalConfig(t *testing.T) {
@@ -40,11 +43,7 @@ func TestAccSQLGlobalConfig(t *testing.T) {
 	_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
 	require.NoError(t, err)
 	workspaceLevel(t, step{
-		Template: `resource "databricks_sql_global_config" "this" {
-			data_access_config = {
-				"spark.sql.session.timeZone": "UTC"
-			}  
-		}`,
+		Template: makeSqlGlobalConfig(""),
 	})
 }
 
@@ -54,29 +53,27 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 		skipf(t)("GCP does not support serverless compute")
 	}
 	ctx := context.Background()
-	l, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
+	_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
 	require.NoError(t, err)
-	defer l.Unlock()
+
+	checkServerlessEnabled := func(enabled bool) func(state *terraform.State) error {
+		return func(state *terraform.State) error {
+			enableServerlessComputeStr := state.Modules[0].Resources["databricks_sql_global_config.this"].Primary.Attributes["enable_serverless_compute"]
+			enableServerlessCompute, err := strconv.ParseBool(enableServerlessComputeStr)
+			require.NoError(t, err)
+			assert.Equal(t, enabled, enableServerlessCompute)
+			return nil
+		}
+	}
+
 	workspaceLevel(t, step{
-		Template: `resource "databricks_sql_global_config" "this" {
-			enable_serverless_compute = true
-			data_access_config = {
-				"spark.sql.session.timeZone": "UTC"
-			}
-		}`,
-		Check: func(s *terraform.State) error {
-			checkServerlessEnabled(t, s, true)
-			return nil
-		},
+		Template: makeSqlGlobalConfig("enable_serverless_compute = true"),
+		Check:    checkServerlessEnabled(true),
 	}, step{
-		Template: `resource "databricks_sql_global_config" "this" {
-			data_access_config = {
-				"spark.sql.session.timeZone": "UTC"
-			}
-		}`,
-		Check: func(s *terraform.State) error {
-			checkServerlessEnabled(t, s, true)
-			return nil
-		},
+		Template: makeSqlGlobalConfig(""),
+		Check:    checkServerlessEnabled(true),
+	}, step{
+		Template: makeSqlGlobalConfig("enable_serverless_compute = false"),
+		Check:    checkServerlessEnabled(false),
 	})
 }

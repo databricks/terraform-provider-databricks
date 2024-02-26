@@ -39,10 +39,12 @@ resource "databricks_sql_global_config" "this" {
 
 func TestAccSQLGlobalConfig(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	ctx := context.Background()
-	_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
-	require.NoError(t, err)
 	workspaceLevel(t, step{
+		PreConfig: func() {
+			ctx := context.Background()
+			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
+			require.NoError(t, err)
+		},
 		Template: makeSqlGlobalConfig(""),
 	})
 }
@@ -52,9 +54,6 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 	if strings.Contains(os.Getenv("CLOUD_ENV"), "gcp") {
 		skipf(t)("GCP does not support serverless compute")
 	}
-	ctx := context.Background()
-	_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
-	require.NoError(t, err)
 
 	checkServerlessEnabled := func(enabled bool) func(state *terraform.State) error {
 		return func(state *terraform.State) error {
@@ -67,6 +66,11 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 	}
 
 	workspaceLevel(t, step{
+		PreConfig: func() {
+			ctx := context.Background()
+			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
+			require.NoError(t, err)
+		},
 		Template: makeSqlGlobalConfig("enable_serverless_compute = true"),
 		Check:    checkServerlessEnabled(true),
 	}, step{

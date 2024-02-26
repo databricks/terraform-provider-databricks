@@ -38,3 +38,11 @@ The resource supports the following arguments:
 
 * `restrict_workspace_admins` - (Required) The configuration details.
 * `status` - (Required) The restrict workspace admins status for the workspace.
+
+## Import
+
+This resource can be imported by predefined name `global`:
+
+```bash
+terraform import databricks_restrict_workspace_admins_setting.this global
+```

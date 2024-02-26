@@ -70,6 +70,21 @@ func ResourceModelServing() common.Resource {
 				if len(config) == 0 {
 					return fmt.Errorf("external_model provider is set to \"%s\" but \"%s_config\" block is missing", providerName, providerName)
 				}
+
+				if configBlock, ok := d.Get("config.0.served_entities.0.external_model.0").(map[string]interface{}); ok {
+					var configsFound []string
+					for key, value := range configBlock {
+						if strings.HasSuffix(key, "_config") {
+							if len(value.([]interface{})) > 0 {
+								configsFound = append(configsFound, key)
+							}
+						}
+					}
+					if len(configsFound) > 1 {
+						msg := strings.Join(configsFound, ", ")
+						return fmt.Errorf("only one external model config block is allowed. Found: %s", msg)
+					}
+				}
 			}
 
 			return nil

@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	defaultSettingName = "global"
+	defaultSettingId = "global"
 )
 
 func retryOnEtagError[Req, Resp any](f func(req Req) (Resp, error), firstReq Req, updateReq func(req *Req, newEtag string), retriableErrors []error) (Resp, error) {
@@ -133,7 +133,7 @@ func (w workspaceSetting[T]) GetETag(t *T) string {
 }
 
 func (w workspaceSetting[T]) GetId(t *T) string {
-	id := defaultSettingName
+	id := defaultSettingId
 	if w.generateIdFunc != nil {
 		id = w.generateIdFunc(t)
 	}
@@ -189,7 +189,7 @@ func (w accountSetting[T]) SetETag(t *T, newEtag string) {
 }
 
 func (w accountSetting[T]) GetId(t *T) string {
-	id := defaultSettingName
+	id := defaultSettingId
 	if w.generateIdFunc != nil {
 		id = w.generateIdFunc(t)
 	}

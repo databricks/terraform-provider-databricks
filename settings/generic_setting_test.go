@@ -74,7 +74,7 @@ func TestQueryCreateDefaultNameSetting(t *testing.T) {
 			}
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id":                defaultSettingName,
+		"id":                defaultSettingId,
 		"etag":              "etag2",
 		"namespace.0.value": "namespace_value",
 	})
@@ -101,9 +101,9 @@ func TestQueryReadDefaultNameSetting(t *testing.T) {
 			}
 			etag = "etag1"
 		`,
-		ID: defaultSettingName,
+		ID: defaultSettingId,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id":                defaultSettingName,
+		"id":                defaultSettingId,
 		"etag":              "etag2",
 		"namespace.0.value": "namespace_value",
 	})
@@ -148,9 +148,9 @@ func TestQueryUpdateDefaultNameSetting(t *testing.T) {
 			}
 			etag = "etag1"
 		`,
-		ID: defaultSettingName,
+		ID: defaultSettingId,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id":                defaultSettingName,
+		"id":                defaultSettingId,
 		"etag":              "etag2",
 		"namespace.0.value": "new_namespace_value",
 	})
@@ -216,9 +216,9 @@ func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 			}
 			etag = "etag1"
 		`,
-		ID: defaultSettingName,
+		ID: defaultSettingId,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id":                defaultSettingName,
+		"id":                defaultSettingId,
 		"etag":              "etag3",
 		"namespace.0.value": "new_namespace_value",
 	})
@@ -241,7 +241,7 @@ func TestQueryDeleteDefaultNameSetting(t *testing.T) {
 			}
 			etag = "etag1"
 		`,
-		ID: defaultSettingName,
+		ID: defaultSettingId,
 	}.Apply(t)
 
 	assert.NoError(t, err)
@@ -278,7 +278,7 @@ func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
 			}
 			etag = "etag1"
 		`,
-		ID: defaultSettingName,
+		ID: defaultSettingId,
 	}.Apply(t)
 
 	assert.NoError(t, err)

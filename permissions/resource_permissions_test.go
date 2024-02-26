@@ -467,7 +467,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 			Status: 400,
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		r := ResourcePermissions()
+		r := ResourcePermissions().ToResource()
 		d := r.TestResourceData()
 		d.SetId("/clusters/abc")
 		diags := r.ReadContext(ctx, d, client)
@@ -1178,7 +1178,7 @@ func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_RUN"
 		}`,
-	}.ExpectError(t, "cannot load path /foo/bar: I'm a teapot")
+	}.ExpectError(t, "cannot load path /foo/bar: i'm a teapot")
 }
 
 func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
@@ -1195,7 +1195,7 @@ func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 			user_name = "ben"
 			permission_level = "CAN_MANAGE"
 		}`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourcePermissionsUpdate(t *testing.T) {
@@ -1476,7 +1476,7 @@ func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
 				GroupName: "admins",
 			},
 		},
-	}).ToPermissionsEntity(ResourcePermissions().TestResourceData(), "me")
+	}).ToPermissionsEntity(ResourcePermissions().ToResource().TestResourceData(), "me")
 	assert.EqualError(t, err, "unknown object type bananas")
 }
 
@@ -1497,7 +1497,7 @@ func TestDeleteMissing(t *testing.T) {
 			Response: apierr.NotFound("missing"),
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		p := ResourcePermissions()
+		p := ResourcePermissions().ToResource()
 		d := p.TestResourceData()
 		d.SetId("x")
 		diags := p.DeleteContext(ctx, d, client)

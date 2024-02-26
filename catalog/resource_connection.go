@@ -5,7 +5,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"golang.org/x/exp/slices"
 )
@@ -27,7 +26,7 @@ type ConnectionInfo struct {
 	// A map of key-value properties attached to the securable.
 	Options map[string]string `json:"options" tf:"sensitive"`
 	// Username of current owner of the connection.
-	Owner string `json:"owner,omitempty" tf:"force_new,suppress_diff"`
+	Owner string `json:"owner,omitempty" tf:"computed"`
 	// An object containing map of key-value properties attached to the
 	// connection.
 	Properties map[string]string `json:"properties,omitempty" tf:"force_new"`
@@ -35,9 +34,9 @@ type ConnectionInfo struct {
 	ReadOnly bool `json:"read_only,omitempty" tf:"force_new,computed"`
 }
 
-var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "OAuthPvtKey"}
+var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "OAuthPvtKey", "GoogleServiceAccountKeyJson"}
 
-func ResourceConnection() *schema.Resource {
+func ResourceConnection() common.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		common.NoCustomize)
 	pi := common.NewPairID("metastore_id", "name").Schema(
@@ -47,9 +46,6 @@ func ResourceConnection() *schema.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if d.Get("owner") != "" {
-				tflog.Warn(context.Background(), "owner field not currently supported. Support will be enabled in a future update.")
-			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -64,6 +60,16 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			// Update owner if it is provided
+			if d.Get("owner") != "" {
+				var updateConnectionRequest catalog.UpdateConnection
+				common.DataToStructPointer(d, s, &updateConnectionRequest)
+				updateConnectionRequest.Name = createConnectionRequest.Name
+				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
+				if err != nil {
+					return err
+				}
+			}
 			d.Set("metastore_id", conn.MetastoreId)
 			pi.Pack(d)
 			return nil
@@ -77,13 +83,17 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			conn, err := w.Connections.GetByNameArg(ctx, connName)
+			conn, err := w.Connections.GetByName(ctx, connName)
 			if err != nil {
 				return err
 			}
 			// We need to preserve original sensitive options as API doesn't return them
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)
+			// If there are no options returned, need to initialize the map
+			if conn.Options == nil {
+				conn.Options = map[string]string{}
+			}
 			for key, element := range cOrig.Options {
 				if slices.Contains(sensitiveOptions, key) {
 					conn.Options[key] = element
@@ -92,9 +102,6 @@ func ResourceConnection() *schema.Resource {
 			return common.StructToData(conn, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if d.Get("owner") != "" {
-				tflog.Warn(context.Background(), "owner field not currently supported. Support will be enabled in a future update.")
-			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -106,17 +113,37 @@ func ResourceConnection() *schema.Resource {
 			var updateConnectionRequest catalog.UpdateConnection
 			common.DataToStructPointer(d, s, &updateConnectionRequest)
 			_, connName, err := pi.Unpack(d)
-			updateConnectionRequest.NameArg = connName
 			if err != nil {
 				return err
 			}
-			conn, err := w.Connections.Update(ctx, updateConnectionRequest)
+			updateConnectionRequest.Name = connName
+
+			if d.HasChange("owner") {
+				_, err = w.Connections.Update(ctx, catalog.UpdateConnection{
+					Name:  updateConnectionRequest.Name,
+					Owner: updateConnectionRequest.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			updateConnectionRequest.Owner = ""
+			_, err = w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.Connections.Update(ctx, catalog.UpdateConnection{
+						Name:  updateConnectionRequest.Name,
+						Owner: old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
 				return err
 			}
-			// We need to repack the Id as the name may have changed
-			d.Set("name", conn.Name)
-			pi.Pack(d)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -128,7 +155,7 @@ func ResourceConnection() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Connections.DeleteByNameArg(ctx, connName)
+			return w.Connections.DeleteByName(ctx, connName)
 		},
-	}.ToResource()
+	}
 }

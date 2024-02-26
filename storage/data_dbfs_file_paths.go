@@ -3,19 +3,19 @@ package storage
 import (
 	"context"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceDbfsFilePaths() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func DataSourceDbfsFilePaths() common.Resource {
+	return common.Resource{
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			path := d.Get("path").(string)
 			recursive := d.Get("recursive").(bool)
 			paths, err := NewDbfsAPI(ctx, m).List(path, recursive)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(path)
 			pathList := []map[string]any{}

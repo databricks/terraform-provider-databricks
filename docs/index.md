@@ -84,14 +84,18 @@ resource "databricks_notebook" "this" {
 resource "databricks_job" "this" {
   name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
 
-  new_cluster {
-    num_workers   = 1
-    spark_version = data.databricks_spark_version.latest.id
-    node_type_id  = data.databricks_node_type.smallest.id
-  }
+  task {
+    task_key = "task1"
 
-  notebook_task {
-    notebook_path = databricks_notebook.this.path
+    notebook_task {
+      notebook_path = databricks_notebook.this.path
+    }
+
+    new_cluster {
+      num_workers   = 1
+      spark_version = data.databricks_spark_version.latest.id
+      node_type_id  = data.databricks_node_type.smallest.id
+    }
   }
 }
 
@@ -350,6 +354,10 @@ The provider works with [Google Cloud CLI authentication](https://cloud.google.c
 Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
 
 If you are configuring a new Databricks account for the first time, please create at least one workspace with an identity (user or service principal) that you intend to use for Unity Catalog rollout. You can then configure the provider using that identity and workspace to provision the required Unity Catalog resources.
+
+## Special considerations for Unity Catalog Resources
+
+When performing a single Terraform apply to update both the owner and other fields for Unity Catalog resources, the process first updates the owner, followed by the other fields using the new owner's permissions. If your principal is not the owner (specifically, the newly updated owner), you will not have the authority to modify those fields. In cases where you wish to change the owner to another individual and also update other fields, we recommend initially updating the fields using your principal, which should have owner permissions, and then updating the owner in a separate step.
 
 ## Miscellaneous configuration parameters
 

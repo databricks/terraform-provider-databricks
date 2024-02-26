@@ -45,15 +45,11 @@ type CredentialInfo struct {
 	ExternalId string `json:"external_id,omitempty" tf:"computed"`
 }
 
-func ResourceMwsCredentials() *schema.Resource {
+func ResourceMwsCredentials() common.Resource {
 	p := common.NewPairSeparatedID("account_id", "credentials_id", "/")
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			err := c.SetAccountId(d.Get("account_id").(string))
-			if err != nil {
-				return err
-			}
-			acc, err := c.AccountClient()
+			acc, err := c.AccountClientWithAccountIdFromConfig(d)
 			if err != nil {
 				return err
 			}
@@ -114,5 +110,5 @@ func ResourceMwsCredentials() *schema.Resource {
 			s["account_id"].Deprecated = "`account_id` should be set as part of the Databricks Config, not in the resource."
 			return s
 		}),
-	}.ToResource()
+	}
 }

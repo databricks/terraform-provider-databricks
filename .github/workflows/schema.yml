@@ -8,11 +8,11 @@ on:
     inputs:
       base:
         description: "Base ref"
-        default: "master"
+        default: "main"
         required: true
       head:
         description: "Head ref"
-        default: "master"
+        default: "main"
         required: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           ref: ${{ github.event.inputs.head }}
 
       - name: "Setup Go"
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: 1.21.x
 

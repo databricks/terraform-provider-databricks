@@ -40,7 +40,7 @@ type CatalogInfo struct {
 	MetastoreID    string            `json:"metastore_id,omitempty" tf:"computed"`
 }
 
-func ResourceCatalog() *schema.Resource {
+func ResourceCatalog() common.Resource {
 	catalogSchema := common.StructToSchema(CatalogInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["force_destroy"] = &schema.Schema{
@@ -148,6 +148,10 @@ func ResourceCatalog() *schema.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			updateCatalogRequest.Owner = ""
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
 
@@ -219,5 +223,5 @@ func ResourceCatalog() *schema.Resource {
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
-	}.ToResource()
+	}
 }

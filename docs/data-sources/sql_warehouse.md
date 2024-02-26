@@ -49,9 +49,9 @@ This data source exports the following attributes:
 * `enable_photon` - Whether [Photon](https://databricks.com/product/delta-engine) is enabled.
 * `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse.
 
-    - **For AWS**:  If your account needs updated [terms of use](https://docs.databricks.com/sql/admin/serverless.html#accept-terms), workspace admins are prompted in the Databricks SQL UI. A workspace must meet the [requirements](https://docs.databricks.com/sql/admin/serverless.html#requirements) and might require an update its instance profile role to [add a trust relationship](https://docs.databricks.com/sql/admin/serverless.html#aws-instance-profile-setup).
+  * **For AWS**:  If your account needs updated [terms of use](https://docs.databricks.com/sql/admin/serverless.html#accept-terms), workspace admins are prompted in the Databricks SQL UI. A workspace must meet the [requirements](https://docs.databricks.com/sql/admin/serverless.html#requirements) and might require an update its instance profile role to [add a trust relationship](https://docs.databricks.com/sql/admin/serverless.html#aws-instance-profile-setup).
 
-    - **For Azure**, you must [enable your workspace for serverless SQL warehouse](https://learn.microsoft.com/azure/databricks/sql/admin/serverless).
+  * **For Azure**, you must [enable your workspace for serverless SQL warehouse](https://learn.microsoft.com/azure/databricks/sql/admin/serverless).
 
 * `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/index.html#warehouse-types) or [Azure](https://learn.microsoft.com/azure/databricks/sql/#warehouse-types).
 * `channel` block, consisting of following fields:
@@ -59,6 +59,11 @@ This data source exports the following attributes:
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
 * `data_source_id` - ID of the data source for this warehouse. This is used to bind an Databricks SQL query to an warehouse.
+* `creator_name` - The username of the user who created the endpoint.
+* `num_active_sessions` - The current number of clusters used by the endpoint.
+* `num_clusters` - The current number of clusters used by the endpoint.
+* `state` - The current state of the endpoint.
+* `health` - Health status of the endpoint.
 
 ## Related resources
 

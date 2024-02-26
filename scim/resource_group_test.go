@@ -355,14 +355,14 @@ func TestCreateForceOverwriteCannotListGroups(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22abc%22",
 			Status:   417,
 			Response: apierr.APIError{
 				Message: "cannot find group",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceGroup().TestResourceData()
+		d := ResourceGroup().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedGroup(
 			fmt.Errorf("Group with name abc already exists."),
@@ -377,7 +377,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%27abc%27",
+			Resource: "/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22abc%22",
 			Response: GroupList{
 				Resources: []Group{
 					{
@@ -402,7 +402,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceGroup().TestResourceData()
+		d := ResourceGroup().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("display_name", "abc")
 		err := createForceOverridesManuallyAddedGroup(

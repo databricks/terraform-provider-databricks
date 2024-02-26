@@ -45,7 +45,7 @@ type SqlTableInfo struct {
 	WarehouseID           string            `json:"warehouse_id,omitempty"`
 
 	exec    common.CommandExecutor
-	sqlExec *sql.StatementExecutionAPI
+	sqlExec sql.StatementExecutionInterface
 }
 
 type SqlTablesAPI struct {
@@ -384,7 +384,7 @@ func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	return nil
 }
 
-func ResourceSqlTable() *schema.Resource {
+func ResourceSqlTable() common.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["data_source_format"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
@@ -394,6 +394,7 @@ func ResourceSqlTable() *schema.Resource {
 				return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
 			}
 			s["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
+			s["view_definition"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 
 			s["cluster_id"].ConflictsWith = []string{"warehouse_id"}
 			s["warehouse_id"].ConflictsWith = []string{"cluster_id"}
@@ -471,5 +472,5 @@ func ResourceSqlTable() *schema.Resource {
 			}
 			return ti.deleteTable()
 		},
-	}.ToResource()
+	}
 }

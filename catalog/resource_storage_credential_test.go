@@ -115,6 +115,72 @@ func TestCreateStorageCredentialWithOwner(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials",
+				ExpectedRequest: &catalog.AccountsCreateStorageCredential{
+					MetastoreId: "metastore_id",
+					CredentialInfo: &catalog.CreateStorageCredential{
+						Name: "storage_credential_name",
+						AwsIamRole: &catalog.AwsIamRole{
+							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
+						},
+					},
+				},
+				Response: catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "storage_credential_name",
+					},
+				},
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials/storage_credential_name",
+				ExpectedRequest: &catalog.AccountsUpdateStorageCredential{
+					CredentialInfo: &catalog.UpdateStorageCredential{
+						Name:  "storage_credential_name",
+						Owner: "administrators",
+						AwsIamRole: &catalog.AwsIamRole{
+							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
+						},
+					},
+				},
+				Response: &catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "storage_credential_name",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials/storage_credential_name?",
+				Response: &catalog.AccountsStorageCredentialInfo{
+					CredentialInfo: &catalog.StorageCredentialInfo{
+						Name: "storage_credential_name",
+						AwsIamRole: &catalog.AwsIamRole{
+							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
+						},
+					},
+				},
+			},
+		},
+		Resource:  ResourceStorageCredential(),
+		AccountID: "account_id",
+		Create:    true,
+		HCL: `
+		name = "storage_credential_name"
+		metastore_id = "metastore_id"
+		aws_iam_role {
+			role_arn = "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF"
+		}
+		owner = "administrators"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateStorageCredentialsReadOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

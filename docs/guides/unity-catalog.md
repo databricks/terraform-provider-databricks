@@ -23,7 +23,7 @@ This guide uses the following variables in configurations:
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
-To get started with Unity Catalog, this guide takes you throw the following high-level steps:
+To get started with Unity Catalog, this guide takes you through the following high-level steps:
 
 - [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)
@@ -250,13 +250,13 @@ data "aws_iam_policy_document" "passrole_for_uc" {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
     principals {
-      identifiers = [databricks_storage_credential.external.aws_iam_role.unity_catalog_iam_arn]
+      identifiers = [databricks_storage_credential.external.aws_iam_role[0].unity_catalog_iam_arn]
       type        = "AWS"
     }
     condition {
       test     = "StringEquals"
       variable = "sts:ExternalId"
-      values   = [databricks_storage_credential.external.aws_iam_role.external_id]
+      values   = [databricks_storage_credential.external.aws_iam_role[0].external_id]
     }
   }
   statement {
@@ -297,7 +297,16 @@ resource "aws_iam_policy" "external_data_access" {
           "${aws_s3_bucket.external.arn}/*"
         ],
         "Effect" : "Allow"
-      }
+      },
+      {
+        "Action" : [
+          "sts:AssumeRole"
+        ],
+        "Resource" : [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access"
+        ],
+        "Effect" : "Allow"
+      },
     ]
   })
   tags = merge(local.tags, {

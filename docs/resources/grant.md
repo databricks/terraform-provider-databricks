@@ -32,15 +32,11 @@ See [databricks_grants Metastore grants](grants.md#metastore-grants) for the lis
 
 ```hcl
 resource "databricks_grant" "sandbox_data_engineers" {
-  metastore = databricks_metastore.this.id
-
   principal  = "Data Engineers"
   privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
 }
 
 resource "databricks_grant" "sandbox_data_sharer" {
-  metastore = databricks_metastore.this.id
-
   principal  = "Data Sharer"
   privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
 }
@@ -215,6 +211,26 @@ resource "databricks_grant" "customers_data_analysts" {
 }
 ```
 
+## Function grants
+
+See [databricks_grants Function grants](grants.md#function-grants) for the list of privileges that apply to Registered models.
+
+```hcl
+resource "databricks_grant" "udf_data_engineers" {
+  function = "main.reporting.udf"
+
+  principal  = "Data Engineers"
+  privileges = ["EXECUTE"]
+}
+
+resource "databricks_grant" "udf_data_analysts" {
+  function = "main.reporting.udf"
+
+  principal  = "Data Analysts"
+  privileges = ["EXECUTE"]
+}
+```
+
 ## Storage credential grants
 
 See [databricks_grants Storage credential grants](grants.md#storage-credential-grants) for the list of privileges that apply to Storage credentials.
@@ -329,3 +345,11 @@ resource "databricks_grant" "some" {
 ## Other access control
 
 You can control Databricks General Permissions through [databricks_permissions](permissions.md) resource.
+
+## Import
+
+The resource can be imported using combination of securable type (`table`, `catalog`, `foreign_connection`, ...), it's name and `principal`:
+
+```bash
+terraform import databricks_grant.this catalog/abc/user_name
+```

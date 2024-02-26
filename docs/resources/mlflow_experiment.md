@@ -25,6 +25,12 @@ The following arguments are supported:
 * `artifact_location` - Path to dbfs:/ or s3:// artifact location of the MLflow experiment.
 * `description` - The description of the MLflow experiment.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of the MLflow experiment.
+
 ## Access Control
 
 * [databricks_permissions](permissions.md#MLflow-Experiment-usage) can control which groups or individual users can *Read*, *Edit*, or *Manage* individual experiments.
@@ -34,7 +40,7 @@ The following arguments are supported:
 The experiment resource can be imported using the id of the experiment
 
 ```bash
-$ terraform import databricks_mlflow_experiment.this <experiment-id>
+terraform import databricks_mlflow_experiment.this <experiment-id>
 ```
 
 ## Related Resources

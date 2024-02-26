@@ -25,7 +25,7 @@ func isBuiltinPolicyFamily(ctx context.Context, w *databricks.WorkspaceClient, f
 }
 
 // ResourceClusterPolicy ...
-func ResourceClusterPolicy() *schema.Resource {
+func ResourceClusterPolicy() common.Resource {
 	s := common.StructToSchema(
 		compute.CreatePolicy{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -35,7 +35,10 @@ func ResourceClusterPolicy() *schema.Resource {
 			}
 			m["definition"].ConflictsWith = []string{"policy_family_definition_overrides", "policy_family_id"}
 			m["definition"].Computed = true
+			m["definition"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
+
 			m["policy_family_definition_overrides"].ConflictsWith = []string{"definition"}
+			m["policy_family_definition_overrides"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 			m["policy_family_id"].ConflictsWith = []string{"definition"}
 			m["policy_family_definition_overrides"].RequiredWith = []string{"policy_family_id"}
 
@@ -128,5 +131,5 @@ func ResourceClusterPolicy() *schema.Resource {
 			}
 			return w.ClusterPolicies.DeleteByPolicyId(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

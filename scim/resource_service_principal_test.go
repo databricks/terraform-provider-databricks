@@ -150,7 +150,7 @@ func TestResourceServicePrincipalCreate_Error(t *testing.T) {
 		display_name = "Example Service Principal"
 		allow_cluster_create = true
 		`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
@@ -332,7 +332,7 @@ func TestResourceServicePrincipalUpdate_Error(t *testing.T) {
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
@@ -365,7 +365,7 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceServicePrincipalDelete(t *testing.T) {
@@ -389,7 +389,7 @@ func TestResourceServicePrincipalDelete_Error(t *testing.T) {
 		Resource: ResourceServicePrincipal(),
 		Delete:   true,
 		ID:       "abc",
-	}.ExpectError(t, "I'm a teapot")
+	}.ExpectError(t, "i'm a teapot")
 }
 
 func TestResourceServicePrincipalDelete_NoErrorEmtpyParams(t *testing.T) {
@@ -543,7 +543,7 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 }
 
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {
-	d := ResourceUser().TestResourceData()
+	d := ResourceUser().ToResource().TestResourceData()
 	d.Set("force", true)
 	rerr := createForceOverridesManuallyAddedServicePrincipal(
 		fmt.Errorf("nonsense"), d,
@@ -556,14 +556,14 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%22%s%%22", appID),
 			Status:   417,
 			Response: apierr.APIError{
 				Message: "cannot find service principal",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
 			fmt.Errorf("Service principal with application ID %s already exists.", appID),
@@ -579,13 +579,13 @@ func TestCreateForceOverwriteCannotListAccServicePrincipals(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%22%s%%22", appID),
 			Response: UserList{
 				TotalResults: 0,
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
 			fmt.Errorf("Service principal with application ID %s already exists.", appID),
@@ -601,7 +601,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%27%s%%27", appID),
+			Resource: fmt.Sprintf("/api/2.0/preview/scim/v2/ServicePrincipals?excludedAttributes=roles&filter=applicationId%%20eq%%20%%22%s%%22", appID),
 			Response: UserList{
 				Resources: []User{
 					{
@@ -626,7 +626,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().TestResourceData()
+		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("application_id", appID)
 		err := createForceOverridesManuallyAddedServicePrincipal(

@@ -6,10 +6,9 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceCurrentMetastore() *schema.Resource {
+func DataSourceCurrentMetastore() common.Resource {
 	type CurrentMetastore struct {
 		Id        string                               `json:"id,omitempty" tf:"computed"`
 		Metastore *catalog.GetMetastoreSummaryResponse `json:"metastore_info,omitempty" tf:"computed" `

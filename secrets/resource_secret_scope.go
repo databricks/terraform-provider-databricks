@@ -108,7 +108,7 @@ var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`
 		"and may not exceed 128 characters.")
 
 // ResourceSecretScope manages secret scopes
-func ResourceSecretScope() *schema.Resource {
+func ResourceSecretScope() common.Resource {
 	s := common.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// TODO: DiffSuppressFunc for initial_manage_principal & importing
 		// nolint
@@ -139,5 +139,5 @@ func ResourceSecretScope() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewSecretScopesAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

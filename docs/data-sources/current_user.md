@@ -31,14 +31,18 @@ resource "databricks_notebook" "this" {
 resource "databricks_job" "this" {
   name = "Terraform Demo (${data.databricks_current_user.me.alphanumeric})"
 
-  new_cluster {
-    num_workers   = 1
-    spark_version = data.databricks_spark_version.latest.id
-    node_type_id  = data.databricks_node_type.smallest.id
-  }
+  task {
+    task_key = "task1"
 
-  notebook_task {
-    notebook_path = databricks_notebook.this.path
+    new_cluster {
+      num_workers   = 1
+      spark_version = data.databricks_spark_version.latest.id
+      node_type_id  = data.databricks_node_type.smallest.id
+    }
+
+    notebook_task {
+      notebook_path = databricks_notebook.this.path
+    }
   }
 }
 
@@ -68,7 +72,7 @@ Data source exposes the following attributes:
 
 The following resources are used in the same context:
 
-* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide
+* [End to end workspace management](../guides/workspace-management.md) guide
 * [databricks_directory](../resources/directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
 * [databricks_notebook](../resources/notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
 * [databricks_repo](../resources/repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

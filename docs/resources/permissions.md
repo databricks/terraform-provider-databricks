@@ -181,14 +181,18 @@ resource "databricks_job" "this" {
   name                = "Featurization"
   max_concurrent_runs = 1
 
-  new_cluster {
-    num_workers   = 300
-    spark_version = data.databricks_spark_version.latest.id
-    node_type_id  = data.databricks_node_type.smallest.id
-  }
+  task {
+    task_key = "task1"
 
-  notebook_task {
-    notebook_path = "/Production/MakeFeatures"
+    new_cluster {
+      num_workers   = 300
+      spark_version = data.databricks_spark_version.latest.id
+      node_type_id  = data.databricks_node_type.smallest.id
+    }
+
+    notebook_task {
+      notebook_path = "/Production/MakeFeatures"
+    }
   }
 }
 
@@ -815,7 +819,7 @@ Exactly one of the below arguments is required:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - Canonical unique identifier for the permissions.
+- `id` - Canonical unique identifier for the permissions in form of `/object_type/object_id`.
 - `object_type` - type of permissions.
 
 ## Import

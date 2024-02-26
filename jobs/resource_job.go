@@ -87,7 +87,8 @@ type SqlAlertTask struct {
 }
 
 type SqlFileTask struct {
-	Path string `json:"path"`
+	Path   string `json:"path"`
+	Source string `json:"source,omitempty" tf:"suppress_diff"`
 }
 
 // SqlTask contains information about DBSQL task
@@ -110,12 +111,54 @@ type DbtTask struct {
 	Schema            string   `json:"schema,omitempty" tf:"default:default"`
 	Catalog           string   `json:"catalog,omitempty"`
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
+	Source            string   `json:"source,omitempty" tf:"suppress_diff"`
 }
 
 // RunJobTask contains information about RunJobTask
 type RunJobTask struct {
 	JobID         int64             `json:"job_id"`
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
+}
+
+// TODO: As TF does not support recursive nesting, limit the nesting depth. Example:
+// https://github.com/hashicorp/terraform-provider-aws/blob/b4a9f93a2b7323202c8904e86cff03d3f2cb006b/internal/service/wafv2/rule_group.go#L110
+type ForEachTask struct {
+	Concurrency int               `json:"concurrency,omitempty"`
+	Inputs      string            `json:"inputs"`
+	Task        ForEachNestedTask `json:"task"`
+}
+
+type ForEachNestedTask struct {
+	TaskKey     string                `json:"task_key,omitempty"`
+	Description string                `json:"description,omitempty"`
+	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
+	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
+
+	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+
+	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
+	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+
+	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings   *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
+	TimeoutSeconds         int32                          `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32                          `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
+	Health                 *JobHealth                     `json:"health,omitempty"`
 }
 
 func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
@@ -158,7 +201,7 @@ type GitSource struct {
 type JobHealthRule struct {
 	Metric    string `json:"metric,omitempty"`
 	Operation string `json:"op,omitempty"`
-	Value     int32  `json:"value,omitempty"`
+	Value     int64  `json:"value,omitempty"`
 }
 
 type JobHealth struct {
@@ -187,6 +230,7 @@ type JobTaskSettings struct {
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+	ForEachTask     *ForEachTask        `json:"for_each_task,omitempty" tf:"group:task_type"`
 
 	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
@@ -273,7 +317,7 @@ type JobSettings struct {
 	Queue                *jobs.QueueSettings           `json:"queue,omitempty"`
 	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"computed"`
 	Health               *JobHealth                    `json:"health,omitempty"`
-	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
+	Parameters           []jobs.JobParameterDefinition `json:"parameters,omitempty" tf:"alias:parameter"`
 	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
 	EditMode             jobs.CreateJobEditMode        `json:"edit_mode,omitempty"`
 }
@@ -340,12 +384,6 @@ type JobParameter struct {
 	Name    string `json:"name,omitempty"`
 	Default string `json:"default,omitempty"`
 	Value   string `json:"value,omitempty"`
-}
-
-// Job-level parameter definitions
-type JobParameterDefinition struct {
-	Name    string `json:"name,omitempty"`
-	Default string `json:"default,omitempty"`
 }
 
 // RunState of the job
@@ -842,7 +880,7 @@ func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 	}
 }
 
-func ResourceJob() *schema.Resource {
+func ResourceJob() common.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
 		var js JobSettings
 		common.DataToStructPointer(d, jobSchema, &js)
@@ -940,5 +978,5 @@ func ResourceJob() *schema.Resource {
 			}
 			return w.Jobs.DeleteByJobId(ctx, jobID)
 		},
-	}.ToResource()
+	}
 }

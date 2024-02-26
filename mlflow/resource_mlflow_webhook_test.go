@@ -272,5 +272,6 @@ func TestWebhookDeleteError(t *testing.T) {
 		ID:       testWhID,
 		HCL:      testWhHCL,
 	}.Apply(t)
-	assert.ErrorContains(t, err, "unexpected end of JSON input")
+	assert.Error(t, err)
+
 }

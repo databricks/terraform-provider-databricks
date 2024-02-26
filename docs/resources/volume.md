@@ -37,8 +37,8 @@ This resource manages Volumes in Unity Catalog.
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }
@@ -93,6 +93,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this Unity Catalog Volume in form of `<catalog>.<schema>.<name>`.
+* `volume_path` - base file path for this Unity Catalog Volume in form of `/Volumes/<catalog>/<schema>/<name>`.
 
 ## Import
 

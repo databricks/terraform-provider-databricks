@@ -100,6 +100,7 @@ type Workspace struct {
 	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
+	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -257,12 +258,12 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 	})
 }
 
-var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id"}
+var workspaceRunningUpdatesAllowed = []string{"credentials_id", "network_id", "storage_customer_managed_key_id", "private_access_settings_id", "managed_services_customer_managed_key_id", "custom_tags"}
 
 // UpdateRunning will update running workspace with couple of possible fields
 func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error {
 	workspacesAPIPath := fmt.Sprintf("/accounts/%s/workspaces/%d", ws.AccountID, ws.WorkspaceID)
-	request := map[string]string{}
+	request := map[string]any{}
 
 	if ws.CredentialsID != "" {
 		request["credentials_id"] = ws.CredentialsID
@@ -281,6 +282,12 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	}
 	if ws.StorageCustomerManagedKeyID != "" {
 		request["storage_customer_managed_key_id"] = ws.StorageCustomerManagedKeyID
+	}
+	if ws.CustomTags != nil {
+		if !a.client.IsAws() {
+			return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
+		}
+		request["custom_tags"] = ws.CustomTags
 	}
 
 	if len(request) == 0 {
@@ -453,7 +460,7 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 }
 
 // ResourceMwsWorkspaces manages E2 workspaces
-func ResourceMwsWorkspaces() *schema.Resource {
+func ResourceMwsWorkspaces() common.Resource {
 	workspaceSchema := common.StructToSchema(Workspace{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			for name, fieldSchema := range s {
@@ -532,6 +539,9 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			if err := requireFields(c.IsGcp(), d, "location"); err != nil {
 				return err
 			}
+			if !c.IsAws() && workspace.CustomTags != nil {
+				return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
+			}
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
 				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID
@@ -603,7 +613,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			Read:   schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-	}.ToResource()
+	}
 }
 
 func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
@@ -858,6 +868,10 @@ func workspaceSchemaV2() cty.Type {
 						},
 					},
 				},
+			},
+			"custom_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
 			},
 		},
 	}).CoreConfigSchema().ImpliedType()

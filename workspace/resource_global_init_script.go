@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,7 +19,7 @@ const (
 )
 
 // ResourceGlobalInitScript manages notebooks
-func ResourceGlobalInitScript() *schema.Resource {
+func ResourceGlobalInitScript() common.Resource {
 	extra := map[string]*schema.Schema{
 		"enabled": {
 			Type:     schema.TypeBool,
@@ -53,22 +54,28 @@ func ResourceGlobalInitScript() *schema.Resource {
 				return fmt.Errorf("size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
 					contentLen, maxScriptSize)
 			}
-			globalInitScriptsAPI := NewGlobalInitScriptsAPI(ctx, c)
-			scriptID, err := globalInitScriptsAPI.Create(GlobalInitScriptPayload{
-				ContentBase64: base64.StdEncoding.EncodeToString(content),
-				Enabled:       d.Get("enabled").(bool),
-				Position:      int32(d.Get("position").(int)),
-				Name:          d.Get("name").(string),
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			created, err := w.GlobalInitScripts.Create(ctx, compute.GlobalInitScriptCreateRequest{
+				Script:   base64.StdEncoding.EncodeToString(content),
+				Enabled:  d.Get("enabled").(bool),
+				Position: d.Get("position").(int),
+				Name:     d.Get("name").(string),
 			})
 			if err != nil {
 				return err
 			}
-			d.SetId(scriptID)
+			d.SetId(created.ScriptId)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			globalInitScriptsAPI := NewGlobalInitScriptsAPI(ctx, c)
-			scriptStatus, err := globalInitScriptsAPI.Get(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			scriptStatus, err := w.GlobalInitScripts.GetByScriptId(ctx, d.Id())
 			if err != nil {
 				return err
 			}
@@ -83,19 +90,27 @@ func ResourceGlobalInitScript() *schema.Resource {
 				return fmt.Errorf("size of the global init script (%d bytes) exceeds maximal allowed (%d bytes)",
 					contentLen, maxScriptSize)
 			}
-			globalInitScriptsAPI := NewGlobalInitScriptsAPI(ctx, c)
-			return globalInitScriptsAPI.Update(d.Id(), GlobalInitScriptPayload{
-				ContentBase64: base64.StdEncoding.EncodeToString(content),
-				Enabled:       d.Get("enabled").(bool),
-				Position:      int32(d.Get("position").(int)),
-				Name:          d.Get("name").(string),
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.GlobalInitScripts.Update(ctx, compute.GlobalInitScriptUpdateRequest{
+				ScriptId: d.Id(),
+				Script:   base64.StdEncoding.EncodeToString(content),
+				Enabled:  d.Get("enabled").(bool),
+				Position: d.Get("position").(int),
+				Name:     d.Get("name").(string),
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewGlobalInitScriptsAPI(ctx, c).Delete(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.GlobalInitScripts.DeleteByScriptId(ctx, d.Id())
 		},
 		Schema:        s,
 		SchemaVersion: 1,
 		Timeouts:      &schema.ResourceTimeout{},
-	}.ToResource()
+	}
 }

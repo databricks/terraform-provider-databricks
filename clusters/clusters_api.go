@@ -194,22 +194,22 @@ type S3StorageInfo struct {
 
 // GcsStorageInfo contains the struct for when storing files in GCS
 type GcsStorageInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // AbfssStorageInfo contains the struct for when storing files in ADLS
 type AbfssStorageInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // WorkspaceFileInfo represents a file in the Databricks workspace.
 type WorkspaceFileInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
@@ -523,7 +523,7 @@ type ClusterInfo struct {
 	DriverInstancePoolID      string                  `json:"driver_instance_pool_id,omitempty" tf:"computed"`
 	PolicyID                  string                  `json:"policy_id,omitempty"`
 	SingleUserName            string                  `json:"single_user_name,omitempty"`
-	ClusterSource             Availability            `json:"cluster_source,omitempty"`
+	ClusterSource             Availability            `json:"cluster_source" tf:"computed"`
 	DockerImage               *DockerImage            `json:"docker_image,omitempty"`
 	State                     ClusterState            `json:"state"`
 	StateMessage              string                  `json:"state_message,omitempty"`

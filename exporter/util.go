@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/aws"
@@ -19,7 +21,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/scim"
-	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
@@ -44,14 +45,26 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 	}
+}
 
+func (ic *importContext) emitFilesFromSlice(slice []string) {
+	for _, p := range slice {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
+}
+
+func (ic *importContext) emitFilesFromMap(m map[string]string) {
+	for _, p := range m {
+		ic.emitIfDbfsFile(p)
+		ic.emitIfWsfsFile(p)
+	}
 }
 
 func (ic *importContext) importCluster(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
-	ic.emitInitScripts(c.InitScripts)
 	if c.AwsAttributes != nil {
 		ic.Emit(&resource{
 			Resource: "databricks_instance_profile",
@@ -77,6 +90,7 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 			ID:       c.PolicyID,
 		})
 	}
+	ic.emitInitScripts(c.InitScripts)
 	ic.emitSecretsFromSecretsPath(c.SparkConf)
 	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
@@ -106,13 +120,22 @@ func (ic *importContext) emitListOfUsers(users []string) {
 }
 
 func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
-	if userOrSPName == "" {
+	if userOrSPName == "" || !ic.isServiceEnabled("users") {
+		return
+	}
+	// Cache check here to avoid emitting
+	ic.emittedUsersMutex.RLock()
+	_, exists := ic.emittedUsers[userOrSPName]
+	ic.emittedUsersMutex.RUnlock()
+	if exists {
+		// log.Printf("[DEBUG] user or SP %s already emitted...", userOrSPName)
 		return
 	}
 	if common.StringIsUUID(userOrSPName) {
-		user, err := ic.findSpnByAppID(userOrSPName)
+		user, err := ic.findSpnByAppID(userOrSPName, false)
 		if err != nil {
 			log.Printf("[ERROR] Can't find SP with application ID %s", userOrSPName)
+			ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
 		} else {
 			ic.Emit(&resource{
 				Resource: "databricks_service_principal",
@@ -120,9 +143,10 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 			})
 		}
 	} else {
-		user, err := ic.findUserByName(strings.ToLower(userOrSPName))
+		user, err := ic.findUserByName(strings.ToLower(userOrSPName), false)
 		if err != nil {
 			log.Printf("[ERROR] Can't find user with name %s", userOrSPName)
+			ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
 		} else {
 			ic.Emit(&resource{
 				Resource: "databricks_user",
@@ -130,48 +154,91 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 			})
 		}
 	}
+	ic.emittedUsersMutex.Lock()
+	ic.emittedUsers[userOrSPName] = struct{}{}
+	ic.emittedUsersMutex.Unlock()
+}
+
+func getUserOrSpNameAndDirectory(path, prefix string) (string, string) {
+	if !strings.HasPrefix(path, prefix) {
+		return "", ""
+	}
+	pathLen := len(path)
+	prefixLen := len(prefix)
+	searchStart := prefixLen + 1
+	if pathLen <= searchStart {
+		return "", ""
+	}
+	pos := strings.Index(path[searchStart:pathLen], "/")
+	if pos == -1 { // we have only user directory...
+		return path[searchStart:pathLen], path
+	}
+	return path[searchStart : pos+searchStart], path[0 : pos+searchStart]
 }
 
 func (ic *importContext) emitUserOrServicePrincipalForPath(path, prefix string) {
-	if strings.HasPrefix(path, prefix) {
-		parts := strings.SplitN(path, "/", 4)
-		if len(parts) >= 3 && parts[2] != "" {
-			ic.emitUserOrServicePrincipal(parts[2])
-		}
+	userOrSpName, _ := getUserOrSpNameAndDirectory(path, prefix)
+	if userOrSpName != "" {
+		ic.emitUserOrServicePrincipal(userOrSpName)
 	}
 }
 
-func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string) bool {
-	if !strings.HasPrefix(path, prefix) {
+func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, strict bool) bool {
+	userOrSPName, userDir := getUserOrSpNameAndDirectory(path, prefix)
+	if userOrSPName == "" {
 		return false
 	}
-	parts := strings.SplitN(path, "/", 4)
-	if (len(parts) == 3 || (len(parts) == 4 && parts[3] == "")) && parts[2] != "" {
-		userOrSPName := parts[2]
-		var err error
-		if common.StringIsUUID(userOrSPName) {
-			_, err = ic.findSpnByAppID(userOrSPName)
-		} else {
-			_, err = ic.findUserByName(strings.ToLower(userOrSPName))
-		}
-		return err == nil
-
+	// strict mode means that it should be exactly user dir, maybe with trailing `/`
+	if strict && !(len(path) == len(userDir) || (len(path) == len(userDir)+1 && path[len(path)-1] == '/')) {
+		return false
 	}
-	return false
+	ic.userOrSpDirectoriesMutex.RLock()
+	result, exists := ic.userOrSpDirectories[userDir]
+	ic.userOrSpDirectoriesMutex.RUnlock()
+	if exists {
+		// log.Printf("[DEBUG] Directory %s already checked. Result=%v", userDir, result)
+		return result
+	}
+	var err error
+	if common.StringIsUUID(userOrSPName) {
+		_, err = ic.findSpnByAppID(userOrSPName, true)
+		if err != nil {
+			ic.addIgnoredResource(fmt.Sprintf("databricks_service_principal. application_id=%s", userOrSPName))
+		}
+	} else {
+		_, err = ic.findUserByName(strings.ToLower(userOrSPName), true)
+		if err != nil {
+			ic.addIgnoredResource(fmt.Sprintf("databricks_user. user_name=%s", userOrSPName))
+		}
+	}
+	ic.userOrSpDirectoriesMutex.Lock()
+	ic.userOrSpDirectories[userDir] = (err == nil)
+	ic.userOrSpDirectoriesMutex.Unlock()
+	return err == nil
 }
 
 func (ic *importContext) emitRepoByPath(path string) {
-	ic.Emit(&resource{
-		Resource:  "databricks_repo",
-		Attribute: "path",
-		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-	})
+	// Path to Repos objects consits of following parts: /Repos, folder, repository, path inside Repo.
+	// Because it starts with `/`, it will produce empty string as first element in the slice.
+	// And we're stopping splitting to avoid producing too many not necessary parts, so we have 5 parts only.
+	parts := strings.SplitN(path, "/", 5)
+	if len(parts) >= 4 {
+		ic.Emit(&resource{
+			Resource:  "databricks_repo",
+			Attribute: "path",
+			Value:     strings.Join(parts[:4], "/"),
+		})
+	} else {
+		log.Printf("[WARN] Incorrect Repos path")
+	}
 }
 
 func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: wrap this into ic.shouldEmit...
+		// TODO: strip /Workspace prefix if it's provided
 		ic.Emit(&resource{
 			Resource: "databricks_workspace_file",
 			ID:       path,
@@ -183,13 +250,14 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: strip /Workspace prefix if it's provided
 		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
 }
 
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 	if len(ic.allDirectories) == 0 {
-		objects := ic.getAllWorkspaceObjects()
+		objects := ic.getAllWorkspaceObjects(nil)
 		ic.wsObjectsMutex.Lock()
 		defer ic.wsObjectsMutex.Unlock()
 		if len(ic.allDirectories) == 0 {
@@ -206,10 +274,12 @@ func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 // TODO: Ignore databricks_automl as well?
 var directoriesToIgnore = []string{".ide", ".bundle", "__pycache__"}
 
+// TODO: add ignoring directories of deleted users?  This could potentially decrease the number of processed objects...
 func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
 	if v.ObjectType != workspace.Directory {
 		return true
 	}
+	// TODO: rewrite to use suffix check, etc., instead of split and slice contains?
 	parts := strings.Split(v.Path, "/")
 	result := len(parts) > 1 && slices.Contains[[]string, string](directoriesToIgnore, parts[len(parts)-1])
 	if result {
@@ -218,17 +288,16 @@ func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
 	return !result
 }
 
-func (ic *importContext) getAllWorkspaceObjects() []workspace.ObjectStatus {
+func (ic *importContext) getAllWorkspaceObjects(visitor func([]workspace.ObjectStatus)) []workspace.ObjectStatus {
 	ic.wsObjectsMutex.Lock()
 	defer ic.wsObjectsMutex.Unlock()
 	if len(ic.allWorkspaceObjects) == 0 {
 		t1 := time.Now()
-		log.Printf("[DEBUG] %v. Starting to list all workspace objects", t1.Local().Format(time.RFC3339))
+		log.Print("[INFO] Starting to list all workspace objects")
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allWorkspaceObjects, _ = notebooksAPI.ListParallel("/", excludeAuxiliaryDirectories)
-		t2 := time.Now()
-		log.Printf("[DEBUG] %v. Finished listing of all workspace objects. %d objects in total. %v seconds",
-			t2.Local().Format(time.RFC3339), len(ic.allWorkspaceObjects), t2.Sub(t1).Seconds())
+		ic.allWorkspaceObjects, _ = ListParallel(notebooksAPI, "/", excludeAuxiliaryDirectories, visitor)
+		log.Printf("[INFO] Finished listing of all workspace objects. %d objects in total. %v seconds",
+			len(ic.allWorkspaceObjects), time.Since(t1).Seconds())
 	}
 	return ic.allWorkspaceObjects
 }
@@ -344,14 +413,26 @@ func (ic *importContext) cacheGroups() error {
 	return nil
 }
 
+func (ic *importContext) addIgnoredResource(msg string) {
+	ic.ignoredResourcesMutex.Lock()
+	defer ic.ignoredResourcesMutex.Unlock()
+	ic.ignoredResources[msg] = struct{}{}
+}
+
 const (
 	nonExistingUserOrSp = "__USER_OR_SPN_DOES_NOT_EXIST__"
 )
 
 func (ic *importContext) getUsersMapping() {
-	ic.usersMutex.Lock()
-	defer ic.usersMutex.Unlock()
-	if ic.allUsersMapping == nil {
+	ic.allUsersMutex.RLocker().Lock()
+	userMapping := ic.allUsersMapping
+	ic.allUsersMutex.RLocker().Unlock()
+	if userMapping == nil {
+		ic.allUsersMutex.Lock()
+		defer ic.allUsersMutex.Unlock()
+		if ic.allUsersMapping != nil {
+			return
+		}
 		ic.allUsersMapping = make(map[string]string)
 		var users []iam.User
 		var err error
@@ -372,10 +453,11 @@ func (ic *importContext) getUsersMapping() {
 			// log.Printf("[DEBUG] adding user %v into the map. %d out of %d", user, i+1, len(users))
 			ic.allUsersMapping[user.UserName] = user.Id
 		}
+		log.Printf("[DEBUG] users are copied")
 	}
 }
 
-func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
+func (ic *importContext) findUserByName(name string, fastCheck bool) (u scim.User, err error) {
 	log.Printf("[DEBUG] Looking for user %s", name)
 	ic.usersMutex.RLocker().Lock()
 	user, exists := ic.allUsers[name]
@@ -391,13 +473,16 @@ func (ic *importContext) findUserByName(name string) (u scim.User, err error) {
 		return
 	}
 	ic.getUsersMapping()
-	ic.usersMutex.RLocker().Lock()
+	ic.allUsersMutex.RLocker().Lock()
 	userId, exists := ic.allUsersMapping[name]
-	ic.usersMutex.RLocker().Unlock()
+	ic.allUsersMutex.RLocker().Unlock()
 	if !exists {
 		err = fmt.Errorf("there is no user '%s'", name)
 		u = scim.User{UserName: nonExistingUserOrSp}
 	} else {
+		if fastCheck {
+			return scim.User{UserName: name}, nil
+		}
 		a := scim.NewUsersAPI(ic.Context, ic.Client)
 		u, err = a.Read(userId, "id,userName,displayName,active,externalId,entitlements,groups,roles")
 		if err != nil {
@@ -464,7 +549,7 @@ func (ic *importContext) getBuiltinPolicyFamilies() map[string]compute.PolicyFam
 	return ic.builtInPolicies
 }
 
-func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err error) {
+func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u scim.User, err error) {
 	log.Printf("[DEBUG] Looking for SP %s", applicationID)
 	ic.spsMutex.RLocker().Lock()
 	sp, exists := ic.allSps[applicationID]
@@ -487,6 +572,9 @@ func (ic *importContext) findSpnByAppID(applicationID string) (u scim.User, err 
 		err = fmt.Errorf("there is no service principal '%s'", applicationID)
 		u = scim.User{ApplicationID: nonExistingUserOrSp}
 	} else {
+		if fastCheck {
+			return scim.User{ApplicationID: applicationID}, nil
+		}
 		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
 		u, err = a.Read(spId, "userName,displayName,active,externalId,entitlements,groups,roles")
 		if err != nil {
@@ -558,14 +646,13 @@ func (ic *importContext) getSqlDataSources() (map[string]string, error) {
 	ic.sqlDatasourcesMutex.Lock()
 	defer ic.sqlDatasourcesMutex.Unlock()
 	if ic.sqlDatasources == nil {
-		var dss []sql.DataSource
-		err := ic.Client.Get(ic.Context, "/preview/sql/data_sources", nil, &dss)
+		dss, err := ic.workspaceClient.DataSources.List(ic.Context)
 		if err != nil {
 			return nil, err
 		}
 		ic.sqlDatasources = make(map[string]string, len(dss))
 		for _, ds := range dss {
-			ic.sqlDatasources[ds.ID] = ds.EndpointID
+			ic.sqlDatasources[ds.Id] = ds.WarehouseId
 		}
 	}
 	return ic.sqlDatasources, nil
@@ -803,7 +890,7 @@ func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource
 	}
 	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
 	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+		[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 }
 
 func generateUniqueID(v string) string {
@@ -837,8 +924,7 @@ func wsObjectGetModifiedAt(obs workspace.ObjectStatus) int64 {
 
 func (ic *importContext) shouldEmitForPath(path string) bool {
 	if !ic.exportDeletedUsersAssets && strings.HasPrefix(path, "/Users/") {
-		userDir := userDirRegex.ReplaceAllString(path, "$1")
-		return ic.IsUserOrServicePrincipalDirectory(userDir, "/Users")
+		return ic.IsUserOrServicePrincipalDirectory(path, "/Users", false)
 	}
 	return true
 }
@@ -851,39 +937,136 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
 			Incremental: ic.incremental,
 		})
 	} else {
-		log.Printf("[DEBUG] Not emitting a workspace object %s for deleted user", path)
+		log.Printf("[WARN] Not emitting a workspace object %s for deleted user. Path='%s'", resourceType, path)
+		ic.addIgnoredResource(fmt.Sprintf("%s. path=%s", resourceType, path))
 	}
 }
 
-func createListWorkspaceObjectsFunc(objType string, resourceType string, objName string) func(ic *importContext) error {
-	return func(ic *importContext) error {
-		// TODO: can we pass a visitor here, that will emit corresponding object earlier?
-		objectsList := ic.getAllWorkspaceObjects()
-		updatedSinceMs := ic.getUpdatedSinceMs()
-		for offset, object := range objectsList {
-			if object.ObjectType != objType || strings.HasPrefix(object.Path, "/Repos") {
-				continue
-			}
-			if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
-				continue
-			}
-			modifiedAt := wsObjectGetModifiedAt(object)
-			if ic.incremental && modifiedAt < updatedSinceMs {
-				log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)", object.Path,
-					modifiedAt, updatedSinceMs)
-				continue
-			}
-			if !ic.MatchesName(object.Path) {
-				continue
-			}
-			ic.maybeEmitWorkspaceObject(resourceType, object.Path)
+func (ic *importContext) enableServices(services string) {
+	ic.services = map[string]struct{}{}
+	for _, s := range strings.Split(services, ",") {
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+	for s := range ic.listing { // Add all services mentioned in the listing
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+}
 
-			if offset%50 == 0 {
-				log.Printf("[INFO] Scanned %d of %d %ss", offset+1, len(objectsList), objName)
+func (ic *importContext) enableListing(listing string) {
+	ic.listing = map[string]struct{}{}
+	for _, s := range strings.Split(listing, ",") {
+		ic.listing[strings.TrimSpace(s)] = struct{}{}
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+}
+
+func (ic *importContext) emitSqlParentDirectory(parent string) {
+	if parent == "" {
+		return
+	}
+	res := sqlParentRegexp.FindStringSubmatch(parent)
+	if len(res) > 1 {
+		ic.Emit(&resource{
+			Resource:  "databricks_directory",
+			Attribute: "object_id",
+			Value:     res[1],
+		})
+	}
+}
+
+func (ic *importContext) shouldSkipWorkspaceObject(object workspace.ObjectStatus, updatedSinceMs int64) bool {
+	if !(object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) ||
+		strings.HasPrefix(object.Path, "/Repos") {
+		// log.Printf("[DEBUG] Skipping unsupported entry %v", object)
+		return true
+	}
+	if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
+		return true
+	}
+	modifiedAt := wsObjectGetModifiedAt(object)
+	if ic.incremental && modifiedAt < updatedSinceMs {
+		p := ic.oldWorkspaceObjectMapping[object.ObjectID]
+		if p == "" || p == object.Path {
+			log.Printf("[DEBUG] skipping '%s' that was modified at %d (last active=%d)",
+				object.Path, modifiedAt, updatedSinceMs)
+			return true
+		}
+		log.Printf("[DEBUG] Different path for object %d. Old='%s', New='%s'", object.ObjectID, p, object.Path)
+	}
+	if !ic.MatchesName(object.Path) {
+		return true
+	}
+	return false
+}
+
+func emitWorkpaceObject(ic *importContext, object workspace.ObjectStatus) {
+	// check the size of the default channel, and add delays if it has less than %20 capacity left.
+	// In this case we won't need to have increase the size of the default channel to extended capacity.
+	defChannelSize := len(ic.defaultChannel)
+	if float64(defChannelSize) > float64(ic.defaultHanlerChannelSize)*0.8 {
+		log.Printf("[DEBUG] waiting a bit before emitting a resource because default channel is 80%% full (%d): %v",
+			defChannelSize, object)
+		time.Sleep(1 * time.Second)
+	}
+	switch object.ObjectType {
+	case workspace.Notebook:
+		ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
+	case workspace.File:
+		ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+	default:
+		log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
+	}
+}
+
+func listNotebooksAndWorkspaceFiles(ic *importContext) error {
+	objectsChannel := make(chan workspace.ObjectStatus, defaultChannelSize)
+	numRoutines := 2 // TODO: make configurable? together with the channel size?
+	var processedObjects atomic.Uint64
+	for i := 0; i < numRoutines; i++ {
+		num := i
+		ic.waitGroup.Add(1)
+		go func() {
+			log.Printf("[DEBUG] Starting channel %d for workspace objects", num)
+			for object := range objectsChannel {
+				processedObjects.Add(1)
+				ic.waitGroup.Add(1)
+				// log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
+				// 	num, len(objectsChannel), object)
+				emitWorkpaceObject(ic, object)
+				ic.waitGroup.Done()
+			}
+			log.Printf("[DEBUG] channel %d for workspace objects is finished", num)
+			ic.waitGroup.Done()
+		}()
+	}
+	// There are two use cases - this function will handle listing, or it will receive listing
+	updatedSinceMs := ic.getUpdatedSinceMs()
+	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
+		for _, object := range objects {
+			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
+				continue
+			}
+			object := object
+			switch object.ObjectType {
+			case workspace.Notebook, workspace.File:
+				objectsChannel <- object
+			default:
+				log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
 			}
 		}
-		return nil
+	})
+	close(objectsChannel)
+	log.Printf("[DEBUG] processedObjects=%d", processedObjects.Load())
+	if processedObjects.Load() == 0 { // we didn't have side effect from listing as it was already happened
+		log.Printf("[DEBUG] ic.getAllWorkspaceObjects already was called before, so we need to explicitly submit all objects")
+		for _, object := range allObjects {
+			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
+				continue
+			}
+			emitWorkpaceObject(ic, object)
+		}
 	}
+	return nil
 }
 
 func (ic *importContext) getLastActiveMs() int64 {
@@ -910,4 +1093,209 @@ func getEnvAsInt(envName string, defaultValue int) int {
 		log.Printf("[ERROR] Can't parse value '%s' of environment variable '%s'", val, envName)
 	}
 	return defaultValue
+}
+
+// Parallel listing implementation
+type syncAnswer struct {
+	MU   sync.Mutex
+	data []workspace.ObjectStatus
+}
+
+func (a *syncAnswer) append(objs []workspace.ObjectStatus) {
+	a.MU.Lock()
+	a.data = append(a.data, objs...)
+	a.MU.Unlock()
+}
+
+type directoryInfo struct {
+	Path     string
+	Attempts int
+}
+
+// constants related to the parallel listing
+const (
+	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
+	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
+	defaultWorkersPoolSize      = 10
+	defaultDirectoryChannelSize = 100000
+)
+
+func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo, dirChannel chan directoryInfo,
+	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(workspace.ObjectStatus) bool, visitor func([]workspace.ObjectStatus)) {
+	defer wg.Done()
+	notebookInfoList, err := a.ListInternalImpl(directory.Path)
+	if err != nil {
+		log.Printf("[WARN] error listing '%s': %v", directory.Path, err)
+		if isRetryableError(err.Error(), directory.Attempts) {
+			wg.Add(1)
+			log.Printf("[INFO] attempt %d of retrying listing of '%s' after error: %v",
+				directory.Attempts+1, directory.Path, err)
+			time.Sleep(time.Duration(retryDelaySeconds) * time.Second)
+			dirChannel <- directoryInfo{Path: directory.Path, Attempts: directory.Attempts + 1}
+		}
+	}
+
+	newList := make([]workspace.ObjectStatus, 0, len(notebookInfoList))
+	directories := make([]workspace.ObjectStatus, 0, len(notebookInfoList))
+	for _, v := range notebookInfoList {
+		if v.ObjectType == workspace.Directory {
+			if shouldIncludeDir(v) {
+				newList = append(newList, v)
+				directories = append(directories, v)
+			}
+		} else {
+			newList = append(newList, v)
+		}
+	}
+	answer.append(newList)
+	for _, v := range directories {
+		wg.Add(1)
+		log.Printf("[DEBUG] putting directory '%s' into channel. Channel size: %d", v.Path, len(dirChannel))
+		dirChannel <- directoryInfo{Path: v.Path}
+		time.Sleep(3 * time.Millisecond)
+	}
+	if visitor != nil {
+		visitor(newList)
+	}
+}
+
+func ListParallel(a workspace.NotebooksAPI, path string, shouldIncludeDir func(workspace.ObjectStatus) bool,
+	visitor func([]workspace.ObjectStatus)) ([]workspace.ObjectStatus, error) {
+	var answer syncAnswer
+	wg := &sync.WaitGroup{}
+
+	if shouldIncludeDir == nil {
+		shouldIncludeDir = func(workspace.ObjectStatus) bool { return true }
+	}
+
+	numWorkers := getEnvAsInt(envVarListParallelism, defaultWorkersPoolSize)
+	channelSize := getEnvAsInt(envVarDirectoryChannelSize, defaultDirectoryChannelSize)
+	dirChannel := make(chan directoryInfo, channelSize)
+	for i := 0; i < numWorkers; i++ {
+		t := i
+		go func() {
+			log.Printf("[DEBUG] starting go routine %d", t)
+			for directory := range dirChannel {
+				log.Printf("[DEBUG] processing directory %s", directory.Path)
+				recursiveAddPathsParallel(a, directory, dirChannel, &answer, wg, shouldIncludeDir, visitor)
+			}
+		}()
+
+	}
+	log.Print("[DEBUG] pushing initial path to channel")
+	wg.Add(1)
+	recursiveAddPathsParallel(a, directoryInfo{Path: path}, dirChannel, &answer, wg, shouldIncludeDir, visitor)
+	log.Print("[DEBUG] starting to wait")
+	wg.Wait()
+	log.Print("[DEBUG] closing the directory channel")
+	close(dirChannel)
+
+	answer.MU.Lock()
+	defer answer.MU.Unlock()
+	return answer.data, nil
+}
+
+var (
+	maxRetries        = 5
+	retryDelaySeconds = 2
+	retriableErrors   = []string{"context deadline exceeded", "Error handling request", "Timed out after "}
+)
+
+func isRetryableError(err string, i int) bool {
+	if i < (maxRetries - 1) {
+		for _, msg := range retriableErrors {
+			if strings.Contains(err, msg) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
+	var err ERR
+	delay := 1
+	for i := 0; i < maxRetries; i++ {
+		err = runFunc()
+		valOf := reflect.ValueOf(&err).Elem()
+		if valOf.IsNil() || valOf.IsZero() {
+			break
+		}
+		if !isRetryableError(fmt.Sprintf("%v", err), i) {
+			log.Printf("[ERROR] Error %s after %d retries: %v", msg, i, err)
+			return err
+		}
+		delay = delay * retryDelaySeconds
+		log.Printf("[INFO] next retry (%d) for %s after %d seconds", (i + 1), msg, delay)
+		time.Sleep(time.Duration(delay) * time.Second)
+	}
+	return err
+}
+
+func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "owner" {
+		return d.Get(pathString).(string) == ""
+	}
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
+func appendEndingSlashToDirName(dir string) string {
+	if dir == "" || dir[len(dir)-1] == '/' {
+		return dir
+	}
+	return dir + "/"
+}
+
+func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, origPath=%s", res.Resource, origPath)
+	res_catalog_name := res.Data.Get("catalog_name").(string)
+	res_schema_name := res.Data.Get("schema_name").(string)
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, catalog='%s' schema='%s'",
+	// 	res.Resource, res_catalog_name, res_schema_name)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v)",
+	// 	ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found)
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: result: %v approximation: catalog='%v' schema='%v', res: catalog='%s' schema='%s'",
+	// 	result, ra_catalog_name, ra_schema_name, res_catalog_name, res_schema_name)
+	return result
+}
+
+func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	shareName, ok := res.Data.GetOk("share")
+	// principal := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingShareRecipient: origPath='%s', ra.Type='%s', shareName='%v', ok? %v, principal='%v'",
+	// 	origPath, ra.Type, shareName, ok, principal)
+
+	return ok && shareName.(string) != ""
+}
+
+func isMatchignShareObject(obj string) isValidAproximationFunc {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
+		objType, ok := res.Data.GetOk(objPath)
+		// name := res.Data.Get(origPath)
+		// log.Printf("[DEBUG] isMatchignShareObject: %s origPath='%s', ra.Type='%s', name='%v', objPath='%s' objType='%v' ok? %v",
+		// 	obj, origPath, ra.Type, name, objPath, objType, ok)
+
+		return ok && objType.(string) == obj
+	}
+}
+
+func isMatchingAllowListArtifact(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	objPath := strings.Replace(origPath, ".artifact", ".match_type", 1)
+	matchType, ok := res.Data.GetOk(objPath)
+	artifactType := res.Data.Get("artifact_type").(string)
+	// artifact := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingAllowListArtifact: origPath='%s', ra.Type='%s', artifactType='%v' artifact='%v', objPath='%s' matchType='%v' ok? %v",
+	// 	origPath, ra.Type, artifactType, artifact, objPath, matchType, ok)
+
+	return ok && matchType.(string) == "PREFIX_MATCH" && (artifactType == "LIBRARY_JAR" || artifactType == "INIT_SCRIPT")
 }

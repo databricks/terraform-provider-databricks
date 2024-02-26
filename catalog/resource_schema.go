@@ -20,7 +20,7 @@ type SchemaInfo struct {
 	FullName    string            `json:"full_name,omitempty" tf:"computed"`
 }
 
-func ResourceSchema() *schema.Resource {
+func ResourceSchema() common.Resource {
 	s := common.StructToSchema(SchemaInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			delete(m, "full_name")
@@ -99,6 +99,10 @@ func ResourceSchema() *schema.Resource {
 				}
 			}
 
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
 			updateSchemaRequest.Owner = ""
 			schema, err := w.Schemas.Update(ctx, updateSchemaRequest)
 			if err != nil {
@@ -152,7 +156,7 @@ func ResourceSchema() *schema.Resource {
 					return err
 				}
 				for _, v := range volumes {
-					w.Volumes.DeleteByFullNameArg(ctx, v.FullName)
+					w.Volumes.DeleteByName(ctx, v.FullName)
 				}
 				// delete all functions
 				functions, err := w.Functions.ListAll(ctx, catalog.ListFunctionsRequest{
@@ -179,5 +183,5 @@ func ResourceSchema() *schema.Resource {
 			}
 			return w.Schemas.DeleteByFullName(ctx, name)
 		},
-	}.ToResource()
+	}
 }

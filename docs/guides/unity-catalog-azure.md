@@ -20,7 +20,7 @@ This guide uses the following variables in configurations:
 
 This guide is provided as-is and you can use this guide as the basis for your custom Terraform module.
 
-To get started with Unity Catalog, this guide takes you throw the following high-level steps:
+To get started with Unity Catalog, this guide takes you through the following high-level steps:
 
 - [Deploying pre-requisite resources and enabling Unity Catalog](#deploying-pre-requisite-resources-and-enabling-unity-catalog)
   - [Provider initialization](#provider-initialization)
@@ -204,7 +204,7 @@ Each metastore exposes a 3-level namespace (catalog-schema-table) by which data 
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  name         = "sandbox"
+  name = "sandbox"
   storage_root = format("abfss://%s@%s.dfs.core.windows.net",
     azurerm_storage_container.ext_storage.name,
   azurerm_storage_account.ext_storage.name)

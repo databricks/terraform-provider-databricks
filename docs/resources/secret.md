@@ -35,7 +35,6 @@ The following arguments are required:
 * `scope` - (Required) (String) name of databricks secret scope. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
 * `key` - (Required) (String) key within secret scope. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
 
-
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -44,13 +43,12 @@ In addition to all arguments above, the following attributes are exported:
 * `last_updated_timestamp` - (Integer) time secret was updated
 * `config_reference` - (String) value to use as a secret reference in [Spark configuration and environment variables](https://docs.databricks.com/security/secrets/secrets.html#use-a-secret-in-a-spark-configuration-property-or-environment-variable): `{{secrets/scope/key}}`.
 
-
 ## Import
 
 The resource secret can be imported using `scopeName|||secretKey` combination. **This may change in future versions.**
 
 ```bash
-$ terraform import databricks_secret.app `scopeName|||secretKey`
+terraform import databricks_secret.app `scopeName|||secretKey`
 ```
 
 ## Related Resources
@@ -59,7 +57,7 @@ The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 * [databricks_secret_acl](secret_acl.md) to manage access to [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_scope](secret_scope.md) to create [secret scopes](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.

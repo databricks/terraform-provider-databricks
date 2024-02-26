@@ -270,6 +270,7 @@ func TestVolumesRead(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
+	assert.Equal(t, "/Volumes/testCatalogName/testSchemaName/testName", d.Get("volume_path"))
 }
 
 func TestResourceVolumeRead_Error(t *testing.T) {
@@ -307,7 +308,7 @@ func TestVolumesUpdate(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testNameNew",
+					NewName: "testNameNew",
 					Comment: "This is a new test comment.",
 				},
 				Response: catalog.VolumeInfo{
@@ -357,6 +358,7 @@ func TestVolumesUpdate(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+	assert.Equal(t, "/Volumes/testCatalogName/testSchemaName/testNameNew", d.Get("volume_path"))
 }
 
 func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
@@ -386,7 +388,7 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testNameNew",
+					NewName: "testNameNew",
 					Comment: "This is a new test comment.",
 				},
 				Response: catalog.VolumeInfo{

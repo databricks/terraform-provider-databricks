@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
-	"path"
 	"reflect"
 	"regexp"
 	"sort"
@@ -178,7 +176,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			name := ic.Importables["databricks_dbfs_file"].Name(ic, r.Data)
-			fileName, err := ic.createFile(name, content)
+			fileName, err := ic.saveFileIn("dbfs_files", name, content)
 			log.Printf("Creating %s for %s", fileName, r)
 			if err != nil {
 				return err
@@ -1302,7 +1300,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			fileName, err := ic.createFile(fmt.Sprintf("%s.sh", r.Name), content)
+			fileName, err := ic.saveFileIn("global_init_scripts", fmt.Sprintf("%s.sh", ic.ResourceName(r)), content)
 			if err != nil {
 				return err
 			}
@@ -1501,7 +1499,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			objectId := r.Data.Get("object_id").(int)
 			name := fileNameNormalizationRegex.ReplaceAllString(r.ID[1:], "_") + "_" + strconv.Itoa(objectId) + fileExtension
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
-			fileName, err := ic.createFileIn("notebooks", name, []byte(content))
+			fileName, err := ic.saveFileIn("notebooks", name, []byte(content))
 			if err != nil {
 				return err
 			}
@@ -1562,7 +1560,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			name := fileNameNormalizationRegex.ReplaceAllString(strings.Join(parts, "/")[1:], "_")
 			content, _ := base64.StdEncoding.DecodeString(contentB64)
-			fileName, err := ic.createFileIn("workspace_files", name, []byte(content))
+			fileName, err := ic.saveFileIn("workspace_files", name, []byte(content))
 			if err != nil {
 				return err
 			}
@@ -2935,7 +2933,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "storage",
 		// TODO: can we implement incremental mode?
 		Name: func(ic *importContext, d *schema.ResourceData) string {
-			return strings.TrimPrefix(d.Id(), "/Volumes/")
+			name := strings.TrimPrefix(d.Id(), "/Volumes/")
+			fileNameMd5 := fmt.Sprintf("%x", md5.Sum([]byte(name)))
+			return strings.ToLower(name) + "_" + fileNameMd5[:8]
 		},
 		Import: func(ic *importContext, r *resource) error {
 			parts := strings.Split(r.ID, "/")
@@ -2953,25 +2953,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			// refactor the common part of directory creation, etc.
+			// write file
 			fileName := ic.prefix + fileNameNormalizationRegex.ReplaceAllString(strings.TrimPrefix(r.ID, "/Volumes/"), "_")
-			localFileName := fmt.Sprintf("%s/%s/%s", ic.Directory, "ucfiles", fileName)
-			err = os.MkdirAll(path.Dir(localFileName), 0755)
-			if err != nil && !os.IsExist(err) {
-				return err
-			}
-			local, err := os.Create(localFileName)
+			local, relativeName, err := ic.createFileIn("uc_files", fileName)
 			if err != nil {
 				return err
 			}
-			// handle err
 			defer local.Close()
 			defer resp.Contents.Close()
 			_, err = io.Copy(local, resp.Contents)
 			if err != nil {
 				return err
 			}
-			relativeName := strings.TrimPrefix(localFileName, ic.Directory+"/")
 			r.Data.Set("source", relativeName)
 			r.Data.Set("path", r.ID)
 

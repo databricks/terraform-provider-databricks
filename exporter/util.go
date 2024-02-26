@@ -832,19 +832,23 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 	log.Printf("[INFO] %d of total %d jobs are going to be imported", i, len(l))
 }
 
-// returns created file name in "files" directory for the export and error if any
-func (ic *importContext) createFile(name string, content []byte) (string, error) {
-	return ic.createFileIn("files", name, content)
-}
-
-func (ic *importContext) createFileIn(dir, name string, content []byte) (string, error) {
+func (ic *importContext) createFileIn(dir, name string) (*os.File, string, error) {
 	fileName := ic.prefix + name
 	localFileName := fmt.Sprintf("%s/%s/%s", ic.Directory, dir, fileName)
 	err := os.MkdirAll(path.Dir(localFileName), 0755)
 	if err != nil && !os.IsExist(err) {
-		return "", err
+		return nil, "", err
 	}
 	local, err := os.Create(localFileName)
+	if err != nil {
+		return nil, "", err
+	}
+	relativeName := strings.TrimPrefix(localFileName, ic.Directory+"/")
+	return local, relativeName, nil
+}
+
+func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, error) {
+	local, relativeName, err := ic.createFileIn(dir, name)
 	if err != nil {
 		return "", err
 	}
@@ -853,7 +857,6 @@ func (ic *importContext) createFileIn(dir, name string, content []byte) (string,
 	if err != nil {
 		return "", err
 	}
-	relativeName := strings.TrimPrefix(localFileName, ic.Directory+"/")
 	return relativeName, nil
 }
 

@@ -68,7 +68,7 @@ func ResourceModelServing() common.Resource {
 				config := d.Get(fmt.Sprintf("config.0.served_entities.0.external_model.0.%s_config", providerName)).([]interface{})
 
 				if len(config) == 0 {
-					return fmt.Errorf("external_model provider is set to \"%s\" but the \"%s_config\" block is missing", providerName, providerName)
+					return fmt.Errorf("external_model provider is set to \"%s\" but \"%s_config\" block is missing", providerName, providerName)
 				}
 			}
 

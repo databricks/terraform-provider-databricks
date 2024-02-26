@@ -34,7 +34,3 @@ func SuppressDiffWhitespaceChange(k, old, new string, d *schema.ResourceData) bo
 	log.Printf("[DEBUG] Suppressing diff for %v: old=%#v new=%#v", k, old, new)
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }
-
-func SuppressCaseSensitivity(k, old, new string, d *schema.ResourceData) bool {
-	return strings.EqualFold(old, new)
-}

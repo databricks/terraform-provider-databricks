@@ -17,7 +17,7 @@ func ResourceModelServing() common.Resource {
 		serving.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].ForceNew = true
-			m["name"].DiffSuppressFunc = common.SuppressCaseSensitivity
+			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			delete(common.MustSchemaPath(m, "config").Elem.(*schema.Resource).Schema, "served_entities")
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true

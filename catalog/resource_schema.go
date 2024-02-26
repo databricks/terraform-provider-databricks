@@ -30,7 +30,7 @@ func ResourceSchema() common.Resource {
 				Default:  false,
 			}
 			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
-			m["name"].DiffSuppressFunc = common.SuppressCaseSensitivity
+			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			return m
 		})
 	return common.Resource{

@@ -30,8 +30,3 @@ func TestSuppressDiffWhitespaceChange(t *testing.T) {
 	assert.True(t, SuppressDiffWhitespaceChange("k", "value", "  value  ", nil))
 	assert.False(t, SuppressDiffWhitespaceChange("k", "value", "new_value", nil))
 }
-
-func TestSuppressCaseSensitivity(t *testing.T) {
-	assert.True(t, SuppressCaseSensitivity("k", "value", "VALUE", nil))
-	assert.False(t, SuppressCaseSensitivity("k", "value", "new_value", nil))
-}

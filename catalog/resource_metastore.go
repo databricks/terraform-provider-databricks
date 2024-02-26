@@ -55,7 +55,7 @@ func ResourceMetastore() common.Resource {
 				}
 				return false
 			}
-			m["name"].DiffSuppressFunc = common.SuppressCaseSensitivity
+			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			return m
 		})
 

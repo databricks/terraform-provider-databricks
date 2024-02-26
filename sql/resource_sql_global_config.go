@@ -140,7 +140,8 @@ func ResourceSqlGlobalConfig() common.Resource {
 	}
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			if _, ok := d.GetOk("enable_serverless_compute"); !ok {
+			// enable_serverless_compute is an optional boolean parameter which may be specified as `false`.
+			if _, ok := d.GetOkExists("enable_serverless_compute"); !ok {
 				// Read the current global config and use the current value of enable_serverless_compute as
 				// the default value if not specified.
 				gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()

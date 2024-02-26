@@ -2,6 +2,8 @@ package serving
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/retries"
@@ -58,6 +60,15 @@ func ResourceModelServing() common.Resource {
 			if old != nil && old == false && new == true {
 				d.ForceNew("config.0.auto_capture_config.0.enabled")
 			}
+
+			provider := d.Get("config.0.served_entities.0.external_model.0.provider").(string)
+			providerName := strings.ReplaceAll(provider, "-", "_")
+			config := d.Get(fmt.Sprintf("config.0.served_entities.0.external_model.0.%s_config", providerName)).([]interface{})
+
+			if len(config) == 0 {
+				return fmt.Errorf("external_model provider is set to \"%s\" but the \"%s_config\" block is missing", providerName, providerName)
+			}
+
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

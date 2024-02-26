@@ -82,7 +82,7 @@ func ResourceModelServing() common.Resource {
 					}
 					if len(configsFound) > 1 {
 						msg := strings.Join(configsFound, ", ")
-						return fmt.Errorf("only one external model config block is allowed. Found: %s", msg)
+						return fmt.Errorf("only one external_model config block is allowed. Found: %s", msg)
 					}
 				}
 			}

@@ -61,30 +61,9 @@ func ResourceModelServing() common.Resource {
 				d.ForceNew("config.0.auto_capture_config.0.enabled")
 			}
 
-			_, e := d.GetOk("config.0.served_entities.0.external_model")
-			provider, p := d.GetOk("config.0.served_entities.0.external_model.0.provider")
-			if e && p {
-				name := strings.ReplaceAll(provider.(string), "-", "_")
-				config := d.Get(fmt.Sprintf("config.0.served_entities.0.external_model.0.%s_config", name)).([]interface{})
-
-				if len(config) == 0 {
-					return fmt.Errorf("external_model provider is set to \"%s\" but \"%s_config\" block is missing", name, name)
-				}
-
-				if configBlock, ok := d.Get("config.0.served_entities.0.external_model.0").(map[string]interface{}); ok {
-					var found []string
-					for key, value := range configBlock {
-						if strings.HasSuffix(key, "_config") {
-							if len(value.([]interface{})) > 0 {
-								found = append(found, key)
-							}
-						}
-					}
-					if len(found) > 1 {
-						msg := strings.Join(found, ", ")
-						return fmt.Errorf("only one external_model config block is allowed. Found: %s", msg)
-					}
-				}
+			err := hasExactlyOneExternalModel(d)
+			if err != nil {
+				return err
 			}
 
 			return nil
@@ -158,4 +137,33 @@ func ResourceModelServing() common.Resource {
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
 	}
+}
+
+func hasExactlyOneExternalModel(d *schema.ResourceDiff) error {
+	_, e := d.GetOk("config.0.served_entities.0.external_model")
+	provider, p := d.GetOk("config.0.served_entities.0.external_model.0.provider")
+	if e && p {
+		name := strings.ReplaceAll(provider.(string), "-", "_")
+		config := d.Get(fmt.Sprintf("config.0.served_entities.0.external_model.0.%s_config", name)).([]interface{})
+
+		if len(config) == 0 {
+			return fmt.Errorf("external_model provider is set to \"%s\" but \"%s_config\" block is missing", name, name)
+		}
+
+		if configBlock, ok := d.Get("config.0.served_entities.0.external_model.0").(map[string]interface{}); ok {
+			var found []string
+			for key, value := range configBlock {
+				if strings.HasSuffix(key, "_config") {
+					if len(value.([]interface{})) > 0 {
+						found = append(found, key)
+					}
+				}
+			}
+			if len(found) > 1 {
+				msg := strings.Join(found, ", ")
+				return fmt.Errorf("only one external_model config block is allowed. Found: %s", msg)
+			}
+		}
+	}
+	return nil
 }

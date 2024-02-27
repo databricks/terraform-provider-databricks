@@ -29,3 +29,11 @@ The resource supports the following arguments:
 
 * `namespace` - (Required) The configuration details.
 * `value` - (Required) The value for the setting.
+
+## Import
+
+This resource can be imported by predefined name `global`:
+
+```bash
+terraform import databricks_default_namespace_setting.this global
+```

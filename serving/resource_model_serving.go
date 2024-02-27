@@ -151,10 +151,8 @@ func hasExactlyOneExternalModel(d *schema.ResourceDiff) error {
 		if configBlock, ok := d.Get("config.0.served_entities.0.external_model.0").(map[string]interface{}); ok {
 			var found []string
 			for key, value := range configBlock {
-				if strings.HasSuffix(key, "_config") {
-					if len(value.([]interface{})) > 0 {
-						found = append(found, key)
-					}
+				if strings.HasSuffix(key, "_config") && len(value.([]interface{})) > 0 {
+					found = append(found, key)
 				}
 			}
 			if len(found) > 1 {

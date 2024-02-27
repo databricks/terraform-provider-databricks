@@ -114,7 +114,7 @@ func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 				FullName:         "test_table",
 				OutputSchemaName: "output.schema",
 				AssetsDir:        "sample.dir",
-				Snapshot:         catalog.MonitorSnapshotProfileType{},
+				Snapshot:         &catalog.MonitorSnapshotProfileType{},
 			}).Return(&catalog.MonitorInfo{
 				AssetsDir:        "sample.dir",
 				OutputSchemaName: "output.schema",
@@ -126,7 +126,7 @@ func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "sample.dir",
 				OutputSchemaName: "output.schema",
-				Snapshot:         catalog.MonitorSnapshotProfileType{},
+				Snapshot:         &catalog.MonitorSnapshotProfileType{},
 			}, nil)
 		},
 		Resource: ResourceLakehouseMonitor(),

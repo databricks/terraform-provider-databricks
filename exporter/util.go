@@ -29,7 +29,6 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -157,6 +156,13 @@ func (ic *importContext) emitUserOrServicePrincipal(userOrSPName string) {
 	ic.emittedUsersMutex.Lock()
 	ic.emittedUsers[userOrSPName] = struct{}{}
 	ic.emittedUsersMutex.Unlock()
+}
+
+func resetAccessFields(d *schema.ResourceData) {
+	d.Set("workspace_access", false)
+	d.Set("databricks_sql_access", false)
+	d.Set("allow_instance_pool_create", false)
+	d.Set("allow_cluster_create", false)
 }
 
 func getUserOrSpNameAndDirectory(path, prefix string) (string, string) {
@@ -308,15 +314,23 @@ func (ic *importContext) emitGroups(u scim.User) {
 			log.Printf("[DEBUG] Skipping non-direct group %s/%s for %s", g.Value, g.Display, u.DisplayName)
 			continue
 		}
+		isAssignedGroup := ic.isAssignedGroup(g.Display)
+		mode := ""
+		if isAssignedGroup {
+			mode = "data"
+		}
 		ic.Emit(&resource{
 			Resource: "databricks_group",
+			Mode:     mode,
 			ID:       g.Value,
 		})
-		ic.Emit(&resource{
-			Resource: "databricks_group_member",
-			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
-			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
-		})
+		if mode == "" {
+			ic.Emit(&resource{
+				Resource: "databricks_group_member",
+				ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
+				Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
+			})
+		}
 	}
 }
 
@@ -373,6 +387,18 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 		ic.emitIfDbfsFile(lib.Library.Whl)
 	}
 	return nil
+}
+
+func (ic *importContext) isAssignedGroup(name string) bool {
+	if ic.pemissionAssignments == nil {
+		return true
+	}
+	for _, v := range ic.pemissionAssignments {
+		if v.Principal.GroupName == name {
+			return true
+		}
+	}
+	return false
 }
 
 func (ic *importContext) cacheGroups() error {
@@ -881,16 +907,6 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 
 		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 	}
-}
-
-func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource) error {
-	blockType := "resource"
-	if r.Mode == "data" {
-		blockType = r.Mode
-	}
-	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
-	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 }
 
 func generateUniqueID(v string) string {

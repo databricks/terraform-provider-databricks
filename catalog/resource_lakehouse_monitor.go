@@ -2,30 +2,32 @@ package catalog
 
 import (
 	"context"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type Monitor struct {
-	catalog.CreateMonitor
-	FullName string `json:"table_name"`
-}
+const DefaultProvisionTimeout = 15 * time.Minute
 
 func ResourceLakehouseMonitor() common.Resource {
 	monitorSchema := common.StructToSchema(
-		Monitor{},
+		catalog.MonitorInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			common.CustomizeSchemaPath(m, "assets_dir").SetRequired()
 			common.CustomizeSchemaPath(m, "output_schema_name").SetRequired()
-
-			common.CustomizeSchemaPath(m, "inference_log", "granularities").SetOptional()
-			common.CustomizeSchemaPath(m, "inference_log", "problem_type").SetOptional()
-			common.CustomizeSchemaPath(m, "inference_log", "timestamp_col").SetOptional()
-			common.CustomizeSchemaPath(m, "inference_log", "prediction_col").SetDefault("prediction")
-
-			common.CustomizeSchemaPath(m, "time_series", "granularities").SetOptional()
-			common.CustomizeSchemaPath(m, "time_series", "timestamp_col").SetOptional()
+			common.CustomizeSchemaPath(m, "table_name").SetRequired()
+			common.CustomizeSchemaPath(m).AddNewField("skip_builtin_dashboard", &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Required: false,
+			})
+			common.CustomizeSchemaPath(m).AddNewField("warehouse_id", &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Required: false,
+			})
 			return m
 		},
 	)
@@ -83,5 +85,8 @@ func ResourceLakehouseMonitor() common.Resource {
 			return w.LakehouseMonitors.DeleteByFullName(ctx, d.Id())
 		},
 		Schema: monitorSchema,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+		},
 	}
 }

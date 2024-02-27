@@ -26,30 +26,18 @@ func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 					TimestampCol:  "timestamp",
 				},
 			}).Return(&catalog.MonitorInfo{
-				AssetsDir:        "sample.dir",
-				OutputSchemaName: "output.schema",
-				TableName:        "test_table",
-				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
-			}, nil)
-			e.Create(mock.Anything, catalog.CreateMonitor{
-				FullName:         "test_table",
-				OutputSchemaName: "output.schema",
-				AssetsDir:        "sample.dir",
-				TimeSeries: &catalog.MonitorTimeSeriesProfileType{
-					Granularities: []string{"1 day"},
-					TimestampCol:  "timestamp",
-				},
-			}).Return(&catalog.MonitorInfo{
-				AssetsDir:        "sample.dir",
-				OutputSchemaName: "output.schema",
-				TableName:        "test_table",
-				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
+				AssetsDir:             "sample.dir",
+				OutputSchemaName:      "output.schema",
+				TableName:             "test_table",
+				Status:                catalog.MonitorInfoStatusMonitorStatusPending,
+				DriftMetricsTableName: "test_table_drift",
 			}, nil)
 			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
-				TableName:        "test_table",
-				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
-				AssetsDir:        "sample.dir",
-				OutputSchemaName: "output.schema",
+				TableName:             "test_table",
+				Status:                catalog.MonitorInfoStatusMonitorStatusPending,
+				AssetsDir:             "sample.dir",
+				OutputSchemaName:      "output.schema",
+				DriftMetricsTableName: "test_table_drift",
 			}, nil)
 		},
 		Resource: ResourceLakehouseMonitor(),
@@ -152,6 +140,29 @@ func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestLakehouseMonitorGet(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
+			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+				TableName:        "test_table",
+				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
+				AssetsDir:        "new_assets.dir",
+				OutputSchemaName: "output.schema",
+				InferenceLog: &catalog.MonitorInferenceLogProfileType{
+					Granularities: []string{"1 week"},
+					TimestampCol:  "timestamp",
+					PredictionCol: "prediction",
+					ModelIdCol:    "model_id",
+				},
+				DriftMetricsTableName: "test_table_drift"}, nil)
+		},
+		Resource: ResourceLakehouseMonitor(),
+		Read:     true,
+		ID:       "test_table",
+	}.ApplyNoError(t)
+}
+
 func TestLakehouseMonitorUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
@@ -177,6 +188,7 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 					PredictionCol: "prediction",
 					ModelIdCol:    "model_id",
 				},
+				DriftMetricsTableName: "test_table_drift",
 			}, nil)
 			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
@@ -189,6 +201,7 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 					PredictionCol: "prediction",
 					ModelIdCol:    "model_id",
 				},
+				DriftMetricsTableName: "test_table_drift",
 			}, nil)
 		},
 		Resource: ResourceLakehouseMonitor(),

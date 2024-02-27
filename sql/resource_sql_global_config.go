@@ -29,7 +29,7 @@ type GlobalConfig struct {
 	DataAccessConfig        map[string]string `json:"data_access_config,omitempty"`
 	InstanceProfileARN      string            `json:"instance_profile_arn,omitempty"`
 	GoogleServiceAccount    string            `json:"google_service_account,omitempty"`
-	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"computed,optional"`
+	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"computed"`
 	SqlConfigParams         map[string]string `json:"sql_config_params,omitempty"`
 }
 

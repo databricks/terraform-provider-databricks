@@ -60,12 +60,10 @@ func ResourceModelServing() common.Resource {
 			if old != nil && old == false && new == true {
 				d.ForceNew("config.0.auto_capture_config.0.enabled")
 			}
-
 			err := hasExactlyOneExternalModel(d)
 			if err != nil {
 				return err
 			}
-
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

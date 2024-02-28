@@ -21,7 +21,12 @@ func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsLi
 	configured := map[string]*schema.Set{}
 	for _, v := range desired.PrivilegeAssignments {
 		if v.Principal == principal {
-			configured[v.Principal] = permissions.SliceToSet(v.Privileges)
+			normalizedPrivileges := []catalog.Privilege{}
+			for _, p := range v.Privileges {
+				normalizedPriv := strings.ReplaceAll(p.String(), " ", "_")
+				normalizedPrivileges = append(normalizedPrivileges, catalog.Privilege(normalizedPriv))
+			}
+			configured[v.Principal] = permissions.SliceToSet(normalizedPrivileges)
 		}
 	}
 	// existing permissions that needs removal for principal

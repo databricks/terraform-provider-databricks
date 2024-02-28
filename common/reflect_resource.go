@@ -354,9 +354,6 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}
-			for k, v := range nestedSchema {
-				v.DiffSuppressFunc = diffSuppressor(k, v)
-			}
 		case reflect.Struct:
 			scm[fieldName].MaxItems = 1
 			scm[fieldName].Type = schema.TypeList
@@ -367,9 +364,6 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			nestedSchema := typeToSchema(sv, unwrappedAliases)
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
-			}
-			for k, v := range nestedSchema {
-				v.DiffSuppressFunc = diffSuppressor(k, v)
 			}
 		case reflect.Slice:
 			ft := schema.TypeList

@@ -12,10 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var (
-	defaultSettingId = "global"
-)
-
 func retryOnEtagError[Req, Resp any](f func(req Req) (Resp, error), firstReq Req, updateReq func(req *Req, newEtag string), retriableErrors []error) (Resp, error) {
 	req := firstReq
 	// Retry once on etag error.
@@ -72,9 +68,6 @@ type genericSettingDefinition[T, U any] interface {
 
 	// Update the etag in the setting.
 	SetETag(t *T, newEtag string)
-
-	// Generate resource ID from settings instance
-	GetId(t *T) string
 }
 
 func getEtag[T any](t T) string {
@@ -111,9 +104,6 @@ type workspaceSetting[T any] struct {
 
 	// Delete the setting with the given etag, and return the new etag.
 	deleteFunc func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (string, error)
-
-	// Optional function to generate resource ID from the settings
-	generateIdFunc func(setting *T) string
 }
 
 func (w workspaceSetting[T]) SettingStruct() T {
@@ -131,15 +121,6 @@ func (w workspaceSetting[T]) Delete(ctx context.Context, c *databricks.Workspace
 func (w workspaceSetting[T]) GetETag(t *T) string {
 	return getEtag(t)
 }
-
-func (w workspaceSetting[T]) GetId(t *T) string {
-	id := defaultSettingId
-	if w.generateIdFunc != nil {
-		id = w.generateIdFunc(t)
-	}
-	return id
-}
-
 func (w workspaceSetting[T]) SetETag(t *T, newEtag string) {
 	setEtag(t, newEtag)
 }
@@ -164,9 +145,6 @@ type accountSetting[T any] struct {
 
 	// Delete the setting with the given etag, and return the new etag.
 	deleteFunc func(ctx context.Context, w *databricks.AccountClient, etag string) (string, error)
-
-	// Optional function to generate resource ID from the settings
-	generateIdFunc func(setting *T) string
 }
 
 func (w accountSetting[T]) SettingStruct() T {
@@ -186,14 +164,6 @@ func (w accountSetting[T]) GetETag(t *T) string {
 }
 func (w accountSetting[T]) SetETag(t *T, newEtag string) {
 	setEtag(t, newEtag)
-}
-
-func (w accountSetting[T]) GetId(t *T) string {
-	id := defaultSettingId
-	if w.generateIdFunc != nil {
-		id = w.generateIdFunc(t)
-	}
-	return id
 }
 
 var _ accountSettingDefinition[struct{}] = accountSetting[struct{}]{}
@@ -247,8 +217,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 		default:
 			return fmt.Errorf("unexpected setting type: %T", defn)
 		}
-		d.Set("etag", res)
-		d.SetId(defn.GetId(&setting))
+		d.SetId(res)
 		return nil
 	}
 
@@ -266,7 +235,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 				if err != nil {
 					return err
 				}
-				res, err = defn.Read(ctx, w, d.Get("etag").(string))
+				res, err = defn.Read(ctx, w, d.Id())
 				if err != nil {
 					return err
 				}
@@ -275,7 +244,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 				if err != nil {
 					return err
 				}
-				res, err = defn.Read(ctx, a, d.Get("etag").(string))
+				res, err = defn.Read(ctx, a, d.Id())
 				if err != nil {
 					return err
 				}
@@ -290,12 +259,12 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			// with a response which is at least as recent as the etag.
 			// Updating, while not always necessary, ensures that the
 			// server responds with an updated response.
-			d.Set("etag", defn.GetETag(res))
+			d.SetId(defn.GetETag(res))
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var setting T
-			defn.SetETag(&setting, d.Get("etag").(string))
+			defn.SetETag(&setting, d.Id())
 			return createOrUpdate(ctx, d, c, setting)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -311,7 +280,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 					func(etag string) (string, error) {
 						return defn.Delete(ctx, w, etag)
 					},
-					d.Get("etag").(string),
+					d.Id(),
 					updateETag,
 					deleteRetriableErrors)
 				if err != nil {
@@ -326,7 +295,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 					func(etag string) (string, error) {
 						return defn.Delete(ctx, a, etag)
 					},
-					d.Get("etag").(string),
+					d.Id(),
 					updateETag,
 					deleteRetriableErrors)
 				if err != nil {
@@ -335,7 +304,7 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			default:
 				return fmt.Errorf("unexpected setting type: %T", defn)
 			}
-			d.Set("etag", etag)
+			d.SetId(etag)
 			return nil
 		},
 	}

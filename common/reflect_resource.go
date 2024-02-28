@@ -328,12 +328,18 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 		switch typeField.Type.Kind() {
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, fieldName, scm[fieldName])
 		case reflect.Float64:
 			scm[fieldName].Type = schema.TypeFloat
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, fieldName, scm[fieldName])
 		case reflect.Bool:
 			scm[fieldName].Type = schema.TypeBool
 		case reflect.String:
 			scm[fieldName].Type = schema.TypeString
+			// diff suppression needs type for zero value
+			handleSuppressDiff(typeField, fieldName, scm[fieldName])
 		case reflect.Map:
 			scm[fieldName].Type = schema.TypeMap
 			elem := typeField.Type.Elem()
@@ -352,6 +358,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			sv := reflect.New(elem).Elem()
 			nestedSchema := typeToSchema(sv, unwrappedAliases)
 			if strings.Contains(tfTag, "suppress_diff") {
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
 					v.DiffSuppressFunc = diffSuppressor(k, v)
 				}
@@ -368,6 +375,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 
 			nestedSchema := typeToSchema(sv, unwrappedAliases)
 			if strings.Contains(tfTag, "suppress_diff") {
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
 					v.DiffSuppressFunc = diffSuppressor(k, v)
 				}
@@ -400,7 +408,6 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 		default:
 			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))
 		}
-		handleSuppressDiff(typeField, fieldName, scm[fieldName])
 	}
 	return scm
 }

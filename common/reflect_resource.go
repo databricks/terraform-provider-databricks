@@ -351,6 +351,11 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
 			nestedSchema := typeToSchema(sv, unwrappedAliases)
+			if strings.Contains(tfTag, "suppress_diff") {
+				for k, v := range nestedSchema {
+					v.DiffSuppressFunc = diffSuppressor(k, v)
+				}
+			}
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}
@@ -362,6 +367,11 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			sv := reflect.New(elem) // changed from ptr
 
 			nestedSchema := typeToSchema(sv, unwrappedAliases)
+			if strings.Contains(tfTag, "suppress_diff") {
+				for k, v := range nestedSchema {
+					v.DiffSuppressFunc = diffSuppressor(k, v)
+				}
+			}
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}

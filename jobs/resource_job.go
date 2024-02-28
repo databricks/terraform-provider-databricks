@@ -27,14 +27,14 @@ import (
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
-	Source         string            `json:"source,omitempty" tf:"computed"`
-	BaseParameters map[string]string `json:"base_parameters,omitempty" tf:"computed"`
+	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
+	BaseParameters map[string]string `json:"base_parameters,omitempty"`
 }
 
 // SparkPythonTask contains the information for python jobs
 type SparkPythonTask struct {
 	PythonFile string   `json:"python_file"`
-	Source     string   `json:"source,omitempty" tf:"computed"`
+	Source     string   `json:"source,omitempty" tf:"suppress_diff"`
 	Parameters []string `json:"parameters,omitempty"`
 }
 
@@ -751,6 +751,11 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
 		common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
 		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
+
+		// Clear the implied diff suppression for the webhook notification lists
+		for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+			common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
+		}
 
 		return s
 	})

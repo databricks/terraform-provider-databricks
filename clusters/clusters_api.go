@@ -147,8 +147,8 @@ type ZonesInfo struct {
 // https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterattributes
 type AwsAttributes struct {
 	FirstOnDemand       int32         `json:"first_on_demand,omitempty"`
-	Availability        Availability  `json:"availability,omitempty" tf:"computed"`
-	ZoneID              string        `json:"zone_id,omitempty" tf:"computed"`
+	Availability        Availability  `json:"availability,omitempty"`
+	ZoneID              string        `json:"zone_id,omitempty"`
 	InstanceProfileArn  string        `json:"instance_profile_arn,omitempty"`
 	SpotBidPricePercent int32         `json:"spot_bid_price_percent,omitempty"`
 	EbsVolumeType       EbsVolumeType `json:"ebs_volume_type,omitempty"`
@@ -160,19 +160,19 @@ type AwsAttributes struct {
 // https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#clusterazureattributes
 type AzureAttributes struct {
 	FirstOnDemand   int32        `json:"first_on_demand,omitempty"`
-	Availability    Availability `json:"availability,omitempty" tf:"computed"`
+	Availability    Availability `json:"availability,omitempty"`
 	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty"`
 }
 
 // GcpAttributes encapsultes GCP specific attributes
 // https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#clustergcpattributes
 type GcpAttributes struct {
-	UsePreemptibleExecutors bool         `json:"use_preemptible_executors,omitempty" tf:"computed"`
-	GoogleServiceAccount    string       `json:"google_service_account,omitempty" tf:"computed"`
-	Availability            Availability `json:"availability,omitempty" tf:"computed"`
-	BootDiskSize            int32        `json:"boot_disk_size,omitempty" tf:"computed"`
-	ZoneId                  string       `json:"zone_id,omitempty" tf:"computed"`
-	LocalSsdCount           int32        `json:"local_ssd_count,omitempty" tf:"computed"`
+	UsePreemptibleExecutors bool         `json:"use_preemptible_executors,omitempty"`
+	GoogleServiceAccount    string       `json:"google_service_account,omitempty"`
+	Availability            Availability `json:"availability,omitempty"`
+	BootDiskSize            int32        `json:"boot_disk_size,omitempty"`
+	ZoneId                  string       `json:"zone_id,omitempty"`
+	LocalSsdCount           int32        `json:"local_ssd_count,omitempty"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS
@@ -408,19 +408,19 @@ type Cluster struct {
 	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type,computed"`
 	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
 	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type,computed"`
-	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id,computed"`
-	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id,computed"`
+	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
+	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	AutoterminationMinutes int32            `json:"autotermination_minutes,omitempty"`
 
 	PolicyID                 string `json:"policy_id,omitempty"`
 	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
 
-	SparkConf    map[string]string `json:"spark_conf,omitempty" tf:"computed"`
-	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty" tf:"computed"`
-	CustomTags   map[string]string `json:"custom_tags,omitempty" tf:"computed"`
+	SparkConf    map[string]string `json:"spark_conf,omitempty"`
+	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
+	CustomTags   map[string]string `json:"custom_tags,omitempty"`
 
-	SSHPublicKeys  []string                `json:"ssh_public_keys,omitempty" tf:"max_items:10,computed"`
+	SSHPublicKeys  []string                `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
 	InitScripts    []InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"`
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`

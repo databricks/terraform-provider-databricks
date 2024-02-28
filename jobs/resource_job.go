@@ -27,14 +27,14 @@ import (
 // NotebookTask contains the information for notebook jobs
 type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
-	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
-	BaseParameters map[string]string `json:"base_parameters,omitempty"`
+	Source         string            `json:"source,omitempty" tf:"computed"`
+	BaseParameters map[string]string `json:"base_parameters,omitempty" tf:"computed"`
 }
 
 // SparkPythonTask contains the information for python jobs
 type SparkPythonTask struct {
 	PythonFile string   `json:"python_file"`
-	Source     string   `json:"source,omitempty" tf:"suppress_diff"`
+	Source     string   `json:"source,omitempty" tf:"computed"`
 	Parameters []string `json:"parameters,omitempty"`
 }
 

@@ -146,22 +146,22 @@ type ZonesInfo struct {
 // AwsAttributes encapsulates the aws attributes for aws based clusters
 // https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterattributes
 type AwsAttributes struct {
-	FirstOnDemand       int32         `json:"first_on_demand,omitempty" tf:"computed"`
+	FirstOnDemand       int32         `json:"first_on_demand,omitempty"`
 	Availability        Availability  `json:"availability,omitempty" tf:"computed"`
 	ZoneID              string        `json:"zone_id,omitempty" tf:"computed"`
-	InstanceProfileArn  string        `json:"instance_profile_arn,omitempty" tf:"computed"`
-	SpotBidPricePercent int32         `json:"spot_bid_price_percent,omitempty" tf:"computed"`
-	EbsVolumeType       EbsVolumeType `json:"ebs_volume_type,omitempty" tf:"computed"`
-	EbsVolumeCount      int32         `json:"ebs_volume_count,omitempty" tf:"computed"`
-	EbsVolumeSize       int32         `json:"ebs_volume_size,omitempty" tf:"computed"`
+	InstanceProfileArn  string        `json:"instance_profile_arn,omitempty"`
+	SpotBidPricePercent int32         `json:"spot_bid_price_percent,omitempty"`
+	EbsVolumeType       EbsVolumeType `json:"ebs_volume_type,omitempty"`
+	EbsVolumeCount      int32         `json:"ebs_volume_count,omitempty"`
+	EbsVolumeSize       int32         `json:"ebs_volume_size,omitempty"`
 }
 
 // AzureAttributes encapsulates the Azure attributes for Azure based clusters
 // https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#clusterazureattributes
 type AzureAttributes struct {
-	FirstOnDemand   int32        `json:"first_on_demand,omitempty" tf:"computed"`
+	FirstOnDemand   int32        `json:"first_on_demand,omitempty"`
 	Availability    Availability `json:"availability,omitempty" tf:"computed"`
-	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty" tf:"computed"`
+	SpotBidMaxPrice float64      `json:"spot_bid_max_price,omitempty"`
 }
 
 // GcpAttributes encapsultes GCP specific attributes
@@ -408,19 +408,19 @@ type Cluster struct {
 	DriverNodeTypeID       string           `json:"driver_node_type_id,omitempty" tf:"group:node_type,computed"`
 	InstancePoolID         string           `json:"instance_pool_id,omitempty" tf:"group:node_type"`
 	DriverInstancePoolID   string           `json:"driver_instance_pool_id,omitempty" tf:"group:node_type,computed"`
-	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
-	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
+	AwsAttributes          *AwsAttributes   `json:"aws_attributes,omitempty" tf:"conflicts:instance_pool_id,computed"`
+	AzureAttributes        *AzureAttributes `json:"azure_attributes,omitempty" tf:"conflicts:instance_pool_id,computed"`
 	GcpAttributes          *GcpAttributes   `json:"gcp_attributes,omitempty" tf:"conflicts:instance_pool_id,suppress_diff"`
 	AutoterminationMinutes int32            `json:"autotermination_minutes,omitempty"`
 
 	PolicyID                 string `json:"policy_id,omitempty"`
 	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
 
-	SparkConf    map[string]string `json:"spark_conf,omitempty"`
-	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
-	CustomTags   map[string]string `json:"custom_tags,omitempty"`
+	SparkConf    map[string]string `json:"spark_conf,omitempty" tf:"computed"`
+	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty" tf:"computed"`
+	CustomTags   map[string]string `json:"custom_tags,omitempty" tf:"computed"`
 
-	SSHPublicKeys  []string                `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
+	SSHPublicKeys  []string                `json:"ssh_public_keys,omitempty" tf:"max_items:10,computed"`
 	InitScripts    []InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"`
 	ClusterLogConf *StorageInfo            `json:"cluster_log_conf,omitempty"`
 	DockerImage    *DockerImage            `json:"docker_image,omitempty"`

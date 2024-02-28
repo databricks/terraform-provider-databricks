@@ -78,6 +78,33 @@ type testStruct struct {
 	Hidden2        string
 }
 
+type testRecursiveStruct struct {
+	Task  *testJobTask `json:"task,omitempty"`
+	Extra string       `json:"extra,omitempty"`
+}
+
+type testJobTask struct {
+	ForEachTask *testForEachTask `json:"for_each_task,omitempty"`
+	Extra       string           `json:"extra,omitempty"`
+}
+
+type testForEachTask struct {
+	Task  *testJobTask `json:"task,omitempty"`
+	Extra string       `json:"extra,omitempty"`
+}
+
+func (testRecursiveStruct) Aliases() map[string]string {
+	return map[string]string{}
+}
+
+func (testRecursiveStruct) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+	return s
+}
+
+func (testRecursiveStruct) MaxDepthForTypes() map[string]int {
+	return map[string]int{"common.testForEachTask": 2}
+}
+
 var scm = StructToSchema(testStruct{}, nil)
 
 var testStructFields = []string{"integer", "float", "non_optional", "string", "computed_field", "force_new_field", "map_field",
@@ -254,6 +281,10 @@ func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[st
 	CustomizeSchemaPath(s, "home").SetSuppressDiff()
 	CustomizeSchemaPath(s, "things").Schema.Type = schema.TypeSet
 	return s
+}
+
+func (DummyResourceProvider) MaxDepthForTypes() map[string]int {
+	return map[string]int{}
 }
 
 var dummy = DummyNoTfTag{
@@ -586,7 +617,7 @@ func TestTypeToSchemaNoStruct(t *testing.T) {
 			fmt.Sprintf("%s", p))
 	}()
 	v := reflect.ValueOf(1)
-	typeToSchema(v, nil)
+	typeToSchema(v, nil, getEmptyRecursionTrackingContext())
 }
 
 func TestTypeToSchemaUnsupported(t *testing.T) {
@@ -599,7 +630,7 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 		New chan int `json:"new"`
 	}
 	v := reflect.ValueOf(nonsense{})
-	typeToSchema(v, nil)
+	typeToSchema(v, nil, getEmptyRecursionTrackingContext())
 }
 
 type data map[string]any
@@ -852,4 +883,18 @@ func TestStructToData_go_sdk_field(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc123", d.Get("warehouse.0.cluster_size"))
 	assert.Equal(t, "extra", d.Get("extra"))
+}
+
+func TestStructToSchema_recursive(t *testing.T) {
+	s := StructToSchema(testRecursiveStruct{}, nil)
+	// Assert that the recursion cannot go beyond 2 levels deep.
+	_, err := SchemaPath(s, "task", "for_each_task")
+	assert.NoError(t, err)
+	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task")
+	assert.NoError(t, err)
+	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task", "task")
+	assert.NoError(t, err)
+	// Should error out on the 3rd level of for_each_task.
+	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task", "task", "for_each_task")
+	assert.Error(t, err)
 }

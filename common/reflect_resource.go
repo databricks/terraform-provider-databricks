@@ -43,12 +43,13 @@ var kindMap = map[reflect.Kind]string{
 type ResourceProvider interface {
 	Aliases() map[string]string
 	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
+	MaxDepthForTypes() map[string]int
 }
 
 // Takes in a ResourceProvider and converts that into a map from string to schema.
 func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, v.Aliases())
+	scm := typeToSchema(rv, v.Aliases(), getRecursionTrackingContext(v))
 	scm = v.CustomizeSchema(scm)
 	return scm
 }
@@ -91,12 +92,12 @@ func getJsonFieldName(typeField reflect.StructField) string {
 // SchemaPath helps to navigate
 func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, error) {
 	cs := s
-	for _, p := range path {
+	for i, p := range path {
 		v, ok := cs[p]
 		if !ok {
 			return nil, fmt.Errorf("missing key %s", p)
 		}
-		if p == path[len(path)-1] {
+		if i == len(path)-1 {
 			return v, nil
 		}
 		cv, ok := v.Elem.(*schema.Resource)
@@ -126,7 +127,7 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		return resourceProviderStructToSchema(rp)
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]string{})
+	scm := typeToSchema(rv, map[string]string{}, getEmptyRecursionTrackingContext())
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -282,7 +283,7 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -292,9 +293,15 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
+	rt.visit(v)
 	fields := listAllFields(v)
 	for _, field := range fields {
 		typeField := field.sf
+		if rt.depthExceeded(typeField) {
+			// Skip the field if recursion depth is over the limit.
+			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", rt.getNameForTypeField(typeField), rt.getMaxDepthForTypeField(typeField))
+			continue
+		}
 		tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldNameWithAliases(typeField, aliases)
@@ -361,7 +368,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, unwrappedAliases)
+			nestedSchema := typeToSchema(sv, unwrappedAliases, rt.copy())
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -379,7 +386,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, unwrappedAliases)
+			nestedSchema := typeToSchema(sv, unwrappedAliases, rt.copy())
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -409,7 +416,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, unwrappedAliases),
+					Schema: typeToSchema(sv, unwrappedAliases, rt.copy()),
 				}
 			}
 		default:

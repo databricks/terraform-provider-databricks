@@ -44,7 +44,7 @@ func TestCustomizableSchemaSetSuppressDiff(t *testing.T) {
 }
 
 func TestCustomizableSchemaSetCustomSuppressDiff(t *testing.T) {
-	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetCustomSuppressDiff(diffSuppressor(CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").Schema))
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetCustomSuppressDiff(diffSuppressor("test", CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").Schema))
 	assert.Truef(t, testCustomizableSchemaScm["non_optional"].DiffSuppressFunc != nil, "DiffSuppressfunc should be set in field: non_optional")
 }
 

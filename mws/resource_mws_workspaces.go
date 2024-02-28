@@ -58,14 +58,14 @@ type CloudResourceContainer struct {
 }
 
 type GCPManagedNetworkConfig struct {
-	SubnetCIDR               string `json:"subnet_cidr" tf:"force_new"`
-	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range" tf:"force_new"`
-	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range" tf:"force_new"`
+	SubnetCIDR               string `json:"subnet_cidr" tf:"force_new,computed"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range" tf:"force_new,computed"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range" tf:"force_new,computed"`
 }
 
 type GkeConfig struct {
-	ConnectivityType string `json:"connectivity_type" tf:"force_new"`
-	MasterIPRange    string `json:"master_ip_range" tf:"force_new"`
+	ConnectivityType string `json:"connectivity_type" tf:"force_new,computed"`
+	MasterIPRange    string `json:"master_ip_range" tf:"force_new,computed"`
 }
 
 type externalCustomerInfo struct {
@@ -96,8 +96,8 @@ type Workspace struct {
 	CreationTime                        int64                    `json:"creation_time,omitempty" tf:"computed"`
 	ExternalCustomerInfo                *externalCustomerInfo    `json:"external_customer_info,omitempty"`
 	CloudResourceBucket                 *CloudResourceContainer  `json:"cloud_resource_container,omitempty"`
-	GCPManagedNetworkConfig             *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty" tf:"suppress_diff"`
-	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"suppress_diff"`
+	GCPManagedNetworkConfig             *GCPManagedNetworkConfig `json:"gcp_managed_network_config,omitempty" tf:"computed"`
+	GkeConfig                           *GkeConfig               `json:"gke_config,omitempty" tf:"computed"`
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
 	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP

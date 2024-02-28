@@ -251,11 +251,11 @@ func diffSuppressor(v *schema.Schema) func(k, old, new string, d *schema.Resourc
 			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
 			return true
 		}
-		if strings.HasSuffix(k, ".#") && new == "0" && old != "0" {
-			field := strings.TrimSuffix(k, ".#")
-			log.Printf("[DEBUG] Suppressing diff for list or set %v: no value configured but platform returned some value (likely {})", field)
-			return true
-		}
+		// if strings.HasSuffix(k, ".#") && new == "0" && old != "0" {
+		// 	field := strings.TrimSuffix(k, ".#")
+		// 	log.Printf("[DEBUG] Suppressing diff for list or set %v: no value configured but platform returned some value (likely {})", field)
+		// 	return true
+		// }
 		return false
 	}
 }
@@ -364,10 +364,10 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			nestedSchema := typeToSchema(sv, unwrappedAliases)
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
-				for _, v := range nestedSchema {
-					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(v)
-				}
+				// for _, v := range nestedSchema {
+				// 	// to those relatively new to GoLang: we must explicitly pass down v by copy
+				// 	v.DiffSuppressFunc = diffSuppressor(v)
+				// }
 			}
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
@@ -382,10 +382,10 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			nestedSchema := typeToSchema(sv, unwrappedAliases)
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
-				for _, v := range nestedSchema {
-					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(v)
-				}
+				// for _, v := range nestedSchema {
+				// 	// to those relatively new to GoLang: we must explicitly pass down v by copy
+				// 	v.DiffSuppressFunc = diffSuppressor(v)
+				// }
 			}
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,

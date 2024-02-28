@@ -15,7 +15,7 @@ import (
 var testSetting = AllSettingsResources()["default_namespace"]
 
 func TestQueryCreateDefaultNameSetting(t *testing.T) {
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockSettingsAPI().EXPECT()
 			e.UpdateDefaultNamespaceSetting(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
@@ -73,15 +73,16 @@ func TestQueryCreateDefaultNameSetting(t *testing.T) {
 				value = "namespace_value"
 			}
 		`,
-	}.ApplyAndExpectData(t, map[string]any{
-		"id":                defaultSettingId,
-		"etag":              "etag2",
-		"namespace.0.value": "namespace_value",
-	})
+	}.Apply(t)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "etag2", d.Id())
+	assert.Equal(t, "namespace_value", d.Get("namespace.0.value"))
 }
 
 func TestQueryReadDefaultNameSetting(t *testing.T) {
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockSettingsAPI().EXPECT().GetDefaultNamespaceSetting(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
 				Etag: "etag1",
@@ -99,18 +100,19 @@ func TestQueryReadDefaultNameSetting(t *testing.T) {
 			namespace {
 				value = "namespace_value"
 			}
-			etag = "etag1"
 		`,
-		ID: defaultSettingId,
-	}.ApplyAndExpectData(t, map[string]any{
-		"id":                defaultSettingId,
-		"etag":              "etag2",
-		"namespace.0.value": "namespace_value",
-	})
+		ID: "etag1",
+	}.Apply(t)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "etag2", d.Id())
+	res := d.Get("namespace").([]interface{})[0].(map[string]interface{})
+	assert.Equal(t, "namespace_value", res["value"])
 }
 
 func TestQueryUpdateDefaultNameSetting(t *testing.T) {
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockSettingsAPI().EXPECT()
 			e.UpdateDefaultNamespaceSetting(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
@@ -146,18 +148,19 @@ func TestQueryUpdateDefaultNameSetting(t *testing.T) {
 			namespace {
 				value = "new_namespace_value"
 			}
-			etag = "etag1"
 		`,
-		ID: defaultSettingId,
-	}.ApplyAndExpectData(t, map[string]any{
-		"id":                defaultSettingId,
-		"etag":              "etag2",
-		"namespace.0.value": "new_namespace_value",
-	})
+		ID: "etag1",
+	}.Apply(t)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "etag2", d.Id())
+	res := d.Get("namespace").([]interface{})[0].(map[string]interface{})
+	assert.Equal(t, "new_namespace_value", res["value"])
 }
 
 func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockSettingsAPI().EXPECT()
 			e.UpdateDefaultNamespaceSetting(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
@@ -214,14 +217,15 @@ func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 			namespace {
 				value = "new_namespace_value"
 			}
-			etag = "etag1"
 		`,
-		ID: defaultSettingId,
-	}.ApplyAndExpectData(t, map[string]any{
-		"id":                defaultSettingId,
-		"etag":              "etag3",
-		"namespace.0.value": "new_namespace_value",
-	})
+		ID: "etag1",
+	}.Apply(t)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "etag3", d.Id())
+	res := d.Get("namespace").([]interface{})[0].(map[string]interface{})
+	assert.Equal(t, "new_namespace_value", res["value"])
 }
 
 func TestQueryDeleteDefaultNameSetting(t *testing.T) {
@@ -235,17 +239,11 @@ func TestQueryDeleteDefaultNameSetting(t *testing.T) {
 		},
 		Resource: testSetting,
 		Delete:   true,
-		HCL: `
-			namespace {
-				value = "new_namespace_value"
-			}
-			etag = "etag1"
-		`,
-		ID: defaultSettingId,
+		ID:       "etag1",
 	}.Apply(t)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "etag2", d.Get("etag").(string))
+	assert.Equal(t, "etag2", d.Id())
 }
 
 func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
@@ -272,15 +270,9 @@ func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
 		},
 		Resource: testSetting,
 		Delete:   true,
-		HCL: `
-			namespace {
-				value = "new_namespace_value"
-			}
-			etag = "etag1"
-		`,
-		ID: defaultSettingId,
+		ID:       "etag1",
 	}.Apply(t)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "etag3", d.Get("etag").(string))
+	assert.Equal(t, "etag3", d.Id())
 }

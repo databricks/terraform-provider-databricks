@@ -585,6 +585,29 @@ func TestResourceGrantPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	assert.Equal(t, catalog.Privilege("c"), diff[0].Remove[0])
 }
 
+func TestResourceGrantPermissionsList_Diff_Spaces(t *testing.T) {
+	diff := diffPermissionsForPrincipal(
+		"a",
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a b"},
+				},
+			},
+		},
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a_b"},
+				},
+			},
+		},
+	)
+	assert.Len(t, diff, 0)
+}
+
 func TestResourceGrantShareGrantCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

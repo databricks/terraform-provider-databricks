@@ -236,12 +236,12 @@ func TestCatalogWorkspaceBindingsReadErrors(t *testing.T) {
 		ID:       "1234567890101112|catalog",
 		New:      true,
 		Read:     true,
-	}.ExpectError(t, "incorrect binding id: 1234567890101112|catalog")
+	}.ExpectError(t, "incorrect binding id: 1234567890101112|catalog. Correct format: <workspace_id>|<securable_type>|<securable_name>")
 
 	qa.ResourceFixture{
 		Resource: ResourceCatalogWorkspaceBinding(),
 		ID:       "A234567890101112|catalog|my_catalog",
 		New:      true,
 		Read:     true,
-	}.ExpectError(t, "strconv.ParseInt: parsing \"A234567890101112\": invalid syntax")
+	}.ExpectError(t, "can't parse workspace_id: strconv.ParseInt: parsing \"A234567890101112\": invalid syntax")
 }

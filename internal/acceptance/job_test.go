@@ -313,3 +313,22 @@ func TestAccJobRunAsMutations(t *testing.T) {
 		},
 	)
 }
+
+func TestRemoveWebhooks(t *testing.T) {
+	// skipf(t)("There is no API to create webhooks")
+	workspaceLevel(t, step{
+		Template: `
+		resource databricks_job test {
+			webhook_notifications {
+				on_success {
+					id = "a90cc1be-a29e-4eb7-a7e9-e4b0d4a7e7ae"
+				}
+			}
+		}
+		`,
+	}, step{
+		Template: `
+		resource databricks_job test {}
+		`,
+	})
+}

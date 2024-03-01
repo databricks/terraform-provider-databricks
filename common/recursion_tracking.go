@@ -48,7 +48,7 @@ func getEmptyRecursionTrackingContext() recursionTrackingContext {
 	}
 }
 
-func getRecursionTrackingContext(rp ResourceProvider) recursionTrackingContext {
+func getRecursionTrackingContext(rp RecursiveResourceProvider) recursionTrackingContext {
 	return recursionTrackingContext{
 		map[string]int{},
 		rp.MaxDepthForTypes(),

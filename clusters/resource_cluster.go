@@ -155,10 +155,6 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	return s
 }
 
-func (ClusterSpec) MaxDepthForTypes() map[string]int {
-	return map[string]int{}
-}
-
 func resourceClusterSchema() map[string]*schema.Schema {
 	return common.StructToSchema(ClusterSpec{}, nil)
 }

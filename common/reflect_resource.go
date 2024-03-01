@@ -43,11 +43,31 @@ var kindMap = map[reflect.Kind]string{
 type ResourceProvider interface {
 	Aliases() map[string]string
 	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
+}
+
+// Interface for ResourceProvider instances that have recursive references in its schema.
+// The function MaxDepthForTypes allows us to specify the max number of recursive depth for a specific field
+//
+// Example:
+//
+//	func (JobSettings) MaxDepthForTypes map[string]int {
+//	    return map[string]int{"for_each_task": 2}
+//	}
+type RecursiveResourceProvider interface {
+	ResourceProvider
 	MaxDepthForTypes() map[string]int
 }
 
 // Takes in a ResourceProvider and converts that into a map from string to schema.
 func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
+	rv := reflect.ValueOf(v)
+	scm := typeToSchema(rv, v.Aliases(), getEmptyRecursionTrackingContext())
+	scm = v.CustomizeSchema(scm)
+	return scm
+}
+
+// Takes in a RecursiveResourceProvider and converts that into a map from string to schema.
+func recursiveResourceProviderStructToSchema(v RecursiveResourceProvider) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, v.Aliases(), getRecursionTrackingContext(v))
 	scm = v.CustomizeSchema(scm)
@@ -125,6 +145,12 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 			panic("customize should be nil if the input implements the ResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
 		}
 		return resourceProviderStructToSchema(rp)
+	}
+	if rp, ok := v.(RecursiveResourceProvider); ok {
+		if customize != nil {
+			panic("customize should be nil if the input implements the RecursiveResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
+		}
+		return recursiveResourceProviderStructToSchema(rp)
 	}
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, map[string]string{}, getEmptyRecursionTrackingContext())

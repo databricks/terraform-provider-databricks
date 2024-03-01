@@ -283,10 +283,6 @@ func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[st
 	return s
 }
 
-func (DummyResourceProvider) MaxDepthForTypes() map[string]int {
-	return map[string]int{}
-}
-
 var dummy = DummyNoTfTag{
 	Enabled:     true,
 	Workers:     1004,

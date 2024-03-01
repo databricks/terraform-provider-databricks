@@ -139,18 +139,18 @@ func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema 
 
 // StructToSchema makes schema from a struct type & applies customizations from callback given
 func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema {
+	if rp, ok := v.(RecursiveResourceProvider); ok {
+		if customize != nil {
+			panic("customize should be nil if the input implements the RecursiveResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
+		}
+		return recursiveResourceProviderStructToSchema(rp)
+	}
 	// If the input 'v' is an instance of ResourceProvider, call resourceProviderStructToSchema instead.
 	if rp, ok := v.(ResourceProvider); ok {
 		if customize != nil {
 			panic("customize should be nil if the input implements the ResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
 		}
 		return resourceProviderStructToSchema(rp)
-	}
-	if rp, ok := v.(RecursiveResourceProvider); ok {
-		if customize != nil {
-			panic("customize should be nil if the input implements the RecursiveResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
-		}
-		return recursiveResourceProviderStructToSchema(rp)
 	}
 	rv := reflect.ValueOf(v)
 	scm := typeToSchema(rv, map[string]string{}, getEmptyRecursionTrackingContext())

@@ -5,7 +5,7 @@ page_title: "Unity Catalog set up on AWS"
 # Deploying pre-requisite resources and enabling Unity Catalog
 
 **Note**
-If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you.
+If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you. See [this guide](unity-catalog-default.md) instead.
 
 **Note**
 Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.

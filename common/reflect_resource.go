@@ -293,6 +293,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string, rt recursionTracki
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
+	rt = rt.copy()
 	rt.visit(v)
 	fields := listAllFields(v)
 	for _, field := range fields {
@@ -368,7 +369,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string, rt recursionTracki
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, unwrappedAliases, rt.copy())
+			nestedSchema := typeToSchema(sv, unwrappedAliases, rt)
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -386,7 +387,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string, rt recursionTracki
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, unwrappedAliases, rt.copy())
+			nestedSchema := typeToSchema(sv, unwrappedAliases, rt)
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
 				for _, v := range nestedSchema {
@@ -416,7 +417,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string, rt recursionTracki
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, unwrappedAliases, rt.copy()),
+					Schema: typeToSchema(sv, unwrappedAliases, rt),
 				}
 			}
 		default:

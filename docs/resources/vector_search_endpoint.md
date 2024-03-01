@@ -11,7 +11,7 @@ This resource allows you to create [Vector Search Endpoint](https://docs.databri
 
 ```hcl
 resource "databricks_vector_search_endpoint" "this" {
-  name = "vector-search-test"
+  name          = "vector-search-test"
   endpoint_type = "STANDARD"
 }
 ```

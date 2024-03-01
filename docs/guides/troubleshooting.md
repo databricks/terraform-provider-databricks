@@ -197,7 +197,7 @@ If you want to enforce a specific authorization method, you can set the `auth_ty
 
 ```hcl
 provider "databricks" {
-  ...
+  # other configurations
   auth_type = "pat"
 }
 ```

@@ -37,12 +37,12 @@ Creating a Delta Sharing share and add a schema to it(including all current and 
 
 ```hcl
 resource "databricks_share" "schema_share" {
-    name = "schema_share"
-    object {
-        name = "catalog_name.schema_name"
-        data_object_type = "SCHEMA"
-        history_data_sharing_status = "ENABLED"
-    }
+  name = "schema_share"
+  object {
+    name                        = "catalog_name.schema_name"
+    data_object_type            = "SCHEMA"
+    history_data_sharing_status = "ENABLED"
+  }
 }
 ```
 

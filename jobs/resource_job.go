@@ -752,6 +752,11 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
 		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
 
+		// Clear the implied diff suppression for the webhook notification lists
+		for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+			common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
+		}
+
 		return s
 	})
 

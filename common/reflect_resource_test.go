@@ -565,7 +565,7 @@ func TestDiffSuppressor(t *testing.T) {
 	stringSchema := &schema.Schema{
 		Type: schema.TypeString,
 	}
-	dsf := diffSuppressor(stringSchema)
+	dsf := diffSuppressor("foo", stringSchema)
 	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
 		"foo": {
 			Type:     schema.TypeBool,

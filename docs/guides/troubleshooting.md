@@ -131,13 +131,13 @@ If you see the following HTTP request when running Terraform in the debug mode:
 GET /login.html?error=private-link-validation-error:NNNNNNNNNN
 ```
 
-then it means that you're trying to access a workspace that uses private link with private access set to disabled, but you're trying to reach it via public endpoint.  Make sure that domain names resolution is configured correctly to resolve workspace URL to a private endpoint.
+then it means that you're trying to access a workspace that uses private link with private access set to disabled, but you're trying to reach it via public endpoint.  Make sure that domain names resolution is configured correctly to resolve workspace URL to a private endpoint.  Also, this may happen when you’re accessing the internet via an HTTP proxy, so all traffic from Terraform is forwarded to the HTTP proxy, and routed via the public internet.
 
 ### Error: ....: Unauthorized access to Org: NNNNNNNNNN
 
 There are a few possible reasons for this error:
 
-* You’re trying to access a Databricks workspace with a private link enabled and public network access set to disabled.  Typically this happens when a computer from which you’re running terraform apply or terraform plan doesn’t have domain name resolution configured correctly, and Terraform is reaching the workspace via a public IP address. Also, this may happen when you’re accessing the internet via a proxy, so all traffic from Terraform is forwarded to the proxy, and routed via the public internet.
+* You’re trying to access a Databricks workspace with a private link enabled and public network access set to disabled.  Typically this happens when a computer from which you’re running terraform apply or terraform plan doesn’t have domain name resolution configured correctly, and Terraform is reaching the workspace via a public IP address. Also, this may happen when you’re accessing the internet via an HTTP proxy, so all traffic from Terraform is forwarded to the proxy, and routed via the public internet.
 * You have a Databricks workspace with IP Access Lists enabled and you’re trying to access from a computer that isn’t in the list of approved IP addresses.
 
 ### Error: Provider registry.terraform.io/databricks/databricks v... does not have a package available for your current platform, windows_386

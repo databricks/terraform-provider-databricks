@@ -542,7 +542,7 @@ func TestModelServingDelete_Error(t *testing.T) {
 	}.ExpectError(t, "Internal error happened")
 }
 
-func TestModelServingNoExternalModelConfig(t *testing.T) {
+func TestModelServingExternalModelNoConfig(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceModelServing(),
 		HCL: `
@@ -566,7 +566,7 @@ func TestModelServingNoExternalModelConfig(t *testing.T) {
 	}.ExpectError(t, "external_model provider is set to \"ai21labs\" but \"ai21labs_config\" block is missing")
 }
 
-func TestModelServingMultipleExternalModelConfig(t *testing.T) {
+func TestModelServingExternalModelMultipleConfig(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceModelServing(),
 		HCL: `

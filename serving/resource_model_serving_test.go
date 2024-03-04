@@ -593,5 +593,5 @@ func TestModelServingMultipleExternalModelConfig(t *testing.T) {
 			}
 			`,
 		Create: true,
-	}.ExpectError(t, "only one external_model config block is allowed. Found: anthropic_config, ai21labs_config")
+	}.ExpectError(t, "only one external_model config block is allowed. Found: ai21labs_config, anthropic_config")
 }

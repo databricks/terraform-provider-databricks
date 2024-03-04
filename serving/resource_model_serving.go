@@ -3,6 +3,7 @@ package serving
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -155,6 +156,7 @@ func hasExactlyOneExternalModel(d *schema.ResourceDiff) error {
 					found = append(found, key)
 				}
 			}
+			slices.Sort(found)
 			if len(found) > 1 {
 				msg := strings.Join(found, ", ")
 				return fmt.Errorf("only one external_model config block is allowed. Found: %s", msg)

@@ -2522,8 +2522,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			switch pathString {
-			case "storage_location", "volume_type":
+			if pathString == "storage_location" {
 				return d.Get("volume_type").(string) == "MANAGED"
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)

@@ -44,6 +44,9 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 		if is.Workspace != nil {
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
+		if is.Volumes != nil {
+			ic.emitIfVolumeFile(is.Volumes.Destination)
+		}
 	}
 }
 
@@ -51,6 +54,7 @@ func (ic *importContext) emitFilesFromSlice(slice []string) {
 	for _, p := range slice {
 		ic.emitIfDbfsFile(p)
 		ic.emitIfWsfsFile(p)
+		ic.emitIfVolumeFile(p)
 	}
 }
 
@@ -58,6 +62,7 @@ func (ic *importContext) emitFilesFromMap(m map[string]string) {
 	for _, p := range m {
 		ic.emitIfDbfsFile(p)
 		ic.emitIfWsfsFile(p)
+		ic.emitIfVolumeFile(p)
 	}
 }
 
@@ -349,6 +354,9 @@ func (ic *importContext) emitLibraries(libs []libraries.Library) {
 		ic.emitIfWsfsFile(lib.Whl)
 		ic.emitIfWsfsFile(lib.Jar)
 		ic.emitIfWsfsFile(lib.Egg)
+		// Files on UC Volumes
+		ic.emitIfVolumeFile(lib.Whl)
+		ic.emitIfVolumeFile(lib.Jar)
 	}
 
 }
@@ -366,11 +374,15 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 		return err
 	}
 	for _, lib := range cll.LibraryStatuses {
-		// Emit workspace file libraries if necessary
-		// Emit Volume libraries when resource is available
 		ic.emitIfDbfsFile(lib.Library.Egg)
 		ic.emitIfDbfsFile(lib.Library.Jar)
 		ic.emitIfDbfsFile(lib.Library.Whl)
+		// Files on UC Volumes
+		ic.emitIfVolumeFile(lib.Library.Whl)
+		ic.emitIfVolumeFile(lib.Library.Jar)
+		// Files on WSFS
+		ic.emitIfWsfsFile(lib.Library.Whl)
+		ic.emitIfWsfsFile(lib.Library.Jar)
 	}
 	return nil
 }
@@ -591,10 +603,14 @@ func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u
 
 func (ic *importContext) emitIfDbfsFile(path string) {
 	if strings.HasPrefix(path, "dbfs:") {
-		ic.Emit(&resource{
-			Resource: "databricks_dbfs_file",
-			ID:       path,
-		})
+		if strings.HasPrefix(path, "dbfs:/Volumes/") {
+			ic.emitIfVolumeFile(path[5:])
+		} else {
+			ic.Emit(&resource{
+				Resource: "databricks_dbfs_file",
+				ID:       path,
+			})
+		}
 	}
 }
 
@@ -602,6 +618,15 @@ func (ic *importContext) emitIfWsfsFile(path string) {
 	if strings.HasPrefix(path, "/Workspace/") {
 		normalPath := strings.TrimPrefix(path, "/Workspace")
 		ic.emitWorkspaceFileOrRepo(normalPath)
+	}
+}
+
+func (ic *importContext) emitIfVolumeFile(path string) {
+	if strings.HasPrefix(path, "/Volumes/") {
+		ic.Emit(&resource{
+			Resource: "databricks_file",
+			ID:       path,
+		})
 	}
 }
 
@@ -807,19 +832,23 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 	log.Printf("[INFO] %d of total %d jobs are going to be imported", i, len(l))
 }
 
-// returns created file name in "files" directory for the export and error if any
-func (ic *importContext) createFile(name string, content []byte) (string, error) {
-	return ic.createFileIn("files", name, content)
-}
-
-func (ic *importContext) createFileIn(dir, name string, content []byte) (string, error) {
+func (ic *importContext) createFileIn(dir, name string) (*os.File, string, error) {
 	fileName := ic.prefix + name
 	localFileName := fmt.Sprintf("%s/%s/%s", ic.Directory, dir, fileName)
 	err := os.MkdirAll(path.Dir(localFileName), 0755)
 	if err != nil && !os.IsExist(err) {
-		return "", err
+		return nil, "", err
 	}
 	local, err := os.Create(localFileName)
+	if err != nil {
+		return nil, "", err
+	}
+	relativeName := strings.TrimPrefix(localFileName, ic.Directory+"/")
+	return local, relativeName, nil
+}
+
+func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, error) {
+	local, relativeName, err := ic.createFileIn(dir, name)
 	if err != nil {
 		return "", err
 	}
@@ -828,7 +857,6 @@ func (ic *importContext) createFileIn(dir, name string, content []byte) (string,
 	if err != nil {
 		return "", err
 	}
-	relativeName := strings.Replace(localFileName, ic.Directory+"/", "", 1)
 	return relativeName, nil
 }
 

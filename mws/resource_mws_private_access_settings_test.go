@@ -3,6 +3,8 @@ package mws
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
@@ -246,4 +248,27 @@ func TestResourcePASDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/pas_id", d.Id())
+}
+
+func TestResourcePASUpdateAccountIdNoDiff(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsPrivateAccessSettings(),
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"account_id":                   "foo",
+			"private_access_settings_name": "pas_name",
+			"public_access_enabled":        "false",
+			"region":                       "eu-west-1",
+			"private_access_level":         "ENDPOINT",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"private_access_settings_id": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+		},
+		HCL: `
+		private_access_settings_name = "pas_name"
+		public_access_enabled = false
+		region = "eu-west-1"
+		private_access_level = "ENDPOINT"
+		`,
+	}.ApplyNoError(t)
 }

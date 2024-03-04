@@ -35,7 +35,7 @@ func TestQueryCreateDefaultNameSetting(t *testing.T) {
 				Details: []apierr.ErrorDetail{{
 					Type: "type.googleapis.com/google.rpc.ErrorInfo",
 					Metadata: map[string]string{
-						"etag": "etag1",
+						etagAttrName: "etag1",
 					},
 				}},
 			})
@@ -75,7 +75,7 @@ func TestQueryCreateDefaultNameSetting(t *testing.T) {
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":                defaultSettingId,
-		"etag":              "etag2",
+		etagAttrName:        "etag2",
 		"namespace.0.value": "namespace_value",
 	})
 }
@@ -104,7 +104,7 @@ func TestQueryReadDefaultNameSetting(t *testing.T) {
 		ID: defaultSettingId,
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":                defaultSettingId,
-		"etag":              "etag2",
+		etagAttrName:        "etag2",
 		"namespace.0.value": "namespace_value",
 	})
 }
@@ -151,7 +151,7 @@ func TestQueryUpdateDefaultNameSetting(t *testing.T) {
 		ID: defaultSettingId,
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":                defaultSettingId,
-		"etag":              "etag2",
+		etagAttrName:        "etag2",
 		"namespace.0.value": "new_namespace_value",
 	})
 }
@@ -177,7 +177,7 @@ func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 				Details: []apierr.ErrorDetail{{
 					Type: "type.googleapis.com/google.rpc.ErrorInfo",
 					Metadata: map[string]string{
-						"etag": "etag2",
+						etagAttrName: "etag2",
 					},
 				}},
 			})
@@ -219,7 +219,7 @@ func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 		ID: defaultSettingId,
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":                defaultSettingId,
-		"etag":              "etag3",
+		etagAttrName:        "etag3",
 		"namespace.0.value": "new_namespace_value",
 	})
 }
@@ -245,7 +245,7 @@ func TestQueryDeleteDefaultNameSetting(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "etag2", d.Get("etag").(string))
+	assert.Equal(t, "etag2", d.Get(etagAttrName).(string))
 }
 
 func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
@@ -260,7 +260,7 @@ func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
 				Details: []apierr.ErrorDetail{{
 					Type: "type.googleapis.com/google.rpc.ErrorInfo",
 					Metadata: map[string]string{
-						"etag": "etag2",
+						etagAttrName: "etag2",
 					},
 				}},
 			})
@@ -282,5 +282,5 @@ func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
 	}.Apply(t)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "etag3", d.Get("etag").(string))
+	assert.Equal(t, "etag3", d.Get(etagAttrName).(string))
 }

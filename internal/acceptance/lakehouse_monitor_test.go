@@ -5,7 +5,7 @@ import (
 )
 
 var commonPartLakehouseMonitoring = `resource "databricks_catalog" "sandbox" {
-	name         = "sandbox${var.RANDOM}"
+	name         = "sandbox${var.STICKY_RANDOM}"
 	comment      = "this catalog is managed by terraform"
 	properties = {
 		purpose = "testing"
@@ -15,7 +15,7 @@ var commonPartLakehouseMonitoring = `resource "databricks_catalog" "sandbox" {
 
 resource "databricks_schema" "things" {
 	catalog_name = databricks_catalog.sandbox.id
-	name         = "things${var.RANDOM}"
+	name         = "things${var.STICKY_RANDOM}"
 	comment      = "this database is managed by terraform"
 	properties = {
 		kind = "various"
@@ -25,7 +25,7 @@ resource "databricks_schema" "things" {
 resource "databricks_sql_table" "myInferenceTable" {
 	catalog_name = databricks_catalog.sandbox.id
 	schema_name = databricks_schema.things.name
-	name = "bar${var.RANDOM}_inference"
+	name = "bar${var.STICKY_RANDOM}_inference"
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
 	
@@ -65,7 +65,7 @@ func TestUcAccLakehouseMonitor(t *testing.T) {
 			resource "databricks_sql_table" "myTimeseries" {
 				catalog_name = databricks_catalog.sandbox.id
 				schema_name = databricks_schema.things.name
-				name = "bar${var.RANDOM}_timeseries"
+				name = "bar${var.STICKY_RANDOM}_timeseries"
 				table_type = "MANAGED"
 				data_source_format = "DELTA"
 
@@ -85,10 +85,10 @@ func TestUcAccLakehouseMonitor(t *testing.T) {
 				} 
 			}
 
-			esource "databricks_sql_table" "mySnapshot" {
+			resource "databricks_sql_table" "mySnapshot" {
 				catalog_name = databricks_catalog.sandbox.id
 				schema_name = databricks_schema.things.name
-				name = "bar${var.RANDOM}_snapshot"
+				name = "bar${var.STICKY_RANDOM}_snapshot"
 				table_type = "MANAGED"
 				data_source_format = "DELTA"
 

@@ -34,7 +34,7 @@ func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 			}, nil)
 			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:             "test_table",
-				Status:                catalog.MonitorInfoStatusMonitorStatusPending,
+				Status:                catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:             "sample.dir",
 				OutputSchemaName:      "output.schema",
 				DriftMetricsTableName: "test_table_drift",

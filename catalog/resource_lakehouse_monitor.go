@@ -2,14 +2,34 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const DefaultProvisionTimeout = 15 * time.Minute
+
+func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
+	return retry.RetryContext(ctx, DefaultProvisionTimeout, func() *retry.RetryError {
+		endpoint, err := w.LakehouseMonitors.GetByFullName(ctx, monitorName)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		if endpoint.Status == catalog.MonitorInfoStatusMonitorStatusActive {
+			return nil
+		}
+		if endpoint.Status == catalog.MonitorInfoStatusMonitorStatusError || endpoint.Status == catalog.MonitorInfoStatusMonitorStatusFailed {
+			return retry.NonRetryableError(fmt.Errorf("monitor status retrund %s for monitor: %s", endpoint.Status, monitorName))
+		}
+		return retry.RetryableError(fmt.Errorf("monitor %s is still pending", monitorName))
+	})
+}
 
 func ResourceLakehouseMonitor() common.Resource {
 	monitorSchema := common.StructToSchema(
@@ -28,6 +48,11 @@ func ResourceLakehouseMonitor() common.Resource {
 				Optional: true,
 				Required: false,
 			})
+			common.CustomizeSchemaPath(m, "monitor_version").SetReadOnly()
+			common.CustomizeSchemaPath(m, "drift_metrics_table_name").SetReadOnly()
+			common.CustomizeSchemaPath(m, "profile_metrics_table_name").SetReadOnly()
+			common.CustomizeSchemaPath(m, "status").SetReadOnly()
+			common.CustomizeSchemaPath(m, "dashboard_id").SetReadOnly()
 			return m
 		},
 	)
@@ -44,6 +69,7 @@ func ResourceLakehouseMonitor() common.Resource {
 			create.FullName = d.Get("table_name").(string)
 
 			endpoint, err := w.LakehouseMonitors.Create(ctx, create)
+			WaitForMonitor(w, ctx, create.FullName)
 			if err != nil {
 				return err
 			}
@@ -75,6 +101,7 @@ func ResourceLakehouseMonitor() common.Resource {
 			common.DataToStructPointer(d, monitorSchema, &update)
 			update.FullName = d.Get("table_name").(string)
 			_, err = w.LakehouseMonitors.Update(ctx, update)
+			WaitForMonitor(w, ctx, update.FullName)
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

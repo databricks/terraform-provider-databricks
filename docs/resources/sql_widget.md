@@ -14,25 +14,25 @@ A widget is always tied to a [dashboard](sql_dashboard.md). Every dashboard may 
 ```hcl
 resource "databricks_sql_widget" "d1w1" {
   dashboard_id = databricks_sql_dashboard.d1.id
-  text = "Hello! I'm a **text widget**!"
+  text         = "Hello! I'm a **text widget**!"
 
   position {
     size_x = 3
     size_y = 4
-    pos_x = 0
-    pos_y = 0
+    pos_x  = 0
+    pos_y  = 0
   }
 }
 
 resource "databricks_sql_widget" "d1w2" {
-  dashboard_id = databricks_sql_dashboard.d1.id
+  dashboard_id     = databricks_sql_dashboard.d1.id
   visualization_id = databricks_sql_visualization.q1v1.id
 
   position {
     size_x = 3
     size_y = 4
-    pos_x = 3
-    pos_y = 0
+    pos_x  = 3
+    pos_y  = 0
   }
 }
 ```

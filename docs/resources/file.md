@@ -34,11 +34,11 @@ resource "databricks_schema" "things" {
 }
 
 resource "databricks_volume" "this" {
-  name             = "quickstart_volume"
-  catalog_name     = databricks_catalog.sandbox.name
-  schema_name      = databricks_schema.things.name
-  volume_type      = "MANAGED"
-  comment          = "this volume is managed by terraform"
+  name         = "quickstart_volume"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  volume_type  = "MANAGED"
+  comment      = "this volume is managed by terraform"
 }
 
 resource "databricks_file" "this" {
@@ -56,7 +56,7 @@ resource "databricks_file" "init_script" {
     echo "Hello World"
     EOT
   )
-  path   = "${databricks_volume.this.volume_path}/fileName"
+  path = "${databricks_volume.this.volume_path}/fileName"
 }
 ```
 

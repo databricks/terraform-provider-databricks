@@ -34,7 +34,7 @@ func TestQueryCreateRestrictWsAdminsSetting(t *testing.T) {
 				Details: []apierr.ErrorDetail{{
 					Type: "type.googleapis.com/google.rpc.ErrorInfo",
 					Metadata: map[string]string{
-						"etag": "etag1",
+						etagAttrName: "etag1",
 					},
 				}},
 			})
@@ -76,7 +76,8 @@ func TestQueryCreateRestrictWsAdminsSetting(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "etag2", d.Id())
+	assert.Equal(t, defaultSettingId, d.Id())
+	assert.Equal(t, "etag2", d.Get(etagAttrName).(string))
 	assert.Equal(t, "RESTRICT_TOKENS_AND_JOB_RUN_AS", d.Get("restrict_workspace_admins.0.status"))
 }
 
@@ -99,13 +100,15 @@ func TestQueryReadRestrictWsAdminsSetting(t *testing.T) {
 			restrict_workspace_admins {
 				status = "RESTRICT_TOKENS_AND_JOB_RUN_AS"
 			}
+			etag = "etag1"
 		`,
-		ID: "etag1",
+		ID: defaultSettingId,
 	}.Apply(t)
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "etag2", d.Id())
+	assert.Equal(t, defaultSettingId, d.Id())
+	assert.Equal(t, "etag2", d.Get(etagAttrName).(string))
 	res := d.Get("restrict_workspace_admins").([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, "RESTRICT_TOKENS_AND_JOB_RUN_AS", res["status"])
 }
@@ -147,13 +150,15 @@ func TestQueryUpdateRestrictWsAdminsSetting(t *testing.T) {
 			restrict_workspace_admins {
 				status = "ALLOW_ALL"
 			}
+			etag = "etag1"
 		`,
-		ID: "etag1",
+		ID: defaultSettingId,
 	}.Apply(t)
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "etag2", d.Id())
+	assert.Equal(t, defaultSettingId, d.Id())
+	assert.Equal(t, "etag2", d.Get(etagAttrName).(string))
 	res := d.Get("restrict_workspace_admins").([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, "ALLOW_ALL", res["status"])
 }
@@ -179,7 +184,7 @@ func TestQueryUpdateRestrictWsAdminsSettingWithConflict(t *testing.T) {
 				Details: []apierr.ErrorDetail{{
 					Type: "type.googleapis.com/google.rpc.ErrorInfo",
 					Metadata: map[string]string{
-						"etag": "etag2",
+						etagAttrName: "etag2",
 					},
 				}},
 			})
@@ -216,19 +221,21 @@ func TestQueryUpdateRestrictWsAdminsSettingWithConflict(t *testing.T) {
 			restrict_workspace_admins {
 				status = "RESTRICT_TOKENS_AND_JOB_RUN_AS"
 			}
+			etag = "etag1"
 		`,
-		ID: "etag1",
+		ID: defaultSettingId,
 	}.Apply(t)
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "etag3", d.Id())
+	assert.Equal(t, defaultSettingId, d.Id())
+	assert.Equal(t, "etag3", d.Get(etagAttrName).(string))
 	res := d.Get("restrict_workspace_admins").([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, "RESTRICT_TOKENS_AND_JOB_RUN_AS", res["status"])
 }
 
 func TestQueryDeleteRestrictWsAdminsSetting(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockSettingsAPI().EXPECT().DeleteRestrictWorkspaceAdminsSetting(mock.Anything, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag1",
@@ -238,15 +245,21 @@ func TestQueryDeleteRestrictWsAdminsSetting(t *testing.T) {
 		},
 		Resource: testRestrictWsAdminsSetting,
 		Delete:   true,
-		ID:       "etag1",
-	}.Apply(t)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "etag2", d.Id())
+		HCL: `
+		restrict_workspace_admins {
+			status = "RESTRICT_TOKENS_AND_JOB_RUN_AS"
+		}
+		etag = "etag1"
+		`,
+		ID: defaultSettingId,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":         defaultSettingId,
+		etagAttrName: "etag2",
+	})
 }
 
 func TestQueryDeleteRestrictWsAdminsSettingWithConflict(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockSettingsAPI().EXPECT().DeleteRestrictWorkspaceAdminsSetting(mock.Anything, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag1",
@@ -257,7 +270,7 @@ func TestQueryDeleteRestrictWsAdminsSettingWithConflict(t *testing.T) {
 				Details: []apierr.ErrorDetail{{
 					Type: "type.googleapis.com/google.rpc.ErrorInfo",
 					Metadata: map[string]string{
-						"etag": "etag2",
+						etagAttrName: "etag2",
 					},
 				}},
 			})
@@ -268,10 +281,16 @@ func TestQueryDeleteRestrictWsAdminsSettingWithConflict(t *testing.T) {
 			}, nil)
 		},
 		Resource: testRestrictWsAdminsSetting,
-		Delete:   true,
-		ID:       "etag1",
-	}.Apply(t)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "etag3", d.Id())
+		HCL: `
+		restrict_workspace_admins {
+			status = "RESTRICT_TOKENS_AND_JOB_RUN_AS"
+		}
+		etag = "etag1"
+		`,
+		Delete: true,
+		ID:     defaultSettingId,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":         defaultSettingId,
+		etagAttrName: "etag3",
+	})
 }

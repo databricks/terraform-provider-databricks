@@ -1,5 +1,36 @@
 # Version changelog
 
+## 1.38.0
+
+### New Features and Improvements
+ * Use workspace-level default for `enable_serverless_compute` if not specified in [databricks_sql_global_config](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_global_config) ([#3279](https://github.com/databricks/terraform-provider-databricks/pull/3279)).
+ * Fixed webhook_notifications diff suppression for [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#3309](https://github.com/databricks/terraform-provider-databricks/pull/3309)).
+ * Perform case-insensitive error message checking when using `force` in [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) ([#3295](https://github.com/databricks/terraform-provider-databricks/pull/3295)).
+ * Use stable IDs for settings resources ([#3314](https://github.com/databricks/terraform-provider-databricks/pull/3314)).
+
+### Documentation Changes
+ * Improved documentation for INTERNAL and INTERNAL_AND_EXTERNAL delta sharing scope in terraform  ([#3287](https://github.com/databricks/terraform-provider-databricks/pull/3287)).
+ * Added user guide for new behaviours with UC by default ([#3318](https://github.com/databricks/terraform-provider-databricks/pull/3318)).
+ * Expanded the note about private link in the troubleshooting guide ([#3319](https://github.com/databricks/terraform-provider-databricks/pull/3319)).
+ * Document `storage_location` attribute of the [databricks_registered_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/registered_model) ([#3249](https://github.com/databricks/terraform-provider-databricks/pull/3249)).
+ * Various documentation improvements ([#3288](https://github.com/databricks/terraform-provider-databricks/pull/3288)).
+ * Changed accounts_id to required ([#3244](https://github.com/databricks/terraform-provider-databricks/pull/3244)).
+
+### Exporter
+ * Improved support for Unity Catalog ([#3281](https://github.com/databricks/terraform-provider-databricks/pull/3281)).
+ * Added generation of import blocks for easier importing existing resources in Terraform 1.5+ ([#3293](https://github.com/databricks/terraform-provider-databricks/pull/3293)).
+ * Added support for [databricks_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/file) resource ([#3301](https://github.com/databricks/terraform-provider-databricks/pull/3301)).
+
+### Internal Changes
+ * Set `Computed` field to `true` for `common.Resource` `account_id` attribute ([#3310](https://github.com/databricks/terraform-provider-databricks/pull/3310)).
+ * Removed unnecessary alias from cluster resource ([#3298](https://github.com/databricks/terraform-provider-databricks/pull/3298)).
+ * Bump Go SDK ([#3296](https://github.com/databricks/terraform-provider-databricks/pull/3296)).
+ * Bump github.com/hashicorp/hcl/v2 from 2.19.1 to 2.20.0 ([#3317](https://github.com/databricks/terraform-provider-databricks/pull/3317)).
+ * Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.32.0 to 2.33.0 ([#3300](https://github.com/databricks/terraform-provider-databricks/pull/3300)).
+ * Bump github.com/stretchr/testify from 1.8.4 to 1.9.0 ([#3323](https://github.com/databricks/terraform-provider-databricks/pull/3323)).
+ * Bump github.com/zclconf/go-cty from 1.14.2 to 1.14.3 ([#3322](https://github.com/databricks/terraform-provider-databricks/pull/3322)).
+
+
 ## 1.37.1
 
 ### New Features and Improvements

@@ -541,3 +541,57 @@ func TestModelServingDelete_Error(t *testing.T) {
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")
 }
+
+func TestModelServingNoExternalModelConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-endpoint"
+			config {
+				served_entities {
+					name = "prod_model"
+					entity_name = "ads1"
+					entity_version = "2"
+					external_model {
+						name     = "prod_external_model"
+						provider = "ai21labs"
+						task     = "llm/v1/embeddings"
+					}
+					workload_size = "Small"
+					scale_to_zero_enabled = true
+				}
+			}
+			`,
+		Create: true,
+	}.ExpectError(t, "external_model provider is set to \"ai21labs\" but \"ai21labs_config\" block is missing")
+}
+
+func TestModelServingMultipleExternalModelConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-endpoint"
+			config {
+				served_entities {
+					name = "prod_model"
+					entity_name = "ads1"
+					entity_version = "2"
+					external_model {
+						name     = "prod_external_model"
+						provider = "ai21labs"
+						task     = "llm/v1/embeddings"
+						ai21labs_config {
+						  ai21labs_api_key = "{{secrets/databricks/ai21labs_api_key}}"
+						}
+						anthropic_config {
+						  anthropic_api_key = "{{secrets/databricks/anthropic_api_key}}"
+						}
+					}
+					workload_size = "Small"
+					scale_to_zero_enabled = true
+				}
+			}
+			`,
+		Create: true,
+	}.ExpectError(t, "only one external_model config block is allowed. Found: anthropic_config, ai21labs_config")
+}

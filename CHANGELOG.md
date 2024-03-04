@@ -3,7 +3,7 @@
 ## 1.38.0
 
 ### New Features and Improvements
- * Use workspace-level default for `enable_serverless_compute` if not specified in [databricks_sql_global_config](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_global_config) ([#3279](https://github.com/databricks/terraform-provider-databricks/pull/3279)).
+ * Use workspace-level default for `enable_serverless_compute` if not specified in [databricks_sql_global_config](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_global_config) ([#3279](https://github.com/databricks/terraform-provider-databricks/pull/3279)). Previously, this resource would disable serverless unless you set the deprecated `enable_serverless_compute` attribute to true. From this release, this resource will not modify `enable_serverless_compute`, leaving it as its default value (enabled) if unspecified.
  * Fixed webhook_notifications diff suppression for [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#3309](https://github.com/databricks/terraform-provider-databricks/pull/3309)).
  * Perform case-insensitive error message checking when using `force` in [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) ([#3295](https://github.com/databricks/terraform-provider-databricks/pull/3295)).
  * Use stable IDs for settings resources ([#3314](https://github.com/databricks/terraform-provider-databricks/pull/3314)).

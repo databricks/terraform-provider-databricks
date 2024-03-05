@@ -128,6 +128,7 @@ The following arguments are supported:
 * `options` - (Optional) Map of user defined table options. Change forces creation of a new resource.
 * `properties` - (Optional) Map of table properties.
 * `partitions` - (Optional) a subset of columns to partition the table by. Change forces creation of a new resource. Conflicts with `cluster_keys`.
+* `create_if_not_exists` - (Optional) Adds IF NOT EXISTS clause to avoid error in case resource already exists (Default: `false`).
 
 ### `column` configuration block
 

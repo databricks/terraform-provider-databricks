@@ -254,7 +254,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	createType := ti.getTableTypeString()
 
-    createStatement := fmt.Sprintf("CREATE %s%s %s%s", externalFragment, createType, ifNotExistsClause, ti.SQLFullName())
+    createStatement := fmt.Sprintf("CREATE %s%s %s%s", externalFragment, createType, ifNotExistsFragment, ti.SQLFullName())
     statements = append(statements, createStatement)
 
 	if len(ti.ColumnInfos) > 0 {

@@ -69,7 +69,10 @@ func ResourceLakehouseMonitor() common.Resource {
 			create.FullName = d.Get("table_name").(string)
 
 			endpoint, err := w.LakehouseMonitors.Create(ctx, create)
-			WaitForMonitor(w, ctx, create.FullName)
+			if err != nil {
+				return err
+			}
+			err = WaitForMonitor(w, ctx, create.FullName)
 			if err != nil {
 				return err
 			}
@@ -86,11 +89,7 @@ func ResourceLakehouseMonitor() common.Resource {
 				return err
 
 			}
-			err = common.StructToData(endpoint, monitorSchema, d)
-			if err != nil {
-				return err
-			}
-			return nil
+			return common.StructToData(endpoint, monitorSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -101,8 +100,10 @@ func ResourceLakehouseMonitor() common.Resource {
 			common.DataToStructPointer(d, monitorSchema, &update)
 			update.FullName = d.Get("table_name").(string)
 			_, err = w.LakehouseMonitors.Update(ctx, update)
-			WaitForMonitor(w, ctx, update.FullName)
-			return err
+			if err != nil {
+				return err
+			}
+			return WaitForMonitor(w, ctx, update.FullName)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

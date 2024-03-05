@@ -43,7 +43,7 @@ type SqlTableInfo struct {
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
 	WarehouseID           string            `json:"warehouse_id,omitempty"`
-    CreateIfNotExists     bool              `json:"create_if_not_exists,omitempty"`
+	CreateIfNotExists     bool              `json:"create_if_not_exists,omitempty"`
 
 	exec    common.CommandExecutor
 	sqlExec sql.StatementExecutionInterface
@@ -247,15 +247,15 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 		externalFragment = "EXTERNAL "
 	}
 
-    ifNotExistsFragment := ""
-    if ti.CreateIfNotExists {
-        ifNotExistsFragment = "IF NOT EXISTS "
-    }
+	ifNotExistsFragment := ""
+	if ti.CreateIfNotExists {
+		ifNotExistsFragment = "IF NOT EXISTS "
+	}
 
 	createType := ti.getTableTypeString()
 
-    createStatement := fmt.Sprintf("CREATE %s%s %s%s", externalFragment, createType, ifNotExistsFragment, ti.SQLFullName())
-    statements = append(statements, createStatement)
+	createStatement := fmt.Sprintf("CREATE %s%s %s%s", externalFragment, createType, ifNotExistsFragment, ti.SQLFullName())
+	statements = append(statements, createStatement)
 
 	if len(ti.ColumnInfos) > 0 {
 		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeColumnInfos()))
@@ -408,11 +408,11 @@ func ResourceSqlTable() common.Resource {
 
 			s["partitions"].ConflictsWith = []string{"cluster_keys"}
 			s["cluster_keys"].ConflictsWith = []string{"partitions"}
-            s["create_if_not_exists"] = &schema.Schema{
-                Type:     schema.TypeBool,
-                Optional: true,
-                Default:  false,
-            }
+			s["create_if_not_exists"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			}
 			return s
 		})
 	return common.Resource{

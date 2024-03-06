@@ -34,7 +34,7 @@ func (rt recursionTrackingContext) copy() recursionTrackingContext {
 }
 
 func (rt recursionTrackingContext) visit(v reflect.Value) {
-	rt.timesVisited[strings.TrimPrefix(v.Type().String(), "*")] += 1
+	rt.timesVisited[getNameForType(v.Type())] += 1
 }
 
 func getEmptyRecursionTrackingContext() recursionTrackingContext {

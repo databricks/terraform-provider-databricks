@@ -10,7 +10,6 @@ A `databricks_lakehouse_monitor` is attached to a [databricks_sql_table](sql_tab
 ## Example Usage
 
 ```hcl
-
 resource "databricks_catalog" "sandbox" {
   name    = "sandbox"
   comment = "this catalog is managed by terraform"
@@ -28,7 +27,7 @@ resource "databricks_schema" "things" {
     }
   }
   
-resource "databricks_table" "myTestTable" {
+resource "databricks_sql_table" "myTestTable" {
     catalog_name = "main"
     schema_name = databricks_schema.things.name
     name = "bar"
@@ -38,15 +37,13 @@ resource "databricks_table" "myTestTable" {
     column {
         name      = "timestamp"
         position  = 1
-        type_name = "INT"
-        type_text = "int"
-        type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+        type = "int"
     }
 }
 
 resource "databricks_lakehouse_monitor" "testTimeseriesMonitor" {
-    table_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
-    assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
+    table_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_sql_table.myTestTable.name}"
+    assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_sql_table.myTestTable.name}"
     output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
     time_series  {
         granularities = ["1 hour"]

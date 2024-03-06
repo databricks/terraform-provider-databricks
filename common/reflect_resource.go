@@ -475,26 +475,6 @@ func isGoSdk(v reflect.Value) bool {
 	return false
 }
 
-// Unwraps aliases map given a fieldname. Should be called everytime we recursively call iterFields.
-//
-// NOTE: If the target field has an alias, we expect `fieldname` argument to be the alias.
-// For example
-//
-//	fieldName = "cluster"
-//	aliases = {"cluster.clusterName": "name", "libraries": "library"}
-//	would return: {"clusterName": "name"}
-func unwrapAliasesMap(fieldName string, aliases map[string]string) map[string]string {
-	result := make(map[string]string)
-	prefix := fieldName + "."
-	for key, value := range aliases {
-		// Only keep the keys that have the prefix.
-		if strings.HasPrefix(key, prefix) && key != prefix {
-			result[key] = value
-		}
-	}
-	return result
-}
-
 // Iterate through each field of the given reflect.Value object and execute a callback function with the corresponding
 // terraform schema object as the input.
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]map[string]string,

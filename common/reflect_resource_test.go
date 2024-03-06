@@ -45,7 +45,7 @@ func TestChooseFieldName(t *testing.T) {
 func TestChooseFieldNameWithAliasesMap(t *testing.T) {
 	assert.Equal(t, "foo", chooseFieldNameWithAliases(reflect.StructField{
 		Tag: `json:"bar"`,
-	}, map[string]string{"bar": "foo"}))
+	}, "Bar", map[string]map[string]string{"Bar": {"bar": "foo"}}))
 }
 
 type testSliceItem struct {

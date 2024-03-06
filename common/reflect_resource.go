@@ -45,10 +45,28 @@ type ResourceProvider interface {
 	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
+// Interface for ResourceProvider instances that have recursive references in its schema.
+// The function MaxDepthForTypes allows us to specify the max number of recursive depth for a specific field
+//
+// Example:
+//
+//	func (JobSettings) MaxDepthForTypes map[string]int {
+//	    return map[string]int{"for_each_task": 2}
+//	}
+type RecursiveResourceProvider interface {
+	ResourceProvider
+	MaxDepthForTypes() map[string]int
+}
+
 // Takes in a ResourceProvider and converts that into a map from string to schema.
 func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, v.Aliases())
+	var scm map[string]*schema.Schema
+	if rrp, ok := v.(RecursiveResourceProvider); ok {
+		scm = typeToSchema(rv, v.Aliases(), getRecursionTrackingContext(rrp))
+	} else {
+		scm = typeToSchema(rv, v.Aliases(), getEmptyRecursionTrackingContext())
+	}
 	scm = v.CustomizeSchema(scm)
 	return scm
 }
@@ -91,12 +109,12 @@ func getJsonFieldName(typeField reflect.StructField) string {
 // SchemaPath helps to navigate
 func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, error) {
 	cs := s
-	for _, p := range path {
+	for i, p := range path {
 		v, ok := cs[p]
 		if !ok {
 			return nil, fmt.Errorf("missing key %s", p)
 		}
-		if p == path[len(path)-1] {
+		if i == len(path)-1 {
 			return v, nil
 		}
 		cv, ok := v.Elem.(*schema.Resource)
@@ -126,18 +144,11 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		return resourceProviderStructToSchema(rp)
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]string{})
+	scm := typeToSchema(rv, map[string]string{}, getEmptyRecursionTrackingContext())
 	if customize != nil {
 		scm = customize(scm)
 	}
 	return scm
-}
-
-// SetSuppressDiff adds diff suppression to a schema. This is necessary for non-computed
-// fields for which the platform returns a value, but the user has not configured any value.
-// For example: the REST API returns `{"tags": {}}` for a resource with no tags.
-func SetSuppressDiff(v *schema.Schema) {
-	v.DiffSuppressFunc = diffSuppressor(v)
 }
 
 // SetDefault sets the default value for a schema.
@@ -216,11 +227,11 @@ func handleSensitive(typeField reflect.StructField, schema *schema.Schema) {
 	}
 }
 
-func handleSuppressDiff(typeField reflect.StructField, v *schema.Schema) {
+func handleSuppressDiff(typeField reflect.StructField, fieldName string, v *schema.Schema) {
 	tfTags := strings.Split(typeField.Tag.Get("tf"), ",")
 	for _, tag := range tfTags {
 		if tag == "suppress_diff" {
-			v.DiffSuppressFunc = diffSuppressor(v)
+			v.DiffSuppressFunc = diffSuppressor(fieldName, v)
 			break
 		}
 	}
@@ -244,16 +255,18 @@ func chooseFieldName(typeField reflect.StructField) string {
 	return getJsonFieldName(typeField)
 }
 
-func diffSuppressor(v *schema.Schema) func(k, old, new string, d *schema.ResourceData) bool {
+func diffSuppressor(fieldName string, v *schema.Schema) func(k, old, new string, d *schema.ResourceData) bool {
 	zero := fmt.Sprintf("%v", v.Type.Zero())
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		if new == zero && old != zero {
 			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
 			return true
 		}
-		if strings.HasSuffix(k, ".#") && new == "0" && old != "0" {
-			field := strings.TrimSuffix(k, ".#")
-			log.Printf("[DEBUG] Suppressing diff for list or set %v: no value configured but platform returned some value (likely {})", field)
+		// When suppressing diffs for a list of attributes, SuppressDiffFunc is called for each diff
+		// recursively. To verify that the list is empty, we need to ensure that the key being diffed
+		// is exactly the list's attribute itself and not one of its elements.
+		if strings.HasSuffix(k, fmt.Sprintf("%s.#", fieldName)) && new == "0" && old != "0" {
+			log.Printf("[DEBUG] Suppressing diff for list or set %v: no value configured but platform returned some value (likely {})", fieldName)
 			return true
 		}
 		return false
@@ -282,7 +295,7 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -292,9 +305,16 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
+	rt = rt.copy()
+	rt.visit(v)
 	fields := listAllFields(v)
 	for _, field := range fields {
 		typeField := field.sf
+		if rt.depthExceeded(typeField) {
+			// Skip the field if recursion depth is over the limit.
+			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", rt.getNameForTypeField(typeField), rt.getMaxDepthForTypeField(typeField))
+			continue
+		}
 		tfTag := typeField.Tag.Get("tf")
 
 		fieldName := chooseFieldNameWithAliases(typeField, aliases)
@@ -334,17 +354,17 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 		case reflect.Int, reflect.Int32, reflect.Int64:
 			scm[fieldName].Type = schema.TypeInt
 			// diff suppression needs type for zero value
-			handleSuppressDiff(typeField, scm[fieldName])
+			handleSuppressDiff(typeField, fieldName, scm[fieldName])
 		case reflect.Float64:
 			scm[fieldName].Type = schema.TypeFloat
 			// diff suppression needs type for zero value
-			handleSuppressDiff(typeField, scm[fieldName])
+			handleSuppressDiff(typeField, fieldName, scm[fieldName])
 		case reflect.Bool:
 			scm[fieldName].Type = schema.TypeBool
 		case reflect.String:
 			scm[fieldName].Type = schema.TypeString
 			// diff suppression needs type for zero value
-			handleSuppressDiff(typeField, scm[fieldName])
+			handleSuppressDiff(typeField, fieldName, scm[fieldName])
 		case reflect.Map:
 			scm[fieldName].Type = schema.TypeMap
 			elem := typeField.Type.Elem()
@@ -361,12 +381,11 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, unwrappedAliases)
+			nestedSchema := typeToSchema(sv, unwrappedAliases, rt)
 			if strings.Contains(tfTag, "suppress_diff") {
-				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
-				for _, v := range nestedSchema {
-					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(v)
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
+				for k, v := range nestedSchema {
+					v.DiffSuppressFunc = diffSuppressor(k, v)
 				}
 			}
 			scm[fieldName].Elem = &schema.Resource{
@@ -379,12 +398,11 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, unwrappedAliases)
+			nestedSchema := typeToSchema(sv, unwrappedAliases, rt)
 			if strings.Contains(tfTag, "suppress_diff") {
-				scm[fieldName].DiffSuppressFunc = diffSuppressor(scm[fieldName])
-				for _, v := range nestedSchema {
-					// to those relatively new to GoLang: we must explicitly pass down v by copy
-					v.DiffSuppressFunc = diffSuppressor(v)
+				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
+				for k, v := range nestedSchema {
+					v.DiffSuppressFunc = diffSuppressor(k, v)
 				}
 			}
 			scm[fieldName].Elem = &schema.Resource{
@@ -409,7 +427,7 @@ func typeToSchema(v reflect.Value, aliases map[string]string) map[string]*schema
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, unwrappedAliases),
+					Schema: typeToSchema(sv, unwrappedAliases, rt),
 				}
 			}
 		default:

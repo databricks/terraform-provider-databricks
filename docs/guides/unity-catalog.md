@@ -5,7 +5,7 @@ page_title: "Unity Catalog set up on AWS"
 # Deploying pre-requisite resources and enabling Unity Catalog
 
 **Note**
-If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you.
+If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you. See [this guide](unity-catalog-default.md) instead.
 
 **Note**
 Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
@@ -30,7 +30,7 @@ To get started with Unity Catalog, this guide takes you through the following hi
   - [Create users and groups](#create-users-and-groups)
   - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore-and-link-it-to-workspaces)
   - [Configure external locations and credentials](#configure-external-locations-and-credentials)
-  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)  
+  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)
   - [Configure Unity Catalog clusters](#configure-unity-catalog-clusters)
 
 ## Provider initialization
@@ -315,7 +315,7 @@ resource "aws_iam_policy" "external_data_access" {
 }
 
 resource "aws_iam_role" "external_data_access" {
-  name                = "${local.prefix}-external-access"
+  name                = "${local.prefix}-uc-access"
   assume_role_policy  = data.aws_iam_policy_document.passrole_for_uc.json
   managed_policy_arns = [aws_iam_policy.external_data_access.arn]
   tags = merge(local.tags, {

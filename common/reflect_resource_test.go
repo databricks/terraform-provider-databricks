@@ -93,8 +93,8 @@ type testForEachTask struct {
 	Extra string       `json:"extra,omitempty"`
 }
 
-func (testRecursiveStruct) Aliases() map[string]string {
-	return map[string]string{}
+func (testRecursiveStruct) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{}
 }
 
 func (testRecursiveStruct) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {

@@ -12,19 +12,15 @@ type recursionTrackingContext struct {
 }
 
 func (rt recursionTrackingContext) depthExceeded(typeField reflect.StructField) bool {
-	typeName := rt.getNameForTypeField(typeField)
+	typeName := getNameForType(typeField.Type)
 	if maxDepth, ok := rt.maxDepthForTypes[typeName]; ok {
 		return rt.timesVisited[typeName]+1 > maxDepth
 	}
 	return false
 }
 
-func (rt recursionTrackingContext) getNameForTypeField(typeField reflect.StructField) string {
-	return strings.TrimPrefix(typeField.Type.String(), "*")
-}
-
 func (rt recursionTrackingContext) getMaxDepthForTypeField(typeField reflect.StructField) int {
-	typeName := rt.getNameForTypeField(typeField)
+	typeName := getNameForType(typeField.Type)
 	return rt.maxDepthForTypes[typeName]
 }
 
@@ -53,4 +49,8 @@ func getRecursionTrackingContext(rp RecursiveResourceProvider) recursionTracking
 		map[string]int{},
 		rp.MaxDepthForTypes(),
 	}
+}
+
+func getNameForType(t reflect.Type) string {
+	return strings.TrimPrefix(t.String(), "*")
 }

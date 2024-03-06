@@ -269,9 +269,9 @@ type DummyResourceProvider struct {
 	DummyNoTfTag
 }
 
-func (DummyResourceProvider) Aliases() map[string]string {
-	return map[string]string{"enabled": "enabled_alias",
-		"addresses.primary": "primary_alias"}
+func (DummyResourceProvider) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{"common.DummyNoTfTag": {"enabled": "enabled_alias"},
+		"common.AddressNoTfTag": {"primary": "primary_alias"}}
 }
 
 func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {

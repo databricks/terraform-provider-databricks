@@ -13,7 +13,10 @@ type recursionTrackingContext struct {
 
 func (rt recursionTrackingContext) depthExceeded(typeField reflect.StructField) bool {
 	typeName := getNameForType(typeField.Type)
+	println("========")
+	println(typeName)
 	if maxDepth, ok := rt.maxDepthForTypes[typeName]; ok {
+		println("in if!!")
 		return rt.timesVisited[typeName]+1 > maxDepth
 	}
 	return false

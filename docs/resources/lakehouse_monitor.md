@@ -115,18 +115,16 @@ table.
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
 * `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.
 
-### Computed Fields
-* `monitor_version` - The version of the monitor config (e.g. 1,2,3). If negative, the monitor may be corrupted
-* `drift_metrics_table_name` - The full name of the drift metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
-* `profile_metrics_table_name` - The full name of the profile metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
-* `status` - Status of the Monitor 
-* `dashboard_id` - The ID of the generated dashboard.
-
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` -  ID of this monitor is the same as the full table name of the format `{catalog}.{schema_name}.{table_name}`
+* `monitor_version` - The version of the monitor config (e.g. 1,2,3). If negative, the monitor may be corrupted
+* `drift_metrics_table_name` - The full name of the drift metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
+* `profile_metrics_table_name` - The full name of the profile metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
+* `status` - Status of the Monitor 
+* `dashboard_id` - The ID of the generated dashboard.
 
 ## Related Resources
 

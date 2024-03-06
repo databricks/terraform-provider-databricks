@@ -270,7 +270,7 @@ type DummyResourceProvider struct {
 }
 
 func (DummyResourceProvider) Aliases() map[string]map[string]string {
-	return map[string]map[string]string{"common.DummyNoTfTag": {"enabled": "enabled_alias"},
+	return map[string]map[string]string{"common.DummyResourceProvider": {"enabled": "enabled_alias"},
 		"common.AddressNoTfTag": {"primary": "primary_alias"}}
 }
 

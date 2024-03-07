@@ -60,7 +60,7 @@ func ResourceModelServing() common.Resource {
 			if old != nil && old == false && new == true {
 				d.ForceNew("config.0.auto_capture_config.0.enabled")
 			}
-			err := hasExactlyOneExternalModel(d)
+			err := validateExternalModelConfig(d)
 			if err != nil {
 				return err
 			}
@@ -137,7 +137,7 @@ func ResourceModelServing() common.Resource {
 	}
 }
 
-func hasExactlyOneExternalModel(d *schema.ResourceDiff) error {
+func validateExternalModelConfig(d *schema.ResourceDiff) error {
 	_, e := d.GetOk("config.0.served_entities.0.external_model")
 	provider, p := d.GetOk("config.0.served_entities.0.external_model.0.provider")
 

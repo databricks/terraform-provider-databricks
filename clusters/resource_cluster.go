@@ -62,10 +62,6 @@ type ClusterSpec struct {
 	compute.ClusterSpec
 }
 
-func (ClusterSpec) Aliases() map[string]map[string]string {
-	return map[string]map[string]string{}
-}
-
 func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()
 	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetComputed()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"slices"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -15,7 +16,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 	type AwsCrossAccountPolicy struct {
 		PolicyType      string   `json:"policy_type,omitempty" tf:"default:managed"`
 		PassRole        []string `json:"pass_roles,omitempty"`
-		JSON            string   `json:"json,omitempty" tf:"computed"`
+		JSON            string   `json:"json" tf:"computed"`
 		AwsAccountId    string   `json:"aws_account_id,omitempty"`
 		VpcId           string   `json:"vpc_id,omitempty"`
 		Region          string   `json:"region,omitempty"`
@@ -24,6 +25,24 @@ func DataAwsCrossaccountPolicy() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *AwsCrossAccountPolicy, w *databricks.WorkspaceClient) error {
 		if !slices.Contains([]string{"managed", "customer", "restricted"}, data.PolicyType) {
 			return fmt.Errorf("policy_type must be either 'managed', 'customer' or 'restricted'")
+		}
+
+		if data.PolicyType == "restricted" {
+			match, _ := regexp.MatchString(`^\d{12}$`, data.AwsAccountId)
+			if !match {
+				return fmt.Errorf("aws_account_id must be a 12 digit number")
+			}
+			match, _ = regexp.MatchString(`^vpc-.*$`, data.VpcId)
+			if !match {
+				return fmt.Errorf("vpc_id must begin with 'vpc-'")
+			}
+			if data.Region == "" {
+				return fmt.Errorf("region must be set")
+			}
+			match, _ = regexp.MatchString(`^sg-.*$`, data.SecurityGroupId)
+			if !match {
+				return fmt.Errorf("security_group_id must begin with 'sg-'")
+			}
 		}
 		// non resource-based permissions
 		actions := []string{

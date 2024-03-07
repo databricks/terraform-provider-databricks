@@ -51,7 +51,6 @@ func ResourceModelServing() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
-
 			return m
 		})
 
@@ -92,7 +91,7 @@ func ResourceModelServing() common.Resource {
 			if err != nil {
 				return err
 			}
-			if d.IsNewResource() || sOrig.Config == nil {
+			if sOrig.Config == nil {
 				// If it is a new resource, then we only return ServedEntities
 				endpoint.Config.ServedModels = nil
 			} else {
@@ -141,26 +140,29 @@ func ResourceModelServing() common.Resource {
 func hasExactlyOneExternalModel(d *schema.ResourceDiff) error {
 	_, e := d.GetOk("config.0.served_entities.0.external_model")
 	provider, p := d.GetOk("config.0.served_entities.0.external_model.0.provider")
-	if e && p {
-		name := strings.ReplaceAll(provider.(string), "-", "_")
-		config := d.Get(fmt.Sprintf("config.0.served_entities.0.external_model.0.%s_config", name)).([]interface{})
 
-		if len(config) == 0 {
-			return fmt.Errorf("external_model provider is set to \"%s\" but \"%s_config\" block is missing", name, name)
+	if !e || !p {
+		return nil
+	}
+
+	name := strings.ReplaceAll(provider.(string), "-", "_")
+	config := d.Get(fmt.Sprintf("config.0.served_entities.0.external_model.0.%s_config", name)).([]interface{})
+
+	if len(config) == 0 {
+		return fmt.Errorf("external_model provider is set to \"%s\" but \"%s_config\" block is missing", name, name)
+	}
+
+	if configBlock, ok := d.Get("config.0.served_entities.0.external_model.0").(map[string]interface{}); ok {
+		var found []string
+		for key, value := range configBlock {
+			if strings.HasSuffix(key, "_config") && len(value.([]interface{})) > 0 {
+				found = append(found, key)
+			}
 		}
-
-		if configBlock, ok := d.Get("config.0.served_entities.0.external_model.0").(map[string]interface{}); ok {
-			var found []string
-			for key, value := range configBlock {
-				if strings.HasSuffix(key, "_config") && len(value.([]interface{})) > 0 {
-					found = append(found, key)
-				}
-			}
-			slices.Sort(found)
-			if len(found) > 1 {
-				msg := strings.Join(found, ", ")
-				return fmt.Errorf("only one external_model config block is allowed. Found: %s", msg)
-			}
+		slices.Sort(found)
+		if len(found) > 1 {
+			msg := strings.Join(found, ", ")
+			return fmt.Errorf("only one external_model config block is allowed. Found: %s", msg)
 		}
 	}
 	return nil

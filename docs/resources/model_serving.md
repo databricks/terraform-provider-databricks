@@ -50,19 +50,9 @@ The following arguments are supported:
   * `served_entities` - A list of served entities for the endpoint to serve. A serving endpoint can have up to 10 served entities.
   * `served_models` - (Deprecated, use `served_entities` instead) Each block represents a served model for the endpoint to serve. A model serving endpoint can have up to 10 served models.
   * `traffic_config` - A single block represents the traffic split configuration amongst the served models.
-    * `routes` - (Required) Each block represents a route that defines traffic to each served model. Each `served_models` block needs to have a corresponding `routes` block
-        * `served_model_name` - (Required) The name of the served model this route configures traffic for. This needs to match the name of a `served_models` block
-        * `traffic_percentage` - (Required) The percentage of endpoint traffic to send to this route. It must be an integer between 0 and 100 inclusive.
   * `auto_capture_config` - Configuration for Inference Tables which automatically logs requests and responses to Unity Catalog.
-    * `catalog_name` - The name of the catalog in Unity Catalog. NOTE: On update, you cannot change the catalog name if it was already set.
-    * `schema_name` - The name of the schema in Unity Catalog. NOTE: On update, you cannot change the schema name if it was already set.
-    * `table_name_prefix` - The prefix of the table in Unity Catalog. NOTE: On update, you cannot change the prefix name if it was already set.
-    * `enabled` - If inference tables are enabled or not. NOTE: If you have already disabled payload logging once, you cannot enable again.
 * `tags` - Tags to be attached to the serving endpoint and automatically propagated to billing logs.
 * `rate_limits` - A list of rate limits to be applied to the serving endpoint. NOTE: only external and foundation model endpoints are supported as of now.
-  * `calls` - (Required) Used to specify how many calls are allowed for a key within the renewal_period.
-  * `key` - Key field for a serving endpoint rate limit. Currently, only `user` and `endpoint` are supported, with `endpoint` being the default if not specified.
-  * `renewal_period` - (Required) Renewal period field for a serving endpoint rate limit. Currently, only `minute` is supported.
 
 ### served_entities Configuration Block
 
@@ -118,6 +108,30 @@ The following arguments are supported:
 * `workload_type` - The workload type of the served model. The workload type selects which type of compute to use in the endpoint. For deep learning workloads, GPU acceleration is available by selecting workload types like `GPU_SMALL` and others. See documentation for all options. The default value is `CPU`.
 * `environment_vars` - (Optional) a map of environment variable name/values that will be used for serving this model.  Environment variables may refer to Databricks secrets using the standard syntax: `{{secrets/secret_scope/secret_key}}`.
 * `instance_profile_arn` - (Optional) ARN of the instance profile that the served model will use to access AWS resources.
+
+### traffic_config Configuration Block
+
+* `routes` - (Required) Each block represents a route that defines traffic to each served entity. Each `served_entity` block needs to have a corresponding `routes` block.
+  * `served_entity_name` - (Required) The name of the served entity this route configures traffic for. This needs to match the name of a `served_entity` block.
+  * `traffic_percentage` - (Required) The percentage of endpoint traffic to send to this route. It must be an integer between 0 and 100 inclusive.
+
+### auto_capture_config Configuration Block
+
+* `catalog_name` - The name of the catalog in Unity Catalog. NOTE: On update, you cannot change the catalog name if it was already set.
+* `schema_name` - The name of the schema in Unity Catalog. NOTE: On update, you cannot change the schema name if it was already set.
+* `table_name_prefix` - The prefix of the table in Unity Catalog. NOTE: On update, you cannot change the prefix name if it was already set.
+* `enabled` - If inference tables are enabled or not. NOTE: If you have already disabled payload logging once, you cannot enable again.
+
+### tags Configuration Block
+
+* `key` - The key field for a tag.
+* `value` - The value field for a tag.
+
+### rate_limits Configuration Block
+
+* `calls` - (Required) Used to specify how many calls are allowed for a key within the renewal_period.
+* `key` - Key field for a serving endpoint rate limit. Currently, only `user` and `endpoint` are supported, with `endpoint` being the default if not specified.
+* `renewal_period` - (Required) Renewal period field for a serving endpoint rate limit. Currently, only `minute` is supported.
 
 ## Attribute Reference
 

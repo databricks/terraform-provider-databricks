@@ -79,7 +79,8 @@ func reflectKind(k reflect.Kind) string {
 	return n
 }
 
-func chooseFieldNameWithAliases(typeField reflect.StructField, parentTypeName string, aliases map[string]map[string]string) string {
+func chooseFieldNameWithAliases(typeField reflect.StructField, parentType reflect.Type, aliases map[string]map[string]string) string {
+	parentTypeName := getNameForType(parentType)
 	fieldNameWithAliasTag := chooseFieldName(typeField)
 	// If nothing in the aliases map, return the field name from plain chooseFieldName method.
 	if len(aliases) == 0 {
@@ -299,7 +300,6 @@ func listAllFields(v reflect.Value) []field {
 }
 
 func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
-	typeName := getNameForType(v.Type())
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -321,7 +321,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 		}
 		tfTag := typeField.Tag.Get("tf")
 
-		fieldName := chooseFieldNameWithAliases(typeField, typeName, aliases)
+		fieldName := chooseFieldNameWithAliases(typeField, v.Type(), aliases)
 		if fieldName == "-" {
 			continue
 		}
@@ -488,10 +488,9 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 	}
 	isGoSDK := isGoSdk(rv)
 	fields := listAllFields(rv)
-	parentTypeName := getNameForType(rv.Type())
 	for _, field := range fields {
 		typeField := field.sf
-		fieldName := chooseFieldNameWithAliases(typeField, parentTypeName, aliases)
+		fieldName := chooseFieldNameWithAliases(typeField, rv.Type(), aliases)
 		if fieldName == "-" {
 			continue
 		}

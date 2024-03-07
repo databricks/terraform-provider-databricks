@@ -2,6 +2,7 @@ package vectorsearch
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -47,6 +48,13 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			}
 			endpoint, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate))
 			if err != nil {
+				ctx2, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
+				log.Printf("[ERROR] Error waiting for endpoint to be created: %s", err.Error())
+				err2 := w.VectorSearchEndpoints.DeleteEndpointByEndpointName(ctx2, req.Name)
+				if err2 != nil {
+					log.Printf("[ERROR] Error cleaning up endpoint: %s", err2.Error())
+				}
+				cancel()
 				return err
 			}
 			d.SetId(endpoint.Name)

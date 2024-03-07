@@ -11,7 +11,8 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
 
-const DefaultProvisionTimeout = 75 * time.Minute
+const defaultProvisionTimeout = 75 * time.Minute
+const deleteCallTimeout = 10 * time.Second
 
 func ResourceVectorSearchEndpoint() common.Resource {
 	s := common.StructToSchema(
@@ -48,11 +49,11 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			}
 			endpoint, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate))
 			if err != nil {
-				ctx2, cancel := context.WithDeadline(context.Background(), time.Now().Add(10*time.Second))
+				nestedContext, cancel := context.WithDeadline(context.Background(), time.Now().Add(deleteCallTimeout))
 				log.Printf("[ERROR] Error waiting for endpoint to be created: %s", err.Error())
-				err2 := w.VectorSearchEndpoints.DeleteEndpointByEndpointName(ctx2, req.Name)
-				if err2 != nil {
-					log.Printf("[ERROR] Error cleaning up endpoint: %s", err2.Error())
+				nestedErr := w.VectorSearchEndpoints.DeleteEndpointByEndpointName(nestedContext, req.Name)
+				if nestedErr != nil {
+					log.Printf("[ERROR] Error cleaning up endpoint: %s", nestedErr.Error())
 				}
 				cancel()
 				return err
@@ -87,7 +88,7 @@ func ResourceVectorSearchEndpoint() common.Resource {
 		Schema:         s,
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Create: schema.DefaultTimeout(defaultProvisionTimeout),
 		},
 	}
 }

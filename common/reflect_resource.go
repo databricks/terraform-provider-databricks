@@ -40,6 +40,16 @@ var kindMap = map[reflect.Kind]string{
 
 // Generic interface for ResourceProvider. Using CustomizeSchema and Aliases functions to keep track of additional information
 // on top of the generated go-sdk struct. This is used to replace manually maintained structs with `tf` tags.
+//
+// Aliases() returns a two dimensional map where the top level key is the name of the struct, the second level key is the name of the field,
+// the values are the alias for the corresponding field under the specified struct.
+// Example:
+//
+//	{
+//	    "compute.ClusterSpec": {
+//	        "libraries": "library"
+//	    }
+//	}
 type ResourceProvider interface {
 	Aliases() map[string]map[string]string
 	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema

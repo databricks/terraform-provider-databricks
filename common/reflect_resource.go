@@ -711,7 +711,7 @@ func DataToReflectValue(d *schema.ResourceData, s map[string]*schema.Schema, rv 
 // Get the aliases map from the given struct if it is an instance of ResourceProvider.
 // NOTE: This does not return aliases defined on `tf` tags.
 func getAliasesMapFromStruct(s any) map[string]map[string]string {
-	if v, ok := s.(ResourceProvider); ok {
+	if v, ok := s.(ResourceProviderWithAlias); ok {
 		return v.Aliases()
 	}
 	return map[string]map[string]string{}

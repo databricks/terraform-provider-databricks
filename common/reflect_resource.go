@@ -38,6 +38,20 @@ var kindMap = map[reflect.Kind]string{
 	reflect.UnsafePointer: "UnsafePointer",
 }
 
+// Global registry for ResoureProvider, the goal is to make StructToSchema able to find pre-registered ResourceProvider for a
+// given struct so that we don't have to specify aliases and customizations redundantly if one schema references the another
+// schema.
+// The key is the package name followed by the struct name. Items should be added in the init() function in each package.
+// Example:
+//
+//	func init() {
+//		 if common.ResourceProviderRegistry == nil {
+//		 	common.ResourceProviderRegistry = make(map[string]common.ResourceProvider)
+//		 }
+//		 common.ResourceProviderRegistry["jobs.JobSettings"] = JobSettingsResource{}
+//	}
+var ResourceProviderRegistry map[string]ResourceProvider
+
 // Generic interface for ResourceProvider. Using CustomizeSchema and Aliases functions to keep track of additional information
 // on top of the generated go-sdk struct. This is used to replace manually maintained structs with `tf` tags.
 //

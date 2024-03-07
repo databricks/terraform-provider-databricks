@@ -398,3 +398,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	}
 	return nil
 }
+
+func init() {
+	if common.ResourceProviderRegistry == nil {
+		common.ResourceProviderRegistry = make(map[string]common.ResourceProvider)
+	}
+	common.ResourceProviderRegistry["compute.ClusterSpec"] = ClusterSpec{}
+	common.ResourceProviderRegistry["compute.Library"] = LibraryResource{}
+}

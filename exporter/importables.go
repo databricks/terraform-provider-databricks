@@ -1657,6 +1657,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_sql_query"),
 		Depends: []reference{
 			{Path: "data_source_id", Resource: "databricks_sql_endpoint", Match: "data_source_id"},
 			{Path: "parameter.query.query_id", Resource: "databricks_sql_query", Match: "id"},
@@ -1705,6 +1706,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_sql_endpoint"),
 	},
 	"databricks_sql_global_config": {
 		WorkspaceLevel: true,
@@ -1896,6 +1898,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_sql_alert"),
 		Depends: []reference{
 			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
 			{Path: "parent", Resource: "databricks_directory", Match: "object_id",
@@ -2418,6 +2421,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_catalog"),
 		Depends: []reference{
 			{Path: "connection_name", Resource: "databricks_connection", Match: "name"},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
@@ -2495,6 +2499,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
+		Ignore:          generateIgnoreObjectWithoutName("databricks_schema"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
@@ -2522,12 +2527,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			switch pathString {
-			case "storage_location", "volume_type":
+			if pathString == "storage_location" {
 				return d.Get("volume_type").(string) == "MANAGED"
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_volume"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
@@ -2557,6 +2562,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_sql_table"),
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 			switch pathString {
 			case "storage_location":
@@ -2839,6 +2845,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_registered_model"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",

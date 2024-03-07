@@ -1985,8 +1985,7 @@ func TestVolumes(t *testing.T) {
 	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
 	d.Set("volume_type", "MANAGED")
 	d.Set("storage_location", "s3://abc/")
-	assert.True(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
-	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
 	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
 }
 

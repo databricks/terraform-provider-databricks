@@ -10,7 +10,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
 
-const DefaultProvisionTimeout = 45 * time.Minute
+const DefaultProvisionTimeout = 75 * time.Minute
 
 func ResourceVectorSearchEndpoint() common.Resource {
 	s := common.StructToSchema(

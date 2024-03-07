@@ -45,7 +45,6 @@ type ResourceProvider interface {
 }
 
 // Interface for ResourceProvider instances that need aliases for fields.
-// The function MaxDepthForTypes allows us to specify the max number of recursive depth for a specific field
 type ResourceProviderWithAlias interface {
 	ResourceProvider
 	// Aliases() returns a two dimensional map where the top level key is the name of the struct, the second level key is the name of the field,

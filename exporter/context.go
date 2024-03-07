@@ -1185,6 +1185,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) {
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
+			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			return matchValue, genTraversalTokens(sr, attr), sr.Mode == "data"
 		}
 		if ref.MatchType != MatchCaseInsensitive { // for case-insensitive matching we'll try iteration

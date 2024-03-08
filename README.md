@@ -36,6 +36,7 @@
 | [databricks_job](docs/resources/job.md)
 | [databricks_job](docs/data-sources/job.md) data
 | [databricks_jobs](docs/data-sources/jobs.md)
+| [databricks_lakehouse_monitor](docs/resources/lakehouse_monitor.md)
 | [databricks_library](docs/resources/library.md)
 | [databricks_metastore](docs/resources/metastore.md)
 | [databricks_metastore_assignment](docs/resources/metastore_assignment.md)

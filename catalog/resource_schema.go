@@ -156,7 +156,7 @@ func ResourceSchema() common.Resource {
 					return err
 				}
 				for _, v := range volumes {
-					w.Volumes.DeleteByFullNameArg(ctx, v.FullName)
+					w.Volumes.DeleteByName(ctx, v.FullName)
 				}
 				// delete all functions
 				functions, err := w.Functions.ListAll(ctx, catalog.ListFunctionsRequest{

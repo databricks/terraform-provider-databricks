@@ -394,6 +394,7 @@ func ResourceSqlTable() common.Resource {
 				return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
 			}
 			s["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
+			s["view_definition"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 
 			s["cluster_id"].ConflictsWith = []string{"warehouse_id"}
 			s["warehouse_id"].ConflictsWith = []string{"cluster_id"}

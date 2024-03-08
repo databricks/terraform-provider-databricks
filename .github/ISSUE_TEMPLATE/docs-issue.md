@@ -16,10 +16,12 @@ This template is for both adding enhancement as well as pointing out issues with
 ### Expected Details
 <!-- What are you expecting from the section that has an issue. If the section is missing anything that should be expected please point that out. -->
 
-### List of things to potentially add/remove:
+### List of things to potentially add/remove
+
 This is a list of things to manipulate in the docs:
+
 - [ ] First item to change
-- [ ] Second item to change 
+- [ ] Second item to change
 
 ### Important Factoids
 <!-- Any links to external documentation that may prove your case, i.e Databricks public docs or Terraform public docs. -->

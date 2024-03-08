@@ -325,7 +325,7 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 
 * `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
 * `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.  Defaults to `GIT` if a `git_source` block is present in the job definition.
-* `project_directory` - (Required when `source` is `WORKSPACE`) The path where dbt should look for `dbt_project.yml`. Equivalent to passing `--project-dir` to the dbt CLI. 
+* `project_directory` - (Required when `source` is `WORKSPACE`) The path where dbt should look for `dbt_project.yml`. Equivalent to passing `--project-dir` to the dbt CLI.
   * If `source` is `GIT`: Relative path to the directory in the repository specified in the `git_source` block. Defaults to the repository's root directory when not specified.
   * If `source` is `WORKSPACE`: Absolute path to the folder in the workspace.
 * `profiles_directory` - (Optional) The relative path to the directory in the repository specified by `git_source` where dbt should look in for the `profiles.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--profile-dir` to a dbt command.
@@ -352,9 +352,9 @@ This task does not require a cluster to execute and does not support retries or 
 
 ### for_each_task Configuration Block
 
-* `concurrency` - (Optional) Controls the number of active iteration task runs. Default is 100 (maximal value).
+* `concurrency` - (Optional) Controls the number of active iteration task runs. Default is 20, maximum allowed is 100.
 * `inputs` - (Required) (String) Array for task to iterate on. This can be a JSON string or a reference to an array parameter.
-* `task` - (Required) Task to run against the `inputs` list. 
+* `task` - (Required) Task to run against the `inputs` list.
 
 ### sql_task Configuration Block
 
@@ -372,7 +372,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
   * `alert_id` - (Required) (String) identifier of the Databricks SQL Alert.
   * `subscriptions` - (Required) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
-* `file` - (Optional) block consisting of single string fields: 
+* `file` - (Optional) block consisting of single string fields:
   * `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.
   * `path` - If `source` is `GIT`: Relative path to the file in the repository specified in the `git_source` block with SQL commands to execute. If `source` is `WORKSPACE`: Absolute path to the file in the workspace with SQL commands to execute.
 
@@ -433,7 +433,7 @@ By default, all users can create and modify jobs unless an administrator [enable
 
 ## Single-task syntax (deprecated)
 
--> **Deprecated** Please define tasks in a `task` block rather than using single-task syntax. 
+-> **Deprecated** Please define tasks in a `task` block rather than using single-task syntax.
 
 This syntax uses Jobs API 2.0 to create a job with a single task. Only a subset of arguments above is supported (`name`, `libraries`, `email_notifications`, `webhook_notifications`, `timeout_seconds`, `max_retries`, `min_retry_interval_millis`, `retry_on_timeout`, `schedule`, `max_concurrent_runs`), and only a single block of `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` can be specified.
 

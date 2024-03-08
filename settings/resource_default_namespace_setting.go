@@ -11,15 +11,15 @@ import (
 var defaultNamespaceSetting = workspaceSetting[settings.DefaultNamespaceSetting]{
 	settingStruct: settings.DefaultNamespaceSetting{},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.DefaultNamespaceSetting, error) {
-		return w.Settings.ReadDefaultWorkspaceNamespace(ctx, settings.ReadDefaultWorkspaceNamespaceRequest{
+		return w.Settings.GetDefaultNamespaceSetting(ctx, settings.GetDefaultNamespaceSettingRequest{
 			Etag: etag,
 		})
 	},
 	updateFunc: func(ctx context.Context, w *databricks.WorkspaceClient, t settings.DefaultNamespaceSetting) (string, error) {
 		t.SettingName = "default"
-		res, err := w.Settings.UpdateDefaultWorkspaceNamespace(ctx, settings.UpdateDefaultWorkspaceNamespaceRequest{
+		res, err := w.Settings.UpdateDefaultNamespaceSetting(ctx, settings.UpdateDefaultNamespaceSettingRequest{
 			AllowMissing: true,
-			Setting:      &t,
+			Setting:      t,
 			FieldMask:    "namespace.value",
 		})
 		if err != nil {
@@ -28,7 +28,7 @@ var defaultNamespaceSetting = workspaceSetting[settings.DefaultNamespaceSetting]
 		return res.Etag, err
 	},
 	deleteFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (string, error) {
-		res, err := w.Settings.DeleteDefaultWorkspaceNamespace(ctx, settings.DeleteDefaultWorkspaceNamespaceRequest{
+		res, err := w.Settings.DeleteDefaultNamespaceSetting(ctx, settings.DeleteDefaultNamespaceSettingRequest{
 			Etag: etag,
 		})
 		if err != nil {

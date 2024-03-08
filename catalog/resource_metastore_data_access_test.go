@@ -131,7 +131,7 @@ func TestCreateDacWithDbGcpSA(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: catalog.CreateStorageCredential{
 					Name:                        "bcd",
-					DatabricksGcpServiceAccount: struct{}{},
+					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountRequest{},
 				},
 				Response: catalog.StorageCredentialInfo{
 					Id: "bcd",
@@ -320,7 +320,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 					MetastoreId: "abc",
 					CredentialInfo: &catalog.CreateStorageCredential{
 						Name:                        "bcd",
-						DatabricksGcpServiceAccount: struct{}{},
+						DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountRequest{},
 					},
 				},
 				Response: catalog.AccountsStorageCredentialInfo{

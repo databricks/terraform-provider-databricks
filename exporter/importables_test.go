@@ -13,6 +13,8 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/sharing"
+	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -31,6 +33,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 )
 
@@ -54,6 +57,8 @@ func importContextForTest() *importContext {
 		emittedUsers:              map[string]struct{}{},
 		userOrSpDirectories:       map[string]bool{},
 		defaultChannel:            make(resourceChannel, defaultChannelSize),
+		services:                  map[string]struct{}{},
+		listing:                   map[string]struct{}{},
 	}
 }
 
@@ -916,18 +921,18 @@ func TestGlobalInitScriptsBodyErrors(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/global-init-scripts/sad-emoji",
-			Response: workspace.GlobalInitScriptInfo{
-				Name:          "x.sh",
-				ContentBase64: "🥺",
+			Resource: "/api/2.0/global-init-scripts/sad-emoji?",
+			Response: compute.GlobalInitScriptDetailsWithContent{
+				Name:   "x.sh",
+				Script: "🥺",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/global-init-scripts/second",
-			Response: workspace.GlobalInitScriptInfo{
-				Name:          "x.sh",
-				ContentBase64: "YWJj",
+			Resource: "/api/2.0/global-init-scripts/second?",
+			Response: compute.GlobalInitScriptDetailsWithContent{
+				Name:   "x.sh",
+				Script: "YWJj",
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -1207,11 +1212,12 @@ func TestGlobalInitScriptGeneration(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/global-init-scripts/a",
-			Response: workspace.GlobalInitScriptInfo{
-				Name:          "New: Importing ^ Things",
-				Enabled:       true,
-				ContentBase64: "YWJj",
+			Resource:     "/api/2.0/global-init-scripts/a?",
+			Response: compute.GlobalInitScriptDetailsWithContent{
+				ScriptId: "a",
+				Name:     "New: Importing ^ Things",
+				Enabled:  true,
+				Script:   "YWJj",
 			},
 		},
 	}, "workspace", false, func(ic *importContext) {
@@ -1225,7 +1231,7 @@ func TestGlobalInitScriptGeneration(t *testing.T) {
 		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_global_init_script" "new_importing_things" {
-		  source  = "${path.module}/files/new_importing_things.sh"
+		  source  = "${path.module}/global_init_scripts/new_importing_things.sh"
 		  name    = "New: Importing ^ Things"
 		  enabled = true
 		}`), getGeneratedFile(ic, "workspace"))
@@ -1292,7 +1298,7 @@ func TestDbfsFileGeneration(t *testing.T) {
 		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_dbfs_file" "_0cc175b9c0f1b6a831c399e269772661_a" {
-		  source = "${path.module}/files/_0cc175b9c0f1b6a831c399e269772661_a"
+		  source = "${path.module}/dbfs_files/_0cc175b9c0f1b6a831c399e269772661_a"
 		  path   = "a"
 		}`), getGeneratedFile(ic, "storage"))
 	})
@@ -1470,4 +1476,692 @@ func TestEmitFilesFromMap(t *testing.T) {
 	assert.Equal(t, 2, len(ic.testEmits))
 	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
 	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+}
+
+func TestStorageCredentialListFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/storage-credentials?",
+			Status:   200,
+			Response: &catalog.ListStorageCredentialsResponse{},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_storage_credential"].List(ic)
+		assert.NoError(t, err)
+	})
+}
+
+func TestImportStorageCredentialGrants(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Status:       200,
+			Resource:     "/api/2.1/unity-catalog/permissions/storage_credential/abc",
+			Response: catalog.PermissionsList{
+				PrivilegeAssignments: []catalog.PrivilegeAssignment{
+					{
+						Principal:  "principal",
+						Privileges: []catalog.Privilege{"CREATE EXTERNAL LOCATION"},
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		d := tfcatalog.ResourceStorageCredential().ToResource().TestResourceData()
+		d.SetId("abc")
+		err := resourcesMap["databricks_storage_credential"].Import(ic, &resource{
+			ID:   "abc",
+			Data: d,
+		})
+		assert.NoError(t, err)
+	})
+}
+
+func TestExternalLocationListFails(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/external-locations?",
+			Status:   200,
+			Response: &catalog.ListExternalLocationsResponse{},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_external_location"].List(ic)
+		assert.NoError(t, err)
+	})
+}
+
+func TestImportExternalLocationGrants(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Status:       200,
+			Resource:     "/api/2.1/unity-catalog/permissions/external-locations/abc",
+			Response: catalog.PermissionsList{
+				PrivilegeAssignments: []catalog.PrivilegeAssignment{
+					{
+						Principal:  "principal",
+						Privileges: []catalog.Privilege{"ALL PRIVILEGES"},
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		d := tfcatalog.ResourceExternalLocation().ToResource().TestResourceData()
+		d.SetId("abc")
+		err := resourcesMap["databricks_external_location"].Import(ic, &resource{
+			ID:   "abc",
+			Data: d,
+		})
+		assert.NoError(t, err)
+	})
+}
+
+func TestListMetastores(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/metastores",
+			Response: catalog.ListMetastoresResponse{
+				Metastores: []catalog.MetastoreInfo{
+					{
+						Name:        "test",
+						MetastoreId: "1234",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-metastores")
+		err := resourcesMap["databricks_metastore"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_metastore[<unknown>] (id: 1234)"])
+	})
+}
+
+func TestListCatalogs(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/catalogs",
+			Response: catalog.ListCatalogsResponse{
+				Catalogs: []catalog.CatalogInfo{
+					{
+						Name:        "cat1",
+						CatalogType: "MANAGED_CATALOG",
+					},
+					{
+						Name:        "cat2",
+						CatalogType: "UNKNOWN",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_catalog"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_catalog[cat1_test_MANAGED_CATALOG] (id: cat1)"])
+	})
+}
+
+func TestImportManagedCatalog(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest",
+			Response: catalog.ListSchemasResponse{
+				Schemas: []catalog.SchemaInfo{
+					{
+						CatalogType: "MANAGED_CATALOG",
+						Name:        "schema1",
+						FullName:    "ctest.schema1",
+					},
+					{
+						CatalogType: "MANAGED_CATALOG",
+						Name:        "information_schema",
+						FullName:    "ctest.schema1",
+					},
+					{
+						CatalogType: "UNKNOWN",
+						FullName:    "ctest.schema2",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
+		d.SetId("ctest")
+		d.Set("name", "ctest")
+		err := resourcesMap["databricks_catalog"].Import(ic, &resource{
+			ID:   "ctest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/ctest)"])
+		assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.schema1)"])
+	})
+}
+
+func TestImportForeignCatalog(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-catalogs,uc-grants,uc-connections")
+	ic.currentMetastore = currentMetastoreResponse
+	d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
+	d.SetId("fctest")
+	d.Set("metastore_id", "1234")
+	d.Set("connection_name", "conn")
+	d.Set("name", "fctest")
+	err := resourcesMap["databricks_catalog"].Import(ic, &resource{
+		ID:   "fctest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 2, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/fctest)"])
+	assert.True(t, ic.testEmits["databricks_connection[<unknown>] (id: 1234|conn)"])
+}
+
+func TestImportIsolatedManagedCatalog(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest",
+			Response: catalog.ListSchemasResponse{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/bindings/catalog/ctest?",
+			Response: catalog.WorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						BindingType: "BINDING_TYPE_READ",
+						WorkspaceId: 1234,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
+		d.SetId("ctest")
+		d.Set("name", "ctest")
+		d.Set("isolation_mode", "ISOLATED")
+		err := resourcesMap["databricks_catalog"].Import(ic, &resource{
+			ID:   "ctest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/ctest)"])
+		assert.True(t, ic.testEmits["databricks_catalog_workspace_binding[catalog_ctest_ws_1234] (id: 1234|catalog|ctest)"])
+	})
+}
+
+func TestImportSchema(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/models?catalog_name=ctest&schema_name=stest",
+			Response: catalog.ListRegisteredModelsResponse{
+				RegisteredModels: []catalog.RegisteredModelInfo{
+					{
+						Name:     "model1",
+						FullName: "ctest.stest.model1",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/volumes?catalog_name=ctest&schema_name=stest",
+			Response: catalog.ListVolumesResponseContent{
+				Volumes: []catalog.VolumeInfo{
+					{
+						Name:     "volume1",
+						FullName: "ctest.stest.volume1",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/unity-catalog/tables?catalog_name=ctest&schema_name=stest",
+			Response: catalog.ListTablesResponse{
+				Tables: []catalog.TableInfo{
+					{
+						Name:      "table1",
+						TableType: "MANAGED",
+						FullName:  "ctest.stest.table1",
+					},
+					{
+						Name:      "table2",
+						TableType: "UNKNOWN",
+						FullName:  "ctest.stest.table2",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-volumes,uc-models,uc-tables")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tfcatalog.ResourceSchema().ToResource().TestResourceData()
+		d.SetId("ctest.stest")
+		d.Set("catalog_name", "ctest")
+		d.Set("name", "stest")
+		err := resourcesMap["databricks_schema"].Import(ic, &resource{
+			ID:   "ctest.stest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 5, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: schema/ctest.stest)"])
+		assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+		assert.True(t, ic.testEmits["databricks_registered_model[<unknown>] (id: ctest.stest.model1)"])
+		assert.True(t, ic.testEmits["databricks_volume[<unknown>] (id: ctest.stest.volume1)"])
+		assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: ctest.stest.table1)"])
+	})
+}
+
+func TestImportShare(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-grants,uc-volumes,uc-models,uc-tables")
+	d := tfcatalog.ResourceShare().ToResource().TestResourceData()
+	scm := tfcatalog.ResourceShare().Schema
+	share := tfcatalog.ShareInfo{
+		Name: "stest",
+		Objects: []tfcatalog.SharedDataObject{
+			{
+				DataObjectType: "TABLE",
+				Name:           "ctest.stest.table1",
+			},
+			{
+				DataObjectType: "MODEL",
+				Name:           "ctest.stest.model1",
+			},
+			{
+				DataObjectType: "VOLUME",
+				Name:           "ctest.stest.vol1",
+			},
+			{
+				DataObjectType: "NOTEBOOK",
+				Name:           "Test",
+			},
+		},
+	}
+	d.MarkNewResource()
+	common.StructToData(share, scm, d)
+	err := common.StructToData(share, scm, d)
+	require.NoError(t, err)
+	err = resourcesMap["databricks_share"].Import(ic, &resource{
+		ID:   "stest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 4, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: share/stest)"])
+	assert.True(t, ic.testEmits["databricks_registered_model[<unknown>] (id: ctest.stest.model1)"])
+	assert.True(t, ic.testEmits["databricks_volume[<unknown>] (id: ctest.stest.vol1)"])
+	assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: ctest.stest.table1)"])
+}
+
+func TestConnections(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/connections",
+			Response: catalog.ListConnectionsResponse{
+				Connections: []catalog.ConnectionInfo{
+					{
+						Name:        "test",
+						MetastoreId: "12345",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-connections,uc-grants")
+		// Test Listing
+		err := resourcesMap["databricks_connection"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_connection[<unknown>] (id: 12345|test)"])
+		// Test Importing
+		d := tfcatalog.ResourceConnection().ToResource().TestResourceData()
+		d.SetId("ctest")
+		d.Set("name", "ctest")
+		err = resourcesMap["databricks_connection"].Import(ic, &resource{
+			ID:   "ctest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: foreign_connection/ctest)"])
+	})
+}
+
+func TestListExternalLocations(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/external-locations?",
+			Response: catalog.ListExternalLocationsResponse{
+				ExternalLocations: []catalog.ExternalLocationInfo{
+					{
+						Name: "test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-external-locations,uc-storage-credentials,uc-grants")
+		ic.currentMetastore = currentMetastoreResponse
+		// Test listing
+		err := resourcesMap["databricks_external_location"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_external_location[<unknown>] (id: test)"])
+		// Test import
+		d := tfcatalog.ResourceExternalLocation().ToResource().TestResourceData()
+		d.SetId("ext_loc")
+		d.Set("credential_name", "stest")
+		err = resourcesMap["databricks_external_location"].Import(ic, &resource{
+			ID:   "ext_loc",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 3, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: external_location/ext_loc)"])
+		assert.True(t, ic.testEmits["databricks_storage_credential[<unknown>] (id: stest)"])
+	})
+}
+
+func TestStorageCredentials(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/storage-credentials?",
+			Response: catalog.ListStorageCredentialsResponse{
+				StorageCredentials: []catalog.StorageCredentialInfo{
+					{
+						Name: "test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-storage-credentials,uc-grants")
+		ic.currentMetastore = currentMetastoreResponse
+		// Test listing
+		err := resourcesMap["databricks_storage_credential"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_storage_credential[<unknown>] (id: test)"])
+		// Test import
+		err = resourcesMap["databricks_storage_credential"].Import(ic, &resource{
+			ID: "1234",
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: storage_credential/1234)"])
+	})
+}
+
+func TestListRecipients(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/recipients?",
+			Response: sharing.ListRecipientsResponse{
+				Recipients: []sharing.RecipientInfo{
+					{
+						Name: "test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-shares")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_recipient"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_recipient[<unknown>] (id: test)"])
+	})
+}
+
+func TestVolumes(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-volumes,uc-catalogs,uc-schemas,uc-grants")
+	// Test importing
+	d := tfcatalog.ResourceVolume().ToResource().TestResourceData()
+	d.SetId("vtest")
+	d.Set("catalog_name", "ctest")
+	d.Set("schema_name", "stest")
+	err := resourcesMap["databricks_volume"].Import(ic, &resource{
+		ID:   "vtest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: volume/vtest)"])
+	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
+	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+
+	//
+	shouldOmitFunc := resourcesMap["databricks_volume"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm := tfcatalog.ResourceVolume().Schema
+	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+	d.Set("volume_type", "MANAGED")
+	d.Set("storage_location", "s3://abc/")
+	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+}
+
+func TestSqlTables(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-tables,uc-catalogs,uc-schemas,uc-grants")
+	// Test importing
+	d := tfcatalog.ResourceSqlTable().ToResource().TestResourceData()
+	d.SetId("ttest")
+	d.Set("catalog_name", "ctest")
+	d.Set("schema_name", "stest")
+	err := resourcesMap["databricks_sql_table"].Import(ic, &resource{
+		ID:   "ttest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: table/ttest)"])
+	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
+	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+
+	//
+	shouldOmitFunc := resourcesMap["databricks_sql_table"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm := tfcatalog.ResourceSqlTable().Schema
+	assert.False(t, shouldOmitFunc(nil, "table_type", scm["table_type"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+	d.Set("table_type", "MANAGED")
+	d.Set("storage_location", "s3://abc/")
+	assert.False(t, shouldOmitFunc(nil, "table_type", scm["table_type"], d))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+}
+
+func TestRegisteredModels(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-models,uc-catalogs,uc-schemas,uc-grants")
+	// Test importing
+	d := tfcatalog.ResourceRegisteredModel().ToResource().TestResourceData()
+	d.SetId("mtest")
+	d.Set("catalog_name", "ctest")
+	d.Set("schema_name", "stest")
+	err := resourcesMap["databricks_registered_model"].Import(ic, &resource{
+		ID:   "mtest",
+		Data: d,
+	})
+	assert.NoError(t, err)
+	require.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: model/mtest)"])
+	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.ctest)"])
+	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+
+	//
+	shouldOmitFunc := resourcesMap["databricks_registered_model"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm := tfcatalog.ResourceRegisteredModel().Schema
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	d.Set("storage_location", "s3://abc/")
+	assert.False(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+
+	ic.currentMetastore = currentMetastoreResponse
+	d.Set("storage_location", "s3://abc/"+currentMetastoreResponse.MetastoreId+"/models/123456")
+	assert.True(t, shouldOmitFunc(ic, "storage_location", scm["storage_location"], d))
+}
+
+func TestListShares(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/shares",
+			Response: sharing.ListSharesResponse{
+				Shares: []sharing.ShareInfo{
+					{
+						Name: "test",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-shares")
+		ic.currentMetastore = currentMetastoreResponse
+		err := resourcesMap["databricks_share"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_share[<unknown>] (id: test)"])
+	})
+}
+
+func TestAuxUcFunctions(t *testing.T) {
+	// Metastore Assignment
+	d := tfcatalog.ResourceMetastoreAssignment().ToResource().TestResourceData()
+	d.Set("workspace_id", 123)
+	assert.Equal(t, "ws_123", resourcesMap["databricks_metastore_assignment"].Name(nil, d))
+
+	shouldOmitFunc := resourcesMap["databricks_metastore_assignment"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	d.Set("default_catalog_name", "")
+
+	scm := tfcatalog.ResourceMetastoreAssignment().Schema
+	assert.True(t, shouldOmitFunc(nil, "default_catalog_name", scm["default_catalog_name"], d))
+	assert.False(t, shouldOmitFunc(nil, "metastore_id", scm["metastore_id"], d))
+
+	// Metastore
+	d = tfcatalog.ResourceMetastore().ToResource().TestResourceData()
+	d.SetId("1234")
+	assert.Equal(t, "1234", resourcesMap["databricks_metastore"].Name(nil, d))
+	d.Set("name", "test")
+	assert.Equal(t, "test", resourcesMap["databricks_metastore"].Name(nil, d))
+
+	shouldOmitFunc = resourcesMap["databricks_metastore"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm = tfcatalog.ResourceMetastore().Schema
+	assert.True(t, shouldOmitFunc(nil, "default_data_access_config_id", scm["default_data_access_config_id"], d))
+	assert.True(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
+	d.Set("owner", "test")
+	assert.False(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+
+	// Connections
+	d = tfcatalog.ResourceConnection().ToResource().TestResourceData()
+	d.SetId("1234")
+	assert.Equal(t, "1234", resourcesMap["databricks_connection"].Name(nil, d))
+	d.Set("name", "test")
+	d.Set("connection_type", "db")
+	assert.Equal(t, "db_test", resourcesMap["databricks_connection"].Name(nil, d))
+
+	// Catalogs
+	d = tfcatalog.ResourceCatalog().ToResource().TestResourceData()
+	d.SetId("test")
+	shouldOmitFunc = resourcesMap["databricks_catalog"].ShouldOmitField
+	require.NotNil(t, shouldOmitFunc)
+	scm = tfcatalog.ResourceCatalog().Schema
+	d.Set("isolation_mode", "OPEN")
+	assert.True(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
+	d.Set("isolation_mode", "ISOLATED")
+	assert.False(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+}
+
+func TestImportUcVolumeFile(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.0/fs/files/Volumes/main/default/wheels/some.whl?",
+			Response:     "test",
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+		os.Mkdir(tmpDir, 0700)
+		ic.Directory = tmpDir
+		ic.enableServices("storage")
+		ic.currentMetastore = currentMetastoreResponse
+
+		file_path := "/Volumes/main/default/wheels/some.whl"
+		d := storage.ResourceFile().ToResource().TestResourceData()
+		d.SetId(file_path)
+		err := resourcesMap["databricks_file"].Import(ic, &resource{
+			ID:   file_path,
+			Data: d,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, file_path, d.Get("path"))
+		assert.Equal(t, "uc_files/main/default/wheels/some.whl", d.Get("source"))
+		// Testing auxiliary functions
+		shouldOmitFunc := resourcesMap["databricks_file"].ShouldOmitField
+		require.NotNil(t, shouldOmitFunc)
+		scm := storage.ResourceFile().Schema
+		assert.True(t, shouldOmitFunc(ic, "md5", scm["md5"], d))
+		assert.False(t, shouldOmitFunc(ic, "path", scm["path"], d))
+
+		assert.Equal(t, "main/default/wheels/some.whl_f27badf8", resourcesMap["databricks_file"].Name(nil, d))
+	})
 }

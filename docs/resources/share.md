@@ -33,6 +33,19 @@ resource "databricks_share" "some" {
 }
 ```
 
+Creating a Delta Sharing share and add a schema to it(including all current and future tables).
+
+```hcl
+resource "databricks_share" "schema_share" {
+  name = "schema_share"
+  object {
+    name                        = "catalog_name.schema_name"
+    data_object_type            = "SCHEMA"
+    history_data_sharing_status = "ENABLED"
+  }
+}
+```
+
 Creating a Delta Sharing share and share a table with partitions spec and history
 
 ```hcl
@@ -75,7 +88,7 @@ The following arguments are required:
 ### object Configuration Block
 
 * `name` (Required) - Full name of the object, e.g. `catalog.schema.name` for a table.
-* `data_object_type` (Required) - Type of the object, currently only `TABLE` is allowed.
+* `data_object_type` (Required) - Type of the data object, currently `TABLE`, `SCHEMA`, `VOLUME`, `NOTEBOOK_FILE` are supported.
 * `comment` (Optional) -  Description about the object.
 * `shared_as` (Optional) - A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share. Change forces creation of a new resource.
 * `cdf_enabled` (Optional) - Whether to enable Change Data Feed (cdf) on the shared object. When this field is set, field `history_data_sharing_status` can not be set.

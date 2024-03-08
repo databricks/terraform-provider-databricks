@@ -12,9 +12,9 @@ import (
 
 func userExistsErrorMessage(userName string, isAccount bool) string {
 	if isAccount {
-		return fmt.Sprintf("User with email %s already exists in this account", userName)
+		return strings.ToLower(fmt.Sprintf("User with email %s already exists in this account", userName))
 	} else {
-		return fmt.Sprintf("User with username %s already exists.", userName)
+		return strings.ToLower(fmt.Sprintf("User with username %s already exists.", userName))
 	}
 }
 
@@ -172,8 +172,9 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	if (!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, false))) &&
-		(!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, true))) {
+	errStr := strings.ToLower(err.Error())
+	if (!strings.HasPrefix(errStr, userExistsErrorMessage(userName, false))) &&
+		(!strings.HasPrefix(errStr, userExistsErrorMessage(userName, true))) {
 		return err
 	}
 	userList, err := usersAPI.Filter(fmt.Sprintf(`userName eq "%s"`, userName), true)

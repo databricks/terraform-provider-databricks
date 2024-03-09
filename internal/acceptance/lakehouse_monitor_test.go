@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"os"
 	"testing"
 )
 
@@ -46,6 +47,9 @@ resource "databricks_sql_table" "myInferenceTable" {
 `
 
 func TestUcAccLakehouseMonitor(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_lakehouse_monitor resource is not available on GCP")
+	}
 	unityWorkspaceLevel(t, step{
 		Template: commonPartLakehouseMonitoring + `
 
@@ -110,6 +114,9 @@ func TestUcAccLakehouseMonitor(t *testing.T) {
 }
 
 func TestUcAccUpdateLakehouseMonitor(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_lakehouse_monitor resource is not available on GCP")
+	}
 	unityWorkspaceLevel(t, step{
 		Template: commonPartLakehouseMonitoring + `
 			resource "databricks_lakehouse_monitor" "testMonitorInference" {

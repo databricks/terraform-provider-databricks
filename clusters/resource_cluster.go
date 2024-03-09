@@ -397,5 +397,5 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 
 func init() {
 	common.RegisterResourceProvider(compute.ClusterSpec{}, ClusterSpec{})
-	common.RegisterResourceProvider(compute.ClusterSpec{}, ClusterSpec{})
+	common.RegisterResourceProvider(compute.Library{}, LibraryResource{})
 }

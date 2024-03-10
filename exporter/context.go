@@ -99,6 +99,7 @@ type importContext struct {
 	lastActiveMs             int64
 	generateDeclaration      bool
 	meAdmin                  bool
+	meUserName               string
 	prefix                   string
 	accountLevel             bool
 	shImports                map[string]bool
@@ -339,6 +340,7 @@ func (ic *importContext) Run() error {
 	ic.accountLevel = ic.Client.Config.IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
+		// TODO: check if we can get the current user from the account client
 		ic.accountClient, err = ic.Client.AccountClient()
 		if err != nil {
 			return err
@@ -355,6 +357,7 @@ func (ic *importContext) Run() error {
 		for _, g := range me.Groups {
 			if g.Display == "admins" {
 				ic.meAdmin = true
+				ic.meUserName = me.UserName
 				break
 			}
 		}

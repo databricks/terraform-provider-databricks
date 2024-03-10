@@ -21,7 +21,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
-	tfuc "github.com/databricks/terraform-provider-databricks/catalog"
+	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
@@ -68,6 +68,10 @@ var (
 		"DBC":        ".dbc",
 		"R_MARKDOWN": ".Rmd",
 	}
+	metastorePrivilegesToAdd = []string{`CREATE_CATALOG`, `CREATE_CONNECTION`,
+		`CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SCHEMA`,
+		`CREATE_STORAGE_CREDENTIAL`, `SET_SHARE_PERMISSION`}
+	defaultPrivilegesToAdd = []string{`ALL_PRIVILEGES`}
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -2351,7 +2355,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var cat tfuc.CatalogInfo
+			var cat tfcatalog.CatalogInfo
 			s := ic.Resources["databricks_catalog"].Schema
 			common.DataToStructPointer(r.Data, s, &cat)
 
@@ -2583,6 +2587,43 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-grants",
 		// TODO: Should we try to make name unique?
 		// TODO: do we need to emit principals? Maybe only on account level? See comment for the owner...
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meUserName == "" {
+				return nil
+			}
+			// TODO: discuss if we need to give ALL_PRIVILEGES vs. giving only specific CREATE permissions, ...
+			// https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/privileges.html#privilege-types-by-securable-object-in-unity-catalog
+			var newPrivileges []string
+			if r.Data.Get("metastore").(string) != "" {
+				newPrivileges = append(newPrivileges, metastorePrivilegesToAdd...)
+			} else if r.Data.Get("catalog").(string) != "" || r.Data.Get("schema").(string) != "" ||
+				r.Data.Get("volume").(string) != "" || r.Data.Get("external_location").(string) != "" ||
+				r.Data.Get("storage_credential").(string) != "" || r.Data.Get("foreign_connection").(string) != "" ||
+				r.Data.Get("share").(string) != "" {
+				newPrivileges = append(newPrivileges, defaultPrivilegesToAdd...)
+			} else {
+				return nil
+			}
+
+			var pList tfcatalog.PermissionsList
+			s := ic.Resources["databricks_grants"].Schema
+			common.DataToStructPointer(r.Data, s, &pList)
+			foundExisting := false
+			for i, v := range pList.Assignments {
+				if v.Principal == ic.meUserName {
+					pList.Assignments[i].Privileges = newPrivileges
+					foundExisting = true
+					break
+				}
+			}
+			if !foundExisting {
+				pList.Assignments = append(pList.Assignments, tfcatalog.PrivilegeAssignment{
+					Principal:  ic.meUserName,
+					Privileges: newPrivileges,
+				})
+			}
+			return common.StructToData(pList, s, r.Data)
+		},
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.Data.Get("grant.#").(int) == 0
 		},
@@ -2738,7 +2779,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
-			var share tfuc.ShareInfo
+			var share tfcatalog.ShareInfo
 			s := ic.Resources["databricks_share"].Schema
 			common.DataToStructPointer(r.Data, s, &share)
 			// TODO: how to link recipients to share?

@@ -84,7 +84,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_catalog_workspace_binding](../resources/catalog_workspace_binding.md)
 * `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
-* `uc-grants` -  [databricks_grants](../resources/grants.md)
+* `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export the list of grants is expanded to include the identity that does the export! This is done to allow to create objects in case when catalogs/schemas have different owners than current identity.*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only metastores from the workspace's region are listed!*
 * `uc-models` - [databricks_registered_model](../resources/registered_model.md)
 * `uc-schemas` -  [databricks_schema](../resources/schema.md)

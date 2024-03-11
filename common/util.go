@@ -46,6 +46,27 @@ func SuppressDiffWhitespaceChange(k, old, new string, d *schema.ResourceData) bo
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }
 
+func SuppressDiffWhitespaceAndEmptyLines(k, old, new string, d *schema.ResourceData) bool {
+	log.Printf("[DEBUG] Suppressing diff for %v due to potential whitespace and empty line differences: old=%#v new=%#v", k, old, new)
+
+	cleanString := func(input string) string {
+		lines := strings.Split(input, "\n")
+		processedLines := []string{}
+		for _, line := range lines {
+			trimmedLine := strings.TrimSpace(line)
+			if trimmedLine != "" {
+				processedLines = append(processedLines, trimmedLine)
+			}
+		}
+		return strings.Join(processedLines, " ")
+	}
+
+	cleanedOld := cleanString(old)
+	cleanedNew := cleanString(new)
+
+	return cleanedOld == cleanedNew
+}
+
 func MustInt64(s string) int64 {
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {

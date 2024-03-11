@@ -84,7 +84,7 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 		return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
 	})
 	s.SchemaPath("storage_location").SetCustomSuppressDiff(ucDirectoryPathSlashAndEmptySuppressDiff)
-	s.SchemaPath("view_definition").SetCustomSuppressDiff(common.SuppressDiffWhitespaceChange)
+	s.SchemaPath("view_definition").SetCustomSuppressDiff(common.SuppressDiffWhitespaceAndEmptyLines)
 
 	s.SchemaPath("cluster_id").SetConflictsWith([]string{"warehouse_id"})
 	s.SchemaPath("warehouse_id").SetConflictsWith([]string{"cluster_id"})

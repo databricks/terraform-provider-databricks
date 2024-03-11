@@ -95,7 +95,7 @@
 | [databricks_zones](docs/data-sources/zones.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 
-[![build](https://github.com/databricks/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databricks/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databricks/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databricks/terraform-provider-databricks) ![lines](https://img.shields.io/tokei/lines/github/databricks/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databricks/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databricks&repo=terraform-provider-databricks)
+[![build](https://github.com/databricks/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databricks/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databricks/terraform-provider-databricks/branch/main/graph/badge.svg)](https://codecov.io/gh/databricks/terraform-provider-databricks) ![lines](https://img.shields.io/tokei/lines/github/databricks/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databricks/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databricks&repo=terraform-provider-databricks)
 
 If you use Terraform 0.13 or newer, please refer to instructions specified at [registry page](https://registry.terraform.io/providers/databricks/databricks/latest). If you use older versions of Terraform or want to build it from sources, please refer to [contributing guidelines](CONTRIBUTING.md) page.
 

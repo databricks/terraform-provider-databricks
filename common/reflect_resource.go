@@ -54,7 +54,12 @@ func RegisterResourceProvider(v any, r ResourceProvider) {
 	if resourceProviderRegistry == nil {
 		resourceProviderRegistry = make(map[string]ResourceProvider)
 	}
-	resourceProviderRegistry[getNameForType(reflect.ValueOf(v).Type())] = r
+	typeName := getNameForType(reflect.ValueOf(v).Type())
+	if _, ok := resourceProviderRegistry[typeName]; ok {
+		errMsg := fmt.Sprintf("%s has already been registered, please avoid registering the same type repeatedly.", typeName)
+		panic(errMsg)
+	}
+	resourceProviderRegistry[typeName] = r
 }
 
 // Generic interface for ResourceProvider. Using CustomizeSchema function to keep track of additional information

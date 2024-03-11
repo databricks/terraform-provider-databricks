@@ -16,10 +16,6 @@ type LibraryResource struct {
 	compute.Library
 }
 
-func (LibraryResource) Aliases() map[string]map[string]string {
-	return map[string]map[string]string{}
-}
-
 func (LibraryResource) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s).AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,

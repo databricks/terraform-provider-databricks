@@ -502,6 +502,44 @@ func TestDataToStructPointerWithResourceProviderStruct(t *testing.T) {
 	DataToStructPointer(d, s, &dummyCopy)
 }
 
+func TestStructToData_EmptyField(t *testing.T) {
+	type EmptyField struct{}
+	type Container struct {
+		EmptyField *EmptyField `json:"empty_field,omitempty"`
+	}
+	s := StructToSchema(Container{}, nil)
+	assert.NotNil(t, s)
+
+	dummy := Container{
+		EmptyField: &EmptyField{},
+	}
+
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	d.MarkNewResource()
+	err := StructToData(dummy, s, d)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, d.Get("empty_field.#"))
+}
+
+func TestStructToData_EmptyFieldNil(t *testing.T) {
+	type EmptyField struct{}
+	type Container struct {
+		EmptyField *EmptyField `json:"empty_field,omitempty"`
+	}
+	s := StructToSchema(Container{}, nil)
+	assert.NotNil(t, s)
+
+	dummy := Container{
+		EmptyField: nil,
+	}
+
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	d.MarkNewResource()
+	err := StructToData(dummy, s, d)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, d.Get("empty_field.#"))
+}
+
 func TestStructToData(t *testing.T) {
 	s := StructToSchema(Dummy{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		return s

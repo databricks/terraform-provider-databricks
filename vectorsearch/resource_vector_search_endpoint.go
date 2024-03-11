@@ -47,15 +47,13 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			if err != nil {
 				return err
 			}
-			endpoint, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate))
+			endpoint, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate) - deleteCallTimeout)
 			if err != nil {
-				nestedContext, cancel := context.WithDeadline(context.Background(), time.Now().Add(deleteCallTimeout))
 				log.Printf("[ERROR] Error waiting for endpoint to be created: %s", err.Error())
-				nestedErr := w.VectorSearchEndpoints.DeleteEndpointByEndpointName(nestedContext, req.Name)
+				nestedErr := w.VectorSearchEndpoints.DeleteEndpointByEndpointName(ctx, req.Name)
 				if nestedErr != nil {
 					log.Printf("[ERROR] Error cleaning up endpoint: %s", nestedErr.Error())
 				}
-				cancel()
 				return err
 			}
 			d.SetId(endpoint.Name)

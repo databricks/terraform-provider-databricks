@@ -1,7 +1,9 @@
 package vectorsearch
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/qa/poll"
@@ -80,4 +82,28 @@ func TestResourcePASDelete(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
+}
+
+func TestVectorSearchEndpointCreateTimeoutError(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockVectorSearchEndpointsAPI().EXPECT()
+			e.CreateEndpoint(mock.Anything, vectorsearch.CreateEndpoint{
+				Name:         "abc",
+				EndpointType: "STANDARD",
+			}).Return(&vectorsearch.WaitGetEndpointVectorSearchEndpointOnline[vectorsearch.EndpointInfo]{
+				Poll: func(_ time.Duration, _ func(*vectorsearch.EndpointInfo)) (*vectorsearch.EndpointInfo, error) {
+					return nil, fmt.Errorf("timeout")
+				},
+			}, nil)
+			e.DeleteEndpointByEndpointName(mock.Anything, "abc").Return(nil)
+		},
+		Resource: ResourceVectorSearchEndpoint(),
+		HCL: `
+		name          = "abc"
+		endpoint_type = "STANDARD"
+		`,
+		Create: true,
+	}.ExpectError(t, "timeout")
+
 }

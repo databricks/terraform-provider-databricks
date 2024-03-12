@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/marshal"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,7 +29,7 @@ type GlobalConfig struct {
 	DataAccessConfig        map[string]string `json:"data_access_config,omitempty"`
 	InstanceProfileARN      string            `json:"instance_profile_arn,omitempty"`
 	GoogleServiceAccount    string            `json:"google_service_account,omitempty"`
-	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"default:false"`
+	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"computed"`
 	SqlConfigParams         map[string]string `json:"sql_config_params,omitempty"`
 }
 
@@ -38,8 +39,17 @@ type GlobalConfigForRead struct {
 	DataAccessConfig           []confPair                 `json:"data_access_config"`
 	InstanceProfileARN         string                     `json:"instance_profile_arn,omitempty"`
 	GoogleServiceAccount       string                     `json:"google_service_account,omitempty"`
-	EnableServerlessCompute    bool                       `json:"enable_serverless_compute"`
+	EnableServerlessCompute    bool                       `json:"enable_serverless_compute,omitempty"`
 	SqlConfigurationParameters *repeatedEndpointConfPairs `json:"sql_configuration_parameters,omitempty"`
+	ForceSendFields            []string                   `json:"-"`
+}
+
+func (g GlobalConfigForRead) MarshalJSON() ([]byte, error) {
+	return marshal.Marshal(g)
+}
+
+func (g *GlobalConfigForRead) UnmarshalJSON(bs []byte) error {
+	return marshal.Unmarshal(bs, g)
 }
 
 func NewSqlGlobalConfigAPI(ctx context.Context, m any) globalConfigAPI {
@@ -51,10 +61,10 @@ type globalConfigAPI struct {
 	context context.Context
 }
 
-func (a globalConfigAPI) Set(gc GlobalConfig) error {
-	data := map[string]any{
-		"security_policy":           gc.SecurityPolicy,
-		"enable_serverless_compute": gc.EnableServerlessCompute,
+func (a globalConfigAPI) Set(gc GlobalConfig, d *schema.ResourceData) error {
+	data := GlobalConfigForRead{
+		SecurityPolicy:          gc.SecurityPolicy,
+		EnableServerlessCompute: gc.EnableServerlessCompute,
 	}
 	if a.client.Config.Host == "" {
 		err := a.client.Config.EnsureResolved()
@@ -64,14 +74,14 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 	}
 	if gc.InstanceProfileARN != "" {
 		if a.client.IsAws() {
-			data["instance_profile_arn"] = gc.InstanceProfileARN
+			data.InstanceProfileARN = gc.InstanceProfileARN
 		} else {
 			return fmt.Errorf("can't use instance_profile_arn outside of AWS")
 		}
 	}
 	if gc.GoogleServiceAccount != "" {
 		if a.client.IsGcp() {
-			data["google_service_account"] = gc.GoogleServiceAccount
+			data.GoogleServiceAccount = gc.GoogleServiceAccount
 		} else {
 			return fmt.Errorf("can't use google_service_account outside of GCP")
 		}
@@ -80,15 +90,16 @@ func (a globalConfigAPI) Set(gc GlobalConfig) error {
 	for k, v := range gc.DataAccessConfig {
 		cfg = append(cfg, confPair{Key: k, Value: v})
 	}
-	data["data_access_config"] = cfg
+	data.DataAccessConfig = cfg
 	if len(gc.SqlConfigParams) > 0 {
 		sql_params := repeatedEndpointConfPairs{}
 		sql_params.ConfigPairs = make([]confPair, 0, len(gc.SqlConfigParams))
 		for k, v := range gc.SqlConfigParams {
 			sql_params.ConfigPairs = append(sql_params.ConfigPairs, confPair{Key: k, Value: v})
 		}
-		data["sql_configuration_parameters"] = sql_params
+		data.SqlConfigurationParameters = &sql_params
 	}
+	common.SetForceSendFields(&data, d, []string{"enable_serverless_compute"})
 
 	return a.client.Put(a.context, "/sql/config/warehouses", data)
 }
@@ -121,14 +132,26 @@ func ResourceSqlGlobalConfig() common.Resource {
 	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		var gc GlobalConfig
 		common.DataToStructPointer(d, s, &gc)
-		if err := NewSqlGlobalConfigAPI(ctx, c).Set(gc); err != nil {
+		if err := NewSqlGlobalConfigAPI(ctx, c).Set(gc, d); err != nil {
 			return err
 		}
 		d.SetId(GlobalSqlConfigResourceID)
 		return nil
 	}
 	return common.Resource{
-		Create: setGlobalConfig,
+		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// enable_serverless_compute is an optional boolean parameter which may be specified as `false`.
+			if _, ok := d.GetOkExists("enable_serverless_compute"); !ok {
+				// Read the current global config and use the current value of enable_serverless_compute as
+				// the default value if not specified.
+				gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
+				if err != nil {
+					return err
+				}
+				d.Set("enable_serverless_compute", gc.EnableServerlessCompute)
+			}
+			return setGlobalConfig(ctx, d, c)
+		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			gc, err := NewSqlGlobalConfigAPI(ctx, c).Get()
 			if err != nil {
@@ -139,7 +162,10 @@ func ResourceSqlGlobalConfig() common.Resource {
 		},
 		Update: setGlobalConfig,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{SecurityPolicy: "DATA_ACCESS_CONTROL"})
+			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{
+				SecurityPolicy:          "DATA_ACCESS_CONTROL",
+				EnableServerlessCompute: d.Get("enable_serverless_compute").(bool),
+			}, d)
 		},
 		Schema: s,
 	}

@@ -282,7 +282,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		allow_cluster_create = true
 		databricks_sql_access = true
 		`,
-		RequiresNew: true,
+		RequiresNew: false,
 		Update:      true,
 		ID:          "abc",
 	}.Apply(t)

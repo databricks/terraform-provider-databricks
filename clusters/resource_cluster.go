@@ -62,10 +62,6 @@ type ClusterSpec struct {
 	compute.ClusterSpec
 }
 
-func (ClusterSpec) Aliases() map[string]string {
-	return map[string]string{"cluster_mount_infos": "cluster_mount_info"}
-}
-
 func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()
 	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetComputed()
@@ -397,4 +393,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 	}
 	return nil
+}
+
+func init() {
+	common.RegisterResourceProvider(compute.ClusterSpec{}, ClusterSpec{})
+	common.RegisterResourceProvider(compute.Library{}, LibraryResource{})
 }

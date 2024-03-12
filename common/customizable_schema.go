@@ -8,6 +8,7 @@ import (
 
 type CustomizableSchema struct {
 	Schema         *schema.Schema
+	path           []string
 	isSuppressDiff bool
 }
 
@@ -23,7 +24,7 @@ func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *Customiza
 		return &CustomizableSchema{Schema: wrappedSch}
 	}
 	sch := MustSchemaPath(s, path...)
-	return &CustomizableSchema{Schema: sch}
+	return &CustomizableSchema{Schema: sch, path: path}
 }
 
 func (s *CustomizableSchema) SetOptional() *CustomizableSchema {
@@ -64,7 +65,7 @@ func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
-	s.Schema.DiffSuppressFunc = diffSuppressor(s.Schema)
+	s.Schema.DiffSuppressFunc = diffSuppressor(s.path[len(s.path)-1], s.Schema)
 	s.isSuppressDiff = true
 	if s.Schema.Type == schema.TypeList && s.Schema.MaxItems == 1 {
 		// If it is a list with max items = 1, it means the corresponding sdk schema type is a struct or a ptr.
@@ -74,8 +75,8 @@ func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 			panic("Cannot cast Elem into Resource type.")
 		}
 		nestedSchema := resource.Schema
-		for _, v := range nestedSchema {
-			v.DiffSuppressFunc = diffSuppressor(v)
+		for k, v := range nestedSchema {
+			v.DiffSuppressFunc = diffSuppressor(k, v)
 		}
 	}
 	return s
@@ -164,7 +165,7 @@ func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *C
 	}
 	cv.Schema[key] = newField
 	if s.isSuppressDiff {
-		newField.DiffSuppressFunc = diffSuppressor(newField)
+		newField.DiffSuppressFunc = diffSuppressor(key, newField)
 	}
 	return s
 }

@@ -69,10 +69,10 @@ func TestVectorSearchEndpointRead(t *testing.T) {
 	})
 }
 
-func TestResourcePASDelete(t *testing.T) {
-	qa.ResourceFixture{
-		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {
-			a.GetMockVectorSearchEndpointsAPI().EXPECT().DeleteEndpointByEndpointName(mock.Anything, "abc").Return(nil)
+func TestVectorSearchEndpointDelete(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockVectorSearchEndpointsAPI().EXPECT().DeleteEndpointByEndpointName(mock.Anything, "abc").Return(nil)
 		},
 		Resource: ResourceVectorSearchEndpoint(),
 		Delete:   true,

@@ -2,12 +2,32 @@ package vectorsearch
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
+
+const defaultIndexProvisionTimeout = 5 * time.Minute
+
+func waitForSearchIndex(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
+	return retry.RetryContext(ctx, defaultIndexProvisionTimeout-deleteCallTimeout, func() *retry.RetryError {
+		index, err := w.VectorSearchIndexes.GetIndexByIndexName(ctx, searchIndexName)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+		if index.Status.Ready { // We really need to depend on the detailed status of the index, but it's not available in the API yet
+			return nil
+		}
+		return retry.RetryableError(fmt.Errorf("vector search index %s is still pending", searchIndexName))
+	})
+}
 
 func ResourceVectorSearchIndex() common.Resource {
 	s := common.StructToSchema(
@@ -31,6 +51,14 @@ func ResourceVectorSearchIndex() common.Resource {
 			common.DataToStructPointer(d, s, &req)
 			_, err = w.VectorSearchIndexes.CreateIndex(ctx, req)
 			if err != nil {
+				return err
+			}
+			err = waitForSearchIndex(w, ctx, req.Name)
+			if err != nil {
+				nestedErr := w.VectorSearchIndexes.DeleteIndexByIndexName(ctx, req.Name)
+				if nestedErr != nil {
+					log.Printf("[ERROR] Error cleaning up search index: %s", nestedErr.Error())
+				}
 				return err
 			}
 			d.SetId(req.Name)
@@ -58,7 +86,7 @@ func ResourceVectorSearchIndex() common.Resource {
 		Schema:         s,
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Create: schema.DefaultTimeout(defaultIndexProvisionTimeout),
 		},
 	}
 }

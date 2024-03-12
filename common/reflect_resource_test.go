@@ -43,9 +43,12 @@ func TestChooseFieldName(t *testing.T) {
 }
 
 func TestChooseFieldNameWithAliasesMap(t *testing.T) {
+	type Bar struct {
+		Foo string `json:"foo,omitempty"`
+	}
 	assert.Equal(t, "foo", chooseFieldNameWithAliases(reflect.StructField{
 		Tag: `json:"bar"`,
-	}, map[string]string{"bar": "foo"}))
+	}, reflect.ValueOf(Bar{}).Type(), map[string]map[string]string{"common.Bar": {"bar": "foo"}}))
 }
 
 type testSliceItem struct {
@@ -91,10 +94,6 @@ type testJobTask struct {
 type testForEachTask struct {
 	Task  *testJobTask `json:"task,omitempty"`
 	Extra string       `json:"extra,omitempty"`
-}
-
-func (testRecursiveStruct) Aliases() map[string]string {
-	return map[string]string{}
 }
 
 func (testRecursiveStruct) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -269,9 +268,9 @@ type DummyResourceProvider struct {
 	DummyNoTfTag
 }
 
-func (DummyResourceProvider) Aliases() map[string]string {
-	return map[string]string{"enabled": "enabled_alias",
-		"addresses.primary": "primary_alias"}
+func (DummyResourceProvider) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{"common.DummyResourceProvider": {"enabled": "enabled_alias"},
+		"common.AddressNoTfTag": {"primary": "primary_alias"}}
 }
 
 func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {

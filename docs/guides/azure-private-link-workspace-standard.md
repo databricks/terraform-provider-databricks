@@ -27,7 +27,7 @@ This guide covers a [standard deployment](https://learn.microsoft.com/en-us/azur
 - A separate Web Auth workspace is not mandatory but recommended.
 - DNS mapping for SSO login callbacks to the Azure Databricks web application can be managed by the Web Auth workspace or another workspace associated with the **browser_authentication** private endpoint.
 
-![Azure Databricks with Private Link - Standard deployment](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/azure-private-link-standard.png)
+![Azure Databricks with Private Link - Standard deployment](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/azure-private-link-standard.png)
 
 This guide uses the following variables:
 

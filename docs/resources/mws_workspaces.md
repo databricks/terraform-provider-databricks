@@ -20,7 +20,7 @@ This resource allows you to set up [workspaces in E2 architecture on AWS](https:
 
 ### Creating a Databricks on AWS workspace
 
-![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
+![Simplest multiworkspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/simplest-multiworkspace.png)
 
 To get workspace running, you have to configure a couple of things:
 

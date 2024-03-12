@@ -30,7 +30,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				require.NoError(t, err)
 				etag := state.Attributes["etag"]
 				require.NotEmpty(t, etag)
-				res, err := w.Settings.GetDefaultNamespaceSetting(ctx, settings.GetDefaultNamespaceSettingRequest{
+				res, err := w.Settings.DefaultNamespace().Get(ctx, settings.GetDefaultNamespaceRequest{
 					Etag: etag,
 				})
 				require.NoError(t, err)
@@ -48,7 +48,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				require.NoError(t, err)
 				// Terraform Check returns the latest resource status before it is destroyed, which has an outdated eTag.
 				// We are making an update call to get the correct eTag in the response error.
-				_, err = w.Settings.UpdateDefaultNamespaceSetting(ctx, settings.UpdateDefaultNamespaceSettingRequest{
+				_, err = w.Settings.DefaultNamespace().Update(ctx, settings.UpdateDefaultNamespaceSettingRequest{
 					AllowMissing: true,
 					Setting: settings.DefaultNamespaceSetting{
 						Namespace: settings.StringMessage{
@@ -63,7 +63,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 					assert.FailNow(t, "cannot parse error message %v", err)
 				}
 				etag := aerr.Details[0].Metadata["etag"]
-				_, err = w.Settings.GetDefaultNamespaceSetting(ctx, settings.GetDefaultNamespaceSettingRequest{
+				_, err = w.Settings.DefaultNamespace().Get(ctx, settings.GetDefaultNamespaceRequest{
 					Etag: etag,
 				})
 				if !errors.As(err, &aerr) {

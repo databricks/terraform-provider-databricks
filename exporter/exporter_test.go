@@ -2291,6 +2291,13 @@ func TestImportingModelServing(t *testing.T) {
 								Name:         "def",
 							},
 						},
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								EntityName:    "def",
+								EntityVersion: "1",
+								Name:          "def",
+							},
+						},
 					},
 				},
 			},

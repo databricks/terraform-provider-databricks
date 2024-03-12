@@ -120,6 +120,11 @@ func ResourceWorkspaceConf() common.Resource {
 			patch := settings.WorkspaceConf{}
 			config := d.Get("custom_config").(map[string]any)
 			for k, v := range config {
+				if !strings.HasPrefix(k, "enable") && !strings.HasPrefix(k, "enforce") {
+					log.Printf("[DEBUG] Skip erasing configuration of %s", k)
+					delete(config, k)
+					continue
+				}
 				switch r := v.(type) {
 				default:
 					patch[k] = ""

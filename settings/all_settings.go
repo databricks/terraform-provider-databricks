@@ -19,7 +19,7 @@ func AllSettingsResources() map[string]common.Resource {
 		"restrict_workspace_admins": makeSettingResource[settings.RestrictWorkspaceAdminsSetting, *databricks.WorkspaceClient](restrictWsAdminsSetting),
 		"compliance_security_profile_account": makeSettingResource[settings.CSPEnablementAccountSetting, *databricks.AccountClient](cspEnablementAccountSetting),
 		"enhanced_security_monitoring_account": makeSettingResource[settings.ESMEnablementAccountSetting, *databricks.AccountClient](esmEnablementAccountSetting),
-		"compliance_security_profile_workspace": makeSettingResource[settings.CSPEnablementSetting, *databricks.AccountClient](cspEnablementWorkspaceSetting),
-		"enhanced_security_monitoring_workspace": makeSettingResource[settings.ESMEnablementSetting, *databricks.AccountClient](esmEnablementWorkspaceSetting),
+		"compliance_security_profile_workspace": makeSettingResource[settings.CSPEnablementSetting, *databricks.WorkspaceClient](cspEnablementWorkspaceSetting),
+		"enhanced_security_monitoring_workspace": makeSettingResource[settings.ESMEnablementSetting, *databricks.WorkspaceClient](esmEnablementWorkspaceSetting),
 	}
 }

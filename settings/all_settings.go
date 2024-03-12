@@ -15,11 +15,11 @@ import (
 //  3. Add a new entry to the AllSettingsResources map below. The final resource name will be "databricks_<SETTING_NAME>_setting".
 func AllSettingsResources() map[string]common.Resource {
 	return map[string]common.Resource{
-		"default_namespace":         makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
-		"restrict_workspace_admins": makeSettingResource[settings.RestrictWorkspaceAdminsSetting, *databricks.WorkspaceClient](restrictWsAdminsSetting),
-		"compliance_security_profile_account": makeSettingResource[settings.CSPEnablementAccountSetting, *databricks.AccountClient](cspEnablementAccountSetting),
-		"enhanced_security_monitoring_account": makeSettingResource[settings.ESMEnablementAccountSetting, *databricks.AccountClient](esmEnablementAccountSetting),
-		"compliance_security_profile_workspace": makeSettingResource[settings.CSPEnablementSetting, *databricks.WorkspaceClient](cspEnablementWorkspaceSetting),
+		"default_namespace":                      makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
+		"restrict_workspace_admins":              makeSettingResource[settings.RestrictWorkspaceAdminsSetting, *databricks.WorkspaceClient](restrictWsAdminsSetting),
+		"compliance_security_profile_account":    makeSettingResource[settings.CSPEnablementAccountSetting, *databricks.AccountClient](cspEnablementAccountSetting),
+		"enhanced_security_monitoring_account":   makeSettingResource[settings.ESMEnablementAccountSetting, *databricks.AccountClient](esmEnablementAccountSetting),
+		"compliance_security_profile_workspace":  makeSettingResource[settings.CSPEnablementSetting, *databricks.WorkspaceClient](cspEnablementWorkspaceSetting),
 		"enhanced_security_monitoring_workspace": makeSettingResource[settings.ESMEnablementSetting, *databricks.WorkspaceClient](esmEnablementWorkspaceSetting),
 	}
 }

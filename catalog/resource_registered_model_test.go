@@ -257,6 +257,58 @@ func TestRegisteredModelUpdateOwner(t *testing.T) {
 	})
 }
 
+func TestRegisteredModelUpdateRollback(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockRegisteredModelsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
+				FullName: "catalog.schema.model",
+				Owner:    "new_owner",
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Owner:       "new_owner",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
+				FullName: "catalog.schema.model",
+				Comment:  "new comment",
+			}).Return(nil, errors.New("Something unexpected"))
+			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
+				FullName: "catalog.schema.model",
+				Owner:    "owner",
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Owner:       "owner",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+			}, nil)
+		},
+		Resource: ResourceRegisteredModel(),
+		Update:   true,
+		ID:       "catalog.schema.model",
+		InstanceState: map[string]string{
+			"name":         "model",
+			"catalog_name": "catalog",
+			"owner":        "owner",
+			"schema_name":  "schema",
+			"comment":      "comment",
+		},
+		HCL: `
+			name = "model"
+			catalog_name = "catalog"
+			owner = "new_owner"
+			schema_name = "schema"
+			comment = "new comment"
+			`,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Something unexpected")
+}
+
 func TestRegisteredModelUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

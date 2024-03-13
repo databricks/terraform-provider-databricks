@@ -2193,15 +2193,22 @@ func TestImportGrants(t *testing.T) {
 	common.DataToStructPointer(r.Data, s, &pList)
 	assert.Empty(t, pList.Assignments)
 
-	// Test with a filled user name and no permissions
+	// Test with a filled user name and no owner
 	ic.meUserName = "user@domain.com"
-	d.Set("metastore", "1234")
+	d.Set("catalog", "1234")
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+	common.DataToStructPointer(r.Data, s, &pList)
+	require.Equal(t, 0, len(pList.Assignments))
+
+	// Test with a filled user name and permissions
+	r.AddExtraData("owner", "otheruser@domain.com")
 	err = resourcesMap["databricks_grants"].Import(ic, r)
 	assert.NoError(t, err)
 	common.DataToStructPointer(r.Data, s, &pList)
 	require.Equal(t, 1, len(pList.Assignments))
 	assert.Equal(t, ic.meUserName, pList.Assignments[0].Principal)
-	assert.Equal(t, sortStringsCopy(metastorePrivilegesToAdd), sortStringsCopy(pList.Assignments[0].Privileges))
+	assert.Equal(t, sortStringsCopy(grantsPrivilegesToAdd["catalog"]), sortStringsCopy(pList.Assignments[0].Privileges))
 
 	// Test with a filled user name and permissions
 	d.Set("metastore", "")
@@ -2215,7 +2222,8 @@ func TestImportGrants(t *testing.T) {
 	common.DataToStructPointer(r.Data, s, &pList)
 	require.Equal(t, 1, len(pList.Assignments))
 	assert.Equal(t, ic.meUserName, pList.Assignments[0].Principal)
-	assert.Equal(t, sortStringsCopy(defaultPrivilegesToAdd), sortStringsCopy(pList.Assignments[0].Privileges))
+	assert.Equal(t, sortStringsCopy(append([]string{"USE_CATALOG", "USE_SCHEMA"}, grantsPrivilegesToAdd["catalog"]...)),
+		sortStringsCopy(pList.Assignments[0].Privileges))
 
 	// Test with a filled user name and unsupported objects
 	d.Set("catalog", "")

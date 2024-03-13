@@ -136,7 +136,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes | Yes | No |
 | [databricks_job](../resources/job.md) | Yes | No | Yes | No |
 | [databricks_library](../resources/library.md) | Yes\* | No | Yes | No |
-| [databricks_metastore](../resources/metastore.md) | Yes | Yes | Yes | Yes |
+| [databricks_metastore](../resources/metastore.md) | Yes | Yes | No | Yes |
 | [databricks_metastore_assignment](../resources/metastore_assignment.md) | Yes | No | No | Yes |
 | [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No | No | No | No |
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No | No | No |
@@ -165,7 +165,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_table](../resources/sql_table.md) | Yes | Yes | Yes | No |
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes | Yes | Yes | No |
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes | Yes | No |
-| [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | Yes |
+| [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | No |
 | [databricks_system_schema](../resources/system_schema.md) | Yes | No | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No | Yes | No |
 | [databricks_user](../resources/user.md) | Yes | No | Yes | Yes |

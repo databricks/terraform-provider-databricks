@@ -2648,31 +2648,16 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_storage_credential": {
 		WorkspaceLevel: true,
-		AccountLevel:   true,
 		Service:        "uc-storage-credentials",
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUCGrantsWithOwner("storage_credential/"+r.ID, r)
 			return nil
 		},
 		List: func(ic *importContext) error {
-			var objList []catalog.StorageCredentialInfo
-			var err error
-
-			if ic.accountLevel {
-				if ic.currentMetastore == nil {
-					return fmt.Errorf("there is no UC metastore information")
-				}
-				currentMetastore := ic.currentMetastore.MetastoreId
-				objList, err = ic.accountClient.StorageCredentials.List(ic.Context, catalog.ListAccountStorageCredentialsRequest{
-					MetastoreId: currentMetastore,
-				})
-			} else {
-				objList, err = ic.workspaceClient.StorageCredentials.ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
-			}
+			objList, err := ic.workspaceClient.StorageCredentials.ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
 			if err != nil {
 				return err
 			}
-
 			for _, v := range objList {
 				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_storage_credential",
@@ -2882,9 +2867,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_metastore": {
-		WorkspaceLevel: true,
-		AccountLevel:   true,
-		Service:        "uc-metastores",
+		AccountLevel: true,
+		Service:      "uc-metastores",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -2893,13 +2877,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		List: func(ic *importContext) error {
-			var err error
-			var metastores []catalog.MetastoreInfo
-			if ic.accountLevel {
-				metastores, err = ic.accountClient.Metastores.ListAll(ic.Context)
-			} else {
-				metastores, err = ic.workspaceClient.Metastores.ListAll(ic.Context)
-			}
+			metastores, err := ic.accountClient.Metastores.ListAll(ic.Context)
 			if err != nil {
 				return err
 			}
@@ -2914,7 +2892,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUCGrantsWithOwner("metastore/"+r.ID, r)
 			// TODO: emit owner? See comment in catalog resource
-			if ic.accountLevel { // emit metastore assignments
+			if ic.accountLevel {
+				// emit metastore assignments
 				assignments, err := ic.accountClient.MetastoreAssignments.ListByMetastoreId(ic.Context, r.ID)
 				if err == nil {
 					for _, workspaceID := range assignments.WorkspaceIds {
@@ -2926,6 +2905,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				} else {
 					log.Printf("[ERROR] listing metastore assignments: %s", err.Error())
 				}
+				// TODO: emit storage credentials associated with specific metastores, but we'll need to solve
+				// a problem of importing a resource... This will require to changing ID from name to metastore ID + name.
 			}
 			return nil
 		},

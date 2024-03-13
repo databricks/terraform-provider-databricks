@@ -25,6 +25,48 @@ func TestRegisteredModelCreate(t *testing.T) {
 				Comment:     "comment",
 			}).Return(&catalog.RegisteredModelInfo{
 				Name:        "model",
+				Owner:       "owner",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+			}, nil)
+			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				Owner:       "owner",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "comment",
+			}, nil)
+		},
+		Resource: ResourceRegisteredModel(),
+		HCL: `
+			name = "model"
+			catalog_name = "catalog"
+			schema_name = "schema"
+			comment = "comment"
+			`,
+		Create: true,
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":    "catalog.schema.model",
+			"owner": "owner",
+		},
+	)
+}
+
+func TestRegisteredModelCreateWithOwner(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockRegisteredModelsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateRegisteredModelRequest{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				Comment:     "comment",
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
 				Owner:       "old_owner",
 				CatalogName: "catalog",
 				SchemaName:  "schema",

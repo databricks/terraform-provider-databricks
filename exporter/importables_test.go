@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"sync"
 	"testing"
 
@@ -2164,4 +2165,69 @@ func TestImportUcVolumeFile(t *testing.T) {
 
 		assert.Equal(t, "main/default/wheels/some.whl_f27badf8", resourcesMap["databricks_file"].Name(nil, d))
 	})
+}
+
+func sortStringsCopy(s []string) []string {
+	c := make([]string, len(s))
+	copy(c, s)
+	sort.Strings(c)
+	return c
+}
+
+func TestImportGrants(t *testing.T) {
+	ic := importContextForTest()
+
+	s := ic.Resources["databricks_grants"].Schema
+	d := tfcatalog.ResourceGrants().ToResource().TestResourceData()
+	id := "metastore/1234"
+	d.SetId(id)
+	d.MarkNewResource()
+	r := &resource{ID: id, Data: d}
+	err := resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+
+	// Test ignore function
+	assert.True(t, resourcesMap["databricks_grants"].Ignore(ic, r))
+
+	var pList tfcatalog.PermissionsList
+	common.DataToStructPointer(r.Data, s, &pList)
+	assert.Empty(t, pList.Assignments)
+
+	// Test with a filled user name and no owner
+	ic.meUserName = "user@domain.com"
+	d.Set("catalog", "1234")
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+	common.DataToStructPointer(r.Data, s, &pList)
+	require.Equal(t, 0, len(pList.Assignments))
+
+	// Test with a filled user name and permissions
+	r.AddExtraData("owner", "otheruser@domain.com")
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+	common.DataToStructPointer(r.Data, s, &pList)
+	require.Equal(t, 1, len(pList.Assignments))
+	assert.Equal(t, ic.meUserName, pList.Assignments[0].Principal)
+	assert.Equal(t, sortStringsCopy(grantsPrivilegesToAdd["catalog"]), sortStringsCopy(pList.Assignments[0].Privileges))
+
+	// Test with a filled user name and permissions
+	d.Set("metastore", "")
+	d.Set("catalog", "test")
+	pList.Assignments = []tfcatalog.PrivilegeAssignment{
+		{Principal: ic.meUserName, Privileges: []string{"USE_CATALOG", "USE_SCHEMA"}},
+	}
+	common.StructToData(pList, s, d)
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+	common.DataToStructPointer(r.Data, s, &pList)
+	require.Equal(t, 1, len(pList.Assignments))
+	assert.Equal(t, ic.meUserName, pList.Assignments[0].Principal)
+	assert.Equal(t, sortStringsCopy(append([]string{"USE_CATALOG", "USE_SCHEMA"}, grantsPrivilegesToAdd["catalog"]...)),
+		sortStringsCopy(pList.Assignments[0].Privileges))
+
+	// Test with a filled user name and unsupported objects
+	d.Set("catalog", "")
+	d.Set("model", "test")
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
 }

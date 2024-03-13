@@ -21,7 +21,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
-	tfuc "github.com/databricks/terraform-provider-databricks/catalog"
+	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
@@ -67,6 +67,17 @@ var (
 		"JUPYTER":    ".ipynb",
 		"DBC":        ".dbc",
 		"R_MARKDOWN": ".Rmd",
+	}
+	grantsPrivilegesToAdd = map[string][]string{
+		// TODO: think how to handle these if the TF user isn't owner of the metastore...
+		// "metastore": {`CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`,
+		// 	`CREATE_RECIPIENT`, `CREATE_SCHEMA`, `CREATE_STORAGE_CREDENTIAL`, `SET_SHARE_PERMISSION`},
+		"catalog":            {`CREATE_SCHEMA`},
+		"schema":             {`CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_MODEL`, `CREATE_VOLUME`},
+		"volume":             {`WRITE_VOLUME`},
+		"external_location":  {`CREATE_EXTERNAL_TABLE`, `CREATE_EXTERNAL_VOLUME`, `CREATE_MANAGED_STORAGE`},
+		"storage_credential": {`CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`},
+		"foreign_connection": {`CREATE_FOREIGN_CATALOG`},
 	}
 )
 
@@ -2351,15 +2362,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var cat tfuc.CatalogInfo
+			var cat tfcatalog.CatalogInfo
 			s := ic.Resources["databricks_catalog"].Schema
 			common.DataToStructPointer(r.Data, s, &cat)
 
 			// Emit: UC Connection, List schemas, Catalog grants, ...
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "catalog/" + cat.Name,
-			})
+			ic.emitUCGrantsWithOwner("catalog/"+cat.Name, r)
 			// TODO: emit owner?  Should we do this? Because it's a account-level identity... Create a separate function for that...
 			if cat.ConnectionName != "" {
 				ic.Emit(&resource{
@@ -2436,10 +2444,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			schemaFullName := r.ID
 			catalogName := r.Data.Get("catalog_name").(string)
 			schemaName := r.Data.Get("name").(string)
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "schema/" + schemaFullName,
-			})
+			ic.emitUCGrantsWithOwner("schema/"+schemaFullName, r)
 			ic.Emit(&resource{
 				Resource: "databricks_catalog",
 				ID:       catalogName,
@@ -2510,10 +2515,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-volumes",
 		Import: func(ic *importContext, r *resource) error {
 			volumeFullName := r.ID
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "volume/" + volumeFullName,
-			})
+			ic.emitUCGrantsWithOwner("volume/"+volumeFullName, r)
+
 			catalogName := r.Data.Get("catalog_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
@@ -2546,10 +2549,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-tables",
 		Import: func(ic *importContext, r *resource) error {
 			tableFullName := r.ID
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "table/" + tableFullName,
-			})
+			ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
 			catalogName := r.Data.Get("catalog_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
@@ -2583,6 +2583,49 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-grants",
 		// TODO: Should we try to make name unique?
 		// TODO: do we need to emit principals? Maybe only on account level? See comment for the owner...
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meUserName == "" {
+				return nil
+			}
+			// https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/privileges.html#privilege-types-by-securable-object-in-unity-catalog
+			var newPrivileges []string
+			for k, v := range grantsPrivilegesToAdd {
+				if r.Data.Get(k).(string) != "" {
+					newPrivileges = append(newPrivileges, v...)
+					break
+				}
+			}
+			if len(newPrivileges) == 0 {
+				return nil
+			}
+
+			owner, found := r.GetExtraData("owner")
+			if !found || owner == "" || owner == ic.meUserName {
+				// We don't need to change permissions if owner isn't set, or it's the same user
+				return nil
+			}
+
+			var pList tfcatalog.PermissionsList
+			s := ic.Resources["databricks_grants"].Schema
+			common.DataToStructPointer(r.Data, s, &pList)
+			foundExisting := false
+			for i, v := range pList.Assignments {
+				if v.Principal == ic.meUserName {
+					pList.Assignments[i].Privileges = append(pList.Assignments[i].Privileges, newPrivileges...)
+					slices.Sort(pList.Assignments[i].Privileges)
+					pList.Assignments[i].Privileges = slices.Compact(pList.Assignments[i].Privileges)
+					foundExisting = true
+					break
+				}
+			}
+			if !foundExisting {
+				pList.Assignments = append(pList.Assignments, tfcatalog.PrivilegeAssignment{
+					Principal:  ic.meUserName,
+					Privileges: newPrivileges,
+				})
+			}
+			return common.StructToData(pList, s, r.Data)
+		},
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.Data.Get("grant.#").(int) == 0
 		},
@@ -2608,10 +2651,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		AccountLevel:   true,
 		Service:        "uc-storage-credentials",
 		Import: func(ic *importContext, r *resource) error {
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       fmt.Sprintf("storage_credential/%s", r.ID),
-			})
+			ic.emitUCGrantsWithOwner("storage_credential/"+r.ID, r)
 			return nil
 		},
 		List: func(ic *importContext) error {
@@ -2650,10 +2690,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-external-locations",
 		Import: func(ic *importContext, r *resource) error {
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       fmt.Sprintf("external_location/%s", r.ID),
-			})
+			ic.emitUCGrantsWithOwner("external_location/"+r.ID, r)
 			ic.Emit(&resource{
 				Resource: "databricks_storage_credential",
 				ID:       r.Data.Get("credential_name").(string),
@@ -2712,10 +2749,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
 			connectionName := r.Data.Get("name").(string)
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "foreign_connection/" + connectionName,
-			})
+			ic.emitUCGrantsWithOwner("foreign_connection/"+connectionName, r)
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
@@ -2738,14 +2772,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
-			var share tfuc.ShareInfo
+			var share tfcatalog.ShareInfo
 			s := ic.Resources["databricks_share"].Schema
 			common.DataToStructPointer(r.Data, s, &share)
 			// TODO: how to link recipients to share?
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "share/" + r.ID,
-			})
+			ic.emitUCGrantsWithOwner("share/"+r.ID, r)
 			for _, obj := range share.Objects {
 				switch obj.DataObjectType {
 				case "TABLE":
@@ -2819,10 +2850,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		// },
 		Import: func(ic *importContext, r *resource) error {
 			modelFullName := r.ID
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "model/" + modelFullName,
-			})
+			ic.emitUCGrantsWithOwner("model/"+modelFullName, r)
 			catalogName := r.Data.Get("catalog_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
@@ -2884,10 +2912,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "metastore/" + r.ID,
-			})
+			ic.emitUCGrantsWithOwner("metastore/"+r.ID, r)
 			// TODO: emit owner? See comment in catalog resource
 			if ic.accountLevel { // emit metastore assignments
 				assignments, err := ic.accountClient.MetastoreAssignments.ListByMetastoreId(ic.Context, r.ID)

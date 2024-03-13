@@ -19,3 +19,14 @@ func TestResourceApproaximationGet(t *testing.T) {
 	require.True(t, found)
 	assert.Equal(t, "42", v.(string))
 }
+
+func TestExtraDataGet(t *testing.T) {
+	r := &resource{}
+	_, found := r.GetExtraData("test")
+	assert.False(t, found)
+
+	r.AddExtraData("test", "42")
+	v, found := r.GetExtraData("test")
+	require.True(t, found)
+	assert.Equal(t, "42", v.(string))
+}

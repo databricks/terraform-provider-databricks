@@ -17,6 +17,11 @@ func ResourceRegisteredModel() common.Resource {
 			m["schema_name"].ForceNew = true
 			m["storage_location"].ForceNew = true
 			m["storage_location"].Computed = true
+			m["owner"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			}
 
 			return m
 		})
@@ -34,6 +39,18 @@ func ResourceRegisteredModel() common.Resource {
 				return err
 			}
 			d.SetId(model.FullName)
+			// Don't update owner if it is not provided
+			if d.Get("owner") == "" {
+				return nil
+			}
+
+			var update catalog.UpdateRegisteredModelRequest
+			common.DataToStructPointer(d, s, &update)
+			update.FullName = d.Id()
+			_, err = w.RegisteredModels.Update(ctx, update)
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -52,9 +69,41 @@ func ResourceRegisteredModel() common.Resource {
 			if err != nil {
 				return err
 			}
+
 			var u catalog.UpdateRegisteredModelRequest
 			common.DataToStructPointer(d, s, &u)
 			u.FullName = d.Id()
+
+			if d.HasChange("owner") {
+				_, err := w.RegisteredModels.Update(ctx, catalog.UpdateRegisteredModelRequest{
+					FullName: u.FullName,
+					Owner:    u.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			if !d.HasChangeExcept("owner") {
+				return nil
+			}
+
+			u.Owner = ""
+			_, err = w.RegisteredModels.Update(ctx, u)
+			if err != nil {
+				if d.HasChange("owner") {
+					// Rollback
+					old, new := d.GetChange("owner")
+					_, rollbackErr := w.RegisteredModels.Update(ctx, catalog.UpdateRegisteredModelRequest{
+						FullName: u.FullName,
+						Owner:    old.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+					}
+				}
+				return err
+			}
 			_, err = w.RegisteredModels.Update(ctx, u)
 			return err
 		},

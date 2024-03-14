@@ -48,9 +48,6 @@ Notable fields are:
 * `effective_predictive_optimization_flag`
 * `enable_predictive_optimization` - Whether predictive optimization should be enabled for this object and objects under it
 * `encryption_details` - Encryption options that apply to clients connecting to cloud storage
-
-__catalog_name__.__schema_name__.__table_name__
-* `full_name` - Full name of table, in form of *`catalog`.`schema`.`table`*
 * `metastore_id` - Unique identifier of parent metastore
 * `name` - Name of table, relative to parent schema
 * `owner` - Username of current owner of table

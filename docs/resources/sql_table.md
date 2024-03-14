@@ -127,6 +127,7 @@ The following arguments are supported:
 * `comment` - (Optional) User-supplied free-form text. Changing comment is not currently supported on `VIEW` table_type.
 * `options` - (Optional) Map of user defined table options. Change forces creation of a new resource.
 * `properties` - (Optional) Map of table properties.
+* `tags` - (Optional) Map of table tags.
 * `partitions` - (Optional) a subset of columns to partition the table by. Change forces creation of a new resource. Conflicts with `cluster_keys`.
 
 ### `column` configuration block

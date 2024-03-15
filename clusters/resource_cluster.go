@@ -331,11 +331,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 
 		// We prefer to use the resize API in cases when only the number of
 		// workers is changed because a resizing cluster can still serve queries
-		var waitGetClusterRunning *compute.WaitGetClusterRunning[struct{}]
-		_ = waitGetClusterRunning // TODO: where use this?
 		if isNumWorkersResizeForNonAutoscalingCluster ||
 			isAutoScalingToNonAutoscalingResize {
-			waitGetClusterRunning, err = clusters.Resize(ctx, compute.ResizeCluster{
+			_, err = clusters.Resize(ctx, compute.ResizeCluster{
 				ClusterId:  clusterId,
 				NumWorkers: cluster.NumWorkers,
 			})
@@ -344,21 +342,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			}
 		} else if isAutoscaleConfigResizeForAutoscalingCluster ||
 			isNonAutoScalingToAutoscalingResize {
-			waitGetClusterRunning, err = clusters.Resize(ctx, compute.ResizeCluster{
+			_, err = clusters.Resize(ctx, compute.ResizeCluster{
 				ClusterId: clusterId,
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
 			var editCluster compute.EditCluster
 			common.DataToStructPointer(d, clusterSchema, &editCluster)
-			waitGetClusterRunning, err = clusters.Edit(ctx, editCluster)
+			_, err = clusters.Edit(ctx, editCluster)
 		}
-		if err != nil {
-			return err
-		}
-
-	} else {
-		clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
 		if err != nil {
 			return err
 		}
@@ -388,6 +380,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	}
 	libraryList.ClusterId = clusterId
 	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList, libsClusterStatus)
+	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
+	if err != nil {
+		return err
+	}
 	if len(libsToUninstall.Libraries) > 0 || len(libsToInstall.Libraries) > 0 {
 		if !clusterInfo.IsRunningOrResizing() {
 			if _, err = clusters.StartByClusterIdAndWait(ctx, clusterId); err != nil {

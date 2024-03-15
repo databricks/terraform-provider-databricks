@@ -973,53 +973,53 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
-				ExpectedRequest: ClusterID{
+				ExpectedRequest: ClusterID{ // TODO
 					ClusterID: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
+				Response: libraries.ClusterLibraryStatuses{ // TODO
 					LibraryStatuses: []libraries.LibraryStatus{},
 				},
 			},
 			{
 				Method:          "POST",
 				Resource:        "/api/2.0/clusters/pin",
-				ExpectedRequest: ClusterID{ClusterID: "abc"},
+				ExpectedRequest: ClusterID{ClusterID: "abc"}, // TODO
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
+				Response: libraries.ClusterLibraryStatuses{ // TODO
 					LibraryStatuses: []libraries.LibraryStatus{},
 				},
 			},
@@ -1051,32 +1051,32 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 	terminated := qa.HTTPFixture{
 		Method:   "GET",
 		Resource: "/api/2.0/clusters/get?cluster_id=abc",
-		Response: ClusterInfo{
-			ClusterID:    "abc",
+		Response: compute.ClusterDetails{
+			ClusterId:    "abc",
 			NumWorkers:   100,
 			SparkVersion: "7.1-scala12",
-			NodeTypeID:   "i3.xlarge",
-			State:        ClusterStateTerminated,
+			NodeTypeId:   "i3.xlarge",
+			State:        compute.StateTerminated,
 			StateMessage: "Terminated for test reasons",
 		},
 	}
 	newLibs := qa.HTTPFixture{
 		Method:   "GET",
 		Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-		Response: libraries.ClusterLibraryStatuses{
-			ClusterID: "abc",
-			LibraryStatuses: []libraries.LibraryStatus{
+		Response: compute.ClusterLibraryStatuses{ // TODO
+			ClusterId: "abc",
+			LibraryStatuses: []compute.LibraryFullStatus{
 				{
-					Library: &libraries.Library{
+					Library: &compute.Library{
 						Jar: "dbfs://foo.jar",
 					},
-					Status: "INSTALLED",
+					Status: compute.LibraryFullStatusStatusInstalled,
 				},
 				{
-					Library: &libraries.Library{
+					Library: &compute.Library{
 						Egg: "dbfs://bar.egg",
 					},
-					Status: "INSTALLED",
+					Status: compute.LibraryFullStatusStatusInstalled,
 				},
 			},
 		},
@@ -1087,33 +1087,33 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/edit",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.ClusterDetails{
 					AutoterminationMinutes: 60,
-					ClusterID:              "abc",
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					ClusterID: "abc",
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					ClusterId: "abc",
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Egg: "dbfs://bar.egg",
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 						{
-							Library: &libraries.Library{
-								Pypi: &libraries.PyPi{
+							Library: &compute.Library{
+								Pypi: &compute.PythonPyPiLibrary{
 									Package: "requests",
 								},
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 					},
 				},
@@ -1121,54 +1121,54 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{ // check to see if cluster is restarting (if so wait)
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:    "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:    "abc",
 					NumWorkers:   100,
 					SparkVersion: "7.1-scala12",
-					NodeTypeID:   "i3.xlarge",
-					State:        ClusterStateTerminated,
+					NodeTypeId:   "i3.xlarge",
+					State:        compute.StateTerminated,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{ // start cluster before libs install
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
-				ExpectedRequest: ClusterID{
-					ClusterID: "abc",
+				ExpectedRequest: compute.StartCluster{
+					ClusterId: "abc",
 				},
 			},
 			{ // 2 of ...
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:    "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:    "abc",
 					NumWorkers:   100,
 					SparkVersion: "7.1-scala12",
-					NodeTypeID:   "i3.xlarge",
-					State:        ClusterStateRunning,
+					NodeTypeId:   "i3.xlarge",
+					State:        compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/uninstall",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					ClusterID: "abc",
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.UninstallLibraries{
+					ClusterId: "abc",
+					Libraries: []compute.Library{
 						{
-							Pypi: &libraries.PyPi{
+							Pypi: &compute.PythonPyPiLibrary{
 								Package: "requests",
 							},
 						},
@@ -1178,9 +1178,9 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/install",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					ClusterID: "abc",
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.InstallLibraries{
+					ClusterId: "abc",
+					Libraries: []compute.Library{
 						{
 							Jar: "dbfs://foo.jar",
 						},
@@ -1191,8 +1191,8 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/delete",
-				ExpectedRequest: ClusterID{
-					ClusterID: "abc",
+				ExpectedRequest: compute.DeleteCluster{
+					ClusterId: "abc",
 				},
 			},
 			terminated, // 3 of 4

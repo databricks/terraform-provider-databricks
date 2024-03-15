@@ -168,7 +168,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err := ValidateCluster(cluster); err != nil {
 		return err
 	}
-	ModifyRequestOnInstancePool(cluster)
+	ModifyRequestOnInstancePool(&cluster)
 	// TODO: propagate d.Timeout(schema.TimeoutCreate)
 	clusterInfo, err := clusters.CreateAndWait(ctx, cluster)
 	if err != nil {
@@ -286,7 +286,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err := ValidateCluster(cluster); err != nil {
 			return err
 		}
-		ModifyRequestOnInstancePool(cluster)
+		ModifyRequestOnInstancePool(&cluster)
 		FixInstancePoolChangeIfAny(d, cluster)
 
 		// We can only call the resize api if the cluster is in the running state

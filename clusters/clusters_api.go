@@ -491,7 +491,7 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	cluster.DriverNodeTypeID = ""
 }
 
-func ModifyRequestOnInstancePool(cluster compute.CreateCluster) {
+func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
 	// Instance profile id does not exist or not set
 	if cluster.InstancePoolId == "" {
 		// Worker must use an instance pool if driver uses an instance pool,

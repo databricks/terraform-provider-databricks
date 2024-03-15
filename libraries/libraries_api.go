@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -272,6 +273,38 @@ func (cll *ClusterLibraryList) Diff(cls ClusterLibraryStatuses) (ClusterLibraryL
 	}
 	toInstall.Sort()
 	toUninstall.Sort()
+	return toInstall, toUninstall
+}
+
+// Diff returns install/uninstall lists given a cluster lib status
+func GetLibrariesToInstallAndUninstall(cll compute.InstallLibraries, cls *compute.ClusterLibraryStatuses) (compute.InstallLibraries, compute.InstallLibraries) {
+	inConfig := map[string]compute.Library{}
+	for _, lib := range cll.Libraries {
+		inConfig[lib.String()] = lib
+	}
+	inState := map[string]compute.Library{}
+	for _, status := range cls.LibraryStatuses {
+		lib := *status.Library
+		inState[lib.String()] = lib
+	}
+	toInstall := compute.InstallLibraries{ClusterId: cll.ClusterId}
+	toUninstall := compute.InstallLibraries{ClusterId: cll.ClusterId} // TODO: Have another struct with just ListLibraries
+	for key, lib := range inConfig {
+		_, exists := inState[key]
+		if exists {
+			continue
+		}
+		toInstall.Libraries = append(toInstall.Libraries, lib)
+	}
+	for key, lib := range inState {
+		_, exists := inConfig[key]
+		if exists {
+			continue
+		}
+		toUninstall.Libraries = append(toUninstall.Libraries, lib)
+	}
+	toInstall.Sort()
+	toUninstall.Sort() // TODO: UninstallLibraries doesn't have sort()
 	return toInstall, toUninstall
 }
 

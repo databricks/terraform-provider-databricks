@@ -447,6 +447,20 @@ func (cluster Cluster) Validate() error {
 	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
 }
 
+func ValidateCluster(cluster compute.CreateCluster) error {
+	// TODO: rewrite with CustomizeDiff
+	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
+		return nil
+	}
+	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
+	master := cluster.SparkConf["spark.master"]
+	resourceClass := cluster.CustomTags["ResourceClass"]
+	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
+		return nil
+	}
+	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
+}
+
 // ModifyRequestOnInstancePool helps remove all request fields that should not be submitted when instance pool is selected.
 func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	// Instance profile id does not exist or not set
@@ -477,6 +491,35 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	cluster.DriverNodeTypeID = ""
 }
 
+func ModifyRequestOnInstancePool(cluster compute.CreateCluster) {
+	// Instance profile id does not exist or not set
+	if cluster.InstancePoolId == "" {
+		// Worker must use an instance pool if driver uses an instance pool,
+		// therefore empty the computed value for driver instance pool.
+		cluster.DriverInstancePoolId = ""
+		return
+	}
+	if cluster.AwsAttributes != nil {
+		// Reset AwsAttributes
+		awsAttributes := compute.AwsAttributes{
+			InstanceProfileArn: cluster.AwsAttributes.InstanceProfileArn,
+		}
+		cluster.AwsAttributes = &awsAttributes
+	}
+	if cluster.AzureAttributes != nil {
+		cluster.AzureAttributes = &compute.AzureAttributes{}
+	}
+	if cluster.GcpAttributes != nil {
+		gcpAttributes := compute.GcpAttributes{
+			GoogleServiceAccount: cluster.GcpAttributes.GoogleServiceAccount,
+		}
+		cluster.GcpAttributes = &gcpAttributes
+	}
+	cluster.EnableElasticDisk = false
+	cluster.NodeTypeId = ""
+	cluster.DriverNodeTypeId = ""
+}
+
 // https://github.com/databricks/terraform-provider-databricks/issues/824
 func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
@@ -485,6 +528,17 @@ func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
 		oldDriverPool == oldInstancePool &&
 		oldDriverPool == newDriverPool {
 		cluster.DriverInstancePoolID = cluster.InstancePoolID
+	}
+}
+
+// https://github.com/databricks/terraform-provider-databricks/issues/824
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) {
+	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
+	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
+	if oldInstancePool != newInstancePool &&
+		oldDriverPool == oldInstancePool &&
+		oldDriverPool == newDriverPool {
+		cluster.DriverInstancePoolId = cluster.InstancePoolId
 	}
 }
 

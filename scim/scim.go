@@ -187,10 +187,7 @@ func PatchRequestWithValue(op, path, value string) patchRequest {
 	o := patchOperation{
 		Op:    op,
 		Path:  path,
-		Value: value,
-	}
-	if value != "" {
-		o.Value = []ComplexValue{{Value: value}}
+		Value: []ComplexValue{{Value: value}},
 	}
 	return PatchRequestComplexValue([]patchOperation{o})
 }

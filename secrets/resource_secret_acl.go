@@ -13,35 +13,34 @@ import (
 // ResourceSecretACL manages access to secret scopes
 func ResourceSecretACL() common.Resource {
 	p := common.NewPairSeparatedID("scope", "principal", "|||")
-	return common.Resource{
-		Schema: map[string]*schema.Schema{
-			"scope": {
-				Type:         schema.TypeString,
-				ValidateFunc: validScope,
-				Required:     true,
-				ForceNew:     true,
-			},
-			"principal": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"permission": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+	s := map[string]*schema.Schema{
+		"scope": {
+			Type:         schema.TypeString,
+			ValidateFunc: validScope,
+			Required:     true,
+			ForceNew:     true,
 		},
+		"principal": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"permission": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+	}
+	return common.Resource{
+		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			err = w.Secrets.PutAcl(ctx, workspace.PutAcl{
-				Scope:      d.Get("scope").(string),
-				Principal:  d.Get("principal").(string),
-				Permission: workspace.AclPermission(d.Get("permission").(string)),
-			})
+			var req workspace.PutAcl
+			common.DataToStructPointer(d, s, &req)
+			err = w.Secrets.PutAcl(ctx, req)
 			if err != nil {
 				return err
 			}

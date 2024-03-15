@@ -39,7 +39,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 					assert.Equal(t, 1, len(acls))
 					assert.Equal(t, me.UserName, acls[0].Principal)
 
-					err = w.Secrets.DeleteScope(context.Background(), workspace.DeleteScope{Scope: scope})
+					err = w.Secrets.DeleteScope(ctx, workspace.DeleteScope{Scope: scope})
 					assert.NoError(t, err)
 					return nil
 				}),

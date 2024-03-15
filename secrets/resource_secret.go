@@ -35,46 +35,45 @@ func readSecret(ctx context.Context, w *databricks.WorkspaceClient, scope string
 // ResourceSecret manages secrets
 func ResourceSecret() common.Resource {
 	p := common.NewPairSeparatedID("scope", "key", "|||")
-	return common.Resource{
-		Schema: map[string]*schema.Schema{
-			"string_value": {
-				Type:         schema.TypeString,
-				ValidateFunc: validation.StringIsNotEmpty,
-				Required:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-			},
-			"scope": {
-				Type:         schema.TypeString,
-				ValidateFunc: validScope,
-				Required:     true,
-				ForceNew:     true,
-			},
-			"key": {
-				Type:         schema.TypeString,
-				ValidateFunc: validScope,
-				Required:     true,
-				ForceNew:     true,
-			},
-			"last_updated_timestamp": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"config_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+	s := map[string]*schema.Schema{
+		"string_value": {
+			Type:         schema.TypeString,
+			ValidateFunc: validation.StringIsNotEmpty,
+			Required:     true,
+			ForceNew:     true,
+			Sensitive:    true,
 		},
+		"scope": {
+			Type:         schema.TypeString,
+			ValidateFunc: validScope,
+			Required:     true,
+			ForceNew:     true,
+		},
+		"key": {
+			Type:         schema.TypeString,
+			ValidateFunc: validScope,
+			Required:     true,
+			ForceNew:     true,
+		},
+		"last_updated_timestamp": {
+			Type:     schema.TypeInt,
+			Computed: true,
+		},
+		"config_reference": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+	}
+	return common.Resource{
+		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			err = w.Secrets.PutSecret(ctx, workspace.PutSecret{
-				Scope:       d.Get("scope").(string),
-				Key:         d.Get("key").(string),
-				StringValue: d.Get("string_value").(string),
-			})
+			var putSecretReq workspace.PutSecret
+			common.DataToStructPointer(d, s, &putSecretReq)
+			err = w.Secrets.PutSecret(ctx, putSecretReq)
 			if err != nil {
 				return err
 			}

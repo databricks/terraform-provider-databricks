@@ -15,11 +15,22 @@ import (
 )
 
 // SecretScope is a struct that encapsulates the secret scope
-type SecretScope struct {
-	Name                   string                                      `json:"name" tf:"force_new"`
-	BackendType            string                                      `json:"backend_type,omitempty" tf:"computed"`
-	InitialManagePrincipal string                                      `json:"initial_manage_principal,omitempty" tf:"force_new"`
-	KeyvaultMetadata       *workspace.AzureKeyVaultSecretScopeMetadata `json:"keyvault_metadata,omitempty" tf:"force_new"`
+type SecretScope workspace.CreateScope
+
+func (s SecretScope) CustomizeSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
+	common.CustomizeSchemaPath(m, "name").SetValidateFunc(validScope)
+	common.CustomizeSchemaPath(m, "backend_type").SetComputed()
+	return m
+}
+
+func (s SecretScope) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"secrets.SecretScope": {
+			"scope":                  "name",
+			"scope_backend_type":     "backend_type",
+			"backend_azure_keyvault": "keyvault_metadata",
+		},
+	}
 }
 
 // Read will return the metadata for the secret scope
@@ -32,9 +43,9 @@ func readSecretScope(ctx context.Context, w *databricks.WorkspaceClient, scopeNa
 			return secretScope, err
 		}
 		if scope.Name == scopeName {
-			secretScope.Name = scope.Name
-			secretScope.BackendType = scope.BackendType.String()
-			secretScope.KeyvaultMetadata = scope.KeyvaultMetadata
+			secretScope.Scope = scope.Name
+			secretScope.ScopeBackendType = scope.BackendType
+			secretScope.BackendAzureKeyvault = scope.KeyvaultMetadata
 			return secretScope, nil
 		}
 
@@ -49,13 +60,7 @@ var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`
 
 // ResourceSecretScope manages secret scopes
 func ResourceSecretScope() common.Resource {
-	s := common.StructToSchema(SecretScope{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		// TODO: DiffSuppressFunc for initial_manage_principal & importing
-		// nolint
-		s["name"].ValidateFunc = validScope
-
-		return s
-	})
+	s := common.StructToSchema(SecretScope{}, nil)
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 2,
@@ -66,19 +71,15 @@ func ResourceSecretScope() common.Resource {
 			}
 			var scope SecretScope
 			common.DataToStructPointer(d, s, &scope)
-			scopeRequest := workspace.CreateScope{
-				Scope:                  scope.Name,
-				InitialManagePrincipal: scope.InitialManagePrincipal,
-				ScopeBackendType:       "DATABRICKS",
+			if scope.BackendAzureKeyvault != nil {
+				scope.ScopeBackendType = "AZURE_KEYVAULT"
+			} else {
+				scope.ScopeBackendType = "DATABRICKS"
 			}
-			if scope.KeyvaultMetadata != nil {
-				scopeRequest.ScopeBackendType = "AZURE_KEYVAULT"
-				scopeRequest.BackendAzureKeyvault = scope.KeyvaultMetadata
-			}
-			if err := w.Secrets.CreateScope(ctx, scopeRequest); err != nil {
+			if err := w.Secrets.CreateScope(ctx, workspace.CreateScope(scope)); err != nil {
 				return err
 			}
-			d.SetId(scope.Name)
+			d.SetId(scope.Scope)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

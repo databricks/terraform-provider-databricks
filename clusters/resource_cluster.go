@@ -156,6 +156,8 @@ func resourceClusterSchema() map[string]*schema.Schema {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	start := time.Now()
+	timeout := d.Timeout(schema.TimeoutCreate)
 	var cluster compute.CreateCluster
 	w, err := c.WorkspaceClient()
 	if err != nil {
@@ -188,12 +190,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err = w.Libraries.Install(ctx, libraryList); err != nil {
 			return err
 		}
-		// TODO: Check for timeout? use WaitForLibrariesInstalledSdk?
-		_, err := w.Libraries.Wait(ctx, compute.Wait{
+		_, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 			ClusterID: d.Id(),
 			IsRunning: clusterInfo.IsRunningOrResizing(),
 			IsRefresh: false,
-		})
+		}, timeout-time.Since(start))
 		if err != nil {
 			return err
 		}
@@ -244,13 +245,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return nil
 	}
 
-	// TODO: Set timeout in wait?
-	libsClusterStatus, err := w.Libraries.Wait(ctx, compute.Wait{
+	libsClusterStatus, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 		ClusterID: d.Id(),
 		IsRunning: clusterInfo.IsRunningOrResizing(),
 		IsRefresh: true,
-	})
-
+	}, d.Timeout(schema.TimeoutRead))
 	if err != nil {
 		return err
 	}

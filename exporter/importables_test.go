@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
+	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -701,8 +702,8 @@ func TestSecretScopeListNoNameMatch(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/secrets/scopes/list",
 
-			Response: secrets.SecretScopeList{
-				Scopes: []secrets.SecretScope{
+			Response: sdk_workspace.ListScopesResponse{
+				Scopes: []sdk_workspace.SecretScope{
 					{
 						Name: "abc",
 					},
@@ -1244,9 +1245,8 @@ func TestSecretGeneration(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/secrets/list?scope=a",
-
-			Response: secrets.SecretsList{
-				Secrets: []secrets.SecretMetadata{
+			Response: sdk_workspace.ListSecretsResponse{
+				Secrets: []sdk_workspace.SecretMetadata{
 					{
 						Key: "b",
 					},
@@ -1258,7 +1258,6 @@ func TestSecretGeneration(t *testing.T) {
 			Resource: "databricks_secret",
 			ID:       "a|||b",
 		})
-
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
 		ic.generateAndWriteResources(nil)

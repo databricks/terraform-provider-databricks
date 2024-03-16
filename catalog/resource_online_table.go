@@ -20,6 +20,9 @@ func waitForOnlineTable(w *databricks.WorkspaceClient, ctx context.Context, onli
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
+		if endpoint.Status == nil {
+			return retry.RetryableError(fmt.Errorf("online table status is not available yet"))
+		}
 		switch endpoint.Status.DetailedState {
 		case catalog.OnlineTableStateOnline, catalog.OnlineTableStateOnlineContinuousUpdate,
 			catalog.OnlineTableStateOnlineNoPendingUpdate, catalog.OnlineTableStateOnlineTriggeredUpdate:

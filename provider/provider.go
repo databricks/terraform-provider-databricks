@@ -93,6 +93,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_storage_credentials":      catalog.DataSourceStorageCredentials().ToResource(),
 			"databricks_tables":                   catalog.DataSourceTables().ToResource(),
 			"databricks_views":                    catalog.DataSourceViews().ToResource(),
+			"databricks_volume":                   catalog.DataSourceVolume().ToResource(),
 			"databricks_volumes":                  catalog.DataSourceVolumes().ToResource(),
 			"databricks_user":                     scim.DataSourceUser().ToResource(),
 			"databricks_zones":                    clusters.DataSourceClusterZones().ToResource(),

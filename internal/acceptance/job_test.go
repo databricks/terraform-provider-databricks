@@ -148,13 +148,9 @@ func TestAccForEachTask(t *testing.T) {
 					concurrency = 1
 					inputs = "[1, 2, 3, 4, 5, 6]"
 					task {
-						task_key = "nested_task_key"
-						new_cluster {
-							num_workers   = 1
-							spark_version = data.databricks_spark_version.latest.id
-							node_type_id  = data.databricks_node_type.smallest.id
-						}
-		
+						task_key        = "nested_task_key"
+						job_cluster_key = "j"
+
 						notebook_task {
 							notebook_path = databricks_notebook.this.path
 						}

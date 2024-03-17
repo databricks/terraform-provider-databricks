@@ -8,16 +8,16 @@ import (
 )
 
 // Enhanced Security Monitoring Account level setting
-var esmEnablementAccountSetting = accountSetting[settings.ESMEnablementAccountSetting]{
-	settingStruct: settings.ESMEnablementAccountSetting{},
-	readFunc: func(ctx context.Context, w *databricks.AccountClient, etag string) (*settings.ESMEnablementAccountSetting, error) {
-		return w.Settings.GetESMEnablementAccountSetting(ctx, settings.GetESMEnablementAccountSettingRequest{
+var esmEnablementAccountSetting = accountSetting[settings.EsmEnablementAccountSetting]{
+	settingStruct: settings.EsmEnablementAccountSetting{},
+	readFunc: func(ctx context.Context, w *databricks.AccountClient, etag string) (*settings.EsmEnablementAccountSetting, error) {
+		return w.Settings.EsmEnablementAccount().Get(ctx, settings.GetEsmEnablementAccountRequest{
 			Etag: etag,
 		})
 	},
-	updateFunc: func(ctx context.Context, w *databricks.AccountClient, t settings.ESMEnablementAccountSetting) (string, error) {
+	updateFunc: func(ctx context.Context, w *databricks.AccountClient, t settings.EsmEnablementAccountSetting) (string, error) {
 		t.SettingName = "default"
-		res, err := w.Settings.UpdateESMEnablementAccountSetting(ctx, settings.UpdateESMEnablementAccountSettingRequest{
+		res, err := w.Settings.EsmEnablementAccount().Update(ctx, settings.UpdateEsmEnablementAccountSettingRequest{
 			AllowMissing: true,
 			Setting:      t,
 			FieldMask:    "esm_enablement_account.value",

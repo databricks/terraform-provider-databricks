@@ -8,16 +8,16 @@ import (
 )
 
 // Compliance Security Profile Workspace level setting
-var cspEnablementWorkspaceSetting = workspaceSetting[settings.CSPEnablementSetting]{
-	settingStruct: settings.CSPEnablementSetting{},
-	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.CSPEnablementSetting, error) {
-		return w.Settings.GetCSPEnablementSetting(ctx, settings.GetCSPEnablementSettingRequest{
+var cspEnablementWorkspaceSetting = workspaceSetting[settings.CspEnablementSetting]{
+	settingStruct: settings.CspEnablementSetting{},
+	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.CspEnablementSetting, error) {
+		return w.Settings.CspEnablement().Get(ctx, settings.GetCspEnablementRequest{
 			Etag: etag,
 		})
 	},
-	updateFunc: func(ctx context.Context, w *databricks.WorkspaceClient, t settings.CSPEnablementSetting) (string, error) {
+	updateFunc: func(ctx context.Context, w *databricks.WorkspaceClient, t settings.CspEnablementSetting) (string, error) {
 		t.SettingName = "default"
-		res, err := w.Settings.UpdateCSPEnablementSetting(ctx, settings.UpdateCSPEnablementSettingRequest{
+		res, err := w.Settings.CspEnablement().Update(ctx, settings.UpdateCspEnablementSettingRequest{
 			AllowMissing: true,
 			Setting:      t,
 			FieldMask:    "csp_enablement_workspace.value",

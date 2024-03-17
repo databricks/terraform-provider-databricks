@@ -8,16 +8,16 @@ import (
 )
 
 // Enhanced Security Monitoring Workspace level setting
-var esmEnablementWorkspaceSetting = workspaceSetting[settings.ESMEnablementSetting]{
-	settingStruct: settings.ESMEnablementSetting{},
-	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.ESMEnablementSetting, error) {
-		return w.Settings.GetESMEnablementSetting(ctx, settings.GetESMEnablementSettingRequest{
+var esmEnablementWorkspaceSetting = workspaceSetting[settings.EsmEnablementSetting]{
+	settingStruct: settings.EsmEnablementSetting{},
+	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.EsmEnablementSetting, error) {
+		return w.Settings.EsmEnablement().Get(ctx, settings.GetEsmEnablementRequest{
 			Etag: etag,
 		})
 	},
-	updateFunc: func(ctx context.Context, w *databricks.WorkspaceClient, t settings.ESMEnablementSetting) (string, error) {
+	updateFunc: func(ctx context.Context, w *databricks.WorkspaceClient, t settings.EsmEnablementSetting) (string, error) {
 		t.SettingName = "default"
-		res, err := w.Settings.UpdateESMEnablementSetting(ctx, settings.UpdateESMEnablementSettingRequest{
+		res, err := w.Settings.EsmEnablement().Update(ctx, settings.UpdateEsmEnablementSettingRequest{
 			AllowMissing: true,
 			Setting:      t,
 			FieldMask:    "esm_enablement_workspace.value",

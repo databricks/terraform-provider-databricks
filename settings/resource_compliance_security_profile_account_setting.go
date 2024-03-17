@@ -8,16 +8,16 @@ import (
 )
 
 // Compliance Security Profile Account level setting
-var cspEnablementAccountSetting = accountSetting[settings.CSPEnablementAccountSetting]{
-	settingStruct: settings.CSPEnablementAccountSetting{},
-	readFunc: func(ctx context.Context, w *databricks.AccountClient, etag string) (*settings.CSPEnablementAccountSetting, error) {
-		return w.Settings.GetCSPEnablementAccountSetting(ctx, settings.GetCSPEnablementAccountRequest{
+var cspEnablementAccountSetting = accountSetting[settings.CspEnablementAccountSetting]{
+	settingStruct: settings.CspEnablementAccountSetting{},
+	readFunc: func(ctx context.Context, w *databricks.AccountClient, etag string) (*settings.CspEnablementAccountSetting, error) {
+		return w.Settings.CspEnablementAccount().Get(ctx, settings.GetCspEnablementAccountRequest{
 			Etag: etag,
 		})
 	},
-	updateFunc: func(ctx context.Context, w *databricks.AccountClient, t settings.CSPEnablementAccountSetting) (string, error) {
+	updateFunc: func(ctx context.Context, w *databricks.AccountClient, t settings.CspEnablementAccountSetting) (string, error) {
 		t.SettingName = "default"
-		res, err := w.Settings.UpdateCSPEnablementAccountSetting(ctx, settings.UpdateCSPEnablementAccountRequest{
+		res, err := w.Settings.CspEnablementAccount().Update(ctx, settings.UpdateCspEnablementAccountSettingRequest{
 			AllowMissing: true,
 			Setting:      t,
 			FieldMask:    "csp_enablement_account.value",

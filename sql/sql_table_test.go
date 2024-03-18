@@ -235,6 +235,56 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 	})
 }
 
+func TestUcAccResourceSqlTable_ViewDefinitionChange(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "VIEW"
+			view_definition    = "SELECT id, name FROM somewhere WHERE condition = true"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+
+			column {
+				name      = "id"
+			}
+
+			column {
+				name      = "name"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "VIEW"
+			view_definition    = "SELECT  id, name \n\n FROM  somewhere  WHERE  condition = true  "
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+
+			column {
+				name      = "id"
+			}
+
+			column {
+				name      = "name"
+			}
+		}`,
+	})
+}
+
 func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `

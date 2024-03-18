@@ -2408,6 +2408,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				if err == nil {
 					for _, binding := range bindings.Bindings {
 						id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securable, cat.Name)
+						// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
+						// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now
+						// to decrease a number of API calls.
 						d := ic.Resources["databricks_catalog_workspace_binding"].Data(
 							&terraform.InstanceState{
 								ID: id,

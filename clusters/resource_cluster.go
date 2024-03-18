@@ -64,7 +64,8 @@ type ClusterSpec struct {
 	compute.ClusterSpec
 }
 
-// This needs to be in OpenAPI spec compute.LibraryList, we have compute.InstallLibraries and compute.UninstallLibraries but no LibraryList
+// This needs to be in OpenAPI spec compute.LibraryList.
+// We have compute.InstallLibraries and compute.UninstallLibraries but no LibraryList
 type LibraryList struct {
 	ClusterId string            `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
 	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`

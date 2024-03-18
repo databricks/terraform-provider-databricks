@@ -3,6 +3,7 @@ package clusters
 import (
 	"context"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +18,7 @@ const DefaultProvisionTimeout = 30 * time.Minute
 const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
 
 var clusterSchema = resourceClusterSchema()
+var clusterSchemaWithRequiredClusterId = resourceClusterSchemaWithRequiredClusterId()
 var clusterSchemaVersion = 2
 
 func ResourceCluster() common.Resource {
@@ -60,6 +62,18 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 type ClusterSpec struct {
 	compute.ClusterSpec
+}
+
+// This needs to be in OpenAPI spec compute.LibraryList, we have compute.InstallLibraries and compute.UninstallLibraries but no LibraryList
+type LibraryList struct {
+	ClusterId string            `json:"cluster_id,omitempty" url:"cluster_id,omitempty"`
+	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+}
+
+func (cll *LibraryList) Sort() {
+	sort.Slice(cll.Libraries, func(i, j int) bool {
+		return cll.Libraries[i].String() < cll.Libraries[j].String()
+	})
 }
 
 func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -151,6 +165,12 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	return s
 }
 
+func resourceClusterSchemaWithRequiredClusterId() map[string]*schema.Schema {
+	s := resourceClusterSchema()
+	common.CustomizeSchemaPath(s, "cluster_id").SetRequired()
+	return s
+}
+
 func resourceClusterSchema() map[string]*schema.Schema {
 	return common.StructToSchema(ClusterSpec{}, nil)
 }
@@ -158,12 +178,12 @@ func resourceClusterSchema() map[string]*schema.Schema {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	start := time.Now()
 	timeout := d.Timeout(schema.TimeoutCreate)
-	var cluster compute.CreateCluster
 	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err
 	}
 	clusters := w.Clusters
+	var cluster compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	if err := ValidateCluster(cluster); err != nil {
 		return err
@@ -175,19 +195,23 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	d.SetId(clusterInfo.ClusterId)
-	d.Set("cluster_id", clusterInfo.ClusterId)
+	d.Set("cluster_id", d.Id())
 	isPinned, ok := d.GetOk("is_pinned")
 	if ok && isPinned.(bool) {
-		err = clusters.PinByClusterId(ctx, clusterInfo.ClusterId)
+		err = clusters.PinByClusterId(ctx, d.Id())
 		if err != nil {
 			return err
 		}
 	}
 
-	var libraryList compute.InstallLibraries
+	var libraryList LibraryList
+	libraryList.ClusterId = d.Id()
 	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	if len(libraryList.Libraries) > 0 {
-		if err = w.Libraries.Install(ctx, libraryList); err != nil {
+		if err = w.Libraries.Install(ctx, compute.InstallLibraries{
+			ClusterId: d.Id(),
+			Libraries: libraryList.Libraries,
+		}); err != nil {
 			return err
 		}
 		_, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
@@ -225,7 +249,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	clusterAPI := w.Clusters
-
 	clusterInfo, err := clusterAPI.GetByClusterId(ctx, d.Id())
 	if err != nil {
 		return err
@@ -254,7 +277,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	libList := libsClusterStatus.ToLibraryList()
-	return common.StructToData(libList, clusterSchema, d)
+	return common.StructToData(libList, clusterSchemaWithRequiredClusterId, d)
 }
 
 func hasClusterConfigChanged(d *schema.ResourceData) bool {
@@ -348,7 +371,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			})
 		} else {
 			var editCluster compute.EditCluster
-			common.DataToStructPointer(d, clusterSchema, &editCluster)
+			editCluster.ClusterId = clusterId
+			common.DataToStructPointer(d, clusterSchemaWithRequiredClusterId, &editCluster)
 			_, err = clusters.Edit(ctx, editCluster)
 		}
 		if err != nil {
@@ -372,14 +396,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		// don't add externally added libraries, if config has no `library {}` blocks
 		return nil
 	}
-	var libraryList compute.InstallLibraries
+	var libraryList LibraryList
+	libraryList.ClusterId = clusterId
 	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	libsClusterStatus, err := w.Libraries.ClusterStatusByClusterId(ctx, clusterId)
 	if err != nil {
 		return err
 	}
 	libraryList.ClusterId = clusterId
-	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList, libsClusterStatus)
+	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(compute.InstallLibraries{
+		ClusterId: clusterId,
+		Libraries: libraryList.Libraries,
+	}, libsClusterStatus)
 	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
 	if err != nil {
 		return err

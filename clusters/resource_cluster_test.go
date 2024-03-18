@@ -1384,7 +1384,7 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/delete",
+				Resource: "/api/2.0/clusters/permanent-delete",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

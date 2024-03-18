@@ -20,7 +20,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/repos"
 )
 
@@ -134,11 +133,11 @@ type ForEachNestedTask struct {
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
 	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
 
-	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
-	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
-	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
-	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	ComputeKey        string            `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -214,11 +213,11 @@ type JobTaskSettings struct {
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
 	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
 
-	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
-	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
-	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
-	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	ComputeKey        string            `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -278,21 +277,21 @@ type JobSettings struct {
 	Description string `json:"description,omitempty"`
 
 	// BEGIN Jobs API 2.0
-	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
-	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
-	NotebookTask           *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
-	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
-	SparkPythonTask        *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
-	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
-	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
-	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
-	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
-	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
-	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
-	MaxRetries             int32               `json:"max_retries,omitempty"`
-	MinRetryIntervalMillis int32               `json:"min_retry_interval_millis,omitempty"`
-	RetryOnTimeout         bool                `json:"retry_on_timeout,omitempty"`
+	ExistingClusterID      string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster             *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	NotebookTask           *NotebookTask     `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask           *SparkJarTask     `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask        *SparkPythonTask  `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask        *SparkSubmitTask  `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask           *PipelineTask     `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask        *PythonWheelTask  `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	DbtTask                *DbtTask          `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask             *RunJobTask       `json:"run_job_task,omitempty" tf:"group:task_type"`
+	Libraries              []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	TimeoutSeconds         int32             `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32             `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32             `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool              `json:"retry_on_timeout,omitempty"`
 	// END Jobs API 2.0
 
 	// BEGIN Jobs API 2.1

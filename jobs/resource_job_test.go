@@ -12,7 +12,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -30,7 +29,7 @@ func TestResourceJobCreate(t *testing.T) {
 					SparkJarTask: &SparkJarTask{
 						MainClassName: "com.labs.BarMain",
 					},
-					Libraries: []libraries.Library{
+					Libraries: []compute.Library{
 						{
 							Jar: "dbfs://ff/gg/hh.jar",
 						},
@@ -75,7 +74,7 @@ func TestResourceJobCreate(t *testing.T) {
 						SparkJarTask: &SparkJarTask{
 							MainClassName: "com.labs.BarMain",
 						},
-						Libraries: []libraries.Library{
+						Libraries: []compute.Library{
 							{
 								Jar: "dbfs://ff/gg/hh.jar",
 							},
@@ -158,7 +157,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 						{
 							TaskKey:           "a",
 							ExistingClusterID: "abc",
-							Libraries: []libraries.Library{
+							Libraries: []compute.Library{
 								{
 									Jar: "dbfs://aa/bb/cc.jar",
 								},
@@ -1594,7 +1593,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 					SparkJarTask: &SparkJarTask{
 						MainClassName: "com.labs.BarMain",
 					},
-					Libraries: []libraries.Library{
+					Libraries: []compute.Library{
 						{
 							Jar: "dbfs://aa/bb/cc.jar",
 						},
@@ -1625,7 +1624,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 						SparkJarTask: &SparkJarTask{
 							MainClassName: "com.labs.BarMain",
 						},
-						Libraries: []libraries.Library{
+						Libraries: []compute.Library{
 							{
 								Jar: "dbfs://aa/bb/cc.jar",
 							},
@@ -1883,7 +1882,7 @@ func TestResourceJobRead(t *testing.T) {
 							MainClassName: "com.labs.BarMain",
 							Parameters:    []string{"--cleanup", "full"},
 						},
-						Libraries: []libraries.Library{
+						Libraries: []compute.Library{
 							{
 								Jar: "dbfs://ff/gg/hh.jar",
 							},
@@ -1982,7 +1981,7 @@ func TestResourceJobUpdate(t *testing.T) {
 							MainClassName: "com.labs.BarMain",
 							Parameters:    []string{"--cleanup", "full"},
 						},
-						Libraries: []libraries.Library{
+						Libraries: []compute.Library{
 							{
 								Jar: "dbfs://ff/gg/hh.jar",
 							},
@@ -2009,7 +2008,7 @@ func TestResourceJobUpdate(t *testing.T) {
 							MainClassName: "com.labs.BarMain",
 							Parameters:    []string{"--cleanup", "full"},
 						},
-						Libraries: []libraries.Library{
+						Libraries: []compute.Library{
 							{
 								Jar: "dbfs://ff/gg/hh.jar",
 							},

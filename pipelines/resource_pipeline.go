@@ -13,9 +13,9 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/marshal"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 )
 
 // DefaultTimeout is the default amount of time that Terraform will wait when creating, updating and deleting pipelines.
@@ -79,11 +79,11 @@ type FileLibrary struct {
 }
 
 type PipelineLibrary struct {
-	Jar      string           `json:"jar,omitempty"`
-	Maven    *libraries.Maven `json:"maven,omitempty"`
-	Whl      string           `json:"whl,omitempty"`
-	Notebook *NotebookLibrary `json:"notebook,omitempty"`
-	File     *FileLibrary     `json:"file,omitempty"`
+	Jar      string                `json:"jar,omitempty"`
+	Maven    *compute.MavenLibrary `json:"maven,omitempty"`
+	Whl      string                `json:"whl,omitempty"`
+	Notebook *NotebookLibrary      `json:"notebook,omitempty"`
+	File     *FileLibrary          `json:"file,omitempty"`
 }
 
 type filters struct {

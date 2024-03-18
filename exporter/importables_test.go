@@ -20,7 +20,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
@@ -323,10 +322,10 @@ func TestImportClusterLibraries(t *testing.T) {
 			Method:       "GET",
 			Status:       200,
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-			Response: libraries.ClusterLibraryStatuses{
-				LibraryStatuses: []libraries.LibraryStatus{
+			Response: compute.ClusterLibraryStatuses{
+				LibraryStatuses: []compute.LibraryFullStatus{
 					{
-						Library: &libraries.Library{
+						Library: &compute.Library{
 							Whl: "foo.whl",
 						},
 						Status: "INSTALLED",

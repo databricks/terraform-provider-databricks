@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -63,8 +62,8 @@ func TestResourceClusterCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 		},
@@ -125,8 +124,8 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 			{

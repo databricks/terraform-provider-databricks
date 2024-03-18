@@ -109,7 +109,7 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	common.CustomizeSchemaPath(s, "azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
 	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
 
-	common.CustomizeSchemaPath(s).AddNewField("library", common.StructToSchema(libraries.ClusterLibraryList{},
+	common.CustomizeSchemaPath(s).AddNewField("library", common.StructToSchema(LibraryList{},
 		func(ss map[string]*schema.Schema) map[string]*schema.Schema {
 			ss["library"].Set = func(i any) int {
 				lib := libraries.NewLibraryFromInstanceState(i)

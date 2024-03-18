@@ -19,7 +19,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
@@ -344,7 +343,7 @@ func (ic *importContext) emitRoles(objType string, id string, roles []scim.Compl
 	}
 }
 
-func (ic *importContext) emitLibraries(libs []libraries.Library) {
+func (ic *importContext) emitLibraries(libs []compute.Library) {
 	for _, lib := range libs {
 		// Files on DBFS
 		ic.emitIfDbfsFile(lib.Whl)
@@ -362,14 +361,15 @@ func (ic *importContext) emitLibraries(libs []libraries.Library) {
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll libraries.ClusterLibraryList
+	var cll clusters.LibraryList
 	common.DataToStructPointer(d, s, &cll)
 	ic.emitLibraries(cll.Libraries)
 	return nil
 }
 
 func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	cll, err := libraries.NewLibrariesAPI(ic.Context, ic.Client).ClusterStatus(d.Id())
+	libraries := ic.workspaceClient.Libraries
+	cll, err := libraries.ClusterStatusByClusterId(ic.Context, d.Id())
 	if err != nil {
 		return err
 	}

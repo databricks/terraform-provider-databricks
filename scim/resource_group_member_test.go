@@ -14,7 +14,7 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: PatchRequest("add", "members", "bcd"),
+				ExpectedRequest: PatchRequestWithValue("add", "members", "bcd"),
 				Response: Group{
 					ID: "abc",
 				},
@@ -164,8 +164,7 @@ func TestResourceGroupMemberDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 				ExpectedRequest: PatchRequest(
 					"remove",
-					`members[value eq "bcd"]`,
-					""),
+					`members[value eq "bcd"]`),
 			},
 		},
 		Resource: ResourceGroupMember(),

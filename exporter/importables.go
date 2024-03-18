@@ -21,6 +21,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -28,7 +29,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
-	"github.com/databricks/terraform-provider-databricks/secrets"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
@@ -1145,41 +1145,49 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name + "_" + generateUniqueID(name)
 		},
 		List: func(ic *importContext) error {
-			ssAPI := secrets.NewSecretScopesAPI(ic.Context, ic.Client)
-			if scopes, err := ssAPI.List(); err == nil {
-				for i, scope := range scopes {
-					if !ic.MatchesName(scope.Name) {
-						log.Printf("[INFO] Secret scope %s doesn't match %s filter", scope.Name, ic.match)
-						continue
-					}
-					ic.Emit(&resource{
-						Resource: "databricks_secret_scope",
-						ID:       scope.Name,
-					})
-					log.Printf("[INFO] Imported %d of %d secret scopes", i+1, len(scopes))
+			scopes := ic.workspaceClient.Secrets.ListScopes(ic.Context)
+			for scopes.HasNext(ic.Context) {
+				scope, err := scopes.Next(ic.Context)
+				if err != nil {
+					return err
 				}
+				if !ic.MatchesName(scope.Name) {
+					log.Printf("[INFO] Secret scope %s doesn't match %s filter", scope.Name, ic.match)
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_secret_scope",
+					ID:       scope.Name,
+				})
 			}
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			backendType, _ := r.Data.GetOk("backend_type")
 			if backendType != "AZURE_KEYVAULT" {
-				if l, err := secrets.NewSecretsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
-					for _, secret := range l {
-						ic.Emit(&resource{
-							Resource: "databricks_secret",
-							ID:       fmt.Sprintf("%s|||%s", r.ID, secret.Key),
-						})
+				secrets := ic.workspaceClient.Secrets.ListSecrets(ic.Context, sdk_workspace.ListSecretsRequest{
+					Scope: r.ID,
+				})
+				for secrets.HasNext(ic.Context) {
+					secret, err := secrets.Next(ic.Context)
+					if err != nil {
+						return err
 					}
-				}
-			}
-			if l, err := secrets.NewSecretAclsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
-				for _, acl := range l {
 					ic.Emit(&resource{
-						Resource: "databricks_secret_acl",
-						ID:       fmt.Sprintf("%s|||%s", r.ID, acl.Principal),
+						Resource: "databricks_secret",
+						ID:       fmt.Sprintf("%s|||%s", r.ID, secret.Key),
 					})
 				}
+			}
+			acls, err := ic.workspaceClient.Secrets.ListAclsByScope(ic.Context, r.ID)
+			if err != nil {
+				return err
+			}
+			for _, acl := range acls.Items {
+				ic.Emit(&resource{
+					Resource: "databricks_secret_acl",
+					ID:       fmt.Sprintf("%s|||%s", r.ID, acl.Principal),
+				})
 			}
 			return nil
 		},

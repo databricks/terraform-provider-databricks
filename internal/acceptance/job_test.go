@@ -110,6 +110,67 @@ func TestAccJobTasks(t *testing.T) {
 	})
 }
 
+func TestAccForEachTask(t *testing.T) {
+	t.Skip("Skipping this test because feature not enabled in Prod")
+	workspaceLevel(t, step{
+		Template: `
+		data "databricks_current_user" "me" {}
+		data "databricks_spark_version" "latest" {}
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+
+		resource "databricks_notebook" "this" {
+			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+			language = "PYTHON"
+			content_base64 = base64encode(<<-EOT
+				# created from ${abspath(path.module)}
+				display(spark.range(10))
+				EOT
+			)
+		}
+
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+
+			job_cluster {
+				job_cluster_key = "j"
+				new_cluster {
+					num_workers   = 20
+					spark_version = data.databricks_spark_version.latest.id
+					node_type_id  = data.databricks_node_type.smallest.id
+				}
+			}
+
+			task {
+				task_key = "for_each_task_key"
+				for_each_task {
+					concurrency = 1
+					inputs = "[1, 2, 3, 4, 5, 6]"
+					task {
+						task_key        = "nested_task_key"
+						job_cluster_key = "j"
+
+						notebook_task {
+							notebook_path = databricks_notebook.this.path
+						}
+					}
+				}
+			}
+			
+			parameter {
+				name = "empty_default"
+				default = ""
+			}
+
+			parameter {
+				name = "non_empty_default"
+				default = "non_empty"
+			}
+		}`,
+	})
+}
+
 // An integration test which creates a continuous job with control_run_state = true, verifying
 // that a job run was triggered within 5 minutes of the job creation. Then, the test updates the
 // job, verifying that the existing run was cancelled within 5 minutes of the update.

@@ -27,11 +27,11 @@ func ResourceGroupInstanceProfile() common.Resource {
 			return err
 		},
 		CreateContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
-			return scim.NewGroupsAPI(ctx, c).Patch(groupID, scim.PatchRequest("add", "roles", roleARN))
+			return scim.NewGroupsAPI(ctx, c).Patch(groupID, scim.PatchRequestWithValue("add", "roles", roleARN))
 		},
 		DeleteContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient) error {
 			return scim.NewGroupsAPI(ctx, c).Patch(groupID, scim.PatchRequest(
-				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
+				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN)))
 		},
 	})
 	r.DeprecationMessage = "Please migrate to `databricks_group_role`"

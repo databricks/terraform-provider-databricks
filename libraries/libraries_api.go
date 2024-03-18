@@ -4,6 +4,11 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 )
 
+type LibraryList struct {
+	ClusterId string            `json:"cluster_id"`
+	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+}
+
 // NewLibraryFromInstanceState returns library from instance state for
 // custom schema hash function. The thing is that for sets of types with
 // optional subtypes resource.SerializeResourceForHash doesn't seem to
@@ -43,7 +48,7 @@ func NewLibraryFromInstanceState(i any) (lib compute.Library) {
 }
 
 // Diff returns install/uninstall lists given a cluster lib status
-func GetLibrariesToInstallAndUninstall(cll compute.InstallLibraries, cls *compute.ClusterLibraryStatuses) (compute.InstallLibraries, compute.InstallLibraries) {
+func GetLibrariesToInstallAndUninstall(cll LibraryList, cls *compute.ClusterLibraryStatuses) (compute.InstallLibraries, compute.InstallLibraries) {
 	inConfig := map[string]compute.Library{}
 	for _, lib := range cll.Libraries {
 		inConfig[lib.String()] = lib
@@ -54,7 +59,8 @@ func GetLibrariesToInstallAndUninstall(cll compute.InstallLibraries, cls *comput
 		inState[lib.String()] = lib
 	}
 	toInstall := compute.InstallLibraries{ClusterId: cll.ClusterId}
-	toUninstall := compute.InstallLibraries{ClusterId: cll.ClusterId} // TODO: Have another struct with just ListLibraries
+	// TODO: UninstallLibraries doesn't have sort() method
+	toUninstall := compute.InstallLibraries{ClusterId: cll.ClusterId}
 	for key, lib := range inConfig {
 		_, exists := inState[key]
 		if exists {
@@ -70,6 +76,6 @@ func GetLibrariesToInstallAndUninstall(cll compute.InstallLibraries, cls *comput
 		toUninstall.Libraries = append(toUninstall.Libraries, lib)
 	}
 	toInstall.Sort()
-	toUninstall.Sort() // TODO: UninstallLibraries doesn't have sort()
+	toUninstall.Sort()
 	return toInstall, toUninstall
 }

@@ -212,7 +212,7 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=mount",
-				Response: clusters.LibraryList{
+				Response: compute.InstallLibraries{
 					Libraries: []compute.Library{},
 				},
 			},
@@ -783,6 +783,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 		})
 }
 
+// tanmaytodo
 func TestImportingClusters(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
@@ -814,7 +815,7 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				Response: clusters.EventDetails{},
+				Response: compute.GetEvents{},
 			},
 			{
 				Method:       "GET",
@@ -847,25 +848,25 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "test2",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "test2",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response:     clusters.EventDetails{},
+				Response:     compute.EventDetails{},
 				ReuseRequest: true,
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "test1",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "test1",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response:     clusters.EventDetails{},
+				Response:     compute.EventDetails{},
 				ReuseRequest: true,
 			},
 			{
@@ -896,13 +897,13 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "awscluster",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "awscluster",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response: clusters.EventDetails{},
+				Response: compute.EventDetails{},
 			},
 			{
 				Method:   "GET",

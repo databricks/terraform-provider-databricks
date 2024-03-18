@@ -361,7 +361,7 @@ func (ic *importContext) emitLibraries(libs []compute.Library) {
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll clusters.LibraryList
+	var cll compute.InstallLibraries
 	common.DataToStructPointer(d, s, &cll)
 	ic.emitLibraries(cll.Libraries)
 	return nil

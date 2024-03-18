@@ -1090,7 +1090,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/edit",
-				ExpectedRequest: compute.ClusterDetails{
+				ExpectedRequest: compute.EditCluster{
 					AutoterminationMinutes: 60,
 					ClusterId:              "abc",
 					NumWorkers:             100,
@@ -1418,6 +1418,7 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 					CustomTags: map[string]string{
 						"ResourceClass": "SingleNode",
 					},
+					ForceSendFields: []string{"NumWorkers"},
 				},
 				Response: compute.ClusterDetails{
 					ClusterId: "abc",

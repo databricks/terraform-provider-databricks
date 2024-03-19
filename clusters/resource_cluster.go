@@ -2,7 +2,9 @@ package clusters
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -56,6 +58,59 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 		return true
 	}
 	return false
+}
+
+func Validate(cluster compute.CreateCluster) error {
+	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
+		return nil
+	}
+	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
+	master := cluster.SparkConf["spark.master"]
+	resourceClass := cluster.CustomTags["ResourceClass"]
+	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
+		return nil
+	}
+	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
+}
+
+func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
+	// Instance profile id does not exist or not set
+	if cluster.InstancePoolId == "" {
+		// Worker must use an instance pool if driver uses an instance pool,
+		// therefore empty the computed value for driver instance pool.
+		cluster.DriverInstancePoolId = ""
+		return
+	}
+	if cluster.AwsAttributes != nil {
+		// Reset AwsAttributes
+		awsAttributes := compute.AwsAttributes{
+			InstanceProfileArn: cluster.AwsAttributes.InstanceProfileArn,
+		}
+		cluster.AwsAttributes = &awsAttributes
+	}
+	if cluster.AzureAttributes != nil {
+		cluster.AzureAttributes = &compute.AzureAttributes{}
+	}
+	if cluster.GcpAttributes != nil {
+		gcpAttributes := compute.GcpAttributes{
+			GoogleServiceAccount: cluster.GcpAttributes.GoogleServiceAccount,
+		}
+		cluster.GcpAttributes = &gcpAttributes
+	}
+	cluster.EnableElasticDisk = false
+	cluster.NodeTypeId = ""
+	cluster.DriverNodeTypeId = ""
+}
+
+// https://github.com/databricks/terraform-provider-databricks/issues/824
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) {
+	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
+	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
+	if oldInstancePool != newInstancePool &&
+		oldDriverPool == oldInstancePool &&
+		oldDriverPool == newDriverPool {
+		cluster.DriverInstancePoolId = cluster.InstancePoolId
+	}
 }
 
 type ClusterSpec struct {
@@ -165,7 +220,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	clusters := w.Clusters
 	var cluster compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &cluster)
-	if err := ValidateCluster(cluster); err != nil {
+	if err := Validate(cluster); err != nil {
 		return err
 	}
 	ModifyRequestOnInstancePool(&cluster)
@@ -292,7 +347,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
-		if err := ValidateCluster(cluster); err != nil {
+		if err := Validate(cluster); err != nil {
 			return err
 		}
 		ModifyRequestOnInstancePool(&cluster)

@@ -306,16 +306,16 @@ func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, stateme
 			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), getWrappedColumnName(oldCi), getWrappedColumnName(ci)))
 		}
 		if ci.Comment != oldCi.Comment {
-			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT %s", typestring, ti.SQLFullName(), getWrappedColumnName(ci), parseComment(ci.Comment)))
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), getWrappedColumnName(ci), parseComment(ci.Comment)))
 		}
 		if ci.Nullable != oldCi.Nullable {
 			var keyWord string
 			if ci.Nullable {
-				keyWord = "SET"
-			} else {
 				keyWord = "DROP"
+			} else {
+				keyWord = "SET"
 			}
-			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NULLABLE", typestring, ti.SQLFullName(), getWrappedColumnName(ci), keyWord))
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NOT NULL", typestring, ti.SQLFullName(), getWrappedColumnName(ci), keyWord))
 		}
 	}
 	return statements

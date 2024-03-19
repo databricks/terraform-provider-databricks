@@ -53,5 +53,5 @@ func SuppressDiffWhitespaceAndEmptyLines(k, old, new string, d *schema.ResourceD
 	cleanedOld := cleanString(old)
 	cleanedNew := cleanString(new)
 
-	return cleanedOld == cleanedNew
+	return strings.TrimSpace(cleanedOld) == strings.TrimSpace(cleanedNew)
 }

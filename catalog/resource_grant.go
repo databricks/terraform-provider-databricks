@@ -15,17 +15,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// normalizePrivileges return an array of catalog.Privilege with privilege values normalized to match API behavior
+func normalizePrivileges(privileges []catalog.Privilege) []catalog.Privilege {
+	normalizedPrivileges := []catalog.Privilege{}
+	for _, p := range privileges {
+		normalizedPriv := strings.ReplaceAll(p.String(), " ", "_")
+		normalizedPrivileges = append(normalizedPrivileges, catalog.Privilege(normalizedPriv))
+	}
+	return normalizedPrivileges
+}
+
 // diffPermissionsForPrincipal returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
 func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
 	for _, v := range desired.PrivilegeAssignments {
 		if v.Principal == principal {
-			normalizedPrivileges := []catalog.Privilege{}
-			for _, p := range v.Privileges {
-				normalizedPriv := strings.ReplaceAll(p.String(), " ", "_")
-				normalizedPrivileges = append(normalizedPrivileges, catalog.Privilege(normalizedPriv))
-			}
+			normalizedPrivileges := normalizePrivileges(v.Privileges)
 			configured[v.Principal] = permissions.SliceToSet(normalizedPrivileges)
 		}
 	}
@@ -235,6 +241,25 @@ func ResourceGrant() common.Resource {
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			if d.HasChange("privileges") {
+				// validate that changes are not just differences between spaces and underscores
+				// between words within each privilege
+				old, new := d.GetChange("privileges")
+				oldPrivs := permissions.SetToSlice(old.(*schema.Set))
+				newPrivs := permissions.SetToSlice(new.(*schema.Set))
+				normalizedOld := permissions.SliceToSet(normalizePrivileges(oldPrivs))
+				normalizedNew := permissions.SliceToSet(normalizePrivileges(newPrivs))
+
+				add := permissions.SetToSlice(normalizedOld.Difference(normalizedNew))
+				remove := permissions.SetToSlice(normalizedNew.Difference(normalizedOld))
+
+				if len(add) == 0 && len(remove) == 0 {
+					d.Clear("privileges")
+				}
+			}
+			return nil
 		},
 	}
 }

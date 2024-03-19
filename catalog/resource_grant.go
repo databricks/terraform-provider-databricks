@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"time"
@@ -243,20 +244,30 @@ func ResourceGrant() common.Resource {
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			if d.HasChange("privileges") {
-				// validate that changes are not just differences between spaces and underscores
-				// between words within each privilege
-				old, new := d.GetChange("privileges")
-				oldPrivs := permissions.SetToSlice(old.(*schema.Set))
-				newPrivs := permissions.SetToSlice(new.(*schema.Set))
-				normalizedOld := permissions.SliceToSet(normalizePrivileges(oldPrivs))
-				normalizedNew := permissions.SliceToSet(normalizePrivileges(newPrivs))
+			changedPrivileges := d.GetChangedKeysPrefix("privileges")
 
-				add := permissions.SetToSlice(normalizedOld.Difference(normalizedNew))
-				remove := permissions.SetToSlice(normalizedNew.Difference(normalizedOld))
+			if len(changedPrivileges) > 0 {
 
-				if len(add) == 0 && len(remove) == 0 {
-					d.Clear("privileges")
+				log.Printf("[DEBUG] CustomizeDiff: changedPrivileges: %v", changedPrivileges)
+
+				for _, k := range changedPrivileges {
+					old, new := d.GetChange(k)
+
+					oldString := old.(string)
+					newString := new.(string)
+
+					log.Printf("[DEBUG] CustomizeDiff: oldString: %s newString: %s", oldString, newString)
+
+					// if the only difference is spaces, remove the change
+					if newString != oldString && strings.ReplaceAll(newString, " ", "_") == oldString {
+						log.Printf("[DEBUG] CustomizeDiff: removing change: %s", k)
+						// this doesn't work since these privileges are not computed...
+						err := d.Clear(k)
+						if err != nil {
+							log.Printf("[DEBUG] CustomizeDiff: error clearing change: %s with error: %v", k, err)
+							return fmt.Errorf("privilege %s only differs from current privilege %s by spaces, please update to match current", newString, oldString)
+						}
+					}
 				}
 			}
 			return nil

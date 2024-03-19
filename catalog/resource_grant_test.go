@@ -860,35 +860,20 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 
 func TestResourceGrantUpdateSpacesNoUpdate(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
-				Response: catalog.PermissionsList{
-					PrivilegeAssignments: []catalog.PrivilegeAssignment{
-						{
-							Principal:  "me",
-							Privileges: []catalog.Privilege{"ALL_PRIVILEGES"},
-						},
-					},
-				},
-			},
-		},
 		Resource: ResourceGrant(),
-		Update:   true,
-		//RequiresNew: false,
-		ID: "table/foo.bar.baz/me",
+		ID:       "table/foo.bar.baz/me",
 		InstanceState: map[string]string{
-			"table":      "foo.bar.baz",
-			"principal":  "me",
-			"privileges": "[ALL_PRIVILEGES]",
+			"table":                 "foo.bar.baz",
+			"principal":             "me",
+			"privileges.#":          "1",
+			"privileges.3182106578": "ALL_PRIVILEGES", // this indexer seems like a huge hack
 		},
-		//ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
+		Update: true,
 		HCL: `
 		table = "foo.bar.baz"
 
 		principal = "me"
 		privileges = ["ALL PRIVILEGES"]
 		`,
-	}.ApplyNoError(t)
+	}.ExpectError(t, "privilege ALL PRIVILEGES only differs from current privilege ALL_PRIVILEGES by spaces, please update to match current")
 }

@@ -30,7 +30,6 @@ resource "databricks_catalog" "sandbox" {
 	cluster_size     = "2X-Small"
 	max_num_clusters = 1
 	warehouse_type   = "PRO"
-	enable_serverless_compute = true
   }
   
   resource "databricks_sql_table" "table" {
@@ -51,7 +50,12 @@ resource "databricks_catalog" "sandbox" {
 	}
   
 	properties = {
-	  "delta.enableChangeDataFeed": true
+		"delta.enableChangeDataFeed" : true
+		"delta.feature.changeDataFeed" : "supported"
+		"delta.feature.appendOnly" : "supported"
+		"delta.feature.checkConstraints" : "supported"
+		"delta.feature.generatedColumns" : "supported"
+		"delta.feature.invariants" : "supported"
 	}
   }
   

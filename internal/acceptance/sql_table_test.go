@@ -311,7 +311,7 @@ func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	tableName := "rename"
+	tableName := RandomName()
 	unityWorkspaceLevel(t, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
@@ -323,7 +323,7 @@ func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	tableName := "addcomment"
+	tableName := RandomName()
 	unityWorkspaceLevel(t, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
@@ -335,7 +335,7 @@ func TestUcAccResourceSqlTable_DropColumnNullable(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	tableName := "dropnullable"
+	tableName := RandomName()
 	unityWorkspaceLevel(t, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
@@ -347,7 +347,7 @@ func TestUcAccResourceSqlTable_MultipleColumnUpdates(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	tableName := "multipleupdates"
+	tableName := RandomName()
 	unityWorkspaceLevel(t, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
@@ -359,7 +359,7 @@ func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	tableName := "updatetype"
+	tableName := RandomName()
 	pattern := "changing the 'type' of an existing column is not supported"
 	r := regexp.MustCompile(pattern)
 

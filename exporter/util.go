@@ -32,7 +32,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorageInfo) {
+func (ic *importContext) emitInitScriptsLegacy(initScripts []clusters.InitScriptStorageInfo) {
+	for _, is := range initScripts {
+		if is.Dbfs != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_dbfs_file",
+				ID:       is.Dbfs.Destination,
+			})
+		}
+		if is.Workspace != nil {
+			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
+		}
+		if is.Volumes != nil {
+			ic.emitIfVolumeFile(is.Volumes.Destination)
+		}
+	}
+}
+
+func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 	for _, is := range initScripts {
 		if is.Dbfs != nil {
 			ic.Emit(&resource{
@@ -65,7 +82,9 @@ func (ic *importContext) emitFilesFromMap(m map[string]string) {
 	}
 }
 
-func (ic *importContext) importCluster(c *clusters.Cluster) {
+// Remove this when databricks_job resource is migrated
+// Usage: ic.importCluster(job.NewCluster)
+func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
@@ -92,6 +111,41 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 		ic.Emit(&resource{
 			Resource: "databricks_cluster_policy",
 			ID:       c.PolicyID,
+		})
+	}
+	ic.emitInitScriptsLegacy(c.InitScripts)
+	ic.emitSecretsFromSecretsPath(c.SparkConf)
+	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitUserOrServicePrincipal(c.SingleUserName)
+}
+
+func (ic *importContext) importCluster(c *compute.ClusterDetails) {
+	if c == nil {
+		return
+	}
+	if c.AwsAttributes != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_instance_profile",
+			ID:       c.AwsAttributes.InstanceProfileArn,
+		})
+	}
+	if c.InstancePoolId != "" {
+		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
+		ic.Emit(&resource{
+			Resource: "databricks_instance_pool",
+			ID:       c.InstancePoolId,
+		})
+	}
+	if c.DriverInstancePoolId != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_instance_pool",
+			ID:       c.DriverInstancePoolId,
+		})
+	}
+	if c.PolicyId != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_cluster_policy",
+			ID:       c.PolicyId,
 		})
 	}
 	ic.emitInitScripts(c.InitScripts)

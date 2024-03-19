@@ -263,7 +263,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	libList := libsClusterStatus.ToLibraryList()
-	return common.StructToData(libList, clusterSchema, d) // tanmaytodo error
+	return common.StructToData(libList, clusterSchema, d)
 }
 
 func hasClusterConfigChanged(d *schema.ResourceData) bool {

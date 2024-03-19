@@ -1618,6 +1618,57 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			return fmt.Errorf("unsupported schema type: %v", path)
 		}
 	}
+	// Generate `depends_on` only for top-level resource because `dataToHcl` is called recursively
+	if len(path) == 0 && len(res.DependsOn) > 0 {
+		notIgnoredResources := []*resource{}
+		for _, dr := range res.DependsOn {
+			dr := dr
+			if dr.Data == nil {
+				tdr := ic.Scope.FindById(dr.Resource, dr.ID)
+				if tdr == nil {
+					log.Printf("[WARN] can't find resource %s in scope", dr)
+					continue
+				}
+				dr = tdr
+			}
+			if ic.Importables[dr.Resource].Ignore == nil || !ic.Importables[dr.Resource].Ignore(ic, dr) {
+				found := false
+				for _, v := range notIgnoredResources {
+					if v.ID == dr.ID && v.Resource == dr.Resource {
+						found = true
+						break
+					}
+				}
+				if !found {
+					notIgnoredResources = append(notIgnoredResources, dr)
+				}
+			}
+		}
+		if len(notIgnoredResources) > 0 {
+			toks := hclwrite.Tokens{}
+			toks = append(toks, &hclwrite.Token{
+				Type:  hclsyntax.TokenOBrack,
+				Bytes: []byte{'['},
+			})
+			for i, dr := range notIgnoredResources {
+				if i > 0 {
+					toks = append(toks, &hclwrite.Token{
+						Type:  hclsyntax.TokenComma,
+						Bytes: []byte{','},
+					})
+				}
+				toks = append(toks, hclwrite.TokensForTraversal(hcl.Traversal{
+					hcl.TraverseRoot{Name: dr.Resource},
+					hcl.TraverseAttr{Name: ic.ResourceName(dr)},
+				})...)
+			}
+			toks = append(toks, &hclwrite.Token{
+				Type:  hclsyntax.TokenCBrack,
+				Bytes: []byte{']'},
+			})
+			body.SetAttributeRaw("depends_on", toks)
+		}
+	}
 	return nil
 }
 

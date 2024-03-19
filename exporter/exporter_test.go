@@ -783,7 +783,6 @@ func TestImportingNoResourcesError(t *testing.T) {
 		})
 }
 
-// tanmaytodo
 func TestImportingClusters(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{

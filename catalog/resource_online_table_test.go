@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -168,6 +169,7 @@ func TestOnlineTableDelete(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockOnlineTablesAPI().EXPECT()
 			e.DeleteByName(mock.Anything, "main.default.online_table").Return(nil)
+			e.GetByName(mock.Anything, "main.default.online_table").Return(nil, apierr.ErrResourceDoesNotExist)
 		},
 		Resource: ResourceOnlineTable(),
 		ID:       "main.default.online_table",

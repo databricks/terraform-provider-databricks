@@ -2,10 +2,12 @@ package catalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -14,7 +16,7 @@ import (
 
 const onlineTableDefaultProvisionTimeout = 45 * time.Minute
 
-func waitForOnlineTable(w *databricks.WorkspaceClient, ctx context.Context, onlineTableName string) error {
+func waitForOnlineTableCreation(w *databricks.WorkspaceClient, ctx context.Context, onlineTableName string) error {
 	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
 		endpoint, err := w.OnlineTables.GetByName(ctx, onlineTableName)
 		if err != nil {
@@ -34,6 +36,19 @@ func waitForOnlineTable(w *databricks.WorkspaceClient, ctx context.Context, onli
 				endpoint.Status.DetailedState.String(), onlineTableName))
 		}
 		return retry.RetryableError(fmt.Errorf("online table %s is still pending", onlineTableName))
+	})
+}
+
+func waitForOnlineTableDeletion(w *databricks.WorkspaceClient, ctx context.Context, onlineTableName string) error {
+	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
+		_, err := w.OnlineTables.GetByName(ctx, onlineTableName)
+		if err == nil {
+			return retry.RetryableError(fmt.Errorf("online table %s is still not deleted", onlineTableName))
+		}
+		if errors.Is(err, apierr.ErrResourceDoesNotExist) || errors.Is(err, apierr.ErrNotFound) {
+			return nil
+		}
+		return retry.NonRetryableError(fmt.Errorf("online table status returned %w", err))
 	})
 }
 
@@ -63,7 +78,7 @@ func ResourceOnlineTable() common.Resource {
 				return err
 			}
 			// this should be specified in the API Spec - filed a ticket to add it
-			err = waitForOnlineTable(w, ctx, res.Name)
+			err = waitForOnlineTableCreation(w, ctx, res.Name)
 			if err != nil {
 
 				return err
@@ -87,8 +102,11 @@ func ResourceOnlineTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			// TODO: talk with the team on how fast it's deleted - should we wait for it to be deleted?
-			return w.OnlineTables.DeleteByName(ctx, d.Id())
+			err = w.OnlineTables.DeleteByName(ctx, d.Id())
+			if err != nil {
+				return err
+			}
+			return waitForOnlineTableDeletion(w, ctx, d.Id())
 		},
 		StateUpgraders: []schema.StateUpgrader{},
 		Schema:         s,

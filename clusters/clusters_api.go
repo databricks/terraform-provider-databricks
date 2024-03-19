@@ -448,7 +448,6 @@ func (cluster Cluster) Validate() error {
 }
 
 func ValidateCluster(cluster compute.CreateCluster) error {
-	// TODO: rewrite with CustomizeDiff
 	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
 		return nil
 	}

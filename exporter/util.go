@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// Remove this once databricks_pipeline and databricks_job resources are migrated to Go SDK
 func (ic *importContext) emitInitScriptsLegacy(initScripts []clusters.InitScriptStorageInfo) {
 	for _, is := range initScripts {
 		if is.Dbfs != nil {

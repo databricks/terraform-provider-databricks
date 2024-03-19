@@ -311,11 +311,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		List: func(ic *importContext) error {
-			// w, err := ic.Client.WorkspaceClient()
-			// if err != nil {
-			// 	return err
-			// }
-			// clusters, err := w.Clusters.ListAll(ic.Context, compute.ListClustersRequest{})
 			clusters, err := clusters.NewClustersAPI(ic.Context, ic.Client).List()
 			if err != nil {
 				return err

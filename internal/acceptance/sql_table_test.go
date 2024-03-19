@@ -269,7 +269,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 	})
 }
 
-func constructManagedSqlTableTemplate(columnInfos []catalog.SqlColumnInfo) string {
+func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.SqlColumnInfo) string {
 	columnsTemplate := ""
 
 	for _, ci := range columnInfos {
@@ -293,7 +293,7 @@ func constructManagedSqlTableTemplate(columnInfos []catalog.SqlColumnInfo) strin
 		}
 
 		resource "databricks_sql_table" "this" {
-			name               = "bar"
+			name               = "%s"
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
@@ -304,17 +304,18 @@ func constructManagedSqlTableTemplate(columnInfos []catalog.SqlColumnInfo) strin
 
 			%s
 			comment = "this table is managed by terraform"
-		}`, columnsTemplate)
+		}`, tableName, columnsTemplate)
 }
 
 func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
+	tableName := "rename"
 	unityWorkspaceLevel(t, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "new_name", Type: "string", Nullable: true, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "string", Nullable: true, Comment: "comment"}}),
 	})
 }
 
@@ -322,10 +323,11 @@ func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
+	tableName := "addcomment"
 	unityWorkspaceLevel(t, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "new comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "new comment"}}),
 	})
 }
 
@@ -333,10 +335,11 @@ func TestUcAccResourceSqlTable_DropColumnNullable(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
+	tableName := "dropnullable"
 	unityWorkspaceLevel(t, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "comment"}}),
 	})
 }
 
@@ -344,10 +347,11 @@ func TestUcAccResourceSqlTable_MultipleColumnUpdates(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
+	tableName := "multipleupdates"
 	unityWorkspaceLevel(t, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "new comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "new comment"}}),
 	})
 }
 
@@ -355,13 +359,14 @@ func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
+	tableName := "updatetype"
 	pattern := "changing the 'type' of an existing column is not supported"
 	r := regexp.MustCompile(pattern)
 
 	unityWorkspaceLevel(t, step{
-		Template: constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
-		Template:    constructManagedSqlTableTemplate([]catalog.SqlColumnInfo{{Name: "name", Type: "int", Nullable: true, Comment: "comment"}}),
+		Template:    constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "int", Nullable: true, Comment: "comment"}}),
 		ExpectError: r,
 	})
 }

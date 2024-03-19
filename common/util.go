@@ -64,7 +64,7 @@ func SuppressDiffWhitespaceAndEmptyLines(k, old, new string, d *schema.ResourceD
 	cleanedOld := cleanString(old)
 	cleanedNew := cleanString(new)
 
-	return cleanedOld == cleanedNew
+	return strings.TrimSpace(cleanedOld) == strings.TrimSpace(cleanedNew)
 }
 
 func MustInt64(s string) int64 {

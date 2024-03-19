@@ -70,7 +70,7 @@ func TestVectorSearchEndpointRead(t *testing.T) {
 }
 
 func TestVectorSearchEndpointDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockVectorSearchEndpointsAPI().EXPECT().DeleteEndpointByEndpointName(mock.Anything, "abc").Return(nil)
 		},

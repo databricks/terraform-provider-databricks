@@ -487,9 +487,9 @@ func TestGenerateDependsOn(t *testing.T) {
 		DependsOn: []*resource{dr,
 			{Resource: dr.Resource, ID: dr.ID},
 			{Resource: dr.Resource, ID: "unknown"},
-			{Resource: dr.Resource, ID: "test2", Data: dr.Data},
 		},
 	}
+	r.AddDependsOn(&resource{Resource: dr.Resource, ID: "test2", Data: dr.Data})
 	resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
 	err := ic.dataToHcl(ic.Importables[r.Resource], []string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 	require.NoError(t, err)

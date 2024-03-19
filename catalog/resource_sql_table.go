@@ -298,7 +298,7 @@ func getWrappedColumnName(ci SqlColumnInfo) string {
 	return fmt.Sprintf("`%s`", ci.Name)
 }
 
-func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) {
+func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
 	// TODO: take out "force_new" in `column` and add case to handle addition and removal of columns.
 	for i, ci := range ti.ColumnInfos {
 		oldCi := oldti.ColumnInfos[i]
@@ -318,6 +318,7 @@ func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, stateme
 			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NULLABLE", typestring, ti.SQLFullName(), getWrappedColumnName(ci), keyWord))
 		}
 	}
+	return statements
 }
 
 func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
@@ -359,7 +360,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.SQLFullName(), ti.serializeProperties()))
 	}
 
-	ti.getStatementsForColumnDiffs(oldti, statements, typestring)
+	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)
 
 	return statements, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -324,6 +325,10 @@ type field struct {
 	v  reflect.Value
 }
 
+func (f field) isForceSendFields() bool {
+	return f.sf.Name == "ForceSendFields"
+}
+
 func listAllFields(v reflect.Value) []field {
 	t := v.Type()
 	fields := make([]field, 0, v.NumField())
@@ -491,11 +496,11 @@ func IsRequestEmpty(v any) (bool, error) {
 		return false, fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rv.Kind()), rv)
 	}
 	var isNotEmpty bool
-	err := iterFields(rv, []string{}, StructToSchema(v, nil), map[string]map[string]string{}, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	err := iterFields(rv, []string{}, StructToSchema(v, nil), map[string]map[string]string{}, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 		if isNotEmpty {
 			return nil
 		}
-		if !valueField.IsZero() {
+		if !valueField.v.IsZero() {
 			isNotEmpty = true
 		}
 		return nil
@@ -520,7 +525,7 @@ func isGoSdk(v reflect.Value) bool {
 // Iterate through each field of the given reflect.Value object and execute a callback function with the corresponding
 // terraform schema object as the input.
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]map[string]string,
-	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
+	cb func(fieldSchema *schema.Schema, path []string, valueField field) error) error {
 	rk := rv.Kind()
 	if rk != reflect.Struct {
 		return fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
@@ -549,8 +554,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
-		valueField := field.v
-		err := cb(fieldSchema, append(path, fieldName), &valueField)
+		err := cb(fieldSchema, append(path, fieldName), field)
 		if err != nil {
 			return fmt.Errorf("%s: %s", fieldName, err)
 		}
@@ -590,10 +594,9 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			}
 			v = v.Elem()
 		}
-		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema,
-			path []string, valueField *reflect.Value) error {
+		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 			fieldName := path[len(path)-1]
-			fieldValue := valueField.Interface()
+			fieldValue := valueField.v.Interface()
 			fieldPath := strings.Join(path, ".")
 			switch fieldSchema.Type {
 			case schema.TypeList, schema.TypeSet:
@@ -603,7 +606,7 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 				}
 				data[fieldName] = nv
 			default:
-				if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
+				if fieldSchema.Optional && isValueNilOrEmpty(valueField.v, fieldPath) {
 					return nil
 				}
 				data[fieldName] = fieldValue
@@ -618,7 +621,7 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 	return resultList, nil
 }
 
-func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
+func isValueNilOrEmpty(valueField reflect.Value, fieldPath string) bool {
 	switch valueField.Kind() {
 	case reflect.Ptr:
 		if valueField.IsNil() {
@@ -641,14 +644,13 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	return iterFields(v, []string{}, s, aliases, func(
-		fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
-		fieldValue := valueField.Interface()
+	return iterFields(v, []string{}, s, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
+		fieldValue := valueField.v.Interface()
 		if fieldValue == nil {
 			return nil
 		}
 		fieldPath := strings.Join(path, ".")
-		if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
+		if fieldSchema.Optional && isValueNilOrEmpty(valueField.v, fieldPath) {
 			return nil
 		}
 		_, configured := d.GetOk(fieldPath)
@@ -739,8 +741,7 @@ func getAliasesMapFromStruct(s any) map[string]map[string]string {
 
 func readReflectValueFromData(path []string, d attributeGetter,
 	rv reflect.Value, s map[string]*schema.Schema, aliases map[string]map[string]string) error {
-	return iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema,
-		path []string, valueField *reflect.Value) error {
+	err := iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
@@ -749,29 +750,29 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		switch fieldSchema.Type {
 		case schema.TypeInt:
 			if v, ok := raw.(int); ok {
-				valueField.SetInt(int64(v))
+				valueField.v.SetInt(int64(v))
 			}
 		case schema.TypeString:
 			if v, ok := raw.(string); ok {
-				valueField.SetString(v)
+				valueField.v.SetString(v)
 			}
 		case schema.TypeBool:
 			if v, ok := raw.(bool); ok {
-				valueField.SetBool(v)
+				valueField.v.SetBool(v)
 			}
 		case schema.TypeFloat:
 			if v, ok := raw.(float64); ok {
-				valueField.SetFloat(v)
+				valueField.v.SetFloat(v)
 			}
 		case schema.TypeMap:
-			mapValueKind := valueField.Type().Elem().Kind()
-			valueField.Set(reflect.MakeMap(valueField.Type()))
+			mapValueKind := valueField.v.Type().Elem().Kind()
+			valueField.v.Set(reflect.MakeMap(valueField.v.Type()))
 			for key, ivalue := range raw.(map[string]any) {
 				vrv, err := primitiveReflectValueFromInterface(mapValueKind, ivalue, fieldPath, key)
 				if err != nil {
 					return err
 				}
-				valueField.SetMapIndex(reflect.ValueOf(key), vrv)
+				valueField.v.SetMapIndex(reflect.ValueOf(key), vrv)
 			}
 		case schema.TypeSet:
 			// here we rely on Terraform SDK to perform validation, so we don't to it twice
@@ -790,6 +791,50 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return setForceSendFieldsIfPresent(rv, d, path, s, aliases)
+}
+
+// If the value is a structure with a field named "ForceSendFields", this function will set the value of that field
+// to a list of fields that are explicitly set to their zero value.
+//
+// For now, this only will apply to boolean and integer fields in the structure.
+func setForceSendFieldsIfPresent(rv reflect.Value, d attributeGetter, path []string, s map[string]*schema.Schema, aliases map[string]map[string]string) error {
+	if rv.Kind() != reflect.Struct {
+		return nil
+	}
+	allFields := listAllFields(rv)
+	forceSendFieldsIndex := slices.IndexFunc(allFields, field.isForceSendFields)
+	if forceSendFieldsIndex == -1 {
+		return nil
+	}
+	forceSendFields := make([]string, 0)
+	forceSendFieldsField := allFields[forceSendFieldsIndex].v
+	err := iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
+		if fieldSchema.Type != schema.TypeBool && fieldSchema.Type != schema.TypeInt {
+			return nil
+		}
+		fieldPath := strings.Join(path, ".")
+		raw, exists := d.GetOkExists(fieldPath)
+		if !exists {
+			return nil
+		}
+		zero := fieldSchema.Type.Zero()
+		if !reflect.DeepEqual(raw, zero) {
+			return nil
+		}
+		forceSendFields = append(forceSendFields, valueField.sf.Name)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if len(forceSendFields) > 0 {
+		forceSendFieldsField.Set(reflect.ValueOf(forceSendFields))
+	}
+	return nil
 }
 
 func primitiveReflectValueFromInterface(rk reflect.Kind,
@@ -837,16 +882,16 @@ func primitiveReflectValueFromInterface(rk reflect.Kind,
 }
 
 func readListFromData(path []string, d attributeGetter,
-	rawList []any, valueField *reflect.Value, fieldSchema *schema.Schema, aliases map[string]map[string]string,
+	rawList []any, valueField field, fieldSchema *schema.Schema, aliases map[string]map[string]string,
 	offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
 		return nil
 	}
 	fieldPath := strings.Join(path, ".")
-	switch valueField.Type().Kind() {
+	switch valueField.v.Type().Kind() {
 	case reflect.Ptr:
-		vpointer := reflect.New(valueField.Type().Elem())
-		valueField.Set(vpointer)
+		vpointer := reflect.New(valueField.v.Type().Elem())
+		valueField.v.Set(vpointer)
 		ve := vpointer.Elem()
 		// here we rely on Terraform SDK to perform validation, so we don't to it twice
 		nestedResource := fieldSchema.Elem.(*schema.Resource)
@@ -856,7 +901,7 @@ func readListFromData(path []string, d attributeGetter,
 		// code path for setting the struct value is different from pointer value
 		// in a single way: we set the field only after readReflectValueFromData
 		// traversed the graph.
-		vstruct := reflect.New(valueField.Type())
+		vstruct := reflect.New(valueField.v.Type())
 		ve := vstruct.Elem()
 		nestedResource := fieldSchema.Elem.(*schema.Resource)
 		nestedPath := append(path, offsetConverter(0))
@@ -864,12 +909,12 @@ func readListFromData(path []string, d attributeGetter,
 		if err != nil {
 			return err
 		}
-		valueField.Set(ve)
+		valueField.v.Set(ve)
 		return nil
 	case reflect.Slice:
-		k := valueField.Type().Elem().Kind()
-		newSlice := reflect.MakeSlice(valueField.Type(), len(rawList), len(rawList))
-		valueField.Set(newSlice)
+		k := valueField.v.Type().Elem().Kind()
+		newSlice := reflect.MakeSlice(valueField.v.Type(), len(rawList), len(rawList))
+		valueField.v.Set(newSlice)
 		for i, elem := range rawList {
 			item := newSlice.Index(i)
 			switch k {
@@ -877,7 +922,7 @@ func readListFromData(path []string, d attributeGetter,
 				// here we rely on Terraform SDK to perform validation, so we don't to it twice
 				nestedResource := fieldSchema.Elem.(*schema.Resource)
 				nestedPath := append(path, offsetConverter(i))
-				vpointer := reflect.New(valueField.Type().Elem())
+				vpointer := reflect.New(valueField.v.Type().Elem())
 				ve := vpointer.Elem()
 				err := readReflectValueFromData(nestedPath, d, ve, nestedResource.Schema, aliases)
 				if err != nil {

@@ -416,7 +416,7 @@ func TestIterFields(t *testing.T) {
 			Default:  "_",
 			Optional: true,
 		},
-	}, nil, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	}, nil, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 		return fmt.Errorf("test error")
 	})
 	assert.EqualError(t, err, "non_optional: test error")
@@ -500,6 +500,31 @@ func TestDataToStructPointerWithResourceProviderStruct(t *testing.T) {
 	assert.NoError(t, err)
 
 	DataToStructPointer(d, s, &dummyCopy)
+}
+
+type structWithForceSendFields struct {
+	BoolOpt         bool     `json:"bool_opt,omitempty"`
+	ForceSendFields []string `json:"-"`
+}
+
+func TestDataToStructPointerWithImpplicitlyZeroFields(t *testing.T) {
+	s := StructToSchema(structWithForceSendFields{}, nil)
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	result := structWithForceSendFields{}
+	DataToStructPointer(d, s, &result)
+	assert.False(t, result.BoolOpt)
+	assert.Nil(t, result.ForceSendFields)
+}
+
+func TestDataToStructPointerWithExplicitlyZeroFields(t *testing.T) {
+	s := StructToSchema(structWithForceSendFields{}, nil)
+	d := schema.TestResourceDataRaw(t, s, map[string]any{
+		"bool_opt": false,
+	})
+	result := structWithForceSendFields{}
+	DataToStructPointer(d, s, &result)
+	assert.False(t, result.BoolOpt)
+	assert.Contains(t, result.ForceSendFields, "BoolOpt")
 }
 
 func TestStructToData_EmptyField(t *testing.T) {
@@ -711,11 +736,11 @@ func TestDiffToStructPointer(t *testing.T) {
 }
 
 func TestReadListFromData(t *testing.T) {
-	err := readListFromData([]string{}, data{}, []any{}, nil, nil, nil, nil)
+	err := readListFromData([]string{}, data{}, []any{}, field{}, nil, nil, nil)
 	assert.NoError(t, err)
 
 	x := reflect.ValueOf(0)
-	err = readListFromData([]string{}, data{}, []any{1}, &x, nil, nil, nil)
+	err = readListFromData([]string{}, data{}, []any{1}, field{v: x}, nil, nil, nil)
 	assert.EqualError(t, err, "[[1]] unknown collection field")
 }
 

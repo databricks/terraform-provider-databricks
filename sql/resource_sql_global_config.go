@@ -99,7 +99,6 @@ func (a globalConfigAPI) Set(gc GlobalConfig, d *schema.ResourceData) error {
 		}
 		data.SqlConfigurationParameters = &sql_params
 	}
-	common.SetForceSendFields(&data, d, []string{"enable_serverless_compute"})
 
 	return a.client.Put(a.context, "/sql/config/warehouses", data)
 }

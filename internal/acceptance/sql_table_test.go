@@ -300,6 +300,9 @@ func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.Sq
 			properties         = {
 				this      = "that"
 				something = "else"
+				"delta.minReaderVersion" = 2
+				"delta.minWriterVersion" = 5
+				"delta.columnMapping.mode" = "name"
 			}
 
 			%s

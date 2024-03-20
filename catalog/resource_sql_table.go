@@ -84,6 +84,7 @@ func sqlTableIsManagedProperty(key string) bool {
 		"delta.lastUpdateVersion":                                  true,
 		"delta.minReaderVersion":                                   true,
 		"delta.minWriterVersion":                                   true,
+		"delta.columnMapping.maxColumnId":                          true,
 		"delta.enableDeletionVectors":                              true,
 		"delta.enableRowTracking":                                  true,
 		"delta.feature.deletionVectors":                            true,

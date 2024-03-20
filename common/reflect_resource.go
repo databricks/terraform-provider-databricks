@@ -816,6 +816,10 @@ func setForceSendFieldsIfPresent(rv reflect.Value, d attributeGetter, path []str
 		if fieldSchema.Type != schema.TypeBool && fieldSchema.Type != schema.TypeInt {
 			return nil
 		}
+		jsonTag := valueField.sf.Tag.Get("json")
+		if jsonTag[0] == '-' {
+			return nil
+		}
 		fieldPath := strings.Join(path, ".")
 		raw, exists := d.GetOkExists(fieldPath)
 		if !exists {

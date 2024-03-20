@@ -504,6 +504,7 @@ func TestDataToStructPointerWithResourceProviderStruct(t *testing.T) {
 
 type structWithForceSendFields struct {
 	BoolOpt         bool     `json:"bool_opt,omitempty"`
+	NonJson         bool     `json:"-,omitempty"`
 	ForceSendFields []string `json:"-"`
 }
 
@@ -520,6 +521,7 @@ func TestDataToStructPointerWithExplicitlyZeroFields(t *testing.T) {
 	s := StructToSchema(structWithForceSendFields{}, nil)
 	d := schema.TestResourceDataRaw(t, s, map[string]any{
 		"bool_opt": false,
+		"non_json": false,
 	})
 	result := structWithForceSendFields{}
 	DataToStructPointer(d, s, &result)

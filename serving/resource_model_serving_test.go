@@ -289,6 +289,97 @@ func TestModelServingCreate_Error(t *testing.T) {
 	}.ExpectError(t, "Internal error happened")
 }
 
+func TestModelServingCreate_WithErrorOnWait(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/serving-endpoints",
+				ExpectedRequest: serving.CreateServingEndpoint{
+					Name: "test-endpoint",
+					Config: serving.EndpointCoreConfigInput{
+						ServedModels: []serving.ServedModelInput{
+							{
+								Name:               "prod_model",
+								ModelName:          "ads1",
+								ModelVersion:       "2",
+								WorkloadSize:       "Small",
+								ScaleToZeroEnabled: true,
+							},
+							{
+								Name:               "candidate_model",
+								ModelName:          "ads1",
+								ModelVersion:       "4",
+								WorkloadSize:       "Small",
+								ScaleToZeroEnabled: false,
+							},
+						},
+						TrafficConfig: &serving.TrafficConfig{
+							Routes: []serving.Route{
+								{
+									ServedModelName:   "prod_model",
+									TrafficPercentage: 90,
+								},
+								{
+									ServedModelName:   "candidate_model",
+									TrafficPercentage: 10,
+								},
+							},
+						},
+					},
+				},
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-endpoint",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+			},
+		},
+		Resource: ResourceModelServing(),
+		HCL: `
+			name = "test-endpoint"
+			config {
+				served_models {
+					name = "prod_model"
+					model_name = "ads1"
+					model_version = "2"
+					workload_size = "Small"
+					scale_to_zero_enabled = true
+				}
+				served_models {
+					name = "candidate_model"
+					model_name = "ads1"
+					model_version = "4"
+					workload_size = "Small"
+					scale_to_zero_enabled = false
+				}
+				traffic_config {
+					routes {
+						served_model_name = "prod_model"
+						traffic_percentage = 90
+					}
+					routes {
+						served_model_name = "candidate_model"
+						traffic_percentage = 10
+					}
+				}
+			}
+			`,
+		Create: true,
+	}.ExpectError(t, "Internal error happened")
+}
+
 func TestModelServingRead(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

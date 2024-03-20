@@ -3,6 +3,7 @@ package serving
 import (
 	"context"
 	"fmt"
+	"log"
 	"slices"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 )
 
 const DefaultProvisionTimeout = 45 * time.Minute
+const deleteCallTimeout = 10 * time.Second
 
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
@@ -73,8 +75,20 @@ func ResourceModelServing() common.Resource {
 			}
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
-			endpoint, err := w.ServingEndpoints.CreateAndWait(ctx, e, retries.Timeout[serving.ServingEndpointDetailed](d.Timeout(schema.TimeoutCreate)))
+			for i := range e.Config.ServedEntities {
+				e.Config.ServedEntities[i].ForceSendFields = append(e.Config.ServedEntities[i].ForceSendFields, "ScaleToZeroEnabled")
+			}
+			wait, err := w.ServingEndpoints.Create(ctx, e)
 			if err != nil {
+				return err
+			}
+			endpoint, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate) - deleteCallTimeout)
+			if err != nil {
+				log.Printf("[ERROR] Error waiting for serving endpoint to be created: %s", err.Error())
+				nestedErr := w.ServingEndpoints.DeleteByName(ctx, e.Name)
+				if nestedErr != nil {
+					log.Printf("[ERROR] Error cleaning up serving endpoint: %s", nestedErr.Error())
+				}
 				return err
 			}
 			d.SetId(endpoint.Name)
@@ -116,6 +130,9 @@ func ResourceModelServing() common.Resource {
 			}
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
+			for i := range e.Config.ServedEntities {
+				e.Config.ServedEntities[i].ForceSendFields = append(e.Config.ServedEntities[i].ForceSendFields, "ScaleToZeroEnabled")
+			}
 			e.Config.Name = e.Name
 			_, err = w.ServingEndpoints.UpdateConfigAndWait(ctx, e.Config, retries.Timeout[serving.ServingEndpointDetailed](d.Timeout(schema.TimeoutUpdate)))
 			return err

@@ -310,18 +310,18 @@ func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.Sq
 		}`, tableName, columnsTemplate)
 }
 
-// // TODO: Run this test on a delta table that has permission to rename column, and re-enable this test.
-// func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
-// 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-// 		skipf(t)("databricks_sql_table resource not available on GCP")
-// 	}
-// 	tableName := RandomName()
-// 	unityWorkspaceLevel(t, step{
-// 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-// 	}, step{
-// 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "string", Nullable: true, Comment: "comment"}}),
-// 	})
-// }
+// TODO: Run this test on a delta table that has permission to rename column, and re-enable this test.
+func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "string", Nullable: true, Comment: "comment"}}),
+	})
+}
 
 func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {

@@ -84,6 +84,7 @@ func sqlTableIsManagedProperty(key string) bool {
 		"delta.lastUpdateVersion":                                  true,
 		"delta.minReaderVersion":                                   true,
 		"delta.minWriterVersion":                                   true,
+		"delta.columnMapping.maxColumnId":                          true,
 		"delta.enableDeletionVectors":                              true,
 		"delta.enableRowTracking":                                  true,
 		"delta.feature.deletionVectors":                            true,
@@ -298,7 +299,7 @@ func getWrappedColumnName(ci SqlColumnInfo) string {
 	return fmt.Sprintf("`%s`", ci.Name)
 }
 
-func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) {
+func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
 	// TODO: take out "force_new" in `column` and add case to handle addition and removal of columns.
 	for i, ci := range ti.ColumnInfos {
 		oldCi := oldti.ColumnInfos[i]
@@ -306,18 +307,19 @@ func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, stateme
 			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), getWrappedColumnName(oldCi), getWrappedColumnName(ci)))
 		}
 		if ci.Comment != oldCi.Comment {
-			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT %s", typestring, ti.SQLFullName(), getWrappedColumnName(ci), parseComment(ci.Comment)))
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), getWrappedColumnName(ci), parseComment(ci.Comment)))
 		}
 		if ci.Nullable != oldCi.Nullable {
 			var keyWord string
 			if ci.Nullable {
-				keyWord = "SET"
-			} else {
 				keyWord = "DROP"
+			} else {
+				keyWord = "SET"
 			}
-			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NULLABLE", typestring, ti.SQLFullName(), getWrappedColumnName(ci), keyWord))
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NOT NULL", typestring, ti.SQLFullName(), getWrappedColumnName(ci), keyWord))
 		}
 	}
+	return statements
 }
 
 func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
@@ -359,7 +361,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.SQLFullName(), ti.serializeProperties()))
 	}
 
-	ti.getStatementsForColumnDiffs(oldti, statements, typestring)
+	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)
 
 	return statements, nil
 }

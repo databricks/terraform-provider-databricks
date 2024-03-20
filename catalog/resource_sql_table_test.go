@@ -590,8 +590,8 @@ func TestResourceSqlTableUpdateView_Comments(t *testing.T) {
 
 func TestResourceSqlTableUpdateTable_Columns(t *testing.T) {
 	allowedCommands := []string{
-		"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` COMMENT managed comment",
-		"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN SET `one` NULLABLE",
+		"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` COMMENT 'managed comment'",
+		"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` DROP NOT NULL",
 		"ALTER TABLE `main`.`foo`.`bar` RENAME COLUMN `two` to `three`",
 	}
 	d, err := qa.ResourceFixture{

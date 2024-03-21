@@ -130,7 +130,7 @@ This block describes individual tasks:
 
 ### depends_on Configuration Block
 
-This block describes dependencies of a given task:
+This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
 
 * `task_key` - (Required) The name of the task this task depends on.
 * `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.

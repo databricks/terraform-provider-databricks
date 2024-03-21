@@ -2,6 +2,7 @@ package vectorsearch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -11,12 +12,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
 
 const defaultIndexProvisionTimeout = 5 * time.Minute
 
-func waitForSearchIndex(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
+func waitForVectorSearchIndexDeletion(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
+	return retry.RetryContext(ctx, defaultIndexProvisionTimeout, func() *retry.RetryError {
+		_, err := w.VectorSearchIndexes.GetIndexByIndexName(ctx, searchIndexName)
+		if err == nil {
+			return retry.RetryableError(fmt.Errorf("vector search index %s is still not deleted", searchIndexName))
+		}
+		if errors.Is(err, apierr.ErrResourceDoesNotExist) || errors.Is(err, apierr.ErrNotFound) {
+			return nil
+		}
+		return retry.NonRetryableError(fmt.Errorf("vector search index %w", err))
+	})
+}
+
+func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
 	return retry.RetryContext(ctx, defaultIndexProvisionTimeout-deleteCallTimeout, func() *retry.RetryError {
 		index, err := w.VectorSearchIndexes.GetIndexByIndexName(ctx, searchIndexName)
 		if err != nil {
@@ -53,7 +68,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = waitForSearchIndex(w, ctx, req.Name)
+			err = waitForSearchIndexCreation(w, ctx, req.Name)
 			if err != nil {
 				nestedErr := w.VectorSearchIndexes.DeleteIndexByIndexName(ctx, req.Name)
 				if nestedErr != nil {
@@ -80,7 +95,11 @@ func ResourceVectorSearchIndex() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.VectorSearchIndexes.DeleteIndexByIndexName(ctx, d.Id())
+			err = w.VectorSearchIndexes.DeleteIndexByIndexName(ctx, d.Id())
+			if err != nil {
+				return err
+			}
+			return waitForVectorSearchIndexDeletion(w, ctx, d.Id())
 		},
 		StateUpgraders: []schema.StateUpgrader{},
 		Schema:         s,

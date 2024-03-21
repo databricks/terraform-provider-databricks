@@ -3,6 +3,7 @@ package vectorsearch
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
@@ -99,7 +100,9 @@ func TestVectorSearchIndexRead(t *testing.T) {
 func TestVectorSearchIndexDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockVectorSearchIndexesAPI().EXPECT().DeleteIndexByIndexName(mock.Anything, "abc").Return(nil)
+			e := w.GetMockVectorSearchIndexesAPI().EXPECT()
+			e.DeleteIndexByIndexName(mock.Anything, "abc").Return(nil)
+			e.GetIndexByIndexName(mock.Anything, "abc").Return(nil, apierr.ErrResourceDoesNotExist)
 		},
 		Resource: ResourceVectorSearchIndex(),
 		Delete:   true,

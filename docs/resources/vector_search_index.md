@@ -72,8 +72,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource can be imported using the name of the Vector Search Endpoint
+The resource can be imported using the name of the Vector Search Index
 
 ```bash
-terraform import databricks_vector_search_endpoint.this <endpoint-name>
+terraform import databricks_vector_search_index.this <index-name>
 ```

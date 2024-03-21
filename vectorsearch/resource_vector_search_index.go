@@ -16,7 +16,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
 
-const defaultIndexProvisionTimeout = 5 * time.Minute
+const defaultIndexProvisionTimeout = 15 * time.Minute
 
 func waitForVectorSearchIndexDeletion(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
 	return retry.RetryContext(ctx, defaultIndexProvisionTimeout, func() *retry.RetryError {
@@ -46,13 +46,20 @@ func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Conte
 
 func ResourceVectorSearchIndex() common.Resource {
 	s := common.StructToSchema(
-		vectorsearch.CreateVectorIndexRequest{},
+		vectorsearch.VectorIndex{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			common.MustSchemaPath(s, "delta_sync_index_spec", "embedding_vector_columns").MinItems = 1
 			exof := []string{"delta_sync_index_spec", "direct_access_index_spec"}
 			s["delta_sync_index_spec"].ExactlyOneOf = exof
 			s["direct_access_index_spec"].ExactlyOneOf = exof
 
+			common.CustomizeSchemaPath(s, "endpoint_name").SetRequired()
+			common.CustomizeSchemaPath(s, "primary_key").SetRequired()
+			common.CustomizeSchemaPath(s, "status").SetReadOnly()
+			common.CustomizeSchemaPath(s, "creator").SetReadOnly()
+			common.CustomizeSchemaPath(s, "name").SetRequired()
+			common.CustomizeSchemaPath(s, "index_type").SetRequired()
+			common.CustomizeSchemaPath(s, "delta_sync_index_spec", "pipeline_id").SetReadOnly()
 			return s
 		})
 

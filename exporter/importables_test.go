@@ -1595,7 +1595,7 @@ func TestListCatalogs(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/catalogs",
+			Resource:     "/api/2.1/unity-catalog/catalogs?",
 			Response: catalog.ListCatalogsResponse{
 				Catalogs: []catalog.CatalogInfo{
 					{

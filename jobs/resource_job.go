@@ -218,7 +218,7 @@ type JobTaskSettings struct {
 	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
-	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice,alias:library"`
 
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`

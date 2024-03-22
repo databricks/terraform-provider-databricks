@@ -16,6 +16,10 @@ Granting view [databricks_permissions](../resources/permissions.md) to all [data
 ```hcl
 data "databricks_jobs" "this" {}
 
+data "databricks_jobs" "tests" {
+  job_name_contains = "test"
+}
+
 resource "databricks_permissions" "everyone_can_view_all_jobs" {
   for_each = data.databricks_jobs.this.ids
   job_id   = each.value
@@ -37,6 +41,10 @@ output "x" {
   sensitive = false
 }
 ```
+
+## Argument Reference
+
+* `job_name_contains` - (Optional) Only return [databricks_job](../resources/job.md#) ids that match the given name string.
 
 ## Attribute Reference
 

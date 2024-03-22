@@ -12,19 +12,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const DefaultProvisionTimeout = 15 * time.Minute
+const lakehouseMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
-	return retry.RetryContext(ctx, DefaultProvisionTimeout, func() *retry.RetryError {
+	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
 		endpoint, err := w.LakehouseMonitors.GetByFullName(ctx, monitorName)
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
 
-		if endpoint.Status == catalog.MonitorInfoStatusMonitorStatusActive {
+		switch endpoint.Status {
+		case catalog.MonitorInfoStatusMonitorStatusActive:
 			return nil
-		}
-		if endpoint.Status == catalog.MonitorInfoStatusMonitorStatusError || endpoint.Status == catalog.MonitorInfoStatusMonitorStatusFailed {
+		case catalog.MonitorInfoStatusMonitorStatusError, catalog.MonitorInfoStatusMonitorStatusFailed:
 			return retry.NonRetryableError(fmt.Errorf("monitor status retrund %s for monitor: %s", endpoint.Status, monitorName))
 		}
 		return retry.RetryableError(fmt.Errorf("monitor %s is still pending", monitorName))
@@ -114,7 +114,7 @@ func ResourceLakehouseMonitor() common.Resource {
 		},
 		Schema: monitorSchema,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Create: schema.DefaultTimeout(lakehouseMonitorDefaultProvisionTimeout),
 		},
 	}
 }

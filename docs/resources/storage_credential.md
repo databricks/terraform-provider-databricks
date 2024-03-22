@@ -84,8 +84,6 @@ The following arguments are required:
 `aws_iam_role` optional configuration block for credential details for AWS:
 
 - `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
-- `external_id` (output only) - The external ID used in role assumption to prevent confused deputy problem.
-- `unity_catalog_iam_arn` (output only) - The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks. This is the identity that is going to assume the AWS IAM role.
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
 

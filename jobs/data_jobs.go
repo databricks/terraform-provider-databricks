@@ -9,12 +9,13 @@ import (
 
 func DataSourceJobs() common.Resource {
 	type jobsData struct {
-		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
+		Ids        map[string]string `json:"ids,omitempty" tf:"computed"`
+		NameFilter string            `json:"job_name_contains,omitempty" tf:"computed"`
 	}
 	return common.DataResource(jobsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		response := e.(*jobsData)
 		jobsAPI := NewJobsAPI(ctx, c)
-		list, err := jobsAPI.List()
+		list, err := jobsAPI.List(response.NameFilter)
 		if err != nil {
 			return err
 		}

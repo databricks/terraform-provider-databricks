@@ -11,7 +11,7 @@ import (
 var restrictWsAdminsSetting = workspaceSetting[settings.RestrictWorkspaceAdminsSetting]{
 	settingStruct: settings.RestrictWorkspaceAdminsSetting{},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.RestrictWorkspaceAdminsSetting, error) {
-		return w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminRequest{
+		return w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
 			Etag: etag,
 		})
 	},
@@ -28,7 +28,7 @@ var restrictWsAdminsSetting = workspaceSetting[settings.RestrictWorkspaceAdminsS
 		return res.Etag, err
 	},
 	deleteFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (string, error) {
-		res, err := w.Settings.RestrictWorkspaceAdmins().Delete(ctx, settings.DeleteRestrictWorkspaceAdminRequest{
+		res, err := w.Settings.RestrictWorkspaceAdmins().Delete(ctx, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
 			Etag: etag,
 		})
 		if err != nil {

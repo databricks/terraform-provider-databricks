@@ -71,7 +71,7 @@ func ResourceOnlineTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			var req catalog.ViewData
+			var req catalog.CreateOnlineTableRequest
 			common.DataToStructPointer(d, s, &req)
 			res, err := w.OnlineTables.Create(ctx, req)
 			if err != nil {

@@ -17,6 +17,7 @@ func ResourceRecipient() common.Resource {
 		common.CustomizeSchemaPath(s, "name").SetForceNew().SetRequired()
 		common.CustomizeSchemaPath(s, "owner").SetSuppressDiff()
 		common.CustomizeSchemaPath(s, "properties_kvpairs").SetSuppressDiff()
+		common.CustomizeSchemaPath(s, "properties_kvpairs", "properties").SetSuppressDiff()
 		common.CustomizeSchemaPath(s, "data_recipient_global_metastore_id").SetForceNew().SetConflictsWith([]string{"ip_access_list"})
 		common.CustomizeSchemaPath(s, "ip_access_list").SetConflictsWith([]string{"data_recipient_global_metastore_id"})
 

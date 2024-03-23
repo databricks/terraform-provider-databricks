@@ -9,36 +9,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type Token struct {
-	Id             string `json:"id,omitempty" tf:"computed"`
-	CreatedAt      int64  `json:"created_at,omitempty" tf:"computed"`
-	CreatedBy      string `json:"created_by,omitempty" tf:"computed"`
-	ActivationUrl  string `json:"activation_url,omitempty" tf:"computed"`
-	ExpirationTime int64  `json:"expiration_time,omitempty" tf:"computed"`
-	UpdatedAt      int64  `json:"updated_at,omitempty" tf:"computed"`
-	UpdatedBy      string `json:"updated_by,omitempty" tf:"computed"`
-}
-
-type IpAccessList struct {
-	AllowedIpAddresses []string `json:"allowed_ip_addresses"`
-}
-
-type RecipientInfo struct {
-	Name                           string        `json:"name" tf:"force_new"`
-	Comment                        string        `json:"comment,omitempty"`
-	SharingCode                    string        `json:"sharing_code,omitempty" tf:"sensitive,force_new,suppress_diff"`
-	AuthenticationType             string        `json:"authentication_type" tf:"force_new"`
-	Tokens                         []Token       `json:"tokens,omitempty" tf:"computed"`
-	Owner                          string        `json:"owner,omitempty" tf:"suppress_diff"`
-	DataRecipientGlobalMetastoreId string        `json:"data_recipient_global_metastore_id,omitempty" tf:"force_new,conflicts:ip_access_list"`
-	IpAccessList                   *IpAccessList `json:"ip_access_list,omitempty"`
-}
-
 func ResourceRecipient() common.Resource {
-	recipientSchema := common.StructToSchema(RecipientInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false)
-		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
-		return m
+	recipientSchema := common.StructToSchema(sharing.RecipientInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew().SetRequired().SetValidateFunc(validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false))
+		common.CustomizeSchemaPath(s, "sharing_code").SetSuppressDiff().SetForceNew().SetSensitive()
+		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew()
+		common.CustomizeSchemaPath(s, "name").SetForceNew().SetRequired()
+		common.CustomizeSchemaPath(s, "owner").SetSuppressDiff()
+		common.CustomizeSchemaPath(s, "properties_kvpairs").SetSuppressDiff()
+		common.CustomizeSchemaPath(s, "data_recipient_global_metastore_id").SetForceNew().SetConflictsWith([]string{"ip_access_list"})
+		common.CustomizeSchemaPath(s, "ip_access_list").SetConflictsWith([]string{"data_recipient_global_metastore_id"})
+
+		common.CustomizeSchemaPath(s, "created_at").SetReadOnly()
+		common.CustomizeSchemaPath(s, "created_by").SetReadOnly()
+		common.CustomizeSchemaPath(s, "updated_at").SetReadOnly()
+		common.CustomizeSchemaPath(s, "updated_by").SetReadOnly()
+		common.CustomizeSchemaPath(s, "metastore_id").SetReadOnly()
+		common.CustomizeSchemaPath(s, "region").SetReadOnly()
+		common.CustomizeSchemaPath(s, "cloud").SetReadOnly()
+		common.CustomizeSchemaPath(s, "activated").SetReadOnly()
+		common.CustomizeSchemaPath(s, "activation_url").SetReadOnly()
+		common.CustomizeSchemaPath(s, "tokens").SetReadOnly()
+		common.CustomizeSchemaPath(s, "tokens", "id").SetReadOnly()
+		common.CustomizeSchemaPath(s, "tokens", "created_at").SetReadOnly()
+		common.CustomizeSchemaPath(s, "tokens", "created_by").SetReadOnly()
+		common.CustomizeSchemaPath(s, "tokens", "activation_url").SetReadOnly()
+		common.CustomizeSchemaPath(s, "tokens", "expiration_time").SetReadOnly()
+		common.CustomizeSchemaPath(s, "tokens", "updated_at").SetReadOnly()
+		common.CustomizeSchemaPath(s, "tokens", "updated_by").SetReadOnly()
+
+		return s
 	})
 	return common.Resource{
 		Schema: recipientSchema,

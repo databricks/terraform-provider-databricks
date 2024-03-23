@@ -30,7 +30,7 @@ func TestCreateRecipient(t *testing.T) {
 						AllowedIpAddresses: []string{"0.0.0.0/0"},
 					},
 				},
-				Response: RecipientInfo{
+				Response: sharing.RecipientInfo{
 					Name: "a",
 				},
 			},

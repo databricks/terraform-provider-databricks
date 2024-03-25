@@ -13,17 +13,17 @@ import (
 func ResourceMwsNccBinding() common.Resource {
 	type binding struct {
 		WorkspaceId int64  `json:"workspace_id"`
-		NccId       string `json:"ncc_id"`
+		NccId       string `json:"network_connectivity_config_id"`
 	}
 	s := common.StructToSchema(binding{}, common.NoCustomize)
-	p := common.NewPairSeparatedID("workspace_id", "ncc_id", "/")
+	p := common.NewPairSeparatedID("workspace_id", "network_connectivity_config_id", "/")
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 		acc, err := c.AccountClient()
 		if err != nil {
 			return err
 		}
 		wait, err := acc.Workspaces.Update(ctx, provisioning.UpdateWorkspaceRequest{
-			NetworkConnectivityConfigId: d.Get("ncc_id").(string),
+			NetworkConnectivityConfigId: d.Get("network_connectivity_config_id").(string),
 			WorkspaceId:                 int64(d.Get("workspace_id").(int)),
 		})
 		if err != nil {

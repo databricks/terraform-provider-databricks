@@ -12,49 +12,55 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func getTestNcc() *settings.NetworkConnectivityConfiguration {
-	return &settings.NetworkConnectivityConfiguration{
-		AccountId:                   "abc",
-		Name:                        "ncc_name",
-		Region:                      "ar",
+func getTestNccRule() *settings.NccAzurePrivateEndpointRule {
+	return &settings.NccAzurePrivateEndpointRule{
+		GroupId:                     "group_id",
+		ResourceId:                  "resource_id",
+		RuleId:                      "rule_id",
 		NetworkConnectivityConfigId: "ncc_id",
+		EndpointName:                "endpoint_name",
+		ConnectionState:             "PENDING",
 	}
 }
 
-func TestResourceNCCCreate(t *testing.T) {
+func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockNetworkConnectivityAPI().EXPECT()
-			e.CreateNetworkConnectivityConfiguration(mock.Anything, settings.CreateNetworkConnectivityConfigRequest{
-				Name:   "ncc_name",
-				Region: "ar",
-			}).Return(getTestNcc(), nil)
-			e.GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(getTestNcc(), nil)
+			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				ResourceId:                  "resource_id",
+				GroupId:                     "blob",
+			}).Return(getTestNccRule(), nil)
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(getTestNccRule(), nil)
 		},
-		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
 		HCL: `
-		name = "ncc_name"
-		region = "ar"
+		ncc_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
 		`,
 		Create: true,
-	}.ApplyAndExpectData(t, map[string]any{"id": "abc/ncc_id"})
+	}.ApplyAndExpectData(t, map[string]any{"id": "ncc_id/rule_id"})
 }
 
-func TestResourceNCCCreate_Error(t *testing.T) {
+func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockNetworkConnectivityAPI().EXPECT()
-			e.CreateNetworkConnectivityConfiguration(mock.Anything, settings.CreateNetworkConnectivityConfigRequest{
-				Name:   "ncc_name",
-				Region: "ar",
+			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				ResourceId:                  "resource_id",
+				GroupId:                     "blob",
 			}).Return(nil, &apierr.APIError{Message: "error"})
 		},
-		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
 		HCL: `
-		name = "ncc_name"
-		region = "ar"
+		ncc_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
 		`,
 		Create: true,
 	}.Apply(t)
@@ -62,18 +68,20 @@ func TestResourceNCCCreate_Error(t *testing.T) {
 	assert.Equal(t, "", d.Id())
 }
 
-func TestResourceNCCRead(t *testing.T) {
+func TestResourceNccPrivateEndpointRuleRead(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockNetworkConnectivityAPI().EXPECT().GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(getTestNcc(), nil)
+			a.GetMockNetworkConnectivityAPI().EXPECT().
+				GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
+				Return(getTestNccRule(), nil)
 		},
-		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
 		Read:      true,
 		New:       true,
-		ID:        "abc/ncc_id",
+		ID:        "ncc_id/rule_id",
 	}.ApplyAndExpectData(t, map[string]any{
-		"id":                             "abc/ncc_id",
+		"id":                             "ncc_id/rule_id",
 		"account_id":                     "abc",
 		"name":                           "ncc_name",
 		"region":                         "ar",
@@ -81,46 +89,53 @@ func TestResourceNCCRead(t *testing.T) {
 	})
 }
 
-func TestResourceNCCRead_Error(t *testing.T) {
+func TestResourceNccPrivateEndpointRuleRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockNetworkConnectivityAPI().EXPECT().GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(nil, &apierr.APIError{Message: "error"})
+			a.GetMockNetworkConnectivityAPI().EXPECT().
+				GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
+				Return(nil, &apierr.APIError{Message: "error"})
 		},
-		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
 		Read:      true,
-		ID:        "abc/ncc_id",
+		ID:        "ncc_id/rule_id",
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "error")
-	assert.Equal(t, "abc/ncc_id", d.Id())
+	assert.Equal(t, "ncc_id/rule_id", d.Id())
 }
 
-func TestResourceNCCDelete(t *testing.T) {
+func TestResourceNccPrivateEndpointRuleDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockNetworkConnectivityAPI().EXPECT().DeleteNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(nil)
+			a.GetMockNetworkConnectivityAPI().EXPECT().
+				DeletePrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
+				Return(&settings.NccAzurePrivateEndpointRule{}, nil)
 		},
-		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
 		Delete:    true,
-		ID:        "abc/ncc_id",
-	}.ApplyAndExpectData(t, map[string]any{"id": "abc/ncc_id"})
+		ID:        "ncc_id/rule_id",
+	}.ApplyAndExpectData(t, map[string]any{"id": "ncc_id/rule_id"})
 }
 
-func TestResourceNCCDelete_Error(t *testing.T) {
+func TestResourceNccPrivateEndpointRuleDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockNetworkConnectivityAPI().EXPECT().DeleteNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(&apierr.APIError{Message: "error"})
+			a.GetMockNetworkConnectivityAPI().EXPECT().
+				DeletePrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
+				Return(nil, &apierr.APIError{Message: "error"})
 		},
-		Resource:  ResourceMwsNetworkConnectivityConfig(),
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
-		ID:        "abc/ncc_id",
+		ID:        "ncc_id/rule_id",
 		HCL: `
-		name = "ncc_name"
-		region = "ar"
+		ncc_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
 		`,
 		Delete: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "error")
-	assert.Equal(t, "abc/ncc_id", d.Id())
+	assert.Equal(t, "ncc_id/rule_id", d.Id())
 }

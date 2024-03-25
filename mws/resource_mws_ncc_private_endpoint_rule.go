@@ -54,6 +54,10 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			}
 			return common.StructToData(rule, s, d)
 		},
+		// this resource cannot be updated, add this to prevent "doesn't support update" error from TF
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return nil
+		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			nccId, ruleId, err := p.Unpack(d)
 			if err != nil {

@@ -33,8 +33,8 @@ resource "databricks_mws_ncc_binding" "ncc_binding" {
 
 The following arguments are available:
 
-* `name` - Name of Network Connectivity Config in Databricks Account
-* `region` - Region of the Network Connectivity Config. NCCs can only be referenced by your workspaces in the same region.
+* `name` - Name of Network Connectivity Config in Databricks Account. Change forces creation of a new resource.
+* `region` - Region of the Network Connectivity Config. NCCs can only be referenced by your workspaces in the same region. Change forces creation of a new resource.
 
 ## Attribute Reference
 

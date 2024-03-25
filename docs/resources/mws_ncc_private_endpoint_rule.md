@@ -33,9 +33,9 @@ resource "databricks_mws_ncc_private_endpoint_rule" "storage" {
 
 The following arguments are available:
 
-* `network_connectivity_config_id` - Canonical unique identifier of Network Connectivity Config in Databricks Account
-* `resource_id` - The Azure resource ID of the target resource.
-* `group_id` - The sub-resource type (group ID) of the target resource. Must be one of `blob`, `dfs`, `sqlServer` or `mysqlServer`. Note that to connect to workspace root storage (root DBFS), you need two endpoints, one for blob and one for dfs.
+* `network_connectivity_config_id` - Canonical unique identifier of Network Connectivity Config in Databricks Account. Change forces creation of a new resource.
+* `resource_id` - The Azure resource ID of the target resource. Change forces creation of a new resource.
+* `group_id` - The sub-resource type (group ID) of the target resource. Must be one of `blob`, `dfs`, `sqlServer` or `mysqlServer`. Note that to connect to workspace root storage (root DBFS), you need two endpoints, one for blob and one for dfs. Change forces creation of a new resource.
 
 ## Attribute Reference
 

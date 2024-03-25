@@ -55,6 +55,10 @@ func ResourceMwsNetworkConnectivityConfig() common.Resource {
 			}
 			return common.StructToData(ncc, s, d)
 		},
+		// this resource cannot be updated, add this to prevent "doesn't support update" error from TF
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			return nil
+		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, nccId, err := p.Unpack(d)
 			if err != nil {

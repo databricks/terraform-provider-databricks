@@ -36,7 +36,7 @@ resource "databricks_mws_ncc_binding" "ncc_binding" {
 The following arguments are available:
 
 * `network_connectivity_config_id` - Canonical unique identifier of Network Connectivity Config in Databricks Account.
-* `workspace_id` - Identifier of the workspace to attach the NCC to
+* `workspace_id` - Identifier of the workspace to attach the NCC to. Change forces creation of a new resource.
 
 ## Related Resources
 

@@ -2348,7 +2348,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.currentMetastore == nil {
 				return fmt.Errorf("there is no UC metastore information")
 			}
-			catalogs, err := ic.workspaceClient.Catalogs.ListAll(ic.Context)
+
+			catalogs, err := ic.workspaceClient.Catalogs.ListAll(ic.Context, catalog.ListCatalogsRequest{})
 			if err != nil {
 				return err
 			}

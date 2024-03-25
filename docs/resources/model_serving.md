@@ -15,15 +15,15 @@ resource "databricks_model_serving" "this" {
   config {
     served_entities {
       name                  = "prod_model"
-      entity_name            = "ads-model"
-      entity_version         = "2"
+      entity_name           = "ads-model"
+      entity_version        = "2"
       workload_size         = "Small"
       scale_to_zero_enabled = true
     }
     served_entities {
       name                  = "candidate_model"
-      entity_name            = "ads-model"
-      entity_version         = "4"
+      entity_name           = "ads-model"
+      entity_version        = "4"
       workload_size         = "Small"
       scale_to_zero_enabled = false
     }

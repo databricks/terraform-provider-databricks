@@ -163,7 +163,7 @@ terraform import databricks_cluster_policy.this <cluster-policy-id>
 
 The following resources are often used in the same context:
 
-* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide.
+* [Dynamic Passthrough Clusters for a Group](../guides/workspace-management.md) guide.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_clusters](../data-sources/clusters.md) data to retrieve a list of [databricks_cluster](cluster.md) ids.
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).

@@ -84,6 +84,7 @@ func sqlTableIsManagedProperty(key string) bool {
 		"delta.lastUpdateVersion":                                  true,
 		"delta.minReaderVersion":                                   true,
 		"delta.minWriterVersion":                                   true,
+		"delta.columnMapping.maxColumnId":                          true,
 		"delta.enableDeletionVectors":                              true,
 		"delta.enableRowTracking":                                  true,
 		"delta.feature.deletionVectors":                            true,
@@ -293,6 +294,34 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	return strings.Join(statements, "")
 }
 
+// Wrapping the column name with backtiks to avoid special character messing things up.
+func getWrappedColumnName(ci SqlColumnInfo) string {
+	return fmt.Sprintf("`%s`", ci.Name)
+}
+
+func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
+	// TODO: take out "force_new" in `column` and add case to handle addition and removal of columns.
+	for i, ci := range ti.ColumnInfos {
+		oldCi := oldti.ColumnInfos[i]
+		if ci.Name != oldCi.Name {
+			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), getWrappedColumnName(oldCi), getWrappedColumnName(ci)))
+		}
+		if ci.Comment != oldCi.Comment {
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), getWrappedColumnName(ci), parseComment(ci.Comment)))
+		}
+		if ci.Nullable != oldCi.Nullable {
+			var keyWord string
+			if ci.Nullable {
+				keyWord = "DROP"
+			} else {
+				keyWord = "SET"
+			}
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NOT NULL", typestring, ti.SQLFullName(), getWrappedColumnName(ci), keyWord))
+		}
+	}
+	return statements
+}
+
 func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 	statements := make([]string, 0)
 	typestring := ti.getTableTypeString()
@@ -331,6 +360,8 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		// Next handle property changes and additions
 		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.SQLFullName(), ti.serializeProperties()))
 	}
+
+	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)
 
 	return statements, nil
 }
@@ -384,6 +415,27 @@ func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	return nil
 }
 
+func columnChangesCustomizeDiff(d *schema.ResourceDiff) error {
+	if d.HasChange("column") {
+		old, new := d.GetChange("column")
+		oldCols := old.([]interface{})
+		newCols := new.([]interface{})
+
+		// Only handling same number of columns for now, will address different number of columns as a follow-up.
+		if len(oldCols) == len(newCols) {
+			for i, oldCol := range oldCols {
+				oldColMap := oldCol.(map[string]interface{})
+				newColMap := newCols[i].(map[string]interface{})
+
+				if oldColMap["type"] != newColMap["type"] {
+					return fmt.Errorf("changing the 'type' of an existing column is not supported")
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func ResourceSqlTable() common.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -394,6 +446,7 @@ func ResourceSqlTable() common.Resource {
 				return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
 			}
 			s["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
+			s["view_definition"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 
 			s["cluster_id"].ConflictsWith = []string{"warehouse_id"}
 			s["warehouse_id"].ConflictsWith = []string{"cluster_id"}
@@ -405,6 +458,10 @@ func ResourceSqlTable() common.Resource {
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			err := columnChangesCustomizeDiff(d)
+			if err != nil {
+				return err
+			}
 			if d.HasChange("properties") {
 				old, new := d.GetChange("properties")
 				oldProps := old.(map[string]any)

@@ -90,7 +90,7 @@ The resource supports the following arguments:
   continuous { }
   ```
 
-* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
+* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
@@ -116,7 +116,8 @@ This block describes individual tasks:
   * `spark_python_task`
   * `spark_submit_task`
   * `sql_task`
-* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
+  * `for_each_task`
+* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job.
 * `depends_on` - (Optional) block specifying dependency(-ies) for a given task.
 * `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. When omitted, defaults to `ALL_SUCCESS`.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
@@ -127,9 +128,22 @@ This block describes individual tasks:
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `health` - (Optional) block described below that specifies health conditions for a given task.
 
+### library Configuration Block
+This block descripes an optional library to be installed on the cluster that will execute the job. For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+
+```hcl
+resource "databricks_job" "this" {
+  library {
+    pypi {
+      package = "databricks-mosaic==0.3.14"
+    }
+  }
+}
+```
+
 ### depends_on Configuration Block
 
-This block describes dependencies of a given task:
+This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
 
 * `task_key` - (Required) The name of the task this task depends on.
 * `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
@@ -323,7 +337,10 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 ### dbt_task Configuration Block
 
 * `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
-* `project_directory` - (Optional) The relative path to the directory in the repository specified in `git_source` where dbt should look in for the `dbt_project.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--project-dir` to a dbt command.
+* `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.  Defaults to `GIT` if a `git_source` block is present in the job definition.
+* `project_directory` - (Required when `source` is `WORKSPACE`) The path where dbt should look for `dbt_project.yml`. Equivalent to passing `--project-dir` to the dbt CLI.
+  * If `source` is `GIT`: Relative path to the directory in the repository specified in the `git_source` block. Defaults to the repository's root directory when not specified.
+  * If `source` is `WORKSPACE`: Absolute path to the folder in the workspace.
 * `profiles_directory` - (Optional) The relative path to the directory in the repository specified by `git_source` where dbt should look in for the `profiles.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--profile-dir` to a dbt command.
 * `catalog` - (Optional) The name of the catalog to use inside Unity Catalog.
 * `schema` - (Optional) The name of the schema dbt should run in. Defaults to `default`.
@@ -346,6 +363,12 @@ The `condition_task` specifies a condition with an outcome that can be used to c
 
 This task does not require a cluster to execute and does not support retries or notifications.
 
+### for_each_task Configuration Block
+
+* `concurrency` - (Optional) Controls the number of active iteration task runs. Default is 20, maximum allowed is 100.
+* `inputs` - (Required) (String) Array for task to iterate on. This can be a JSON string or a reference to an array parameter.
+* `task` - (Required) Task to run against the `inputs` list.
+
 ### sql_task Configuration Block
 
 One of the `query`, `dashboard` or `alert` needs to be provided.
@@ -362,7 +385,9 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
   * `alert_id` - (Required) (String) identifier of the Databricks SQL Alert.
   * `subscriptions` - (Required) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
-* `file` - (Optional) block consisting of single string field: `path` - a relative path to the file (inside the Git repository) with SQL commands to execute.  *Requires `git_source` configuration block*.
+* `file` - (Optional) block consisting of single string fields:
+  * `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.
+  * `path` - If `source` is `GIT`: Relative path to the file in the repository specified in the `git_source` block with SQL commands to execute. If `source` is `WORKSPACE`: Absolute path to the file in the workspace with SQL commands to execute.
 
 Example
 
@@ -421,7 +446,7 @@ By default, all users can create and modify jobs unless an administrator [enable
 
 ## Single-task syntax (deprecated)
 
--> **Deprecated** Please define tasks in a `task` block rather than using single-task syntax. 
+-> **Deprecated** Please define tasks in a `task` block rather than using single-task syntax.
 
 This syntax uses Jobs API 2.0 to create a job with a single task. Only a subset of arguments above is supported (`name`, `libraries`, `email_notifications`, `webhook_notifications`, `timeout_seconds`, `max_retries`, `min_retry_interval_millis`, `retry_on_timeout`, `schedule`, `max_concurrent_runs`), and only a single block of `notebook_task`, `spark_jar_task`, `spark_python_task`, `spark_submit_task` and `pipeline_task` can be specified.
 

@@ -71,7 +71,6 @@ func TestCreateSchemaWithOwner(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{
 					Owner:   "administrators",
-					Name:    "a",
 					Comment: "c",
 				},
 				Response: catalog.SchemaInfo{
@@ -127,7 +126,6 @@ func TestUpdateSchema(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{
-					Name:    "a",
 					Comment: "c",
 				},
 				Response: catalog.SchemaInfo{
@@ -185,7 +183,6 @@ func TestUpdateSchemaOwnerWithOtherFields(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{
-					Name:    "a",
 					Comment: "d",
 				},
 				Response: catalog.SchemaInfo{
@@ -243,7 +240,6 @@ func TestUpdateSchemaRollback(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{
-					Name:    "a",
 					Comment: "d",
 				},
 				Response: apierr.APIErrorBody{
@@ -316,7 +312,6 @@ func TestUpdateSchemaRollback_Error(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{
-					Name:    "a",
 					Comment: "d",
 				},
 				Response: apierr.APIErrorBody{
@@ -377,7 +372,6 @@ func TestUpdateSchemaForceNew(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/schemas/b.a",
 				ExpectedRequest: catalog.UpdateSchema{
-					Name:    "a",
 					Comment: "c",
 				},
 				Response: catalog.SchemaInfo{

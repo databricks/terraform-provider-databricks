@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastores Data Source
 
+-> **Note** This data source could be only used with account-level provider!
+
 Retrieves a mapping of name to id of [databricks_metastore](../resources/metastore.md) objects, that were created by Terraform or manually, so that special handling could be applied.
 
 -> **Note** [`account_id`](../index.md#account_id) provider configuration property is required for this resource to work. Data resource will error in case of metastores with duplicate names. This data source is only available for users & service principals with account admin status

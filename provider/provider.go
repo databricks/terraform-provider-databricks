@@ -39,6 +39,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/tokens"
+	"github.com/databricks/terraform-provider-databricks/vectorsearch"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
@@ -89,6 +90,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_spark_version":            clusters.DataSourceSparkVersion().ToResource(),
 			"databricks_sql_warehouse":            sql.DataSourceWarehouse().ToResource(),
 			"databricks_sql_warehouses":           sql.DataSourceWarehouses().ToResource(),
+			"databricks_storage_credential":       catalog.DataSourceStorageCredential().ToResource(),
+			"databricks_storage_credentials":      catalog.DataSourceStorageCredentials().ToResource(),
 			"databricks_tables":                   catalog.DataSourceTables().ToResource(),
 			"databricks_views":                    catalog.DataSourceViews().ToResource(),
 			"databricks_volumes":                  catalog.DataSourceVolumes().ToResource(),
@@ -111,6 +114,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_directory":                   workspace.ResourceDirectory().ToResource(),
 			"databricks_entitlements":                scim.ResourceEntitlements().ToResource(),
 			"databricks_external_location":           catalog.ResourceExternalLocation().ToResource(),
+			"databricks_file":                        storage.ResourceFile().ToResource(),
 			"databricks_git_credential":              repos.ResourceGitCredential().ToResource(),
 			"databricks_global_init_script":          workspace.ResourceGlobalInitScript().ToResource(),
 			"databricks_grant":                       catalog.ResourceGrant().ToResource(),
@@ -123,6 +127,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_instance_profile":            aws.ResourceInstanceProfile().ToResource(),
 			"databricks_ip_access_list":              access.ResourceIPAccessList().ToResource(),
 			"databricks_job":                         jobs.ResourceJob().ToResource(),
+			"databricks_lakehouse_monitor":           catalog.ResourceLakehouseMonitor().ToResource(),
 			"databricks_library":                     clusters.ResourceLibrary().ToResource(),
 			"databricks_metastore":                   catalog.ResourceMetastore().ToResource(),
 			"databricks_metastore_assignment":        catalog.ResourceMetastoreAssignment().ToResource(),
@@ -143,6 +148,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_workspaces":              mws.ResourceMwsWorkspaces().ToResource(),
 			"databricks_notebook":                    workspace.ResourceNotebook().ToResource(),
 			"databricks_obo_token":                   tokens.ResourceOboToken().ToResource(),
+			"databricks_online_table":                catalog.ResourceOnlineTable().ToResource(),
 			"databricks_permission_assignment":       access.ResourcePermissionAssignment().ToResource(),
 			"databricks_permissions":                 permissions.ResourcePermissions().ToResource(),
 			"databricks_pipeline":                    pipelines.ResourcePipeline().ToResource(),
@@ -174,6 +180,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_user":                        scim.ResourceUser().ToResource(),
 			"databricks_user_instance_profile":       aws.ResourceUserInstanceProfile().ToResource(),
 			"databricks_user_role":                   aws.ResourceUserRole().ToResource(),
+			"databricks_vector_search_endpoint":      vectorsearch.ResourceVectorSearchEndpoint().ToResource(),
+			"databricks_vector_search_index":         vectorsearch.ResourceVectorSearchIndex().ToResource(),
 			"databricks_volume":                      catalog.ResourceVolume().ToResource(),
 			"databricks_workspace_conf":              workspace.ResourceWorkspaceConf().ToResource(),
 			"databricks_workspace_file":              workspace.ResourceWorkspaceFile().ToResource(),

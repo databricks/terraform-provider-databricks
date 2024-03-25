@@ -36,6 +36,7 @@
 | [databricks_job](docs/resources/job.md)
 | [databricks_job](docs/data-sources/job.md) data
 | [databricks_jobs](docs/data-sources/jobs.md)
+| [databricks_lakehouse_monitor](docs/resources/lakehouse_monitor.md)
 | [databricks_library](docs/resources/library.md)
 | [databricks_metastore](docs/resources/metastore.md)
 | [databricks_metastore_assignment](docs/resources/metastore_assignment.md)
@@ -94,7 +95,7 @@
 | [databricks_zones](docs/data-sources/zones.md)
 | [Contributing and Development Guidelines](CONTRIBUTING.md)
 
-[![build](https://github.com/databricks/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databricks/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databricks/terraform-provider-databricks/branch/master/graph/badge.svg)](https://codecov.io/gh/databricks/terraform-provider-databricks) ![lines](https://img.shields.io/tokei/lines/github/databricks/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databricks/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databricks&repo=terraform-provider-databricks)
+[![build](https://github.com/databricks/terraform-provider-databricks/workflows/build/badge.svg?branch=master)](https://github.com/databricks/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amaster) [![codecov](https://codecov.io/gh/databricks/terraform-provider-databricks/branch/main/graph/badge.svg)](https://codecov.io/gh/databricks/terraform-provider-databricks) ![lines](https://img.shields.io/tokei/lines/github/databricks/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databricks/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databricks&repo=terraform-provider-databricks)
 
 If you use Terraform 0.13 or newer, please refer to instructions specified at [registry page](https://registry.terraform.io/providers/databricks/databricks/latest). If you use older versions of Terraform or want to build it from sources, please refer to [contributing guidelines](CONTRIBUTING.md) page.
 
@@ -167,7 +168,7 @@ To make Databricks Terraform Provider generally available, we've moved it from [
 
 You should have [`.terraform.lock.hcl`](https://github.com/databrickslabs/terraform-provider-databricks/blob/v0.6.2/scripts/versions-lock.hcl) file in your state directory that is checked into source control. terraform init will give you the following warning.
 
-```
+```text
 Warning: Additional provider information from registry 
 
 The remote registry returned warnings for registry.terraform.io/databrickslabs/databricks:
@@ -178,6 +179,6 @@ After you replace `databrickslabs/databricks` with `databricks/databricks` in th
 
 If you didn't check-in [`.terraform.lock.hcl`](https://www.terraform.io/language/files/dependency-lock#lock-file-location) to the source code version control, you may you may see `Failed to install provider` error. Please follow the simple steps described in the [troubleshooting guide](docs/guides/troubleshooting.md).
 
-```
+```text
 Warning: Exporter is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.
 ```

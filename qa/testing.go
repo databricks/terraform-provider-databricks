@@ -104,11 +104,13 @@ type ResourceFixture struct {
 	CommandMock common.CommandMock
 
 	// Set one of them to true to test the corresponding CRUD function for the
-	// terraform resource.
-	Create bool
-	Read   bool
-	Update bool
-	Delete bool
+	// terraform resource. Or set ExpectedDiff to skip execution and only test
+	// that the diff is expected.
+	Create       bool
+	Read         bool
+	Update       bool
+	Delete       bool
+	ExpectedDiff map[string]*terraform.ResourceAttrDiff
 
 	Removed     bool
 	ID          string
@@ -171,8 +173,10 @@ func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, err
 			return nil, fmt.Errorf("ID must be set for Delete")
 		}
 		return resourceCRUD(r.DeleteContext).withId(f.ID), nil
+	case f.ExpectedDiff != nil:
+		return nil, nil
 	}
-	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
+	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` or `ExpectedDiff` specified")
 }
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
@@ -304,6 +308,10 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
+	if f.ExpectedDiff != nil {
+		assert.Equal(t, f.ExpectedDiff, diff.Attributes)
+		return nil, err
+	}
 	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err

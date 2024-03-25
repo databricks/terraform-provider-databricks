@@ -34,14 +34,50 @@ func TestImportContextFindSkips(t *testing.T) {
 				},
 			},
 		}})
-	_, traversal := (&importContext{
+	_, traversal, _ := (&importContext{
 		State: state,
-	}).Find(&resource{
-		Resource:  "a",
-		Attribute: "b",
-		Name:      "c",
-	}, "x", reference{})
+	}).Find("v", "x", reference{Resource: "a"}, &resource{}, "a")
 	assert.Nil(t, traversal)
+}
+
+func TestImportContextFindNoDirectLookup(t *testing.T) {
+	state := newStateApproximation([]string{"a"})
+	state.Append(resourceApproximation{
+		Type: "a",
+		Instances: []instanceApproximation{
+			{
+				Attributes: map[string]any{
+					"b": "42",
+				},
+			},
+		}})
+	_, traversal, _ := (&importContext{
+		State: state,
+	}).Find("42", "b", reference{Resource: "a", SkipDirectLookup: true}, &resource{}, "a")
+	assert.NotNil(t, traversal)
+}
+
+func TestImportContextFindMatchLongestPrefix(t *testing.T) {
+	state := newStateApproximation([]string{"a"})
+	state.Append(resourceApproximation{
+		Type: "a",
+		Instances: []instanceApproximation{
+			{
+				Attributes: map[string]any{
+					"b": "/a/b",
+				},
+			},
+			{
+				Attributes: map[string]any{
+					"b": "/a/b/c",
+				},
+			},
+		}})
+	val, traversal, _ := (&importContext{
+		State: state,
+	}).Find("/a/b/c/d", "b", reference{Resource: "a", MatchType: MatchLongestPrefix}, &resource{}, "a")
+	require.NotNil(t, traversal)
+	assert.Equal(t, "/a/b/c", val)
 }
 
 func TestImportContextHas(t *testing.T) {
@@ -396,4 +432,23 @@ func TestDeletedWsObjectsDetection(t *testing.T) {
 	_ = os.WriteFile(fname, []byte("{}"), 0755)
 	ic.loadOldWorkspaceObjects(fname)
 	require.Equal(t, 0, len(ic.oldWorkspaceObjects))
+}
+
+func TestExtractResourceIdFromImportBlockString(t *testing.T) {
+	id := extractResourceIdFromImportBlockString(`import {
+		id = "64ed13ad-5772-4871-b23d-660ad014ea1e"
+		to = databricks_pipeline.test_pipeline
+	  }`)
+	assert.Equal(t, "databricks_pipeline.test_pipeline", id)
+
+	id = extractResourceIdFromImportBlockString(``)
+	assert.Equal(t, "", id)
+
+	id = extractResourceIdFromImportBlockString(`aaaa`)
+	assert.Equal(t, "", id)
+
+	id = extractResourceIdFromImportBlockString(`import {
+		id = "64ed13ad-5772-4871-b23d-660ad014ea1e"
+	  }`)
+	assert.Equal(t, "", id)
 }

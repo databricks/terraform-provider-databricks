@@ -58,16 +58,16 @@ terraform {
 │   │   ├── main.tf
 │   │   └── versions.tf
 │   └── production
-│	   ├── README.md
-│	   ├── main.tf
-│   	└── versions.tf
+│    ├── README.md
+│    ├── main.tf
+│    └── versions.tf
 └── modules
-	├── first-module
-	│   ├── ...
-	│   └── versions.tf
-	└── second-module
- 	   ├── ...
- 	   └── versions.tf
+ ├── first-module
+ │   ├── ...
+ │   └── versions.tf
+ └── second-module
+     ├── ...
+     └── versions.tf
 ```
 
 ### Error: Failed to install provider
@@ -131,14 +131,13 @@ If you see the following HTTP request when running Terraform in the debug mode:
 GET /login.html?error=private-link-validation-error:NNNNNNNNNN
 ```
 
-then it means that you're trying to access a workspace that uses private link with private access set to disabled, but you're trying to reach it via public endpoint.  Make sure that domain names resolution is configured correctly to resolve workspace URL to a private endpoint.
+then it means that you're trying to access a workspace that uses private link with private access set to disabled, but you're trying to reach it via public endpoint.  Make sure that domain names resolution is configured correctly to resolve workspace URL to a private endpoint.  Also, this may happen when you’re accessing the internet via an HTTP proxy, so all traffic from Terraform is forwarded to the HTTP proxy, and routed via the public internet.
 
 ### Error: ....: Unauthorized access to Org: NNNNNNNNNN
 
-
 There are a few possible reasons for this error:
 
-* You’re trying to access a Databricks workspace with a private link enabled and public network access set to disabled.  Typically this happens when a computer from which you’re running terraform apply or terraform plan doesn’t have domain name resolution configured correctly, and Terraform is reaching the workspace via a public IP address. Also, this may happen when you’re accessing the internet via a proxy, so all traffic from Terraform is forwarded to the proxy, and routed via the public internet.
+* You’re trying to access a Databricks workspace with a private link enabled and public network access set to disabled.  Typically this happens when a computer from which you’re running terraform apply or terraform plan doesn’t have domain name resolution configured correctly, and Terraform is reaching the workspace via a public IP address. Also, this may happen when you’re accessing the internet via an HTTP proxy, so all traffic from Terraform is forwarded to the proxy, and routed via the public internet.
 * You have a Databricks workspace with IP Access Lists enabled and you’re trying to access from a computer that isn’t in the list of approved IP addresses.
 
 ### Error: Provider registry.terraform.io/databricks/databricks v... does not have a package available for your current platform, windows_386
@@ -183,3 +182,24 @@ If the metastore assigned to the workspace has changed, the new metastore id mus
 ```
 
 To solve this error, the new Metastore ID must be set in the field `metastore_id` of the failing resources.
+
+### More than one authorization method configured error
+
+If you notice the below error:
+
+```sh
+Error: validate: more than one authorization method configured
+```
+
+Ensure that you only have one authorization method set. All available authorization methods are documented [here](https://registry.terraform.io/providers/databricks/databricks/latest/docs#auth_type).
+
+If you want to enforce a specific authorization method, you can set the `auth_type` attribute in the provider block:
+
+```hcl
+provider "databricks" {
+  # other configurations
+  auth_type = "pat"
+}
+```
+
+The above would enforce the use of PAT authorization.

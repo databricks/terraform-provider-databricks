@@ -38,7 +38,7 @@ This data source exports the following attributes:
   * `storage_root_credential_id` - ID of a storage credential used for the `storage_root`.
   * `storage_root_credential_name` - Name of a storage credential used for the `storage_root`.
   * `default_data_access_config_id` -  the ID of the default data access configuration.
-  * `delta_sharing_scope` - Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
+  * `delta_sharing_scope` - Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL. INTERNAL only allows sharing within the same account, and INTERNAL_AND_EXTERNAL allows cross account sharing and token based sharing.
   * `delta_sharing_recipient_token_lifetime_in_seconds` - the expiration duration in seconds on recipient data access tokens.
   * `delta_sharing_organization_name` - The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing.
   * `created_at` - Timestamp (in milliseconds) when the current metastore was created.

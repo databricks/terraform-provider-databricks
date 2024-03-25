@@ -6,7 +6,7 @@ page_title: "Provisioning AWS Databricks E2"
 
 You can provision multiple Databricks workspaces with Terraform.
 
-![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
+![Simplest multiworkspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/simplest-multiworkspace.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -93,6 +93,7 @@ resource "aws_iam_role" "cross_account_role" {
 }
 
 data "databricks_aws_crossaccount_policy" "this" {
+  policy_type = "customer"
 }
 
 resource "aws_iam_role_policy" "this" {
@@ -331,7 +332,7 @@ resource "time_sleep" "wait" {
 }
 ```
 
-#### IAM policy error
+### IAM policy error
 
 If you notice the below error:
 
@@ -341,8 +342,12 @@ Error: MALFORMED_REQUEST: Failed credentials validation checks: Spot Cancellatio
 
 - Try creating workspace from UI:
 
-![create_workspace_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/create_workspace_error.png)
+![create_workspace_error](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/create_workspace_error.png)
 
 - Verify if the role and policy exist (assume role should allow external ID)
 
-![iam_role_trust_error](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/iam_role_trust_error.png)
+![iam_role_trust_error](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/iam_role_trust_error.png)
+
+### More than one authorization method configured error
+
+See the [troubleshooting guide](https://registry.terraform.io/providers/databricks/databricks/latest/docs/guides/troubleshooting#more-than-one-authorization-method-configured)

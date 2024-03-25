@@ -11,7 +11,6 @@ This secret can be used to configure the Databricks Terraform Provider to authen
 
 Additionally, the secret can be used to request OAuth tokens for the service principal, which can be used to authenticate to Databricks REST APIs. See [Authentication using OAuth tokens for service principals](https://docs.databricks.com/dev-tools/authentication-oauth.html).
 
-
 ## Example Usage
 
 Create service principal secret
@@ -28,14 +27,12 @@ The following arguments are available:
 
 * `service_principal_id` - ID of the [databricks_service_principal](service_principal.md) (not application ID).
 
-
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - ID of the secret
-- `secret` - Generated secret for the service principal
-
+* `id` - ID of the secret
+* `secret` - Generated secret for the service principal
 
 ## Related Resources
 

@@ -236,6 +236,23 @@ type resource struct {
 	Incremental bool
 	// Actual Terraform data
 	Data *schema.ResourceData
+	// Arbitrary data to be used by importable
+	ExtraData map[string]any
+}
+
+func (r *resource) AddExtraData(key string, value any) {
+	if r.ExtraData == nil {
+		r.ExtraData = map[string]any{}
+	}
+	r.ExtraData[key] = value
+}
+
+func (r *resource) GetExtraData(key string) (any, bool) {
+	if r.ExtraData == nil {
+		return nil, false
+	}
+	v, ok := r.ExtraData[key]
+	return v, ok
 }
 
 func (r *resource) MatchPair() (string, string) {

@@ -79,12 +79,12 @@ Services are just logical groups of resources used for filtering and organizatio
 * `sql-dashboards` - **listing** [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
 * `sql-queries` - **listing** [databricks_sql_query](../resources/sql_query.md).
-* `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
+* `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
 * `uc-artifact-allowlist` - **listing** exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_catalog_workspace_binding](../resources/catalog_workspace_binding.md)
 * `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
-* `uc-grants` -  [databricks_grants](../resources/grants.md)
+* `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export the list of grants is expanded to include the identity that does the export! This is done to allow to create objects in case when catalogs/schemas have different owners than current identity.*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only metastores from the workspace's region are listed!*
 * `uc-models` - [databricks_registered_model](../resources/registered_model.md)
 * `uc-schemas` -  [databricks_schema](../resources/schema.md)
@@ -124,6 +124,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_connection](../resources/connection.md) | Yes | Yes | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |
+| [databricks_file](../resources/file.md) | Yes | No | Yes | No |
 | [databricks_global_init_script](../resources/global_init_script.md) | Yes | Yes | Yes | No |
 | [databricks_grants](../resources/grants.md) | Yes | No | Yes | No |
 | [databricks_group](../resources/group.md) | Yes | No | Yes | Yes |
@@ -135,7 +136,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes | Yes | No |
 | [databricks_job](../resources/job.md) | Yes | No | Yes | No |
 | [databricks_library](../resources/library.md) | Yes\* | No | Yes | No |
-| [databricks_metastore](../resources/metastore.md) | Yes | Yes | Yes | Yes |
+| [databricks_metastore](../resources/metastore.md) | Yes | Yes | No | Yes |
 | [databricks_metastore_assignment](../resources/metastore_assignment.md) | Yes | No | No | Yes |
 | [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No | No | No | No |
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No | No | No |
@@ -164,7 +165,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_table](../resources/sql_table.md) | Yes | Yes | Yes | No |
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes | Yes | Yes | No |
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes | Yes | No |
-| [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | Yes |
+| [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | No |
 | [databricks_system_schema](../resources/system_schema.md) | Yes | No | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No | Yes | No |
 | [databricks_user](../resources/user.md) | Yes | No | Yes | Yes |

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"sync"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
+	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -700,8 +702,8 @@ func TestSecretScopeListNoNameMatch(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/secrets/scopes/list",
 
-			Response: secrets.SecretScopeList{
-				Scopes: []secrets.SecretScope{
+			Response: sdk_workspace.ListScopesResponse{
+				Scopes: []sdk_workspace.SecretScope{
 					{
 						Name: "abc",
 					},
@@ -1231,7 +1233,7 @@ func TestGlobalInitScriptGeneration(t *testing.T) {
 		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_global_init_script" "new_importing_things" {
-		  source  = "${path.module}/files/new_importing_things.sh"
+		  source  = "${path.module}/global_init_scripts/new_importing_things.sh"
 		  name    = "New: Importing ^ Things"
 		  enabled = true
 		}`), getGeneratedFile(ic, "workspace"))
@@ -1243,9 +1245,8 @@ func TestSecretGeneration(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/secrets/list?scope=a",
-
-			Response: secrets.SecretsList{
-				Secrets: []secrets.SecretMetadata{
+			Response: sdk_workspace.ListSecretsResponse{
+				Secrets: []sdk_workspace.SecretMetadata{
 					{
 						Key: "b",
 					},
@@ -1257,7 +1258,6 @@ func TestSecretGeneration(t *testing.T) {
 			Resource: "databricks_secret",
 			ID:       "a|||b",
 		})
-
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
 		ic.generateAndWriteResources(nil)
@@ -1298,7 +1298,7 @@ func TestDbfsFileGeneration(t *testing.T) {
 		ic.generateAndWriteResources(nil)
 		assert.Equal(t, commands.TrimLeadingWhitespace(`
 		resource "databricks_dbfs_file" "_0cc175b9c0f1b6a831c399e269772661_a" {
-		  source = "${path.module}/files/_0cc175b9c0f1b6a831c399e269772661_a"
+		  source = "${path.module}/dbfs_files/_0cc175b9c0f1b6a831c399e269772661_a"
 		  path   = "a"
 		}`), getGeneratedFile(ic, "storage"))
 	})
@@ -1564,37 +1564,38 @@ func TestImportExternalLocationGrants(t *testing.T) {
 	})
 }
 
-func TestListMetastores(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			ReuseRequest: true,
-			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/metastores",
-			Response: catalog.ListMetastoresResponse{
-				Metastores: []catalog.MetastoreInfo{
-					{
-						Name:        "test",
-						MetastoreId: "1234",
-					},
-				},
-			},
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
-		ic := importContextForTestWithClient(ctx, client)
-		ic.enableServices("uc-metastores")
-		err := resourcesMap["databricks_metastore"].List(ic)
-		assert.NoError(t, err)
-		require.Equal(t, 1, len(ic.testEmits))
-		assert.True(t, ic.testEmits["databricks_metastore[<unknown>] (id: 1234)"])
-	})
-}
+// TODO: restore it when support for Account-level tests is added
+// func TestListMetastores(t *testing.T) {
+// 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+// 		{
+// 			ReuseRequest: true,
+// 			Method:       "GET",
+// 			Resource:     "/api/2.1/unity-catalog/metastores",
+// 			Response: catalog.ListMetastoresResponse{
+// 				Metastores: []catalog.MetastoreInfo{
+// 					{
+// 						Name:        "test",
+// 						MetastoreId: "1234",
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}, func(ctx context.Context, client *common.DatabricksClient) {
+// 		ic := importContextForTestWithClient(ctx, client)
+// 		ic.enableServices("uc-metastores")
+// 		err := resourcesMap["databricks_metastore"].List(ic)
+// 		assert.NoError(t, err)
+// 		require.Equal(t, 1, len(ic.testEmits))
+// 		assert.True(t, ic.testEmits["databricks_metastore[<unknown>] (id: 1234)"])
+// 	})
+// }
 
 func TestListCatalogs(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/catalogs",
+			Resource:     "/api/2.1/unity-catalog/catalogs?",
 			Response: catalog.ListCatalogsResponse{
 				Catalogs: []catalog.CatalogInfo{
 					{
@@ -1985,8 +1986,7 @@ func TestVolumes(t *testing.T) {
 	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
 	d.Set("volume_type", "MANAGED")
 	d.Set("storage_location", "s3://abc/")
-	assert.True(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
-	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
 	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
 }
 
@@ -2127,4 +2127,107 @@ func TestAuxUcFunctions(t *testing.T) {
 	d.Set("isolation_mode", "ISOLATED")
 	assert.False(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
 	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+}
+
+func TestImportUcVolumeFile(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.0/fs/files/Volumes/main/default/wheels/some.whl?",
+			Response:     "test",
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+		os.Mkdir(tmpDir, 0700)
+		ic.Directory = tmpDir
+		ic.enableServices("storage")
+		ic.currentMetastore = currentMetastoreResponse
+
+		file_path := "/Volumes/main/default/wheels/some.whl"
+		d := storage.ResourceFile().ToResource().TestResourceData()
+		d.SetId(file_path)
+		err := resourcesMap["databricks_file"].Import(ic, &resource{
+			ID:   file_path,
+			Data: d,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, file_path, d.Get("path"))
+		assert.Equal(t, "uc_files/main/default/wheels/some.whl", d.Get("source"))
+		// Testing auxiliary functions
+		shouldOmitFunc := resourcesMap["databricks_file"].ShouldOmitField
+		require.NotNil(t, shouldOmitFunc)
+		scm := storage.ResourceFile().Schema
+		assert.True(t, shouldOmitFunc(ic, "md5", scm["md5"], d))
+		assert.False(t, shouldOmitFunc(ic, "path", scm["path"], d))
+
+		assert.Equal(t, "main/default/wheels/some.whl_f27badf8", resourcesMap["databricks_file"].Name(nil, d))
+	})
+}
+
+func sortStringsCopy(s []string) []string {
+	c := make([]string, len(s))
+	copy(c, s)
+	sort.Strings(c)
+	return c
+}
+
+func TestImportGrants(t *testing.T) {
+	ic := importContextForTest()
+
+	s := ic.Resources["databricks_grants"].Schema
+	d := tfcatalog.ResourceGrants().ToResource().TestResourceData()
+	id := "metastore/1234"
+	d.SetId(id)
+	d.MarkNewResource()
+	r := &resource{ID: id, Data: d}
+	err := resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+
+	// Test ignore function
+	assert.True(t, resourcesMap["databricks_grants"].Ignore(ic, r))
+
+	var pList tfcatalog.PermissionsList
+	common.DataToStructPointer(r.Data, s, &pList)
+	assert.Empty(t, pList.Assignments)
+
+	// Test with a filled user name and no owner
+	ic.meUserName = "user@domain.com"
+	d.Set("catalog", "1234")
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+	common.DataToStructPointer(r.Data, s, &pList)
+	require.Equal(t, 0, len(pList.Assignments))
+
+	// Test with a filled user name and permissions
+	r.AddExtraData("owner", "otheruser@domain.com")
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+	common.DataToStructPointer(r.Data, s, &pList)
+	require.Equal(t, 1, len(pList.Assignments))
+	assert.Equal(t, ic.meUserName, pList.Assignments[0].Principal)
+	assert.Equal(t, sortStringsCopy(grantsPrivilegesToAdd["catalog"]), sortStringsCopy(pList.Assignments[0].Privileges))
+
+	// Test with a filled user name and permissions
+	d.Set("metastore", "")
+	d.Set("catalog", "test")
+	pList.Assignments = []tfcatalog.PrivilegeAssignment{
+		{Principal: ic.meUserName, Privileges: []string{"USE_CATALOG", "USE_SCHEMA"}},
+	}
+	common.StructToData(pList, s, d)
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
+	common.DataToStructPointer(r.Data, s, &pList)
+	require.Equal(t, 1, len(pList.Assignments))
+	assert.Equal(t, ic.meUserName, pList.Assignments[0].Principal)
+	assert.Equal(t, sortStringsCopy(append([]string{"USE_CATALOG", "USE_SCHEMA"}, grantsPrivilegesToAdd["catalog"]...)),
+		sortStringsCopy(pList.Assignments[0].Privileges))
+
+	// Test with a filled user name and unsupported objects
+	d.Set("catalog", "")
+	d.Set("model", "test")
+	err = resourcesMap["databricks_grants"].Import(ic, r)
+	assert.NoError(t, err)
 }

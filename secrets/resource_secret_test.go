@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,8 +15,8 @@ func TestResourceSecretRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/list?scope=foo",
-				Response: SecretsList{
-					Secrets: []SecretMetadata{
+				Response: workspace.ListSecretsResponse{
+					Secrets: []workspace.SecretMetadata{
 						{
 							Key:                  "bar",
 							LastUpdatedTimestamp: 12345678,
@@ -43,8 +44,8 @@ func TestResourceSecretRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/list?scope=foo",
-				Response: SecretsList{
-					Secrets: []SecretMetadata{
+				Response: workspace.ListSecretsResponse{
+					Secrets: []workspace.SecretMetadata{
 						{
 							Key:                  "bar",
 							LastUpdatedTimestamp: 12345678,
@@ -87,7 +88,7 @@ func TestResourceSecretCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/put",
-				ExpectedRequest: SecretsRequest{
+				ExpectedRequest: workspace.PutSecret{
 					StringValue: "SparkIsTh3Be$t",
 					Scope:       "foo",
 					Key:         "bar",
@@ -96,8 +97,8 @@ func TestResourceSecretCreate(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/list?scope=foo",
-				Response: SecretsList{
-					Secrets: []SecretMetadata{
+				Response: workspace.ListSecretsResponse{
+					Secrets: []workspace.SecretMetadata{
 						{
 							Key:                  "bar",
 							LastUpdatedTimestamp: 12345678,

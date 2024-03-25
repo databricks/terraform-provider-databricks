@@ -14,8 +14,8 @@ List all storage credentials in the metastore
 ```hcl
 data "databricks_storage_credentials" "all" {}
 
-output "all_metastores" {
-  value = data.databricks_metastores.all.names
+output "all_storage_credentials" {
+  value = data.databricks_storage_credentials.all.names
 }
 ```
 
@@ -23,7 +23,7 @@ output "all_metastores" {
 
 This data source exports the following attributes:
 
-* `namé` - List of names of [databricks_storage_credential](./storage_credential.md) in the metastore
+* `names` - List of names of [databricks_storage_credential](./storage_credential.md) in the metastore
 
 ## Related Resources
 

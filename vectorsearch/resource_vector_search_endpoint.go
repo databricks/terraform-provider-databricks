@@ -2,6 +2,7 @@ package vectorsearch
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -10,7 +11,8 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
 
-const DefaultProvisionTimeout = 45 * time.Minute
+const defaultEndpointProvisionTimeout = 75 * time.Minute
+const deleteCallTimeout = 10 * time.Second
 
 func ResourceVectorSearchEndpoint() common.Resource {
 	s := common.StructToSchema(
@@ -45,8 +47,13 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			if err != nil {
 				return err
 			}
-			endpoint, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate))
+			endpoint, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate) - deleteCallTimeout)
 			if err != nil {
+				log.Printf("[ERROR] Error waiting for endpoint to be created: %s", err.Error())
+				nestedErr := w.VectorSearchEndpoints.DeleteEndpointByEndpointName(ctx, req.Name)
+				if nestedErr != nil {
+					log.Printf("[ERROR] Error cleaning up endpoint: %s", nestedErr.Error())
+				}
 				return err
 			}
 			d.SetId(endpoint.Name)
@@ -79,7 +86,7 @@ func ResourceVectorSearchEndpoint() common.Resource {
 		Schema:         s,
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+			Create: schema.DefaultTimeout(defaultEndpointProvisionTimeout),
 		},
 	}
 }

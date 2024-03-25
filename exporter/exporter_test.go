@@ -22,7 +22,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
-	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
+	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -33,7 +33,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
-	"github.com/databricks/terraform-provider-databricks/secrets"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -323,7 +322,7 @@ var emptyRecipients = qa.HTTPFixture{
 var emptyGitCredentials = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/git-credentials",
-	Response: []workspaceApi.CredentialInfo{
+	Response: []sdk_workspace.CredentialInfo{
 		{},
 	},
 }
@@ -648,8 +647,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/scopes/list",
 				ReuseRequest: true,
-				Response: secrets.SecretScopeList{
-					Scopes: []secrets.SecretScope{
+				Response: sdk_workspace.ListScopesResponse{
+					Scopes: []sdk_workspace.SecretScope{
 						{Name: "a"},
 					},
 				},
@@ -658,8 +657,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/list?scope=a",
 				ReuseRequest: true,
-				Response: secrets.SecretsList{
-					Secrets: []secrets.SecretMetadata{
+				Response: sdk_workspace.ListSecretsResponse{
+					Secrets: []sdk_workspace.SecretMetadata{
 						{Key: "b"},
 					},
 				},
@@ -667,8 +666,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/list?scope=a",
-				Response: secrets.SecretScopeACL{
-					Items: []secrets.ACLItem{
+				Response: sdk_workspace.ListAclsResponse{
+					Items: []sdk_workspace.AclItem{
 						{Permission: "MANAGE", Principal: "test"},
 						{Permission: "READ", Principal: "users"},
 					},
@@ -677,8 +676,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/list?scope=a",
-				Response: secrets.SecretScopeACL{
-					Items: []secrets.ACLItem{
+				Response: sdk_workspace.ListAclsResponse{
+					Items: []sdk_workspace.AclItem{
 						{Permission: "MANAGE", Principal: "test"},
 						{Permission: "READ", Principal: "users"},
 					},
@@ -687,12 +686,12 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=test&scope=a",
-				Response: secrets.ACLItem{Permission: "MANAGE", Principal: "test"},
+				Response: sdk_workspace.AclItem{Permission: "MANAGE", Principal: "test"},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=users&scope=a",
-				Response: secrets.ACLItem{Permission: "READ", Principal: "users"},
+				Response: sdk_workspace.AclItem{Permission: "READ", Principal: "users"},
 			},
 			emptyWorkspace,
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -766,8 +765,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/scopes/list",
 				ReuseRequest: true,
-				Response: secrets.SecretScopeList{
-					Scopes: []secrets.SecretScope{},
+				Response: sdk_workspace.ListScopesResponse{
+					Scopes: []sdk_workspace.SecretScope{},
 				},
 			},
 			emptyWorkspace,
@@ -2289,6 +2288,13 @@ func TestImportingModelServing(t *testing.T) {
 								ModelName:    "def",
 								ModelVersion: "1",
 								Name:         "def",
+							},
+						},
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								EntityName:    "def",
+								EntityVersion: "1",
+								Name:          "def",
 							},
 						},
 					},

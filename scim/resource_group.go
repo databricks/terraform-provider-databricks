@@ -13,7 +13,7 @@ import (
 // ResourceGroup manages user groups
 func ResourceGroup() common.Resource {
 	type entity struct {
-		DisplayName string `json:"display_name" tf:"force_new"`
+		DisplayName string `json:"display_name"`
 		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
 		URL         string `json:"url,omitempty" tf:"computed"`
 	}

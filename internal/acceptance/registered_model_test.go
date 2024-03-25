@@ -40,6 +40,7 @@ func TestUcAccRegisteredModel(t *testing.T) {
 				name = "terraform-test-registered-model-update-{var.STICKY_RANDOM}"
 				catalog_name = "main"
 				schema_name = "default"
+				owner = "account users"
 				comment = "new comment"
 			}
 		`,

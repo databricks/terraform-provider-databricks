@@ -56,7 +56,7 @@ func ResourceSqlEndpoint() common.Resource {
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["id"].Computed = true
 		common.SetDefault(m["auto_stop_mins"], 120)
-		common.SetSuppressDiff(m["channel"])
+		common.CustomizeSchemaPath(m, "channel").SetSuppressDiff()
 		common.MustSchemaPath(m, "channel", "name").Default = "CHANNEL_NAME_CURRENT"
 		common.SetRequired(m["cluster_size"])
 		common.SetReadOnly(m["creator_name"])
@@ -69,19 +69,19 @@ func ResourceSqlEndpoint() common.Resource {
 		common.SetDefault(m["max_num_clusters"], 1)
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
-		common.SetSuppressDiff(m["min_num_clusters"])
+		common.CustomizeSchemaPath(m, "min_num_clusters").SetSuppressDiff()
 		common.SetRequired(m["name"])
 		common.SetReadOnly(m["num_active_sessions"])
 		common.SetReadOnly(m["num_clusters"])
 		common.SetReadOnly(m["odbc_params"])
 		common.SetDefault(m["spot_instance_policy"], "COST_OPTIMIZED")
 		common.SetReadOnly(m["state"])
-		common.SetSuppressDiff(m["tags"])
+		common.CustomizeSchemaPath(m, "tags").SetSuppressDiff()
 		common.SetRequired(common.MustSchemaPath(m, "tags", "custom_tags", "key"))
 		common.SetRequired(common.MustSchemaPath(m, "tags", "custom_tags", "value"))
-		common.SetSuppressDiff(m["warehouse_type"])
-		m["warehouse_type"].ValidateDiagFunc = validation.ToDiagFunc(
-			validation.StringInSlice([]string{"PRO", "CLASSIC"}, false))
+		common.CustomizeSchemaPath(m, "warehouse_type").
+			SetSuppressDiff().
+			SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"PRO", "CLASSIC"}, false)))
 		return m
 	})
 	return common.Resource{

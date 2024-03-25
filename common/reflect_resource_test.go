@@ -43,9 +43,12 @@ func TestChooseFieldName(t *testing.T) {
 }
 
 func TestChooseFieldNameWithAliasesMap(t *testing.T) {
+	type Bar struct {
+		Foo string `json:"foo,omitempty"`
+	}
 	assert.Equal(t, "foo", chooseFieldNameWithAliases(reflect.StructField{
 		Tag: `json:"bar"`,
-	}, map[string]string{"bar": "foo"}))
+	}, reflect.ValueOf(Bar{}).Type(), map[string]map[string]string{"common.Bar": {"bar": "foo"}}))
 }
 
 type testSliceItem struct {
@@ -76,6 +79,29 @@ type testStruct struct {
 	TfOptional     string            `json:"tf_optional" tf:"optional"`
 	Hidden         string            `json:"-"`
 	Hidden2        string
+}
+
+type testRecursiveStruct struct {
+	Task  *testJobTask `json:"task,omitempty"`
+	Extra string       `json:"extra,omitempty"`
+}
+
+type testJobTask struct {
+	ForEachTask *testForEachTask `json:"for_each_task,omitempty"`
+	Extra       string           `json:"extra,omitempty"`
+}
+
+type testForEachTask struct {
+	Task  *testJobTask `json:"task,omitempty"`
+	Extra string       `json:"extra,omitempty"`
+}
+
+func (testRecursiveStruct) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+	return s
+}
+
+func (testRecursiveStruct) MaxDepthForTypes() map[string]int {
+	return map[string]int{"common.testForEachTask": 2}
 }
 
 var scm = StructToSchema(testStruct{}, nil)
@@ -242,9 +268,9 @@ type DummyResourceProvider struct {
 	DummyNoTfTag
 }
 
-func (DummyResourceProvider) Aliases() map[string]string {
-	return map[string]string{"enabled": "enabled_alias",
-		"addresses.primary": "primary_alias"}
+func (DummyResourceProvider) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{"common.DummyResourceProvider": {"enabled": "enabled_alias"},
+		"common.AddressNoTfTag": {"primary": "primary_alias"}}
 }
 
 func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -476,6 +502,44 @@ func TestDataToStructPointerWithResourceProviderStruct(t *testing.T) {
 	DataToStructPointer(d, s, &dummyCopy)
 }
 
+func TestStructToData_EmptyField(t *testing.T) {
+	type EmptyField struct{}
+	type Container struct {
+		EmptyField *EmptyField `json:"empty_field,omitempty"`
+	}
+	s := StructToSchema(Container{}, nil)
+	assert.NotNil(t, s)
+
+	dummy := Container{
+		EmptyField: &EmptyField{},
+	}
+
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	d.MarkNewResource()
+	err := StructToData(dummy, s, d)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, d.Get("empty_field.#"))
+}
+
+func TestStructToData_EmptyFieldNil(t *testing.T) {
+	type EmptyField struct{}
+	type Container struct {
+		EmptyField *EmptyField `json:"empty_field,omitempty"`
+	}
+	s := StructToSchema(Container{}, nil)
+	assert.NotNil(t, s)
+
+	dummy := Container{
+		EmptyField: nil,
+	}
+
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	d.MarkNewResource()
+	err := StructToData(dummy, s, d)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, d.Get("empty_field.#"))
+}
+
 func TestStructToData(t *testing.T) {
 	s := StructToSchema(Dummy{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		return s
@@ -565,7 +629,7 @@ func TestDiffSuppressor(t *testing.T) {
 	stringSchema := &schema.Schema{
 		Type: schema.TypeString,
 	}
-	dsf := diffSuppressor(stringSchema)
+	dsf := diffSuppressor("foo", stringSchema)
 	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
 		"foo": {
 			Type:     schema.TypeBool,
@@ -586,7 +650,7 @@ func TestTypeToSchemaNoStruct(t *testing.T) {
 			fmt.Sprintf("%s", p))
 	}()
 	v := reflect.ValueOf(1)
-	typeToSchema(v, nil)
+	typeToSchema(v, nil, getEmptyRecursionTrackingContext())
 }
 
 func TestTypeToSchemaUnsupported(t *testing.T) {
@@ -599,7 +663,7 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 		New chan int `json:"new"`
 	}
 	v := reflect.ValueOf(nonsense{})
-	typeToSchema(v, nil)
+	typeToSchema(v, nil, getEmptyRecursionTrackingContext())
 }
 
 type data map[string]any
@@ -852,4 +916,18 @@ func TestStructToData_go_sdk_field(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc123", d.Get("warehouse.0.cluster_size"))
 	assert.Equal(t, "extra", d.Get("extra"))
+}
+
+func TestStructToSchema_recursive(t *testing.T) {
+	s := StructToSchema(testRecursiveStruct{}, nil)
+	// Assert that the recursion cannot go beyond 2 levels deep.
+	_, err := SchemaPath(s, "task", "for_each_task")
+	assert.NoError(t, err)
+	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task")
+	assert.NoError(t, err)
+	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task", "task")
+	assert.NoError(t, err)
+	// Should error out on the 3rd level of for_each_task.
+	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task", "task", "for_each_task")
+	assert.Error(t, err)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -81,14 +80,6 @@ func (a PermissionAssignmentAPI) List(workspaceId int64) (list PermissionAssignm
 	return
 }
 
-func mustInt64(s string) int64 {
-	n, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
-
 func ResourceMwsPermissionAssignment() common.Resource {
 	type entity struct {
 		WorkspaceId int64    `json:"workspace_id"`
@@ -120,11 +111,11 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			if err != nil {
 				return fmt.Errorf("parse id: %w", err)
 			}
-			list, err := NewPermissionAssignmentAPI(ctx, c).List(mustInt64(workspaceId))
+			list, err := NewPermissionAssignmentAPI(ctx, c).List(common.MustInt64(workspaceId))
 			if err != nil {
 				return err
 			}
-			permissions, err := list.ForPrincipal(mustInt64(principalId))
+			permissions, err := list.ForPrincipal(common.MustInt64(principalId))
 			if err != nil {
 				return err
 			}

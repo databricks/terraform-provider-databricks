@@ -12,15 +12,12 @@ import (
 
 func ResourceMwsNetworkConnectivityConfig() common.Resource {
 	s := common.StructToSchema(settings.NetworkConnectivityConfiguration{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		common.MustSchemaPath(m, "name").ValidateFunc = validation.StringLenBetween(3, 30)
+		common.CustomizeSchemaPath(m, "name").SetValidateFunc(validation.StringLenBetween(3, 30))
 		for _, p := range []string{"name", "region"} {
-			common.MustSchemaPath(m, p).Optional = false
-			common.MustSchemaPath(m, p).Required = true
+			common.CustomizeSchemaPath(m, p).SetRequired()
 		}
 		for _, p := range []string{"account_id", "network_connectivity_config_id", "creation_time", "updated_time"} {
-			common.MustSchemaPath(m, p).Optional = false
-			common.MustSchemaPath(m, p).Required = false
-			common.MustSchemaPath(m, p).Computed = true
+			common.CustomizeSchemaPath(m, p).SetComputed()
 		}
 		return m
 	})

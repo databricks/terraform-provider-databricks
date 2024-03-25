@@ -414,3 +414,8 @@ func TestDeleteRecipientError(t *testing.T) {
 		ID:       "testRecipient",
 	}.ExpectError(t, "Something went wrong")
 }
+
+func TestRecipientPropsSuppressDiff(t *testing.T) {
+	assert.True(t, recepientPropertiesSuppressDiff("properties_kvpairs.properties.databricks.name", "test", "", nil))
+	assert.False(t, recepientPropertiesSuppressDiff("test", "test", "", nil))
+}

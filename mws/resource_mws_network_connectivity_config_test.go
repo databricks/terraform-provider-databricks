@@ -22,7 +22,7 @@ func getTestNcc() *settings.NetworkConnectivityConfiguration {
 }
 
 func TestResourceNCCCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockNetworkConnectivityAPI().EXPECT()
 			e.CreateNetworkConnectivityConfiguration(mock.Anything, settings.CreateNetworkConnectivityConfigRequest{
@@ -38,9 +38,7 @@ func TestResourceNCCCreate(t *testing.T) {
 		region = "ar"
 		`,
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/ncc_id", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{"id": "abc/ncc_id"})
 }
 
 func TestResourceNCCCreate_Error(t *testing.T) {
@@ -67,8 +65,7 @@ func TestResourceNCCCreate_Error(t *testing.T) {
 func TestResourceNCCRead(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			e := a.GetMockNetworkConnectivityAPI().EXPECT()
-			e.GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(getTestNcc(), nil)
+			a.GetMockNetworkConnectivityAPI().EXPECT().GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(getTestNcc(), nil)
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
@@ -87,8 +84,7 @@ func TestResourceNCCRead(t *testing.T) {
 func TestResourceNCCRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			e := a.GetMockNetworkConnectivityAPI().EXPECT()
-			e.GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(nil, &apierr.APIError{Message: "error"})
+			a.GetMockNetworkConnectivityAPI().EXPECT().GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(nil, &apierr.APIError{Message: "error"})
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
@@ -100,25 +96,21 @@ func TestResourceNCCRead_Error(t *testing.T) {
 }
 
 func TestResourceNCCDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			e := a.GetMockNetworkConnectivityAPI().EXPECT()
-			e.DeleteNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(nil)
+			a.GetMockNetworkConnectivityAPI().EXPECT().DeleteNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(nil)
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
 		Delete:    true,
 		ID:        "abc/ncc_id",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/ncc_id", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{"id": "abc/ncc_id"})
 }
 
 func TestResourceNCCDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			e := a.GetMockNetworkConnectivityAPI().EXPECT()
-			e.DeleteNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(&apierr.APIError{Message: "error"})
+			a.GetMockNetworkConnectivityAPI().EXPECT().DeleteNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(&apierr.APIError{Message: "error"})
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",

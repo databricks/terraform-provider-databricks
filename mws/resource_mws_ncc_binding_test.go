@@ -30,8 +30,8 @@ func TestResourceNccBindingCreate(t *testing.T) {
 		Resource:  ResourceMwsNccBinding(),
 		AccountID: "abc",
 		HCL: `
-		workspace_id = 123456789
-		ncc_id = "ncc_id"
+		workspace_id                   = 123456789
+		network_connectivity_config_id = "ncc_id"
 		`,
 		Create: true,
 	}.ApplyAndExpectData(t, map[string]any{"id": "123456789/ncc_id"})
@@ -60,14 +60,14 @@ func TestResourceNccBindingUpdate(t *testing.T) {
 		Resource:  ResourceMwsNccBinding(),
 		AccountID: "abc",
 		State: map[string]any{
-			"ncc_id":       "ncc_prev_id",
-			"workspace_id": 123456789,
+			"network_connectivity_config_id": "ncc_prev_id",
+			"workspace_id":                   123456789,
 		},
 		Update: true,
 		ID:     "123456789/ncc_prev_id",
 		HCL: `
-		workspace_id = 123456789
-		ncc_id = "ncc_id"
+		workspace_id                   = 123456789
+		network_connectivity_config_id = "ncc_id"
 		`,
 	}.ApplyAndExpectData(t, map[string]any{"id": "123456789/ncc_id"})
 }

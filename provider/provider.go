@@ -142,6 +142,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_credentials":                 mws.ResourceMwsCredentials().ToResource(),
 			"databricks_mws_log_delivery":                mws.ResourceMwsLogDelivery().ToResource(),
 			"databricks_mws_ncc_binding":                 mws.ResourceMwsNccBinding().ToResource(),
+			"databricks_mws_ncc_private_endpoint_rule":   mws.ResourceMwsNccPrivateEndpointRule().ToResource(),
 			"databricks_mws_networks":                    mws.ResourceMwsNetworks().ToResource(),
 			"databricks_mws_network_connectivity_config": mws.ResourceMwsNetworkConnectivityConfig().ToResource(),
 			"databricks_mws_permission_assignment":       mws.ResourceMwsPermissionAssignment().ToResource(),

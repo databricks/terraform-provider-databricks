@@ -7,21 +7,25 @@ subcategory: "Deployment"
 
 -> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html) in Azure & AWS.
 
-Allows you to create a [Network Connectivity Config] that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages serverless network connectivity configs](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/serverless-firewall).
+Allows you to create a [Network Connectivity Config] that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages serverless network connectivity configs](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-firewall).
 
 ## Example Usage
 
 ```hcl
 variable "region" {}
 variable "databricks_account_id" {}
-variable "databricks_workspace_id" {}
 variable "prefix" {}
 
 resource "databricks_mws_network_connectivity_config" "ncc" {
   provider                     = databricks.account
-  account_id                   = var.databricks_account_id
   name                         = "Network Connectivity Config for ${var.prefix}"
   region                       = var.region
+}
+
+resource "databricks_mws_ncc_binding" "ncc_binding" {
+  provider =                       databricks.account
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.id
+  workspace_id =                   var.databricks_workspace_id
 }
 ```
 
@@ -29,7 +33,6 @@ resource "databricks_mws_network_connectivity_config" "ncc" {
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the [Accounts Console](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/account-settings/#--locate-your-account-id).
 * `name` - Name of Network Connectivity Config in Databricks Account
 * `region` - Region of the Network Connectivity Config. NCCs can only be referenced by your workspaces in the same region.
 
@@ -53,3 +56,4 @@ terraform import databricks_mws_network_connectivity_config.ncc <accountID>/<Net
 The following resources are used in the context:
 
 * [databricks_mws_workspaces](mws_workspaces.md) to set up Databricks workspaces.
+* [databricks_mws_ncc_binding](mws_ncc_binding.md) to attach an NCC to a workspace

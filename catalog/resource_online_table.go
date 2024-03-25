@@ -56,7 +56,7 @@ func ResourceOnlineTable() common.Resource {
 	s := common.StructToSchema(catalog.OnlineTable{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
-			common.CustomizeSchemaPath(m, "name", "source_table_full_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(m, "spec", "source_table_full_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 			common.CustomizeSchemaPath(m, "name").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(m, "status").SetReadOnly()
 			common.CustomizeSchemaPath(m, "spec", "pipeline_id").SetReadOnly()

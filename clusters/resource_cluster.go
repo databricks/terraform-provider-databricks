@@ -291,6 +291,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	}
 	clusterAPI := w.Clusters
 	clusterInfo, err := clusterAPI.GetByClusterId(ctx, d.Id())
+	err = wrapMissingClusterError(err, d.Id())
 	if err != nil {
 		return err
 	}
@@ -370,6 +371,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			}
 		}
 		clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
+		err = wrapMissingClusterError(err, d.Id())
 		if err != nil {
 			return err
 		}
@@ -446,6 +448,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	}
 	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList, libsClusterStatus)
 	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
+	err = wrapMissingClusterError(err, d.Id())
 	if err != nil {
 		return err
 	}

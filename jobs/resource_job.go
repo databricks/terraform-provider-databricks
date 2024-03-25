@@ -267,8 +267,16 @@ type FileArrival struct {
 	WaitAfterLastChangeSeconds    int32  `json:"wait_after_last_change_seconds,omitempty"`
 }
 
+type TableUpdate struct {
+	TableNames 										[]string 	`json:"table_names"`
+	Condition  										string   	`json:"condition,omitempty"`
+	MinTimeBetweenTriggersSeconds int32  		`json:"min_time_between_triggers_seconds,omitempty"`
+	WaitAfterLastChangeSeconds    int32  		`json:"wait_after_last_change_seconds,omitempty"`
+}
+
 type Trigger struct {
-	FileArrival *FileArrival `json:"file_arrival"`
+	FileArrival *FileArrival `json:"file_arrival",omitempty`
+	TableUpdate *TableUpdate `json:"table_update",omitempty`
 	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 

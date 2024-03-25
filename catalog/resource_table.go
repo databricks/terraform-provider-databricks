@@ -66,7 +66,10 @@ func (a TablesAPI) deleteTable(name string) error {
 func ResourceTable() common.Resource {
 	tableSchema := common.StructToSchema(TableInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
+			for _, field := range caseInsensitiveFields {
+				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			}
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{

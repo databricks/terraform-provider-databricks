@@ -1303,7 +1303,6 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 	}.Apply(t)
 }
 
-
 func TestResourceJobCreate_Trigger_FileArrivalCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Create:   true,

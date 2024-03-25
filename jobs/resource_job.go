@@ -268,10 +268,10 @@ type FileArrival struct {
 }
 
 type TableUpdate struct {
-	TableNames 										[]string 	`json:"table_names"`
-	Condition  										string   	`json:"condition,omitempty"`
-	MinTimeBetweenTriggersSeconds int32  		`json:"min_time_between_triggers_seconds,omitempty"`
-	WaitAfterLastChangeSeconds    int32  		`json:"wait_after_last_change_seconds,omitempty"`
+	TableNames                    []string `json:"table_names"`
+	Condition                     string   `json:"condition,omitempty"`
+	MinTimeBetweenTriggersSeconds int32    `json:"min_time_between_triggers_seconds,omitempty"`
+	WaitAfterLastChangeSeconds    int32    `json:"wait_after_last_change_seconds,omitempty"`
 }
 
 type Trigger struct {

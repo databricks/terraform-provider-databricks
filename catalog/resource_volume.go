@@ -50,7 +50,6 @@ func ResourceVolume() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			}
-			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			return m
 		})
 	return common.Resource{

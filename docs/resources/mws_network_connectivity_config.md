@@ -17,15 +17,15 @@ variable "databricks_account_id" {}
 variable "prefix" {}
 
 resource "databricks_mws_network_connectivity_config" "ncc" {
-  provider                     = databricks.account
-  name                         = "Network Connectivity Config for ${var.prefix}"
-  region                       = var.region
+  provider = databricks.account
+  name     = "Network Connectivity Config for ${var.prefix}"
+  region   = var.region
 }
 
 resource "databricks_mws_ncc_binding" "ncc_binding" {
-  provider =                       databricks.account
+  provider                       = databricks.account
   network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.id
-  workspace_id =                   var.databricks_workspace_id
+  workspace_id                   = var.databricks_workspace_id
 }
 ```
 
@@ -47,8 +47,8 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by Databricks account ID and Network Connectivity Config ID.
 
-```hcl
-terraform import databricks_mws_network_connectivity_config.ncc <accountID>/<NetworkConnectivityConfigID>
+```sh
+terraform import databricks_mws_network_connectivity_config.ncc <account_id>/<network_connectivity_config_id>
 ```
 
 ## Related Resources

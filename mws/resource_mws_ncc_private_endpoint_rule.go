@@ -12,8 +12,7 @@ import (
 func ResourceMwsNccPrivateEndpointRule() common.Resource {
 	s := common.StructToSchema(settings.NccAzurePrivateEndpointRule{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, p := range []string{"network_connectivity_config_id", "group_id", "resource_id"} {
-			common.CustomizeSchemaPath(m, p).SetRequired()
-			common.CustomizeSchemaPath(m, p).SetForceNew()
+			common.CustomizeSchemaPath(m, p).SetRequired().SetForceNew()
 		}
 		for _, p := range []string{"rule_id", "endpoint_name", "connection_state"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()
@@ -53,10 +52,6 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 				return err
 			}
 			return common.StructToData(rule, s, d)
-		},
-		// this resource cannot be updated, add this to prevent "doesn't support update" error from TF
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			nccId, ruleId, err := p.Unpack(d)

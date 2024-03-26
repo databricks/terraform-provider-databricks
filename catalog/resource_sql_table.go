@@ -463,38 +463,51 @@ func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	return nil
 }
 
-func columnChangesCustomizeDiff(d *schema.ResourceDiff) error {
-	if d.HasChange("column") {
-		old, new := d.GetChange("column")
-		oldCols := old.([]interface{})
-		newCols := new.([]interface{})
+func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) error {
+	// Using plain type casting for oldCols because DiffToStructPointer does not support old value in the diff.
+	old, _ := d.GetChange("column")
+	oldCols := old.([]interface{})
+	newColumnInfos := newTable.ColumnInfos
 
-		if len(oldCols) == len(newCols) {
-			for i, oldCol := range oldCols {
-				oldColMap := oldCol.(map[string]interface{})
-				newColMap := newCols[i].(map[string]interface{})
+	if len(oldCols) == len(newColumnInfos) {
+		err := assertNoColumnTypeDiff(oldCols, newColumnInfos)
+		if err != nil {
+			return err
+		}
+	} else {
+		err := assertNoColumnMembershipAndFieldValueUpdate(oldCols, newColumnInfos)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-				if oldColMap["type"] != newColMap["type"] {
-					return fmt.Errorf("changing the 'type' of an existing column is not supported")
-				}
-			}
-		} else {
-			oldColsNameToMap := make(map[string]map[string]interface{})
-			newColsNameToMap := make(map[string]map[string]interface{})
-			for _, oldCol := range oldCols {
-				oldColMap := oldCol.(map[string]interface{})
-				oldColsNameToMap[oldColMap["name"].(string)] = oldColMap
-			}
-			for _, newCol := range newCols {
-				newColMap := newCol.(map[string]interface{})
-				newColsNameToMap[newColMap["name"].(string)] = newColMap
-			}
-			for name, oldColMap := range oldColsNameToMap {
-				if newColMap, exists := newColsNameToMap[name]; exists {
-					if oldColMap["type"] != newColMap["type"] || oldColMap["nullable"] != newColMap["nullable"] || oldColMap["comment"] != newColMap["comment"] {
-						return fmt.Errorf("detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time")
-					}
-				}
+func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
+	for i, oldCol := range oldCols {
+		oldColMap := oldCol.(map[string]interface{})
+		if oldColMap["type"] != newColumnInfos[i].Type {
+			return fmt.Errorf("changing the 'type' of an existing column is not supported")
+		}
+	}
+	return nil
+}
+
+// This function will throw if column addition or removal is happening together with column info field values.
+func assertNoColumnMembershipAndFieldValueUpdate(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
+	oldColsNameToMap := make(map[string]map[string]interface{})
+	newColsNameToMap := make(map[string]SqlColumnInfo)
+	for _, oldCol := range oldCols {
+		oldColMap := oldCol.(map[string]interface{})
+		oldColsNameToMap[oldColMap["name"].(string)] = oldColMap
+	}
+	for _, newCol := range newColumnInfos {
+		newColsNameToMap[newCol.Name] = newCol
+	}
+	for name, oldColMap := range oldColsNameToMap {
+		if newCol, exists := newColsNameToMap[name]; exists {
+			if oldColMap["type"] != newCol.Type || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
+				return fmt.Errorf("detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time")
 			}
 		}
 	}
@@ -523,9 +536,13 @@ func ResourceSqlTable() common.Resource {
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			err := columnChangesCustomizeDiff(d)
-			if err != nil {
-				return err
+			if d.HasChange("column") {
+				var newTableStruct SqlTableInfo
+				common.DiffToStructPointer(d, tableSchema, &newTableStruct)
+				err := columnChangesCustomizeDiff(d, &newTableStruct)
+				if err != nil {
+					return err
+				}
 			}
 			if d.HasChange("properties") {
 				old, new := d.GetChange("properties")

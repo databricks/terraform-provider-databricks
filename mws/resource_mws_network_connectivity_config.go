@@ -14,8 +14,7 @@ func ResourceMwsNetworkConnectivityConfig() common.Resource {
 	s := common.StructToSchema(settings.NetworkConnectivityConfiguration{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(m, "name").SetValidateFunc(validation.StringLenBetween(3, 30))
 		for _, p := range []string{"name", "region"} {
-			common.CustomizeSchemaPath(m, p).SetRequired()
-			common.CustomizeSchemaPath(m, p).SetForceNew()
+			common.CustomizeSchemaPath(m, p).SetRequired().SetForceNew()
 		}
 		for _, p := range []string{"account_id", "network_connectivity_config_id", "creation_time", "updated_time"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()
@@ -54,10 +53,6 @@ func ResourceMwsNetworkConnectivityConfig() common.Resource {
 				return err
 			}
 			return common.StructToData(ncc, s, d)
-		},
-		// this resource cannot be updated, add this to prevent "doesn't support update" error from TF
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, nccId, err := p.Unpack(d)

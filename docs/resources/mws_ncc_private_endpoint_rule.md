@@ -7,7 +7,7 @@ subcategory: "Deployment"
 
 -> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html) in Azure.
 
-Allows you to create a [Network Connectivity Config] that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages serverless network connectivity configs](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/serverless-firewall).
+Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to [configure private connectivity from serverless compute](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link).
 
 ## Example Usage
 
@@ -16,16 +16,16 @@ variable "region" {}
 variable "prefix" {}
 
 resource "databricks_mws_network_connectivity_config" "ncc" {
-  provider                     = databricks.account
-  name                         = "Network Connectivity Config for ${var.prefix}"
-  region                       = var.region
+  provider = databricks.account
+  name     = "Network Connectivity Config for ${var.prefix}"
+  region   = var.region
 }
 
 resource "databricks_mws_ncc_private_endpoint_rule" "storage" {
-  provider                        = databricks.account
-  network_connectivity_config_id  = databricks_mws_network_connectivity_config.ncc.id
-  resource_id                     = "/subscriptions/653bb673-1234-abcd-a90b-d064d5d53ca4/resourcegroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/examplesa"
-  group_id                      = "blob"
+  provider                       = databricks.account
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.id
+  resource_id                    = "/subscriptions/653bb673-1234-abcd-a90b-d064d5d53ca4/resourcegroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/examplesa"
+  group_id                       = "blob"
 }
 ```
 
@@ -59,8 +59,8 @@ The possible values are:
 
 This resource can be imported by Databricks account ID and Network Connectivity Config ID.
 
-```hcl
-terraform import databricks_mws_network_connectivity_config.ncc <accountID>/<NetworkConnectivityConfigID>
+```sh
+terraform import databricks_mws_ncc_private_endpoint_rule.rule <network_connectivity_config_id>/<rule_id>
 ```
 
 ## Related Resources

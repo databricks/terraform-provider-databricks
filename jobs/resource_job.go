@@ -275,8 +275,8 @@ type TableUpdate struct {
 }
 
 type Trigger struct {
-	FileArrival *FileArrival `json:"file_arrival",omitempty`
-	TableUpdate *TableUpdate `json:"table_update",omitempty`
+	FileArrival *FileArrival `json:"file_arrival,omitempty"`
+	TableUpdate *TableUpdate `json:"table_update,omitempty"`
 	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
@@ -735,6 +735,8 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["schedule"].ConflictsWith = []string{"continuous", "trigger"}
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
+
+		s["trigger"].ExactlyOneOf = []string{"file_arrival", "table_update"}
 
 		// Deprecated Job API 2.0 attributes
 		var topLevelDeprecatedAttr = []string{

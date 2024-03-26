@@ -59,9 +59,9 @@ func TestResourceNccBindingUpdate(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccBinding(),
 		AccountID: "abc",
-		State: map[string]any{
+		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_prev_id",
-			"workspace_id":                   123456789,
+			"workspace_id":                   "123456789",
 		},
 		Update: true,
 		ID:     "123456789/ncc_prev_id",

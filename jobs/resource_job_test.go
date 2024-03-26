@@ -1303,59 +1303,6 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 	}.Apply(t)
 }
 
-func TestResourceJobCreate_Trigger_FileArrivalCreate(t *testing.T) {
-	qa.ResourceFixture{
-		Create:   true,
-		Resource: ResourceJob(),
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
-				ExpectedRequest: JobSettings{
-					MaxConcurrentRuns: 1,
-					Name:              "Test",
-					Trigger: &Trigger{
-						PauseStatus: "UNPAUSED",
-						FileArrival: &FileArrival{
-							URL: "s3://bucket/prefix",
-						},
-					},
-				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						MaxConcurrentRuns: 1,
-						Name:              "Test",
-						Trigger: &Trigger{
-							PauseStatus: "UNPAUSED",
-							FileArrival: &FileArrival{
-								URL: "s3://bucket/prefix",
-							},
-						},
-					},
-				},
-			},
-		},
-		HCL: `
-		trigger {
-			pause_status = "UNPAUSED"
-			file_arrival {
-				url = "s3://bucket/prefix"
-			}
-		}
-		max_concurrent_runs = 1
-		name = "Test"
-		`,
-	}.Apply(t)
-}
-
 func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Create:   true,

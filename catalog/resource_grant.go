@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -253,13 +254,22 @@ func ResourceGrant() common.Resource {
 				for _, k := range changedPrivileges {
 					old, new := d.GetChange(k)
 
+					log.Printf("[DEBUG] CustomizeDiff: old: %v new: %v", old, new)
+
+					oldType := reflect.TypeOf(old)
+					newType := reflect.TypeOf(new)
+					if oldType.String() != "string" || newType.String() != "string" {
+						log.Printf("[DEBUG] CustomizeDiff: oldType: %s newType: %s", oldType, newType)
+						continue
+					}
+
 					oldString := old.(string)
 					newString := new.(string)
 
 					log.Printf("[DEBUG] CustomizeDiff: oldString: %s newString: %s", oldString, newString)
 
 					// if the only difference is spaces, remove the change
-					if newString != oldString && strings.ReplaceAll(newString, " ", "_") == oldString {
+					if oldString != newString && strings.ReplaceAll(newString, " ", "_") == oldString {
 						log.Printf("[DEBUG] CustomizeDiff: removing change: %s", k)
 						// this doesn't work since these privileges are not computed...
 						err := d.Clear(k)

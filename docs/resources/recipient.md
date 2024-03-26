@@ -74,7 +74,7 @@ The following arguments are required:
 * `data_recipient_global_metastore_id` - Required when `authentication_type` is `DATABRICKS`.
 * `ip_access_list` - (Optional) Recipient IP access list.
 * `properties_kvpairs` - (Optional) Recipient properties - object consisting of following fields:
-  * `properties` (Required) a map of string key-value pairs with recipient's properties.
+  * `properties` (Required) a map of string key-value pairs with recipient's properties.  Properties with name starting with `databricks.` are reserved.
 
 ### Ip Access List Argument
 

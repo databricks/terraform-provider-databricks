@@ -19,36 +19,36 @@ resource "databricks_catalog" "sandbox" {
 }
 
 resource "databricks_schema" "things" {
-    catalog_name = databricks_catalog.sandbox.id
-    name         = "things"
-    comment      = "this database is managed by terraform"
-    properties = {
-      kind = "various"
-    }
+  catalog_name = databricks_catalog.sandbox.id
+  name         = "things"
+  comment      = "this database is managed by terraform"
+  properties = {
+    kind = "various"
   }
-  
-resource "databricks_sql_table" "myTestTable" {
-    catalog_name = "main"
-    schema_name = databricks_schema.things.name
-    name = "bar"
-    table_type = "MANAGED"
-    data_source_format = "DELTA"
+}
 
-    column {
-        name      = "timestamp"
-        position  = 1
-        type = "int"
-    }
+resource "databricks_sql_table" "myTestTable" {
+  catalog_name       = "main"
+  schema_name        = databricks_schema.things.name
+  name               = "bar"
+  table_type         = "MANAGED"
+  data_source_format = "DELTA"
+
+  column {
+    name     = "timestamp"
+    position = 1
+    type     = "int"
+  }
 }
 
 resource "databricks_lakehouse_monitor" "testTimeseriesMonitor" {
-    table_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_sql_table.myTestTable.name}"
-    assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_sql_table.myTestTable.name}"
-    output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
-    time_series  {
-        granularities = ["1 hour"]
-        timestamp_col = "timestamp"
-    }
+  table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_sql_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_sql_table.myTestTable.name}"
+  output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
+  time_series {
+    granularities = ["1 hour"]
+    timestamp_col = "timestamp"
+  }
 }
 ```
 
@@ -56,25 +56,25 @@ resource "databricks_lakehouse_monitor" "testTimeseriesMonitor" {
 
 ```hcl
 resource "databricks_lakehouse_monitor" "testMonitorInference" {
-    table_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
-    assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
-    output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
-    inference_log  {
-        granularities = ["1 hour"]
-        timestamp_col = "timestamp"
-        prediction_col = "prediction"
-        model_id_col = "model_id"
-        problem_type = "PROBLEM_TYPE_REGRESSION"
-    } 
+  table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
+  output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
+  inference_log {
+    granularities  = ["1 hour"]
+    timestamp_col  = "timestamp"
+    prediction_col = "prediction"
+    model_id_col   = "model_id"
+    problem_type   = "PROBLEM_TYPE_REGRESSION"
+  }
 }
 ```
 ### Snapshot Monitor
 ```hcl
 resource "databricks_lakehouse_monitor" "testMonitorInference" {
-    table_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
-    assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
-    output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
-    snapshot  {} 
+  table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
+  output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
+  snapshot {}
 }
 ```
 

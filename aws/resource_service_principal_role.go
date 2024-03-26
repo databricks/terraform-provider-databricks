@@ -13,7 +13,7 @@ import (
 func ResourceServicePrincipalRole() common.Resource {
 	r := common.NewPairID("service_principal_id", "role").BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, servicePrincipalID, role string, c *common.DatabricksClient) error {
-			return scim.NewServicePrincipalsAPI(ctx, c).Patch(servicePrincipalID, scim.PatchRequest("add", "roles", role))
+			return scim.NewServicePrincipalsAPI(ctx, c).Patch(servicePrincipalID, scim.PatchRequestWithValue("add", "roles", role))
 		},
 		ReadContext: func(ctx context.Context, servicePrincipalID, roleARN string, c *common.DatabricksClient) error {
 			servicePrincipal, err := scim.NewServicePrincipalsAPI(ctx, c).Read(servicePrincipalID, "roles")
@@ -25,7 +25,7 @@ func ResourceServicePrincipalRole() common.Resource {
 		},
 		DeleteContext: func(ctx context.Context, servicePrincipalID, roleARN string, c *common.DatabricksClient) error {
 			return scim.NewServicePrincipalsAPI(ctx, c).Patch(servicePrincipalID, scim.PatchRequest(
-				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
+				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN)))
 		},
 	})
 	return r

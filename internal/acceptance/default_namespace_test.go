@@ -30,7 +30,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				require.NoError(t, err)
 				etag := state.Attributes["etag"]
 				require.NotEmpty(t, etag)
-				res, err := w.Settings.DefaultNamespace().Get(ctx, settings.GetDefaultNamespaceRequest{
+				res, err := w.Settings.DefaultNamespace().Get(ctx, settings.GetDefaultNamespaceSettingRequest{
 					Etag: etag,
 				})
 				require.NoError(t, err)
@@ -63,7 +63,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 					assert.FailNow(t, "cannot parse error message %v", err)
 				}
 				etag := aerr.Details[0].Metadata["etag"]
-				_, err = w.Settings.DefaultNamespace().Get(ctx, settings.GetDefaultNamespaceRequest{
+				_, err = w.Settings.DefaultNamespace().Get(ctx, settings.GetDefaultNamespaceSettingRequest{
 					Etag: etag,
 				})
 				if !errors.As(err, &aerr) {

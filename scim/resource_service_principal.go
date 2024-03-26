@@ -214,7 +214,7 @@ func ResourceServicePrincipal() common.Resource {
 			}
 			// Disable or delete
 			if isDisable {
-				r := PatchRequest("replace", "active", "false")
+				r := PatchRequestWithValue("replace", "active", "false")
 				err = spAPI.Patch(d.Id(), r)
 			} else {
 				err = spAPI.Delete(d.Id())

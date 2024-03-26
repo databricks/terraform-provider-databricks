@@ -613,9 +613,6 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 		if err != nil {
 			return nil, err
 		}
-		if len(data) == 0 {
-			continue
-		}
 		resultList = append(resultList, data)
 	}
 	return resultList, nil

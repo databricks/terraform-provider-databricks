@@ -1337,3 +1337,16 @@ func generateIgnoreObjectWithoutName(resourceType string) func(ic *importContext
 		return res
 	}
 }
+
+func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) {
+	gr := &resource{
+		Resource: "databricks_grants",
+		ID:       id,
+	}
+	if parentResource.Data != nil {
+		if owner, ok := parentResource.Data.GetOk("owner"); ok {
+			gr.AddExtraData("owner", owner)
+		}
+	}
+	ic.Emit(gr)
+}

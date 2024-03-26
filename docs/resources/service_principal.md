@@ -4,23 +4,28 @@ subcategory: "Security"
 
 # databricks_service_principal Resource
 
-Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) in Databricks workspace or account.
+Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) in Databricks account or workspace.
+
+There are different types of service principals:
+
+* Databricks-managed - exists only inside the Databricks platform (all clouds) and couldn't be used for accessing non-Databricks services.
+* Azure-managed - existing Azure service principal (enterprise application) is registered inside Databricks.  It could be used to work with other Azure services.
 
 -> **Note** To assign account level service principals to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
 
 -> **Note** Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level service principals. Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level service principals.
 
-To create service principals in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments.
+To create service principals in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using the supported authentication method for account operations.
 
 The default behavior when deleting a `databricks_service_principal` resource depends on whether the provider is configured at the workspace-level or account-level. When the provider is configured at the workspace-level, the service principal will be deleted from the workspace. When the provider is configured at the account-level, the service principal will be deactivated but not deleted. When the provider is configured at the account level, to delete the service principal from the account when the resource is deleted, set `disable_as_user_deletion = false`. Conversely, when the provider is configured at the account-level, to deactivate the service principal when the resource is deleted, set `disable_as_user_deletion = true`.
 
 ## Example Usage
 
-Creating regular service principal:
+Creating regular Databricks-managed service principal:
 
 ```hcl
 resource "databricks_service_principal" "sp" {
-  application_id = "00000000-0000-0000-0000-000000000000"
+  display_name = "Admin SP"
 }
 ```
 
@@ -32,7 +37,7 @@ data "databricks_group" "admins" {
 }
 
 resource "databricks_service_principal" "sp" {
-  application_id = "00000000-0000-0000-0000-000000000000"
+  display_name = "Admin SP"
 }
 
 resource "databricks_group_member" "i-am-admin" {
@@ -41,7 +46,7 @@ resource "databricks_group_member" "i-am-admin" {
 }
 ```
 
-Creating service principal with cluster create permissions:
+Creating Azure-managed service principal with cluster create permissions:
 
 ```hcl
 resource "databricks_service_principal" "sp" {
@@ -51,12 +56,12 @@ resource "databricks_service_principal" "sp" {
 }
 ```
 
-Creating service principal in AWS Databricks account:
+Creating Databricks-managed service principal in AWS Databricks account:
 
 ```hcl
 // initialize provider at account-level
 provider "databricks" {
-  alias         = "mws"
+  alias         = "account"
   host          = "https://accounts.cloud.databricks.com"
   account_id    = "00000000-0000-0000-0000-000000000000"
   client_id     = var.client_id
@@ -64,35 +69,35 @@ provider "databricks" {
 }
 
 resource "databricks_service_principal" "sp" {
-  provider     = databricks.mws
+  provider     = databricks.account
   display_name = "Automation-only SP"
 }
 ```
 
-Creating service principal in Azure Databricks account:
+Creating Azure-managed service principal in Azure Databricks account:
 
 ```hcl
 // initialize provider at Azure account-level
 provider "databricks" {
-  alias      = "azure_account"
+  alias      = "account"
   host       = "https://accounts.azuredatabricks.net"
   account_id = "00000000-0000-0000-0000-000000000000"
   auth_type  = "azure-cli"
 }
 
 resource "databricks_service_principal" "sp" {
-  provider       = databricks.azure_account
+  provider       = databricks.account
   application_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
 
 ## Argument Reference
 
--> `application_id` is required on Azure Databricks and is not allowed on other clouds. `display_name` is required on all clouds except Azure.
+-> `application_id` is required on Azure Databricks when using Azure-managed service principals and is not allowed for Databricks-managed service principals. `display_name` is required on all clouds when using Databricks-managed service principals, and optional for Azure Databricks.
 
 The following arguments are available:
 
-- `application_id` - This is the Azure Application ID of the given Azure service principal and will be their form of access and identity. On other clouds than Azure this value is auto-generated.
+- `application_id` This is the Azure Application ID of the given Azure service principal and will be their form of access and identity. For Databricks-managed service principals this value is auto-generated.
 - `display_name` - (Required) This is an alias for the service principal and can be the full name of the service principal.
 - `external_id` - (Optional) ID of the service principal in an external identity provider.
 - `allow_cluster_create` - (Optional) Allow the service principal to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within the boundaries of that specific policy.

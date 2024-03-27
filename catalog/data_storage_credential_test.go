@@ -17,7 +17,7 @@ func TestStorageCredentialDataVerify(t *testing.T) {
 				&catalog.StorageCredentialInfo{
 					Name:  "abc",
 					Owner: "admin",
-					AwsIamRole: &catalog.AwsIamRole{
+					AwsIamRole: &catalog.AwsIamRoleResponse{
 						RoleArn: "test",
 					},
 					AzureManagedIdentity: &catalog.AzureManagedIdentity{

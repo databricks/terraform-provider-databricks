@@ -21,14 +21,14 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
-	tfuc "github.com/databricks/terraform-provider-databricks/catalog"
+	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
+	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
-	"github.com/databricks/terraform-provider-databricks/secrets"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
@@ -67,6 +67,17 @@ var (
 		"JUPYTER":    ".ipynb",
 		"DBC":        ".dbc",
 		"R_MARKDOWN": ".Rmd",
+	}
+	grantsPrivilegesToAdd = map[string][]string{
+		// TODO: think how to handle these if the TF user isn't owner of the metastore...
+		// "metastore": {`CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`,
+		// 	`CREATE_RECIPIENT`, `CREATE_SCHEMA`, `CREATE_STORAGE_CREDENTIAL`, `SET_SHARE_PERMISSION`},
+		"catalog":            {`CREATE_SCHEMA`},
+		"schema":             {`CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_MODEL`, `CREATE_VOLUME`},
+		"volume":             {`WRITE_VOLUME`},
+		"external_location":  {`CREATE_EXTERNAL_TABLE`, `CREATE_EXTERNAL_VOLUME`, `CREATE_MANAGED_STORAGE`},
+		"storage_credential": {`CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`},
+		"foreign_connection": {`CREATE_FOREIGN_CATALOG`},
 	}
 )
 
@@ -1134,41 +1145,49 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name + "_" + generateUniqueID(name)
 		},
 		List: func(ic *importContext) error {
-			ssAPI := secrets.NewSecretScopesAPI(ic.Context, ic.Client)
-			if scopes, err := ssAPI.List(); err == nil {
-				for i, scope := range scopes {
-					if !ic.MatchesName(scope.Name) {
-						log.Printf("[INFO] Secret scope %s doesn't match %s filter", scope.Name, ic.match)
-						continue
-					}
-					ic.Emit(&resource{
-						Resource: "databricks_secret_scope",
-						ID:       scope.Name,
-					})
-					log.Printf("[INFO] Imported %d of %d secret scopes", i+1, len(scopes))
+			scopes := ic.workspaceClient.Secrets.ListScopes(ic.Context)
+			for scopes.HasNext(ic.Context) {
+				scope, err := scopes.Next(ic.Context)
+				if err != nil {
+					return err
 				}
+				if !ic.MatchesName(scope.Name) {
+					log.Printf("[INFO] Secret scope %s doesn't match %s filter", scope.Name, ic.match)
+					continue
+				}
+				ic.Emit(&resource{
+					Resource: "databricks_secret_scope",
+					ID:       scope.Name,
+				})
 			}
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			backendType, _ := r.Data.GetOk("backend_type")
 			if backendType != "AZURE_KEYVAULT" {
-				if l, err := secrets.NewSecretsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
-					for _, secret := range l {
-						ic.Emit(&resource{
-							Resource: "databricks_secret",
-							ID:       fmt.Sprintf("%s|||%s", r.ID, secret.Key),
-						})
+				secrets := ic.workspaceClient.Secrets.ListSecrets(ic.Context, sdk_workspace.ListSecretsRequest{
+					Scope: r.ID,
+				})
+				for secrets.HasNext(ic.Context) {
+					secret, err := secrets.Next(ic.Context)
+					if err != nil {
+						return err
 					}
-				}
-			}
-			if l, err := secrets.NewSecretAclsAPI(ic.Context, ic.Client).List(r.ID); err == nil {
-				for _, acl := range l {
 					ic.Emit(&resource{
-						Resource: "databricks_secret_acl",
-						ID:       fmt.Sprintf("%s|||%s", r.ID, acl.Principal),
+						Resource: "databricks_secret",
+						ID:       fmt.Sprintf("%s|||%s", r.ID, secret.Key),
 					})
 				}
+			}
+			acls, err := ic.workspaceClient.Secrets.ListAclsByScope(ic.Context, r.ID)
+			if err != nil {
+				return err
+			}
+			for _, acl := range acls.Items {
+				ic.Emit(&resource{
+					Resource: "databricks_secret_acl",
+					ID:       fmt.Sprintf("%s|||%s", r.ID, acl.Principal),
+				})
 			}
 			return nil
 		},
@@ -1179,17 +1198,31 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_secret": {
 		WorkspaceLevel: true,
 		Service:        "secrets",
-		Depends: []reference{
-			{Path: "string_value", Variable: true},
-			{Path: "scope", Resource: "databricks_secret_scope"},
-			{Path: "string_value", Resource: "vault_generic_secret", Match: "data"},
-			{Path: "string_value", Resource: "aws_kms_secrets", Match: "plaintext"},
-			{Path: "string_value", Resource: "azurerm_key_vault_secret", Match: "value"},
-			{Path: "string_value", Resource: "aws_secretsmanager_secret_version", Match: "secret_string"},
-		},
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := fmt.Sprintf("%s_%s", d.Get("scope"), d.Get("key"))
 			return name + "_" + generateUniqueID(name)
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.exportSecrets {
+				resp, err := ic.workspaceClient.Secrets.GetSecret(ic.Context, sdk_workspace.GetSecretRequest{
+					Scope: r.Data.Get("scope").(string),
+					Key:   r.Data.Get("key").(string),
+				})
+				if err != nil {
+					return err
+				}
+				secret, err := base64.StdEncoding.DecodeString(resp.Value)
+				if err != nil {
+					return err
+				}
+				varName := ic.generateVariableName("string_value", ic.ResourceName(r))
+				ic.addTfVar(varName, string(secret))
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "string_value", Variable: true},
+			{Path: "scope", Resource: "databricks_secret_scope"},
 		},
 	},
 	"databricks_secret_acl": {
@@ -1657,6 +1690,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_sql_query"),
 		Depends: []reference{
 			{Path: "data_source_id", Resource: "databricks_sql_endpoint", Match: "data_source_id"},
 			{Path: "parameter.query.query_id", Resource: "databricks_sql_query", Match: "id"},
@@ -1705,6 +1739,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_sql_endpoint"),
 	},
 	"databricks_sql_global_config": {
 		WorkspaceLevel: true,
@@ -1896,6 +1931,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_sql_alert"),
 		Depends: []reference{
 			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
 			{Path: "parent", Resource: "databricks_directory", Match: "object_id",
@@ -2326,7 +2362,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.currentMetastore == nil {
 				return fmt.Errorf("there is no UC metastore information")
 			}
-			catalogs, err := ic.workspaceClient.Catalogs.ListAll(ic.Context)
+
+			catalogs, err := ic.workspaceClient.Catalogs.ListAll(ic.Context, catalog.ListCatalogsRequest{})
 			if err != nil {
 				return err
 			}
@@ -2348,15 +2385,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var cat tfuc.CatalogInfo
+			var cat tfcatalog.CatalogInfo
 			s := ic.Resources["databricks_catalog"].Schema
 			common.DataToStructPointer(r.Data, s, &cat)
 
 			// Emit: UC Connection, List schemas, Catalog grants, ...
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "catalog/" + cat.Name,
-			})
+			ic.emitUCGrantsWithOwner("catalog/"+cat.Name, r)
 			// TODO: emit owner?  Should we do this? Because it's a account-level identity... Create a separate function for that...
 			if cat.ConnectionName != "" {
 				ic.Emit(&resource{
@@ -2389,6 +2423,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				if err == nil {
 					for _, binding := range bindings.Bindings {
 						id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securable, cat.Name)
+						// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
+						// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now
+						// to decrease a number of API calls.
 						d := ic.Resources["databricks_catalog_workspace_binding"].Data(
 							&terraform.InstanceState{
 								ID: id,
@@ -2418,6 +2455,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_catalog"),
 		Depends: []reference{
 			{Path: "connection_name", Resource: "databricks_connection", Match: "name"},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
@@ -2432,10 +2470,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			schemaFullName := r.ID
 			catalogName := r.Data.Get("catalog_name").(string)
 			schemaName := r.Data.Get("name").(string)
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "schema/" + schemaFullName,
-			})
+			ic.emitUCGrantsWithOwner("schema/"+schemaFullName, r)
 			ic.Emit(&resource{
 				Resource: "databricks_catalog",
 				ID:       catalogName,
@@ -2495,6 +2530,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
+		Ignore:          generateIgnoreObjectWithoutName("databricks_schema"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
@@ -2505,10 +2541,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-volumes",
 		Import: func(ic *importContext, r *resource) error {
 			volumeFullName := r.ID
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "volume/" + volumeFullName,
-			})
+			ic.emitUCGrantsWithOwner("volume/"+volumeFullName, r)
+
 			catalogName := r.Data.Get("catalog_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
@@ -2527,6 +2561,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_volume"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
@@ -2540,10 +2575,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-tables",
 		Import: func(ic *importContext, r *resource) error {
 			tableFullName := r.ID
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "table/" + tableFullName,
-			})
+			ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
 			catalogName := r.Data.Get("catalog_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
@@ -2556,6 +2588,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_sql_table"),
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 			switch pathString {
 			case "storage_location":
@@ -2576,6 +2609,49 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-grants",
 		// TODO: Should we try to make name unique?
 		// TODO: do we need to emit principals? Maybe only on account level? See comment for the owner...
+		Import: func(ic *importContext, r *resource) error {
+			if ic.meUserName == "" {
+				return nil
+			}
+			// https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/privileges.html#privilege-types-by-securable-object-in-unity-catalog
+			var newPrivileges []string
+			for k, v := range grantsPrivilegesToAdd {
+				if r.Data.Get(k).(string) != "" {
+					newPrivileges = append(newPrivileges, v...)
+					break
+				}
+			}
+			if len(newPrivileges) == 0 {
+				return nil
+			}
+
+			owner, found := r.GetExtraData("owner")
+			if !found || owner == "" || owner == ic.meUserName {
+				// We don't need to change permissions if owner isn't set, or it's the same user
+				return nil
+			}
+
+			var pList tfcatalog.PermissionsList
+			s := ic.Resources["databricks_grants"].Schema
+			common.DataToStructPointer(r.Data, s, &pList)
+			foundExisting := false
+			for i, v := range pList.Assignments {
+				if v.Principal == ic.meUserName {
+					pList.Assignments[i].Privileges = append(pList.Assignments[i].Privileges, newPrivileges...)
+					slices.Sort(pList.Assignments[i].Privileges)
+					pList.Assignments[i].Privileges = slices.Compact(pList.Assignments[i].Privileges)
+					foundExisting = true
+					break
+				}
+			}
+			if !foundExisting {
+				pList.Assignments = append(pList.Assignments, tfcatalog.PrivilegeAssignment{
+					Principal:  ic.meUserName,
+					Privileges: newPrivileges,
+				})
+			}
+			return common.StructToData(pList, s, r.Data)
+		},
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.Data.Get("grant.#").(int) == 0
 		},
@@ -2598,34 +2674,16 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_storage_credential": {
 		WorkspaceLevel: true,
-		AccountLevel:   true,
 		Service:        "uc-storage-credentials",
 		Import: func(ic *importContext, r *resource) error {
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       fmt.Sprintf("storage_credential/%s", r.ID),
-			})
+			ic.emitUCGrantsWithOwner("storage_credential/"+r.ID, r)
 			return nil
 		},
 		List: func(ic *importContext) error {
-			var objList []catalog.StorageCredentialInfo
-			var err error
-
-			if ic.accountLevel {
-				if ic.currentMetastore == nil {
-					return fmt.Errorf("there is no UC metastore information")
-				}
-				currentMetastore := ic.currentMetastore.MetastoreId
-				objList, err = ic.accountClient.StorageCredentials.List(ic.Context, catalog.ListAccountStorageCredentialsRequest{
-					MetastoreId: currentMetastore,
-				})
-			} else {
-				objList, err = ic.workspaceClient.StorageCredentials.ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
-			}
+			objList, err := ic.workspaceClient.StorageCredentials.ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
 			if err != nil {
 				return err
 			}
-
 			for _, v := range objList {
 				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_storage_credential",
@@ -2643,10 +2701,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-external-locations",
 		Import: func(ic *importContext, r *resource) error {
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       fmt.Sprintf("external_location/%s", r.ID),
-			})
+			ic.emitUCGrantsWithOwner("external_location/"+r.ID, r)
 			ic.Emit(&resource{
 				Resource: "databricks_storage_credential",
 				ID:       r.Data.Get("credential_name").(string),
@@ -2705,10 +2760,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
 			connectionName := r.Data.Get("name").(string)
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "foreign_connection/" + connectionName,
-			})
+			ic.emitUCGrantsWithOwner("foreign_connection/"+connectionName, r)
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
@@ -2731,14 +2783,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
-			var share tfuc.ShareInfo
+			var share tfcatalog.ShareInfo
 			s := ic.Resources["databricks_share"].Schema
 			common.DataToStructPointer(r.Data, s, &share)
 			// TODO: how to link recipients to share?
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "share/" + r.ID,
-			})
+			ic.emitUCGrantsWithOwner("share/"+r.ID, r)
 			for _, obj := range share.Objects {
 				switch obj.DataObjectType {
 				case "TABLE":
@@ -2812,10 +2861,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		// },
 		Import: func(ic *importContext, r *resource) error {
 			modelFullName := r.ID
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "model/" + modelFullName,
-			})
+			ic.emitUCGrantsWithOwner("model/"+modelFullName, r)
 			catalogName := r.Data.Get("catalog_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
@@ -2838,6 +2884,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
+		Ignore: generateIgnoreObjectWithoutName("databricks_registered_model"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
@@ -2846,9 +2893,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_metastore": {
-		WorkspaceLevel: true,
-		AccountLevel:   true,
-		Service:        "uc-metastores",
+		AccountLevel: true,
+		Service:      "uc-metastores",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -2857,13 +2903,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		List: func(ic *importContext) error {
-			var err error
-			var metastores []catalog.MetastoreInfo
-			if ic.accountLevel {
-				metastores, err = ic.accountClient.Metastores.ListAll(ic.Context)
-			} else {
-				metastores, err = ic.workspaceClient.Metastores.ListAll(ic.Context)
-			}
+			metastores, err := ic.accountClient.Metastores.ListAll(ic.Context)
 			if err != nil {
 				return err
 			}
@@ -2876,12 +2916,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			ic.Emit(&resource{
-				Resource: "databricks_grants",
-				ID:       "metastore/" + r.ID,
-			})
+			ic.emitUCGrantsWithOwner("metastore/"+r.ID, r)
 			// TODO: emit owner? See comment in catalog resource
-			if ic.accountLevel { // emit metastore assignments
+			if ic.accountLevel {
+				// emit metastore assignments
 				assignments, err := ic.accountClient.MetastoreAssignments.ListByMetastoreId(ic.Context, r.ID)
 				if err == nil {
 					for _, workspaceID := range assignments.WorkspaceIds {
@@ -2893,6 +2931,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				} else {
 					log.Printf("[ERROR] listing metastore assignments: %s", err.Error())
 				}
+				// TODO: emit storage credentials associated with specific metastores, but we'll need to solve
+				// a problem of importing a resource... This will require to changing ID from name to metastore ID + name.
 			}
 			return nil
 		},

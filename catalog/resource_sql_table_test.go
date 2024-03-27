@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 )
 
 func TestResourceSqlTableCreateStatement_External(t *testing.T) {
@@ -635,6 +636,144 @@ func TestResourceSqlTableUpdateView_Comments(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "barview", d.Get("name"))
+}
+
+func TestResourceSqlTableUpdateTable_Columns(t *testing.T) {
+	allowedCommands := []string{
+		"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` COMMENT 'managed comment'",
+		"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` DROP NOT NULL",
+		"ALTER TABLE `main`.`foo`.`bar` RENAME COLUMN `two` to `three`",
+	}
+	d, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			assert.True(t, slices.Contains(allowedCommands, commandStr))
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "EXTERNAL"
+		data_source_format = "DELTA"
+		storage_location   = "s3://ext-main/foo/bar1"
+		comment 		   = "terraform managed"
+		cluster_id         = "gone"
+		column {
+			name      = "one"
+			type      = "string"
+			comment   = "managed comment"
+			nullable  = true
+		}
+		column {
+			name      = "three"
+			type      = "string"
+		}
+		`,
+		InstanceState: map[string]string{
+			"name":               "bar",
+			"catalog_name":       "main",
+			"schema_name":        "foo",
+			"table_type":         "EXTERNAL",
+			"data_source_format": "DELTA",
+			"storage_location":   "s3://ext-main/foo/bar1",
+			"comment":            "terraform managed",
+			"column.#":           "2",
+			"column.0.name":      "one",
+			"column.0.type":      "string",
+			"column.0.comment":   "old comment",
+			"column.0.nullable":  "false",
+			"column.1.name":      "two",
+			"column.1.type":      "string",
+			"column.1.nullable":  "true",
+		},
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ReuseRequest: true,
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					ColumnInfos: []SqlColumnInfo{
+						{
+							Name:     "one",
+							Type:     "string",
+							Comment:  "old comment",
+							Nullable: false,
+						},
+						{
+							Name:     "two",
+							Type:     "string",
+							Nullable: true,
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "gone",
+				},
+				Status: 404,
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", d.Get("name"))
+}
+
+func TestResourceSqlTableUpdateTable_ColumnsTypeThrowsError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "EXTERNAL"
+		data_source_format = "DELTA"
+		storage_location   = "s3://ext-main/foo/bar1"
+		comment 		   = "terraform managed"
+		cluster_id         = "gone"
+		column {
+			name      = "one"
+			type      = "int"
+			comment   = "managed comment"
+			nullable  = false
+		}
+		`,
+		InstanceState: map[string]string{
+			"name":               "bar",
+			"catalog_name":       "main",
+			"schema_name":        "foo",
+			"table_type":         "EXTERNAL",
+			"data_source_format": "DELTA",
+			"storage_location":   "s3://ext-main/foo/bar1",
+			"comment":            "terraform managed",
+			"column.#":           "1",
+			"column.0.name":      "one",
+			"column.0.type":      "string",
+			"column.0.comment":   "old comment",
+			"column.0.nullable":  "false",
+		},
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	assert.EqualError(t, err, "changing the 'type' of an existing column is not supported")
 }
 
 func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {

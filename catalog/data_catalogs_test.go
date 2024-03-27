@@ -12,7 +12,7 @@ func TestCatalogsData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs",
+				Resource: "/api/2.1/unity-catalog/catalogs?",
 				Response: catalog.ListCatalogsResponse{
 					Catalogs: []catalog.CatalogInfo{
 						{

@@ -30,7 +30,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 				require.NoError(t, err)
 				etag := state.Attributes["etag"]
 				require.NotEmpty(t, etag)
-				res, err := w.Settings.GetRestrictWorkspaceAdminsSetting(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
+				res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
 					Etag: etag,
 				})
 				assert.NoError(t, err)
@@ -49,7 +49,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 					assert.NoError(t, err)
 					// Terraform Check returns the latest resource status before it is destroyed, which has an outdated eTag.
 					// We are making an update call to get the correct eTag in the response error.
-					_, err = w.Settings.UpdateRestrictWorkspaceAdminsSetting(ctx, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
+					_, err = w.Settings.RestrictWorkspaceAdmins().Update(ctx, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
 						AllowMissing: true,
 						Setting: settings.RestrictWorkspaceAdminsSetting{
 							RestrictWorkspaceAdmins: settings.RestrictWorkspaceAdminsMessage{
@@ -64,7 +64,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 						assert.FailNow(t, "cannot parse error message %v", err)
 					}
 					etag := aerr.Details[0].Metadata["etag"]
-					res, err := w.Settings.GetRestrictWorkspaceAdminsSetting(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
+					res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
 						Etag: etag,
 					})
 					// we should not be getting any error

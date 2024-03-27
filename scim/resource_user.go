@@ -140,7 +140,7 @@ func ResourceUser() common.Resource {
 			}
 			// Disable or delete
 			if isDisable {
-				r := PatchRequest("replace", "active", "false")
+				r := PatchRequestWithValue("replace", "active", "false")
 				err = user.Patch(d.Id(), r)
 			} else {
 				err = user.Delete(d.Id())

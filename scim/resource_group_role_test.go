@@ -13,7 +13,7 @@ func TestResourceGroupRoleCreate(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: PatchRequest("add", "roles", "arn:aws:iam::000000000000:role/test-role"),
+				ExpectedRequest: PatchRequestWithValue("add", "roles", "arn:aws:iam::000000000000:role/test-role"),
 				Response: Group{
 					ID: "abc",
 				},
@@ -155,8 +155,7 @@ func TestResourceGroupRoleDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 				ExpectedRequest: PatchRequest(
 					"remove",
-					`roles[value eq "arn:aws:iam::000000000000:role/test-role"]`,
-					""),
+					`roles[value eq "arn:aws:iam::000000000000:role/test-role"]`),
 			},
 		},
 		Resource: ResourceGroupRole(),

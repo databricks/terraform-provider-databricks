@@ -13,7 +13,7 @@ type StorageCredentialInfo struct {
 	Name                        string                                       `json:"name" tf:"force_new"`
 	Owner                       string                                       `json:"owner,omitempty" tf:"computed"`
 	Comment                     string                                       `json:"comment,omitempty"`
-	Aws                         *catalog.AwsIamRole                          `json:"aws_iam_role,omitempty" tf:"group:access"`
+	Aws                         *catalog.AwsIamRoleResponse                  `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure                       *catalog.AzureServicePrincipal               `json:"azure_service_principal,omitempty" tf:"group:access"`
 	AzMI                        *catalog.AzureManagedIdentity                `json:"azure_managed_identity,omitempty" tf:"group:access"`
 	GcpSAKey                    *GcpServiceAccountKey                        `json:"gcp_service_account_key,omitempty" tf:"group:access"`
@@ -130,11 +130,6 @@ func ResourceStorageCredential() common.Resource {
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Id()
 			update.Force = force
-			// We need to set them to empty since these fields are computed
-			if _, ok := d.GetOk("aws_iam_role"); ok {
-				update.AwsIamRole.UnityCatalogIamArn = ""
-				update.AwsIamRole.ExternalId = ""
-			}
 			if _, ok := d.GetOk("azure_managed_identity"); ok {
 				update.AzureManagedIdentity.CredentialId = ""
 			}

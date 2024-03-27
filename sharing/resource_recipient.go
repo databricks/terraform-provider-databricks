@@ -23,10 +23,10 @@ func recepientPropertiesSuppressDiff(k, old, new string, d *schema.ResourceData)
 
 func ResourceRecipient() common.Resource {
 	recipientSchema := common.StructToSchema(sharing.RecipientInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew().SetRequired().SetValidateFunc(validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false))
+		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew().SetRequired().SetValidateFunc(
+			validation.StringInSlice([]string{"TOKEN", "DATABRICKS"}, false))
 		common.CustomizeSchemaPath(s, "sharing_code").SetSuppressDiff().SetForceNew().SetSensitive()
-		common.CustomizeSchemaPath(s, "authentication_type").SetForceNew()
-		common.CustomizeSchemaPath(s, "name").SetForceNew().SetRequired()
+		common.CustomizeSchemaPath(s, "name").SetForceNew().SetRequired().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 		common.CustomizeSchemaPath(s, "owner").SetSuppressDiff()
 		common.CustomizeSchemaPath(s, "properties_kvpairs").SetSuppressDiff()
 		common.CustomizeSchemaPath(s, "properties_kvpairs", "properties").SetCustomSuppressDiff(recepientPropertiesSuppressDiff)
@@ -35,9 +35,10 @@ func ResourceRecipient() common.Resource {
 
 		// ReadOnly fields
 		for _, path := range []string{"created_at", "created_by", "updated_at", "updated_by", "metastore_id", "region",
-			"cloud", "activated", "activation_url", "tokens"} {
+			"cloud", "activated", "activation_url"} {
 			common.CustomizeSchemaPath(s, path).SetReadOnly()
 		}
+		common.CustomizeSchemaPath(s, "tokens").SetReadOnly().SetOptional()
 		for _, path := range []string{"id", "created_at", "created_by", "activation_url", "expiration_time", "updated_at", "updated_by"} {
 			common.CustomizeSchemaPath(s, "tokens", path).SetReadOnly()
 		}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,7 +9,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/exporter"
 	"github.com/databricks/terraform-provider-databricks/provider"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 )
 
 func main() {
@@ -29,15 +33,54 @@ func main() {
 		debug = true
 	}
 	log.Printf(`Databricks Terraform Provider
+	
+	Version %s
+	
+	https://registry.terraform.io/providers/databricks/databricks/latest/docs
+	
+	`, common.Version())
 
-Version %s
+	sdkPluginProvider := provider.DatabricksProvider()
 
-https://registry.terraform.io/providers/databricks/databricks/latest/docs
+	// Translate terraform sdk plugin to protocol 6
+	upgradedSdkPluginProvider, err := tf5to6server.UpgradeServer(
+		context.Background(),
+		sdkPluginProvider.GRPCProvider,
+	)
 
-`, common.Version())
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: provider.DatabricksProvider,
-		ProviderAddr: "registry.terraform.io/databricks/databricks",
-		Debug:        debug,
-	})
+	pluginFrameworkProvider := provider.GetDatabricksProviderPluginFramework()
+
+	providers := []func() tfprotov6.ProviderServer{
+		upgradedSdkPluginProvider,
+		pluginFrameworkProvider,
+	}
+
+	// Translate plugin framework to protocol 5, we would use tf5muxserver.NewMuxServer(ctx, providers...) below
+	// providers := []func() tfprotov5.ProviderServer{
+	// 	sdkPluginProvider.GRPCProvider,
+	// 	providerserver.NewProtocol5(
+	// 		pluginFrameworkProvider,
+	// 	),
+	// }
+
+	ctx := context.Background()
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var serveOpts []tf5server.ServeOpt
+	if debug {
+		serveOpts = append(serveOpts, tf5server.WithManagedDebug())
+	}
+
+	err = tf5server.Serve(
+		"registry.terraform.io/databricks/databricks",
+		muxServer.ProviderServer,
+		serveOpts...,
+	)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }

@@ -1198,17 +1198,31 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_secret": {
 		WorkspaceLevel: true,
 		Service:        "secrets",
-		Depends: []reference{
-			{Path: "string_value", Variable: true},
-			{Path: "scope", Resource: "databricks_secret_scope"},
-			{Path: "string_value", Resource: "vault_generic_secret", Match: "data"},
-			{Path: "string_value", Resource: "aws_kms_secrets", Match: "plaintext"},
-			{Path: "string_value", Resource: "azurerm_key_vault_secret", Match: "value"},
-			{Path: "string_value", Resource: "aws_secretsmanager_secret_version", Match: "secret_string"},
-		},
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := fmt.Sprintf("%s_%s", d.Get("scope"), d.Get("key"))
 			return name + "_" + generateUniqueID(name)
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.exportSecrets {
+				resp, err := ic.workspaceClient.Secrets.GetSecret(ic.Context, sdk_workspace.GetSecretRequest{
+					Scope: r.Data.Get("scope").(string),
+					Key:   r.Data.Get("key").(string),
+				})
+				if err != nil {
+					return err
+				}
+				secret, err := base64.StdEncoding.DecodeString(resp.Value)
+				if err != nil {
+					return err
+				}
+				varName := ic.generateVariableName("string_value", ic.ResourceName(r))
+				ic.addTfVar(varName, string(secret))
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "string_value", Variable: true},
+			{Path: "scope", Resource: "databricks_secret_scope"},
 		},
 	},
 	"databricks_secret_acl": {

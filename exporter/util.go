@@ -1350,3 +1350,9 @@ func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resour
 	}
 	ic.Emit(gr)
 }
+
+func (ic *importContext) addTfVar(name, value string) {
+	ic.tfvarsMutex.Lock()
+	defer ic.tfvarsMutex.Unlock()
+	ic.tfvars[name] = value
+}

@@ -1349,7 +1349,10 @@ func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
 		trigger {
 			pause_status = "UNPAUSED"
 			table_update {
-				table_names = ["catalog.schema.table1", "catalog.schema.table2"]
+				table_names = {
+					"catalog.schema.table1",
+					"catalog.schema.table2"
+				}
 				condition = "ALL_UPDATED"
 			}
 		}

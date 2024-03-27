@@ -736,7 +736,9 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
 
-		s["trigger"].ExactlyOneOf = []string{"file_arrival", "table_update"}
+		trigger_eoo := []string{"trigger.0.file_arrival", "trigger.0.table_update"}
+		common.MustSchemaPath(s, "trigger", "file_arrival").ExactlyOneOf = trigger_eoo
+		common.MustSchemaPath(s, "trigger", "table_update").ExactlyOneOf = trigger_eoo
 
 		// Deprecated Job API 2.0 attributes
 		var topLevelDeprecatedAttr = []string{

@@ -1091,7 +1091,20 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		scopeSize, time.Since(t1).Seconds())
 }
 
+func (ic *importContext) generateGitIgnore() {
+	fileName := fmt.Sprintf("%s/.gitignore", ic.Directory)
+	vf, err := os.Create(fileName)
+	if err != nil {
+		log.Printf("[ERROR] can't create %s: %v", fileName, err)
+		return
+	}
+	defer vf.Close()
+	// nolint
+	vf.Write([]byte("terraform.tfvars\n"))
+}
+
 func (ic *importContext) generateTfvars() error {
+	// TODO: make it incremental as well...
 	if len(ic.tfvars) == 0 {
 		return nil
 	}
@@ -1111,6 +1124,8 @@ func (ic *importContext) generateTfvars() error {
 	// nolint
 	vf.Write(f.Bytes())
 	log.Printf("[INFO] Written %d tfvars", len(ic.tfvars))
+
+	ic.generateGitIgnore()
 
 	return nil
 }

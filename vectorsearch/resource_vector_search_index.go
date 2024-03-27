@@ -52,7 +52,8 @@ func ResourceVectorSearchIndex() common.Resource {
 			exof := []string{"delta_sync_index_spec", "direct_access_index_spec"}
 			s["delta_sync_index_spec"].ExactlyOneOf = exof
 			s["direct_access_index_spec"].ExactlyOneOf = exof
-
+			s["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			common.CustomizeSchemaPath(s, "delta_sync_index_spec", "source_table").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 			common.CustomizeSchemaPath(s, "endpoint_name").SetRequired()
 			common.CustomizeSchemaPath(s, "primary_key").SetRequired()
 			common.CustomizeSchemaPath(s, "status").SetReadOnly()

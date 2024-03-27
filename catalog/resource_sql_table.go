@@ -439,6 +439,10 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff) error {
 func ResourceSqlTable() common.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
+			for _, field := range caseInsensitiveFields {
+				s[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			}
 			s["data_source_format"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if new == "" {
 					return true

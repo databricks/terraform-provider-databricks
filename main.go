@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/exporter"
 	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
@@ -52,7 +53,7 @@ func main() {
 
 	providers := []func() tfprotov6.ProviderServer{
 		upgradedSdkPluginProvider,
-		pluginFrameworkProvider,
+		providerserver.NewProtocol6(pluginFrameworkProvider),
 	}
 
 	// Translate plugin framework to protocol 5, we would use tf5muxserver.NewMuxServer(ctx, providers...) below

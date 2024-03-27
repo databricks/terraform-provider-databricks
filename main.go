@@ -10,8 +10,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/exporter"
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 )
@@ -52,11 +52,14 @@ func main() {
 	pluginFrameworkProvider := provider.GetDatabricksProviderPluginFramework()
 
 	providers := []func() tfprotov6.ProviderServer{
-		upgradedSdkPluginProvider,
+		func() tfprotov6.ProviderServer {
+			return upgradedSdkPluginProvider
+		},
 		providerserver.NewProtocol6(pluginFrameworkProvider),
 	}
 
-	// Translate plugin framework to protocol 5, we would use tf5muxserver.NewMuxServer(ctx, providers...) below
+	// Translate plugin framework to protocol 5,
+	// we would use tf5muxserver.NewMuxServer(ctx, providers...) and tf5server.Serve below
 	// providers := []func() tfprotov5.ProviderServer{
 	// 	sdkPluginProvider.GRPCProvider,
 	// 	providerserver.NewProtocol5(
@@ -70,12 +73,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var serveOpts []tf5server.ServeOpt
+	var serveOpts []tf6server.ServeOpt
 	if debug {
-		serveOpts = append(serveOpts, tf5server.WithManagedDebug())
+		serveOpts = append(serveOpts, tf6server.WithManagedDebug())
 	}
 
-	err = tf5server.Serve(
+	err = tf6server.Serve(
 		"registry.terraform.io/databricks/databricks",
 		muxServer.ProviderServer,
 		serveOpts...,

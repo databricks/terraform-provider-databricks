@@ -1327,3 +1327,32 @@ func isMatchingAllowListArtifact(ic *importContext, res *resource, ra *resourceA
 
 	return ok && matchType.(string) == "PREFIX_MATCH" && (artifactType == "LIBRARY_JAR" || artifactType == "INIT_SCRIPT")
 }
+
+func generateIgnoreObjectWithoutName(resourceType string) func(ic *importContext, r *resource) bool {
+	return func(ic *importContext, r *resource) bool {
+		res := (r.Data != nil && r.Data.Get("name").(string) == "")
+		if res {
+			ic.addIgnoredResource(fmt.Sprintf("%s. ID=%s", resourceType, r.ID))
+		}
+		return res
+	}
+}
+
+func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) {
+	gr := &resource{
+		Resource: "databricks_grants",
+		ID:       id,
+	}
+	if parentResource.Data != nil {
+		if owner, ok := parentResource.Data.GetOk("owner"); ok {
+			gr.AddExtraData("owner", owner)
+		}
+	}
+	ic.Emit(gr)
+}
+
+func (ic *importContext) addTfVar(name, value string) {
+	ic.tfvarsMutex.Lock()
+	defer ic.tfvarsMutex.Unlock()
+	ic.tfvars[name] = value
+}

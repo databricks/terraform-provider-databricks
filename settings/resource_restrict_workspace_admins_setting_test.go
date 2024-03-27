@@ -16,8 +16,8 @@ var testRestrictWsAdminsSetting = AllSettingsResources()["restrict_workspace_adm
 func TestQueryCreateRestrictWsAdminsSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockSettingsAPI().EXPECT()
-			e.UpdateRestrictWorkspaceAdminsSetting(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
+			e := w.GetMockRestrictWorkspaceAdminsAPI().EXPECT()
+			e.Update(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "restrict_workspace_admins.status",
 				Setting: settings.RestrictWorkspaceAdminsSetting{
@@ -38,7 +38,7 @@ func TestQueryCreateRestrictWsAdminsSetting(t *testing.T) {
 					},
 				}},
 			})
-			e.UpdateRestrictWorkspaceAdminsSetting(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
+			e.Update(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "restrict_workspace_admins.status",
 				Setting: settings.RestrictWorkspaceAdminsSetting{
@@ -55,7 +55,7 @@ func TestQueryCreateRestrictWsAdminsSetting(t *testing.T) {
 				},
 				SettingName: "default",
 			}, nil)
-			e.GetRestrictWorkspaceAdminsSetting(mock.Anything, settings.GetRestrictWorkspaceAdminsSettingRequest{
+			e.Get(mock.Anything, settings.GetRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag2",
 			}).Return(&settings.RestrictWorkspaceAdminsSetting{
 				Etag: "etag2",
@@ -84,7 +84,7 @@ func TestQueryCreateRestrictWsAdminsSetting(t *testing.T) {
 func TestQueryReadRestrictWsAdminsSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockSettingsAPI().EXPECT().GetRestrictWorkspaceAdminsSetting(mock.Anything, settings.GetRestrictWorkspaceAdminsSettingRequest{
+			w.GetMockRestrictWorkspaceAdminsAPI().EXPECT().Get(mock.Anything, settings.GetRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag1",
 			}).Return(&settings.RestrictWorkspaceAdminsSetting{
 				Etag: "etag2",
@@ -116,8 +116,8 @@ func TestQueryReadRestrictWsAdminsSetting(t *testing.T) {
 func TestQueryUpdateRestrictWsAdminsSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockSettingsAPI().EXPECT()
-			e.UpdateRestrictWorkspaceAdminsSetting(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
+			e := w.GetMockRestrictWorkspaceAdminsAPI().EXPECT()
+			e.Update(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "restrict_workspace_admins.status",
 				Setting: settings.RestrictWorkspaceAdminsSetting{
@@ -134,7 +134,7 @@ func TestQueryUpdateRestrictWsAdminsSetting(t *testing.T) {
 				},
 				SettingName: "default",
 			}, nil)
-			e.GetRestrictWorkspaceAdminsSetting(mock.Anything, settings.GetRestrictWorkspaceAdminsSettingRequest{
+			e.Get(mock.Anything, settings.GetRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag2",
 			}).Return(&settings.RestrictWorkspaceAdminsSetting{
 				Etag: "etag2",
@@ -166,8 +166,8 @@ func TestQueryUpdateRestrictWsAdminsSetting(t *testing.T) {
 func TestQueryUpdateRestrictWsAdminsSettingWithConflict(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockSettingsAPI().EXPECT()
-			e.UpdateRestrictWorkspaceAdminsSetting(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
+			e := w.GetMockRestrictWorkspaceAdminsAPI().EXPECT()
+			e.Update(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "restrict_workspace_admins.status",
 				Setting: settings.RestrictWorkspaceAdminsSetting{
@@ -188,7 +188,7 @@ func TestQueryUpdateRestrictWsAdminsSettingWithConflict(t *testing.T) {
 					},
 				}},
 			})
-			e.UpdateRestrictWorkspaceAdminsSetting(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
+			e.Update(mock.Anything, settings.UpdateRestrictWorkspaceAdminsSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "restrict_workspace_admins.status",
 				Setting: settings.RestrictWorkspaceAdminsSetting{
@@ -205,7 +205,7 @@ func TestQueryUpdateRestrictWsAdminsSettingWithConflict(t *testing.T) {
 				},
 				SettingName: "default",
 			}, nil)
-			e.GetRestrictWorkspaceAdminsSetting(mock.Anything, settings.GetRestrictWorkspaceAdminsSettingRequest{
+			e.Get(mock.Anything, settings.GetRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag3",
 			}).Return(&settings.RestrictWorkspaceAdminsSetting{
 				Etag: "etag3",
@@ -237,7 +237,7 @@ func TestQueryUpdateRestrictWsAdminsSettingWithConflict(t *testing.T) {
 func TestQueryDeleteRestrictWsAdminsSetting(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockSettingsAPI().EXPECT().DeleteRestrictWorkspaceAdminsSetting(mock.Anything, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
+			w.GetMockRestrictWorkspaceAdminsAPI().EXPECT().Delete(mock.Anything, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag1",
 			}).Return(&settings.DeleteRestrictWorkspaceAdminsSettingResponse{
 				Etag: "etag2",
@@ -261,7 +261,7 @@ func TestQueryDeleteRestrictWsAdminsSetting(t *testing.T) {
 func TestQueryDeleteRestrictWsAdminsSettingWithConflict(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockSettingsAPI().EXPECT().DeleteRestrictWorkspaceAdminsSetting(mock.Anything, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
+			w.GetMockRestrictWorkspaceAdminsAPI().EXPECT().Delete(mock.Anything, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag1",
 			}).Return(nil, &apierr.APIError{
 				ErrorCode:  "RESOURCE_CONFLICT",
@@ -274,7 +274,7 @@ func TestQueryDeleteRestrictWsAdminsSettingWithConflict(t *testing.T) {
 					},
 				}},
 			})
-			w.GetMockSettingsAPI().EXPECT().DeleteRestrictWorkspaceAdminsSetting(mock.Anything, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
+			w.GetMockRestrictWorkspaceAdminsAPI().EXPECT().Delete(mock.Anything, settings.DeleteRestrictWorkspaceAdminsSettingRequest{
 				Etag: "etag2",
 			}).Return(&settings.DeleteRestrictWorkspaceAdminsSettingResponse{
 				Etag: "etag3",

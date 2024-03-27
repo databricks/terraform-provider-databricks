@@ -17,8 +17,8 @@ var testSetting = AllSettingsResources()["default_namespace"]
 func TestQueryCreateDefaultNameSetting(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockSettingsAPI().EXPECT()
-			e.UpdateDefaultNamespaceSetting(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
+			e := w.GetMockDefaultNamespaceAPI().EXPECT()
+			e.Update(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "namespace.value",
 				Setting: settings.DefaultNamespaceSetting{
@@ -39,7 +39,7 @@ func TestQueryCreateDefaultNameSetting(t *testing.T) {
 					},
 				}},
 			})
-			e.UpdateDefaultNamespaceSetting(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
+			e.Update(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "namespace.value",
 				Setting: settings.DefaultNamespaceSetting{
@@ -56,7 +56,7 @@ func TestQueryCreateDefaultNameSetting(t *testing.T) {
 				},
 				SettingName: "default",
 			}, nil)
-			e.GetDefaultNamespaceSetting(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
+			e.Get(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
 				Etag: "etag2",
 			}).Return(&settings.DefaultNamespaceSetting{
 				Etag: "etag2",
@@ -83,7 +83,7 @@ func TestQueryCreateDefaultNameSetting(t *testing.T) {
 func TestQueryReadDefaultNameSetting(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockSettingsAPI().EXPECT().GetDefaultNamespaceSetting(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
+			w.GetMockDefaultNamespaceAPI().EXPECT().Get(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
 				Etag: "etag1",
 			}).Return(&settings.DefaultNamespaceSetting{
 				Etag: "etag2",
@@ -112,8 +112,8 @@ func TestQueryReadDefaultNameSetting(t *testing.T) {
 func TestQueryUpdateDefaultNameSetting(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockSettingsAPI().EXPECT()
-			e.UpdateDefaultNamespaceSetting(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
+			e := w.GetMockDefaultNamespaceAPI().EXPECT()
+			e.Update(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "namespace.value",
 				Setting: settings.DefaultNamespaceSetting{
@@ -130,7 +130,7 @@ func TestQueryUpdateDefaultNameSetting(t *testing.T) {
 				},
 				SettingName: "default",
 			}, nil)
-			e.GetDefaultNamespaceSetting(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
+			e.Get(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
 				Etag: "etag2",
 			}).Return(&settings.DefaultNamespaceSetting{
 				Etag: "etag2",
@@ -159,8 +159,8 @@ func TestQueryUpdateDefaultNameSetting(t *testing.T) {
 func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockSettingsAPI().EXPECT()
-			e.UpdateDefaultNamespaceSetting(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
+			e := w.GetMockDefaultNamespaceAPI().EXPECT()
+			e.Update(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "namespace.value",
 				Setting: settings.DefaultNamespaceSetting{
@@ -181,7 +181,7 @@ func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 					},
 				}},
 			})
-			e.UpdateDefaultNamespaceSetting(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
+			e.Update(mock.Anything, settings.UpdateDefaultNamespaceSettingRequest{
 				AllowMissing: true,
 				FieldMask:    "namespace.value",
 				Setting: settings.DefaultNamespaceSetting{
@@ -198,7 +198,7 @@ func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 				},
 				SettingName: "default",
 			}, nil)
-			e.GetDefaultNamespaceSetting(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
+			e.Get(mock.Anything, settings.GetDefaultNamespaceSettingRequest{
 				Etag: "etag3",
 			}).Return(&settings.DefaultNamespaceSetting{
 				Etag: "etag3",
@@ -227,7 +227,7 @@ func TestQueryUpdateDefaultNameSettingWithConflict(t *testing.T) {
 func TestQueryDeleteDefaultNameSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockSettingsAPI().EXPECT().DeleteDefaultNamespaceSetting(mock.Anything, settings.DeleteDefaultNamespaceSettingRequest{
+			w.GetMockDefaultNamespaceAPI().EXPECT().Delete(mock.Anything, settings.DeleteDefaultNamespaceSettingRequest{
 				Etag: "etag1",
 			}).Return(&settings.DeleteDefaultNamespaceSettingResponse{
 				Etag: "etag2",
@@ -251,7 +251,7 @@ func TestQueryDeleteDefaultNameSetting(t *testing.T) {
 func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockSettingsAPI().EXPECT().DeleteDefaultNamespaceSetting(mock.Anything, settings.DeleteDefaultNamespaceSettingRequest{
+			w.GetMockDefaultNamespaceAPI().EXPECT().Delete(mock.Anything, settings.DeleteDefaultNamespaceSettingRequest{
 				Etag: "etag1",
 			}).Return(nil, &apierr.APIError{
 				ErrorCode:  "RESOURCE_CONFLICT",
@@ -264,7 +264,7 @@ func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
 					},
 				}},
 			})
-			w.GetMockSettingsAPI().EXPECT().DeleteDefaultNamespaceSetting(mock.Anything, settings.DeleteDefaultNamespaceSettingRequest{
+			w.GetMockDefaultNamespaceAPI().EXPECT().Delete(mock.Anything, settings.DeleteDefaultNamespaceSettingRequest{
 				Etag: "etag2",
 			}).Return(&settings.DeleteDefaultNamespaceSettingResponse{
 				Etag: "etag3",

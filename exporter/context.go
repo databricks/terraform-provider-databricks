@@ -98,7 +98,9 @@ type importContext struct {
 	lastActiveDays           int64
 	lastActiveMs             int64
 	generateDeclaration      bool
+	exportSecrets            bool
 	meAdmin                  bool
+	meUserName               string
 	prefix                   string
 	accountLevel             bool
 	shImports                map[string]bool
@@ -157,6 +159,9 @@ type importContext struct {
 
 	userOrSpDirectories      map[string]bool
 	userOrSpDirectoriesMutex sync.RWMutex
+
+	tfvarsMutex sync.Mutex
+	tfvars      map[string]string
 }
 
 type mount struct {
@@ -267,6 +272,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		userOrSpDirectories:       map[string]bool{},
 		services:                  map[string]struct{}{},
 		listing:                   map[string]struct{}{},
+		tfvars:                    map[string]string{},
 	}
 }
 
@@ -339,6 +345,7 @@ func (ic *importContext) Run() error {
 	ic.accountLevel = ic.Client.Config.IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
+		// TODO: check if we can get the current user from the account client
 		ic.accountClient, err = ic.Client.AccountClient()
 		if err != nil {
 			return err
@@ -355,6 +362,7 @@ func (ic *importContext) Run() error {
 		for _, g := range me.Groups {
 			if g.Display == "admins" {
 				ic.meAdmin = true
+				ic.meUserName = me.UserName
 				break
 			}
 		}
@@ -466,7 +474,12 @@ func (ic *importContext) Run() error {
 	ic.generateAndWriteResources(sh)
 	err = ic.generateVariables()
 	if err != nil {
-		return err
+		log.Printf("[ERROR] can't write variables file: %s", err.Error())
+	}
+
+	err = ic.generateTfvars()
+	if err != nil {
+		log.Printf("[ERROR] can't write terraform.tfvars file: %s", err.Error())
 	}
 
 	// Write stats file
@@ -1078,6 +1091,45 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		scopeSize, time.Since(t1).Seconds())
 }
 
+func (ic *importContext) generateGitIgnore() {
+	fileName := fmt.Sprintf("%s/.gitignore", ic.Directory)
+	vf, err := os.Create(fileName)
+	if err != nil {
+		log.Printf("[ERROR] can't create %s: %v", fileName, err)
+		return
+	}
+	defer vf.Close()
+	// nolint
+	vf.Write([]byte("terraform.tfvars\n"))
+}
+
+func (ic *importContext) generateTfvars() error {
+	// TODO: make it incremental as well...
+	if len(ic.tfvars) == 0 {
+		return nil
+	}
+	f := hclwrite.NewEmptyFile()
+	body := f.Body()
+	fileName := fmt.Sprintf("%s/terraform.tfvars", ic.Directory)
+
+	vf, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer vf.Close()
+
+	for k, v := range ic.tfvars {
+		body.SetAttributeValue(k, cty.StringVal(v))
+	}
+	// nolint
+	vf.Write(f.Bytes())
+	log.Printf("[INFO] Written %d tfvars", len(ic.tfvars))
+
+	ic.generateGitIgnore()
+
+	return nil
+}
+
 func (ic *importContext) generateVariables() error {
 	if len(ic.variables) == 0 {
 		return nil
@@ -1185,6 +1237,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) {
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
+			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			return matchValue, genTraversalTokens(sr, attr), sr.Mode == "data"
 		}
 		if ref.MatchType != MatchCaseInsensitive { // for case-insensitive matching we'll try iteration
@@ -1466,6 +1519,10 @@ func (ic *importContext) getTraversalTokens(ref reference, value string, origRes
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
+func (ic *importContext) generateVariableName(attrName, name string) string {
+	return fmt.Sprintf("%s_%s", attrName, name)
+}
+
 func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value, origResource *resource) hclwrite.Tokens {
 	pathString := strings.Join(path, ".")
 	match := dependsRe.ReplaceAllString(pathString, "")
@@ -1484,7 +1541,8 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 			}
 		}
 		if d.Variable {
-			return ic.variable(fmt.Sprintf("%s_%s", path[0], value), "")
+			varName := ic.generateVariableName(path[0], value)
+			return ic.variable(varName, "")
 		}
 
 		tokens, isData := ic.getTraversalTokens(d, value, origResource, pathString)

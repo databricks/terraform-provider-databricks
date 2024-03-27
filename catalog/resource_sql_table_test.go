@@ -529,6 +529,56 @@ func TestResourceSqlTableUpdateView_Definition(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceSqlTableUpdateView_IgnoreNewlineInDefinition(t *testing.T) {
+	commandExecuted := false
+
+	_, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			commandExecuted = true
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+        resource "databricks_sql_table" "test" {
+            name            = "barview"
+            catalog_name    = "main"
+            schema_name     = "foo"
+            table_type      = "VIEW"
+            cluster_id      = "existingcluster"
+            view_definition = "SELECT * FROM main.foo.bar\n\n"
+        }`,
+		InstanceState: map[string]string{
+			"name":            "barview",
+			"catalog_name":    "main",
+			"schema_name":     "foo",
+			"table_type":      "VIEW",
+			"cluster_id":      "existingcluster",
+			"view_definition": "SELECT * FROM main.foo.bar",
+		},
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
+				Response: SqlTableInfo{
+					Name:           "barview",
+					CatalogName:    "main",
+					SchemaName:     "foo",
+					TableType:      "VIEW",
+					ViewDefinition: "SELECT * FROM main.foo.bar",
+				},
+			},
+		},
+		Resource: ResourceSqlTable(),
+		Update:   true,
+		ID:       "main.foo.barview",
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.False(t, commandExecuted, "No update command should be executed for only newline changes in view_definition")
+}
+
 func TestResourceSqlTableUpdateView_Comments(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {

@@ -59,9 +59,13 @@ func TestPermissionAssignmentRead(t *testing.T) {
 			},
 		},
 		Resource: ResourcePermissionAssignment(),
-		Read:     true,
-		New:      true,
-		ID:       "345",
+		HCL: `
+		permissions = ["USER"]
+		principal_id = 345
+		`,
+		Read: true,
+		New:  true,
+		ID:   "345",
 	}.ApplyAndExpectData(t, map[string]any{
 		"principal_id": 345,
 		"permissions":  []any{"USER"},

@@ -66,7 +66,7 @@ func TestResourceJobCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID:         789,
 					RunAsUserName: "user@mail.com",
@@ -1179,7 +1179,7 @@ func TestResourceJobCreate_AlwaysRunning(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1279,7 +1279,7 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1384,7 +1384,7 @@ func TestResourceJobCreate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) 
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1438,7 +1438,7 @@ func TestResourceJobCreate_ControlRunState_ContinuousUpdateCancel(t *testing.T) 
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1532,7 +1532,7 @@ func TestResourceJobCreateSingleNode(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1603,7 +1603,7 @@ func TestResourceJobCreateNWorkers(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1675,7 +1675,7 @@ func TestResourceJobCreateWithWebhooks(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1933,7 +1933,7 @@ func TestResourceJobRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1989,7 +1989,7 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
@@ -2010,7 +2010,7 @@ func TestResourceJobRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -2059,7 +2059,7 @@ func TestResourceJobUpdate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -2396,7 +2396,7 @@ func TestResourceJobUpdate_Restart(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/get?job_id=789",
+				Resource: "/api/2.1/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{

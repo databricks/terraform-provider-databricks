@@ -453,6 +453,8 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}
+		case reflect.Interface:
+			fmt.Println("skip" + fieldName)
 		case reflect.Slice:
 			ft := schema.TypeList
 			if strings.Contains(tfTag, "slice_set") {

@@ -44,12 +44,12 @@ func TestWaitForLibrariesInstalledSdk(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=still-installing",
 			ReuseRequest: true,
-			Response: ClusterLibraryStatuses{
-				ClusterID: "still-installing",
-				LibraryStatuses: []LibraryStatus{
+			Response: compute.ClusterLibraryStatuses{
+				ClusterId: "still-installing",
+				LibraryStatuses: []compute.LibraryFullStatus{
 					{
 						Status: "PENDING",
-						Library: &Library{
+						Library: &compute.Library{
 							Jar: "a.jar",
 						},
 					},
@@ -60,19 +60,19 @@ func TestWaitForLibrariesInstalledSdk(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=failed-wheel",
 			ReuseRequest: true,
-			Response: ClusterLibraryStatuses{
-				ClusterID: "still-installing",
-				LibraryStatuses: []LibraryStatus{
+			Response: compute.ClusterLibraryStatuses{
+				ClusterId: "still-installing",
+				LibraryStatuses: []compute.LibraryFullStatus{
 					{
 						Status:   "FAILED",
 						Messages: []string{"does not compute"},
-						Library: &Library{
+						Library: &compute.Library{
 							Whl: "b.whl",
 						},
 					},
 					{
 						Status: "INSTALLED",
-						Library: &Library{
+						Library: &compute.Library{
 							Jar: "a.jar",
 						},
 					},
@@ -82,9 +82,9 @@ func TestWaitForLibrariesInstalledSdk(t *testing.T) {
 		{
 			Method:   "POST",
 			Resource: "/api/2.0/libraries/uninstall",
-			ExpectedRequest: ClusterLibraryList{
-				ClusterID: "failed-wheel",
-				Libraries: []Library{
+			ExpectedRequest: compute.UninstallLibraries{
+				ClusterId: "failed-wheel",
+				Libraries: []compute.Library{
 					{
 						Whl: "b.whl",
 					},

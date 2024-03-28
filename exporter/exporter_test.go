@@ -28,7 +28,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
@@ -213,8 +212,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=mount",
-				Response: libraries.ClusterLibraryList{
-					Libraries: []libraries.Library{},
+				Response: compute.InstallLibraries{
+					Libraries: []compute.Library{},
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -825,7 +824,7 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				Response: clusters.EventDetails{},
+				Response: compute.GetEvents{},
 			},
 			{
 				Method:       "GET",
@@ -858,25 +857,25 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "test2",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "test2",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response:     clusters.EventDetails{},
+				Response:     compute.EventDetails{},
 				ReuseRequest: true,
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "test1",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "test1",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response:     clusters.EventDetails{},
+				Response:     compute.EventDetails{},
 				ReuseRequest: true,
 			},
 			{
@@ -907,13 +906,13 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "awscluster",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "awscluster",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response: clusters.EventDetails{},
+				Response: compute.EventDetails{},
 			},
 			{
 				Method:   "GET",
@@ -975,12 +974,12 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
-				Response: libraries.ClusterLibraryStatuses{
-					ClusterID: "test2",
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					ClusterId: "test2",
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
-								Pypi: &libraries.PyPi{
+							Library: &compute.Library{
+								Pypi: &compute.PythonPyPiLibrary{
 									Package: "chispa",
 								},
 							},
@@ -1087,7 +1086,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 						EmailNotifications: &sdk_jobs.JobEmailNotifications{
 							OnFailure: []string{"user@domain.com"},
 						},
-						Libraries: []libraries.Library{
+						Libraries: []compute.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
 							{Whl: "/Workspace/Repos/user@domain.com/repo/test.whl"},
 							{Whl: "/Workspace/Users/user@domain.com/libs/test.whl"},
@@ -1296,7 +1295,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 						Tasks: []jobs.JobTaskSettings{
 							{
 								TaskKey: "dummy",
-								Libraries: []libraries.Library{
+								Libraries: []compute.Library{
 									{Jar: "dbfs:/FileStore/jars/test.jar"},
 								},
 								NewCluster: &clusters.Cluster{

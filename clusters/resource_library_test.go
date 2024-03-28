@@ -3,7 +3,7 @@ package clusters
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -26,23 +26,23 @@ func TestLibraryCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/install",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.InstallLibraries{
+					Libraries: []compute.Library{
 						{
 							Whl: "foo.whl",
 						},
 					},
-					ClusterID: "abc",
+					ClusterId: "abc",
 				},
 			},
 			{
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Whl: "foo.whl",
 							},
 							Status: "INSTALLED",
@@ -75,10 +75,10 @@ func TestLibraryDelete(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Whl: "foo.whl",
 							},
 							Status: "INSTALLED",
@@ -89,13 +89,13 @@ func TestLibraryDelete(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/uninstall",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.UninstallLibraries{
+					Libraries: []compute.Library{
 						{
 							Whl: "foo.whl",
 						},
 					},
-					ClusterID: "abc",
+					ClusterId: "abc",
 				},
 			},
 		},

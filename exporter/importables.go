@@ -346,7 +346,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var c clusters.Cluster
+			var c compute.ClusterDetails
 			s := ic.Resources["databricks_cluster"].Schema
 			common.DataToStructPointer(r.Data, s, &c)
 			ic.importCluster(&c)
@@ -461,7 +461,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			var job jobs.JobSettings
 			s := ic.Resources["databricks_job"].Schema
 			common.DataToStructPointer(r.Data, s, &job)
-			ic.importCluster(job.NewCluster)
+			ic.importClusterLegacy(job.NewCluster)
 			ic.Emit(&resource{
 				Resource: "databricks_cluster",
 				ID:       job.ExistingClusterID,
@@ -574,7 +574,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 					ic.emitFilesFromMap(task.RunJobTask.JobParameters)
 				}
-				ic.importCluster(task.NewCluster)
+				ic.importClusterLegacy(task.NewCluster)
 				ic.Emit(&resource{
 					Resource: "databricks_cluster",
 					ID:       task.ExistingClusterID,
@@ -582,7 +582,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.emitLibraries(task.Libraries)
 			}
 			for _, jc := range job.JobClusters {
-				ic.importCluster(jc.NewCluster)
+				ic.importClusterLegacy(jc.NewCluster)
 			}
 			if job.RunAs != nil {
 				if job.RunAs.UserName != "" {
@@ -2014,7 +2014,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       cluster.PolicyID,
 					})
 				}
-				ic.emitInitScripts(cluster.InitScripts)
+				ic.emitInitScriptsLegacy(cluster.InitScripts)
 				ic.emitSecretsFromSecretsPath(cluster.SparkConf)
 				ic.emitSecretsFromSecretsPath(cluster.SparkEnvVars)
 			}

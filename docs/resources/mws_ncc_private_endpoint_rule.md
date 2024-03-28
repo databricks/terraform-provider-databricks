@@ -5,7 +5,7 @@ subcategory: "Deployment"
 
 -> **Note** Initialize provider with `alias = "account"`, `host = "https://accounts.azuredatabricks.net"` and use `provider = databricks.account` for all `databricks_mws_*` resources.
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html) in Azure.
+-> **Public Preview** This feature is only available in Azure, and currently in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
 Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to [configure private connectivity from serverless compute](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link).
 
@@ -45,7 +45,6 @@ In addition to all arguments above, the following attributes are exported:
 * `endpoint_name` - The name of the Azure private endpoint resource, e.g. "databricks-088781b3-77fa-4132-b429-1af0d91bc593-pe-3cb31234"
 * `connection_state` - The current status of this private endpoint. The private endpoint rules are effective only if the connection state is ESTABLISHED. Remember that you must approve new endpoints on your resources in the Azure portal before they take effect.
 The possible values are:
-  * `INIT`: (deprecated) The endpoint has been created and pending approval.
   * `PENDING`: The endpoint has been created and pending approval.
   * `ESTABLISHED`: The endpoint has been approved and is ready to use in your serverless compute resources.
   * `REJECTED`: Connection was rejected by the private link resource owner.

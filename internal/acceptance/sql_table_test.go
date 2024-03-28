@@ -318,7 +318,9 @@ func TestUcAccResourceSqlTable_ViewDefinitionChange(t *testing.T) {
                 name      = "name"
             }
         }`,
-    
+	})
+}
+
 func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.SqlColumnInfo) string {
 	columnsTemplate := ""
 

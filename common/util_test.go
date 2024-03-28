@@ -30,3 +30,7 @@ func TestSuppressDiffWhitespaceChange(t *testing.T) {
 	assert.True(t, SuppressDiffWhitespaceChange("k", "value", "  value  ", nil))
 	assert.False(t, SuppressDiffWhitespaceChange("k", "value", "new_value", nil))
 }
+
+func TestMustInt64(t *testing.T) {
+	assert.Equal(t, int64(123), MustInt64("123"))
+}

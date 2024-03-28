@@ -3,7 +3,6 @@ package access
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -65,14 +64,6 @@ func (a PermissionAssignmentAPI) List() (list PermissionAssignmentList, err erro
 	return
 }
 
-func mustInt64(s string) int64 {
-	n, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
-
 // ResourcePermissionAssignment performs of users to a workspace
 // from a workspace context, though it requires additional set
 // data resource for "workspace account scim", whicl will be added later.
@@ -101,7 +92,7 @@ func ResourcePermissionAssignment() common.Resource {
 				return err
 			}
 			data := entity{
-				PrincipalId: mustInt64(d.Id()),
+				PrincipalId: common.MustInt64(d.Id()),
 			}
 			permissions, err := list.ForPrincipal(data.PrincipalId)
 			if err != nil {

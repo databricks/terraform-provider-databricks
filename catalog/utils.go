@@ -26,3 +26,23 @@ func validateMetastoreId(ctx context.Context, w *databricks.WorkspaceClient, met
 	}
 	return nil
 }
+
+// Given a slice of SqlColumnInfo, construct the corresponding HCL string.
+func GetSqlColumnInfoHCL(columnInfos []SqlColumnInfo) string {
+	columnsTemplate := ""
+
+	for _, ci := range columnInfos {
+		ciTemplate := fmt.Sprintf(
+			`
+			column {
+				name      = "%s"
+				type      = "%s"
+				nullable  = %t
+				comment   = "%s"
+			}
+			`, ci.Name, ci.Type, ci.Nullable, ci.Comment,
+		)
+		columnsTemplate += ciTemplate
+	}
+	return columnsTemplate
+}

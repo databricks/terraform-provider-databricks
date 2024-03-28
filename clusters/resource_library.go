@@ -16,7 +16,7 @@ type LibraryResource struct {
 	compute.Library
 }
 
-func (LibraryResource) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+func (LibraryResource) CustomizeSchema(s map[string]*schema.Schema, path []string) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s).AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,

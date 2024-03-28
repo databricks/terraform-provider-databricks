@@ -82,7 +82,7 @@ type SqlDashboardTask struct {
 
 type SqlAlertTask struct {
 	AlertID            string            `json:"alert_id"`
-	Subscriptions      []SqlSubscription `json:"subscriptions"`
+	Subscriptions      []SqlSubscription `json:"subscriptions,omitempty"`
 	PauseSubscriptions bool              `json:"pause_subscriptions,omitempty"`
 }
 
@@ -129,7 +129,7 @@ type ForEachTask struct {
 }
 
 type ForEachNestedTask struct {
-	TaskKey     string                `json:"task_key,omitempty"`
+	TaskKey     string                `json:"task_key"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
 	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
@@ -209,7 +209,7 @@ type JobHealth struct {
 }
 
 type JobTaskSettings struct {
-	TaskKey     string                `json:"task_key,omitempty"`
+	TaskKey     string                `json:"task_key"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
 	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
@@ -477,6 +477,111 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 		nextPageToken = resp.NextPageToken
 	}
 	return jobs, nil
+}
+
+type JobSettingsResource struct {
+	jobs.JobSettings
+
+	// BEGIN Jobs API 2.0
+	ExistingClusterID      string               `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster             *compute.ClusterSpec `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	NotebookTask           *NotebookTask        `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask           *SparkJarTask        `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask        *SparkPythonTask     `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask        *SparkSubmitTask     `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask           *PipelineTask        `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask        *PythonWheelTask     `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	DbtTask                *DbtTask             `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask             *RunJobTask          `json:"run_job_task,omitempty" tf:"group:task_type"`
+	Libraries              []libraries.Library  `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	TimeoutSeconds         int32                `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32                `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32                `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool                 `json:"retry_on_timeout,omitempty"`
+	// END Jobs API 2.0
+}
+
+func (JobSettingsResource) Aliases() map[string]map[string]string {
+	aliases := map[string]map[string]string{
+		"jobs.JobSettingsResource": {
+			"tasks":        "task",
+			"parameters":   "parameter",
+			"job_clusters": "job_cluster",
+		},
+		"jobs.GitSource": {
+			"git_url":      "url",
+			"git_provider": "provider",
+			"git_branch":   "branch",
+			"git_tag":      "tag",
+			"git_commit":   "commit",
+		},
+		"jobs.Task": {
+			"libraries": "library",
+		},
+	}
+	return aliases
+}
+
+func (JobSettingsResource) CustomizeSchema(s map[string]*schema.Schema, path []string) map[string]*schema.Schema {
+	common.CustomizeSchemaPath(s, "format").SetComputed()
+	common.CustomizeSchemaPath(s, "dbt_task").SetDeprecated("should be used inside a task block and not inside a job block")
+	common.CustomizeSchemaPath(s).AddNewField("url", &schema.Schema{
+		Computed: true,
+		Type:     schema.TypeString,
+	}).AddNewField("always_running", &schema.Schema{
+		Optional:   true,
+		Default:    false,
+		Type:       schema.TypeBool,
+		Deprecated: "always_running will be replaced by control_run_state in the next major release.",
+	}).AddNewField("control_run_state", &schema.Schema{
+		Optional: true,
+		Default:  false,
+		Type:     schema.TypeBool,
+	})
+
+	common.CustomizeSchemaPath(s, "always_running").SetConflictsWith(path, []string{"control_run_state", "continuous"})
+	common.CustomizeSchemaPath(s, "control_run_state").SetConflictsWith(path, []string{"always_running"})
+
+	common.CustomizeSchemaPath(s, "task", "library").Schema.Type = schema.TypeSet
+	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "library").Schema.Type = schema.TypeSet
+
+	topLevelDeprecationMessage := "should be used inside a task block and not inside a job block"
+	common.CustomizeSchemaPath(s, "max_retries").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "min_retry_interval_millis").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "retry_on_timeout").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "notebook_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "spark_jar_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "spark_python_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "spark_submit_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "pipeline_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "python_wheel_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "dbt_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(s, "run_job_task").SetDeprecated(topLevelDeprecationMessage)
+
+	common.CustomizeSchemaPath(s, "schedule", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
+	common.CustomizeSchemaPath(s, "trigger", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
+	common.CustomizeSchemaPath(s, "continuous", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
+	common.CustomizeSchemaPath(s, "max_concurrent_runs").SetDefault(1).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
+
+	common.CustomizeSchemaPath(s, "schedule").SetConflictsWith(path, []string{"continuous", "trigger"})
+	common.CustomizeSchemaPath(s, "continuous").SetConflictsWith(path, []string{"schedule", "trigger"})
+	common.CustomizeSchemaPath(s, "trigger").SetConflictsWith(path, []string{"continuous", "schedule"})
+
+	// we need to have only one of user name vs service principal in the run_as block
+	run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
+	common.CustomizeSchemaPath(s, "run_as", "user_name").SetExactlyOneOf(path, run_as_eoo)
+	common.CustomizeSchemaPath(s, "run_as", "service_principal_name").SetExactlyOneOf(path, run_as_eoo)
+
+	// Clear the implied diff suppression for the webhook notification lists
+	for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+		common.CustomizeSchemaPath(s, "webhook_notifications", n).SetCustomSuppressDiff(nil)
+	}
+
+	return s
+}
+
+func (JobSettingsResource) MaxDepthForTypes() map[string]int {
+	return map[string]int{"jobs.ForEachTask": 1}
 }
 
 // List all jobs
@@ -776,6 +881,8 @@ func parseJobId(id string) (int64, error) {
 	return strconv.ParseInt(id, 10, 64)
 }
 
+var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
+
 // Callbacks to manage runs for jobs after creation and update.
 //
 // There are three types of lifecycle management for jobs:
@@ -907,7 +1014,7 @@ func ResourceJob() common.Resource {
 		return ctx
 	}
 	return common.Resource{
-		Schema:        jobSchema,
+		Schema:        jobsGoSdkSchema,
 		SchemaVersion: 2,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
@@ -965,7 +1072,7 @@ func ResourceJob() common.Resource {
 				return err
 			}
 			d.Set("url", c.FormatURL("#job/", d.Id()))
-			return common.StructToData(*job.Settings, jobSchema, d)
+			return common.StructToData(*job.Settings, jobsGoSdkSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var js JobSettings
@@ -996,4 +1103,8 @@ func ResourceJob() common.Resource {
 			return w.Jobs.DeleteByJobId(ctx, jobID)
 		},
 	}
+}
+
+func init() {
+	common.RegisterResourceProvider(jobs.JobSettings{}, JobSettingsResource{})
 }

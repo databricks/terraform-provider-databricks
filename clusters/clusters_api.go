@@ -398,7 +398,7 @@ type Cluster struct {
 	ClusterID   string `json:"cluster_id,omitempty"`
 	ClusterName string `json:"cluster_name,omitempty"`
 
-	SparkVersion              string     `json:"spark_version"`
+	SparkVersion              string     `json:"spark_version,omitempty"`
 	NumWorkers                int32      `json:"num_workers" tf:"group:size"`
 	Autoscale                 *AutoScale `json:"autoscale,omitempty" tf:"group:size"`
 	EnableElasticDisk         bool       `json:"enable_elastic_disk,omitempty" tf:"computed"`

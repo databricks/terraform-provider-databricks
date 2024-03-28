@@ -585,6 +585,29 @@ func TestResourceGrantPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	assert.Equal(t, catalog.Privilege("c"), diff[0].Remove[0])
 }
 
+func TestResourceGrantPermissionsList_Diff_Spaces(t *testing.T) {
+	diff := diffPermissionsForPrincipal(
+		"a",
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a b"},
+				},
+			},
+		},
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a_b"},
+				},
+			},
+		},
+	)
+	assert.Len(t, diff, 0)
+}
+
 func TestResourceGrantShareGrantCreate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -833,4 +856,24 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 		privileges = ["EXECUTE"]
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestResourceGrantUpdateSpacesNoUpdate(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceGrant(),
+		ID:       "table/foo.bar.baz/me",
+		InstanceState: map[string]string{
+			"table":                 "foo.bar.baz",
+			"principal":             "me",
+			"privileges.#":          "1",
+			"privileges.3182106578": "ALL_PRIVILEGES", // this indexer seems like a huge hack
+		},
+		Update: true,
+		HCL: `
+		table = "foo.bar.baz"
+
+		principal = "me"
+		privileges = ["ALL PRIVILEGES"]
+		`,
+	}.ExpectError(t, "privilege ALL PRIVILEGES only differs from current privilege ALL_PRIVILEGES by spaces, please update to match current")
 }

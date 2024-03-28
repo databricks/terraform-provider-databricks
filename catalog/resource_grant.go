@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -15,13 +17,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// normalizePrivileges return an array of catalog.Privilege with privilege values normalized to match API behavior
+func normalizePrivileges(privileges []catalog.Privilege) []catalog.Privilege {
+	normalizedPrivileges := []catalog.Privilege{}
+	for _, p := range privileges {
+		normalizedPriv := strings.ReplaceAll(p.String(), " ", "_")
+		normalizedPrivileges = append(normalizedPrivileges, catalog.Privilege(normalizedPriv))
+	}
+	return normalizedPrivileges
+}
+
 // diffPermissionsForPrincipal returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
 func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
 	for _, v := range desired.PrivilegeAssignments {
 		if v.Principal == principal {
-			configured[v.Principal] = permissions.SliceToSet(v.Privileges)
+			normalizedPrivileges := normalizePrivileges(v.Privileges)
+			configured[v.Principal] = permissions.SliceToSet(normalizedPrivileges)
 		}
 	}
 	// existing permissions that needs removal for principal
@@ -230,6 +243,44 @@ func ResourceGrant() common.Resource {
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			changedPrivileges := d.GetChangedKeysPrefix("privileges")
+
+			if len(changedPrivileges) > 0 {
+
+				log.Printf("[DEBUG] CustomizeDiff: changedPrivileges: %v", changedPrivileges)
+
+				for _, k := range changedPrivileges {
+					old, new := d.GetChange(k)
+
+					log.Printf("[DEBUG] CustomizeDiff: old: %v new: %v", old, new)
+
+					oldType := reflect.TypeOf(old)
+					newType := reflect.TypeOf(new)
+					if oldType.String() != "string" || newType.String() != "string" {
+						log.Printf("[DEBUG] CustomizeDiff: oldType: %s newType: %s", oldType, newType)
+						continue
+					}
+
+					oldString := old.(string)
+					newString := new.(string)
+
+					log.Printf("[DEBUG] CustomizeDiff: oldString: %s newString: %s", oldString, newString)
+
+					// if the only difference is spaces, remove the change
+					if oldString != newString && strings.ReplaceAll(newString, " ", "_") == oldString {
+						log.Printf("[DEBUG] CustomizeDiff: removing change: %s", k)
+						// this doesn't work since these privileges are not computed...
+						err := d.Clear(k)
+						if err != nil {
+							log.Printf("[DEBUG] CustomizeDiff: error clearing change: %s with error: %v", k, err)
+							return fmt.Errorf("privilege %s only differs from current privilege %s by spaces, please update to match current", newString, oldString)
+						}
+					}
+				}
+			}
+			return nil
 		},
 	}
 }

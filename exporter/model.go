@@ -238,6 +238,8 @@ type resource struct {
 	Data *schema.ResourceData
 	// Arbitrary data to be used by importable
 	ExtraData map[string]any
+	// References to dependencies - it could be fully resolved resource, with Data, etc., or it could be just resource type + ID
+	DependsOn []*resource
 }
 
 func (r *resource) AddExtraData(key string, value any) {
@@ -245,6 +247,10 @@ func (r *resource) AddExtraData(key string, value any) {
 		r.ExtraData = map[string]any{}
 	}
 	r.ExtraData[key] = value
+}
+
+func (r *resource) AddDependsOn(dep *resource) {
+	r.DependsOn = append(r.DependsOn, dep)
 }
 
 func (r *resource) GetExtraData(key string) (any, bool) {
@@ -396,4 +402,16 @@ func (a *importedResources) Sorted() []*resource {
 	copy(c, a.resources)
 	sort.Sort(c)
 	return c
+}
+
+func (a *importedResources) FindById(resourceType, id string) *resource {
+	defer a.mutex.RLocker().Unlock()
+	a.mutex.RLocker().Lock()
+	for _, r := range a.resources {
+		if r.Resource == resourceType && r.ID == id {
+			return r
+		}
+	}
+
+	return nil
 }

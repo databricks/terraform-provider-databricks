@@ -20,10 +20,10 @@ import (
 var MaxSqlExecWaitTimeout = 50
 
 type SqlColumnInfo struct {
-	Name     string `json:"name"`
-	Type     string `json:"type_text,omitempty" tf:"suppress_diff,alias:type"`
-	Comment  string `json:"comment,omitempty"`
-	Nullable bool   `json:"nullable,omitempty" tf:"default:true"`
+	Name     string `json:"name" tf:"force_new"`
+	Type     string `json:"type_text,omitempty" tf:"suppress_diff,alias:type,force_new"`
+	Comment  string `json:"comment,omitempty" tf:"force_new"`
+	Nullable bool   `json:"nullable,omitempty" tf:"default:true,force_new"`
 }
 
 type SqlTableInfo struct {

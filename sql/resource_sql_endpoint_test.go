@@ -155,6 +155,7 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 				AutoStopMins:       0,
 				EnablePhoton:       true,
 				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
 			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
 				Poll: poll.Simple(getResponse),
 			}, nil)

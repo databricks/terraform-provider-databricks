@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -143,4 +144,11 @@ func SliceWithoutString(in []string, without string) (out []string) {
 		out = append(out, v)
 	}
 	return
+}
+
+// If a privilege/permission only differs with underscores replacing spaces
+// then we can suppress the change
+func PrivilegesSuppressWhitespaceChange(k, old, new string, _ *schema.ResourceData) bool {
+	log.Printf("[INFO] privilegesSuppressWhitespaceChange: k: %s old: %s new: %s", k, old, new)
+	return strings.ReplaceAll(old, " ", "_") == strings.ReplaceAll(new, " ", "_")
 }

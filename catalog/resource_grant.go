@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
-	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -132,10 +130,14 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 	return split[0], split[1], split[2], nil
 }
 
+// func privilegesSuppressWhitespaceChange(k, old, new string, d *schema.ResourceData) bool {
+// 	log.Printf("[INFO] privilegesSuppressWhitespaceChange: k: %s old: %s new: %s", k, old, new)
+// 	return strings.ReplaceAll(old, " ", "_") == strings.ReplaceAll(new, " ", "_")
+// }
+
 func ResourceGrant() common.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-
 			m["principal"].ForceNew = true
 
 			allFields := []string{}
@@ -151,6 +153,9 @@ func ResourceGrant() common.Resource {
 					ConflictsWith: permissions.SliceWithoutString(allFields, field),
 				}
 			}
+
+			m["privileges"].DiffSuppressFunc = permissions.PrivilegesSuppressWhitespaceChange
+
 			return m
 		})
 
@@ -243,44 +248,6 @@ func ResourceGrant() common.Resource {
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
-		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			changedPrivileges := d.GetChangedKeysPrefix("privileges")
-
-			if len(changedPrivileges) > 0 {
-
-				log.Printf("[DEBUG] CustomizeDiff: changedPrivileges: %v", changedPrivileges)
-
-				for _, k := range changedPrivileges {
-					old, new := d.GetChange(k)
-
-					log.Printf("[DEBUG] CustomizeDiff: old: %v new: %v", old, new)
-
-					oldType := reflect.TypeOf(old)
-					newType := reflect.TypeOf(new)
-					if oldType.String() != "string" || newType.String() != "string" {
-						log.Printf("[DEBUG] CustomizeDiff: oldType: %s newType: %s", oldType, newType)
-						continue
-					}
-
-					oldString := old.(string)
-					newString := new.(string)
-
-					log.Printf("[DEBUG] CustomizeDiff: oldString: %s newString: %s", oldString, newString)
-
-					// if the only difference is spaces, remove the change
-					if oldString != newString && strings.ReplaceAll(newString, " ", "_") == oldString {
-						log.Printf("[DEBUG] CustomizeDiff: removing change: %s", k)
-						// this doesn't work since these privileges are not computed...
-						err := d.Clear(k)
-						if err != nil {
-							log.Printf("[DEBUG] CustomizeDiff: error clearing change: %s with error: %v", k, err)
-							return fmt.Errorf("privilege %s only differs from current privilege %s by spaces, please update to match current", newString, oldString)
-						}
-					}
-				}
-			}
-			return nil
 		},
 	}
 }

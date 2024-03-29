@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"time"
@@ -135,6 +136,11 @@ func parseId(d *schema.ResourceData) (string, string, error) {
 func ResourceGrants() common.Resource {
 	s := common.StructToSchema(PermissionsList{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+
+			log.Printf("[INFO] ResourceGrants schema: %v", s)
+
+			common.CustomizeSchemaPath(s, "grant", "privileges").SetCustomSuppressDiff(permissions.PrivilegesSuppressWhitespaceChange)
+
 			alof := []string{}
 			for field := range permissions.Mappings {
 				s[field] = &schema.Schema{
@@ -144,6 +150,7 @@ func ResourceGrants() common.Resource {
 				}
 				alof = append(alof, field)
 			}
+
 			for field := range permissions.Mappings {
 				s[field].AtLeastOneOf = alof
 			}

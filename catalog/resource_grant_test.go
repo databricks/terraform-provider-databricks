@@ -857,23 +857,3 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
-
-func TestResourceGrantUpdateSpacesNoUpdate(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: ResourceGrant(),
-		ID:       "table/foo.bar.baz/me",
-		InstanceState: map[string]string{
-			"table":                 "foo.bar.baz",
-			"principal":             "me",
-			"privileges.#":          "1",
-			"privileges.3182106578": "ALL_PRIVILEGES", // this indexer seems like a huge hack
-		},
-		Update: true,
-		HCL: `
-		table = "foo.bar.baz"
-
-		principal = "me"
-		privileges = ["ALL PRIVILEGES"]
-		`,
-	}.ExpectError(t, "privilege ALL PRIVILEGES only differs from current privilege ALL_PRIVILEGES by spaces, please update to match current")
-}

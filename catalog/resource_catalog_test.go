@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -426,55 +425,30 @@ func TestUpdateCatalogOwnerAndOtherFields(t *testing.T) {
 
 func TestUpdateCatalogUpdateRollback(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Owner: "updatedOwner",
-				},
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "updatedOwner",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Comment: "e",
-				},
-				Response: apierr.APIErrorBody{
-					ErrorCode: "SERVER_ERROR",
-					Message:   "Something unexpected happened",
-				},
-				Status: 500,
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Owner: "administrators",
-				},
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "administrators",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a?",
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "administrators",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:  "a",
+				Owner: "updatedOwner",
+			}).Return(&catalog.CatalogInfo{
+				Name:        "a",
+				MetastoreId: "d",
+				Comment:     "c",
+				Owner:       "updatedOwner",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:    "a",
+				Comment: "e",
+			}).Return(nil, errors.New("Something unexpected happened"))
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:  "a",
+				Owner: "administrators",
+			}).Return(&catalog.CatalogInfo{
+				Name:        "a",
+				MetastoreId: "d",
+				Comment:     "c",
+				Owner:       "administrators",
+			}, nil)
 		},
 		Resource: ResourceCatalog(),
 		Update:   true,
@@ -497,44 +471,25 @@ func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
 	serverErrMessage := "Something unexpected happened"
 	rollbackErrMessage := "Internal error happened"
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Owner: "updatedOwner",
-				},
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "updatedOwner",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Comment: "e",
-				},
-				Response: apierr.APIErrorBody{
-					ErrorCode: "SERVER_ERROR",
-					Message:   serverErrMessage,
-				},
-				Status: 500,
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Owner: "administrators",
-				},
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   rollbackErrMessage,
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:  "a",
+				Owner: "updatedOwner",
+			}).Return(&catalog.CatalogInfo{
+				Name:        "a",
+				MetastoreId: "d",
+				Comment:     "c",
+				Owner:       "updatedOwner",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:    "a",
+				Comment: "e",
+			}).Return(nil, errors.New(serverErrMessage))
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:  "a",
+				Owner: "administrators",
+			}).Return(nil, errors.New(rollbackErrMessage))
 		},
 		Resource: ResourceCatalog(),
 		Update:   true,
@@ -556,53 +511,9 @@ func TestUpdateCatalogUpdateRollbackError(t *testing.T) {
 
 func TestForceDeleteCatalog(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/schemas?catalog_name=b",
-				Response: []catalog.SchemaInfo{
-					{
-						Name:     "a",
-						FullName: "b.a",
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/?catalog_name=b&schema_name=a",
-				Response: catalog.ListTablesResponse{
-					Tables: []catalog.TableInfo{
-						{
-							CatalogName: "b",
-							SchemaName:  "a",
-							Name:        "c",
-							TableType:   "MANAGED",
-						},
-						{
-							CatalogName: "b",
-							SchemaName:  "a",
-							Name:        "d",
-							TableType:   "VIEW",
-						},
-					},
-				},
-			},
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/tables/b.a.c",
-			},
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/tables/b.a.d",
-			},
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/b.a",
-			},
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/catalogs/b?force=true",
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockCatalogsAPI().EXPECT().Delete(mock.Anything,
+				catalog.DeleteCatalogRequest{Name: "b", Force: true}).Return(nil)
 		},
 		Resource: ResourceCatalog(),
 		Delete:   true,

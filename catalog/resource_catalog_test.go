@@ -1,14 +1,17 @@
 package catalog
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,44 +21,29 @@ func TestCatalogCornerCases(t *testing.T) {
 
 func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/catalogs",
-				ExpectedRequest: catalog.CreateCatalog{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateCatalog{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-				Response: catalog.CatalogInfo{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					MetastoreId: "e",
-					Owner:       "f",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-			},
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a?",
-				Response: catalog.CatalogInfo{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					MetastoreId: "e",
-					Owner:       "f",
+			}, nil)
+			w.GetMockSchemasAPI().EXPECT().DeleteByFullName(mock.Anything, "a.default").Return(nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourceCatalog(),
 		Create:   true,
@@ -69,45 +57,33 @@ func TestCatalogCreateAlsoDeletesDefaultSchema(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestCatalogCreateWithForiegnCatalogDoesNotDeleteDefaultSchema(t *testing.T) {
+func TestCatalogCreateWithForeignCatalogDoesNotDeleteDefaultSchema(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/catalogs",
-				ExpectedRequest: catalog.CreateCatalog{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					ConnectionName: "g", // this indicates a foriegn catalog
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateCatalog{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-				Response: catalog.CatalogInfo{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					MetastoreId:    "e",
-					Owner:          "f",
-					ConnectionName: "g",
+				ConnectionName: "g", // this indicates a foreign catalog
+			}).Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a?",
-				Response: catalog.CatalogInfo{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					MetastoreId:    "e",
-					Owner:          "f",
-					ConnectionName: "g",
+				ConnectionName: "g",
+			}, nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-			},
+				ConnectionName: "g",
+			}, nil)
 		},
 		Resource: ResourceCatalog(),
 		Create:   true,
@@ -124,54 +100,48 @@ func TestCatalogCreateWithForiegnCatalogDoesNotDeleteDefaultSchema(t *testing.T)
 
 func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/catalogs",
-				ExpectedRequest: catalog.CreateCatalog{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateCatalog{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-				Response: catalog.CatalogInfo{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					Owner: "testers",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-			},
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					Owner: "administrators",
+			}, nil)
+			w.GetMockSchemasAPI().EXPECT().DeleteByFullName(mock.Anything, "a.default").Return(nil)
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:                         "a",
+				Owner:                        "administrators",
+				Comment:                      "b",
+				EnablePredictiveOptimization: "ENABLE",
+				Properties: map[string]string{
+					"c": "d",
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a?",
-				Response: catalog.CatalogInfo{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					MetastoreId: "e",
-					Owner:       "administrators",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-			},
+				Owner:                        "administrators",
+				EnablePredictiveOptimization: "ENABLE",
+			}, nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
+				},
+				Owner:                        "administrators",
+				EnablePredictiveOptimization: "ENABLE",
+			}, nil)
 		},
 		Resource: ResourceCatalog(),
 		Create:   true,
@@ -182,40 +152,29 @@ func TestCatalogCreateWithOwnerAlsoDeletesDefaultSchema(t *testing.T) {
 			c = "d"
 		}
 		owner = "administrators"
+		enable_predictive_optimization = "ENABLE"
 		`,
 	}.ApplyNoError(t)
 }
 
 func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/unity-catalog/catalogs",
-				ExpectedRequest: catalog.CatalogInfo{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateCatalog{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-				Response: catalog.CatalogInfo{
-					Name:    "a",
-					Comment: "b",
-					Properties: map[string]string{
-						"c": "d",
-					},
-					Owner: "testers",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "b",
+				Properties: map[string]string{
+					"c": "d",
 				},
-			},
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.1/unity-catalog/schemas/a.default?",
-				Status:   400,
-				Response: apierr.APIErrorBody{
-					Message: "Something",
-				},
-			},
+			}, nil)
+			w.GetMockSchemasAPI().EXPECT().DeleteByFullName(mock.Anything, "a.default").Return(errors.New("Something"))
 		},
 		Resource: ResourceCatalog(),
 		Create:   true,
@@ -234,50 +193,24 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 
 func TestUpdateCatalog(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
-				Response: catalog.MetastoreAssignment{
-					MetastoreId: "d",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Owner: "administrators",
-				},
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "administrators",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Comment: "c",
-				},
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "administrators",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a?",
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "administrators",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "d",
+			}, nil)
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:  "a",
+				Owner: "administrators",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "c",
+				Owner:   "administrators",
+			}, nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "c",
+				Owner:   "administrators",
+			}, nil)
 		},
 		Resource: ResourceCatalog(),
 		Update:   true,
@@ -297,43 +230,21 @@ func TestUpdateCatalog(t *testing.T) {
 
 func TestUpdateCatalogOwnerOnly(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Owner: "updatedOwner",
-				},
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "updatedOwner",
-				},
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/catalogs/a",
-				ExpectedRequest: catalog.UpdateCatalog{
-					Comment: "c",
-				},
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "updatedOwner",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/catalogs/a?",
-				Response: catalog.CatalogInfo{
-					Name:        "a",
-					MetastoreId: "d",
-					Comment:     "c",
-					Owner:       "updatedOwner",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:  "a",
+				Owner: "updatedOwner",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "c",
+				Owner:   "updatedOwner",
+			}, nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "c",
+				Owner:   "updatedOwner",
+			}, nil)
 		},
 		Resource: ResourceCatalog(),
 		Update:   true,
@@ -353,14 +264,10 @@ func TestUpdateCatalogOwnerOnly(t *testing.T) {
 
 func TestFailIfMetastoreIdIsWrong(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
-				Response: catalog.MetastoreAssignment{
-					MetastoreId: "old_id",
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "old_id",
+			}, nil)
 		},
 		Resource: ResourceCatalog(),
 		Update:   true,

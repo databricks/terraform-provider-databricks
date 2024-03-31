@@ -1345,6 +1345,10 @@ func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resour
 	}
 	var owner string
 	if parentResource.Data != nil {
+		ignoreFunc := ic.Importables[parentResource.Resource].Ignore
+		if ignoreFunc != nil && ignoreFunc(ic, parentResource) {
+			return "", nil
+		}
 		ownerRaw, ok := parentResource.Data.GetOk("owner")
 		if ok {
 			gr.AddExtraData("owner", ownerRaw)

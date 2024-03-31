@@ -1360,3 +1360,16 @@ func (ic *importContext) addTfVar(name, value string) {
 	defer ic.tfvarsMutex.Unlock()
 	ic.tfvars[name] = value
 }
+
+func (ic *importContext) emitPermissionsIfNotIgnored(r *resource, id, name string) {
+	if ic.meAdmin {
+		ignoreFunc := ic.Importables[r.Resource].Ignore
+		if ignoreFunc == nil || !ignoreFunc(ic, r) {
+			ic.Emit(&resource{
+				Resource: "databricks_permissions",
+				ID:       id,
+				Name:     name,
+			})
+		}
+	}
+}

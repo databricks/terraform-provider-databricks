@@ -228,13 +228,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/instance-pools/%s", r.ID),
-					Name:     "inst_pool_" + ic.Importables["databricks_instance_pool"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/instance-pools/%s", r.ID),
+				"inst_pool_"+ic.Importables["databricks_instance_pool"].Name(ic, r.Data))
 			return nil
 		},
 	},
@@ -279,7 +274,11 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("cluster_name").(string)
 			if name == "" {
-				return strings.Split(d.Id(), "-")[2]
+				parts := strings.Split(d.Id(), "-")
+				if len(parts) > 2 {
+					return parts[2]
+				}
+				return d.Id()
 			}
 			return fmt.Sprintf("%s_%s", name, d.Id())
 		},
@@ -350,13 +349,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := ic.Resources["databricks_cluster"].Schema
 			common.DataToStructPointer(r.Data, s, &c)
 			ic.importCluster(&c)
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/clusters/%s", r.ID),
-					Name:     "cluster_" + ic.Importables["databricks_cluster"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/clusters/%s", r.ID),
+				"cluster_"+ic.Importables["databricks_cluster"].Name(ic, r.Data))
 			return ic.importClusterLibraries(r.Data, s)
 		},
 		ShouldOmitField: makeShouldOmitFieldForCluster(nil),
@@ -466,13 +460,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_cluster",
 				ID:       job.ExistingClusterID,
 			})
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/jobs/%s", r.ID),
-					Name:     "job_" + ic.Importables["databricks_job"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/jobs/%s", r.ID),
+				"job_"+ic.Importables["databricks_job"].Name(ic, r.Data))
 			// Support for multitask jobs
 			for _, task := range job.Tasks {
 				if task.NotebookTask != nil {
@@ -719,13 +708,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/cluster-policies/%s", r.ID),
-					Name:     "cluster_policy_" + ic.Importables["databricks_cluster_policy"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/cluster-policies/%s", r.ID),
+				"cluster_policy_"+ic.Importables["databricks_cluster_policy"].Name(ic, r.Data))
 
 			var clusterPolicy compute.Policy
 			s := ic.Resources["databricks_cluster_policy"].Schema
@@ -1389,13 +1373,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.Data.Get("path").(string), "/Repos")
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/repos/%s", r.ID),
-					Name:     "repo_" + ic.Importables["databricks_repo"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/repos/%s", r.ID),
+				"repo_"+ic.Importables["databricks_repo"].Name(ic, r.Data))
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -1536,14 +1515,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/notebooks/%d", objectId),
-					Name:     "notebook_" + ic.Importables["databricks_notebook"].Name(ic, r.Data),
-				})
-			}
-
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/notebooks/%d", objectId),
+				"notebook_"+ic.Importables["databricks_notebook"].Name(ic, r.Data))
 			// TODO: it's not completely correct condition - we need to make emit smarter -
 			// emit only if permissions are different from their parent's permission.
 			if ic.meAdmin {
@@ -1598,13 +1571,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/files/%d", objectId),
-					Name:     "ws_file_" + ic.Importables["databricks_workspace_file"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/files/%d", objectId),
+				"ws_file_"+ic.Importables["databricks_workspace_file"].Name(ic, r.Data))
 
 			// TODO: it's not completely correct condition - we need to make emit smarter -
 			// emit only if permissions are different from their parent's permission.
@@ -1681,13 +1649,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			ic.emitSqlParentDirectory(query.Parent)
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/sql/queries/%s", r.ID),
-					Name:     "sql_query_" + ic.Importables["databricks_sql_query"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/sql/queries/%s", r.ID),
+				"sql_query_"+ic.Importables["databricks_sql_query"].Name(ic, r.Data))
 			return nil
 		},
 		Ignore: generateIgnoreObjectWithoutName("databricks_sql_query"),
@@ -1726,12 +1689,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/sql/warehouses/%s", r.ID),
+				"sql_endpoint_"+ic.Importables["databricks_sql_endpoint"].Name(ic, r.Data))
 			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/sql/warehouses/%s", r.ID),
-					Name:     "sql_endpoint_" + ic.Importables["databricks_sql_endpoint"].Name(ic, r.Data),
-				})
 				ic.Emit(&resource{
 					Resource: "databricks_sql_global_config",
 					ID:       tfsql.GlobalSqlConfigResourceID,
@@ -1796,13 +1756,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/sql/dashboards/%s", r.ID),
-					Name:     "sql_dashboard_" + ic.Importables["databricks_sql_dashboard"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/sql/dashboards/%s", r.ID),
+				"sql_dashboard_"+ic.Importables["databricks_sql_dashboard"].Name(ic, r.Data))
 			dashboardID := r.ID
 			dashboardAPI := tfsql.NewDashboardAPI(ic.Context, ic.Client)
 			dashboard, err := dashboardAPI.Read(dashboardID)
@@ -1923,12 +1878,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{Resource: "databricks_sql_query", ID: alert.QueryId})
 			}
 			ic.emitSqlParentDirectory(alert.Parent)
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/sql/alerts/%s", r.ID),
-					Name:     "sql_alert_" + ic.Importables["databricks_sql_alert"].Name(ic, r.Data)})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/sql/alerts/%s", r.ID),
+				"sql_alert_"+ic.Importables["databricks_sql_alert"].Name(ic, r.Data))
 			return nil
 		},
 		Ignore: generateIgnoreObjectWithoutName("databricks_sql_alert"),
@@ -2020,14 +1971,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			ic.emitFilesFromMap(pipeline.Configuration)
 			ic.emitSecretsFromSecretsPath(pipeline.Configuration)
-
-			if ic.meAdmin {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/pipelines/%s", r.ID),
-					Name:     "pipeline_" + ic.Importables["databricks_pipeline"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/pipelines/%s", r.ID),
+				"pipeline_"+ic.Importables["databricks_pipeline"].Name(ic, r.Data))
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -2112,12 +2057,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			// Existing permissions API doesn't allow to set permissions for
-			if ic.meAdmin && r.ID != "/Shared" {
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/directories/%d", r.Data.Get("object_id").(int)),
-					Name:     "directory_" + ic.Importables["databricks_directory"].Name(ic, r.Data),
-				})
+			if r.ID != "/Shared" {
+				ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/directories/%d", r.Data.Get("object_id").(int)),
+					"directory_"+ic.Importables["databricks_directory"].Name(ic, r.Data))
 			}
 
 			if r.ID == "/Shared" || r.ID == "/Users" || ic.IsUserOrServicePrincipalDirectory(r.ID, "/Users", true) {
@@ -2161,14 +2103,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			if ic.meAdmin {
-				log.Printf("[DEBUG] Emitting permissions of endpoint '%s' id='%s'", r.ID, r.Data.Get("serving_endpoint_id").(string))
-				ic.Emit(&resource{
-					Resource: "databricks_permissions",
-					ID:       fmt.Sprintf("/serving-endpoints/%s", r.Data.Get("serving_endpoint_id").(string)),
-					Name:     "serving_endpoint_" + ic.Importables["databricks_model_serving"].Name(ic, r.Data),
-				})
-			}
+			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/serving-endpoints/%s", r.Data.Get("serving_endpoint_id").(string)),
+				"serving_endpoint_"+ic.Importables["databricks_model_serving"].Name(ic, r.Data))
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {

@@ -403,6 +403,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.notebook_task.base_parameters", Resource: "databricks_file"},
 			{Path: "task.notebook_task.base_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.notebook_task.notebook_path", Resource: "databricks_notebook"},
+			{Path: "task.notebook_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "task.pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.python_wheel_task.named_parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.python_wheel_task.named_parameters", Resource: "databricks_file"},
@@ -480,6 +481,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.emitNotebookOrRepo(task.NotebookTask.NotebookPath)
 					}
 					ic.emitFilesFromMap(task.NotebookTask.BaseParameters)
+					if task.NotebookTask.WarehouseId != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_sql_endpoint",
+							ID:       task.NotebookTask.WarehouseId,
+						})
+					}
 				}
 				if task.PipelineTask != nil {
 					ic.Emit(&resource{

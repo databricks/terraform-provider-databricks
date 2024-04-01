@@ -29,6 +29,7 @@ type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
 	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
 	BaseParameters map[string]string `json:"base_parameters,omitempty"`
+	WarehouseId    string            `json:"warehouse_id,omitempty"`
 }
 
 // SparkPythonTask contains the information for python jobs

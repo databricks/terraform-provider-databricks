@@ -1201,6 +1201,18 @@ func genTraversalTokens(sr *resourceApproximation, pick string) hcl.Traversal {
 	}
 }
 
+func (ic *importContext) isIgnoredResourceApproximation(ra *resourceApproximation) bool {
+	var ignored bool
+	if ra != nil && ra.Resource != nil {
+		ignoreFunc := ic.Importables[ra.Type].Ignore
+		if ignoreFunc != nil && ignoreFunc(ic, ra.Resource) {
+			log.Printf("[WARN] Found reference to the ignored resource %s: %s", ra.Type, ra.Name)
+			return true
+		}
+	}
+	return ignored
+}
+
 func (ic *importContext) Find(value, attr string, ref reference, origResource *resource, origPath string) (string, hcl.Traversal, bool) {
 	log.Printf("[DEBUG] Starting searching for reference for resource %s, attr='%s', value='%s', ref=%v",
 		ref.Resource, attr, value, ref)
@@ -1234,7 +1246,8 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 	if (ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp ||
 		ref.MatchType == MatchCaseInsensitive) && !ref.SkipDirectLookup {
 		sr := ic.State.Get(ref.Resource, attr, matchValue)
-		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) {
+		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) &&
+			!ic.isIgnoredResourceApproximation(sr) {
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
 			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
@@ -1271,7 +1284,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			case MatchPrefix:
 				matched = strings.HasPrefix(matchValue, strValue)
 			case MatchLongestPrefix:
-				if strings.HasPrefix(matchValue, strValue) && len(origValue) > maxPrefixLen {
+				if strings.HasPrefix(matchValue, strValue) && len(origValue) > maxPrefixLen && !ic.isIgnoredResourceApproximation(sr) {
 					maxPrefixLen = len(origValue)
 					maxPrefixOrigValue = origValue
 					maxPrefixResource = sr
@@ -1281,7 +1294,8 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			default:
 				log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 			}
-			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(ic, origResource, sr, origPath)) {
+			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(ic, origResource, sr, origPath)) ||
+				ic.isIgnoredResourceApproximation(sr) {
 				continue
 			}
 			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
@@ -1291,7 +1305,8 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 		}
 	}
 	if ref.MatchType == MatchLongestPrefix && maxPrefixResource != nil &&
-		(ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, maxPrefixResource, origPath)) {
+		(ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, maxPrefixResource, origPath)) &&
+		!ic.isIgnoredResourceApproximation(maxPrefixResource) {
 		log.Printf("[DEBUG] Finished searching longest prefix for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 			ref.Resource, attr, value, ref, maxPrefixResource.Type, maxPrefixResource.Name)
 		return maxPrefixOrigValue, genTraversalTokens(maxPrefixResource, attr), maxPrefixResource.Mode == "data"
@@ -1349,10 +1364,10 @@ func (ic *importContext) Add(r *resource) {
 	inst.Attributes["id"] = r.ID
 	ic.State.Append(resourceApproximation{
 		Mode:      r.Mode,
-		Module:    ic.Module,
 		Type:      r.Resource,
 		Name:      r.Name,
 		Instances: []instanceApproximation{inst},
+		Resource:  r,
 	})
 	// in single-threaded scenario scope is toposorted
 	ic.Scope.Append(r)

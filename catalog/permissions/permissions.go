@@ -149,5 +149,9 @@ func SliceWithoutString(in []string, without string) (out []string) {
 // If a privilege/permission only differs with underscores replacing spaces
 // then we can suppress the change
 func PrivilegesSuppressWhitespaceChange(k, old, new string, _ *schema.ResourceData) bool {
-	return strings.ReplaceAll(old, " ", "_") == strings.ReplaceAll(new, " ", "_")
+	if (new == strings.ReplaceAll(old, " ", "_")) || (old == strings.ReplaceAll(new, " ", "_")) {
+		log.Printf("[DEBUG] Ignoring configuration drift from %s to %s", old, new)
+		return true
+	}
+	return false
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestUcAccDataSourceAwsCrossaccountPolicy(t *testing.T) {
+func TestMwsAccDataSourceAwsCrossaccountPolicy(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET") // marker for AWS test env
 	accountLevel(t, step{
 		Template: `

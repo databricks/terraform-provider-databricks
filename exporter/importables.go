@@ -1198,17 +1198,31 @@ var resourcesMap map[string]importable = map[string]importable{
 	"databricks_secret": {
 		WorkspaceLevel: true,
 		Service:        "secrets",
-		Depends: []reference{
-			{Path: "string_value", Variable: true},
-			{Path: "scope", Resource: "databricks_secret_scope"},
-			{Path: "string_value", Resource: "vault_generic_secret", Match: "data"},
-			{Path: "string_value", Resource: "aws_kms_secrets", Match: "plaintext"},
-			{Path: "string_value", Resource: "azurerm_key_vault_secret", Match: "value"},
-			{Path: "string_value", Resource: "aws_secretsmanager_secret_version", Match: "secret_string"},
-		},
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := fmt.Sprintf("%s_%s", d.Get("scope"), d.Get("key"))
 			return name + "_" + generateUniqueID(name)
+		},
+		Import: func(ic *importContext, r *resource) error {
+			if ic.exportSecrets {
+				resp, err := ic.workspaceClient.Secrets.GetSecret(ic.Context, sdk_workspace.GetSecretRequest{
+					Scope: r.Data.Get("scope").(string),
+					Key:   r.Data.Get("key").(string),
+				})
+				if err != nil {
+					return err
+				}
+				secret, err := base64.StdEncoding.DecodeString(resp.Value)
+				if err != nil {
+					return err
+				}
+				varName := ic.generateVariableName("string_value", ic.ResourceName(r))
+				ic.addTfVar(varName, string(secret))
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "string_value", Variable: true},
+			{Path: "scope", Resource: "databricks_secret_scope"},
 		},
 	},
 	"databricks_secret_acl": {
@@ -2376,7 +2390,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			common.DataToStructPointer(r.Data, s, &cat)
 
 			// Emit: UC Connection, List schemas, Catalog grants, ...
-			ic.emitUCGrantsWithOwner("catalog/"+cat.Name, r)
+			owner, catalogGrantsResource := ic.emitUCGrantsWithOwner("catalog/"+cat.Name, r)
+			dependsOn := []*resource{}
+			if owner != "" && owner != ic.meUserName {
+				dependsOn = append(dependsOn, catalogGrantsResource)
+			}
 			// TODO: emit owner?  Should we do this? Because it's a account-level identity... Create a separate function for that...
 			if cat.ConnectionName != "" {
 				ic.Emit(&resource{
@@ -2395,8 +2413,9 @@ var resourcesMap map[string]importable = map[string]importable{
 						continue
 					}
 					ic.EmitIfUpdatedAfterMillis(&resource{
-						Resource: "databricks_schema",
-						ID:       schema.FullName,
+						Resource:  "databricks_schema",
+						ID:        schema.FullName,
+						DependsOn: dependsOn,
 					}, schema.UpdatedAt, fmt.Sprintf("schema '%s'", schema.FullName))
 				}
 			}
@@ -2456,14 +2475,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			schemaFullName := r.ID
 			catalogName := r.Data.Get("catalog_name").(string)
 			schemaName := r.Data.Get("name").(string)
-			ic.emitUCGrantsWithOwner("schema/"+schemaFullName, r)
+			owner, schemaGrantResource := ic.emitUCGrantsWithOwner("schema/"+schemaFullName, r)
+			dependsOn := []*resource{}
+			if owner != "" && owner != ic.meUserName {
+				dependsOn = append(dependsOn, schemaGrantResource)
+			}
+			// TODO: think if we need to emit upstream dependencies in case if we're going bottom-up
 			ic.Emit(&resource{
 				Resource: "databricks_catalog",
 				ID:       catalogName,
 			})
+			// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "catalog/" + catalogName})
+
+			// TODO: somehow add depends on catalog's grant...
 			// TODO: emit owner? See comment in catalog resource
-			// TODO: list tables
-			// list registered models
 			models, err := ic.workspaceClient.RegisteredModels.ListAll(ic.Context,
 				catalog.ListRegisteredModelsRequest{
 					CatalogName: catalogName,
@@ -2474,8 +2499,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for _, model := range models {
 				ic.EmitIfUpdatedAfterMillis(&resource{
-					Resource: "databricks_registered_model",
-					ID:       model.FullName,
+					Resource:  "databricks_registered_model",
+					ID:        model.FullName,
+					DependsOn: dependsOn,
 				}, model.UpdatedAt, fmt.Sprintf("registered model '%s'", model.FullName))
 			}
 			// list volumes
@@ -2489,11 +2515,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			for _, volume := range volumes {
 				ic.EmitIfUpdatedAfterMillis(&resource{
-					Resource: "databricks_volume",
-					ID:       volume.FullName,
+					Resource:  "databricks_volume",
+					ID:        volume.FullName,
+					DependsOn: dependsOn,
 				}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
 			}
-
+			// list tables
 			tables, err := ic.workspaceClient.Tables.ListAll(ic.Context, catalog.ListTablesRequest{
 				CatalogName: catalogName,
 				SchemaName:  schemaName,
@@ -2505,13 +2532,17 @@ var resourcesMap map[string]importable = map[string]importable{
 				switch table.TableType {
 				case "MANAGED", "EXTERNAL", "VIEW":
 					ic.EmitIfUpdatedAfterMillis(&resource{
-						Resource: "databricks_sql_table",
-						ID:       table.FullName,
+						Resource:  "databricks_sql_table",
+						ID:        table.FullName,
+						DependsOn: dependsOn,
 					}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
 				default:
 					log.Printf("[DEBUG] Skipping table %s of type %s", table.FullName, table.TableType)
 				}
 			}
+			// TODO: list VectorSearch indexes
+
+			// TODO: list online tables
 
 			return nil
 		},
@@ -2529,15 +2560,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			volumeFullName := r.ID
 			ic.emitUCGrantsWithOwner("volume/"+volumeFullName, r)
 
-			catalogName := r.Data.Get("catalog_name").(string)
+			schemaFullName := r.Data.Get("catalog_name").(string) + "." + r.Data.Get("schema_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
-				ID:       catalogName + "." + r.Data.Get("schema_name").(string),
+				ID:       schemaFullName,
 			})
-			ic.Emit(&resource{
-				Resource: "databricks_catalog",
-				ID:       catalogName,
-			})
+			// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "schema/" + schemaFullName})
 			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
@@ -2562,15 +2590,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			tableFullName := r.ID
 			ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
-			catalogName := r.Data.Get("catalog_name").(string)
+			schemaFullName := r.Data.Get("catalog_name").(string) + "." + r.Data.Get("schema_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
-				ID:       catalogName + "." + r.Data.Get("schema_name").(string),
+				ID:       schemaFullName,
 			})
-			ic.Emit(&resource{
-				Resource: "databricks_catalog",
-				ID:       catalogName,
-			})
+			// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "schema/" + schemaFullName})
 			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
@@ -2688,10 +2713,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-external-locations",
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUCGrantsWithOwner("external_location/"+r.ID, r)
+			credentialName := r.Data.Get("credential_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_storage_credential",
-				ID:       r.Data.Get("credential_name").(string),
+				ID:       credentialName,
 			})
+			// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "storage_credential/" + credentialName})
 			return nil
 		},
 		List: func(ic *importContext) error {
@@ -2848,15 +2875,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			modelFullName := r.ID
 			ic.emitUCGrantsWithOwner("model/"+modelFullName, r)
-			catalogName := r.Data.Get("catalog_name").(string)
+			schemaFullName := r.Data.Get("catalog_name").(string) + "." + r.Data.Get("schema_name").(string)
 			ic.Emit(&resource{
 				Resource: "databricks_schema",
-				ID:       catalogName + "." + r.Data.Get("catalog_name").(string),
+				ID:       schemaFullName,
 			})
-			ic.Emit(&resource{
-				Resource: "databricks_catalog",
-				ID:       catalogName,
-			})
+			// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "schema/" + schemaFullName})
 			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
@@ -2971,6 +2995,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_volume",
 					ID:       volumeId,
 				})
+				// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "volume/" + volumeId})
 			}
 
 			// download & store file

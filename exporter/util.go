@@ -1393,15 +1393,25 @@ func generateIgnoreObjectWithoutName(resourceType string) func(ic *importContext
 	}
 }
 
-func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) {
+func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) (string, *resource) {
 	gr := &resource{
 		Resource: "databricks_grants",
 		ID:       id,
 	}
+	var owner string
 	if parentResource.Data != nil {
-		if owner, ok := parentResource.Data.GetOk("owner"); ok {
-			gr.AddExtraData("owner", owner)
+		ownerRaw, ok := parentResource.Data.GetOk("owner")
+		if ok {
+			gr.AddExtraData("owner", ownerRaw)
+			owner = ownerRaw.(string)
 		}
 	}
 	ic.Emit(gr)
+	return owner, gr
+}
+
+func (ic *importContext) addTfVar(name, value string) {
+	ic.tfvarsMutex.Lock()
+	defer ic.tfvarsMutex.Unlock()
+	ic.tfvars[name] = value
 }

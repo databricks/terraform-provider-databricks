@@ -41,6 +41,10 @@ func getNameFromId(id string) (string, error) {
 func ResourceVolume() common.Resource {
 	s := common.StructToSchema(VolumeInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
+			for _, field := range caseInsensitiveFields {
+				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			}
 			m["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
 			m["volume_path"] = &schema.Schema{
 				Type:     schema.TypeString,

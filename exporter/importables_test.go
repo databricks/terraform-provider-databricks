@@ -60,6 +60,7 @@ func importContextForTest() *importContext {
 		defaultChannel:            make(resourceChannel, defaultChannelSize),
 		services:                  map[string]struct{}{},
 		listing:                   map[string]struct{}{},
+		tfvars:                    map[string]string{},
 	}
 }
 
@@ -1972,10 +1973,9 @@ func TestVolumes(t *testing.T) {
 		Data: d,
 	})
 	assert.NoError(t, err)
-	require.Equal(t, 3, len(ic.testEmits))
+	require.Equal(t, 2, len(ic.testEmits))
 	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: volume/vtest)"])
 	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
-	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
 
 	//
 	shouldOmitFunc := resourcesMap["databricks_volume"].ShouldOmitField
@@ -2002,10 +2002,9 @@ func TestSqlTables(t *testing.T) {
 		Data: d,
 	})
 	assert.NoError(t, err)
-	require.Equal(t, 3, len(ic.testEmits))
+	require.Equal(t, 2, len(ic.testEmits))
 	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: table/ttest)"])
 	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
-	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
 
 	//
 	shouldOmitFunc := resourcesMap["databricks_sql_table"].ShouldOmitField
@@ -2033,10 +2032,9 @@ func TestRegisteredModels(t *testing.T) {
 		Data: d,
 	})
 	assert.NoError(t, err)
-	require.Equal(t, 3, len(ic.testEmits))
+	require.Equal(t, 2, len(ic.testEmits))
 	assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: model/mtest)"])
-	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.ctest)"])
-	assert.True(t, ic.testEmits["databricks_catalog[<unknown>] (id: ctest)"])
+	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
 
 	//
 	shouldOmitFunc := resourcesMap["databricks_registered_model"].ShouldOmitField

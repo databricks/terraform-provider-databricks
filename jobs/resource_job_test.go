@@ -1302,6 +1302,65 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 	}.Apply(t)
 }
 
+func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					MaxConcurrentRuns: 1,
+					Name:              "Test",
+					Trigger: &Trigger{
+						PauseStatus: "UNPAUSED",
+						TableUpdate: &TableUpdate{
+							TableNames: []string{"catalog.schema.table1", "catalog.schema.table2"},
+							Condition:  "ALL_UPDATED",
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Trigger: &Trigger{
+							PauseStatus: "UNPAUSED",
+							TableUpdate: &TableUpdate{
+								TableNames: []string{"catalog.schema.table1", "catalog.schema.table2"},
+								Condition:  "ALL_UPDATED",
+							},
+						},
+					},
+				},
+			},
+		},
+		HCL: `
+		trigger {
+			pause_status = "UNPAUSED"
+			table_update {
+				table_names = {
+					"catalog.schema.table1",
+					"catalog.schema.table2"
+				}
+				condition = "ALL_UPDATED"
+			}
+		}
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
 func TestResourceJobCreate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
 	qa.ResourceFixture{
 		Update:   true,

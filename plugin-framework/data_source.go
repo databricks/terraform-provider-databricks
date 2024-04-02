@@ -6,6 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
+var _ datasource.DataSource = (*DatabricksDataSource)(nil)
+
 type DatabricksDataSource struct {
 }
 

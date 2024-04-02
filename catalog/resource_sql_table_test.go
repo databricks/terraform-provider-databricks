@@ -531,25 +531,22 @@ func TestResourceSqlTableUpdateView_Definition(t *testing.T) {
 }
 
 func TestResourceSqlTableUpdateView_IgnoreNewlineInDefinition(t *testing.T) {
-	commandExecuted := false
-
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
-			commandExecuted = true
+			assert.NotContains(t, commandStr, "ALTERR VIEW `main`.`foo`.`barview`", "New lines should not recreate the resource")
 			return common.CommandResults{
 				ResultType: "",
 				Data:       nil,
 			}
 		},
 		HCL: `
-        resource "databricks_sql_table" "test" {
-            name            = "barview"
-            catalog_name    = "main"
-            schema_name     = "foo"
-            table_type      = "VIEW"
-            cluster_id      = "existingcluster"
-            view_definition = "SELECT * FROM main.foo.bar\n\n"
-        }`,
+		name               = "barview"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "VIEW"
+		cluster_id         = "existingcluster"
+		view_definition    = "SELECT * FROM main.foo.bar \n\n"
+		`,
 		InstanceState: map[string]string{
 			"name":            "barview",
 			"catalog_name":    "main",
@@ -558,7 +555,7 @@ func TestResourceSqlTableUpdateView_IgnoreNewlineInDefinition(t *testing.T) {
 			"cluster_id":      "existingcluster",
 			"view_definition": "SELECT * FROM main.foo.bar",
 		},
-		Fixtures: []qa.HTTPFixture{
+		Fixtures: append([]qa.HTTPFixture{
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
@@ -570,14 +567,30 @@ func TestResourceSqlTableUpdateView_IgnoreNewlineInDefinition(t *testing.T) {
 					ViewDefinition: "SELECT * FROM main.foo.bar",
 				},
 			},
-		},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
+				Response: SqlTableInfo{
+					Name:           "barview",
+					CatalogName:    "main",
+					SchemaName:     "foo",
+					TableType:      "VIEW",
+					ViewDefinition: "SELECT * FROM main.foo.bar",
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "existingcluster",
+				},
+				Status: 404,
+			},
+		}, createClusterForSql...),
 		Resource: ResourceSqlTable(),
 		Update:   true,
 		ID:       "main.foo.barview",
-	}.Apply(t)
-
-	assert.NoError(t, err)
-	assert.False(t, commandExecuted, "No update command should be executed for only newline changes in view_definition")
+	}.ApplyNoError(t)
 }
 
 func TestResourceSqlTableUpdateView_Comments(t *testing.T) {

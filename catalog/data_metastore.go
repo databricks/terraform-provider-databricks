@@ -38,7 +38,7 @@ func DataSourceMetastore() common.Resource {
 			minfos := []catalog.MetastoreInfo{}
 			if data.Name != "" {
 				for _, v := range metastores {
-					if v.Name == data.Name {
+					if strings.EqualFold(v.Name, data.Name) {
 						minfos = append(minfos, v)
 					}
 				}

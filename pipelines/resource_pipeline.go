@@ -97,23 +97,23 @@ type Notification struct {
 }
 
 type PipelineSpec struct {
-	ID                  string             `json:"id,omitempty" tf:"computed"`
-	Name                string             `json:"name,omitempty"`
-	Storage             string             `json:"storage,omitempty" tf:"force_new"`
-	Catalog             string             `json:"catalog,omitempty" tf:"force_new"`
-	Configuration       map[string]string  `json:"configuration,omitempty"`
-	Clusters            []pipelineCluster  `json:"clusters,omitempty" tf:"alias:cluster"`
-	Libraries           []PipelineLibrary  `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	Filters             *filters           `json:"filters,omitempty"`
-	Continuous          bool               `json:"continuous,omitempty"`
-	Development         bool               `json:"development,omitempty"`
-	AllowDuplicateNames bool               `json:"allow_duplicate_names,omitempty"`
-	Target              string             `json:"target,omitempty"`
-	Photon              bool               `json:"photon,omitempty"`
-	Edition             string             `json:"edition,omitempty" tf:"suppress_diff,default:ADVANCED"`
-	Channel             string             `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
-	Notifications       []Notification     `json:"notifications,omitempty" tf:"alias:notification"`
-	Serverless          bool               `json:"serverless" tf:"optional"`
+	ID                  string              `json:"id,omitempty" tf:"computed"`
+	Name                string              `json:"name,omitempty"`
+	Storage             string              `json:"storage,omitempty" tf:"force_new"`
+	Catalog             string              `json:"catalog,omitempty" tf:"force_new"`
+	Configuration       map[string]string   `json:"configuration,omitempty"`
+	Clusters            []pipelineCluster   `json:"clusters,omitempty" tf:"alias:cluster"`
+	Libraries           []PipelineLibrary   `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Filters             *filters            `json:"filters,omitempty"`
+	Continuous          bool                `json:"continuous,omitempty"`
+	Development         bool                `json:"development,omitempty"`
+	AllowDuplicateNames bool                `json:"allow_duplicate_names,omitempty"`
+	Target              string              `json:"target,omitempty"`
+	Photon              bool                `json:"photon,omitempty"`
+	Edition             string              `json:"edition,omitempty" tf:"suppress_diff,default:ADVANCED"`
+	Channel             string              `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
+	Notifications       []Notification      `json:"notifications,omitempty" tf:"alias:notification"`
+	Serverless          bool                `json:"serverless" tf:"optional"`
 	Deployment          *PipelineDeployment `json:"deployment,omitempty"`
 }
 

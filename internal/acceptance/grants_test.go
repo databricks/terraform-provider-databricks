@@ -5,6 +5,9 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 var grantsTemplate = `
@@ -140,5 +143,37 @@ func TestUcAccGrantsForIdChange(t *testing.T) {
 	}, step{
 		Template:    grantsTemplateForNamePermissionChange("-fail", "abc"),
 		ExpectError: regexp.MustCompile(`Error: cannot create grants: Privilege abc is not applicable to this entity`),
+	})
+}
+
+func grantsTemplateForNamePermissionChange(permission string) string {
+	return fmt.Sprintf(`
+	resource "databricks_storage_credential" "external" {
+		name = "cred-{var.STICKY_RANDOM}-underscores"
+		aws_iam_role {
+			role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
+		}
+		comment = "Managed by TF"
+	}
+	
+	resource "databricks_grants" "cred" {
+		storage_credential = databricks_storage_credential.external.id
+		grant {
+			principal  = "{env.TEST_DATA_ENG_GROUP}"
+			privileges = ["%s"]
+		}
+	}
+	`, permission)
+}
+
+func TestUcAccGrantsForUnderscoreChange(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: grantsTemplateForUnderscoreChange("ALL_PRIVILEGES"),
+	}, step{
+		Template: grantsTemplateForUnderscoreChange("ALL PRIVILEGES"),
+		Check: func(s *terraform.State) error {
+			assert.Equal(t, s.Serial, int64(1), "Expected serial to not be updated")
+			return nil
+		},
 	})
 }

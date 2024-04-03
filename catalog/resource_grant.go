@@ -130,11 +130,6 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 	return split[0], split[1], split[2], nil
 }
 
-// func privilegesSuppressWhitespaceChange(k, old, new string, d *schema.ResourceData) bool {
-// 	log.Printf("[INFO] privilegesSuppressWhitespaceChange: k: %s old: %s new: %s", k, old, new)
-// 	return strings.ReplaceAll(old, " ", "_") == strings.ReplaceAll(new, " ", "_")
-// }
-
 func ResourceGrant() common.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/permissions"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -856,4 +857,11 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 		privileges = ["EXECUTE"]
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestPrivilegesSuppressWhitespaceChange(t *testing.T) {
+	assert.True(t, permissions.PrivilegesSuppressWhitespaceChange("", "a", "a", nil))
+	assert.True(t, permissions.PrivilegesSuppressWhitespaceChange("", "a_b", "a b", nil))
+	assert.True(t, permissions.PrivilegesSuppressWhitespaceChange("", "a b", "a_b", nil))
+	assert.False(t, permissions.PrivilegesSuppressWhitespaceChange("", "a", "b", nil))
 }

@@ -146,7 +146,7 @@ func TestUcAccGrantsForIdChange(t *testing.T) {
 	})
 }
 
-func grantsTemplateForNamePermissionChange(permission string) string {
+func grantsTemplateForUnderscoreChange(permission string) string {
 	return fmt.Sprintf(`
 	resource "databricks_storage_credential" "external" {
 		name = "cred-{var.STICKY_RANDOM}-underscores"

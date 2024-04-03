@@ -22,7 +22,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 		Region          string   `json:"region,omitempty"`
 		SecurityGroupId string   `json:"security_group_id,omitempty"`
 	}
-	return common.WorkspaceData(func(ctx context.Context, data *AwsCrossAccountPolicy, w *databricks.WorkspaceClient) error {
+	return common.AccountData(func(ctx context.Context, data *AwsCrossAccountPolicy, w *databricks.AccountClient) error {
 		if !slices.Contains([]string{"managed", "customer", "restricted"}, data.PolicyType) {
 			return fmt.Errorf("policy_type must be either 'managed', 'customer' or 'restricted'")
 		}

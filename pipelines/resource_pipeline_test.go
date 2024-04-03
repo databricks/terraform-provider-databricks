@@ -36,14 +36,21 @@ var basicPipelineSpec = PipelineSpec{
 		Include: []string{"com.databricks.include"},
 		Exclude: []string{"com.databricks.exclude"},
 	},
+	Deployment: &PipelineDeployment{
+		Kind:             "BUNDLE",
+		MetadataFilePath: "/foo/bar",
+	},
+	Edition: "ADVANCED",
+	Channel: "CURRENT",
 }
 
 func TestResourcePipelineCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "POST",
-				Resource: "/api/2.0/pipelines",
+				Method:          "POST",
+				Resource:        "/api/2.0/pipelines",
+				ExpectedRequest: basicPipelineSpec,
 				Response: createPipelineResponse{
 					PipelineID: "abcd",
 				},
@@ -103,6 +110,10 @@ func TestResourcePipelineCreate(t *testing.T) {
 		  exclude = ["com.databricks.exclude"]
 		}
 		continuous = false
+		deployment {
+			kind = "BUNDLE"
+			metadata_file_path = "/foo/bar"
+		}
 		`,
 	}.Apply(t)
 	assert.NoError(t, err)

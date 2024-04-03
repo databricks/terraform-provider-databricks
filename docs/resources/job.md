@@ -90,7 +90,7 @@ The resource supports the following arguments:
   continuous { }
   ```
 
-* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+* `library` - (Optional) (List) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.

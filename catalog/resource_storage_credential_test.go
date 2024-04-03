@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestStorageCredentialsCornerCases(t *testing.T) {
@@ -704,4 +706,29 @@ func TestUpdateAzStorageCredentialSpn(t *testing.T) {
 		"azure_service_principal.0.directory_id":   "SAME",
 		"azure_service_principal.0.client_secret":  "CHANGED",
 	})
+}
+
+func TestDeleteStorageCredential(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockAccountStorageCredentialsAPI().EXPECT().Delete(mock.Anything, catalog.DeleteAccountStorageCredentialRequest{
+				MetastoreId:           "metastore_id",
+				StorageCredentialName: "a",
+				Force:                 true,
+			}).Return(nil)
+		},
+		Resource:  ResourceStorageCredential(),
+		AccountID: "account_id",
+		Delete:    true,
+		ID:        "a",
+		HCL: `
+		name = "a"
+		metastore_id = "metastore_id"
+		aws_iam_role {
+			role_arn = "def"
+		}
+		comment = "c"
+		force_destroy = true
+		`,
+	}.ApplyNoError(t)
 }

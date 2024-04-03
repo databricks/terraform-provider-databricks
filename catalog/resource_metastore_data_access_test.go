@@ -3,8 +3,10 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestDacCornerCases(t *testing.T) {
@@ -378,4 +380,114 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 			"databricks_gcp_service_account.#":       1,
 			"databricks_gcp_service_account.0.email": "a@example.com",
 		})
+}
+
+func TestUpdateDacWithOwner(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockAccountStorageCredentialsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.AccountsUpdateStorageCredential{
+				MetastoreId:           "metastore_id",
+				StorageCredentialName: "a",
+				CredentialInfo: &catalog.UpdateStorageCredential{
+					Owner: "updatedOwner",
+					Name:  "a",
+				},
+			}).Return(&catalog.AccountsStorageCredentialInfo{
+				CredentialInfo: &catalog.StorageCredentialInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+					AwsIamRole: &catalog.AwsIamRoleResponse{
+						RoleArn: "INITIAL",
+					},
+				},
+			}, nil)
+			e.Update(mock.Anything, catalog.AccountsUpdateStorageCredential{
+				MetastoreId:           "metastore_id",
+				StorageCredentialName: "a",
+				CredentialInfo: &catalog.UpdateStorageCredential{
+					Name:    "a",
+					Comment: "c",
+					AwsIamRole: &catalog.AwsIamRoleRequest{
+						RoleArn: "INITIAL",
+					},
+					Force: true,
+				},
+			}).Return(&catalog.AccountsStorageCredentialInfo{
+				CredentialInfo: &catalog.StorageCredentialInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+					AwsIamRole: &catalog.AwsIamRoleResponse{
+						RoleArn: "INITIAL",
+					},
+				},
+			}, nil)
+			e.GetByMetastoreIdAndStorageCredentialName(mock.Anything, "metastore_id", "a").Return(&catalog.AccountsStorageCredentialInfo{
+				CredentialInfo: &catalog.StorageCredentialInfo{
+					Name:        "a",
+					MetastoreId: "d",
+					Comment:     "c",
+					Owner:       "updatedOwner",
+					AwsIamRole: &catalog.AwsIamRoleResponse{
+						RoleArn: "INITIAL",
+					},
+				},
+			}, nil)
+			a.GetMockAccountMetastoresAPI().EXPECT().GetByMetastoreId(mock.Anything, "metastore_id").Return(&catalog.AccountsMetastoreInfo{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					StorageRootCredentialName: "a",
+				},
+			}, nil)
+		},
+		Resource:  ResourceMetastoreDataAccess(),
+		Update:    true,
+		ID:        "metastore_id|a",
+		AccountID: "account_id",
+		InstanceState: map[string]string{
+			"name":                    "a",
+			"comment":                 "c",
+			"aws_iam_role.#":          "1",
+			"aws_iam_role.0.role_arn": "INITIAL",
+			"is_default":              "true",
+		},
+		HCL: `
+		name = "a"
+		comment = "c"
+		aws_iam_role {
+			role_arn = "INITIAL"
+		}
+		owner = "updatedOwner"
+		force_update = true
+		is_default = true
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestDeleteDac(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockAccountStorageCredentialsAPI().EXPECT().Delete(mock.Anything, catalog.DeleteAccountStorageCredentialRequest{
+				MetastoreId:           "metastore_id",
+				StorageCredentialName: "a",
+				Force:                 true,
+			}).Return(nil)
+		},
+		Resource:  ResourceMetastoreDataAccess(),
+		AccountID: "account_id",
+		Delete:    true,
+		ID:        "metastore_id|a",
+		HCL: `
+		name = "a"
+		metastore_id = "metastore_id"
+		aws_iam_role {
+			role_arn = "def"
+		}
+		comment = "c"
+		force_destroy = true
+		`,
+	}.ApplyNoError(t)
 }

@@ -62,6 +62,109 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 	return m
 }
 
+func updateStorageCredential(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, metastoreId string, name string, update catalog.UpdateStorageCredential) error {
+	return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+		if d.HasChange("owner") {
+			_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
+				CredentialInfo: &catalog.UpdateStorageCredential{
+					Name:  update.Name,
+					Owner: update.Owner,
+				},
+				MetastoreId:           metastoreId,
+				StorageCredentialName: name,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		if !d.HasChangeExcept("owner") {
+			return nil
+		}
+
+		update.Owner = ""
+		_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
+			CredentialInfo:        &update,
+			MetastoreId:           metastoreId,
+			StorageCredentialName: name,
+		})
+		if err != nil {
+			if d.HasChange("owner") {
+				// Rollback
+				old, new := d.GetChange("owner")
+				_, rollbackErr := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
+					CredentialInfo: &catalog.UpdateStorageCredential{
+						Name:  update.Name,
+						Owner: old.(string),
+					},
+					MetastoreId:           metastoreId,
+					StorageCredentialName: name,
+				})
+				if rollbackErr != nil {
+					return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+				}
+			}
+			return err
+		}
+		return nil
+	}, func(w *databricks.WorkspaceClient) error {
+		err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+		if err != nil {
+			return err
+		}
+		if d.HasChange("owner") {
+			_, err := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
+				Name:  update.Name,
+				Owner: update.Owner,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		if !d.HasChangeExcept("owner") {
+			return nil
+		}
+
+		update.Owner = ""
+		_, err = w.StorageCredentials.Update(ctx, update)
+		if err != nil {
+			if d.HasChange("owner") {
+				// Rollback
+				old, new := d.GetChange("owner")
+				_, rollbackErr := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
+					Name:  update.Name,
+					Owner: old.(string),
+				})
+				if rollbackErr != nil {
+					return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+				}
+			}
+			return err
+		}
+		return nil
+	})
+}
+
+func deleteStorageCredential(ctx context.Context, c *common.DatabricksClient, metastoreId string, name string, force bool) error {
+	return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+		return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
+			MetastoreId:           metastoreId,
+			StorageCredentialName: name,
+			Force:                 force,
+		})
+	}, func(w *databricks.WorkspaceClient) error {
+		err := validateMetastoreId(ctx, w, metastoreId)
+		if err != nil {
+			return err
+		}
+		return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
+			Name:  name,
+			Force: force,
+		})
+	})
+}
+
 var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["is_default"] = &schema.Schema{
@@ -70,6 +173,7 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 			// on every apply.
 			Type:     schema.TypeBool,
 			Optional: true,
+			ForceNew: true,
 		}
 
 		return adjustDataAccessSchema(m)
@@ -115,6 +219,11 @@ func ResourceMetastoreDataAccess() common.Resource {
 						},
 					})
 					if err != nil {
+						// Rollback
+						rollback_err := acc.StorageCredentials.DeleteByMetastoreIdAndStorageCredentialName(ctx, metastoreId, dac.CredentialInfo.Name)
+						if rollback_err != nil {
+							return fmt.Errorf("failed to rollback: %v", rollback_err)
+						}
 						return err
 					}
 				}
@@ -130,9 +239,14 @@ func ResourceMetastoreDataAccess() common.Resource {
 						Id:                      metastoreId,
 						StorageRootCredentialId: dac.Id,
 					})
-				}
-				if err != nil {
-					return err
+					if err != nil {
+						// Rollback
+						rollback_err := w.StorageCredentials.DeleteByName(ctx, dac.Name)
+						if rollback_err != nil {
+							return fmt.Errorf("failed to rollback: %v", rollback_err)
+						}
+						return err
+					}
 				}
 				p.Pack(d)
 				return nil
@@ -147,10 +261,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				var storageCredential *catalog.AccountsStorageCredentialInfo
-				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
-					MetastoreId:           metastoreId,
-					StorageCredentialName: dacName,
-				})
+				storageCredential, err = acc.StorageCredentials.GetByMetastoreIdAndStorageCredentialName(ctx, metastoreId, dacName)
 				if err != nil {
 					return err
 				}
@@ -177,24 +288,27 @@ func ResourceMetastoreDataAccess() common.Resource {
 				return common.StructToData(storageCredential, dacSchema, d)
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var update catalog.UpdateStorageCredential
+			force := d.Get("force_update").(bool)
 			metastoreId, dacName, err := p.Unpack(d)
-			force := d.Get("force_destroy").(bool)
 			if err != nil {
 				return err
 			}
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
-					MetastoreId:           metastoreId,
-					StorageCredentialName: dacName,
-					Force:                 force,
-				})
-			}, func(w *databricks.WorkspaceClient) error {
-				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
-					Name:  dacName,
-					Force: force,
-				})
-			})
+			common.DataToStructPointer(d, storageCredentialSchema, &update)
+			update.Name = dacName
+			update.Force = force
+			if _, ok := d.GetOk("azure_managed_identity"); ok {
+				update.AzureManagedIdentity.CredentialId = ""
+			}
+			return updateStorageCredential(ctx, d, c, metastoreId, dacName, update)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			metastoreId, dacName, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return deleteStorageCredential(ctx, c, metastoreId, dacName, d.Get("force_destroy").(bool))
 		},
 	}
 }

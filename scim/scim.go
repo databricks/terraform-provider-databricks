@@ -101,10 +101,10 @@ func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 	return e
 }
 
-func addEntitlementsToSchema(s *map[string]*schema.Schema) {
+func addEntitlementsToSchema(s map[string]*schema.Schema) {
 	for _, entitlement := range possibleEntitlements {
 		field_name := entitlementMapping[entitlement]
-		(*s)[field_name] = &schema.Schema{
+		s[field_name] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,

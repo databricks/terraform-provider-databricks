@@ -18,14 +18,14 @@ func ResourceEntitlements() common.Resource {
 	}
 	entitlementSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			alof := []string{"group_id", "user_id", "service_principal_id"}
 			for _, field := range alof {
 				m[field].AtLeastOneOf = alof
 			}
 			return m
 		})
-	addEntitlementsToSchema(&entitlementSchema)
+	addEntitlementsToSchema(entitlementSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return patchEntitlements(ctx, d, c, "replace")
@@ -61,7 +61,7 @@ func ResourceEntitlements() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return enforceEntitlements(ctx, d, c)
+			return patchEntitlements(ctx, d, c, "replace")
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return patchEntitlements(ctx, d, c, "remove")
@@ -105,34 +105,6 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 			return err
 		}
 		d.SetId("spn/" + spnId)
-	}
-	return nil
-}
-
-func enforceEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	split := strings.SplitN(d.Id(), "/", 2)
-	if len(split) != 2 {
-		return fmt.Errorf("ID must be two elements: %s", d.Id())
-	}
-	identity := strings.ToLower(split[0])
-	id := strings.ToLower(split[1])
-	request := PatchRequestComplexValue(
-		[]patchOperation{
-			{
-				"remove", "entitlements", generateFullEntitlements(),
-			},
-			{
-				"add", "entitlements", readEntitlementsFromData(d),
-			},
-		},
-	)
-	switch identity {
-	case "group":
-		NewGroupsAPI(ctx, c).UpdateEntitlements(id, request)
-	case "user":
-		NewUsersAPI(ctx, c).UpdateEntitlements(id, request)
-	case "spn":
-		NewServicePrincipalsAPI(ctx, c).UpdateEntitlements(id, request)
 	}
 	return nil
 }

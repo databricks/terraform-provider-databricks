@@ -1,9 +1,14 @@
 package acceptance
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAccEntitlementResource(t *testing.T) {
@@ -93,5 +98,54 @@ func TestAccServicePrincipalEntitlementsResourceOnAws(t *testing.T) {
 			allow_cluster_create       = true
 			allow_instance_pool_create = true
 		}`,
+	})
+}
+
+func TestAccIssue1860(t *testing.T) {
+	groupName := RandomName("entitlements-")
+	workspaceLevel(t, step{
+		PreConfig: func() {
+			w := databricks.Must(databricks.NewWorkspaceClient())
+			ctx := context.Background()
+			_, err := w.Groups.Create(ctx, iam.Group{
+				DisplayName: groupName,
+			})
+			assert.NoError(t, err)
+		},
+		Template: fmt.Sprintf(`
+		  data "databricks_group" "example" {
+			display_name = "%s"
+		  }
+		  
+		  resource "databricks_entitlements" "entitlements_users" {
+			group_id              = data.databricks_group.example.id
+		  }
+		`, groupName),
+	}, step{
+		Template: fmt.Sprintf(`
+		  data "databricks_group" "example" {
+			display_name = "%s"
+		  }
+		  resource "databricks_entitlements" "entitlements_users" {
+			group_id                   = data.databricks_group.example.id
+			allow_cluster_create       = true
+			allow_instance_pool_create = true
+			workspace_access           = true
+			databricks_sql_access      = true
+		  }
+		  `, groupName),
+	}, step{
+		Template: fmt.Sprintf(`
+		  data "databricks_group" "example" {
+			display_name = "%s"
+		  }
+		  resource "databricks_entitlements" "entitlements_users" {
+			group_id                   = data.databricks_group.example.id
+			allow_cluster_create       = false
+			allow_instance_pool_create = false
+			workspace_access           = true
+			databricks_sql_access      = true
+		  }
+		  `, groupName),
 	})
 }

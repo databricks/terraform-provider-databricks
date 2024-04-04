@@ -32,6 +32,7 @@ The following arguments are required:
 * `connection_name` - (Optional) For Foreign Catalogs: the name of the connection to an external data source. Changes forces creation of a new resource.
 * `owner` - (Optional) Username/groupname/sp application_id of the catalog owner.
 * `isolation_mode` - (Optional) Whether the catalog is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATED` or `OPEN`. Setting the catalog to `ISOLATED` will automatically allow access from the current workspace.
+* `enable_predictive_optimization` - (Optional) Whether predictive optimization should be enabled for this object and objects under it. Can be `ENABLE`, `DISABLE` or `INHERIT`
 * `comment` - (Optional) User-supplied free-form text.
 * `properties` - (Optional) Extensible Catalog properties.
 * `options` - (Optional) For Foreign Catalogs: the name of the entity from an external data source that maps to a catalog. For example, the database name in a PostgreSQL server.

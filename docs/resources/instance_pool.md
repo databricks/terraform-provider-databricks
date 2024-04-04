@@ -71,7 +71,8 @@ The following options are [available](https://docs.microsoft.com/en-us/azure/dat
 The following options are [available](https://docs.gcp.databricks.com/dev-tools/api/latest/clusters.html#gcpavailability):
 
 * `gcp_availability` - (Optional) Availability type used for all nodes. Valid values are `PREEMPTIBLE_GCP`, `PREEMPTIBLE_WITH_FALLBACK_GCP` and `ON_DEMAND_GCP`, default: `ON_DEMAND_GCP`.
-* `local_ssd_count` (optional, int) Number of local SSD disks (each is 375GB in size) that will be attached to each node of the cluster.
+* `local_ssd_count` (Optional, Int) Number of local SSD disks (each is 375GB in size) that will be attached to each node of the cluster.
+* `zone_id` - (Optional) Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like `us-central1-a`. The provided availability zone must be in the same region as the Databricks workspace.
 
 ### disk_spec Configuration Block
 

@@ -39,7 +39,6 @@ func resourceClusterTimeouts() *schema.ResourceTimeout {
 		Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		Delete: schema.DefaultTimeout(DefaultProvisionTimeout),
 	}
-
 }
 
 func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
@@ -60,6 +59,8 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
+// This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
+// Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func Validate(cluster compute.CreateCluster) error {
 	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
 		return nil
@@ -73,6 +74,8 @@ func Validate(cluster compute.CreateCluster) error {
 	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
 }
 
+// This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
+// Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
 	// Instance profile id does not exist or not set
 	if cluster.InstancePoolId == "" {
@@ -102,6 +105,8 @@ func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
 	cluster.DriverNodeTypeId = ""
 }
 
+// This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
+// Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
 func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
@@ -481,6 +486,17 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	err = w.Clusters.PermanentDeleteByClusterId(ctx, d.Id())
+	if err == nil {
+		return nil
+	}
+	if !strings.Contains(err.Error(), "unpin the cluster first") {
+		return err
+	}
+	err = w.Clusters.UnpinByClusterId(ctx, d.Id())
 	if err != nil {
 		return err
 	}

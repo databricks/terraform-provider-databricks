@@ -28,7 +28,12 @@ func ResourceEntitlements() common.Resource {
 	addEntitlementsToSchema(entitlementSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return patchEntitlements(ctx, d, c, "replace")
+			err := patchEntitlements(ctx, d, c, "replace")
+			if err != nil {
+				return err
+			}
+			d.SetId(getId(d))
+			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			split := strings.SplitN(d.Id(), "/", 2)
@@ -70,13 +75,29 @@ func ResourceEntitlements() common.Resource {
 	}
 }
 
+func getId(d *schema.ResourceData) string {
+	groupId := d.Get("group_id").(string)
+	userId := d.Get("user_id").(string)
+	spnId := d.Get("service_principal_id").(string)
+	if groupId != "" {
+		return "group/" + groupId
+	}
+	if userId != "" {
+		return "user/" + userId
+	}
+	if spnId != "" {
+		return "spn/" + spnId
+	}
+	return ""
+}
+
 func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, op string) error {
 	groupId := d.Get("group_id").(string)
 	userId := d.Get("user_id").(string)
 	spnId := d.Get("service_principal_id").(string)
 	noEntitlementMessage := "invalidPath No such attribute with the name : entitlements in the current resource"
 	entitlements := readEntitlementsFromData(d)
-	if entitlements == nil {
+	if len(entitlements) == 1 && entitlements[0].Value == "" && op == "remove" {
 		// No updates are needed, so return early
 		return nil
 	}
@@ -93,7 +114,6 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
-		d.SetId("group/" + groupId)
 	}
 	if userId != "" {
 		usersAPI := NewUsersAPI(ctx, c)
@@ -101,7 +121,6 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
-		d.SetId("user/" + userId)
 	}
 	if spnId != "" {
 		spnAPI := NewServicePrincipalsAPI(ctx, c)
@@ -109,7 +128,6 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 		if err != nil && !strings.Contains(err.Error(), noEntitlementMessage) {
 			return err
 		}
-		d.SetId("spn/" + spnId)
 	}
 	return nil
 }

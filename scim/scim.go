@@ -82,6 +82,12 @@ func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 			})
 		}
 	}
+	// if there is no nil value
+	if e == nil {
+		e = append(e, ComplexValue{
+			Value: "",
+		})
+	}
 	return e
 }
 

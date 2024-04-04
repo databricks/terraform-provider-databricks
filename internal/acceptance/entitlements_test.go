@@ -208,7 +208,6 @@ func TestAccEntitlementsRemoveExisting(t *testing.T) {
 		},
 		{},
 	})
-
 	workspaceLevel(t, steps...)
 }
 
@@ -221,6 +220,5 @@ func TestAccEntitlementsSomeTrueSomeFalse(t *testing.T) {
 			{"databricks_sql_access", true},
 		},
 	})
-
 	workspaceLevel(t, steps...)
 }

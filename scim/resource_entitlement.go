@@ -75,11 +75,16 @@ func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.Da
 	userId := d.Get("user_id").(string)
 	spnId := d.Get("service_principal_id").(string)
 	noEntitlementMessage := "invalidPath No such attribute with the name : entitlements in the current resource"
+	entitlements := readEntitlementsFromData(d)
+	if entitlements == nil {
+		// No updates are needed, so return early
+		return nil
+	}
 	request := PatchRequestComplexValue([]patchOperation{
 		{
 			op,
 			"entitlements",
-			readEntitlementsFromData(d),
+			entitlements,
 		},
 	})
 	if groupId != "" {

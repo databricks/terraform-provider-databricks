@@ -72,16 +72,6 @@ func (e entitlements) readIntoData(d *schema.ResourceData) error {
 	return nil
 }
 
-func generateFullEntitlements() entitlements {
-	var e entitlements
-	for _, entitlement := range possibleEntitlements {
-		e = append(e, ComplexValue{
-			Value: entitlement,
-		})
-	}
-	return e
-}
-
 func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 	var e entitlements
 	for _, entitlement := range possibleEntitlements {
@@ -91,12 +81,6 @@ func readEntitlementsFromData(d *schema.ResourceData) entitlements {
 				Value: entitlement,
 			})
 		}
-	}
-	// if there is no nil value
-	if e == nil {
-		e = append(e, ComplexValue{
-			Value: "",
-		})
 	}
 	return e
 }

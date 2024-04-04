@@ -536,6 +536,80 @@ func TestResourceJobCreate_ConditionTask(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "231", d.Id())
 }
+
+func TestResourceJobCreate_ForEachTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "Foreach-task-testing",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey: "for_each_task_key",
+							ForEachTask: &ForEachTask{
+								Concurrency: 1,
+								Inputs:      "[1, 2, 3, 4, 5, 6]",
+								Task: ForEachNestedTask{
+									TaskKey:           "nested_task_key",
+									ExistingClusterID: "abc",
+									NotebookTask: &NotebookTask{
+										NotebookPath: "/Stuff",
+									},
+								},
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "for_each_task_key",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "Foreach-task-testing"
+
+		task {
+			task_key = "for_each_task_key"
+			for_each_task {
+				concurrency = 1
+
+				inputs = "[1, 2, 3, 4, 5, 6]"
+
+				task {
+
+					task_key = "nested_task_key"
+
+					existing_cluster_id = "abc"
+					
+						notebook_task {
+							notebook_path = "/Stuff"
+						}
+				}
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1223,6 +1297,65 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 			pause_status = "UNPAUSED"
 		}
 		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.Apply(t)
+}
+
+func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					MaxConcurrentRuns: 1,
+					Name:              "Test",
+					Trigger: &Trigger{
+						PauseStatus: "UNPAUSED",
+						TableUpdate: &TableUpdate{
+							TableNames: []string{"catalog.schema.table1", "catalog.schema.table2"},
+							Condition:  "ALL_UPDATED",
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Trigger: &Trigger{
+							PauseStatus: "UNPAUSED",
+							TableUpdate: &TableUpdate{
+								TableNames: []string{"catalog.schema.table1", "catalog.schema.table2"},
+								Condition:  "ALL_UPDATED",
+							},
+						},
+					},
+				},
+			},
+		},
+		HCL: `
+		trigger {
+			pause_status = "UNPAUSED"
+			table_update {
+				table_names = {
+					"catalog.schema.table1",
+					"catalog.schema.table2"
+				}
+				condition = "ALL_UPDATED"
+			}
+		}
 		max_concurrent_runs = 1
 		name = "Test"
 		`,

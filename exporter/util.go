@@ -44,6 +44,9 @@ func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorag
 		if is.Workspace != nil {
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
+		if is.Volumes != nil {
+			ic.emitIfVolumeFile(is.Volumes.Destination)
+		}
 	}
 }
 
@@ -51,6 +54,7 @@ func (ic *importContext) emitFilesFromSlice(slice []string) {
 	for _, p := range slice {
 		ic.emitIfDbfsFile(p)
 		ic.emitIfWsfsFile(p)
+		ic.emitIfVolumeFile(p)
 	}
 }
 
@@ -58,6 +62,7 @@ func (ic *importContext) emitFilesFromMap(m map[string]string) {
 	for _, p := range m {
 		ic.emitIfDbfsFile(p)
 		ic.emitIfWsfsFile(p)
+		ic.emitIfVolumeFile(p)
 	}
 }
 
@@ -218,17 +223,27 @@ func (ic *importContext) IsUserOrServicePrincipalDirectory(path, prefix string, 
 }
 
 func (ic *importContext) emitRepoByPath(path string) {
-	ic.Emit(&resource{
-		Resource:  "databricks_repo",
-		Attribute: "path",
-		Value:     strings.Join(strings.SplitN(path, "/", 5)[:4], "/"),
-	})
+	// Path to Repos objects consits of following parts: /Repos, folder, repository, path inside Repo.
+	// Because it starts with `/`, it will produce empty string as first element in the slice.
+	// And we're stopping splitting to avoid producing too many not necessary parts, so we have 5 parts only.
+	parts := strings.SplitN(path, "/", 5)
+	if len(parts) >= 4 {
+		ic.Emit(&resource{
+			Resource:  "databricks_repo",
+			Attribute: "path",
+			Value:     strings.Join(parts[:4], "/"),
+		})
+	} else {
+		log.Printf("[WARN] Incorrect Repos path")
+	}
 }
 
 func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: wrap this into ic.shouldEmit...
+		// TODO: strip /Workspace prefix if it's provided
 		ic.Emit(&resource{
 			Resource: "databricks_workspace_file",
 			ID:       path,
@@ -240,6 +255,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 	if strings.HasPrefix(path, "/Repos") {
 		ic.emitRepoByPath(path)
 	} else {
+		// TODO: strip /Workspace prefix if it's provided
 		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
 	}
 }
@@ -338,6 +354,9 @@ func (ic *importContext) emitLibraries(libs []libraries.Library) {
 		ic.emitIfWsfsFile(lib.Whl)
 		ic.emitIfWsfsFile(lib.Jar)
 		ic.emitIfWsfsFile(lib.Egg)
+		// Files on UC Volumes
+		ic.emitIfVolumeFile(lib.Whl)
+		ic.emitIfVolumeFile(lib.Jar)
 	}
 
 }
@@ -355,11 +374,15 @@ func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[st
 		return err
 	}
 	for _, lib := range cll.LibraryStatuses {
-		// Emit workspace file libraries if necessary
-		// Emit Volume libraries when resource is available
 		ic.emitIfDbfsFile(lib.Library.Egg)
 		ic.emitIfDbfsFile(lib.Library.Jar)
 		ic.emitIfDbfsFile(lib.Library.Whl)
+		// Files on UC Volumes
+		ic.emitIfVolumeFile(lib.Library.Whl)
+		ic.emitIfVolumeFile(lib.Library.Jar)
+		// Files on WSFS
+		ic.emitIfWsfsFile(lib.Library.Whl)
+		ic.emitIfWsfsFile(lib.Library.Jar)
 	}
 	return nil
 }
@@ -580,10 +603,14 @@ func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u
 
 func (ic *importContext) emitIfDbfsFile(path string) {
 	if strings.HasPrefix(path, "dbfs:") {
-		ic.Emit(&resource{
-			Resource: "databricks_dbfs_file",
-			ID:       path,
-		})
+		if strings.HasPrefix(path, "dbfs:/Volumes/") {
+			ic.emitIfVolumeFile(path[5:])
+		} else {
+			ic.Emit(&resource{
+				Resource: "databricks_dbfs_file",
+				ID:       path,
+			})
+		}
 	}
 }
 
@@ -591,6 +618,15 @@ func (ic *importContext) emitIfWsfsFile(path string) {
 	if strings.HasPrefix(path, "/Workspace/") {
 		normalPath := strings.TrimPrefix(path, "/Workspace")
 		ic.emitWorkspaceFileOrRepo(normalPath)
+	}
+}
+
+func (ic *importContext) emitIfVolumeFile(path string) {
+	if strings.HasPrefix(path, "/Volumes/") {
+		ic.Emit(&resource{
+			Resource: "databricks_file",
+			ID:       path,
+		})
 	}
 }
 
@@ -796,19 +832,23 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 	log.Printf("[INFO] %d of total %d jobs are going to be imported", i, len(l))
 }
 
-// returns created file name in "files" directory for the export and error if any
-func (ic *importContext) createFile(name string, content []byte) (string, error) {
-	return ic.createFileIn("files", name, content)
-}
-
-func (ic *importContext) createFileIn(dir, name string, content []byte) (string, error) {
+func (ic *importContext) createFileIn(dir, name string) (*os.File, string, error) {
 	fileName := ic.prefix + name
 	localFileName := fmt.Sprintf("%s/%s/%s", ic.Directory, dir, fileName)
 	err := os.MkdirAll(path.Dir(localFileName), 0755)
 	if err != nil && !os.IsExist(err) {
-		return "", err
+		return nil, "", err
 	}
 	local, err := os.Create(localFileName)
+	if err != nil {
+		return nil, "", err
+	}
+	relativeName := strings.TrimPrefix(localFileName, ic.Directory+"/")
+	return local, relativeName, nil
+}
+
+func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, error) {
+	local, relativeName, err := ic.createFileIn(dir, name)
 	if err != nil {
 		return "", err
 	}
@@ -817,7 +857,6 @@ func (ic *importContext) createFileIn(dir, name string, content []byte) (string,
 	if err != nil {
 		return "", err
 	}
-	relativeName := strings.Replace(localFileName, ic.Directory+"/", "", 1)
 	return relativeName, nil
 }
 
@@ -879,7 +918,7 @@ func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource
 	}
 	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
 	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r.Data, resourceBlock.Body())
+		[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 }
 
 func generateUniqueID(v string) string {
@@ -934,6 +973,17 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
 func (ic *importContext) enableServices(services string) {
 	ic.services = map[string]struct{}{}
 	for _, s := range strings.Split(services, ",") {
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+	for s := range ic.listing { // Add all services mentioned in the listing
+		ic.services[strings.TrimSpace(s)] = struct{}{}
+	}
+}
+
+func (ic *importContext) enableListing(listing string) {
+	ic.listing = map[string]struct{}{}
+	for _, s := range strings.Split(listing, ",") {
+		ic.listing[strings.TrimSpace(s)] = struct{}{}
 		ic.services[strings.TrimSpace(s)] = struct{}{}
 	}
 }
@@ -1208,4 +1258,105 @@ func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
 		time.Sleep(time.Duration(delay) * time.Second)
 	}
 	return err
+}
+
+func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "owner" {
+		return d.Get(pathString).(string) == ""
+	}
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
+func appendEndingSlashToDirName(dir string) string {
+	if dir == "" || dir[len(dir)-1] == '/' {
+		return dir
+	}
+	return dir + "/"
+}
+
+func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, origPath=%s", res.Resource, origPath)
+	res_catalog_name := res.Data.Get("catalog_name").(string)
+	res_schema_name := res.Data.Get("schema_name").(string)
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: resource: %s, catalog='%s' schema='%s'",
+	// 	res.Resource, res_catalog_name, res_schema_name)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v)",
+	// 	ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found)
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	// log.Printf("[DEBUG] matchingCatalogAndSchema: result: %v approximation: catalog='%v' schema='%v', res: catalog='%s' schema='%s'",
+	// 	result, ra_catalog_name, ra_schema_name, res_catalog_name, res_schema_name)
+	return result
+}
+
+func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	shareName, ok := res.Data.GetOk("share")
+	// principal := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingShareRecipient: origPath='%s', ra.Type='%s', shareName='%v', ok? %v, principal='%v'",
+	// 	origPath, ra.Type, shareName, ok, principal)
+
+	return ok && shareName.(string) != ""
+}
+
+func isMatchignShareObject(obj string) isValidAproximationFunc {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
+		objType, ok := res.Data.GetOk(objPath)
+		// name := res.Data.Get(origPath)
+		// log.Printf("[DEBUG] isMatchignShareObject: %s origPath='%s', ra.Type='%s', name='%v', objPath='%s' objType='%v' ok? %v",
+		// 	obj, origPath, ra.Type, name, objPath, objType, ok)
+
+		return ok && objType.(string) == obj
+	}
+}
+
+func isMatchingAllowListArtifact(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	objPath := strings.Replace(origPath, ".artifact", ".match_type", 1)
+	matchType, ok := res.Data.GetOk(objPath)
+	artifactType := res.Data.Get("artifact_type").(string)
+	// artifact := res.Data.Get(origPath)
+	// log.Printf("[DEBUG] isMatchingAllowListArtifact: origPath='%s', ra.Type='%s', artifactType='%v' artifact='%v', objPath='%s' matchType='%v' ok? %v",
+	// 	origPath, ra.Type, artifactType, artifact, objPath, matchType, ok)
+
+	return ok && matchType.(string) == "PREFIX_MATCH" && (artifactType == "LIBRARY_JAR" || artifactType == "INIT_SCRIPT")
+}
+
+func generateIgnoreObjectWithoutName(resourceType string) func(ic *importContext, r *resource) bool {
+	return func(ic *importContext, r *resource) bool {
+		res := (r.Data != nil && r.Data.Get("name").(string) == "")
+		if res {
+			ic.addIgnoredResource(fmt.Sprintf("%s. ID=%s", resourceType, r.ID))
+		}
+		return res
+	}
+}
+
+func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) (string, *resource) {
+	gr := &resource{
+		Resource: "databricks_grants",
+		ID:       id,
+	}
+	var owner string
+	if parentResource.Data != nil {
+		ownerRaw, ok := parentResource.Data.GetOk("owner")
+		if ok {
+			gr.AddExtraData("owner", ownerRaw)
+			owner = ownerRaw.(string)
+		}
+	}
+	ic.Emit(gr)
+	return owner, gr
+}
+
+func (ic *importContext) addTfVar(name, value string) {
+	ic.tfvarsMutex.Lock()
+	defer ic.tfvarsMutex.Unlock()
+	ic.tfvars[name] = value
 }

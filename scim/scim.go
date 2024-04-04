@@ -175,14 +175,19 @@ type patchRequest struct {
 	Operations []patchOperation `json:"Operations,omitempty"`
 }
 
-func PatchRequest(op, path, value string) patchRequest {
+func PatchRequest(op, path string) patchRequest {
+	o := patchOperation{
+		Op:   op,
+		Path: path,
+	}
+	return PatchRequestComplexValue([]patchOperation{o})
+}
+
+func PatchRequestWithValue(op, path, value string) patchRequest {
 	o := patchOperation{
 		Op:    op,
 		Path:  path,
-		Value: value,
-	}
-	if value != "" {
-		o.Value = []ComplexValue{{Value: value}}
+		Value: []ComplexValue{{Value: value}},
 	}
 	return PatchRequestComplexValue([]patchOperation{o})
 }

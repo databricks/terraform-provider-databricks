@@ -443,6 +443,7 @@ var NoAuth string = "default auth: cannot configure default credentials, " +
 func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 	s["account_id"] = &schema.Schema{
 		Type:       schema.TypeString,
+		Computed:   true,
 		Optional:   true,
 		Deprecated: "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
 	}

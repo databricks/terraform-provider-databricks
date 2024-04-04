@@ -27,6 +27,7 @@ resource "databricks_ip_access_list" "allowed-list" {
   depends_on = [databricks_workspace_conf.this]
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -48,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 The databricks_ip_access_list can be imported using id:
 
 ```bash
-$ terraform import databricks_ip_access_list.this <list-id>
+terraform import databricks_ip_access_list.this <list-id>
 ```
 
 ## Related Resources

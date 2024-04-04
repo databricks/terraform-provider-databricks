@@ -29,6 +29,7 @@ type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
 	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
 	BaseParameters map[string]string `json:"base_parameters,omitempty"`
+	WarehouseId    string            `json:"warehouse_id,omitempty"`
 }
 
 // SparkPythonTask contains the information for python jobs
@@ -87,7 +88,8 @@ type SqlAlertTask struct {
 }
 
 type SqlFileTask struct {
-	Path string `json:"path"`
+	Path   string `json:"path"`
+	Source string `json:"source,omitempty" tf:"suppress_diff"`
 }
 
 // SqlTask contains information about DBSQL task
@@ -110,12 +112,54 @@ type DbtTask struct {
 	Schema            string   `json:"schema,omitempty" tf:"default:default"`
 	Catalog           string   `json:"catalog,omitempty"`
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
+	Source            string   `json:"source,omitempty" tf:"suppress_diff"`
 }
 
 // RunJobTask contains information about RunJobTask
 type RunJobTask struct {
 	JobID         int64             `json:"job_id"`
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
+}
+
+// TODO: As TF does not support recursive nesting, limit the nesting depth. Example:
+// https://github.com/hashicorp/terraform-provider-aws/blob/b4a9f93a2b7323202c8904e86cff03d3f2cb006b/internal/service/wafv2/rule_group.go#L110
+type ForEachTask struct {
+	Concurrency int               `json:"concurrency,omitempty"`
+	Inputs      string            `json:"inputs"`
+	Task        ForEachNestedTask `json:"task"`
+}
+
+type ForEachNestedTask struct {
+	TaskKey     string                `json:"task_key,omitempty"`
+	Description string                `json:"description,omitempty"`
+	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
+	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
+
+	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"alias:library"`
+
+	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
+	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+
+	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings   *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
+	TimeoutSeconds         int32                          `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32                          `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
+	Health                 *JobHealth                     `json:"health,omitempty"`
 }
 
 func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
@@ -187,6 +231,7 @@ type JobTaskSettings struct {
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+	ForEachTask     *ForEachTask        `json:"for_each_task,omitempty" tf:"group:task_type"`
 
 	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
@@ -223,8 +268,16 @@ type FileArrival struct {
 	WaitAfterLastChangeSeconds    int32  `json:"wait_after_last_change_seconds,omitempty"`
 }
 
+type TableUpdate struct {
+	TableNames                    []string `json:"table_names"`
+	Condition                     string   `json:"condition,omitempty"`
+	MinTimeBetweenTriggersSeconds int32    `json:"min_time_between_triggers_seconds,omitempty"`
+	WaitAfterLastChangeSeconds    int32    `json:"wait_after_last_change_seconds,omitempty"`
+}
+
 type Trigger struct {
-	FileArrival *FileArrival `json:"file_arrival"`
+	FileArrival *FileArrival `json:"file_arrival,omitempty"`
+	TableUpdate *TableUpdate `json:"table_update,omitempty"`
 	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
@@ -275,7 +328,7 @@ type JobSettings struct {
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []jobs.JobParameterDefinition `json:"parameters,omitempty" tf:"alias:parameter"`
 	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
-	EditMode             jobs.CreateJobEditMode        `json:"edit_mode,omitempty"`
+	EditMode             jobs.JobEditMode              `json:"edit_mode,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -684,6 +737,10 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
 
+		trigger_eoo := []string{"trigger.0.file_arrival", "trigger.0.table_update"}
+		common.MustSchemaPath(s, "trigger", "file_arrival").ExactlyOneOf = trigger_eoo
+		common.MustSchemaPath(s, "trigger", "table_update").ExactlyOneOf = trigger_eoo
+
 		// Deprecated Job API 2.0 attributes
 		var topLevelDeprecatedAttr = []string{
 			"max_retries",
@@ -707,6 +764,11 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
 		common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
 		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
+
+		// Clear the implied diff suppression for the webhook notification lists
+		for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+			common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
+		}
 
 		return s
 	})

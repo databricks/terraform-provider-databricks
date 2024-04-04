@@ -36,6 +36,16 @@ type resourceApproximation struct {
 	Instances []instanceApproximation `json:"instances"`
 }
 
+func (ra *resourceApproximation) Get(attr string) (any, bool) {
+	for _, i := range ra.Instances {
+		v, found := i.Attributes[attr]
+		if found {
+			return v, found
+		}
+	}
+	return nil, false
+}
+
 // TODO: think if something like trie may help here...
 type resourceApproximationHolder struct {
 	mutex      sync.RWMutex
@@ -163,9 +173,14 @@ const (
 	MatchCaseInsensitive = "caseinsensitive"
 	// MatchPrefix is to specify that prefix of value should match
 	MatchPrefix = "prefix"
+	// MatchLongestPrefix is to specify that prefix of value should match, and select the longest value from list of candidates
+	MatchLongestPrefix = "longestprefix"
 	// MatchRegexp is to specify that the group extracted from value should match
 	MatchRegexp = "regexp"
 )
+
+type valueTransformFunc func(string) string
+type isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
 
 type reference struct {
 	// path to a given field, like, `cluster_id`, `access_control.user_name``, ... For references blocks/arrays, the `.N` component isn't required
@@ -182,6 +197,13 @@ type reference struct {
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match
 	Regexp *regexp.Regexp
+	// functions to transform match and current search value
+	MatchValueTransformFunc  valueTransformFunc
+	SearchValueTransformFunc valueTransformFunc
+	// function to evaluate fit of the resource approximation found to the resource...
+	IsValidApproximation isValidAproximationFunc
+	// if we should skip direct lookups (for example, we need it for UC schemas matching)
+	SkipDirectLookup bool
 }
 
 func (r reference) MatchAttribute() string {
@@ -214,6 +236,29 @@ type resource struct {
 	Incremental bool
 	// Actual Terraform data
 	Data *schema.ResourceData
+	// Arbitrary data to be used by importable
+	ExtraData map[string]any
+	// References to dependencies - it could be fully resolved resource, with Data, etc., or it could be just resource type + ID
+	DependsOn []*resource
+}
+
+func (r *resource) AddExtraData(key string, value any) {
+	if r.ExtraData == nil {
+		r.ExtraData = map[string]any{}
+	}
+	r.ExtraData[key] = value
+}
+
+func (r *resource) AddDependsOn(dep *resource) {
+	r.DependsOn = append(r.DependsOn, dep)
+}
+
+func (r *resource) GetExtraData(key string) (any, bool) {
+	if r.ExtraData == nil {
+		return nil, false
+	}
+	v, ok := r.ExtraData[key]
+	return v, ok
 }
 
 func (r *resource) MatchPair() (string, string) {
@@ -357,4 +402,16 @@ func (a *importedResources) Sorted() []*resource {
 	copy(c, a.resources)
 	sort.Sort(c)
 	return c
+}
+
+func (a *importedResources) FindById(resourceType, id string) *resource {
+	defer a.mutex.RLocker().Unlock()
+	a.mutex.RLocker().Lock()
+	for _, r := range a.resources {
+		if r.Resource == resourceType && r.ID == id {
+			return r
+		}
+	}
+
+	return nil
 }

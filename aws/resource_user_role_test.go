@@ -19,7 +19,7 @@ func TestUserRoleCreate_AndGetResourceDrift(t *testing.T) {
 			{
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Users/a",
-				ExpectedRequest: scim.PatchRequest("add", "roles", "b"),
+				ExpectedRequest: scim.PatchRequestWithValue("add", "roles", "b"),
 			},
 			{
 				Method:   "GET",

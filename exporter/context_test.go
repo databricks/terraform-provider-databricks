@@ -10,7 +10,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,14 +36,50 @@ func TestImportContextFindSkips(t *testing.T) {
 				},
 			},
 		}})
-	_, traversal := (&importContext{
+	_, traversal, _ := (&importContext{
 		State: state,
-	}).Find(&resource{
-		Resource:  "a",
-		Attribute: "b",
-		Name:      "c",
-	}, "x", reference{})
+	}).Find("v", "x", reference{Resource: "a"}, &resource{}, "a")
 	assert.Nil(t, traversal)
+}
+
+func TestImportContextFindNoDirectLookup(t *testing.T) {
+	state := newStateApproximation([]string{"a"})
+	state.Append(resourceApproximation{
+		Type: "a",
+		Instances: []instanceApproximation{
+			{
+				Attributes: map[string]any{
+					"b": "42",
+				},
+			},
+		}})
+	_, traversal, _ := (&importContext{
+		State: state,
+	}).Find("42", "b", reference{Resource: "a", SkipDirectLookup: true}, &resource{}, "a")
+	assert.NotNil(t, traversal)
+}
+
+func TestImportContextFindMatchLongestPrefix(t *testing.T) {
+	state := newStateApproximation([]string{"a"})
+	state.Append(resourceApproximation{
+		Type: "a",
+		Instances: []instanceApproximation{
+			{
+				Attributes: map[string]any{
+					"b": "/a/b",
+				},
+			},
+			{
+				Attributes: map[string]any{
+					"b": "/a/b/c",
+				},
+			},
+		}})
+	val, traversal, _ := (&importContext{
+		State: state,
+	}).Find("/a/b/c/d", "b", reference{Resource: "a", MatchType: MatchLongestPrefix}, &resource{}, "a")
+	require.NotNil(t, traversal)
+	assert.Equal(t, "/a/b/c", val)
 }
 
 func TestImportContextHas(t *testing.T) {
@@ -396,4 +434,65 @@ func TestDeletedWsObjectsDetection(t *testing.T) {
 	_ = os.WriteFile(fname, []byte("{}"), 0755)
 	ic.loadOldWorkspaceObjects(fname)
 	require.Equal(t, 0, len(ic.oldWorkspaceObjects))
+}
+
+func TestExtractResourceIdFromImportBlockString(t *testing.T) {
+	id := extractResourceIdFromImportBlockString(`import {
+		id = "64ed13ad-5772-4871-b23d-660ad014ea1e"
+		to = databricks_pipeline.test_pipeline
+	  }`)
+	assert.Equal(t, "databricks_pipeline.test_pipeline", id)
+
+	id = extractResourceIdFromImportBlockString(``)
+	assert.Equal(t, "", id)
+
+	id = extractResourceIdFromImportBlockString(`aaaa`)
+	assert.Equal(t, "", id)
+
+	id = extractResourceIdFromImportBlockString(`import {
+		id = "64ed13ad-5772-4871-b23d-660ad014ea1e"
+	  }`)
+	assert.Equal(t, "", id)
+}
+
+func TestGenerateDependsOn(t *testing.T) {
+	ic := importContextForTest()
+	ic.incremental = true
+
+	f := hclwrite.NewEmptyFile()
+	body := f.Body()
+	dr := &resource{
+		Resource: "databricks_catalog",
+		ID:       "test",
+		Data: ic.Resources["databricks_catalog"].Data(
+			&terraform.InstanceState{
+				ID: "test",
+				Attributes: map[string]string{
+					"name": "test",
+				},
+			}),
+	}
+	ic.Scope.Append(dr)
+	r := &resource{
+		Resource: "databricks_schema",
+		Name:     "test.schema",
+		Data: ic.Resources["databricks_schema"].Data(
+			&terraform.InstanceState{
+				ID: "test",
+				Attributes: map[string]string{
+					"catalog_name": "test",
+					"name":         "schema",
+				},
+			}),
+		DependsOn: []*resource{dr,
+			{Resource: dr.Resource, ID: dr.ID},
+			{Resource: dr.Resource, ID: "unknown"},
+		},
+	}
+	r.AddDependsOn(&resource{Resource: dr.Resource, ID: "test2", Data: dr.Data})
+	resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
+	err := ic.dataToHcl(ic.Importables[r.Resource], []string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
+	require.NoError(t, err)
+	formatted := hclwrite.Format(f.Bytes())
+	assert.Contains(t, string(formatted), "depends_on   = [databricks_catalog.test, databricks_catalog.test2]")
 }

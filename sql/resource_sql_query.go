@@ -544,6 +544,7 @@ func ResourceSqlQuery() common.Resource {
 			}, false)
 
 			m["run_as_role"].ValidateFunc = validation.StringInSlice([]string{"viewer", "owner"}, false)
+			m["query"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 			return m
 		})
 

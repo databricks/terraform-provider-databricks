@@ -70,7 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 The resource notebook can be imported using notebook path
 
 ```bash
-$ terraform import databricks_notebook.this /path/to/notebook
+terraform import databricks_notebook.this /path/to/notebook
 ```
 
 ## Related Resources

@@ -27,8 +27,7 @@ func TestCreateMetastore(t *testing.T) {
 				MetastoreId: "abc",
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
-				Id:   "abc",
-				Name: "a",
+				Id: "abc",
 			}).Return(&catalog.MetastoreInfo{
 				Name: "a",
 			}, nil)
@@ -58,7 +57,6 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:    "abc",
-				Name:  "a",
 				Owner: "administrators",
 			}).Return(&catalog.MetastoreInfo{
 				Name:  "a",
@@ -92,7 +90,6 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "a",
 				Owner:             "administrators",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 0,
@@ -246,7 +243,6 @@ func TestUpdateMetastore_OwnerAndOtherChanges(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "abc",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -296,7 +292,6 @@ func TestUpdateMetastore_Rollback(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "abc",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -337,7 +332,6 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 			e := w.GetMockMetastoresAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:                "abc",
-				Name:              "abc",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -387,16 +381,6 @@ func TestCreateAccountMetastore(t *testing.T) {
 					MetastoreId: "abc",
 				},
 			}, nil)
-			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
-				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Name: "a",
-				},
-			}).Return(&catalog.AccountsMetastoreInfo{
-				MetastoreInfo: &catalog.MetastoreInfo{
-					Name: "a",
-				},
-			}, nil)
 			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
@@ -431,7 +415,6 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
-					Name:  "a",
 					Owner: "administrators",
 				},
 			}).Return(&catalog.AccountsMetastoreInfo{
@@ -476,7 +459,6 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
-					Name:                         "a",
 					Owner:                        "administrators",
 					DeltaSharingOrganizationName: "acme",
 					DeltaSharingScope:            "INTERNAL_AND_EXTERNAL",
@@ -630,7 +612,6 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
 					Id:                "abc",
-					Name:              "abc",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -680,7 +661,6 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 				MetastoreId: "abc",
 				MetastoreInfo: &catalog.UpdateMetastore{
 					Id:                "abc",
-					Name:              "abc",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},

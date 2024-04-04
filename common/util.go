@@ -2,7 +2,9 @@ package common
 
 import (
 	"context"
+	"log"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,4 +28,9 @@ func GetTerraformVersionFromContext(ctx context.Context) string {
 
 func IsExporter(ctx context.Context) bool {
 	return GetTerraformVersionFromContext(ctx) == "exporter"
+}
+
+func SuppressDiffWhitespaceChange(k, old, new string, d *schema.ResourceData) bool {
+	log.Printf("[DEBUG] Suppressing diff for %v: old=%#v new=%#v", k, old, new)
+	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }

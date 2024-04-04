@@ -41,6 +41,7 @@ func TestUcAccSchema(t *testing.T) {
 			properties = {
 				kind = "various"
 			}
+			enable_predictive_optimization = "DISABLE"
 		}
 
 		resource "databricks_schema" "stuff" {
@@ -83,6 +84,7 @@ func schemaTemplateWithOwner(comment string, owner string) string {
 			properties = {
 				kind = "various"
 			}
+			enable_predictive_optimization = "ENABLE"
 			owner = "%s"
 		}`, comment, owner)
 }

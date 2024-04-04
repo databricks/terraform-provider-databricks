@@ -32,9 +32,9 @@ func (volumeDataParams) CustomizeSchema(s map[string]*schema.Schema) map[string]
 func volumeDataRead(ctx context.Context, data volumeDataParams, w *databricks.WorkspaceClient) (*catalog.VolumeInfo, error) {
 	volumeRequest := catalog.ReadVolumeRequest{}
 	if data.FullName != "" {
-		volumeRequest.FullNameArg = data.FullName
+		volumeRequest.Name = data.FullName
 	} else {
-		volumeRequest.FullNameArg = fmt.Sprintf("%s.%s.%s", data.CatalogName, data.SchemaName, data.Name)
+		volumeRequest.Name = fmt.Sprintf("%s.%s.%s", data.CatalogName, data.SchemaName, data.Name)
 	}
 
 	volume, err := w.Volumes.Read(ctx, volumeRequest)

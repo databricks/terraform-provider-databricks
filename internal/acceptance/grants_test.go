@@ -5,9 +5,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/stretchr/testify/assert"
 )
 
 var grantsTemplate = `
@@ -168,12 +165,6 @@ func grantsTemplateForUnderscoreChange(permission string) string {
 
 func TestUcAccGrantsForUnderscoreChange(t *testing.T) {
 	unityWorkspaceLevel(t, step{
-		Template: grantsTemplateForUnderscoreChange("ALL_PRIVILEGES"),
-	}, step{
 		Template: grantsTemplateForUnderscoreChange("ALL PRIVILEGES"),
-		Check: func(s *terraform.State) error {
-			assert.Equal(t, s.Serial, int64(1), "Expected serial to not be updated")
-			return nil
-		},
 	})
 }

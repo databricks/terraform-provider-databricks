@@ -104,7 +104,7 @@ func ResourceServicePrincipal() common.Resource {
 	}
 	servicePrincipalSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,

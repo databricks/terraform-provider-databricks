@@ -198,6 +198,25 @@ func TestAccEntitlementsAddToEmpty(t *testing.T) {
 	workspaceLevel(t, steps...)
 }
 
+func TestAccEntitlementsSetExplicitlyToFalse(t *testing.T) {
+	steps := makeEntitlementsSteps(t, [][]entitlement{
+		{
+			{"allow_cluster_create", false},
+			{"allow_instance_pool_create", false},
+			{"workspace_access", false},
+			{"databricks_sql_access", false},
+		},
+		{},
+		{
+			{"allow_cluster_create", false},
+			{"allow_instance_pool_create", false},
+			{"workspace_access", false},
+			{"databricks_sql_access", false},
+		},
+	})
+	workspaceLevel(t, steps...)
+}
+
 func TestAccEntitlementsRemoveExisting(t *testing.T) {
 	steps := makeEntitlementsSteps(t, [][]entitlement{
 		{

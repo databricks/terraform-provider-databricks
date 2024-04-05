@@ -747,3 +747,13 @@ func TestResourceEntitlementsGroupCreateEmpty(t *testing.T) {
 	assert.Equal(t, false, d.Get("databricks_sql_access"))
 	assert.Equal(t, false, d.Get("workspace_access"))
 }
+
+func TestResourceEntitlementsCreate_AccountLevelShouldError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource:  ResourceEntitlements(),
+		HCL:       `group_id = "abc"`,
+		Create:    true,
+		AccountID: "abc-123",
+	}.Apply(t)
+	assert.Contains(t, "entitlements can only be managed with a provider configured at the workspace-level", err.Error())
+}

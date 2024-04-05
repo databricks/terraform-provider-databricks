@@ -28,6 +28,9 @@ func ResourceEntitlements() common.Resource {
 	addEntitlementsToSchema(entitlementSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			if c.Config.IsAccountClient() {
+				return fmt.Errorf("entitlements can only be managed with a provider configured at the workspace-level")
+			}
 			err := patchEntitlements(ctx, d, c, "replace")
 			if err != nil {
 				return err

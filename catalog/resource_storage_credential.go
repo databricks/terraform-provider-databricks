@@ -9,30 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type StorageCredentialInfo struct {
-	Name                        string                                       `json:"name" tf:"force_new"`
-	Owner                       string                                       `json:"owner,omitempty" tf:"computed"`
-	Comment                     string                                       `json:"comment,omitempty"`
-	Aws                         *catalog.AwsIamRoleResponse                  `json:"aws_iam_role,omitempty" tf:"group:access"`
-	Azure                       *catalog.AzureServicePrincipal               `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI                        *catalog.AzureManagedIdentityResponse        `json:"azure_managed_identity,omitempty" tf:"group:access"`
-	GcpSAKey                    *GcpServiceAccountKey                        `json:"gcp_service_account_key,omitempty" tf:"group:access"`
-	DatabricksGcpServiceAccount *catalog.DatabricksGcpServiceAccountResponse `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
-	MetastoreID                 string                                       `json:"metastore_id,omitempty" tf:"computed"`
-	ReadOnly                    bool                                         `json:"read_only,omitempty"`
-	SkipValidation              bool                                         `json:"skip_validation,omitempty"`
-}
-
-func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {
-	//common.DataToStructPointer(d, s, &create) will error out because of DatabricksGcpServiceAccount any
-	tmpSchema := make(map[string]*schema.Schema)
-	for k, v := range originalSchema {
-		tmpSchema[k] = v
-	}
-	delete(tmpSchema, "databricks_gcp_service_account")
-	return tmpSchema
-}
-
 var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		return adjustDataAccessSchema(m)

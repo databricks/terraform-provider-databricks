@@ -40,7 +40,9 @@ func ResourceMwsNccBinding() common.Resource {
 		Schema: s,
 		Create: createOrUpdate,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			log.Print("[WARN] Importing this NCC binding is not enabled, skipping...")
+			if d.IsNewResource() {
+				log.Print("[WARN] Importing NCC binding is not supported, skipping...")
+			}
 			return nil
 		},
 		Update: createOrUpdate,

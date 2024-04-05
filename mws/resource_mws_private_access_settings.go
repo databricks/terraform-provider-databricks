@@ -42,6 +42,7 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 				return err
 			}
 			d.Set("private_access_settings_id", res.PrivateAccessSettingsId)
+			d.Set("account_id", res.AccountId)
 			p.Pack(d)
 			return nil
 		},

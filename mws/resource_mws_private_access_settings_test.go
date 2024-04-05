@@ -24,6 +24,7 @@ func TestResourcePASCreate(t *testing.T) {
 				PrivateAccessLevel:        "ACCOUNT",
 			}).Return(&provisioning.PrivateAccessSettings{
 				PrivateAccessSettingsId: "pas_id",
+				AccountId:               "abc",
 			}, nil)
 			e.GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(&provisioning.PrivateAccessSettings{
 				PrivateAccessSettingsId:   "pas_id",
@@ -85,6 +86,7 @@ func TestResourcePASCreate_PublicAccessDisabled(t *testing.T) {
 				ForceSendFields:           []string{"PublicAccessEnabled"},
 			}).Return(&provisioning.PrivateAccessSettings{
 				PrivateAccessSettingsId: "pas_id",
+				AccountId:               "abc",
 			}, nil)
 			e.GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(&provisioning.PrivateAccessSettings{
 				PrivateAccessSettingsId:   "pas_id",
@@ -93,7 +95,8 @@ func TestResourcePASCreate_PublicAccessDisabled(t *testing.T) {
 				ForceSendFields:           []string{"PublicAccessEnabled"},
 			}, nil)
 		},
-		Resource: ResourceMwsPrivateAccessSettings(),
+		Resource:  ResourceMwsPrivateAccessSettings(),
+		AccountID: "abc",
 		HCL: `
 		account_id = "abc"
 		private_access_settings_name = "pas_name"

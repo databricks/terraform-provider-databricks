@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -36,7 +37,7 @@ func init() {
 }
 
 func workspaceLevel(t *testing.T, steps ...step) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	loadWorkspaceEnv(t)
 	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
 		skipf(t)("Skipping workspace test on account level")
@@ -46,7 +47,7 @@ func workspaceLevel(t *testing.T, steps ...step) {
 }
 
 func accountLevel(t *testing.T, steps ...step) {
-	loadDebugEnvIfRunsFromIDE(t, "account")
+	loadAccountEnv(t)
 	cfg := &config.Config{
 		AccountID: GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID"),
 	}
@@ -63,7 +64,7 @@ func accountLevel(t *testing.T, steps ...step) {
 }
 
 func unityWorkspaceLevel(t *testing.T, steps ...step) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+	loadUcwsEnv(t)
 	GetEnvOrSkipTest(t, "TEST_METASTORE_ID")
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
 		skipf(t)("Skipping workspace test on account level")
@@ -73,7 +74,7 @@ func unityWorkspaceLevel(t *testing.T, steps ...step) {
 }
 
 func unityAccountLevel(t *testing.T, steps ...step) {
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	loadUcacctEnv(t)
 	GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	GetEnvOrSkipTest(t, "TEST_METASTORE_ID")
 	t.Parallel()
@@ -351,6 +352,41 @@ func skipf(t *testing.T) func(format string, args ...any) {
 func isInDebug() bool {
 	ex, _ := os.Executable()
 	return strings.HasPrefix(path.Base(ex), "__debug_bin")
+}
+
+func loadWorkspaceEnv(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+}
+
+func loadAccountEnv(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "account")
+}
+
+func loadUcwsEnv(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "ucws")
+}
+
+func loadUcacctEnv(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+}
+
+func isAws() bool {
+	awsCloudEnvs := []string{"MWS", "aws", "ucws", "ucacct"}
+	return isCloudEnvInList(awsCloudEnvs)
+}
+
+func isAzure() bool {
+	azureCloudEnvs := []string{"azure", "azure-ucacct"}
+	return isCloudEnvInList(azureCloudEnvs)
+}
+
+func isGcp() bool {
+	gcpCloudEnvs := []string{"gcp-accounts", "gcp-ucacct", "gcp-ucws", "gcp"}
+	return isCloudEnvInList(gcpCloudEnvs)
+}
+
+func isCloudEnvInList(cloudEnvs []string) bool {
+	return slices.Contains(cloudEnvs, os.Getenv("CLOUD_ENV"))
 }
 
 // loads debug environment from ~/.databricks/debug-env.json

@@ -2,18 +2,15 @@ package acceptance
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestUcAccVectorSearchEndpoint(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	switch cloudEnv {
-	case "ucws", "azure":
-	default:
-		t.Skipf("not available on %s", cloudEnv)
+	loadUcwsEnv(t)
+	if isGcp() {
+		skipf(t)("not available on GCP")
 	}
 
 	name := fmt.Sprintf("terraform-test-vector-search-%[1]s",

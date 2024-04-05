@@ -3,7 +3,6 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -38,7 +37,7 @@ resource "databricks_sql_global_config" "this" {
 }
 
 func TestAccSQLGlobalConfig(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	loadWorkspaceEnv(t)
 	workspaceLevel(t, step{
 		PreConfig: func() {
 			ctx := context.Background()
@@ -50,8 +49,8 @@ func TestAccSQLGlobalConfig(t *testing.T) {
 }
 
 func TestAccSQLGlobalConfigServerless(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if strings.Contains(os.Getenv("CLOUD_ENV"), "gcp") {
+	loadWorkspaceEnv(t)
+	if isGcp() {
 		skipf(t)("GCP does not support serverless compute")
 	}
 

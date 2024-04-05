@@ -13,11 +13,9 @@ import (
 )
 
 func TestAccModelServing(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	switch cloudEnv {
-	case "aws", "azure":
-	default:
-		t.Skipf("not available on %s", cloudEnv)
+	loadWorkspaceEnv(t)
+	if isGcp() {
+		skipf(t)("not available on GCP")
 	}
 
 	clusterID := os.Getenv("TEST_DEFAULT_CLUSTER_ID")

@@ -493,6 +493,8 @@ func ResourceMwsWorkspaces() common.Resource {
 				return old != ""
 			}
 
+			s["pricing_tier"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+
 			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
 			s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
 			s["managed_services_customer_managed_key_id"].ConflictsWith = []string{"customer_managed_key_id"}

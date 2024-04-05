@@ -13,6 +13,7 @@ func TestUcAccCatalog(t *testing.T) {
 			properties = {
 				purpose = "testing"
 			}
+			enable_predictive_optimization = "ENABLE"
 		}`,
 	})
 }
@@ -59,6 +60,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			properties     = {
 				purpose = "testing"
 			}
+			enable_predictive_optimization = "ENABLE"
 		}`,
 	}, step{
 		Template: `
@@ -68,6 +70,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			properties     = {
 				purpose = "testing"
 			}
+			enable_predictive_optimization = "ENABLE"
 			owner = "account users"
 		}`,
 	}, step{
@@ -78,6 +81,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			properties     = {
 				purpose = "testing"
 			}
+			enable_predictive_optimization = "ENABLE"
 			owner = "{env.TEST_DATA_ENG_GROUP}"
 		}`,
 	}, step{
@@ -88,6 +92,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			properties     = {
 				purpose = "testing"
 			}
+			enable_predictive_optimization = "DISABLE"
 			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
 		}`,
 	})

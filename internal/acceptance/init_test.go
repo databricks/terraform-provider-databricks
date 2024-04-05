@@ -386,7 +386,11 @@ func isGcp() bool {
 }
 
 func isCloudEnvInList(cloudEnvs []string) bool {
-	return slices.Contains(cloudEnvs, os.Getenv("CLOUD_ENV"))
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv == "" {
+		panic("CLOUD_ENV is not set. When debugging, ensure that load*Env functions are called before referencing the environment")
+	}
+	return slices.Contains(cloudEnvs, cloudEnv)
 }
 
 // loads debug environment from ~/.databricks/debug-env.json

@@ -84,12 +84,24 @@ func schemaTemplateWithOwner(comment string, owner string) string {
 			properties = {
 				kind = "various"
 			}
-			enable_predictive_optimization = "ENABLE"
+			%s
 			owner = "%s"
-		}`, comment, owner)
+		}`, comment, getPredictiveOptimizationSetting(true), owner)
+}
+
+func getPredictiveOptimizationSetting(enabled bool) string {
+	if isGcp() {
+		return ""
+	}
+	value := "ENABLE"
+	if !enabled {
+		value = "DISABLE"
+	}
+	return fmt.Sprintf(`enable_predictive_optimization = "%s"`, value)
 }
 
 func TestUcAccSchemaUpdate(t *testing.T) {
+	loadUcwsEnv(t)
 	unityWorkspaceLevel(t, step{
 		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform", "account users"),
 	}, step{

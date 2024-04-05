@@ -14,7 +14,7 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 		for _, p := range []string{"network_connectivity_config_id", "group_id", "resource_id"} {
 			common.CustomizeSchemaPath(m, p).SetRequired().SetForceNew()
 		}
-		for _, p := range []string{"rule_id", "endpoint_name", "connection_state"} {
+		for _, p := range []string{"rule_id", "endpoint_name", "connection_state", "creation_time", "updated_time"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()
 		}
 		return m

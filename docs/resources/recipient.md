@@ -73,6 +73,8 @@ The following arguments are required:
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN` and `DATABRICKS`.
 * `data_recipient_global_metastore_id` - Required when `authentication_type` is `DATABRICKS`.
 * `ip_access_list` - (Optional) Recipient IP access list.
+* `properties_kvpairs` - (Optional) Recipient properties - object consisting of following fields:
+  * `properties` (Required) a map of string key-value pairs with recipient's properties.  Properties with name starting with `databricks.` are reserved.
 
 ### Ip Access List Argument
 
@@ -103,7 +105,14 @@ In addition to all arguments above, the following attributes are exported:
   * `expiration_time` - Expiration timestamp of the token in epoch milliseconds.
   * `updated_at` - Time at which this recipient Token was updated, in epoch milliseconds.
   * `updated_by` - Username of recipient Token updater.
-* `id` - ID of this recipient - same as the `name`.
+* `created_at` - Time at which this recipient was created, in epoch milliseconds.
+* `created_by` - Username of recipient creator.
+* `updated_at` - Time at which this recipient was updated, in epoch milliseconds.
+* `updated_by` - Username of recipient Token updater.
+* `metastore_id` - Unique identifier of recipient's Unity Catalog metastore. This field is only present when the authentication_type is `DATABRICKS`.
+* `cloud` - Cloud vendor of the recipient's Unity Catalog Metstore. This field is only present when the authentication_type is `DATABRICKS`.
+* `region` - Cloud region of the recipient's Unity Catalog Metstore. This field is only present when the authentication_type is `DATABRICKS`.
+
 
 ## Related Resources
 

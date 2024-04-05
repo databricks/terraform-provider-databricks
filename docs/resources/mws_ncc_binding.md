@@ -15,7 +15,6 @@ The NCC and workspace must be in the same region.
 
 ```hcl
 variable "region" {}
-variable "databricks_workspace_id" {}
 variable "prefix" {}
 
 resource "databricks_mws_network_connectivity_config" "ncc" {
@@ -26,7 +25,7 @@ resource "databricks_mws_network_connectivity_config" "ncc" {
 
 resource "databricks_mws_ncc_binding" "ncc_binding" {
   provider                       = databricks.account
-  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.id
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.network_connectivity_config_id
   workspace_id                   = var.databricks_workspace_id
 }
 ```

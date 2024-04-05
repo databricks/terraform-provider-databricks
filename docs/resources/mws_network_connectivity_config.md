@@ -13,7 +13,6 @@ Allows you to create a [Network Connectivity Config] that can be used as part of
 
 ```hcl
 variable "region" {}
-variable "databricks_account_id" {}
 variable "prefix" {}
 
 resource "databricks_mws_network_connectivity_config" "ncc" {
@@ -24,7 +23,7 @@ resource "databricks_mws_network_connectivity_config" "ncc" {
 
 resource "databricks_mws_ncc_binding" "ncc_binding" {
   provider                       = databricks.account
-  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.id
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.network_connectivity_config_id
   workspace_id                   = var.databricks_workspace_id
 }
 ```

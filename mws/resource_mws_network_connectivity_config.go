@@ -16,7 +16,7 @@ func ResourceMwsNetworkConnectivityConfig() common.Resource {
 		for _, p := range []string{"name", "region"} {
 			common.CustomizeSchemaPath(m, p).SetRequired().SetForceNew()
 		}
-		for _, p := range []string{"account_id", "network_connectivity_config_id", "creation_time", "updated_time"} {
+		for _, p := range []string{"account_id", "network_connectivity_config_id", "creation_time", "updated_time", "egress_config"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()
 		}
 		return m

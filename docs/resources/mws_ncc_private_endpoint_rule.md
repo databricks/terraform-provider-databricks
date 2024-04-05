@@ -23,7 +23,7 @@ resource "databricks_mws_network_connectivity_config" "ncc" {
 
 resource "databricks_mws_ncc_private_endpoint_rule" "storage" {
   provider                       = databricks.account
-  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.id
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.network_connectivity_config_id
   resource_id                    = "/subscriptions/653bb673-1234-abcd-a90b-d064d5d53ca4/resourcegroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/examplesa"
   group_id                       = "blob"
 }

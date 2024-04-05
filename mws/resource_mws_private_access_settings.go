@@ -15,9 +15,9 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 	pasSchema := common.StructToSchema(provisioning.PrivateAccessSettings{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(m, "private_access_settings_name").SetValidateFunc(validation.StringLenBetween(4, 256))
 		common.CustomizeSchemaPath(m, "private_access_settings_name").SetRequired()
+
 		common.CustomizeSchemaPath(m, "region").SetRequired()
 
-		common.CustomizeSchemaPath(m, "private_access_level").SetValidateFunc(validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true))
 		common.CustomizeSchemaPath(m, "private_access_settings_id").SetComputed()
 
 		common.CustomizeSchemaPath(m, "private_access_level").SetValidateFunc(validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true))

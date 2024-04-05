@@ -71,23 +71,7 @@ var emptyAddRequest = PatchRequestComplexValue([]patchOperation{
 
 var updateRequest = PatchRequestComplexValue([]patchOperation{
 	{
-		"remove", "entitlements", []ComplexValue{
-			{
-				Value: "allow-cluster-create",
-			},
-			{
-				Value: "allow-instance-pool-create",
-			},
-			{
-				Value: "databricks-sql-access",
-			},
-			{
-				Value: "workspace-access",
-			},
-		},
-	},
-	{
-		"add", "entitlements", []ComplexValue{
+		"replace", "entitlements", []ComplexValue{
 			{
 				Value: "allow-cluster-create",
 			},

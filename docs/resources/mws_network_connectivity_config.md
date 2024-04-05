@@ -56,4 +56,5 @@ terraform import databricks_mws_network_connectivity_config.ncc <account_id>/<ne
 The following resources are used in the context:
 
 * [databricks_mws_workspaces](mws_workspaces.md) to set up Databricks workspaces.
-* [databricks_mws_ncc_binding](mws_ncc_binding.md) to attach an NCC to a workspace
+* [databricks_mws_ncc_binding](mws_ncc_binding.md) to attach an NCC to a workspace.
+* [databricks_mws_ncc_private_endpoint_rule](mws_ncc_private_endpoint_rule.md) to create a private endpoint rule.

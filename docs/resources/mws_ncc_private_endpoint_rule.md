@@ -66,5 +66,5 @@ terraform import databricks_mws_ncc_private_endpoint_rule.rule <network_connecti
 
 The following resources are used in the context:
 
-* [databricks_mws_network_connectivity_config](mws_network_connectivity_config.md) to create Network Connectivity Config objects
-* [databricks_mws_ncc_binding](mws_ncc_binding.md) to attach an NCC to a workspace
+* [databricks_mws_network_connectivity_config](mws_network_connectivity_config.md) to create Network Connectivity Config objects.
+* [databricks_mws_ncc_binding](mws_ncc_binding.md) to attach an NCC to a workspace.

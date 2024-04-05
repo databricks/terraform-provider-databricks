@@ -43,3 +43,4 @@ The following arguments are available:
 The following resources are used in the context:
 
 * [databricks_mws_workspaces](mws_workspaces.md) to set up Databricks workspaces.
+* [databricks_mws_network_connectivity_config](mws_network_connectivity_config.md) to create Network Connectivity Config objects.

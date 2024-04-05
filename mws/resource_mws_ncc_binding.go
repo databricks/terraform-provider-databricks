@@ -13,7 +13,7 @@ import (
 func ResourceMwsNccBinding() common.Resource {
 	type binding struct {
 		WorkspaceId int64  `json:"workspace_id" tf:"force_new"`
-		NccId       string `json:"network_connectivity_config_id" tf:"force_new"`
+		NccId       string `json:"network_connectivity_config_id"`
 	}
 	s := common.StructToSchema(binding{}, common.NoCustomize)
 	p := common.NewPairSeparatedID("workspace_id", "network_connectivity_config_id", "/")
@@ -43,6 +43,7 @@ func ResourceMwsNccBinding() common.Resource {
 			log.Print("[WARN] Importing this NCC binding is not enabled, skipping...")
 			return nil
 		},
+		Update: createOrUpdate,
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			log.Printf("[WARN] Cannot remove network connectivity config binding, only update is supported.")
 			return nil

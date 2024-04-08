@@ -87,6 +87,7 @@ func sqlTableIsManagedProperty(key string) bool {
 		"delta.columnMapping.maxColumnId":                          true,
 		"delta.enableDeletionVectors":                              true,
 		"delta.enableRowTracking":                                  true,
+		"delta.feature.clustering":                                 true,
 		"delta.feature.deletionVectors":                            true,
 		"delta.feature.domainMetadata":                             true,
 		"delta.feature.liquid":                                     true,

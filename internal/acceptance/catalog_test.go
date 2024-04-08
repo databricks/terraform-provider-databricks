@@ -1,20 +1,22 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestUcAccCatalog(t *testing.T) {
+	loadUcwsEnv(t)
 	unityWorkspaceLevel(t, step{
-		Template: `
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name         = "sandbox{var.RANDOM}"
 			comment      = "this catalog is managed by terraform"
 			properties = {
 				purpose = "testing"
 			}
-			enable_predictive_optimization = "ENABLE"
-		}`,
+			%s
+		}`, getPredictiveOptimizationSetting(t, true)),
 	})
 }
 
@@ -52,48 +54,49 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 }
 
 func TestUcAccCatalogUpdate(t *testing.T) {
+	loadUcwsEnv(t)
 	unityWorkspaceLevel(t, step{
-		Template: `
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
 			comment        = "this catalog is managed by terraform"
 			properties     = {
 				purpose = "testing"
 			}
-			enable_predictive_optimization = "ENABLE"
-		}`,
+			%s
+		}`, getPredictiveOptimizationSetting(t, true)),
 	}, step{
-		Template: `
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
 			comment        = "this catalog is managed by terraform"
 			properties     = {
 				purpose = "testing"
 			}
-			enable_predictive_optimization = "ENABLE"
+			%s
 			owner = "account users"
-		}`,
+		}`, getPredictiveOptimizationSetting(t, true)),
 	}, step{
-		Template: `
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
 			comment        = "this catalog is managed by terraform"
 			properties     = {
 				purpose = "testing"
 			}
-			enable_predictive_optimization = "ENABLE"
+			%s
 			owner = "{env.TEST_DATA_ENG_GROUP}"
-		}`,
+		}`, getPredictiveOptimizationSetting(t, true)),
 	}, step{
-		Template: `
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
 			comment        = "this catalog is managed by terraform - updated comment"
 			properties     = {
 				purpose = "testing"
 			}
-			enable_predictive_optimization = "DISABLE"
+			%s
 			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
-		}`,
+		}`, getPredictiveOptimizationSetting(t, false)),
 	})
 }

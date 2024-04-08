@@ -3,7 +3,6 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -13,17 +12,12 @@ import (
 )
 
 func TestAccModelServing(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	switch cloudEnv {
-	case "aws", "azure":
-	default:
-		t.Skipf("not available on %s", cloudEnv)
+	loadWorkspaceEnv(t)
+	if isGcp(t) {
+		skipf(t)("not available on GCP")
 	}
 
-	clusterID := os.Getenv("TEST_DEFAULT_CLUSTER_ID")
-	if clusterID == "" {
-		t.Skipf("default cluster not available")
-	}
+	clusterID := GetEnvOrSkipTest(t, "TEST_DEFAULT_CLUSTER_ID")
 
 	name := fmt.Sprintf("terraform-test-model-serving-%[1]s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))

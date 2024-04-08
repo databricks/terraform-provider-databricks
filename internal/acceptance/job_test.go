@@ -347,16 +347,16 @@ func TestAccJobRunAsUser(t *testing.T) {
 	})
 }
 
-func TestAccJobRunAsServicePrincipal(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+func TestUcAccJobRunAsServicePrincipal(t *testing.T) {
+	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 	unityWorkspaceLevel(t, step{
 		Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 	})
 }
 
-func TestAccJobRunAsMutations(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+func TestUcAccJobRunAsMutations(t *testing.T) {
+	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 	unityWorkspaceLevel(
 		t,
@@ -375,8 +375,8 @@ func TestAccJobRunAsMutations(t *testing.T) {
 	)
 }
 
-func TestRemoveWebhooks(t *testing.T) {
-	// skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
+func TestAccRemoveWebhooks(t *testing.T) {
+	skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
 	workspaceLevel(t, step{
 		Template: `
 		resource databricks_job test {

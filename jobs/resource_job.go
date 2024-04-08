@@ -773,7 +773,7 @@ var jobSchema = common.StructToSchema(JobSettings{},
 
 		// Clear the implied diff suppression for the webhook notification lists
 		fixWebhookNotifications(s)
-		fixWebhookNotifications(common.MustSchemaMap(s, "tasks"))
+		fixWebhookNotifications(common.MustSchemaMap(s, "task"))
 
 		return s
 	})

@@ -50,7 +50,7 @@ func TestAccSQLGlobalConfig(t *testing.T) {
 
 func TestAccSQLGlobalConfigServerless(t *testing.T) {
 	loadWorkspaceEnv(t)
-	if isGcp() {
+	if isGcp(t) {
 		skipf(t)("GCP does not support serverless compute")
 	}
 

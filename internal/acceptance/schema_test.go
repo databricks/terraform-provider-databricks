@@ -75,7 +75,7 @@ func TestUcAccSchema(t *testing.T) {
 	})
 }
 
-func schemaTemplateWithOwner(comment string, owner string) string {
+func schemaTemplateWithOwner(t *testing.T, comment string, owner string) string {
 	return fmt.Sprintf(`
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
@@ -86,11 +86,11 @@ func schemaTemplateWithOwner(comment string, owner string) string {
 			}
 			%s
 			owner = "%s"
-		}`, comment, getPredictiveOptimizationSetting(true), owner)
+		}`, comment, getPredictiveOptimizationSetting(t, true), owner)
 }
 
-func getPredictiveOptimizationSetting(enabled bool) string {
-	if isGcp() {
+func getPredictiveOptimizationSetting(t *testing.T, enabled bool) string {
+	if isGcp(t) {
 		return ""
 	}
 	value := "ENABLE"
@@ -103,12 +103,12 @@ func getPredictiveOptimizationSetting(enabled bool) string {
 func TestUcAccSchemaUpdate(t *testing.T) {
 	loadUcwsEnv(t)
 	unityWorkspaceLevel(t, step{
-		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform", "account users"),
+		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform", "account users"),
 	}, step{
-		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment", "account users"),
+		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment", "account users"),
 	}, step{
-		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment", "{env.TEST_DATA_ENG_GROUP}"),
+		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment", "{env.TEST_DATA_ENG_GROUP}"),
 	}, step{
-		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
+		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

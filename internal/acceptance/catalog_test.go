@@ -16,7 +16,7 @@ func TestUcAccCatalog(t *testing.T) {
 				purpose = "testing"
 			}
 			%s
-		}`, getPredictiveOptimizationSetting(true)),
+		}`, getPredictiveOptimizationSetting(t, true)),
 	})
 }
 
@@ -64,7 +64,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 				purpose = "testing"
 			}
 			%s
-		}`, getPredictiveOptimizationSetting(true)),
+		}`, getPredictiveOptimizationSetting(t, true)),
 	}, step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
@@ -75,7 +75,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			}
 			%s
 			owner = "account users"
-		}`, getPredictiveOptimizationSetting(true)),
+		}`, getPredictiveOptimizationSetting(t, true)),
 	}, step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
@@ -86,7 +86,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			}
 			%s
 			owner = "{env.TEST_DATA_ENG_GROUP}"
-		}`, getPredictiveOptimizationSetting(true)),
+		}`, getPredictiveOptimizationSetting(t, true)),
 	}, step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
@@ -97,6 +97,6 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			}
 			%s
 			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
-		}`, getPredictiveOptimizationSetting(false)),
+		}`, getPredictiveOptimizationSetting(t, false)),
 	})
 }

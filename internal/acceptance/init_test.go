@@ -370,25 +370,25 @@ func loadUcacctEnv(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "ucacct")
 }
 
-func isAws() bool {
+func isAws(t *testing.T) bool {
 	awsCloudEnvs := []string{"MWS", "aws", "ucws", "ucacct"}
-	return isCloudEnvInList(awsCloudEnvs)
+	return isCloudEnvInList(t, awsCloudEnvs)
 }
 
-func isAzure() bool {
+func isAzure(t *testing.T) bool {
 	azureCloudEnvs := []string{"azure", "azure-ucacct"}
-	return isCloudEnvInList(azureCloudEnvs)
+	return isCloudEnvInList(t, azureCloudEnvs)
 }
 
-func isGcp() bool {
+func isGcp(t *testing.T) bool {
 	gcpCloudEnvs := []string{"gcp-accounts", "gcp-ucacct", "gcp-ucws", "gcp"}
-	return isCloudEnvInList(gcpCloudEnvs)
+	return isCloudEnvInList(t, gcpCloudEnvs)
 }
 
-func isCloudEnvInList(cloudEnvs []string) bool {
+func isCloudEnvInList(t *testing.T, cloudEnvs []string) bool {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
-		panic("CLOUD_ENV is not set. When debugging, ensure that load*Env functions are called before referencing the environment")
+		skipf(t)("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	return slices.Contains(cloudEnvs, cloudEnv)
 }

@@ -172,8 +172,28 @@ func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, er
 	return nil, fmt.Errorf("%v does not compute", path)
 }
 
+func SchemaMap(s map[string]*schema.Schema, path ...string) (map[string]*schema.Schema, error) {
+	sch, err := SchemaPath(s, path...)
+	if err != nil {
+		return nil, err
+	}
+	cv, ok := sch.Elem.(*schema.Resource)
+	if !ok {
+		return nil, fmt.Errorf("%s is not nested resource", path[len(path)-1])
+	}
+	return cv.Schema, nil
+}
+
 func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema {
 	sch, err := SchemaPath(s, path...)
+	if err != nil {
+		panic(err)
+	}
+	return sch
+}
+
+func MustSchemaMap(s map[string]*schema.Schema, path ...string) map[string]*schema.Schema {
+	sch, err := SchemaMap(s, path...)
 	if err != nil {
 		panic(err)
 	}

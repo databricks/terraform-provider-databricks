@@ -894,21 +894,6 @@ func TestResourceSqlTableUpdateView_Definition(t *testing.T) {
 
 func TestResourceSqlTableUpdateView_IgnoreNewlineInDefinition(t *testing.T) {
 	qa.ResourceFixture{
-		CommandMock: func(commandStr string) common.CommandResults {
-			assert.NotContains(t, commandStr, "ALTERR VIEW `main`.`foo`.`barview`", "New lines should not recreate the resource")
-			return common.CommandResults{
-				ResultType: "",
-				Data:       nil,
-			}
-		},
-		HCL: `
-		name               = "barview"
-		catalog_name       = "main"
-		schema_name        = "foo"
-		table_type         = "VIEW"
-		cluster_id         = "existingcluster"
-		view_definition    = "SELECT * FROM main.foo.bar \n\n"
-		`,
 		InstanceState: map[string]string{
 			"name":            "barview",
 			"catalog_name":    "main",
@@ -917,42 +902,132 @@ func TestResourceSqlTableUpdateView_IgnoreNewlineInDefinition(t *testing.T) {
 			"cluster_id":      "existingcluster",
 			"view_definition": "SELECT * FROM main.foo.bar",
 		},
-		Fixtures: append([]qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
-				Response: SqlTableInfo{
-					Name:           "barview",
-					CatalogName:    "main",
-					SchemaName:     "foo",
-					TableType:      "VIEW",
-					ViewDefinition: "SELECT * FROM main.foo.bar",
-				},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"catalog_name": {
+				Old:         "main",
+				New:         "main",
+				RequiresNew: false,
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
-				Response: SqlTableInfo{
-					Name:           "barview",
-					CatalogName:    "main",
-					SchemaName:     "foo",
-					TableType:      "VIEW",
-					ViewDefinition: "SELECT * FROM main.foo.bar",
-				},
+			"cluster_id": {
+				Old:         "existingcluster",
+				New:         "existingcluster",
+				RequiresNew: false,
 			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/clusters/start",
-				ExpectedRequest: clusters.ClusterID{
-					ClusterID: "existingcluster",
-				},
-				Status: 404,
+			"name": {
+				Old:         "barview",
+				New:         "barview",
+				RequiresNew: false,
 			},
-		}, createClusterForSql...),
+			"schema_name": {
+				Old:         "foo",
+				New:         "foo",
+				RequiresNew: false,
+			},
+			"table_type": {
+				Old:         "VIEW",
+				New:         "VIEW",
+				RequiresNew: false,
+			},
+			"view_definition": {
+				Old:         "SELECT * FROM main.foo.bar",
+				New:         "SELECT * FROM main.foo.bar ",
+				NewComputed: false,
+				RequiresNew: false,
+				NewRemoved:  false,
+				Sensitive:   false,
+			},
+			"column.#": {
+				Old:         "",
+				New:         "",
+				NewComputed: true,
+				RequiresNew: false,
+			},
+			"effective_properties.%": {
+				Old:         "",
+				New:         "",
+				NewComputed: true,
+				RequiresNew: false,
+			},
+			"owner": {
+				Old:         "",
+				New:         "",
+				NewComputed: true,
+				RequiresNew: false,
+			},
+			"partitions.#": {
+				Old:         "",
+				New:         "",
+				NewComputed: true,
+				RequiresNew: true,
+			},
+			"provider_config.#": {
+				Old:         "",
+				New:         "",
+				NewComputed: true,
+				RequiresNew: false,
+			},
+			"table_id": {
+				Old:         "",
+				New:         "",
+				NewComputed: true,
+				RequiresNew: false,
+			},
+		},
+		HCL: `
+		name               = "barview"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "VIEW"
+		cluster_id         = "existingcluster"
+		view_definition    = "SELECT * FROM main.foo.bar "
+		`,
 		Resource: ResourceSqlTable(),
-		Update:   true,
 		ID:       "main.foo.barview",
 	}.ApplyNoError(t)
+}
+
+func TestResourceSqlTableDiff_ViewDefinitionWhitespaceOnly(t *testing.T) {
+	oldTable := &SqlTableInfo{
+		Name:           "barview",
+		CatalogName:    "main",
+		SchemaName:     "foo",
+		TableType:      "VIEW",
+		ViewDefinition: "SELECT id, name FROM somewhere WHERE condition = true",
+	}
+	newTable := &SqlTableInfo{
+		Name:           "barview",
+		CatalogName:    "main",
+		SchemaName:     "foo",
+		TableType:      "VIEW",
+		ViewDefinition: "SELECT  id, name \r\n\r\n FROM  somewhere\tWHERE  condition = true  ",
+	}
+
+	statements, err := newTable.diff(oldTable)
+
+	assert.NoError(t, err)
+	assert.Empty(t, statements)
+}
+
+func TestResourceSqlTableDiff_ViewDefinitionSemanticChange(t *testing.T) {
+	oldTable := &SqlTableInfo{
+		Name:           "barview",
+		CatalogName:    "main",
+		SchemaName:     "foo",
+		TableType:      "VIEW",
+		ViewDefinition: "SELECT id, name FROM somewhere WHERE condition = true",
+	}
+	newTable := &SqlTableInfo{
+		Name:           "barview",
+		CatalogName:    "main",
+		SchemaName:     "foo",
+		TableType:      "VIEW",
+		ViewDefinition: "SELECT id, name FROM somewhere WHERE condition = false",
+	}
+
+	statements, err := newTable.diff(oldTable)
+
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"ALTER VIEW `main`.`foo`.`barview` AS SELECT id, name FROM somewhere WHERE condition = false"}, statements)
 }
 
 func TestResourceSqlTableUpdateView_Comments(t *testing.T) {

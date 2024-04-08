@@ -694,6 +694,15 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Response: sdk_workspace.AclItem{Permission: "READ", Principal: "users"},
 			},
 			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/get?key=b&scope=a",
+
+				Response: sdk_workspace.GetSecretResponse{
+					Value: "dGVzdA==",
+					Key:   "b",
+				},
+			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -702,6 +711,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			ic.Directory = tmpDir
 			_, listing := ic.allServicesAndListing()
 			ic.enableListing(listing)
+			ic.exportSecrets = true
 
 			err := ic.Run()
 			assert.NoError(t, err)

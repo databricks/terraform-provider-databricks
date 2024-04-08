@@ -57,6 +57,8 @@ func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Sche
 		return old == "false" && new == "true"
 	}
 
+	m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+
 	return m
 }
 

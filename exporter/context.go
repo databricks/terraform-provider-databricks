@@ -98,6 +98,7 @@ type importContext struct {
 	lastActiveDays           int64
 	lastActiveMs             int64
 	generateDeclaration      bool
+	exportSecrets            bool
 	meAdmin                  bool
 	meUserName               string
 	prefix                   string
@@ -158,6 +159,9 @@ type importContext struct {
 
 	userOrSpDirectories      map[string]bool
 	userOrSpDirectoriesMutex sync.RWMutex
+
+	tfvarsMutex sync.Mutex
+	tfvars      map[string]string
 }
 
 type mount struct {
@@ -268,6 +272,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		userOrSpDirectories:       map[string]bool{},
 		services:                  map[string]struct{}{},
 		listing:                   map[string]struct{}{},
+		tfvars:                    map[string]string{},
 	}
 }
 
@@ -469,7 +474,12 @@ func (ic *importContext) Run() error {
 	ic.generateAndWriteResources(sh)
 	err = ic.generateVariables()
 	if err != nil {
-		return err
+		log.Printf("[ERROR] can't write variables file: %s", err.Error())
+	}
+
+	err = ic.generateTfvars()
+	if err != nil {
+		log.Printf("[ERROR] can't write terraform.tfvars file: %s", err.Error())
 	}
 
 	// Write stats file
@@ -1081,6 +1091,45 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		scopeSize, time.Since(t1).Seconds())
 }
 
+func (ic *importContext) generateGitIgnore() {
+	fileName := fmt.Sprintf("%s/.gitignore", ic.Directory)
+	vf, err := os.Create(fileName)
+	if err != nil {
+		log.Printf("[ERROR] can't create %s: %v", fileName, err)
+		return
+	}
+	defer vf.Close()
+	// nolint
+	vf.Write([]byte("terraform.tfvars\n"))
+}
+
+func (ic *importContext) generateTfvars() error {
+	// TODO: make it incremental as well...
+	if len(ic.tfvars) == 0 {
+		return nil
+	}
+	f := hclwrite.NewEmptyFile()
+	body := f.Body()
+	fileName := fmt.Sprintf("%s/terraform.tfvars", ic.Directory)
+
+	vf, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer vf.Close()
+
+	for k, v := range ic.tfvars {
+		body.SetAttributeValue(k, cty.StringVal(v))
+	}
+	// nolint
+	vf.Write(f.Bytes())
+	log.Printf("[INFO] Written %d tfvars", len(ic.tfvars))
+
+	ic.generateGitIgnore()
+
+	return nil
+}
+
 func (ic *importContext) generateVariables() error {
 	if len(ic.variables) == 0 {
 		return nil
@@ -1152,6 +1201,18 @@ func genTraversalTokens(sr *resourceApproximation, pick string) hcl.Traversal {
 	}
 }
 
+func (ic *importContext) isIgnoredResourceApproximation(ra *resourceApproximation) bool {
+	var ignored bool
+	if ra != nil && ra.Resource != nil {
+		ignoreFunc := ic.Importables[ra.Type].Ignore
+		if ignoreFunc != nil && ignoreFunc(ic, ra.Resource) {
+			log.Printf("[WARN] Found reference to the ignored resource %s: %s", ra.Type, ra.Name)
+			return true
+		}
+	}
+	return ignored
+}
+
 func (ic *importContext) Find(value, attr string, ref reference, origResource *resource, origPath string) (string, hcl.Traversal, bool) {
 	log.Printf("[DEBUG] Starting searching for reference for resource %s, attr='%s', value='%s', ref=%v",
 		ref.Resource, attr, value, ref)
@@ -1185,7 +1246,8 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 	if (ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp ||
 		ref.MatchType == MatchCaseInsensitive) && !ref.SkipDirectLookup {
 		sr := ic.State.Get(ref.Resource, attr, matchValue)
-		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) {
+		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) &&
+			!ic.isIgnoredResourceApproximation(sr) {
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
 			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
@@ -1222,7 +1284,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			case MatchPrefix:
 				matched = strings.HasPrefix(matchValue, strValue)
 			case MatchLongestPrefix:
-				if strings.HasPrefix(matchValue, strValue) && len(origValue) > maxPrefixLen {
+				if strings.HasPrefix(matchValue, strValue) && len(origValue) > maxPrefixLen && !ic.isIgnoredResourceApproximation(sr) {
 					maxPrefixLen = len(origValue)
 					maxPrefixOrigValue = origValue
 					maxPrefixResource = sr
@@ -1232,7 +1294,8 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			default:
 				log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 			}
-			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(ic, origResource, sr, origPath)) {
+			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(ic, origResource, sr, origPath)) ||
+				ic.isIgnoredResourceApproximation(sr) {
 				continue
 			}
 			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
@@ -1242,7 +1305,8 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 		}
 	}
 	if ref.MatchType == MatchLongestPrefix && maxPrefixResource != nil &&
-		(ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, maxPrefixResource, origPath)) {
+		(ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, maxPrefixResource, origPath)) &&
+		!ic.isIgnoredResourceApproximation(maxPrefixResource) {
 		log.Printf("[DEBUG] Finished searching longest prefix for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 			ref.Resource, attr, value, ref, maxPrefixResource.Type, maxPrefixResource.Name)
 		return maxPrefixOrigValue, genTraversalTokens(maxPrefixResource, attr), maxPrefixResource.Mode == "data"
@@ -1300,10 +1364,10 @@ func (ic *importContext) Add(r *resource) {
 	inst.Attributes["id"] = r.ID
 	ic.State.Append(resourceApproximation{
 		Mode:      r.Mode,
-		Module:    ic.Module,
 		Type:      r.Resource,
 		Name:      r.Name,
 		Instances: []instanceApproximation{inst},
+		Resource:  r,
 	})
 	// in single-threaded scenario scope is toposorted
 	ic.Scope.Append(r)
@@ -1470,6 +1534,10 @@ func (ic *importContext) getTraversalTokens(ref reference, value string, origRes
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
+func (ic *importContext) generateVariableName(attrName, name string) string {
+	return fmt.Sprintf("%s_%s", attrName, name)
+}
+
 func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value, origResource *resource) hclwrite.Tokens {
 	pathString := strings.Join(path, ".")
 	match := dependsRe.ReplaceAllString(pathString, "")
@@ -1488,7 +1556,8 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 			}
 		}
 		if d.Variable {
-			return ic.variable(fmt.Sprintf("%s_%s", path[0], value), "")
+			varName := ic.generateVariableName(path[0], value)
+			return ic.variable(varName, "")
 		}
 
 		tokens, isData := ic.getTraversalTokens(d, value, origResource, pathString)
@@ -1616,6 +1685,57 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			}
 		default:
 			return fmt.Errorf("unsupported schema type: %v", path)
+		}
+	}
+	// Generate `depends_on` only for top-level resource because `dataToHcl` is called recursively
+	if len(path) == 0 && len(res.DependsOn) > 0 {
+		notIgnoredResources := []*resource{}
+		for _, dr := range res.DependsOn {
+			dr := dr
+			if dr.Data == nil {
+				tdr := ic.Scope.FindById(dr.Resource, dr.ID)
+				if tdr == nil {
+					log.Printf("[WARN] can't find resource %s in scope", dr)
+					continue
+				}
+				dr = tdr
+			}
+			if ic.Importables[dr.Resource].Ignore == nil || !ic.Importables[dr.Resource].Ignore(ic, dr) {
+				found := false
+				for _, v := range notIgnoredResources {
+					if v.ID == dr.ID && v.Resource == dr.Resource {
+						found = true
+						break
+					}
+				}
+				if !found {
+					notIgnoredResources = append(notIgnoredResources, dr)
+				}
+			}
+		}
+		if len(notIgnoredResources) > 0 {
+			toks := hclwrite.Tokens{}
+			toks = append(toks, &hclwrite.Token{
+				Type:  hclsyntax.TokenOBrack,
+				Bytes: []byte{'['},
+			})
+			for i, dr := range notIgnoredResources {
+				if i > 0 {
+					toks = append(toks, &hclwrite.Token{
+						Type:  hclsyntax.TokenComma,
+						Bytes: []byte{','},
+					})
+				}
+				toks = append(toks, hclwrite.TokensForTraversal(hcl.Traversal{
+					hcl.TraverseRoot{Name: dr.Resource},
+					hcl.TraverseAttr{Name: ic.ResourceName(dr)},
+				})...)
+			}
+			toks = append(toks, &hclwrite.Token{
+				Type:  hclsyntax.TokenCBrack,
+				Bytes: []byte{']'},
+			})
+			body.SetAttributeRaw("depends_on", toks)
 		}
 	}
 	return nil

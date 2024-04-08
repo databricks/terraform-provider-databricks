@@ -97,23 +97,24 @@ type Notification struct {
 }
 
 type PipelineSpec struct {
-	ID                  string            `json:"id,omitempty" tf:"computed"`
-	Name                string            `json:"name,omitempty"`
-	Storage             string            `json:"storage,omitempty" tf:"force_new"`
-	Catalog             string            `json:"catalog,omitempty" tf:"force_new"`
-	Configuration       map[string]string `json:"configuration,omitempty"`
-	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"alias:cluster"`
-	Libraries           []PipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	Filters             *filters          `json:"filters,omitempty"`
-	Continuous          bool              `json:"continuous,omitempty"`
-	Development         bool              `json:"development,omitempty"`
-	AllowDuplicateNames bool              `json:"allow_duplicate_names,omitempty"`
-	Target              string            `json:"target,omitempty"`
-	Photon              bool              `json:"photon,omitempty"`
-	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:ADVANCED"`
-	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
-	Notifications       []Notification    `json:"notifications,omitempty" tf:"alias:notification"`
-	Serverless          bool              `json:"serverless" tf:"optional"`
+	ID                  string              `json:"id,omitempty" tf:"computed"`
+	Name                string              `json:"name,omitempty"`
+	Storage             string              `json:"storage,omitempty" tf:"force_new"`
+	Catalog             string              `json:"catalog,omitempty" tf:"force_new"`
+	Configuration       map[string]string   `json:"configuration,omitempty"`
+	Clusters            []pipelineCluster   `json:"clusters,omitempty" tf:"alias:cluster"`
+	Libraries           []PipelineLibrary   `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Filters             *filters            `json:"filters,omitempty"`
+	Continuous          bool                `json:"continuous,omitempty"`
+	Development         bool                `json:"development,omitempty"`
+	AllowDuplicateNames bool                `json:"allow_duplicate_names,omitempty"`
+	Target              string              `json:"target,omitempty"`
+	Photon              bool                `json:"photon,omitempty"`
+	Edition             string              `json:"edition,omitempty" tf:"suppress_diff,default:ADVANCED"`
+	Channel             string              `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
+	Notifications       []Notification      `json:"notifications,omitempty" tf:"alias:notification"`
+	Serverless          bool                `json:"serverless" tf:"optional"`
+	Deployment          *PipelineDeployment `json:"deployment,omitempty"`
 }
 
 type createPipelineResponse struct {
@@ -183,6 +184,17 @@ type PipelineListResponse struct {
 type PipelinesAPI struct {
 	client *common.DatabricksClient
 	ctx    context.Context
+}
+
+type DeploymentKind string
+
+const (
+	DeploymentKindBundle DeploymentKind = "BUNDLE"
+)
+
+type PipelineDeployment struct {
+	Kind             DeploymentKind `json:"kind,omitempty"`
+	MetadataFilePath string         `json:"metadata_file_path,omitempty"`
 }
 
 func NewPipelinesAPI(ctx context.Context, m any) PipelinesAPI {
@@ -320,8 +332,7 @@ func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 }
 
 func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
-	cluster, _ := m["cluster"].Elem.(*schema.Resource)
-	clustersSchema := cluster.Schema
+	clustersSchema := common.MustSchemaMap(m, "cluster")
 	clustersSchema["spark_conf"].DiffSuppressFunc = clusters.SparkConfDiffSuppressFunc
 	common.MustSchemaPath(clustersSchema,
 		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
@@ -329,8 +340,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 
 	common.MustSchemaPath(clustersSchema, "init_scripts", "dbfs").Deprecated = clusters.DbfsDeprecationWarning
 
-	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
-	gcpAttributesSchema := gcpAttributes.Schema
+	gcpAttributesSchema := common.MustSchemaMap(clustersSchema, "gcp_attributes")
 	delete(gcpAttributesSchema, "use_preemptible_executors")
 	delete(gcpAttributesSchema, "boot_disk_size")
 

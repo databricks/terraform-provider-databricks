@@ -1,14 +1,11 @@
 package acceptance
 
 import (
-	"os"
 	"testing"
 )
 
 func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	switch cloudEnv {
-	case "azure-ucacct":
+	if isAzure(t) {
 		accountLevel(t, step{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
@@ -36,7 +33,8 @@ func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
 			}
 			`,
 		})
-	case "mws":
+	}
+	if isAws(t) {
 		accountLevel(t, step{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {

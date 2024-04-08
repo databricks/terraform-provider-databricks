@@ -17,7 +17,7 @@ func DataSourceExperiment() common.Resource {
 
 	type MlExperiment struct {
 		ml.Experiment
-		Id string `json:"id,omitempty" tf:"computed"`
+		Id string `json:"id" tf:"computed,optional"`
 	}
 
 	return common.WorkspaceDataWithParams(func(ctx context.Context, data experimentDataParams, w *databricks.WorkspaceClient) (*MlExperiment, error) {

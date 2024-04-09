@@ -41,7 +41,7 @@ A `maintenance_window` block that defines the maintenance frequency with the fol
 * A `week_day_based_schedule` block with the following arguments
   * `day_of_week` - the day of the week in uppercase, e.g. `MONDAY` or `SUNDAY`
   * `frequency` - one of the `FIRST_OF_MONTH`, `SECOND_OF_MONTH`, `THIRD_OF_MONTH`, `FOURTH_OF_MONTH`, `FIRST_AND_THIRD_OF_MONTH`, `SECOND_AND_FOURTH_OF_MONTH`, `EVERY_WEEK`.
-  * A `window_start_time` block that defines the time of your maintenance window
+  * A `window_start_time` block that defines the time of your maintenance window. The default timezone is UTC and cannot be changed.
     * `hours`
     * `minutes`
 

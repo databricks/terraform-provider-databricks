@@ -822,6 +822,11 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
 		}
+		if job.Settings.Deployment != nil && job.Settings.Deployment.Kind == "BUNDLE" &&
+			job.Settings.EditMode == "UI_LOCKED" {
+			log.Printf("[INFO] Skipping job '%s' because it's deployed by DABs", job.Settings.Name)
+			continue
+		}
 		ic.Emit(&resource{
 			Resource: "databricks_job",
 			ID:       job.ID(),

@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
@@ -434,13 +435,22 @@ func TestInstnacePoolsListWithMatch(t *testing.T) {
 	})
 }
 
-func TestJobListNoNameMatch(t *testing.T) {
+func TestJobListNoNameMatchOrFromBundles(t *testing.T) {
 	ic := importContextForTest()
 	ic.match = "bcd"
 	ic.importJobs([]jobs.Job{
 		{
 			Settings: &jobs.JobSettings{
 				Name: "abc",
+			},
+		},
+		{
+			Settings: &jobs.JobSettings{
+				Name:     "bcd",
+				EditMode: "UI_LOCKED",
+				Deployment: &sdk_jobs.JobDeployment{
+					Kind: "BUNDLE",
+				},
 			},
 		},
 	})

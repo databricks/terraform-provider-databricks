@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,8 +17,8 @@ func TestResourceSecretScopeRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/secrets/scopes/list",
-				Response: SecretScopeList{
-					Scopes: []SecretScope{
+				Response: workspace.ListScopesResponse{
+					Scopes: []workspace.SecretScope{
 						{
 							Name:        "abc",
 							BackendType: "DATABRICKS",
@@ -45,14 +46,14 @@ func TestResourceSecretScopeRead_KeyVault(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/secrets/scopes/list",
-				Response: SecretScopeList{
-					Scopes: []SecretScope{
+				Response: workspace.ListScopesResponse{
+					Scopes: []workspace.SecretScope{
 						{
 							Name:        "abc",
 							BackendType: "AZURE_KEYVAULT",
-							KeyvaultMetadata: &KeyvaultMetadata{
-								ResourceID: "bcd",
-								DNSName:    "def",
+							KeyvaultMetadata: &workspace.AzureKeyVaultSecretScopeMetadata{
+								ResourceId: "bcd",
+								DnsName:    "def",
 							},
 						},
 					},
@@ -79,8 +80,8 @@ func TestResourceSecretScopeRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/secrets/scopes/list",
-				Response: SecretScopeList{
-					Scopes: []SecretScope{
+				Response: workspace.ListScopesResponse{
+					Scopes: []workspace.SecretScope{
 						{
 							Name:        "bcd",
 							BackendType: "DATABRICKS",
@@ -132,8 +133,8 @@ func TestResourceSecretScopeCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/secrets/scopes/list",
-				Response: SecretScopeList{
-					Scopes: []SecretScope{
+				Response: workspace.ListScopesResponse{
+					Scopes: []workspace.SecretScope{
 						{
 							Name:        "Boom",
 							BackendType: "DATABRICKS",
@@ -159,26 +160,26 @@ func TestResourceSecretScopeCreate_KeyVault(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/scopes/create",
-				ExpectedRequest: secretScopeRequest{
-					Scope:       "Boom",
-					BackendType: "AZURE_KEYVAULT",
-					BackendAzureKeyvault: &KeyvaultMetadata{
-						ResourceID: "bcd",
-						DNSName:    "def",
+				ExpectedRequest: workspace.CreateScope{
+					Scope:            "Boom",
+					ScopeBackendType: "AZURE_KEYVAULT",
+					BackendAzureKeyvault: &workspace.AzureKeyVaultSecretScopeMetadata{
+						ResourceId: "bcd",
+						DnsName:    "def",
 					},
 				},
 			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/secrets/scopes/list",
-				Response: SecretScopeList{
-					Scopes: []SecretScope{
+				Response: workspace.ListScopesResponse{
+					Scopes: []workspace.SecretScope{
 						{
 							Name:        "Boom",
 							BackendType: "AZURE_KEYVAULT",
-							KeyvaultMetadata: &KeyvaultMetadata{
-								ResourceID: "bcd",
-								DNSName:    "def",
+							KeyvaultMetadata: &workspace.AzureKeyVaultSecretScopeMetadata{
+								ResourceId: "bcd",
+								DnsName:    "def",
 							},
 						},
 					},
@@ -215,8 +216,8 @@ func TestResourceSecretScopeCreate_Users(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/secrets/scopes/list",
-				Response: SecretScopeList{
-					Scopes: []SecretScope{
+				Response: workspace.ListScopesResponse{
+					Scopes: []workspace.SecretScope{
 						{
 							Name:        "Boom",
 							BackendType: "DATABRICKS",

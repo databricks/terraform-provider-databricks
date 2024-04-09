@@ -104,7 +104,7 @@ func ResourceServicePrincipal() common.Resource {
 	}
 	servicePrincipalSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -214,7 +214,7 @@ func ResourceServicePrincipal() common.Resource {
 			}
 			// Disable or delete
 			if isDisable {
-				r := PatchRequest("replace", "active", "false")
+				r := PatchRequestWithValue("replace", "active", "false")
 				err = spAPI.Patch(d.Id(), r)
 			} else {
 				err = spAPI.Delete(d.Id())

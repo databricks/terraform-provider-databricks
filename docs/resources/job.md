@@ -90,7 +90,7 @@ The resource supports the following arguments:
   continuous { }
   ```
 
-* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
+* `library` - (Optional) (List) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
@@ -117,7 +117,7 @@ This block describes individual tasks:
   * `spark_submit_task`
   * `sql_task`
   * `for_each_task`
-* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section](cluster.md#libraries) for [databricks_cluster](cluster.md) resource.
+* `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job.
 * `depends_on` - (Optional) block specifying dependency(-ies) for a given task.
 * `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. When omitted, defaults to `ALL_SUCCESS`.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
@@ -128,9 +128,22 @@ This block describes individual tasks:
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 * `health` - (Optional) block described below that specifies health conditions for a given task.
 
+### library Configuration Block
+This block descripes an optional library to be installed on the cluster that will execute the job. For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+
+```hcl
+resource "databricks_job" "this" {
+  library {
+    pypi {
+      package = "databricks-mosaic==0.3.14"
+    }
+  }
+}
+```
+
 ### depends_on Configuration Block
 
-This block describes dependencies of a given task:
+This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
 
 * `task_key` - (Required) The name of the task this task depends on.
 * `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
@@ -196,8 +209,13 @@ This block describes the queue settings of the job:
 ### trigger Configuration Block
 
 * `pause_status` - (Optional) Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
-* `file_arrival` - (Required) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
+* `file_arrival` - (Optional) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) string with URL under the Unity Catalog external location that will be monitored for new files. Please note that have a trailing slash character (`/`).
+  * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
+  * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
+* `table_update` - (Optional) configuration block to define a trigger for Table Update events consisting of following attributes:
+  * `table_names` - (Required) A list of Delta tables to monitor for changes. The table name must be in the format `catalog_name.schema_name.table_name`.
+  * `condition` - (Optional) The table(s) condition based on which to trigger a job run. Valid values are `ANY_UPDATED` or `ALL_UPDATED`.
   * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
   * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
 
@@ -306,6 +324,7 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 * `notebook_path` - (Required) The path of the [databricks_notebook](notebook.md#path) to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required.
 * `source` - (Optional) Location type of the notebook, can only be `WORKSPACE` or `GIT`. When set to `WORKSPACE`, the notebook will be retrieved from the local Databricks workspace. When set to `GIT`, the notebook will be retrieved from a Git repository defined in `git_source`. If the value is empty, the task will use `GIT` if `git_source` is defined and `WORKSPACE` otherwise.
 * `base_parameters` - (Optional) (Map) Base parameters to be used for each run of this job. If the run is initiated by a call to run-now with parameters specified, the two parameters maps will be merged. If the same key is specified in base_parameters and in run-now, the value from run-now will be used. If the notebook takes a parameter that is not specified in the job’s base_parameters or the run-now override parameters, the default value from the notebook will be used. Retrieve these parameters in a notebook using `dbutils.widgets.get`.
+* `warehouse_id` - (Optional) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task with SQL notebook.
 
 ### pipeline_task Configuration Block
 

@@ -1,13 +1,17 @@
 package acceptance
 
 import (
+	"fmt"
 	"os"
+	"regexp"
 	"testing"
+
+	"github.com/databricks/terraform-provider-databricks/catalog"
 )
 
 func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		t.Skipf("databricks_sql_table resource not available on GCP")
+		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	unityWorkspaceLevel(t, step{
 		Template: `
@@ -104,7 +108,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 
 func TestUcAccResourceSqlTable_View(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		t.Skipf("databricks_sql_table resource not available on GCP")
+		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	unityWorkspaceLevel(t, step{
 		Template: `
@@ -154,7 +158,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 
 func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		t.Skipf("databricks_sql_table resource not available on GCP")
+		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	unityWorkspaceLevel(t, step{
 		Template: `
@@ -198,7 +202,7 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 }
 func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		t.Skipf("databricks_sql_table resource not available on GCP")
+		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	unityWorkspaceLevel(t, step{
 		Template: `
@@ -257,10 +261,201 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 			}
 			column {
 				name      = "name"
-				type      = "string"
+				type      = "varchar(64)"
 			}
 			cluster_keys = ["id", "name"]			
 			comment = "this table is managed by terraform..."
 		}`,
+	})
+}
+
+func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.SqlColumnInfo) string {
+	columnsTemplate := catalog.GetSqlColumnInfoHCL(columnInfos)
+
+	return fmt.Sprintf(`
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "%s"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				this      = "that"
+				something = "else"
+				"delta.minReaderVersion" = 2
+				"delta.minWriterVersion" = 5
+				"delta.columnMapping.mode" = "name"
+			}
+
+			%s
+			comment = "this table is managed by terraform"
+		}`, tableName, columnsTemplate)
+}
+
+var typeUpdateErrorPattern = "changing the 'type' of an existing column is not supported"
+var typeUpdateErrorRegex = regexp.MustCompile(typeUpdateErrorPattern)
+
+var inlineAndMembershipChangeErrorPattern = "detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time"
+var inlineAndMembershipChangeErrorRegex = regexp.MustCompile(inlineAndMembershipChangeErrorPattern)
+
+func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "string", Nullable: true, Comment: "comment"}}),
+	})
+}
+
+func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "new comment"}}),
+	})
+}
+
+func TestUcAccResourceSqlTable_DropColumnNullable(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "comment"}}),
+	})
+}
+
+func TestUcAccResourceSqlTable_MultipleColumnUpdates(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "new comment"}}),
+	})
+}
+
+func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template:    constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "int", Nullable: true, Comment: "comment"}}),
+		ExpectError: typeUpdateErrorRegex,
+	})
+}
+
+func TestUcAccResourceSqlTable_DropColumn(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
+			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
+			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
+		}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	})
+}
+
+func TestUcAccResourceSqlTable_DropMultipleColumns(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
+			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
+			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
+			{Name: "namethree", Type: "string", Nullable: true, Comment: "comment"},
+		}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	})
+}
+
+func TestUcAccResourceSqlTable_AddColumn(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
+			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
+			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
+		}),
+	})
+}
+
+func TestUcAccResourceSqlTable_AddMultipleColumns(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
+			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
+			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
+			{Name: "namethree", Type: "string", Nullable: true, Comment: "comment"},
+		}),
+	})
+}
+
+func TestUcAccResourceSqlTable_AddColumnAndUpdateThrows(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
+			{Name: "name", Type: "string", Nullable: false, Comment: "new comment"},
+			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
+		}),
+		ExpectError: inlineAndMembershipChangeErrorRegex,
+	})
+}
+
+func TestUcAccResourceSqlTable_DropColumnAndUpdateThrows(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
+			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
+			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
+		}),
+	}, step{
+		Template:    constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "new comment"}}),
+		ExpectError: inlineAndMembershipChangeErrorRegex,
 	})
 }

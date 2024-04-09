@@ -30,7 +30,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 				require.NoError(t, err)
 				etag := state.Attributes["etag"]
 				require.NotEmpty(t, etag)
-				res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminRequest{
+				res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
 					Etag: etag,
 				})
 				assert.NoError(t, err)
@@ -64,7 +64,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 						assert.FailNow(t, "cannot parse error message %v", err)
 					}
 					etag := aerr.Details[0].Metadata["etag"]
-					res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminRequest{
+					res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
 						Etag: etag,
 					})
 					// we should not be getting any error

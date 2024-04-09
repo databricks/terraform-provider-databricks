@@ -7,30 +7,38 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type SchemaInfo struct {
-	Name        string            `json:"name" tf:"force_new"`
-	CatalogName string            `json:"catalog_name" tf:"force_new"`
-	StorageRoot string            `json:"storage_root,omitempty" tf:"force_new"`
-	Comment     string            `json:"comment,omitempty"`
-	Properties  map[string]string `json:"properties,omitempty"`
-	Owner       string            `json:"owner,omitempty" tf:"computed"`
-	MetastoreID string            `json:"metastore_id,omitempty" tf:"computed"`
-	FullName    string            `json:"full_name,omitempty" tf:"computed"`
+	Name                         string            `json:"name" tf:"force_new"`
+	CatalogName                  string            `json:"catalog_name" tf:"force_new"`
+	StorageRoot                  string            `json:"storage_root,omitempty" tf:"force_new"`
+	Comment                      string            `json:"comment,omitempty"`
+	Properties                   map[string]string `json:"properties,omitempty"`
+	EnablePredictiveOptimization string            `json:"enable_predictive_optimization,omitempty" tf:"computed"`
+	Owner                        string            `json:"owner,omitempty" tf:"computed"`
+	MetastoreID                  string            `json:"metastore_id,omitempty" tf:"computed"`
+	FullName                     string            `json:"full_name,omitempty" tf:"computed"`
 }
 
 func ResourceSchema() common.Resource {
 	s := common.StructToSchema(SchemaInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			delete(m, "full_name")
-			m["force_destroy"] = &schema.Schema{
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			delete(s, "full_name")
+			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			}
-			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
-			return m
+			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
+			s["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
+			common.CustomizeSchemaPath(s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(s, "catalog_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
+				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
+			)
+			return s
 		})
 	return common.Resource{
 		Schema: s,
@@ -51,8 +59,15 @@ func ResourceSchema() common.Resource {
 			}
 			d.SetId(schema.FullName)
 
-			// Don't update owner if it is not provided
-			if d.Get("owner") == "" {
+			// Update owner or predictive optimization if it is provided
+			updateRequired := false
+			for _, key := range []string{"owner", "enable_predictive_optimization"} {
+				if d.Get(key) != "" {
+					updateRequired = true
+					break
+				}
+			}
+			if !updateRequired {
 				return nil
 			}
 
@@ -70,7 +85,7 @@ func ResourceSchema() common.Resource {
 			if err != nil {
 				return err
 			}
-			schema, err := w.Schemas.Get(ctx, catalog.GetSchemaRequest{FullName: d.Id()})
+			schema, err := w.Schemas.GetByFullName(ctx, d.Id())
 			if err != nil {
 				return err
 			}

@@ -11,7 +11,7 @@ import (
 var defaultNamespaceSetting = workspaceSetting[settings.DefaultNamespaceSetting]{
 	settingStruct: settings.DefaultNamespaceSetting{},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.DefaultNamespaceSetting, error) {
-		return w.Settings.DefaultNamespace().Get(ctx, settings.GetDefaultNamespaceRequest{
+		return w.Settings.DefaultNamespace().Get(ctx, settings.GetDefaultNamespaceSettingRequest{
 			Etag: etag,
 		})
 	},
@@ -28,7 +28,7 @@ var defaultNamespaceSetting = workspaceSetting[settings.DefaultNamespaceSetting]
 		return res.Etag, err
 	},
 	deleteFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (string, error) {
-		res, err := w.Settings.DefaultNamespace().Delete(ctx, settings.DeleteDefaultNamespaceRequest{
+		res, err := w.Settings.DefaultNamespace().Delete(ctx, settings.DeleteDefaultNamespaceSettingRequest{
 			Etag: etag,
 		})
 		if err != nil {

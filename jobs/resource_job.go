@@ -29,6 +29,7 @@ type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
 	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
 	BaseParameters map[string]string `json:"base_parameters,omitempty"`
+	WarehouseId    string            `json:"warehouse_id,omitempty"`
 }
 
 // SparkPythonTask contains the information for python jobs
@@ -138,7 +139,7 @@ type ForEachNestedTask struct {
 	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
-	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"alias:library"`
 
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -267,8 +268,16 @@ type FileArrival struct {
 	WaitAfterLastChangeSeconds    int32  `json:"wait_after_last_change_seconds,omitempty"`
 }
 
+type TableUpdate struct {
+	TableNames                    []string `json:"table_names"`
+	Condition                     string   `json:"condition,omitempty"`
+	MinTimeBetweenTriggersSeconds int32    `json:"min_time_between_triggers_seconds,omitempty"`
+	WaitAfterLastChangeSeconds    int32    `json:"wait_after_last_change_seconds,omitempty"`
+}
+
 type Trigger struct {
-	FileArrival *FileArrival `json:"file_arrival"`
+	FileArrival *FileArrival `json:"file_arrival,omitempty"`
+	TableUpdate *TableUpdate `json:"table_update,omitempty"`
 	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
@@ -319,7 +328,7 @@ type JobSettings struct {
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []jobs.JobParameterDefinition `json:"parameters,omitempty" tf:"alias:parameter"`
 	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
-	EditMode             jobs.CreateJobEditMode        `json:"edit_mode,omitempty"`
+	EditMode             jobs.JobEditMode              `json:"edit_mode,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -657,18 +666,18 @@ func wrapMissingJobError(err error, id string) error {
 	return err
 }
 
-func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
-	if p, err := common.SchemaPath(*s, "new_cluster", "num_workers"); err == nil {
+func jobSettingsSchema(s map[string]*schema.Schema, prefix string) {
+	if p, err := common.SchemaPath(s, "new_cluster", "num_workers"); err == nil {
 		p.Optional = true
 		p.Default = 0
 		p.Type = schema.TypeInt
 		p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 		p.Required = false
 	}
-	if p, err := common.SchemaPath(*s, "new_cluster", "init_scripts", "dbfs"); err == nil {
+	if p, err := common.SchemaPath(s, "new_cluster", "init_scripts", "dbfs"); err == nil {
 		p.Deprecated = clusters.DbfsDeprecationWarning
 	}
-	if v, err := common.SchemaPath(*s, "new_cluster", "spark_conf"); err == nil {
+	if v, err := common.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
 		reSize := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.%")
 		reConf := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.spark.databricks.delta.preview.enabled")
 		v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
@@ -683,19 +692,25 @@ func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
 	}
 }
 
-func gitSourceSchema(r *schema.Resource, prefix string) {
-	r.Schema["url"].ValidateFunc = validation.IsURLWithHTTPS
-	(*r.Schema["tag"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
-	(*r.Schema["branch"]).ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
-	(*r.Schema["commit"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
+func gitSourceSchema(s map[string]*schema.Schema, prefix string) {
+	s["url"].ValidateFunc = validation.IsURLWithHTTPS
+	s["tag"].ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
+	s["branch"].ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
+	s["commit"].ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
+}
+
+func fixWebhookNotifications(s map[string]*schema.Schema) {
+	for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+		common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
+	}
 }
 
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		jobSettingsSchema(&s, "")
-		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
-		jobSettingsSchema(&s["job_cluster"].Elem.(*schema.Resource).Schema, "job_cluster.0.")
-		gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
+		jobSettingsSchema(s, "")
+		jobSettingsSchema(common.MustSchemaMap(s, "task"), "task.0.")
+		jobSettingsSchema(common.MustSchemaMap(s, "job_cluster"), "job_cluster.0.")
+		gitSourceSchema(common.MustSchemaMap(s, "git_source"), "")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
@@ -728,6 +743,10 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
 
+		trigger_eoo := []string{"trigger.0.file_arrival", "trigger.0.table_update"}
+		common.MustSchemaPath(s, "trigger", "file_arrival").ExactlyOneOf = trigger_eoo
+		common.MustSchemaPath(s, "trigger", "table_update").ExactlyOneOf = trigger_eoo
+
 		// Deprecated Job API 2.0 attributes
 		var topLevelDeprecatedAttr = []string{
 			"max_retries",
@@ -753,9 +772,8 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
 
 		// Clear the implied diff suppression for the webhook notification lists
-		for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
-			common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
-		}
+		fixWebhookNotifications(s)
+		fixWebhookNotifications(common.MustSchemaMap(s, "task"))
 
 		return s
 	})

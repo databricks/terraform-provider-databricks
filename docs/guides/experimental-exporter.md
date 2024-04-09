@@ -53,6 +53,7 @@ All arguments are optional, and they tune what code is being generated.
 * `-debug` - turn on debug output.
 * `-trace` - turn on trace output (includes debug level as well).
 * `-native-import` - turns on generation of [native import blocks](https://developer.hashicorp.com/terraform/language/import) (requires Terraform 1.5+).  This option is recommended for cases when you want to start to manage existing workspace.
+* `-export-secrets` - enables export of the secret values - they will be written into the `terraform.tfvars` file.  **Be very careful with this file!**
 
 ## Services
 
@@ -66,7 +67,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `directories` - **listing** [databricks_directory](../resources/directory.md).
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
-* `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated jobs than interactive clusters, so they get their own file in this tool's output.
+* `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
@@ -84,7 +85,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_catalog_workspace_binding](../resources/catalog_workspace_binding.md)
 * `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
-* `uc-grants` -  [databricks_grants](../resources/grants.md)
+* `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export the list of grants is expanded to include the identity that does the export! This is done to allow to create objects in case when catalogs/schemas have different owners than current identity.*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only metastores from the workspace's region are listed!*
 * `uc-models` - [databricks_registered_model](../resources/registered_model.md)
 * `uc-schemas` -  [databricks_schema](../resources/schema.md)
@@ -98,7 +99,7 @@ Services are just logical groups of resources used for filtering and organizatio
 
 ## Secrets
 
-For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. Importer will create a variable in `vars.tf`, with the same name as the secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.
+For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. By default importer will create a variable in `vars.tf`, with the same name as the secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.  You can use `-export-secrets` command-line option to generate the `terraform.tfvars` file with secret values.
 
 ## Parallel execution
 
@@ -136,7 +137,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes | Yes | No |
 | [databricks_job](../resources/job.md) | Yes | No | Yes | No |
 | [databricks_library](../resources/library.md) | Yes\* | No | Yes | No |
-| [databricks_metastore](../resources/metastore.md) | Yes | Yes | Yes | Yes |
+| [databricks_metastore](../resources/metastore.md) | Yes | Yes | No | Yes |
 | [databricks_metastore_assignment](../resources/metastore_assignment.md) | Yes | No | No | Yes |
 | [databricks_mlflow_experiment](../resources/mlflow_experiment.md) | No | No | No | No |
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No | No | No |
@@ -165,7 +166,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_table](../resources/sql_table.md) | Yes | Yes | Yes | No |
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes | Yes | Yes | No |
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes | Yes | No |
-| [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | Yes |
+| [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | No |
 | [databricks_system_schema](../resources/system_schema.md) | Yes | No | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No | Yes | No |
 | [databricks_user](../resources/user.md) | Yes | No | Yes | Yes |

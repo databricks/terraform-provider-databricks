@@ -32,7 +32,7 @@ func ResourceUser() common.Resource {
 	}
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
@@ -140,7 +140,7 @@ func ResourceUser() common.Resource {
 			}
 			// Disable or delete
 			if isDisable {
-				r := PatchRequest("replace", "active", "false")
+				r := PatchRequestWithValue("replace", "active", "false")
 				err = user.Patch(d.Id(), r)
 			} else {
 				err = user.Delete(d.Id())

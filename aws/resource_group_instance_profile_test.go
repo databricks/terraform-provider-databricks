@@ -16,7 +16,7 @@ func TestResourceGroupInstanceProfileCreate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				ExpectedRequest: scim.PatchRequest(
+				ExpectedRequest: scim.PatchRequestWithValue(
 					"add",
 					"roles",
 					"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"),
@@ -215,8 +215,7 @@ func TestResourceGroupInstanceProfileDelete(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 				ExpectedRequest: scim.PatchRequest(
 					"remove",
-					`roles[value eq "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"]`,
-					""),
+					`roles[value eq "arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"]`),
 			},
 		},
 		Resource: ResourceGroupInstanceProfile(),

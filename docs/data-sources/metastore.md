@@ -34,7 +34,12 @@ output "some_metastore" {
 
 ## Argument Reference
 
-* `metastore_id` - Id of the metastore to be fetched
+Provide one of the arguments to get information about a metastore:
+
+* `metastore_id` - Id of the metastore
+* `name` - Name of the metastore
+* `region` - Region of the metastore
+
 
 ## Attribute Reference
 

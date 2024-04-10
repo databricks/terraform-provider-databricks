@@ -203,10 +203,10 @@ func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
 		Resource: ResourceRepo(),
 		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
-			"path": "/NotRepos/Production/test/",
+			"path": "/Repos/Production/test/abc/",
 		},
 		Create: true,
-	}.ExpectError(t, "invalid config supplied. [path] should start with /Repos/, got '/NotRepos/Production/test/'")
+	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 4")
 }
 
 func TestResourceRepoCreateCustomDirectoryWrongPath(t *testing.T) {

@@ -332,8 +332,7 @@ func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 }
 
 func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
-	cluster, _ := m["cluster"].Elem.(*schema.Resource)
-	clustersSchema := cluster.Schema
+	clustersSchema := common.MustSchemaMap(m, "cluster")
 	clustersSchema["spark_conf"].DiffSuppressFunc = clusters.SparkConfDiffSuppressFunc
 	common.MustSchemaPath(clustersSchema,
 		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
@@ -341,8 +340,7 @@ func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schem
 
 	common.MustSchemaPath(clustersSchema, "init_scripts", "dbfs").Deprecated = clusters.DbfsDeprecationWarning
 
-	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
-	gcpAttributesSchema := gcpAttributes.Schema
+	gcpAttributesSchema := common.MustSchemaMap(clustersSchema, "gcp_attributes")
 	delete(gcpAttributesSchema, "use_preemptible_executors")
 	delete(gcpAttributesSchema, "boot_disk_size")
 

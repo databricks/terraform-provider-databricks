@@ -877,6 +877,11 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
 		}
+		if job.Settings.Deployment != nil && job.Settings.Deployment.Kind == "BUNDLE" &&
+			job.Settings.EditMode == "UI_LOCKED" {
+			log.Printf("[INFO] Skipping job '%s' because it's deployed by DABs", job.Settings.Name)
+			continue
+		}
 		ic.Emit(&resource{
 			Resource: "databricks_job",
 			ID:       job.ID(),
@@ -1400,6 +1405,10 @@ func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resour
 	}
 	var owner string
 	if parentResource.Data != nil {
+		ignoreFunc := ic.Importables[parentResource.Resource].Ignore
+		if ignoreFunc != nil && ignoreFunc(ic, parentResource) {
+			return "", nil
+		}
 		ownerRaw, ok := parentResource.Data.GetOk("owner")
 		if ok {
 			gr.AddExtraData("owner", ownerRaw)
@@ -1414,4 +1423,17 @@ func (ic *importContext) addTfVar(name, value string) {
 	ic.tfvarsMutex.Lock()
 	defer ic.tfvarsMutex.Unlock()
 	ic.tfvars[name] = value
+}
+
+func (ic *importContext) emitPermissionsIfNotIgnored(r *resource, id, name string) {
+	if ic.meAdmin {
+		ignoreFunc := ic.Importables[r.Resource].Ignore
+		if ignoreFunc == nil || !ignoreFunc(ic, r) {
+			ic.Emit(&resource{
+				Resource: "databricks_permissions",
+				ID:       id,
+				Name:     name,
+			})
+		}
+	}
 }

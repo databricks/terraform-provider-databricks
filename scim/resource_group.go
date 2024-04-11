@@ -19,7 +19,7 @@ func ResourceGroup() common.Resource {
 	}
 	groupSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			// https://github.com/databricks/terraform-provider-databricks/issues/1089
 			m["display_name"].ValidateDiagFunc = validation.ToDiagFunc(
 				validation.StringNotInSlice([]string{"users", "admins"}, false))
@@ -34,7 +34,7 @@ func ResourceGroup() common.Resource {
 			}
 			return m
 		})
-	addEntitlementsToSchema(&groupSchema)
+	addEntitlementsToSchema(groupSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			g := Group{

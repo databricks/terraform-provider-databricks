@@ -30,10 +30,9 @@ type instanceApproximation struct {
 type resourceApproximation struct {
 	Type      string                  `json:"type"`
 	Name      string                  `json:"name"`
-	Provider  string                  `json:"provider"`
 	Mode      string                  `json:"mode"`
-	Module    string                  `json:"module,omitempty"`
 	Instances []instanceApproximation `json:"instances"`
+	Resource  *resource
 }
 
 func (ra *resourceApproximation) Get(attr string) (any, bool) {

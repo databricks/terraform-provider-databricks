@@ -32,7 +32,7 @@ func ResourceUser() common.Resource {
 	}
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
 			m["force"] = &schema.Schema{

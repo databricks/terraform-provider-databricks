@@ -118,13 +118,9 @@ func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCl
 	}
 }
 
-type LibraryList struct {
-	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-}
-
 type ClusterSpec struct {
 	compute.ClusterSpec
-	LibraryList
+	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
 func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -442,7 +438,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 
-	var libraryList LibraryList
+	var libraryList ClusterSpec
 	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList.Libraries, libsClusterStatus)
 

@@ -133,7 +133,7 @@ type ForEachNestedTask struct {
 	TaskKey     string                `json:"task_key,omitempty"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
-	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
+	RunIf       string                `json:"run_if,omitempty"`
 
 	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
@@ -213,7 +213,7 @@ type JobTaskSettings struct {
 	TaskKey     string                `json:"task_key,omitempty"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
-	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
+	RunIf       string                `json:"run_if,omitempty"`
 
 	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
@@ -685,6 +685,17 @@ func jobSettingsSchema(s map[string]*schema.Schema, prefix string) {
 			isLegacyConfig := reConf.Match([]byte(k))
 			if isPossiblyLegacyConfig || isLegacyConfig {
 				log.Printf("[DEBUG] Suppressing diff for k=%#v old=%#v new=%#v", k, old, new)
+				return true
+			}
+			return false
+		}
+	}
+	// The default value for run_if for a task is ALL_SUCCESS. We only want
+	// to suppress the diff if user has not provided a value for run_if and
+	// the platform returns ALL_SUCCESS.
+	if v, err := common.SchemaPath(s, "task", "run_if"); err == nil {
+		v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "ALL_SUCCESS" && new == "" {
 				return true
 			}
 			return false

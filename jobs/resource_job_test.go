@@ -2111,6 +2111,126 @@ func TestResourceJobUpdate(t *testing.T) {
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
 
+// TODO: More generic abstraction for default suppress diff behaviour.
+// TODO: Use enum value from the SDK for "ALL_SUCCESS"
+
+func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Tasks: []JobTaskSettings{
+							{
+								NotebookTask: &NotebookTask{
+									NotebookPath: "/foo/bar",
+								},
+								// The diff is suppressed here. The API payload
+								// contains the "run_if" value from the terraform
+								// state.
+								RunIf: "ALL_SUCCESS",
+							},
+						},
+						Name: "My job",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						Name: "My job",
+						Tasks: []JobTaskSettings{
+							{
+								NotebookTask: &NotebookTask{NotebookPath: "/foo/bar"},
+								RunIf:        "ALL_SUCCESS",
+							},
+						},
+					},
+				},
+			},
+		},
+		ID:       "789",
+		Update:   true,
+		Resource: ResourceJob(),
+		InstanceState: map[string]string{
+			"task.0.run_if": "ALL_SUCCESS",
+		},
+		HCL: `
+		name = "My job"
+		task {
+			notebook_task {
+				notebook_path = "/foo/bar"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+}
+
+func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Tasks: []JobTaskSettings{
+							{
+								NotebookTask: &NotebookTask{
+									NotebookPath: "/foo/bar",
+								},
+							},
+						},
+						Name: "My job",
+						// The diff is not suppressed here. Thus the API payload
+						// explicitly does not set run_if here, to unset it in the
+						// job definition.
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						Name: "My job",
+						Tasks: []JobTaskSettings{
+							{
+								NotebookTask: &NotebookTask{NotebookPath: "/foo/bar"},
+								RunIf:        "AT_LEAST_ONE_FAILED",
+							},
+						},
+					},
+				},
+			},
+		},
+		ID:     "789",
+		Update: true,
+		InstanceState: map[string]string{
+			"task.0.run_if": "AT_LEAST_ONE_FAILED",
+		},
+		Resource: ResourceJob(),
+		HCL: `
+		name = "My job"
+		task {
+			notebook_task {
+				notebook_path = "/foo/bar"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+}
+
 func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

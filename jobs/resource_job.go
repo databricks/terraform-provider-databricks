@@ -695,7 +695,15 @@ func jobSettingsSchema(s map[string]*schema.Schema, prefix string) {
 	// the platform returns ALL_SUCCESS.
 	if v, err := common.SchemaPath(s, "task", "run_if"); err == nil {
 		v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			if old == "ALL_SUCCESS" && new == "" {
+			if old == string(jobs.RunIfAllSuccess) && new == "" {
+				return true
+			}
+			return false
+		}
+	}
+	if v, err := common.SchemaPath(s, "task", "for_each_task", "task", "run_if"); err == nil {
+		v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+			if old == string(jobs.RunIfAllSuccess) && new == "" {
 				return true
 			}
 			return false

@@ -2111,9 +2111,6 @@ func TestResourceJobUpdate(t *testing.T) {
 	assert.Equal(t, "Featurizer New", d.Get("name"))
 }
 
-// TODO: More generic abstraction for default suppress diff behaviour.
-// TODO: Use enum value from the SDK for "ALL_SUCCESS"
-
 func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -2134,6 +2131,17 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 								// state.
 								RunIf: "ALL_SUCCESS",
 							},
+							{
+								ForEachTask: &ForEachTask{
+									Inputs: "abc",
+									Task: ForEachNestedTask{
+										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
+										// The diff is suppressed here. Value is from
+										// the terraform state.
+										RunIf: "ALL_SUCCESS",
+									},
+								},
+							},
 						},
 						Name: "My job",
 					},
@@ -2151,6 +2159,15 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 								NotebookTask: &NotebookTask{NotebookPath: "/foo/bar"},
 								RunIf:        "ALL_SUCCESS",
 							},
+							{
+								ForEachTask: &ForEachTask{
+									Inputs: "abc",
+									Task: ForEachNestedTask{
+										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
+										RunIf:        "ALL_SUCCESS",
+									},
+								},
+							},
 						},
 					},
 				},
@@ -2160,13 +2177,24 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 		Update:   true,
 		Resource: ResourceJob(),
 		InstanceState: map[string]string{
-			"task.0.run_if": "ALL_SUCCESS",
+			"task.0.run_if":                        "ALL_SUCCESS",
+			"task.1.for_each_task.0.task.0.run_if": "ALL_SUCCESS",
 		},
 		HCL: `
 		name = "My job"
 		task {
 			notebook_task {
 				notebook_path = "/foo/bar"
+			}
+		}
+		task {
+			for_each_task {
+				inputs = "abc"
+				task {
+					notebook_task {
+						notebook_path = "/bar/foo"
+					}
+				}
 			}
 		}`,
 	}.Apply(t)
@@ -2188,12 +2216,23 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 								NotebookTask: &NotebookTask{
 									NotebookPath: "/foo/bar",
 								},
+								// The diff is not suppressed here. Thus the API payload
+								// explicitly does not set run_if here, to unset it in the
+								// job definition.
+								// RunIf is not set, as implied from the HCL config.
+							},
+							{
+								ForEachTask: &ForEachTask{
+									Inputs: "abc",
+									Task: ForEachNestedTask{
+										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
+										// The diff is not suppressed. RunIf is
+										// not set, as implied from the HCL config.
+									},
+								},
 							},
 						},
 						Name: "My job",
-						// The diff is not suppressed here. Thus the API payload
-						// explicitly does not set run_if here, to unset it in the
-						// job definition.
 					},
 				},
 			},
@@ -2209,6 +2248,13 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 								NotebookTask: &NotebookTask{NotebookPath: "/foo/bar"},
 								RunIf:        "AT_LEAST_ONE_FAILED",
 							},
+							{
+								ForEachTask: &ForEachTask{
+									Task: ForEachNestedTask{
+										RunIf: "AT_LEAST_ONE_FAILED",
+									},
+								},
+							},
 						},
 					},
 				},
@@ -2217,7 +2263,8 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 		ID:     "789",
 		Update: true,
 		InstanceState: map[string]string{
-			"task.0.run_if": "AT_LEAST_ONE_FAILED",
+			"task.0.run_if":                        "AT_LEAST_ONE_FAILED",
+			"task.1.for_each_task.0.task.0.run_if": "AT_LEAST_ONE_FAILED",
 		},
 		Resource: ResourceJob(),
 		HCL: `
@@ -2225,6 +2272,16 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 		task {
 			notebook_task {
 				notebook_path = "/foo/bar"
+			}
+		}
+		task {
+			for_each_task {
+				inputs = "abc"
+				task {
+					notebook_task {
+						notebook_path = "/bar/foo"
+					}
+				}
 			}
 		}`,
 	}.Apply(t)

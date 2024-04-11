@@ -118,8 +118,13 @@ func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCl
 	}
 }
 
+type LibraryList struct {
+	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+}
+
 type ClusterSpec struct {
 	compute.ClusterSpec
+	LibraryList
 }
 
 func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -159,7 +164,6 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	common.CustomizeSchemaPath(s, "cluster_log_conf", "dbfs", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "cluster_log_conf", "s3", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "spark_version").SetRequired()
-	common.CustomizeSchemaPath(s).AddNewField("library", common.StructToSchema(libraries.LibraryList{}, nil)["library"])
 	common.CustomizeSchemaPath(s).AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
@@ -240,13 +244,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 	}
 
-	var libraryList libraries.LibraryList
+	var libraryList compute.InstallLibraries
 	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	if len(libraryList.Libraries) > 0 {
-		if err = w.Libraries.Install(ctx, compute.InstallLibraries{
-			ClusterId: libraryList.ClusterId,
-			Libraries: libraryList.Libraries,
-		}); err != nil {
+		if err = w.Libraries.Install(ctx, libraryList); err != nil {
 			return err
 		}
 		_, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
@@ -441,15 +442,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 
-	var libraryList libraries.LibraryList
+	var libraryList LibraryList
 	common.DataToStructPointer(d, clusterSchema, &libraryList)
-	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList, libsClusterStatus)
+	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList.Libraries, libsClusterStatus)
 
 	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
 	if err != nil {
 		return wrapMissingClusterError(err, d.Id())
 	}
-	if len(libsToUninstall.Libraries) > 0 || len(libsToInstall.Libraries) > 0 {
+	if len(libsToUninstall) > 0 || len(libsToInstall) > 0 {
 		if !clusterInfo.IsRunningOrResizing() {
 			if _, err = clusters.StartByClusterIdAndWait(ctx, clusterId); err != nil {
 				return err
@@ -459,8 +460,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		// or errors out, so we just know the cluster is active.
 		err = w.Libraries.UpdateAndWait(ctx, compute.Update{
 			ClusterId: clusterId,
-			Install:   libsToInstall.Libraries,
-			Uninstall: libsToUninstall.Libraries,
+			Install:   libsToInstall,
+			Uninstall: libsToUninstall,
 		})
 		if err != nil {
 			return err

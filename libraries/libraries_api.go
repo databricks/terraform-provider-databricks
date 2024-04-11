@@ -1,41 +1,14 @@
 package libraries
 
 import (
-	"sort"
-
 	"github.com/databricks/databricks-sdk-go/service/compute"
-	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type LibraryList struct {
 	// Unique identifier for the cluster on which to install these libraries.
 	ClusterId string `json:"cluster_id"`
 	// The libraries to install.
-	Libraries []compute.Library `json:"libraries,omitempty"`
-}
-
-func (l *LibraryList) Sort() {
-	sort.Slice(l.Libraries, func(i, j int) bool {
-		return l.Libraries[i].String() < l.Libraries[j].String()
-	})
-}
-
-func (l LibraryList) Aliases() map[string]map[string]string {
-	return map[string]map[string]string{
-		"libraries.LibraryList": {
-			"libraries": "library",
-		},
-	}
-}
-
-func (l LibraryList) CustomizeSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
-	common.CustomizeSchemaPath(m, "library").Schema.Set = func(i any) int {
-		lib := NewLibraryFromInstanceState(i)
-		return schema.HashString(lib.String())
-	}
-	common.CustomizeSchemaPath(m, "library").SetSliceSet()
-	return m
+	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
 // NewLibraryFromInstanceState returns library from instance state for
@@ -77,9 +50,9 @@ func NewLibraryFromInstanceState(i any) (lib compute.Library) {
 }
 
 // Diff returns install/uninstall lists given a cluster lib status
-func GetLibrariesToInstallAndUninstall(cll LibraryList, cls *compute.ClusterLibraryStatuses) (LibraryList, LibraryList) {
+func GetLibrariesToInstallAndUninstall(cll []compute.Library, cls *compute.ClusterLibraryStatuses) ([]compute.Library, []compute.Library) {
 	inConfig := map[string]compute.Library{}
-	for _, lib := range cll.Libraries {
+	for _, lib := range cll {
 		inConfig[lib.String()] = lib
 	}
 	inState := map[string]compute.Library{}
@@ -87,8 +60,8 @@ func GetLibrariesToInstallAndUninstall(cll LibraryList, cls *compute.ClusterLibr
 		lib := *status.Library
 		inState[lib.String()] = lib
 	}
-	toInstall := LibraryList{ClusterId: cll.ClusterId}
-	toUninstall := LibraryList{ClusterId: cll.ClusterId}
+	toInstall := compute.InstallLibraries{}
+	toUninstall := compute.InstallLibraries{}
 	for key, lib := range inConfig {
 		_, exists := inState[key]
 		if exists {
@@ -105,5 +78,5 @@ func GetLibrariesToInstallAndUninstall(cll LibraryList, cls *compute.ClusterLibr
 	}
 	toInstall.Sort()
 	toUninstall.Sort()
-	return toInstall, toUninstall
+	return toInstall.Libraries, toUninstall.Libraries
 }

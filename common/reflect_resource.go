@@ -80,6 +80,9 @@ type ResourceProviderWithAlias interface {
 	//	        "libraries": "library"
 	//	    }
 	//	}
+	// Note: In case the struct is derived from another struct example:
+	// type LibraryList compute.InstallLibraries
+	// The top level key would still be the name of the struct i.e. LibraryList in this example.
 	Aliases() map[string]map[string]string
 }
 
@@ -504,6 +507,9 @@ func IsRequestEmpty(v any) (bool, error) {
 }
 
 // isGoSdk returns true if the struct is from databricks-sdk-go or embeds a struct from databricks-sdk-go.
+// Note: In case the struct doesn't explicitly embed a struct from databricks-sdk-go, this would return false, example:
+// type LibraryList compute.InstallLibraries --> isGoSDK(LibraryList) would return false whereas
+// type LibraryList struct { compute.InstallLibraries } --> isGoSDK(LibraryList) would return true
 func isGoSdk(v reflect.Value) bool {
 	if strings.Contains(v.Type().PkgPath(), "databricks-sdk-go") {
 		return true

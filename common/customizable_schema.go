@@ -38,6 +38,11 @@ func (s *CustomizableSchema) SetComputed() *CustomizableSchema {
 	return s
 }
 
+func (s *CustomizableSchema) SetSliceSet() *CustomizableSchema {
+	s.Schema.Type = schema.TypeSet
+	return s
+}
+
 func (s *CustomizableSchema) SetDefault(value any) *CustomizableSchema {
 	s.Schema.Default = value
 	s.Schema.Optional = true

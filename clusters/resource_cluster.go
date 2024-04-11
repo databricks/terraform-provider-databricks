@@ -153,23 +153,13 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	common.CustomizeSchemaPath(s, "aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
 	common.CustomizeSchemaPath(s, "azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
 	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
-
-	// TODO: use compute.InstallLibraries -- fails
-	common.CustomizeSchemaPath(s).AddNewField("library", common.StructToSchema(libraries.LibraryList{},
-		func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-			ss["library"].Set = func(i any) int {
-				lib := libraries.NewLibraryFromInstanceState(i)
-				return schema.HashString(lib.String())
-			}
-			return ss
-		})["library"])
-
 	common.CustomizeSchemaPath(s, "autotermination_minutes").SetDefault(60)
 	common.CustomizeSchemaPath(s, "autoscale", "max_workers").SetOptional()
 	common.CustomizeSchemaPath(s, "autoscale", "min_workers").SetOptional()
 	common.CustomizeSchemaPath(s, "cluster_log_conf", "dbfs", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "cluster_log_conf", "s3", "destination").SetRequired()
 	common.CustomizeSchemaPath(s, "spark_version").SetRequired()
+	common.CustomizeSchemaPath(s).AddNewField("library", common.StructToSchema(libraries.LibraryList{}, nil)["library"])
 	common.CustomizeSchemaPath(s).AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
@@ -251,11 +241,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	}
 
 	var libraryList libraries.LibraryList
-	libraryList.ClusterId = d.Id()
 	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	if len(libraryList.Libraries) > 0 {
 		if err = w.Libraries.Install(ctx, compute.InstallLibraries{
-			ClusterId: d.Id(),
+			ClusterId: libraryList.ClusterId,
 			Libraries: libraryList.Libraries,
 		}); err != nil {
 			return err
@@ -296,9 +285,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	}
 	clusterAPI := w.Clusters
 	clusterInfo, err := clusterAPI.GetByClusterId(ctx, d.Id())
-	err = wrapMissingClusterError(err, d.Id())
 	if err != nil {
-		return err
+		return wrapMissingClusterError(err, d.Id())
 	}
 	if err = common.StructToData(clusterInfo, clusterSchema, d); err != nil {
 		return err
@@ -376,9 +364,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			}
 		}
 		clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
-		err = wrapMissingClusterError(err, d.Id())
 		if err != nil {
-			return err
+			return wrapMissingClusterError(err, d.Id())
 		}
 
 		isNumWorkersResizeForNonAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
@@ -444,18 +431,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		// don't add externally added libraries, if config has no `library {}` blocks
 		return nil
 	}
-	var libraryList libraries.LibraryList
-	libraryList.ClusterId = clusterId
-	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	libsClusterStatus, err := w.Libraries.ClusterStatusByClusterId(ctx, clusterId)
 	if err != nil {
 		return err
 	}
+
+	var libraryList libraries.LibraryList
+	common.DataToStructPointer(d, clusterSchema, &libraryList)
 	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList, libsClusterStatus)
+
 	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
-	err = wrapMissingClusterError(err, d.Id())
 	if err != nil {
-		return err
+		return wrapMissingClusterError(err, d.Id())
 	}
 	if len(libsToUninstall.Libraries) > 0 || len(libsToInstall.Libraries) > 0 {
 		if !clusterInfo.IsRunningOrResizing() {

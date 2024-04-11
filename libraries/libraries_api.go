@@ -4,13 +4,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 )
 
-type LibraryList struct {
-	// Unique identifier for the cluster on which to install these libraries.
-	ClusterId string `json:"cluster_id"`
-	// The libraries to install.
-	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-}
-
 // NewLibraryFromInstanceState returns library from instance state for
 // custom schema hash function. The thing is that for sets of types with
 // optional subtypes resource.SerializeResourceForHash doesn't seem to

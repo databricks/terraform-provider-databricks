@@ -414,7 +414,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			return err
 		}
 	} else {
-		clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
+		_, err = clusters.GetByClusterId(ctx, clusterId)
 		if err != nil {
 			return wrapMissingClusterError(err, d.Id())
 		}
@@ -457,7 +457,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 		// clusters.StartAndGetInfo() always returns a running cluster
 		// or errors out, so we just know the cluster is active.
-		// TODO: Wait needed here?
 		err = w.Libraries.UpdateAndWait(ctx, compute.Update{
 			ClusterId: clusterId,
 			Install:   libsToInstall.Libraries,

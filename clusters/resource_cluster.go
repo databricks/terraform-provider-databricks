@@ -413,6 +413,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err != nil {
 			return err
 		}
+	} else {
+		clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
+		if err != nil {
+			return wrapMissingClusterError(err, d.Id())
+		}
 	}
 	oldPinned, newPinned := d.GetChange("is_pinned")
 	if oldPinned.(bool) != newPinned.(bool) {

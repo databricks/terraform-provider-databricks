@@ -85,10 +85,13 @@ func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 	return s
 }
 
-// SetSuppressDiffWithDefault suppresses the diff if the new value (ie value from HCL config) is not set and
-// the old value (ie value from state / platform) is equal to the default value. Often Databricks HTTP APIs
-// will return values for fields that were not set by the author in their terraform configuration This function
-// allows us to suppress the diff in these cases.
+// SetSuppressDiffWithDefault suppresses the diff if the
+// new value (ie value from HCL config) is not set and
+// the old value (ie value from state / platform) is equal to the default value.
+//
+// Often Databricks HTTP APIs will return values for fields that were not set by
+// the author in their terraform configuration This function allows us to suppress
+// the diff in these cases.
 func (s *CustomizableSchema) SetSuppressDiffWithDefault(dv any) *CustomizableSchema {
 	primitiveTypes := []schema.ValueType{schema.TypeBool, schema.TypeString, schema.TypeInt, schema.TypeFloat}
 	if !slices.Contains(primitiveTypes, s.Schema.Type) {

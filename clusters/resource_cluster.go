@@ -61,7 +61,7 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 // This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
 // Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func Validate(cluster compute.CreateCluster) error {
+func Validate(cluster ClusterSpec) error {
 	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
 		return nil
 	}
@@ -76,7 +76,7 @@ func Validate(cluster compute.CreateCluster) error {
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
+func ModifyRequestOnInstancePool(cluster *ClusterSpec) {
 	// Instance profile id does not exist or not set
 	if cluster.InstancePoolId == "" {
 		// Worker must use an instance pool if driver uses an instance pool,
@@ -108,7 +108,7 @@ func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
 // This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
 // Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
-func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) {
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster ClusterSpec) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
 	if oldInstancePool != newInstancePool &&
@@ -140,6 +140,10 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	common.CustomizeSchemaPath(s, "workload_type", "clients").SetRequired()
 	common.CustomizeSchemaPath(s, "workload_type", "clients", "notebooks").SetDefault(true)
 	common.CustomizeSchemaPath(s, "workload_type", "clients", "jobs").SetDefault(true)
+	s["library"].Set = func(i any) int {
+		lib := libraries.NewLibraryFromInstanceState(i)
+		return schema.HashString(lib.String())
+	}
 	common.CustomizeSchemaPath(s).AddNewField("idempotency_token", &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
@@ -213,16 +217,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	clusters := w.Clusters
-	var cluster compute.CreateCluster
+	var cluster ClusterSpec
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	if err := Validate(cluster); err != nil {
 		return err
 	}
 	ModifyRequestOnInstancePool(&cluster)
-	if cluster.Autoscale == nil {
-		cluster.ForceSendFields = []string{"NumWorkers"}
+	var createClusterRequest compute.CreateCluster
+	common.DataToStructPointer(d, clusterSchema, &createClusterRequest)
+	if createClusterRequest.Autoscale == nil {
+		createClusterRequest.ForceSendFields = []string{"NumWorkers"}
 	}
-	clusterWaiter, err := clusters.Create(ctx, cluster)
+	clusterWaiter, err := clusters.Create(ctx, createClusterRequest)
 	if err != nil {
 		return err
 	}
@@ -240,10 +246,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 	}
 
-	var libraryList compute.InstallLibraries
-	common.DataToStructPointer(d, clusterSchema, &libraryList)
-	if len(libraryList.Libraries) > 0 {
-		if err = w.Libraries.Install(ctx, libraryList); err != nil {
+	if len(cluster.Libraries) > 0 {
+		if err = w.Libraries.Install(ctx, compute.InstallLibraries{
+			ClusterId: d.Id(),
+			Libraries: cluster.Libraries,
+		}); err != nil {
 			return err
 		}
 		_, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
@@ -331,7 +338,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	clusters := w.Clusters
-	var cluster compute.CreateCluster
+	var cluster ClusterSpec
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	clusterId := d.Id()
 	var clusterInfo *compute.ClusterDetails
@@ -438,9 +445,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 
-	var libraryList ClusterSpec
-	common.DataToStructPointer(d, clusterSchema, &libraryList)
-	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList.Libraries, libsClusterStatus)
+	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(cluster.Libraries, libsClusterStatus)
 
 	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
 	if err != nil {

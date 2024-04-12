@@ -1544,15 +1544,17 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 }
 
 func TestModifyClusterRequestAws(t *testing.T) {
-	c := compute.CreateCluster{
-		InstancePoolId: "a",
-		AwsAttributes: &compute.AwsAttributes{
-			InstanceProfileArn: "b",
-			ZoneId:             "c",
+	c := ClusterSpec{
+		ClusterSpec: compute.ClusterSpec{
+			InstancePoolId: "a",
+			AwsAttributes: &compute.AwsAttributes{
+				InstanceProfileArn: "b",
+				ZoneId:             "c",
+			},
+			EnableElasticDisk: true,
+			NodeTypeId:        "d",
+			DriverNodeTypeId:  "e",
 		},
-		EnableElasticDisk: true,
-		NodeTypeId:        "d",
-		DriverNodeTypeId:  "e",
 	}
 	ModifyRequestOnInstancePool(&c)
 	assert.Equal(t, "", c.AwsAttributes.ZoneId)
@@ -1562,14 +1564,16 @@ func TestModifyClusterRequestAws(t *testing.T) {
 }
 
 func TestModifyClusterRequestAzure(t *testing.T) {
-	c := compute.CreateCluster{
-		InstancePoolId: "a",
-		AzureAttributes: &compute.AzureAttributes{
-			FirstOnDemand: 1,
+	c := ClusterSpec{
+		ClusterSpec: compute.ClusterSpec{
+			InstancePoolId: "a",
+			AzureAttributes: &compute.AzureAttributes{
+				FirstOnDemand: 1,
+			},
+			EnableElasticDisk: true,
+			NodeTypeId:        "d",
+			DriverNodeTypeId:  "e",
 		},
-		EnableElasticDisk: true,
-		NodeTypeId:        "d",
-		DriverNodeTypeId:  "e",
 	}
 	ModifyRequestOnInstancePool(&c)
 	assert.Equal(t, &compute.AzureAttributes{}, c.AzureAttributes)
@@ -1579,14 +1583,16 @@ func TestModifyClusterRequestAzure(t *testing.T) {
 }
 
 func TestModifyClusterRequestGcp(t *testing.T) {
-	c := compute.CreateCluster{
-		InstancePoolId: "a",
-		GcpAttributes: &compute.GcpAttributes{
-			UsePreemptibleExecutors: true,
+	c := ClusterSpec{
+		ClusterSpec: compute.ClusterSpec{
+			InstancePoolId: "a",
+			GcpAttributes: &compute.GcpAttributes{
+				UsePreemptibleExecutors: true,
+			},
+			EnableElasticDisk: true,
+			NodeTypeId:        "d",
+			DriverNodeTypeId:  "e",
 		},
-		EnableElasticDisk: true,
-		NodeTypeId:        "d",
-		DriverNodeTypeId:  "e",
 	}
 	ModifyRequestOnInstancePool(&c)
 	assert.Equal(t, false, c.GcpAttributes.UsePreemptibleExecutors)

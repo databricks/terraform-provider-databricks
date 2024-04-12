@@ -2,7 +2,9 @@ package clusters
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,30 +15,29 @@ import (
 	"github.com/databricks/terraform-provider-databricks/libraries"
 )
 
-// DefaultProvisionTimeout ...
 const DefaultProvisionTimeout = 30 * time.Minute
-
 const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
 
 var clusterSchema = resourceClusterSchema()
+var clusterSchemaVersion = 2
 
-// ResourceCluster - returns Cluster resource description
 func ResourceCluster() common.Resource {
 	return common.Resource{
-		Create: resourceClusterCreate,
-		Read:   resourceClusterRead,
-		Update: resourceClusterUpdate,
-		Delete: func(ctx context.Context,
-			d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewClustersAPI(ctx, c).PermanentDelete(d.Id())
-		},
+		Create:        resourceClusterCreate,
+		Read:          resourceClusterRead,
+		Update:        resourceClusterUpdate,
+		Delete:        resourceClusterDelete,
 		Schema:        clusterSchema,
-		SchemaVersion: 2,
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
-			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
-			Delete: schema.DefaultTimeout(DefaultProvisionTimeout),
-		},
+		SchemaVersion: clusterSchemaVersion,
+		Timeouts:      resourceClusterTimeouts(),
+	}
+}
+
+func resourceClusterTimeouts() *schema.ResourceTimeout {
+	return &schema.ResourceTimeout{
+		Create: schema.DefaultTimeout(DefaultProvisionTimeout),
+		Update: schema.DefaultTimeout(DefaultProvisionTimeout),
+		Delete: schema.DefaultTimeout(DefaultProvisionTimeout),
 	}
 }
 
@@ -58,8 +59,68 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
+// This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
+// Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
+func Validate(cluster compute.CreateCluster) error {
+	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
+		return nil
+	}
+	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
+	master := cluster.SparkConf["spark.master"]
+	resourceClass := cluster.CustomTags["ResourceClass"]
+	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
+		return nil
+	}
+	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
+}
+
+// This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
+// Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
+func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
+	// Instance profile id does not exist or not set
+	if cluster.InstancePoolId == "" {
+		// Worker must use an instance pool if driver uses an instance pool,
+		// therefore empty the computed value for driver instance pool.
+		cluster.DriverInstancePoolId = ""
+		return
+	}
+	if cluster.AwsAttributes != nil {
+		// Reset AwsAttributes
+		awsAttributes := compute.AwsAttributes{
+			InstanceProfileArn: cluster.AwsAttributes.InstanceProfileArn,
+		}
+		cluster.AwsAttributes = &awsAttributes
+	}
+	if cluster.AzureAttributes != nil {
+		cluster.AzureAttributes = &compute.AzureAttributes{}
+	}
+	if cluster.GcpAttributes != nil {
+		gcpAttributes := compute.GcpAttributes{
+			GoogleServiceAccount: cluster.GcpAttributes.GoogleServiceAccount,
+		}
+		cluster.GcpAttributes = &gcpAttributes
+	}
+	cluster.EnableElasticDisk = false
+	cluster.NodeTypeId = ""
+	cluster.DriverNodeTypeId = ""
+}
+
+// This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
+// Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
+// https://github.com/databricks/terraform-provider-databricks/issues/824
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) {
+	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
+	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
+	if oldInstancePool != newInstancePool &&
+		oldDriverPool == oldInstancePool &&
+		oldDriverPool == newDriverPool {
+		cluster.DriverInstancePoolId = cluster.InstancePoolId
+	}
+}
+
 type ClusterSpec struct {
 	compute.ClusterSpec
+	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
 func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -93,16 +154,6 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	common.CustomizeSchemaPath(s, "aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
 	common.CustomizeSchemaPath(s, "azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
 	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
-
-	common.CustomizeSchemaPath(s).AddNewField("library", common.StructToSchema(libraries.ClusterLibraryList{},
-		func(ss map[string]*schema.Schema) map[string]*schema.Schema {
-			ss["library"].Set = func(i any) int {
-				lib := libraries.NewLibraryFromInstanceState(i)
-				return schema.HashString(lib.String())
-			}
-			return ss
-		})["library"])
-
 	common.CustomizeSchemaPath(s, "autotermination_minutes").SetDefault(60)
 	common.CustomizeSchemaPath(s, "autoscale", "max_workers").SetOptional()
 	common.CustomizeSchemaPath(s, "autoscale", "min_workers").SetOptional()
@@ -111,7 +162,6 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	common.CustomizeSchemaPath(s, "spark_version").SetRequired()
 	common.CustomizeSchemaPath(s).AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,
-		Optional: true,
 		Computed: true,
 	})
 	common.CustomizeSchemaPath(s).AddNewField("default_tags", &schema.Schema{
@@ -156,42 +206,51 @@ func resourceClusterSchema() map[string]*schema.Schema {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	var cluster Cluster
 	start := time.Now()
 	timeout := d.Timeout(schema.TimeoutCreate)
-	clusters := NewClustersAPI(ctx, c)
-	common.DataToStructPointer(d, clusterSchema, &cluster)
-	if err := cluster.Validate(); err != nil {
-		return err
-	}
-	cluster.ModifyRequestOnInstancePool()
-	// TODO: propagate d.Timeout(schema.TimeoutCreate)
-	clusterInfo, err := clusters.Create(cluster)
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err
 	}
-	d.SetId(clusterInfo.ClusterID)
-	d.Set("cluster_id", clusterInfo.ClusterID)
+	clusters := w.Clusters
+	var cluster compute.CreateCluster
+	common.DataToStructPointer(d, clusterSchema, &cluster)
+	if err := Validate(cluster); err != nil {
+		return err
+	}
+	ModifyRequestOnInstancePool(&cluster)
+	if cluster.Autoscale == nil {
+		cluster.ForceSendFields = []string{"NumWorkers"}
+	}
+	clusterWaiter, err := clusters.Create(ctx, cluster)
+	if err != nil {
+		return err
+	}
+	clusterInfo, err := clusterWaiter.GetWithTimeout(timeout)
+	if err != nil {
+		return err
+	}
+	d.SetId(clusterInfo.ClusterId)
+	d.Set("cluster_id", d.Id())
 	isPinned, ok := d.GetOk("is_pinned")
 	if ok && isPinned.(bool) {
-		err = clusters.Pin(clusterInfo.ClusterID)
+		err = clusters.PinByClusterId(ctx, d.Id())
 		if err != nil {
 			return err
 		}
 	}
-	var libraryList libraries.ClusterLibraryList
+
+	var libraryList compute.InstallLibraries
 	common.DataToStructPointer(d, clusterSchema, &libraryList)
-	libs := libraries.NewLibrariesAPI(ctx, c)
 	if len(libraryList.Libraries) > 0 {
-		if err = libs.Install(libraryList); err != nil {
+		if err = w.Libraries.Install(ctx, libraryList); err != nil {
 			return err
 		}
-		_, err := libs.WaitForLibrariesInstalled(libraries.Wait{
+		_, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 			ClusterID: d.Id(),
-			Timeout:   timeout - time.Since(start),
 			IsRunning: clusterInfo.IsRunningOrResizing(),
 			IsRefresh: false,
-		})
+		}, timeout-time.Since(start))
 		if err != nil {
 			return err
 		}
@@ -199,36 +258,40 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	return nil
 }
 
-func setPinnedStatus(d *schema.ResourceData, clusterAPI ClustersAPI) error {
-	events, err := clusterAPI.Events(EventsRequest{
-		ClusterID:  d.Id(),
+func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI compute.ClustersInterface) error {
+	events, err := clusterAPI.EventsAll(ctx, compute.GetEvents{
+		ClusterId:  d.Id(),
 		Limit:      1,
-		Order:      SortDescending,
-		EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
-		MaxItems:   1,
+		Order:      compute.GetEventsOrderDesc,
+		EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 	})
 	if err != nil {
 		return err
 	}
-	pinnedEvent := EvTypeUnpinned
+	pinnedEvent := compute.EventTypeUnpinned
 	if len(events) > 0 {
 		pinnedEvent = events[0].Type
 	}
-	return d.Set("is_pinned", pinnedEvent == EvTypePinned)
+	return d.Set("is_pinned", pinnedEvent == compute.EventTypePinned)
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	clusterAPI := NewClustersAPI(ctx, c)
-	clusterInfo, err := clusterAPI.Get(d.Id())
+	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err
+	}
+	clusterAPI := w.Clusters
+	clusterInfo, err := clusterAPI.GetByClusterId(ctx, d.Id())
+	if err != nil {
+		return wrapMissingClusterError(err, d.Id())
 	}
 	if err = common.StructToData(clusterInfo, clusterSchema, d); err != nil {
 		return err
 	}
-	if err = setPinnedStatus(d, clusterAPI); err != nil {
+	if err = setPinnedStatus(ctx, d, clusterAPI); err != nil {
 		return err
 	}
+
 	d.Set("url", c.FormatURL("#setting/clusters/", d.Id(), "/configuration"))
 	shouldSkipLibrariesRead := !common.IsExporter(ctx)
 	if d.Get("library.#").(int) == 0 && shouldSkipLibrariesRead {
@@ -236,13 +299,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		// TODO: check if it still works fine with importing. Perhaps os.Setenv will do the trick
 		return nil
 	}
-	librariesAPI := libraries.NewLibrariesAPI(ctx, c)
-	libsClusterStatus, err := librariesAPI.WaitForLibrariesInstalled(libraries.Wait{
+
+	libsClusterStatus, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 		ClusterID: d.Id(),
-		Timeout:   d.Timeout(schema.TimeoutRead),
 		IsRunning: clusterInfo.IsRunningOrResizing(),
 		IsRefresh: true,
-	})
+	}, d.Timeout(schema.TimeoutRead))
 	if err != nil {
 		return err
 	}
@@ -264,20 +326,23 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	clusters := NewClustersAPI(ctx, c)
-	clusterID := d.Id()
-	cluster := Cluster{ClusterID: clusterID}
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	clusters := w.Clusters
+	var cluster compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &cluster)
-	var clusterInfo ClusterInfo
-	var err error
+	clusterId := d.Id()
+	var clusterInfo *compute.ClusterDetails
 
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
-		if err := cluster.Validate(); err != nil {
+		if err := Validate(cluster); err != nil {
 			return err
 		}
-		cluster.ModifyRequestOnInstancePool()
-		cluster.FixInstancePoolChangeIfAny(d)
+		ModifyRequestOnInstancePool(&cluster)
+		FixInstancePoolChangeIfAny(d, cluster)
 
 		// We can only call the resize api if the cluster is in the running state
 		// and only the cluster size (ie num_workers OR autoscale) is being changed
@@ -295,9 +360,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				hasOnlyResizeClusterConfigChanged = false
 			}
 		}
-		clusterInfo, err = clusters.Get(clusterID)
+		clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
 		if err != nil {
-			return err
+			return wrapMissingClusterError(err, d.Id())
 		}
 
 		isNumWorkersResizeForNonAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
@@ -323,36 +388,41 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		// workers is changed because a resizing cluster can still serve queries
 		if isNumWorkersResizeForNonAutoscalingCluster ||
 			isAutoScalingToNonAutoscalingResize {
-			clusterInfo, err = clusters.Resize(ResizeRequest{
-				ClusterID:  clusterID,
+			_, err = clusters.Resize(ctx, compute.ResizeCluster{
+				ClusterId:  clusterId,
 				NumWorkers: cluster.NumWorkers,
 			})
+			if err != nil {
+				return err
+			}
 		} else if isAutoscaleConfigResizeForAutoscalingCluster ||
 			isNonAutoScalingToAutoscalingResize {
-			clusterInfo, err = clusters.Resize(ResizeRequest{
-				ClusterID: clusterID,
-				AutoScale: cluster.Autoscale,
+			_, err = clusters.Resize(ctx, compute.ResizeCluster{
+				ClusterId: clusterId,
+				Autoscale: cluster.Autoscale,
 			})
 		} else {
-			clusterInfo, err = clusters.Edit(cluster)
+			var editCluster compute.EditCluster
+			editCluster.ClusterId = clusterId
+			common.DataToStructPointer(d, clusterSchema, &editCluster)
+			_, err = clusters.Edit(ctx, editCluster)
 		}
 		if err != nil {
 			return err
 		}
-
 	} else {
-		clusterInfo, err = clusters.Get(clusterID)
+		_, err = clusters.GetByClusterId(ctx, clusterId)
 		if err != nil {
-			return err
+			return wrapMissingClusterError(err, d.Id())
 		}
 	}
 	oldPinned, newPinned := d.GetChange("is_pinned")
 	if oldPinned.(bool) != newPinned.(bool) {
 		log.Printf("[DEBUG] Update: is_pinned. Old: %v, New: %v", oldPinned, newPinned)
 		if newPinned.(bool) {
-			err = clusters.Pin(clusterID)
+			err = clusters.PinByClusterId(ctx, clusterId)
 		} else {
-			err = clusters.Unpin(clusterID)
+			err = clusters.UnpinByClusterId(ctx, clusterId)
 		}
 		if err != nil {
 			return err
@@ -363,36 +433,62 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		// don't add externally added libraries, if config has no `library {}` blocks
 		return nil
 	}
-	var libraryList libraries.ClusterLibraryList
-	common.DataToStructPointer(d, clusterSchema, &libraryList)
-	librariesAPI := libraries.NewLibrariesAPI(ctx, c)
-	libsClusterStatus, err := librariesAPI.ClusterStatus(clusterID)
+	libsClusterStatus, err := w.Libraries.ClusterStatusByClusterId(ctx, clusterId)
 	if err != nil {
 		return err
 	}
-	libraryList.ClusterID = clusterID
-	libsToInstall, libsToUninstall := libraryList.Diff(libsClusterStatus)
-	if len(libsToUninstall.Libraries) > 0 || len(libsToInstall.Libraries) > 0 {
+
+	var libraryList ClusterSpec
+	common.DataToStructPointer(d, clusterSchema, &libraryList)
+	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(libraryList.Libraries, libsClusterStatus)
+
+	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
+	if err != nil {
+		return wrapMissingClusterError(err, d.Id())
+	}
+	if len(libsToUninstall) > 0 || len(libsToInstall) > 0 {
 		if !clusterInfo.IsRunningOrResizing() {
-			if _, err = clusters.StartAndGetInfo(clusterID); err != nil {
+			if _, err = clusters.StartByClusterIdAndWait(ctx, clusterId); err != nil {
 				return err
 			}
 		}
 		// clusters.StartAndGetInfo() always returns a running cluster
 		// or errors out, so we just know the cluster is active.
-		err = librariesAPI.UpdateLibraries(clusterID, libsToInstall, libsToUninstall,
-			d.Timeout(schema.TimeoutUpdate))
+		err = w.Libraries.UpdateAndWait(ctx, compute.Update{
+			ClusterId: clusterId,
+			Install:   libsToInstall,
+			Uninstall: libsToUninstall,
+		})
 		if err != nil {
 			return err
 		}
 		if clusterInfo.State == ClusterStateTerminated {
-			log.Printf("[INFO] %s was in TERMINATED state, so terminating it again", clusterID)
-			if err = clusters.Terminate(clusterID); err != nil {
+			log.Printf("[INFO] %s was in TERMINATED state, so terminating it again", clusterId)
+			if err = clusters.DeleteByClusterId(ctx, clusterId); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	err = w.Clusters.PermanentDeleteByClusterId(ctx, d.Id())
+	if err == nil {
+		return nil
+	}
+	if !strings.Contains(err.Error(), "unpin the cluster first") {
+		return err
+	}
+	err = w.Clusters.UnpinByClusterId(ctx, d.Id())
+	if err != nil {
+		return err
+	}
+	return w.Clusters.PermanentDeleteByClusterId(ctx, d.Id())
 }
 
 func init() {

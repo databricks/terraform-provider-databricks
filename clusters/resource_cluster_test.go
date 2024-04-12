@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -29,7 +28,7 @@ func TestResourceClusterCreate(t *testing.T) {
 				},
 				Response: compute.ClusterDetails{
 					ClusterId: "abc",
-					State:     ClusterStateRunning,
+					State:     compute.StateRunning,
 				},
 			},
 			{
@@ -43,28 +42,28 @@ func TestResourceClusterCreate(t *testing.T) {
 					SparkVersion:           "7.1-scala12",
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 		},
@@ -89,60 +88,62 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/create",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 				},
-				Response: ClusterInfo{
-					ClusterID: "abc",
-					State:     ClusterStateRunning,
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateRunning,
 				},
 			},
 			{
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
-				Method:          "POST",
-				Resource:        "/api/2.0/clusters/pin",
-				ExpectedRequest: ClusterID{ClusterID: "abc"},
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/pin",
+				ExpectedRequest: compute.PinCluster{
+					ClusterId: "abc",
+				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events: []ClusterEvent{
+				Response: compute.GetEventsResponse{
+					Events: []compute.ClusterEvent{
 						{
-							ClusterID: "abc",
+							ClusterId: "abc",
 							Timestamp: int64(123),
-							Type:      EvTypePinned,
-							Details:   EventDetails{},
+							Type:      compute.EventTypePinned,
+							Details:   &compute.EventDetails{},
 						},
 					},
 					TotalCount: 1,
@@ -170,56 +171,56 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/create",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             100,
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 60,
 				},
-				Response: ClusterInfo{
-					ClusterID: "abc",
-					State:     ClusterStateRunning,
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateRunning,
 				},
 			},
 			{
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/install",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					ClusterID: "abc",
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.InstallLibraries{
+					ClusterId: "abc",
+					Libraries: []compute.Library{
 						{
 							Jar: "dbfs://foo.jar",
 						},
 						{
-							Cran: &libraries.Cran{
+							Cran: &compute.RCranLibrary{
 								Package: "rkeops",
 								Repo:    "internal",
 							},
@@ -228,14 +229,14 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 							Egg: "dbfs://bar.egg",
 						},
 						{
-							Maven: &libraries.Maven{
+							Maven: &compute.MavenLibrary{
 								Coordinates: "foo:bar:baz:0.1.0",
 								Exclusions:  []string{"org.apache:flink:base"},
 								Repo:        "s3://maven-repo-in-s3/release",
 							},
 						},
 						{
-							Pypi: &libraries.PyPi{
+							Pypi: &compute.PythonPyPiLibrary{
 								Package: "seaborn==1.2.4",
 							},
 						},
@@ -249,21 +250,21 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 				Method: "GET",
 				// 1 of 3 requests
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
-								Pypi: &libraries.PyPi{
+							Library: &compute.Library{
+								Pypi: &compute.PythonPyPiLibrary{
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: "PENDING",
+							Status: compute.LibraryFullStatusStatusPending,
 						},
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 					},
 				},
@@ -272,21 +273,21 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 				Method: "GET",
 				// 2 of 3 requests
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
-								Pypi: &libraries.PyPi{
+							Library: &compute.Library{
+								Pypi: &compute.PythonPyPiLibrary{
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 					},
 				},
@@ -295,21 +296,21 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 				Method: "GET",
 				// 3 of 3 requests
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
-								Pypi: &libraries.PyPi{
+							Library: &compute.Library{
+								Pypi: &compute.PythonPyPiLibrary{
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 					},
 				},
@@ -366,53 +367,53 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/create",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					RuntimeEngine:          "PHOTON",
 				},
-				Response: ClusterInfo{
-					ClusterID: "abc",
-					State:     ClusterStateRunning,
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateRunning,
 				},
 			},
 			{
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 					RuntimeEngine:          "PHOTON",
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 		},
@@ -465,15 +466,15 @@ func TestResourceClusterRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
-					AutoScale: &AutoScale{
+					State:                  compute.StateRunning,
+					Autoscale: &compute.AutoScale{
 						MaxWorkers: 4,
 					},
 				},
@@ -481,14 +482,14 @@ func TestResourceClusterRead(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
@@ -563,38 +564,38 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID: "abc",
-					AutoScale: &AutoScale{
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					Autoscale: &compute.AutoScale{
 						MinWorkers: 1,
 						MaxWorkers: 4,
 					},
 					ClusterName:            "Non Autoscaling Cluster",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/resize",
-				ExpectedRequest: ResizeRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.ResizeCluster{
+					ClusterId:  "abc",
 					NumWorkers: 3,
 				},
 			},
@@ -630,36 +631,36 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             150,
 					ClusterName:            "Non Autoscaling Cluster",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/resize",
-				ExpectedRequest: ResizeRequest{
-					ClusterID: "abc",
-					AutoScale: &AutoScale{
+				ExpectedRequest: compute.ResizeCluster{
+					ClusterId: "abc",
+					Autoscale: &compute.AutoScale{
 						MinWorkers: 4,
 						MaxWorkers: 10,
 					},
@@ -697,40 +698,40 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             150,
 					ClusterName:            "Non Autoscaling Cluster",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateTerminated,
+					State:                  compute.StateTerminated,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/edit",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.ClusterDetails{
 					AutoterminationMinutes: 15,
-					ClusterID:              "abc",
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Non Autoscaling Cluster",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 				},
 			},
 		},
@@ -761,23 +762,23 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID: "abc",
-					AutoScale: &AutoScale{
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					Autoscale: &compute.AutoScale{
 						MaxWorkers: 4,
 					},
 					ClusterName:  "Shared Autoscaling",
 					SparkVersion: "7.1-scala12",
-					NodeTypeID:   "i3.xlarge",
-					State:        ClusterStateRunning,
+					NodeTypeId:   "i3.xlarge",
+					State:        compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/resize",
-				ExpectedRequest: ResizeRequest{
-					ClusterID: "abc",
-					AutoScale: &AutoScale{
+				ExpectedRequest: compute.ResizeCluster{
+					ClusterId: "abc",
+					Autoscale: &compute.AutoScale{
 						MinWorkers: 4,
 						MaxWorkers: 10,
 					},
@@ -786,14 +787,14 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
@@ -832,35 +833,35 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             150,
 					ClusterName:            "Non Autoscaling Cluster",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/resize",
-				ExpectedRequest: ResizeRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.ResizeCluster{
+					ClusterId:  "abc",
 					NumWorkers: 100,
 				},
 			},
@@ -892,61 +893,61 @@ func TestResourceClusterUpdate(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
-				ExpectedRequest: ClusterID{
-					ClusterID: "abc",
+				ExpectedRequest: compute.StartCluster{
+					ClusterId: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/edit",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.ClusterDetails{
 					AutoterminationMinutes: 15,
-					ClusterID:              "abc",
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 		},
@@ -972,54 +973,56 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
-				ExpectedRequest: ClusterID{
-					ClusterID: "abc",
+				ExpectedRequest: compute.StartCluster{
+					ClusterId: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 			{
-				Method:          "POST",
-				Resource:        "/api/2.0/clusters/pin",
-				ExpectedRequest: ClusterID{ClusterID: "abc"},
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/pin",
+				ExpectedRequest: compute.PinCluster{
+					ClusterId: "abc",
+				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 		},
@@ -1050,32 +1053,32 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 	terminated := qa.HTTPFixture{
 		Method:   "GET",
 		Resource: "/api/2.0/clusters/get?cluster_id=abc",
-		Response: ClusterInfo{
-			ClusterID:    "abc",
+		Response: compute.ClusterDetails{
+			ClusterId:    "abc",
 			NumWorkers:   100,
 			SparkVersion: "7.1-scala12",
-			NodeTypeID:   "i3.xlarge",
-			State:        ClusterStateTerminated,
+			NodeTypeId:   "i3.xlarge",
+			State:        compute.StateTerminated,
 			StateMessage: "Terminated for test reasons",
 		},
 	}
 	newLibs := qa.HTTPFixture{
 		Method:   "GET",
 		Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-		Response: libraries.ClusterLibraryStatuses{
-			ClusterID: "abc",
-			LibraryStatuses: []libraries.LibraryStatus{
+		Response: compute.ClusterLibraryStatuses{
+			ClusterId: "abc",
+			LibraryStatuses: []compute.LibraryFullStatus{
 				{
-					Library: &libraries.Library{
+					Library: &compute.Library{
 						Jar: "dbfs://foo.jar",
 					},
-					Status: "INSTALLED",
+					Status: compute.LibraryFullStatusStatusInstalled,
 				},
 				{
-					Library: &libraries.Library{
+					Library: &compute.Library{
 						Egg: "dbfs://bar.egg",
 					},
-					Status: "INSTALLED",
+					Status: compute.LibraryFullStatusStatusInstalled,
 				},
 			},
 		},
@@ -1086,33 +1089,33 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/edit",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.EditCluster{
 					AutoterminationMinutes: 60,
-					ClusterID:              "abc",
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					ClusterID: "abc",
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					ClusterId: "abc",
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Egg: "dbfs://bar.egg",
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 						{
-							Library: &libraries.Library{
-								Pypi: &libraries.PyPi{
+							Library: &compute.Library{
+								Pypi: &compute.PythonPyPiLibrary{
 									Package: "requests",
 								},
 							},
-							Status: "INSTALLED",
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 					},
 				},
@@ -1120,54 +1123,54 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{ // check to see if cluster is restarting (if so wait)
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:    "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:    "abc",
 					NumWorkers:   100,
 					SparkVersion: "7.1-scala12",
-					NodeTypeID:   "i3.xlarge",
-					State:        ClusterStateTerminated,
+					NodeTypeId:   "i3.xlarge",
+					State:        compute.StateTerminated,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{ // start cluster before libs install
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
-				ExpectedRequest: ClusterID{
-					ClusterID: "abc",
+				ExpectedRequest: compute.StartCluster{
+					ClusterId: "abc",
 				},
 			},
 			{ // 2 of ...
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:    "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:    "abc",
 					NumWorkers:   100,
 					SparkVersion: "7.1-scala12",
-					NodeTypeID:   "i3.xlarge",
-					State:        ClusterStateRunning,
+					NodeTypeId:   "i3.xlarge",
+					State:        compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/uninstall",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					ClusterID: "abc",
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.UninstallLibraries{
+					ClusterId: "abc",
+					Libraries: []compute.Library{
 						{
-							Pypi: &libraries.PyPi{
+							Pypi: &compute.PythonPyPiLibrary{
 								Package: "requests",
 							},
 						},
@@ -1177,9 +1180,9 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/install",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					ClusterID: "abc",
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.InstallLibraries{
+					ClusterId: "abc",
+					Libraries: []compute.Library{
 						{
 							Jar: "dbfs://foo.jar",
 						},
@@ -1190,8 +1193,8 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/delete",
-				ExpectedRequest: ClusterID{
-					ClusterID: "abc",
+				ExpectedRequest: compute.DeleteCluster{
+					ClusterId: "abc",
 				},
 			},
 			terminated, // 3 of 4
@@ -1253,71 +1256,71 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
+					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
-					AwsAttributes: &AwsAttributes{
+					State:                  compute.StateRunning,
+					AwsAttributes: &compute.AwsAttributes{
 						Availability:  "SPOT",
 						FirstOnDemand: 1,
-						ZoneID:        "us-west-2a",
+						ZoneId:        "us-west-2a",
 					},
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
-				ExpectedRequest: ClusterID{
-					ClusterID: "abc",
+				ExpectedRequest: compute.StartCluster{
+					ClusterId: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/edit",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.EditCluster{
 					AutoterminationMinutes: 15,
-					ClusterID:              "abc",
+					ClusterId:              "abc",
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
 					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
-					AwsAttributes: &AwsAttributes{
+					NodeTypeId:             "i3.xlarge",
+					AwsAttributes: &compute.AwsAttributes{
 						Availability:  "SPOT",
 						FirstOnDemand: 1,
-						ZoneID:        "auto",
+						ZoneId:        "auto",
 					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 		},
@@ -1347,22 +1350,22 @@ func TestResourceClusterDelete(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/delete",
-				ExpectedRequest: map[string]string{
-					"cluster_id": "abc",
+				ExpectedRequest: compute.DeleteCluster{
+					ClusterId: "abc",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					State: ClusterStateTerminated,
+				Response: compute.ClusterDetails{
+					State: compute.StateTerminated,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/permanent-delete",
-				ExpectedRequest: map[string]string{
-					"cluster_id": "abc",
+				ExpectedRequest: compute.PermanentDeleteCluster{
+					ClusterId: "abc",
 				},
 			},
 		},
@@ -1379,7 +1382,7 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/delete",
+				Resource: "/api/2.0/clusters/permanent-delete",
 				Response: apierr.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -1401,11 +1404,11 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/create",
-				ExpectedRequest: Cluster{
+				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             0,
 					ClusterName:            "Single Node Cluster",
 					SparkVersion:           "7.3.x-scala12",
-					NodeTypeID:             "Standard_F4s",
+					NodeTypeId:             "Standard_F4s",
 					AutoterminationMinutes: 120,
 					SparkConf: map[string]string{
 						"spark.master":                     "local[*]",
@@ -1414,23 +1417,24 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 					CustomTags: map[string]string{
 						"ResourceClass": "SingleNode",
 					},
+					ForceSendFields: []string{"NumWorkers"},
 				},
-				Response: ClusterInfo{
-					ClusterID: "abc",
-					State:     ClusterStateRunning,
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: EventsRequest{
-					ClusterID:  "abc",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
 					Limit:      1,
-					Order:      SortDescending,
-					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 				},
-				Response: EventsResponse{
-					Events:     []ClusterEvent{},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
 					TotalCount: 0,
 				},
 			},
@@ -1438,13 +1442,13 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:              "abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
 					ClusterName:            "Single Node Cluster",
 					SparkVersion:           "7.3.x-scala12",
-					NodeTypeID:             "Standard_F4s",
+					NodeTypeId:             "Standard_F4s",
 					AutoterminationMinutes: 120,
-					State:                  ClusterStateRunning,
+					State:                  compute.StateRunning,
 					SparkConf: map[string]string{
 						"spark.master":                     "local[*]",
 						"spark.databricks.cluster.profile": "singleNode",
@@ -1457,8 +1461,8 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
-				Response: libraries.ClusterLibraryStatuses{
-					LibraryStatuses: []libraries.LibraryStatus{},
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
 				},
 			},
 		},
@@ -1540,54 +1544,54 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 }
 
 func TestModifyClusterRequestAws(t *testing.T) {
-	c := Cluster{
-		InstancePoolID: "a",
-		AwsAttributes: &AwsAttributes{
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		AwsAttributes: &compute.AwsAttributes{
 			InstanceProfileArn: "b",
-			ZoneID:             "c",
+			ZoneId:             "c",
 		},
 		EnableElasticDisk: true,
-		NodeTypeID:        "d",
-		DriverNodeTypeID:  "e",
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	c.ModifyRequestOnInstancePool()
-	assert.Equal(t, "", c.AwsAttributes.ZoneID)
-	assert.Equal(t, "", c.NodeTypeID)
-	assert.Equal(t, "", c.DriverNodeTypeID)
+	ModifyRequestOnInstancePool(&c)
+	assert.Equal(t, "", c.AwsAttributes.ZoneId)
+	assert.Equal(t, "", c.NodeTypeId)
+	assert.Equal(t, "", c.DriverNodeTypeId)
 	assert.Equal(t, false, c.EnableElasticDisk)
 }
 
 func TestModifyClusterRequestAzure(t *testing.T) {
-	c := Cluster{
-		InstancePoolID: "a",
-		AzureAttributes: &AzureAttributes{
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		AzureAttributes: &compute.AzureAttributes{
 			FirstOnDemand: 1,
 		},
 		EnableElasticDisk: true,
-		NodeTypeID:        "d",
-		DriverNodeTypeID:  "e",
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	c.ModifyRequestOnInstancePool()
-	assert.Equal(t, &AzureAttributes{}, c.AzureAttributes)
-	assert.Equal(t, "", c.NodeTypeID)
-	assert.Equal(t, "", c.DriverNodeTypeID)
+	ModifyRequestOnInstancePool(&c)
+	assert.Equal(t, &compute.AzureAttributes{}, c.AzureAttributes)
+	assert.Equal(t, "", c.NodeTypeId)
+	assert.Equal(t, "", c.DriverNodeTypeId)
 	assert.Equal(t, false, c.EnableElasticDisk)
 }
 
 func TestModifyClusterRequestGcp(t *testing.T) {
-	c := Cluster{
-		InstancePoolID: "a",
-		GcpAttributes: &GcpAttributes{
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		GcpAttributes: &compute.GcpAttributes{
 			UsePreemptibleExecutors: true,
 		},
 		EnableElasticDisk: true,
-		NodeTypeID:        "d",
-		DriverNodeTypeID:  "e",
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	c.ModifyRequestOnInstancePool()
+	ModifyRequestOnInstancePool(&c)
 	assert.Equal(t, false, c.GcpAttributes.UsePreemptibleExecutors)
-	assert.Equal(t, "", c.NodeTypeID)
-	assert.Equal(t, "", c.DriverNodeTypeID)
+	assert.Equal(t, "", c.NodeTypeId)
+	assert.Equal(t, "", c.DriverNodeTypeId)
 	assert.Equal(t, false, c.EnableElasticDisk)
 }
 
@@ -1599,8 +1603,8 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=foo",
-				Response: ClusterInfo{
-					State: ClusterStateTerminated,
+				Response: compute.ClusterDetails{
+					State: compute.StateTerminated,
 				},
 			},
 			{
@@ -1611,14 +1615,14 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=foo",
-				Response: libraries.ClusterLibraryStatuses{
-					ClusterID: "foo",
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					ClusterId: "foo",
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Status: "PENDING",
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Jar: "foo.bar",
 							},
+							Status: compute.LibraryFullStatusStatusPending,
 						},
 					},
 				},
@@ -1637,8 +1641,8 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/clusters/get?cluster_id=foo",
-				Response: ClusterInfo{
-					State: ClusterStateRunning,
+				Response: compute.ClusterDetails{
+					State: compute.StateRunning,
 				},
 			},
 			{
@@ -1648,21 +1652,21 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=foo",
-				Response: libraries.ClusterLibraryStatuses{
-					ClusterID: "foo",
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					ClusterId: "foo",
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Status:   "FAILED",
-							Messages: []string{"fails for the test"},
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Jar: "foo.bar",
 							},
+							Status:   compute.LibraryFullStatusStatusFailed,
+							Messages: []string{"fails for the test"},
 						},
 						{
-							Status: "INSTALLED",
-							Library: &libraries.Library{
+							Library: &compute.Library{
 								Whl: "bar.whl",
 							},
+							Status: compute.LibraryFullStatusStatusInstalled,
 						},
 					},
 				},
@@ -1670,9 +1674,9 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/libraries/uninstall",
-				ExpectedRequest: libraries.ClusterLibraryList{
-					ClusterID: "foo",
-					Libraries: []libraries.Library{
+				ExpectedRequest: compute.UninstallLibraries{
+					ClusterId: "foo",
+					Libraries: []compute.Library{
 						{
 							Jar: "foo.bar",
 						},

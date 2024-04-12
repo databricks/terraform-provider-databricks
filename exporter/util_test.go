@@ -19,7 +19,7 @@ import (
 func TestImportClusterEmitsInitScripts(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("storage")
-	ic.importCluster(&clusters.Cluster{
+	ic.importClusterLegacy(&clusters.Cluster{
 		InitScripts: []clusters.InitScriptStorageInfo{
 			{
 				Dbfs: &clusters.DbfsStorageInfo{

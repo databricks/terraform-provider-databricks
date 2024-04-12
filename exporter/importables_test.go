@@ -1016,20 +1016,11 @@ func TestNotebookGeneration(t *testing.T) {
 					{
 						Path:       "/First/Second",
 						ObjectType: "NOTEBOOK",
+						ObjectID:   123,
+						Language:   "PYTHON",
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/First/Second",
-				Language:   "PYTHON",
-			},
-			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1066,22 +1057,13 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 						ObjectType: "NOTEBOOK",
 					},
 					{
-						Path:       "/First/Second",
+						ObjectID:   123,
 						ObjectType: "NOTEBOOK",
+						Path:       "/First/Second",
+						Language:   "PYTHON",
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/First/Second",
-				Language:   "PYTHON",
-			},
-			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1120,8 +1102,10 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 						ObjectType: "NOTEBOOK",
 					},
 					{
-						Path:       "/Fir\"st\\/Second",
+						ObjectID:   123,
 						ObjectType: "NOTEBOOK",
+						Path:       "/Fir\"st\\/Second",
+						Language:   "PYTHON",
 					},
 				},
 			},
@@ -1134,17 +1118,6 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 				ObjectID:   124,
 				ObjectType: "DIRECTORY",
 				Path:       "/Fir\"st\\",
-			},
-			ReuseRequest: true,
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFir%22st%5C%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/Fir\"st\\/Second",
-				Language:   "PYTHON",
 			},
 			ReuseRequest: true,
 		},
@@ -1822,7 +1795,6 @@ func TestImportShare(t *testing.T) {
 		},
 	}
 	d.MarkNewResource()
-	common.StructToData(share, scm, d)
 	err := common.StructToData(share, scm, d)
 	require.NoError(t, err)
 	err = resourcesMap["databricks_share"].Import(ic, &resource{

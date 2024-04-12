@@ -310,7 +310,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 		ic.emitRepoByPath(path)
 	} else {
 		// TODO: strip /Workspace prefix if it's provided
-		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
+		ic.maybeEmitWorkspaceObject("databricks_notebook", path, nil)
 	}
 }
 
@@ -1017,11 +1017,33 @@ func (ic *importContext) shouldEmitForPath(path string) bool {
 	return true
 }
 
-func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
+func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string, obj *workspace.ObjectStatus) {
 	if ic.shouldEmitForPath(path) {
+		var data *schema.ResourceData
+		if obj != nil {
+			switch resourceType {
+			case "databricks_notebook":
+				data = workspace.ResourceNotebook().ToResource().TestResourceData()
+			case "databricks_workspace_file":
+				data = workspace.ResourceWorkspaceFile().ToResource().TestResourceData()
+			case "databricks_directory":
+				data = workspace.ResourceDirectory().ToResource().TestResourceData()
+			}
+			if data != nil {
+				scm := ic.Resources[resourceType].Schema
+				data.MarkNewResource()
+				data.SetId(path)
+				err := common.StructToData(obj, scm, data)
+				if err != nil {
+					log.Printf("[ERROR] can't convert %s object to data: %v. obj=%v", resourceType, err, obj)
+					data = nil
+				}
+			}
+		}
 		ic.Emit(&resource{
 			Resource:    resourceType,
 			ID:          path,
+			Data:        data,
 			Incremental: ic.incremental,
 		})
 	} else {
@@ -1098,9 +1120,9 @@ func emitWorkpaceObject(ic *importContext, object workspace.ObjectStatus) {
 	}
 	switch object.ObjectType {
 	case workspace.Notebook:
-		ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
+		ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path, &object)
 	case workspace.File:
-		ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+		ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path, &object)
 	default:
 		log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
 	}

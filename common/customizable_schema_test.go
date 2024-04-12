@@ -43,6 +43,99 @@ func TestCustomizableSchemaSetSuppressDiff(t *testing.T) {
 	assert.Truef(t, testCustomizableSchemaScm["non_optional"].DiffSuppressFunc != nil, "DiffSuppressfunc should be set in field: non_optional")
 }
 
+func TestCustomizableSchemaSetCustomSuppressDiffWithDefault(t *testing.T) {
+	tc := []struct {
+		name      string
+		fieldName string
+		dv        any
+		old       string
+		new       string
+		result    bool
+	}{
+		{
+			name:      "default string",
+			fieldName: "string",
+			dv:        "foobar",
+			old:       "foobar",
+			new:       "",
+			result:    true,
+		},
+		{
+			name:      "default int",
+			fieldName: "integer",
+			dv:        123,
+			old:       "123",
+			new:       "0",
+			result:    true,
+		},
+		{
+			name:      "default bool",
+			fieldName: "bool",
+			dv:        true,
+			old:       "true",
+			new:       "false",
+			result:    true,
+		},
+		{
+			name:      "default float",
+			fieldName: "float",
+			dv:        123.456,
+			old:       "123.456",
+			new:       "0",
+			result:    true,
+		},
+		{
+			name:      "non default string",
+			fieldName: "string",
+			dv:        "foobar",
+			old:       "non-default-val",
+			new:       "",
+			result:    false,
+		},
+		{
+			name:      "non default int",
+			fieldName: "integer",
+			dv:        123,
+			old:       "non-default-val",
+			new:       "0",
+			result:    false,
+		},
+		{
+			name:      "non default bool",
+			fieldName: "bool",
+			dv:        true,
+			old:       "non-default-val",
+			new:       "false",
+			result:    false,
+		},
+		{
+			name:      "non default float",
+			fieldName: "float",
+			dv:        123.456,
+			old:       "non-default-val",
+			new:       "0",
+			result:    false,
+		},
+		{
+			name:      "override in config",
+			fieldName: "string",
+			dv:        "foobar",
+			old:       "foobar",
+			new:       "new-val-in-config",
+			result:    false,
+		},
+	}
+
+	for _, tt := range tc {
+		t.Run(tt.name, func(t *testing.T) {
+			CustomizeSchemaPath(testCustomizableSchemaScm, tt.fieldName).SetSuppressDiffWithDefault(tt.dv)
+			assert.Truef(t, testCustomizableSchemaScm[tt.fieldName].DiffSuppressFunc != nil, "DiffSuppressFunc should be set in field: %s", tt.fieldName)
+
+			assert.Equal(t, tt.result, testCustomizableSchemaScm[tt.fieldName].DiffSuppressFunc("", tt.old, tt.new, nil))
+		})
+	}
+}
+
 func TestCustomizableSchemaSetCustomSuppressDiff(t *testing.T) {
 	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetCustomSuppressDiff(diffSuppressor("test", CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").Schema))
 	assert.Truef(t, testCustomizableSchemaScm["non_optional"].DiffSuppressFunc != nil, "DiffSuppressfunc should be set in field: non_optional")

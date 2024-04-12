@@ -132,7 +132,7 @@ type ForEachNestedTask struct {
 	TaskKey     string                `json:"task_key,omitempty"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
-	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
+	RunIf       string                `json:"run_if,omitempty"`
 
 	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
@@ -211,7 +211,7 @@ type JobTaskSettings struct {
 	TaskKey     string                `json:"task_key,omitempty"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
-	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
+	RunIf       string                `json:"run_if,omitempty"`
 
 	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
@@ -765,6 +765,10 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		// Clear the implied diff suppression for the webhook notification lists
 		fixWebhookNotifications(s)
 		fixWebhookNotifications(common.MustSchemaMap(s, "task"))
+
+		// Suppress diff if the platform returns ALL_SUCCESS for run_if in a task
+		common.CustomizeSchemaPath(s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+		common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
 		return s
 	})

@@ -158,6 +158,8 @@ type ForEachNestedTask struct {
 	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
 	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
 	Health                 *JobHealth                     `json:"health,omitempty"`
+
+	EnvironmentKey string `json:"environment_key,omitempty"`
 }
 
 func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
@@ -238,6 +240,8 @@ type JobTaskSettings struct {
 	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
 	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
 	Health                 *JobHealth                     `json:"health,omitempty"`
+
+	EnvironmentKey string `json:"environment_key,omitempty"`
 }
 
 type JobCluster struct {
@@ -297,9 +301,10 @@ type JobSettings struct {
 	// END Jobs API 2.0
 
 	// BEGIN Jobs API 2.1
-	Tasks       []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
-	Format      string            `json:"format,omitempty" tf:"computed"`
-	JobClusters []JobCluster      `json:"job_clusters,omitempty" tf:"alias:job_cluster"`
+	Tasks        []JobTaskSettings     `json:"tasks,omitempty" tf:"alias:task"`
+	Format       string                `json:"format,omitempty" tf:"computed"`
+	JobClusters  []JobCluster          `json:"job_clusters,omitempty" tf:"alias:job_cluster"`
+	Environments []jobs.JobEnvironment `json:"environments,omitempty" tf:"alias:environment"`
 	// END Jobs API 2.1
 
 	// BEGIN Jobs + Repo integration preview

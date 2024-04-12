@@ -898,6 +898,79 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 	assert.Equal(t, "17", d.Id())
 }
 
+func TestResourceJobCreate_JobCompute(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name: "JobEnvironments",
+					Tasks: []JobTaskSettings{
+						{
+							TaskKey:        "b",
+							EnvironmentKey: "j",
+							NotebookTask: &NotebookTask{
+								NotebookPath: "/Stuff",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+					Environments: []jobs.JobEnvironment{
+						{
+							EnvironmentKey: "j",
+							Spec: &compute.Environment{
+								Client: "1",
+								Dependencies: []string{
+									"cowsay",
+									"-r /Workspace/Users/lisa@company.com/my.whl",
+								},
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 18,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/get?job_id=18",
+				Response: Job{
+					// good enough for mock
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "b",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobEnvironments"
+		environment {
+			environment_key = "j"
+			spec {
+			  client   	= "1"
+			  dependencies = ["cowsay", "-r /Workspace/Users/lisa@company.com/my.whl"]
+			}
+		}
+		task {
+			task_key = "b"
+			environment_key = "j"
+			notebook_task {
+				notebook_path = "/Stuff"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "18", d.Id())
+}
+
 func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

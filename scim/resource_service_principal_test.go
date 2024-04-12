@@ -468,7 +468,7 @@ func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/Repos/abc) doesn't exist.",
 				},
-				Status: 400,
+				Status: 404,
 			},
 		},
 		Resource: ResourceServicePrincipal(),

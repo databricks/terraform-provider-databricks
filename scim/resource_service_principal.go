@@ -224,13 +224,13 @@ func ResourceServicePrincipal() common.Resource {
 				if isForceDeleteRepos {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
 					if err != nil {
-						return fmt.Errorf("force_delete_repos: %w", err)
+						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
 					if err != nil {
-						return fmt.Errorf("force_delete_home_dir: %w", err)
+						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}
 				}
 			}

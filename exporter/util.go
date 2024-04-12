@@ -19,7 +19,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
@@ -33,7 +32,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorageInfo) {
+// Remove this once databricks_pipeline and databricks_job resources are migrated to Go SDK
+func (ic *importContext) emitInitScriptsLegacy(initScripts []clusters.InitScriptStorageInfo) {
+	for _, is := range initScripts {
+		if is.Dbfs != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_dbfs_file",
+				ID:       is.Dbfs.Destination,
+			})
+		}
+		if is.Workspace != nil {
+			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
+		}
+		if is.Volumes != nil {
+			ic.emitIfVolumeFile(is.Volumes.Destination)
+		}
+	}
+}
+
+func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 	for _, is := range initScripts {
 		if is.Dbfs != nil {
 			ic.Emit(&resource{
@@ -66,7 +83,9 @@ func (ic *importContext) emitFilesFromMap(m map[string]string) {
 	}
 }
 
-func (ic *importContext) importCluster(c *clusters.Cluster) {
+// Remove this when databricks_job resource is migrated
+// Usage: ic.importCluster(job.NewCluster)
+func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
@@ -93,6 +112,41 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 		ic.Emit(&resource{
 			Resource: "databricks_cluster_policy",
 			ID:       c.PolicyID,
+		})
+	}
+	ic.emitInitScriptsLegacy(c.InitScripts)
+	ic.emitSecretsFromSecretsPath(c.SparkConf)
+	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitUserOrServicePrincipal(c.SingleUserName)
+}
+
+func (ic *importContext) importCluster(c *compute.ClusterDetails) {
+	if c == nil {
+		return
+	}
+	if c.AwsAttributes != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_instance_profile",
+			ID:       c.AwsAttributes.InstanceProfileArn,
+		})
+	}
+	if c.InstancePoolId != "" {
+		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
+		ic.Emit(&resource{
+			Resource: "databricks_instance_pool",
+			ID:       c.InstancePoolId,
+		})
+	}
+	if c.DriverInstancePoolId != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_instance_pool",
+			ID:       c.DriverInstancePoolId,
+		})
+	}
+	if c.PolicyId != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_cluster_policy",
+			ID:       c.PolicyId,
 		})
 	}
 	ic.emitInitScripts(c.InitScripts)
@@ -344,7 +398,7 @@ func (ic *importContext) emitRoles(objType string, id string, roles []scim.Compl
 	}
 }
 
-func (ic *importContext) emitLibraries(libs []libraries.Library) {
+func (ic *importContext) emitLibraries(libs []compute.Library) {
 	for _, lib := range libs {
 		// Files on DBFS
 		ic.emitIfDbfsFile(lib.Whl)
@@ -362,14 +416,15 @@ func (ic *importContext) emitLibraries(libs []libraries.Library) {
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll libraries.ClusterLibraryList
+	var cll compute.InstallLibraries
 	common.DataToStructPointer(d, s, &cll)
 	ic.emitLibraries(cll.Libraries)
 	return nil
 }
 
 func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	cll, err := libraries.NewLibrariesAPI(ic.Context, ic.Client).ClusterStatus(d.Id())
+	libraries := ic.workspaceClient.Libraries
+	cll, err := libraries.ClusterStatusByClusterId(ic.Context, d.Id())
 	if err != nil {
 		return err
 	}

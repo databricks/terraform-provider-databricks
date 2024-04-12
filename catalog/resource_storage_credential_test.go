@@ -466,7 +466,7 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "a",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityRequest{
 						AccessConnectorId: "def",
 					},
 					Comment: "c",
@@ -479,7 +479,7 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: catalog.UpdateStorageCredential{
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "def",
 					},
 					Comment: "c",
@@ -493,7 +493,7 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "def",
 					},
 					MetastoreId: "d",
@@ -621,7 +621,7 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: catalog.UpdateStorageCredential{
 					Comment: "c",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "CHANGED",
 					},
 				},
@@ -631,7 +631,7 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "CHANGED",
 					},
 					MetastoreId: "d",

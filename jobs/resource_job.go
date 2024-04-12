@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -248,11 +247,6 @@ type JobCluster struct {
 	NewCluster    *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 }
 
-type JobCompute struct {
-	ComputeKey  string               `json:"compute_key,omitempty" tf:"group:cluster_type"`
-	ComputeSpec *compute.ComputeSpec `json:"spec,omitempty" tf:"group:cluster_type"`
-}
-
 type ContinuousConf struct {
 	PauseStatus string `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
@@ -308,7 +302,6 @@ type JobSettings struct {
 	Tasks       []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
 	Format      string            `json:"format,omitempty" tf:"computed"`
 	JobClusters []JobCluster      `json:"job_clusters,omitempty" tf:"alias:job_cluster"`
-	Compute     []JobCompute      `json:"compute,omitempty" tf:"alias:compute"`
 	// END Jobs API 2.1
 
 	// BEGIN Jobs + Repo integration preview

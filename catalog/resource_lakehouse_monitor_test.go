@@ -18,10 +18,10 @@ func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
-				FullName:         "test_table",
+				TableName:         "test_table",
 				OutputSchemaName: "output.schema",
 				AssetsDir:        "sample.dir",
-				TimeSeries: &catalog.MonitorTimeSeriesProfileType{
+				TimeSeries: &catalog.MonitorTimeSeries{
 					Granularities: []string{"1 day"},
 					TimestampCol:  "timestamp",
 				},
@@ -32,7 +32,7 @@ func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 				Status:                catalog.MonitorInfoStatusMonitorStatusPending,
 				DriftMetricsTableName: "test_table_drift",
 			}, nil)
-			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:             "test_table",
 				Status:                catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:             "sample.dir",
@@ -59,15 +59,15 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
-				FullName:         "test_table",
+				TableName:         "test_table",
 				OutputSchemaName: "output.schema",
 				AssetsDir:        "sample.dir",
-				InferenceLog: &catalog.MonitorInferenceLogProfileType{
+				InferenceLog: &catalog.MonitorInferenceLog{
 					Granularities: []string{"1 day"},
 					TimestampCol:  "timestamp",
 					PredictionCol: "prediction",
 					ModelIdCol:    "model_id",
-					ProblemType:   catalog.MonitorInferenceLogProfileTypeProblemTypeProblemTypeRegression,
+					ProblemType:   catalog.MonitorInferenceLogProblemTypeProblemTypeRegression,
 				},
 			}).Return(&catalog.MonitorInfo{
 				AssetsDir:        "sample.dir",
@@ -75,17 +75,17 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 			}, nil)
-			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "sample.dir",
 				OutputSchemaName: "output.schema",
-				InferenceLog: &catalog.MonitorInferenceLogProfileType{
+				InferenceLog: &catalog.MonitorInferenceLog{
 					Granularities: []string{"1 day"},
 					TimestampCol:  "timestamp",
 					PredictionCol: "prediction",
 					ModelIdCol:    "model_id",
-					ProblemType:   catalog.MonitorInferenceLogProfileTypeProblemTypeProblemTypeRegression,
+					ProblemType:   catalog.MonitorInferenceLogProblemTypeProblemTypeRegression,
 				},
 			}, nil)
 		},
@@ -111,22 +111,22 @@ func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
-				FullName:         "test_table",
+				TableName:         "test_table",
 				OutputSchemaName: "output.schema",
 				AssetsDir:        "sample.dir",
-				Snapshot:         &catalog.MonitorSnapshotProfileType{},
+				Snapshot:         &catalog.MonitorSnapshot{},
 			}).Return(&catalog.MonitorInfo{
 				AssetsDir:        "sample.dir",
 				OutputSchemaName: "output.schema",
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 			}, nil)
-			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "sample.dir",
 				OutputSchemaName: "output.schema",
-				Snapshot:         &catalog.MonitorSnapshotProfileType{},
+				Snapshot:         &catalog.MonitorSnapshot{},
 			}, nil)
 		},
 		Resource: ResourceLakehouseMonitor(),
@@ -144,12 +144,12 @@ func TestLakehouseMonitorGet(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
-			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "new_assets.dir",
 				OutputSchemaName: "output.schema",
-				InferenceLog: &catalog.MonitorInferenceLogProfileType{
+				InferenceLog: &catalog.MonitorInferenceLog{
 					Granularities: []string{"1 week"},
 					TimestampCol:  "timestamp",
 					PredictionCol: "prediction",
@@ -168,21 +168,21 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateMonitor{
-				FullName:         "test_table",
+				TableName:         "test_table",
 				OutputSchemaName: "output.schema",
-				InferenceLog: &catalog.MonitorInferenceLogProfileType{
+				InferenceLog: &catalog.MonitorInferenceLog{
 					Granularities: []string{"1 week"},
 					TimestampCol:  "timestamp",
 					PredictionCol: "prediction",
 					ModelIdCol:    "model_id",
-					ProblemType:   catalog.MonitorInferenceLogProfileTypeProblemTypeProblemTypeRegression,
+					ProblemType:   catalog.MonitorInferenceLogProblemTypeProblemTypeRegression,
 				},
 			}).Return(&catalog.MonitorInfo{
 				AssetsDir:        "new_assets.dir",
 				OutputSchemaName: "output.schema",
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
-				InferenceLog: &catalog.MonitorInferenceLogProfileType{
+				InferenceLog: &catalog.MonitorInferenceLog{
 					Granularities: []string{"1 week"},
 					TimestampCol:  "timestamp",
 					PredictionCol: "prediction",
@@ -190,12 +190,12 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 				},
 				DriftMetricsTableName: "test_table_drift",
 			}, nil)
-			e.GetByFullName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
+			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
 				AssetsDir:        "new_assets.dir",
 				OutputSchemaName: "output.schema",
-				InferenceLog: &catalog.MonitorInferenceLogProfileType{
+				InferenceLog: &catalog.MonitorInferenceLog{
 					Granularities: []string{"1 week"},
 					TimestampCol:  "timestamp",
 					PredictionCol: "prediction",
@@ -229,7 +229,7 @@ func TestLakehouseMonitorDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
-			e.DeleteByFullName(mock.Anything, "test_table").Return(nil)
+			e.DeleteByTableName(mock.Anything, "test_table").Return(nil)
 		},
 		Resource: ResourceLakehouseMonitor(),
 		Delete:   true,

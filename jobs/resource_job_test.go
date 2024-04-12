@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -897,78 +896,6 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "17", d.Id())
-}
-
-func TestResourceJobCreate_JobCompute(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
-				ExpectedRequest: JobSettings{
-					Name: "JobComputed",
-					Tasks: []JobTaskSettings{
-						{
-							TaskKey:    "b",
-							ComputeKey: "j",
-							NotebookTask: &NotebookTask{
-								NotebookPath: "/Stuff",
-							},
-						},
-					},
-					MaxConcurrentRuns: 1,
-					Compute: []JobCompute{
-						{
-							ComputeKey: "j",
-							ComputeSpec: &compute.ComputeSpec{
-								Kind: "t",
-							},
-						},
-					},
-				},
-				Response: Job{
-					JobID: 18,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=18",
-				Response: Job{
-					// good enough for mock
-					Settings: &JobSettings{
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey: "b",
-							},
-						},
-					},
-				},
-			},
-		},
-		Create:   true,
-		Resource: ResourceJob(),
-		HCL: `
-		name = "JobComputed"
-
-		compute {
-			compute_key = "j"
-			spec {
-			  kind   	= "t"
-			}
-		}
-
-		task {
-			task_key = "b"
-
-			compute_key = "j"
-
-			notebook_task {
-				notebook_path = "/Stuff"
-			}
-		}`,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "18", d.Id())
 }
 
 func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {

@@ -690,25 +690,6 @@ func jobSettingsSchema(s map[string]*schema.Schema, prefix string) {
 			return false
 		}
 	}
-	// The default value for run_if for a task is ALL_SUCCESS. We only want
-	// to suppress the diff if user has not provided a value for run_if and
-	// the platform returns ALL_SUCCESS.
-	if v, err := common.SchemaPath(s, "task", "run_if"); err == nil {
-		v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			if old == string(jobs.RunIfAllSuccess) && new == "" {
-				return true
-			}
-			return false
-		}
-	}
-	if v, err := common.SchemaPath(s, "task", "for_each_task", "task", "run_if"); err == nil {
-		v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-			if old == string(jobs.RunIfAllSuccess) && new == "" {
-				return true
-			}
-			return false
-		}
-	}
 }
 
 func gitSourceSchema(s map[string]*schema.Schema, prefix string) {
@@ -793,6 +774,10 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		// Clear the implied diff suppression for the webhook notification lists
 		fixWebhookNotifications(s)
 		fixWebhookNotifications(common.MustSchemaMap(s, "task"))
+
+		// Suppress diff if the platform returns ALL_SUCCESS for run_if in a task
+		common.CustomizeSchemaPath(s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+		common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
 		return s
 	})

@@ -1,6 +1,9 @@
 package common
 
 import (
+	"fmt"
+	"slices"
+
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -78,6 +81,33 @@ func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 		for k, v := range nestedSchema {
 			v.DiffSuppressFunc = diffSuppressor(k, v)
 		}
+	}
+	return s
+}
+
+// SetSuppressDiffWithDefault suppresses the diff if the new value (ie value from HCL config) is not set and
+// the old value (ie value from state / platform) is equal to the default value. Often Databricks HTTP APIs
+// will return values for fields that were not set by the author in their terraform configuration This function
+// allows us to suppress the diff in these cases.
+func (s *CustomizableSchema) SetSuppressDiffWithDefault(dv any) *CustomizableSchema {
+	primitiveTypes := []schema.ValueType{schema.TypeBool, schema.TypeString, schema.TypeInt, schema.TypeFloat}
+	if !slices.Contains(primitiveTypes, s.Schema.Type) {
+		panic(fmt.Errorf("expected primitive type, got: %s", s.Schema.Type))
+	}
+
+	// Get zero value for the schema type
+	zero := fmt.Sprintf("%v", s.Schema.Type.Zero())
+
+	// Get string representation of the default value
+	sv := fmt.Sprintf("%v", dv)
+
+	// Suppress diff if the new value (ie value from HCL config) is not set and
+	// the old value (ie value from state / platform) is equal to the default value.
+	s.Schema.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+		if new == zero && old == sv {
+			return true
+		}
+		return false
 	}
 	return s
 }

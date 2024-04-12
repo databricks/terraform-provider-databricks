@@ -18,7 +18,7 @@ func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
-				TableName:         "test_table",
+				TableName:        "test_table",
 				OutputSchemaName: "output.schema",
 				AssetsDir:        "sample.dir",
 				TimeSeries: &catalog.MonitorTimeSeries{
@@ -59,7 +59,7 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
-				TableName:         "test_table",
+				TableName:        "test_table",
 				OutputSchemaName: "output.schema",
 				AssetsDir:        "sample.dir",
 				InferenceLog: &catalog.MonitorInferenceLog{
@@ -111,7 +111,7 @@ func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
-				TableName:         "test_table",
+				TableName:        "test_table",
 				OutputSchemaName: "output.schema",
 				AssetsDir:        "sample.dir",
 				Snapshot:         &catalog.MonitorSnapshot{},
@@ -168,7 +168,7 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateMonitor{
-				TableName:         "test_table",
+				TableName:        "test_table",
 				OutputSchemaName: "output.schema",
 				InferenceLog: &catalog.MonitorInferenceLog{
 					Granularities: []string{"1 week"},

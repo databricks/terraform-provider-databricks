@@ -20,7 +20,7 @@ func TestStorageCredentialDataVerify(t *testing.T) {
 					AwsIamRole: &catalog.AwsIamRoleResponse{
 						RoleArn: "test",
 					},
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "test",
 					},
 					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{

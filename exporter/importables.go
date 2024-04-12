@@ -555,7 +555,7 @@ var resourcesMap map[string]importable = map[string]importable{
 									if object.ObjectType != workspace.File {
 										continue
 									}
-									ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+									ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path, &object)
 								}
 							} else {
 								log.Printf("[WARN] Can't list directory %s for DBT task in job %s (id: %s)", directory, job.Name, r.ID)
@@ -2053,7 +2053,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if res := ignoreIdeFolderRegex.FindStringSubmatch(directory.Path); res != nil {
 					continue
 				}
-				ic.maybeEmitWorkspaceObject("databricks_directory", directory.Path)
+				ic.maybeEmitWorkspaceObject("databricks_directory", directory.Path, &directory)
 
 				if offset%50 == 0 {
 					log.Printf("[INFO] Scanned %d of %d directories", offset+1, len(directoryList))

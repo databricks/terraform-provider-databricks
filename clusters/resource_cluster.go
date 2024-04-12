@@ -140,6 +140,10 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	common.CustomizeSchemaPath(s, "workload_type", "clients").SetRequired()
 	common.CustomizeSchemaPath(s, "workload_type", "clients", "notebooks").SetDefault(true)
 	common.CustomizeSchemaPath(s, "workload_type", "clients", "jobs").SetDefault(true)
+	s["library"].Set = func(i any) int {
+		lib := libraries.NewLibraryFromInstanceState(i)
+		return schema.HashString(lib.String())
+	}
 	common.CustomizeSchemaPath(s).AddNewField("idempotency_token", &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
@@ -242,12 +246,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 	}
 
-	var libraryList compute.InstallLibraries
-	common.DataToStructPointer(d, clusterSchema, &libraryList)
-	if len(libraryList.Libraries) > 0 {
+	if len(cluster.Libraries) > 0 {
 		if err = w.Libraries.Install(ctx, compute.InstallLibraries{
 			ClusterId: d.Id(),
-			Libraries: libraryList.Libraries,
+			Libraries: cluster.Libraries,
 		}); err != nil {
 			return err
 		}

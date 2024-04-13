@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccSecretScopeResource(t *testing.T) {
+	println("Abc")
 	scope := qa.RandomName("tf-")
 	workspaceLevel(t, step{
 		Template: fmt.Sprintf(`

@@ -30,8 +30,8 @@ func ResourceRecipient() common.Resource {
 		common.CustomizeSchemaPath(s, "owner").SetSuppressDiff()
 		common.CustomizeSchemaPath(s, "properties_kvpairs").SetSuppressDiff()
 		common.CustomizeSchemaPath(s, "properties_kvpairs", "properties").SetCustomSuppressDiff(recepientPropertiesSuppressDiff)
-		common.CustomizeSchemaPath(s, "data_recipient_global_metastore_id").SetForceNew().SetConflictsWith([]string{"ip_access_list"})
-		common.CustomizeSchemaPath(s, "ip_access_list").SetConflictsWith([]string{"data_recipient_global_metastore_id"})
+		common.CustomizeSchemaPath(s, "data_recipient_global_metastore_id").SetForceNew().SetConflictsWith([]string{}, []string{"ip_access_list"})
+		common.CustomizeSchemaPath(s, "ip_access_list").SetConflictsWith([]string{}, []string{"data_recipient_global_metastore_id"})
 
 		// ReadOnly fields
 		for _, path := range []string{"created_at", "created_by", "updated_at", "updated_by", "metastore_id", "region",

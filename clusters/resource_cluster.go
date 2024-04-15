@@ -123,13 +123,13 @@ type ClusterSpec struct {
 	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
-func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema, path []string) map[string]*schema.Schema {
 	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()
 	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetComputed()
 	common.CustomizeSchemaPath(s, "enable_local_disk_encryption").SetComputed()
-	common.CustomizeSchemaPath(s, "node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
-	common.CustomizeSchemaPath(s, "driver_node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
-	common.CustomizeSchemaPath(s, "driver_instance_pool_id").SetComputed().SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
+	common.CustomizeSchemaPath(s, "node_type_id").SetComputed().SetConflictsWith(path, []string{"driver_instance_pool_id", "instance_pool_id"})
+	common.CustomizeSchemaPath(s, "driver_node_type_id").SetComputed().SetConflictsWith(path, []string{"driver_instance_pool_id", "instance_pool_id"})
+	common.CustomizeSchemaPath(s, "driver_instance_pool_id").SetComputed().SetConflictsWith(path, []string{"driver_node_type_id", "node_type_id"})
 	common.CustomizeSchemaPath(s, "ssh_public_keys").SetMaxItems(10)
 	common.CustomizeSchemaPath(s, "init_scripts").SetMaxItems(10)
 	common.CustomizeSchemaPath(s, "init_scripts", "dbfs").SetDeprecated(DbfsDeprecationWarning)
@@ -154,10 +154,10 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 	common.CustomizeSchemaPath(s, "docker_image", "basic_auth", "password").SetRequired().SetSensitive()
 	common.CustomizeSchemaPath(s, "docker_image", "basic_auth", "username").SetRequired()
 	common.CustomizeSchemaPath(s, "spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
-	common.CustomizeSchemaPath(s, "aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
+	common.CustomizeSchemaPath(s, "aws_attributes").SetSuppressDiff().SetConflictsWith(path, []string{"azure_attributes", "gcp_attributes"})
 	common.CustomizeSchemaPath(s, "aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
-	common.CustomizeSchemaPath(s, "azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
-	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
+	common.CustomizeSchemaPath(s, "azure_attributes").SetSuppressDiff().SetConflictsWith(path, []string{"aws_attributes", "gcp_attributes"})
+	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith(path, []string{"aws_attributes", "azure_attributes"})
 	common.CustomizeSchemaPath(s, "autotermination_minutes").SetDefault(60)
 	common.CustomizeSchemaPath(s, "autoscale", "max_workers").SetOptional()
 	common.CustomizeSchemaPath(s, "autoscale", "min_workers").SetOptional()
@@ -176,7 +176,7 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 		Type:     schema.TypeString,
 		Computed: true,
 	})
-	common.CustomizeSchemaPath(s, "instance_pool_id").SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
+	common.CustomizeSchemaPath(s, "instance_pool_id").SetConflictsWith(path, []string{"driver_node_type_id", "node_type_id"})
 	common.CustomizeSchemaPath(s, "runtime_engine").SetValidateFunc(validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false))
 	common.CustomizeSchemaPath(s).AddNewField("is_pinned", &schema.Schema{
 		Type:     schema.TypeBool,

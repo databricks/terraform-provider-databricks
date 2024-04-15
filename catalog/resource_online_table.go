@@ -62,8 +62,8 @@ func ResourceOnlineTable() common.Resource {
 			common.CustomizeSchemaPath(m, "spec", "pipeline_id").SetReadOnly()
 
 			runTypes := []string{"spec.0.run_triggered", "spec.0.run_continuously"}
-			common.CustomizeSchemaPath(m, "spec", "run_triggered").SetAtLeastOneOf(runTypes).SetSuppressDiff()
-			common.CustomizeSchemaPath(m, "spec", "run_continuously").SetAtLeastOneOf(runTypes).SetSuppressDiff()
+			common.CustomizeSchemaPath(m, "spec", "run_triggered").SetAtLeastOneOf([]string{}, runTypes).SetSuppressDiff()
+			common.CustomizeSchemaPath(m, "spec", "run_continuously").SetAtLeastOneOf([]string{}, runTypes).SetSuppressDiff()
 			return m
 		})
 

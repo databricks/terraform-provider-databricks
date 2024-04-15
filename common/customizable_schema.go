@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -145,35 +146,51 @@ func (s *CustomizableSchema) SetMinItems(value int) *CustomizableSchema {
 	return s
 }
 
-func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchema {
+func getPrefixedValue(path []string, value []string) []string {
+	var prefix string
+	if len(path) != 0 {
+		prefix = strings.Join(path, ".") + "."
+	} else {
+		prefix = ""
+	}
+	prefixedPaths := make([]string, len(value))
+	for i, item := range value {
+		prefixedPaths[i] = prefix + item
+	}
+	return prefixedPaths
+}
+
+// Path is used to construct prefixes for cases where the resource is referenced from the resourceProviderRegistry.
+// The path should be directly taken from the input of CustomizeSchema function.
+func (s *CustomizableSchema) SetConflictsWith(path []string, value []string) *CustomizableSchema {
 	if len(value) == 0 {
 		panic("SetConflictsWith cannot take in an empty list")
 	}
-	s.Schema.ConflictsWith = value
+	s.Schema.ConflictsWith = getPrefixedValue(path, value)
 	return s
 }
 
-func (s *CustomizableSchema) SetExactlyOneOf(value []string) *CustomizableSchema {
+func (s *CustomizableSchema) SetExactlyOneOf(path []string, value []string) *CustomizableSchema {
 	if len(value) == 0 {
 		panic("SetExactlyOneOf cannot take in an empty list")
 	}
-	s.Schema.ExactlyOneOf = value
+	s.Schema.ExactlyOneOf = getPrefixedValue(path, value)
 	return s
 }
 
-func (s *CustomizableSchema) SetAtLeastOneOf(value []string) *CustomizableSchema {
+func (s *CustomizableSchema) SetAtLeastOneOf(path []string, value []string) *CustomizableSchema {
 	if len(value) == 0 {
 		panic("SetAtLeastOneOf cannot take in an empty list")
 	}
-	s.Schema.AtLeastOneOf = value
+	s.Schema.AtLeastOneOf = getPrefixedValue(path, value)
 	return s
 }
 
-func (s *CustomizableSchema) SetRequiredWith(value []string) *CustomizableSchema {
+func (s *CustomizableSchema) SetRequiredWith(path []string, value []string) *CustomizableSchema {
 	if len(value) == 0 {
 		panic("SetRequiredWith cannot take in an empty list")
 	}
-	s.Schema.RequiredWith = value
+	s.Schema.RequiredWith = getPrefixedValue(path, value)
 	return s
 }
 

@@ -1734,6 +1734,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 				import_from_git_branch = "main"
 				dirty_state = "NOT_SYNCED"
 			}
+			provider = "gitHub"
 		}
 
 		task {
@@ -1781,6 +1782,7 @@ func TestResourceJobCreateFromGitSourceTagAndBranchConflict(t *testing.T) {
 		url = "https://github.com/databricks/terraform-provider-databricks"
 		tag = "0.4.8"
 		branch = "main"
+		provider = "gitHub"
 	}`
 	resourceJobCreateFromGitSourceConflict(t, []string{"branch", "tag"}, gitSource)
 }
@@ -1789,6 +1791,7 @@ func TestResourceJobCreateFromGitSourceTagAndCommitConflict(t *testing.T) {
 		url = "https://github.com/databricks/terraform-provider-databricks"
 		tag = "0.4.8"
 		commit = "a26bf6"
+		provider = "gitHub"
 	}`
 	resourceJobCreateFromGitSourceConflict(t, []string{"commit", "tag"}, gitSource)
 }
@@ -1798,32 +1801,9 @@ func TestResourceJobCreateFromGitSourceBranchAndCommitConflict(t *testing.T) {
 		url = "https://github.com/databricks/terraform-provider-databricks"
 		branch = "main"
 		commit = "a26bf6"
+		provider = "gitHub"
 	}`
 	resourceJobCreateFromGitSourceConflict(t, []string{"branch", "commit"}, gitSource)
-}
-
-func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
-	qa.ResourceFixture{
-		Create:   true,
-		Resource: ResourceJob(),
-		HCL: `existing_cluster_id = "abc"
-		max_concurrent_runs = 1
-		name = "GitSourceJob"
-
-		git_source {
-			url = "https://custom.git.hosting.com/databricks/terraform-provider-databricks"
-			tag = "0.4.8"
-		}
-
-		task {
-			task_key = "b"
-
-			notebook_task {
-				notebook_path = "/GitSourcedNotebook"
-			}
-		}
-	`,
-	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databricks/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit: JobSource:<nil>}")
 }
 
 func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
@@ -2232,6 +2212,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 						},
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey: "key",
 								NewCluster: &clusters.Cluster{
 									InstancePoolID:       "instance-pool-worker-task",
 									DriverInstancePoolID: "instance-pool-driver-task",
@@ -2242,6 +2223,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 						},
 						JobClusters: []JobCluster{
 							{
+								JobClusterKey: "key",
 								NewCluster: &clusters.Cluster{
 									InstancePoolID:       "instance-pool-worker-job",
 									DriverInstancePoolID: "instance-pool-driver-job",
@@ -2296,6 +2278,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 			num_workers = 1
 		}
 		task = {
+			task_key = "key"
 			new_cluster = {
 				instance_pool_id = "instance-pool-worker-task"
 				driver_instance_pool_id = "instance-pool-driver-task"
@@ -2304,6 +2287,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 			}
 		}
 		job_cluster = {
+			job_cluster_key = "key"
 			new_cluster = {
 				instance_pool_id = "instance-pool-worker-job"
 				driver_instance_pool_id = "instance-pool-driver-job"
@@ -2338,6 +2322,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 						},
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey: "key",
 								NewCluster: &clusters.Cluster{
 									NodeTypeID:   "node-type-id-2",
 									SparkVersion: "spark-2",
@@ -2347,6 +2332,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 						},
 						JobClusters: []JobCluster{
 							{
+								JobClusterKey: "key",
 								NewCluster: &clusters.Cluster{
 									NodeTypeID:   "node-type-id-3",
 									SparkVersion: "spark-3",
@@ -2404,6 +2390,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 			num_workers = 1
 		}
 		task = {
+			task_key = "key"
 			new_cluster = {
 				node_type_id = "node-type-id-2"
 				spark_version = "spark-2"
@@ -2411,6 +2398,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 			}
 		}
 		job_cluster = {
+			job_cluster_key = "key"
 			new_cluster = {
 				node_type_id = "node-type-id-3"
 				spark_version = "spark-3"
@@ -2440,6 +2428,7 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 						Name: "Featurizer New",
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey:           "key",
 								ExistingClusterID: "abc",
 								SparkJarTask: &SparkJarTask{
 									MainClassName: "com.labs.BarMain",
@@ -2480,6 +2469,7 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 			spark_jar_task {
 				main_class_name = "com.labs.BarMain"
 			}
+			task_key = "key"
 		}`,
 	}.ApplyNoError(t)
 }

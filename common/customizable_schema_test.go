@@ -162,22 +162,22 @@ func TestCustomizableSchemaSetMinItems(t *testing.T) {
 }
 
 func TestCustomizableSchemaSetConflictsWith(t *testing.T) {
-	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetConflictsWith([]string{"abc"})
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetConflictsWith([]string{}, []string{"abc"})
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].ConflictsWith) == 1, "conflictsWith should be set in field: non_optional")
 }
 
 func TestCustomizableSchemaSetExactlyOneOf(t *testing.T) {
-	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetExactlyOneOf([]string{"abc"})
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetExactlyOneOf([]string{}, []string{"abc"})
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].ExactlyOneOf) == 1, "ExactlyOneOf should be set in field: non_optional")
 }
 
 func TestCustomizableSchemaAtLeastOneOf(t *testing.T) {
-	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetAtLeastOneOf([]string{"abc"})
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetAtLeastOneOf([]string{}, []string{"abc"})
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].AtLeastOneOf) == 1, "AtLeastOneOf should be set in field: non_optional")
 }
 
 func TestCustomizableSchemaSetRequiredWith(t *testing.T) {
-	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetRequiredWith([]string{"abc"})
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetRequiredWith([]string{}, []string{"abc"})
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].RequiredWith) == 1, "RequiredWith should be set in field: non_optional")
 }
 func TestCustomizableSchemaSetDeprecated(t *testing.T) {

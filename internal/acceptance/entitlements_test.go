@@ -7,9 +7,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
-	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/logger"
-	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +21,7 @@ func (e entitlement) String() string {
 	return fmt.Sprintf("%s = %t", e.name, e.value)
 }
 
-func entitlementsStepBuilder(t *testing.T, c **httpclient.ApiClient, r entitlementResource) func(entitlements []entitlement) step {
+func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitlements []entitlement) step {
 	return func(entitlements []entitlement) step {
 		entitlementsBuf := strings.Builder{}
 		for _, entitlement := range entitlements {
@@ -33,19 +31,15 @@ func entitlementsStepBuilder(t *testing.T, c **httpclient.ApiClient, r entitleme
 			Template: fmt.Sprintf(`
 			%s
 			resource "databricks_entitlements" "entitlements_users" {
-				group_id = %s
+				%s
 				%s
 			}
 		`, r.dataSourceTemplate(), r.tfReference(), entitlementsBuf.String()),
 			Check: func(s *terraform.State) error {
-				groupId := s.RootModule().Resources["data.databricks_group.example"].Primary.ID
-				var res iam.Group
-				ctx := context.Background()
-				err := (*c).Do(ctx, "GET", fmt.Sprintf("/api/2.0/preview/scim/v2/Groups/%s?attributes=entitlements", groupId),
-					httpclient.WithResponseUnmarshal(&res))
+				remoteEntitlements, err := r.getEntitlements(context.Background())
 				assert.NoError(t, err)
-				receivedEntitlements := make([]string, 0, len(res.Entitlements))
-				for _, entitlement := range res.Entitlements {
+				receivedEntitlements := make([]string, 0, len(remoteEntitlements))
+				for _, entitlement := range remoteEntitlements {
 					receivedEntitlements = append(receivedEntitlements, entitlement.Value)
 				}
 				expectedEntitlements := make([]string, 0, len(entitlements))
@@ -64,28 +58,24 @@ func entitlementsStepBuilder(t *testing.T, c **httpclient.ApiClient, r entitleme
 
 func makeEntitlementsSteps(t *testing.T, r entitlementResource, entitlementsSteps [][]entitlement) []step {
 	r.setDisplayName(RandomName("entitlements-"))
-	var c *httpclient.ApiClient
-	makeEntitlementsStep := entitlementsStepBuilder(t, &c, r)
+	makeEntitlementsStep := entitlementsStepBuilder(t, r)
 	steps := make([]step, len(entitlementsSteps))
 	for i, entitlements := range entitlementsSteps {
 		steps[i] = makeEntitlementsStep(entitlements)
 	}
-	steps[0].PreConfig = makePreconfig(t, &c, r)
+	steps[0].PreConfig = makePreconfig(t, r)
 	return steps
 }
 
-func makePreconfig(t *testing.T, c **httpclient.ApiClient, r entitlementResource) func() {
+func makePreconfig(t *testing.T, r entitlementResource) func() {
 	logger.DefaultLogger = &logger.SimpleLogger{
 		Level: logger.LevelDebug,
 	}
 	return func() {
 		w := databricks.Must(databricks.NewWorkspaceClient())
 		r.setWorkspaceClient(w)
-		var err error
-		*c, err = w.Config.NewApiClient()
-		assert.NoError(t, err)
 		ctx := context.Background()
-		err = r.create(ctx)
+		err := r.create(ctx)
 		assert.NoError(t, err)
 		t.Cleanup(func() {
 			r.cleanUp(ctx)
@@ -97,15 +87,17 @@ func entitlementsTest(t *testing.T, f func(*testing.T, entitlementResource)) {
 	loadWorkspaceEnv(t)
 	sp := &servicePrincipalResource{}
 	if isAzure(t) {
+		// A long-lived application is used in Azure.
 		sp.applicationId = GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+		sp.cleanup = false
 	}
 	resources := []entitlementResource{
-		// &groupResource{},
+		&groupResource{},
 		&userResource{},
-		// sp,
+		sp,
 	}
 	for _, r := range resources {
-		t.Run(fmt.Sprintf("%T", r), func(t *testing.T) {
+		t.Run(r.resourceType(), func(t *testing.T) {
 			f(t, r)
 		})
 	}

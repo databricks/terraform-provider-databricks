@@ -511,10 +511,16 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			case reflect.String:
 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
 			case reflect.Struct:
-				println("3")
+				if fieldName == "library" {
+					println("3, required?", scm[fieldName].Required)
+					println("optional?", scm[fieldName].Optional)
+				}
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
 					Schema: typeToSchema(sv, aliases, rt.addToPath(fieldName)),
+				}
+				if fieldName == "library" {
+					println("required after set?", scm[fieldName].Required)
 				}
 			}
 		default:

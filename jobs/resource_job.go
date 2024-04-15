@@ -474,7 +474,7 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 type JobSettingsResource struct {
 	jobs.JobSettings
 
-	// BEGIN Jobs API 2.0
+	// BEGIN Jobs API 2.0m
 	ExistingClusterID      string               `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster             *compute.ClusterSpec `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	NotebookTask           *NotebookTask        `json:"notebook_task,omitempty" tf:"group:task_type"`

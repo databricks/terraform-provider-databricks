@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"golang.org/x/exp/slices"
 
@@ -223,18 +224,18 @@ func ResourceServicePrincipal() common.Resource {
 			if !isAccount && !isDisable && err == nil {
 				if isForceDeleteRepos {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
-					if err != nil {
+					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
-					if err != nil {
+					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}
 				}
 			}
-			return err
+			return nil
 		},
 	}
 }

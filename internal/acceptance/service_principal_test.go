@@ -3,7 +3,6 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -22,36 +21,37 @@ const awsSpn = `resource "databricks_service_principal" "this" {
 }`
 
 func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
-	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	loadWorkspaceEnv(t)
+	if !isAzure(t) {
+		skipf(t)("Test only valid for Azure")
+	}
+	uuid := createUuid()
+	var spId string
 	workspaceLevel(t, step{
 		Template: `
 			resource "databricks_service_principal" "a" {
-				application_id = "{var.RANDOM_UUID}"
+				application_id = "` + uuid + `"
 				force_delete_home_dir = true
 			}`,
 		Check: func(s *terraform.State) error {
-			appId := s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
-			os.Setenv("application_id_a", appId)
+			spId = s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
 			return nil
 		},
 	}, step{
 		Template: `
-			resource "databricks_service_principal" "b" {
-				application_id = "{var.RANDOM_UUID}"
-			}
-			`,
+			resource "databricks_service_principal" "a" {
+				application_id = "` + uuid + `"
+				force_delete_home_dir = true
+			}`,
+		Destroy: true,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
 			if err != nil {
 				return err
 			}
 			ctx := context.Background()
-			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", os.Getenv("application_id_a")))
-			os.Remove("application_id_a")
-			if err != nil {
-				if apierr.IsMissing(err) {
-					return nil
-				}
+			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", spId))
+			if err != nil && !apierr.IsMissing(err) {
 				return err
 			}
 			return nil
@@ -60,7 +60,10 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 }
 
 func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
-	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	loadWorkspaceEnv(t)
+	if !isAzure(t) {
+		skipf(t)("Test only valid for Azure")
+	}
 	var appId string
 	workspaceLevel(t, step{
 		Template: `

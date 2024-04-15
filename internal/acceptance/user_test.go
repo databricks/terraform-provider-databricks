@@ -74,9 +74,11 @@ func TestAccUserHomeDelete(t *testing.T) {
 		}`,
 	}, step{
 		Template: `
-		resource "databricks_user" "second" {
-			user_name = "{var.RANDOM}@example.com"
+		resource "databricks_user" "first" {
+			user_name = "` + username + `"
+			force_delete_home_dir = true
 		}`,
+		Destroy: true,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
 			if err != nil {

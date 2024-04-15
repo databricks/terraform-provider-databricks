@@ -64,6 +64,10 @@ func RegisterResourceProvider(v any, r ResourceProvider) {
 
 func getResourceProviderRegistryKey(v any) reflect.Type {
 	t := reflect.ValueOf(v).Type()
+	return getNonPointerType(t)
+}
+
+func getNonPointerType(t reflect.Type) reflect.Type {
 	if t.Kind() == reflect.Ptr {
 		return t.Elem()
 	} else {
@@ -375,10 +379,12 @@ func listAllFields(v reflect.Value) []field {
 }
 
 func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
-	if rpStruct, ok := resourceProviderRegistry[v.Type()]; ok {
-		println(strings.TrimPrefix(v.Type().String(), "*"))
+	if rpStruct, ok := resourceProviderRegistry[getNonPointerType(v.Type())]; ok {
+		println("found in registry:", getNonPointerType(v.Type()).String())
 		return resourceProviderStructToSchema(rpStruct, rt.path)
 	}
+	println("notfound in registry:", getNonPointerType(v.Type()).String())
+
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -428,11 +434,11 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 				}
 			}
 		}
-		if fieldName == "library" {
-			println("parent:")
-			println(strings.TrimPrefix(v.Type().String(), "*"))
-			println(isOptional(typeField))
-		}
+		// if fieldName == "library" {
+		// 	println("parent:")
+		// 	println(strings.TrimPrefix(v.Type().String(), "*"))
+		// 	println(isOptional(typeField))
+		// }
 		handleOptional(typeField, scm[fieldName])
 		handleComputed(typeField, scm[fieldName])
 		handleForceNew(typeField, scm[fieldName])
@@ -484,6 +490,9 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
+			if fieldName == "new_cluster" && strings.TrimPrefix(v.Type().String(), "*") == "jobs.JobCluster" {
+				println("processing new_cluster in JobCluster")
+			}
 			nestedSchema := typeToSchema(sv, aliases, rt.addToPath(fieldName))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
@@ -493,6 +502,14 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			}
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
+			}
+			if fieldName == "new_cluster" && strings.TrimPrefix(v.Type().String(), "*") == "jobs.JobCluster" {
+				println("===begin listing fields")
+
+				for k, _ := range nestedSchema {
+					println(k)
+				}
+				println("===end")
 			}
 		case reflect.Slice:
 			ft := schema.TypeList
@@ -511,17 +528,17 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			case reflect.String:
 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
 			case reflect.Struct:
-				if fieldName == "library" {
-					println("3, required?", scm[fieldName].Required)
-					println("optional?", scm[fieldName].Optional)
-				}
+				// if fieldName == "library" {
+				// 	println("3, required?", scm[fieldName].Required)
+				// 	println("optional?", scm[fieldName].Optional)
+				// }
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
 					Schema: typeToSchema(sv, aliases, rt.addToPath(fieldName)),
 				}
-				if fieldName == "library" {
-					println("required after set?", scm[fieldName].Required)
-				}
+				// if fieldName == "library" {
+				// 	println("required after set?", scm[fieldName].Required)
+				// }
 			}
 		default:
 			panic(fmt.Errorf("unknown type for %s: %s", fieldName, reflectKind(typeField.Type.Kind())))

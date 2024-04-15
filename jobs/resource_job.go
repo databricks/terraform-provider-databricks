@@ -609,23 +609,6 @@ func (JobSettingsResource) CustomizeSchema(s map[string]*schema.Schema, path []s
 	common.CustomizeSchemaPath(s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
-	common.CustomizeSchemaPath(s, "job_cluster", "new_cluster").AddNewField("cluster_id", &schema.Schema{
-		Optional: true,
-		Type:     schema.TypeString,
-	})
-	common.CustomizeSchemaPath(s, "job_cluster", "new_cluster").AddNewField("idempotency_token", &schema.Schema{
-		Optional: true,
-		Type:     schema.TypeString,
-	})
-
-	common.CustomizeSchemaPath(s, "job_cluster", "new_cluster", "driver_instance_pool_id").SetComputed()
-	common.CustomizeSchemaPath(s, "job_cluster", "new_cluster", "driver_node_type_id").SetComputed()
-	common.CustomizeSchemaPath(s, "job_cluster", "new_cluster", "enable_elastic_disk").SetComputed()
-	common.CustomizeSchemaPath(s, "job_cluster", "new_cluster", "enable_local_disk_encryption").SetComputed()
-	common.CustomizeSchemaPath(s, "job_cluster", "new_cluster", "node_type_id").SetComputed()
-
-	common.CustomizeSchemaPath(s, "job_cluster", "new_cluster", "spark_version").SetRequired()
-
 	return s
 }
 

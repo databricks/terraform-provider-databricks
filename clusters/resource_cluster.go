@@ -124,6 +124,7 @@ type ClusterSpec struct {
 }
 
 func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema, path []string) map[string]*schema.Schema {
+	println("clusterSpec customize schema called!")
 	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()
 	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetComputed()
 	common.CustomizeSchemaPath(s, "enable_local_disk_encryption").SetComputed()

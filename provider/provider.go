@@ -67,6 +67,8 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_dbfs_file":                storage.DataSourceDbfsFile().ToResource(),
 			"databricks_dbfs_file_paths":          storage.DataSourceDbfsFilePaths().ToResource(),
 			"databricks_directory":                workspace.DataSourceDirectory().ToResource(),
+			"databricks_external_location":        catalog.DataSourceExternalLocation().ToResource(),
+			"databricks_external_locations":       catalog.DataSourceExternalLocations().ToResource(),
 			"databricks_group":                    scim.DataSourceGroup().ToResource(),
 			"databricks_instance_pool":            pools.DataSourceInstancePool().ToResource(),
 			"databricks_instance_profiles":        aws.DataSourceInstanceProfiles().ToResource(),

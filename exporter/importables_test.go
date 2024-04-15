@@ -31,6 +31,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
+	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -1771,11 +1772,11 @@ func TestImportSchema(t *testing.T) {
 func TestImportShare(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("uc-grants,uc-volumes,uc-models,uc-tables")
-	d := tfcatalog.ResourceShare().ToResource().TestResourceData()
-	scm := tfcatalog.ResourceShare().Schema
-	share := tfcatalog.ShareInfo{
+	d := tfsharing.ResourceShare().ToResource().TestResourceData()
+	scm := tfsharing.ResourceShare().Schema
+	share := tfsharing.ShareInfo{
 		Name: "stest",
-		Objects: []tfcatalog.SharedDataObject{
+		Objects: []tfsharing.SharedDataObject{
 			{
 				DataObjectType: "TABLE",
 				Name:           "ctest.stest.table1",

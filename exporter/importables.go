@@ -29,6 +29,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
+	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
@@ -2730,7 +2731,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
-			var share tfcatalog.ShareInfo
+			var share tfsharing.ShareInfo
 			s := ic.Resources["databricks_share"].Schema
 			common.DataToStructPointer(r.Data, s, &share)
 			// TODO: how to link recipients to share?

@@ -14,11 +14,11 @@ func DataSourceExternalLocation() common.Resource {
 		ExternalLocation *catalog.ExternalLocationInfo `json:"external_location_info,omitempty" tf:"computed" `
 	}
 	return common.WorkspaceData(func(ctx context.Context, data *ExternalLocationByID, w *databricks.WorkspaceClient) error {
-		credential, err := w.ExternalLocations.GetByName(ctx, data.Name)
+		location, err := w.ExternalLocations.GetByName(ctx, data.Name)
 		if err != nil {
 			return err
 		}
-		data.ExternalLocation = credential
+		data.ExternalLocation = location
 		return nil
 	})
 }

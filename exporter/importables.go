@@ -79,6 +79,7 @@ var (
 		"storage_credential": {`CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`},
 		"foreign_connection": {`CREATE_FOREIGN_CATALOG`},
 	}
+	ParentDirectoryExtraKey = "parent_directory"
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -1526,20 +1527,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				"notebook_"+ic.Importables["databricks_notebook"].Name(ic, r.Data))
 			// TODO: it's not completely correct condition - we need to make emit smarter -
 			// emit only if permissions are different from their parent's permission.
-			if idx := strings.LastIndex(r.ID, "/"); idx != -1 {
-				directoryPath := r.ID[:idx]
-				ic.Emit(&resource{
-					Resource: "databricks_directory",
-					ID:       directoryPath,
-				})
-			}
+			ic.emitWorkspaceObjectParentDirectory(r)
 			return r.Data.Set("source", fileName)
 		},
 		ShouldOmitField: shouldOmitMd5Field,
 		Depends: []reference{
 			{Path: "source", File: true},
-			{Path: "path", Resource: "databricks_directory",
-				MatchType: MatchLongestPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "path", Resource: "databricks_directory", MatchType: MatchLongestPrefix,
+				SearchValueTransformFunc: appendEndingSlashToDirName, ExtraLookupKey: ParentDirectoryExtraKey},
 			{Path: "path", Resource: "databricks_user", Match: "home",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "path", Resource: "databricks_service_principal", Match: "home",
@@ -1579,21 +1574,15 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			// TODO: it's not completely correct condition - we need to make emit smarter -
 			// emit only if permissions are different from their parent's permission.
-			if idx := strings.LastIndex(r.ID, "/"); idx != -1 {
-				directoryPath := r.ID[:idx]
-				ic.Emit(&resource{
-					Resource: "databricks_directory",
-					ID:       directoryPath,
-				})
-			}
-			log.Printf("Creating %s for %s", fileName, r)
+			ic.emitWorkspaceObjectParentDirectory(r)
+			log.Printf("[TRACE] Creating %s for %s", fileName, r)
 			return r.Data.Set("source", fileName)
 		},
 		ShouldOmitField: shouldOmitMd5Field,
 		Depends: []reference{
 			{Path: "source", File: true},
-			{Path: "path", Resource: "databricks_directory",
-				MatchType: MatchLongestPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "path", Resource: "databricks_directory", MatchType: MatchLongestPrefix,
+				SearchValueTransformFunc: appendEndingSlashToDirName, ExtraLookupKey: ParentDirectoryExtraKey},
 			{Path: "path", Resource: "databricks_user", Match: "home",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "path", Resource: "databricks_service_principal", Match: "home",

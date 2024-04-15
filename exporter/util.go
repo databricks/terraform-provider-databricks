@@ -1071,7 +1071,7 @@ func (ic *importContext) enableListing(listing string) {
 }
 
 func (ic *importContext) emitSqlParentDirectory(parent string) {
-	if parent == "" {
+	if parent == "" || !ic.isServiceEnabled("directories") {
 		return
 	}
 	res := sqlParentRegexp.FindStringSubmatch(parent)

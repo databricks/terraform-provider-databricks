@@ -1526,17 +1526,13 @@ var resourcesMap map[string]importable = map[string]importable{
 				"notebook_"+ic.Importables["databricks_notebook"].Name(ic, r.Data))
 			// TODO: it's not completely correct condition - we need to make emit smarter -
 			// emit only if permissions are different from their parent's permission.
-			if ic.meAdmin {
-				directorySplits := strings.Split(r.ID, "/")
-				directorySplits = directorySplits[:len(directorySplits)-1]
-				directoryPath := strings.Join(directorySplits, "/")
-
+			if idx := strings.LastIndex(r.ID, "/"); idx != -1 {
+				directoryPath := r.ID[:idx]
 				ic.Emit(&resource{
 					Resource: "databricks_directory",
 					ID:       directoryPath,
 				})
 			}
-
 			return r.Data.Set("source", fileName)
 		},
 		ShouldOmitField: shouldOmitMd5Field,
@@ -1583,11 +1579,8 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			// TODO: it's not completely correct condition - we need to make emit smarter -
 			// emit only if permissions are different from their parent's permission.
-			if ic.meAdmin {
-				directorySplits := strings.Split(r.ID, "/")
-				directorySplits = directorySplits[:len(directorySplits)-1]
-				directoryPath := strings.Join(directorySplits, "/")
-
+			if idx := strings.LastIndex(r.ID, "/"); idx != -1 {
+				directoryPath := r.ID[:idx]
 				ic.Emit(&resource{
 					Resource: "databricks_directory",
 					ID:       directoryPath,
@@ -2072,9 +2065,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if r.ID == "/Shared" || r.ID == "/Users" || ic.IsUserOrServicePrincipalDirectory(r.ID, "/Users", true) {
 				r.Mode = "data"
 			}
-
 			return nil
-
 		},
 		Body: resourceOrDataBlockBody,
 		Depends: []reference{

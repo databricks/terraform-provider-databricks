@@ -376,6 +376,7 @@ func listAllFields(v reflect.Value) []field {
 
 func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
 	if rpStruct, ok := resourceProviderRegistry[v.Type()]; ok {
+		println(strings.TrimPrefix(v.Type().String(), "*"))
 		return resourceProviderStructToSchema(rpStruct, rt.path)
 	}
 	scm := map[string]*schema.Schema{}
@@ -426,6 +427,11 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 					scm[fieldName].MinItems = minItems
 				}
 			}
+		}
+		if fieldName == "library" {
+			println("parent:")
+			println(strings.TrimPrefix(v.Type().String(), "*"))
+			println(isOptional(typeField))
 		}
 		handleOptional(typeField, scm[fieldName])
 		handleComputed(typeField, scm[fieldName])
@@ -505,6 +511,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			case reflect.String:
 				scm[fieldName].Elem = &schema.Schema{Type: schema.TypeString}
 			case reflect.Struct:
+				println("3")
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
 					Schema: typeToSchema(sv, aliases, rt.addToPath(fieldName)),

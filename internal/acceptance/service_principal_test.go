@@ -26,24 +26,21 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 		skipf(t)("Test only valid for Azure")
 	}
 	uuid := createUuid()
+	template := `
+	resource "databricks_service_principal" "a" {
+		application_id = "` + uuid + `"
+		force_delete_home_dir = true
+	}`
 	var spId string
 	workspaceLevel(t, step{
-		Template: `
-			resource "databricks_service_principal" "a" {
-				application_id = "` + uuid + `"
-				force_delete_home_dir = true
-			}`,
+		Template: template,
 		Check: func(s *terraform.State) error {
 			spId = s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
 			return nil
 		},
 	}, step{
-		Template: `
-			resource "databricks_service_principal" "a" {
-				application_id = "` + uuid + `"
-				force_delete_home_dir = true
-			}`,
-		Destroy: true,
+		Template: template,
+		Destroy:  true,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
 			if err != nil {
@@ -64,23 +61,22 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 	if !isAzure(t) {
 		skipf(t)("Test only valid for Azure")
 	}
+	uuid := createUuid()
+	template := `
+	resource "databricks_service_principal" "a" {
+		application_id = "` + uuid + `"
+		force_delete_home_dir = false 
+	}`
 	var appId string
 	workspaceLevel(t, step{
-		Template: `
-			resource "databricks_service_principal" "a" {
-				application_id = "{var.RANDOM_UUID}"
-				force_delete_home_dir = false 
-			}`,
+		Template: template,
 		Check: func(s *terraform.State) error {
 			appId = s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
 			return provisionHomeFolder(context.Background(), s, "databricks_service_principal.a", appId)
 		},
 	}, step{
-		Template: `
-			resource "databricks_service_principal" "b" {
-				application_id = "{var.RANDOM_UUID}"
-			}
-			`,
+		Template: template,
+		Destroy:  true,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
 			if err != nil {

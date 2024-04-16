@@ -220,6 +220,9 @@ func ResourceServicePrincipal() common.Resource {
 			} else {
 				err = spAPI.Delete(d.Id())
 			}
+			if err != nil {
+				return err
+			}
 			// Handle force delete flags
 			if !isAccount && !isDisable && err == nil {
 				if isForceDeleteRepos {

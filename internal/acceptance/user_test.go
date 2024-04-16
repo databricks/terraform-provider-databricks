@@ -66,19 +66,16 @@ func TestAccUserHomeDeleteHasNoEffectInAccount(t *testing.T) {
 
 func TestAccUserHomeDelete(t *testing.T) {
 	username := qa.RandomEmail()
+	template := `
+	resource "databricks_user" "first" {
+		user_name = "` + username + `"
+		force_delete_home_dir = true
+	}`
 	workspaceLevel(t, step{
-		Template: `
-		resource "databricks_user" "first" {
-			user_name = "` + username + `"
-			force_delete_home_dir = true
-		}`,
+		Template: template,
 	}, step{
-		Template: `
-		resource "databricks_user" "first" {
-			user_name = "` + username + `"
-			force_delete_home_dir = true
-		}`,
-		Destroy: true,
+		Template: template,
+		Destroy:  true,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
 			if err != nil {
@@ -114,19 +111,18 @@ func provisionHomeFolder(ctx context.Context, s *terraform.State, tfAttribute, u
 
 func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	username := qa.RandomEmail()
+	template := `
+	resource "databricks_user" "a" {
+		user_name = "` + username + `"
+	}`
 	workspaceLevel(t, step{
-		Template: `
-			resource "databricks_user" "a" {
-				user_name = "` + username + `"
-			}`,
+		Template: template,
 		Check: func(s *terraform.State) error {
 			return provisionHomeFolder(context.Background(), s, "databricks_user.a", username)
 		},
 	}, step{
-		Template: `
-			resource "databricks_user" "b" {
-				user_name = "{var.RANDOM}@example.com"
-			}`,
+		Template: template,
+		Destroy:  true,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
 			if err != nil {

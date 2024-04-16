@@ -23,7 +23,7 @@
  * Use correct provider alias in AWS E2 provisioning guide ([#3425](https://github.com/databricks/terraform-provider-databricks/pull/3425)).
  * Document `pricing_tier` of [databricks_mws_workspaces](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_workspaces) resource ([#3433](https://github.com/databricks/terraform-provider-databricks/pull/3433)).
  * Updated documentation for Delta Sharing resources; refactoring relevant resources & data sources ([#3466](https://github.com/databricks/terraform-provider-databricks/pull/3466)).
- * Added description for new fields in databricks_lakehouse_monitor
+ * Added description for new fields in [databricks_lakehouse_monitor](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/lakehouse_monitor)
 
 ### Exporter
  * Decrease a need for `get-status` calls for directories when listing workspace objects ([#3470](https://github.com/databricks/terraform-provider-databricks/pull/3470)).

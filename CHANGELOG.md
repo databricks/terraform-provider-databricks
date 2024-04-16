@@ -23,14 +23,15 @@
  * Use correct provider alias in AWS E2 provisioning guide ([#3425](https://github.com/databricks/terraform-provider-databricks/pull/3425)).
  * Document `pricing_tier` of [databricks_mws_workspaces](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_workspaces) resource ([#3433](https://github.com/databricks/terraform-provider-databricks/pull/3433)).
  * Updated documentation for Delta Sharing resources; refactoring relevant resources & data sources ([#3466](https://github.com/databricks/terraform-provider-databricks/pull/3466)).
+ * Added description for new fields in databricks_lakehouse_monitor
 
 ### Exporter
- * Exporter: decrease a need for `get-status` calls for directories when listing workspace objects ([#3470](https://github.com/databricks/terraform-provider-databricks/pull/3470)).
- * Exporter: don't emit permissions and grants if object is going to be ignored ([#3417](https://github.com/databricks/terraform-provider-databricks/pull/3417)).
- * Exporter: don't generate references to ignored resources ([#3418](https://github.com/databricks/terraform-provider-databricks/pull/3418)).
- * Exporter: generate resource data from the object status obtained during the listing operation ([#3460](https://github.com/databricks/terraform-provider-databricks/pull/3460)).
- * Exporter: improve emitting of directories ([#3462](https://github.com/databricks/terraform-provider-databricks/pull/3462)).
- * Exporter: skip listing of jobs deployed with DABs ([#3445](https://github.com/databricks/terraform-provider-databricks/pull/3445)).
+ * Decrease a need for `get-status` calls for directories when listing workspace objects ([#3470](https://github.com/databricks/terraform-provider-databricks/pull/3470)).
+ * Don't emit permissions and grants if object is going to be ignored ([#3417](https://github.com/databricks/terraform-provider-databricks/pull/3417)).
+ * Don't generate references to ignored resources ([#3418](https://github.com/databricks/terraform-provider-databricks/pull/3418)).
+ * Generate resource data from the object status obtained during the listing operation ([#3460](https://github.com/databricks/terraform-provider-databricks/pull/3460)).
+ * Improve emitting of directories ([#3462](https://github.com/databricks/terraform-provider-databricks/pull/3462)).
+ * Skip listing of jobs deployed with DABs ([#3445](https://github.com/databricks/terraform-provider-databricks/pull/3445)).
 
 ### Internal Changes
  * Migrated [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource to Go SDK  ([#3376](https://github.com/databricks/terraform-provider-databricks/pull/3376)).

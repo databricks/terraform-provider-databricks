@@ -1123,6 +1123,8 @@ func emitWorkpaceObject(ic *importContext, object workspace.ObjectStatus) {
 		ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path, &object)
 	case workspace.File:
 		ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path, &object)
+	case workspace.Directory:
+		ic.maybeEmitWorkspaceObject("databricks_directory", object.Path, &object)
 	default:
 		log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
 	}
@@ -1140,8 +1142,6 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			for object := range objectsChannel {
 				processedObjects.Add(1)
 				ic.waitGroup.Add(1)
-				// log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
-				// 	num, len(objectsChannel), object)
 				emitWorkpaceObject(ic, object)
 				ic.waitGroup.Done()
 			}
@@ -1153,15 +1153,19 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	updatedSinceMs := ic.getUpdatedSinceMs()
 	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
-			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
-				continue
-			}
-			object := object
-			switch object.ObjectType {
-			case workspace.Notebook, workspace.File:
+			if object.ObjectType == workspace.Directory && object.Path != "/" && !ic.incremental {
 				objectsChannel <- object
-			default:
-				log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
+			} else {
+				if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
+					continue
+				}
+				object := object
+				switch object.ObjectType {
+				case workspace.Notebook, workspace.File:
+					objectsChannel <- object
+				default:
+					log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
+				}
 			}
 		}
 	})
@@ -1457,5 +1461,19 @@ func (ic *importContext) emitPermissionsIfNotIgnored(r *resource, id, name strin
 				Name:     name,
 			})
 		}
+	}
+}
+
+func (ic *importContext) emitWorkspaceObjectParentDirectory(r *resource) {
+	if !ic.isServiceEnabled("directories") {
+		return
+	}
+	if idx := strings.LastIndex(r.ID, "/"); idx > 0 { // not found, or directly in the root...
+		directoryPath := r.ID[:idx]
+		ic.Emit(&resource{
+			Resource: "databricks_directory",
+			ID:       directoryPath,
+		})
+		r.AddExtraData(ParentDirectoryExtraKey, directoryPath)
 	}
 }

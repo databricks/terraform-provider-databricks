@@ -1250,13 +1250,23 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			!ic.isIgnoredResourceApproximation(sr) {
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
-			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			return matchValue, genTraversalTokens(sr, attr), sr.Mode == "data"
 		}
 		if ref.MatchType != MatchCaseInsensitive { // for case-insensitive matching we'll try iteration
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Not found",
 				ref.Resource, attr, value, ref)
 			return "", nil, false
+		}
+	} else if ref.MatchType == MatchLongestPrefix && ref.ExtraLookupKey != "" {
+		extraKeyValue, exists := origResource.GetExtraData(ref.ExtraLookupKey)
+		if exists && extraKeyValue.(string) != "" {
+			sr := ic.State.Get(ref.Resource, attr, extraKeyValue.(string))
+			if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) &&
+				!ic.isIgnoredResourceApproximation(sr) {
+				log.Printf("[DEBUG] Finished direct lookup by key %s for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
+					ref.ExtraLookupKey, ref.Resource, attr, value, ref, sr.Type, sr.Name)
+				return extraKeyValue.(string), genTraversalTokens(sr, attr), sr.Mode == "data"
+			}
 		}
 	}
 
@@ -1275,7 +1285,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			origValue := strValue
 			if ref.SearchValueTransformFunc != nil {
 				strValue = ref.SearchValueTransformFunc(strValue)
-				log.Printf("[DEBUG] Resource %s. Transformed value from '%s' to '%s'", ref.Resource, origValue, strValue)
+				log.Printf("[TRACE] Resource %s. Transformed value from '%s' to '%s'", ref.Resource, origValue, strValue)
 			}
 			matched := false
 			switch ref.MatchType {
@@ -1298,7 +1308,6 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 				ic.isIgnoredResourceApproximation(sr) {
 				continue
 			}
-			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			log.Printf("[DEBUG] Finished searching for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
 			return origValue, genTraversalTokens(sr, attr), sr.Mode == "data"

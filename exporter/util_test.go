@@ -412,3 +412,20 @@ func TestIgnoreObjectWithEmptyName(t *testing.T) {
 	assert.False(t, ignoreFunc(ic, r))
 	assert.Equal(t, 1, len(ic.ignoredResources))
 }
+
+func TestEmitWorkspaceObjectParentDirectory(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,directories")
+	dirPath := "/Shared"
+	r := &resource{
+		ID:       "/Shared/abc",
+		Resource: "databricks_notebook",
+	}
+	ic.emitWorkspaceObjectParentDirectory(r)
+	assert.Equal(t, 1, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_directory[<unknown>] (id: /Shared)"])
+
+	dir, exists := r.GetExtraData(ParentDirectoryExtraKey)
+	assert.True(t, exists)
+	assert.Equal(t, dirPath, dir)
+}

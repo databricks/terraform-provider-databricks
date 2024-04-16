@@ -125,9 +125,11 @@ func TestResourceJobCreate(t *testing.T) {
 		}
 		library {
 			jar = "dbfs://aa/bb/cc.jar"
+			cluster_id = "abc"
 		}
 		library {
 			jar = "dbfs://ff/gg/hh.jar"
+			cluster_id = "abc"
 		}
 		queue {
 			enabled = true

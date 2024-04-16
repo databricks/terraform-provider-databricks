@@ -88,7 +88,7 @@ The following arguments are supported:
 * `baseline_table_name` - Name of the baseline table from which drift metrics are computed from.Columns in the monitored table should also be present in the baseline
 table.
 * `custom_metrics` - Custom metrics to compute on the monitored table. These can be aggregate metrics, derived metrics (from already computed aggregate metrics), or drift metrics (comparing metrics across time windows).
-    * `definition` - [create metric definition]: https://docs.databricks.com/en/lakehouse-monitoring/custom-metrics.html#create-definition
+    * `definition` - [create metric definition](https://docs.databricks.com/en/lakehouse-monitoring/custom-metrics.html#create-definition)
     * `input_columns` - Columns on the monitored table to apply the custom metrics to.
     * `name` - Name of the custom metric.
     * `output_data_type` - The output type of the custom metric.
@@ -106,8 +106,13 @@ table.
 * `time_series` - Configuration for monitoring timeseries tables.
     * `granularities` -  List of granularities to use when aggregating data into time windows based on their timestamp.
     * `timestamp_col` - Column of the timestamp of predictions
-* `notifications` - The notification settings for the monitor
-* `schedule` - The schedule for automatically updating and refreshing metric tables.
+* `notifications` - The notification settings for the monitor.  The following optional blocks are supported, each consisting of the single string array field with name `email_addresses` containing a list of emails to notify:
+    * `on_failure` - who to send notifications to on monitor failure.
+    * `on_new_classification_tag_detected` - Who to send notifications to when new data classification tags are detected.
+* `schedule` - The schedule for automatically updating and refreshing metric tables.  This block consists of following fields:
+    * `quartz_cron_expression` - string expression that determines when to run the monitor. See [Quartz documentation](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) for examples.
+    * `timezone_id` - string with timezone id (e.g., `PST`) in which to evaluate the Quartz expression.
+    * `pause_status` - optional string field that indicates whether a schedule is paused (`PAUSED`) or not (`UNPAUSED`).
 * `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
 * `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.

@@ -771,9 +771,11 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		fixWebhookNotifications(s)
 		fixWebhookNotifications(common.MustSchemaMap(s, "task"))
 
+		emptyCtx := common.SchemaPathContext{}
+
 		// Suppress diff if the platform returns ALL_SUCCESS for run_if in a task
-		common.CustomizeSchemaPath(s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
-		common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+		common.CustomizeSchemaPath(emptyCtx, s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+		common.CustomizeSchemaPath(emptyCtx, s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
 		return s
 	})

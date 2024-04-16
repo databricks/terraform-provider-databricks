@@ -18,16 +18,17 @@ func ResourceVectorSearchEndpoint() common.Resource {
 	s := common.StructToSchema(
 		vectorsearch.EndpointInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			common.CustomizeSchemaPath(s, "name").SetRequired().SetForceNew()
-			common.CustomizeSchemaPath(s, "endpoint_type").SetRequired().SetForceNew()
+			emptyCtx := common.SchemaPathContext{}
+			common.CustomizeSchemaPath(emptyCtx, s, "name").SetRequired().SetForceNew()
+			common.CustomizeSchemaPath(emptyCtx, s, "endpoint_type").SetRequired().SetForceNew()
 			delete(s, "id")
-			common.CustomizeSchemaPath(s, "creator").SetReadOnly()
-			common.CustomizeSchemaPath(s, "creation_timestamp").SetReadOnly()
-			common.CustomizeSchemaPath(s, "last_updated_timestamp").SetReadOnly()
-			common.CustomizeSchemaPath(s, "last_updated_user").SetReadOnly()
-			common.CustomizeSchemaPath(s, "endpoint_status").SetReadOnly()
-			common.CustomizeSchemaPath(s, "num_indexes").SetReadOnly()
-			common.CustomizeSchemaPath(s).AddNewField("endpoint_id", &schema.Schema{
+			common.CustomizeSchemaPath(emptyCtx, s, "creator").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, s, "creation_timestamp").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, s, "last_updated_timestamp").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, s, "last_updated_user").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, s, "endpoint_status").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, s, "num_indexes").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, s).AddNewField("endpoint_id", &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			})

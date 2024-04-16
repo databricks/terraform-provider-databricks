@@ -50,9 +50,10 @@ func ResourceCatalog() common.Resource {
 				Optional: true,
 				Default:  false,
 			}
-			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
-			common.CustomizeSchemaPath(s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
+			emptyCtx := common.SchemaPathContext{}
+			common.CustomizeSchemaPath(emptyCtx, s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
+			common.CustomizeSchemaPath(emptyCtx, s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(emptyCtx, s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
 			return s

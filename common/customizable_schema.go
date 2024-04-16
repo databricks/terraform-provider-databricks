@@ -2,7 +2,9 @@ package common
 
 import (
 	"fmt"
+	"log"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -13,9 +15,43 @@ type CustomizableSchema struct {
 	Schema         *schema.Schema
 	path           []string
 	isSuppressDiff bool
+	context        SchemaPathContext
 }
 
-func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *CustomizableSchema {
+// This context is used in CustomizeSchemaPath function to proivde information about nested schema referenced by the schema registry.
+type SchemaPathContext struct {
+	// Path is used for refernces from resourceProviderRegistry as prefix, follows the format of `[a,0,b]`
+	path       []string
+	schemaPath []*schema.Schema
+}
+
+func (spc SchemaPathContext) copy() SchemaPathContext {
+	newPath := make([]string, len(spc.path))
+	copy(newPath, spc.path)
+	newSchemaPath := make([]*schema.Schema, len(spc.schemaPath))
+	copy(newSchemaPath, spc.schemaPath)
+	return SchemaPathContext{
+		path:       newPath,
+		schemaPath: newSchemaPath,
+	}
+}
+
+func (spc SchemaPathContext) addToPath(fieldName string, schema *schema.Schema) SchemaPathContext {
+	newSpc := spc.copy()
+	// Special path element `"0"` is used to denote either arrays or sets of elements
+	newSpc.path = append(spc.path, fieldName, "0")
+	newSpc.schemaPath = append(spc.schemaPath, schema)
+	return newSpc
+}
+
+func getEmptySchemaPathContext() SchemaPathContext {
+	return SchemaPathContext{
+		[]string{},
+		[]*schema.Schema{},
+	}
+}
+
+func CustomizeSchemaPath(ctx SchemaPathContext, s map[string]*schema.Schema, path ...string) *CustomizableSchema {
 	if len(path) == 0 {
 		// Wrapping the input map into a schema when the path is empty.
 		// The primary use case for this situation is for adding a new field at the top level.
@@ -27,7 +63,32 @@ func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *Customiza
 		return &CustomizableSchema{Schema: wrappedSch}
 	}
 	sch := MustSchemaPath(s, path...)
-	return &CustomizableSchema{Schema: sch, path: path}
+	return &CustomizableSchema{Schema: sch, path: path, context: ctx}
+}
+
+func (s *CustomizableSchema) pathContainsMultipleItemsList() bool {
+	schemaPath := s.context.schemaPath
+	for _, scm := range schemaPath {
+		if scm.Type == schema.TypeList && scm.MaxItems != 1 {
+			return true
+		}
+	}
+	return false
+}
+
+// Used to get the prefix path for functions like ConflictsWith, by joining `path` in SchemaPathContext.
+func getPrefixedValue(path []string, value []string) []string {
+	var prefix string
+	if len(path) != 0 {
+		prefix = strings.Join(path, ".") + "."
+	} else {
+		prefix = ""
+	}
+	prefixedPaths := make([]string, len(value))
+	for i, item := range value {
+		prefixedPaths[i] = prefix + item
+	}
+	return prefixedPaths
 }
 
 func (s *CustomizableSchema) SetOptional() *CustomizableSchema {
@@ -149,7 +210,11 @@ func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchem
 	if len(value) == 0 {
 		panic("SetConflictsWith cannot take in an empty list")
 	}
-	s.Schema.ConflictsWith = value
+	if s.pathContainsMultipleItemsList() {
+		log.Printf("[DEBUG] ConflictsWith skipped for %v, path contains TypeList block with MaxItems not equal to 1", strings.Join(s.path, "."))
+		return s
+	}
+	s.Schema.ConflictsWith = getPrefixedValue(s.context.path, value)
 	return s
 }
 
@@ -157,7 +222,11 @@ func (s *CustomizableSchema) SetExactlyOneOf(value []string) *CustomizableSchema
 	if len(value) == 0 {
 		panic("SetExactlyOneOf cannot take in an empty list")
 	}
-	s.Schema.ExactlyOneOf = value
+	if s.pathContainsMultipleItemsList() {
+		log.Printf("[DEBUG] ExactlyOneOf skipped for %v, path contains TypeList block with MaxItems not equal to 1", strings.Join(s.path, "."))
+		return s
+	}
+	s.Schema.ExactlyOneOf = getPrefixedValue(s.context.path, value)
 	return s
 }
 
@@ -165,7 +234,11 @@ func (s *CustomizableSchema) SetAtLeastOneOf(value []string) *CustomizableSchema
 	if len(value) == 0 {
 		panic("SetAtLeastOneOf cannot take in an empty list")
 	}
-	s.Schema.AtLeastOneOf = value
+	if s.pathContainsMultipleItemsList() {
+		log.Printf("[DEBUG] AtLeastOneOf skipped for %v, path contains TypeList block with MaxItems not equal to 1", strings.Join(s.path, "."))
+		return s
+	}
+	s.Schema.AtLeastOneOf = getPrefixedValue(s.context.path, value)
 	return s
 }
 
@@ -173,7 +246,11 @@ func (s *CustomizableSchema) SetRequiredWith(value []string) *CustomizableSchema
 	if len(value) == 0 {
 		panic("SetRequiredWith cannot take in an empty list")
 	}
-	s.Schema.RequiredWith = value
+	if s.pathContainsMultipleItemsList() {
+		log.Printf("[DEBUG] SetRequiredWith skipped for %v, path contains TypeList block with MaxItems not equal to 1", strings.Join(s.path, "."))
+		return s
+	}
+	s.Schema.RequiredWith = getPrefixedValue(s.context.path, value)
 	return s
 }
 

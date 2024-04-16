@@ -13,15 +13,16 @@ import (
 
 func ResourceMwsPrivateAccessSettings() common.Resource {
 	pasSchema := common.StructToSchema(provisioning.PrivateAccessSettings{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		common.CustomizeSchemaPath(m, "private_access_settings_name").SetValidateFunc(validation.StringLenBetween(4, 256))
-		common.CustomizeSchemaPath(m, "private_access_settings_name").SetRequired()
+		emptyCtx := common.SchemaPathContext{}
+		common.CustomizeSchemaPath(emptyCtx, m, "private_access_settings_name").SetValidateFunc(validation.StringLenBetween(4, 256))
+		common.CustomizeSchemaPath(emptyCtx, m, "private_access_settings_name").SetRequired()
 
-		common.CustomizeSchemaPath(m, "region").SetRequired()
+		common.CustomizeSchemaPath(emptyCtx, m, "region").SetRequired()
 
-		common.CustomizeSchemaPath(m, "private_access_settings_id").SetComputed()
+		common.CustomizeSchemaPath(emptyCtx, m, "private_access_settings_id").SetComputed()
 
-		common.CustomizeSchemaPath(m, "private_access_level").SetValidateFunc(validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true))
-		common.CustomizeSchemaPath(m, "private_access_level").SetDefault("ACCOUNT")
+		common.CustomizeSchemaPath(emptyCtx, m, "private_access_level").SetValidateFunc(validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true))
+		common.CustomizeSchemaPath(emptyCtx, m, "private_access_level").SetDefault("ACCOUNT")
 
 		common.AddAccountIdField(m)
 		return m

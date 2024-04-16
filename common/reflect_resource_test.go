@@ -96,7 +96,7 @@ type testForEachTask struct {
 	Extra string       `json:"extra,omitempty"`
 }
 
-func (testRecursiveStruct) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+func (testRecursiveStruct) CustomizeSchema(s map[string]*schema.Schema, ctx SchemaPathContext) map[string]*schema.Schema {
 	return s
 }
 
@@ -273,12 +273,12 @@ func (DummyResourceProvider) Aliases() map[string]map[string]string {
 		"common.AddressNoTfTag": {"primary": "primary_alias"}}
 }
 
-func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
-	CustomizeSchemaPath(s, "addresses").SetMinItems(1)
-	CustomizeSchemaPath(s, "addresses").SetMaxItems(10)
-	CustomizeSchemaPath(s, "tags").SetMaxItems(5)
-	CustomizeSchemaPath(s, "home").SetSuppressDiff()
-	CustomizeSchemaPath(s, "things").Schema.Type = schema.TypeSet
+func (DummyResourceProvider) CustomizeSchema(s map[string]*schema.Schema, ctx SchemaPathContext) map[string]*schema.Schema {
+	CustomizeSchemaPath(ctx, s, "addresses").SetMinItems(1)
+	CustomizeSchemaPath(ctx, s, "addresses").SetMaxItems(10)
+	CustomizeSchemaPath(ctx, s, "tags").SetMaxItems(5)
+	CustomizeSchemaPath(ctx, s, "home").SetSuppressDiff()
+	CustomizeSchemaPath(ctx, s, "things").Schema.Type = schema.TypeSet
 	return s
 }
 
@@ -650,7 +650,7 @@ func TestTypeToSchemaNoStruct(t *testing.T) {
 			fmt.Sprintf("%s", p))
 	}()
 	v := reflect.ValueOf(1)
-	typeToSchema(v, nil, getEmptyRecursionTrackingContext())
+	typeToSchema(v, nil, getEmptyRecursionTrackingContext(), getEmptySchemaPathContext())
 }
 
 func TestTypeToSchemaUnsupported(t *testing.T) {
@@ -663,7 +663,7 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 		New chan int `json:"new"`
 	}
 	v := reflect.ValueOf(nonsense{})
-	typeToSchema(v, nil, getEmptyRecursionTrackingContext())
+	typeToSchema(v, nil, getEmptyRecursionTrackingContext(), getEmptySchemaPathContext())
 }
 
 type data map[string]any

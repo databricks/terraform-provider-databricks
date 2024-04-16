@@ -358,6 +358,13 @@ func TestUcAccJobRunAsServicePrincipal(t *testing.T) {
 func TestUcAccJobRunAsMutations(t *testing.T) {
 	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+	// Note: the attribute must match the type of principal that the test is run as.
+	// Today, Azure tests are run using a service principal and AWS tests using a user.
+	// When AWS tests are run using a service principal, the attribute must be updated.
+	attribute := "user_name"
+	if isAzure(t) {
+		attribute = "service_principal_name"
+	}
 	unityWorkspaceLevel(
 		t,
 		// Provision job with service principal `run_as`
@@ -366,7 +373,7 @@ func TestUcAccJobRunAsMutations(t *testing.T) {
 		},
 		// Update job to a user `run_as`
 		step{
-			Template: runAsTemplate(`user_name = data.databricks_current_user.me.user_name`),
+			Template: runAsTemplate(attribute + ` = data.databricks_current_user.me.user_name`),
 		},
 		// Update job back to a service principal `run_as`
 		step{

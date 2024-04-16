@@ -1258,13 +1258,9 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			return "", nil, false
 		}
 	} else if ref.MatchType == MatchLongestPrefix && ref.ExtraLookupKey != "" {
-		// log.Printf("[DEBUG] Searching longest prefix for reference by key %s for resource %s, attr='%s', value='%s', ref=%v",
-		// 	ref.ExtraLookupKey, ref.Resource, attr, value, ref)
 		extraKeyValue, exists := origResource.GetExtraData(ref.ExtraLookupKey)
 		if exists && extraKeyValue.(string) != "" {
 			sr := ic.State.Get(ref.Resource, attr, extraKeyValue.(string))
-			// log.Printf("[DEBUG] Found %s for resource %s, attr='%s', value='%s', ref=%v. Found: %v",
-			// 	ref.ExtraLookupKey, ref.Resource, attr, parentDir, ref, sr)
 			if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) &&
 				!ic.isIgnoredResourceApproximation(sr) {
 				log.Printf("[DEBUG] Finished direct lookup by key %s for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",

@@ -354,19 +354,29 @@ func isInDebug() bool {
 	return strings.HasPrefix(path.Base(ex), "__debug_bin")
 }
 
+func setDebugLogger() {
+	logger.DefaultLogger = &logger.SimpleLogger{
+		Level: logger.LevelDebug,
+	}
+}
+
 func loadWorkspaceEnv(t *testing.T) {
+	setDebugLogger()
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 }
 
 func loadAccountEnv(t *testing.T) {
+	setDebugLogger()
 	loadDebugEnvIfRunsFromIDE(t, "account")
 }
 
 func loadUcwsEnv(t *testing.T) {
+	setDebugLogger()
 	loadDebugEnvIfRunsFromIDE(t, "ucws")
 }
 
 func loadUcacctEnv(t *testing.T) {
+	setDebugLogger()
 	loadDebugEnvIfRunsFromIDE(t, "ucacct")
 }
 
@@ -391,6 +401,20 @@ func isCloudEnvInList(t *testing.T, cloudEnvs []string) bool {
 		skipf(t)("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	return slices.Contains(cloudEnvs, cloudEnv)
+}
+
+func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	user, err := w.CurrentUser.Me(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, emailValue := range user.Emails {
+		if emailValue.Primary && strings.Contains(emailValue.Value, "@") {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 // loads debug environment from ~/.databricks/debug-env.json

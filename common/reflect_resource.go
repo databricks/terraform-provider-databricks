@@ -380,10 +380,10 @@ func listAllFields(v reflect.Value) []field {
 
 func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
 	if rpStruct, ok := resourceProviderRegistry[getNonPointerType(v.Type())]; ok {
-		println("found in registry:", getNonPointerType(v.Type()).String())
+		// println("found in registry:", getNonPointerType(v.Type()).String())
 		return resourceProviderStructToSchema(rpStruct, rt.path)
 	}
-	println("notfound in registry:", getNonPointerType(v.Type()).String())
+	// println("notfound in registry:", getNonPointerType(v.Type()).String())
 
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
@@ -503,14 +503,14 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			scm[fieldName].Elem = &schema.Resource{
 				Schema: nestedSchema,
 			}
-			if fieldName == "new_cluster" && strings.TrimPrefix(v.Type().String(), "*") == "jobs.JobCluster" {
-				println("===begin listing fields")
+			// if fieldName == "new_cluster" && strings.TrimPrefix(v.Type().String(), "*") == "jobs.JobCluster" {
+			// 	println("===begin listing fields")
 
-				for k, _ := range nestedSchema {
-					println(k)
-				}
-				println("===end")
-			}
+			// 	for k, _ := range nestedSchema {
+			// 		println(k)
+			// 	}
+			// 	println("===end")
+			// }
 		case reflect.Slice:
 			ft := schema.TypeList
 			if strings.Contains(tfTag, "slice_set") {

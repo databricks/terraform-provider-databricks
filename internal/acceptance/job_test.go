@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccJobTasks(t *testing.T) {
@@ -355,16 +356,21 @@ func TestUcAccJobRunAsServicePrincipal(t *testing.T) {
 	})
 }
 
+func getRunAsAttribute(t *testing.T, ctx context.Context) string {
+	isSp, err := isAuthedAsWorkspaceServicePrincipal(ctx)
+	require.NoError(t, err)
+	if isSp {
+		return "service_principal_name"
+	}
+	return "user_name"
+}
+
 func TestUcAccJobRunAsMutations(t *testing.T) {
 	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 	// Note: the attribute must match the type of principal that the test is run as.
-	// Today, Azure tests are run using a service principal and AWS tests using a user.
-	// When AWS tests are run using a service principal, the attribute must be updated.
-	attribute := "user_name"
-	if isAzure(t) {
-		attribute = "service_principal_name"
-	}
+	ctx := context.Background()
+	attribute := getRunAsAttribute(t, ctx)
 	unityWorkspaceLevel(
 		t,
 		// Provision job with service principal `run_as`

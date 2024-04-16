@@ -1,13 +1,13 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Delta Sharing"
 ---
 # databricks_share Resource
 
 -> **Note** This resource could be only used with workspace-level provider!
 
-Within a metastore, Unity Catalog provides the ability to create a share, which is a named object that contains a collection of tables in a metastore that you want to share as a group. A share can contain tables from only a single metastore. You can add or remove tables from a share at any time.
+In Delta Sharing, a share is a read-only collection of tables and table partitions that a provider wants to share with one or more recipients. If your recipient uses a Unity Catalog-enabled Databricks workspace, you can also include notebook files, views (including dynamic views that restrict access at the row and column level), Unity Catalog volumes, and Unity Catalog models in a share.
 
-A `databricks_share` is contained within [databricks_metastore](metastore.md) and can contain a list of tables.
+In a Unity Catalog-enabled Databricks workspace, a share is a securable object registered in Unity Catalog. A `databricks_share` is contained within a [databricks_metastore](metastore.md). If you remove a share from your Unity Catalog metastore, all recipients of that share lose the ability to access it.
 
 ## Example Usage
 

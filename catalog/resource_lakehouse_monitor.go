@@ -35,24 +35,25 @@ func ResourceLakehouseMonitor() common.Resource {
 	monitorSchema := common.StructToSchema(
 		catalog.MonitorInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			common.CustomizeSchemaPath(m, "assets_dir").SetRequired()
-			common.CustomizeSchemaPath(m, "output_schema_name").SetRequired()
-			common.CustomizeSchemaPath(m, "table_name").SetRequired()
-			common.CustomizeSchemaPath(m).AddNewField("skip_builtin_dashboard", &schema.Schema{
+			emptyCtx := common.SchemaPathContext{}
+			common.CustomizeSchemaPath(emptyCtx, m, "assets_dir").SetRequired()
+			common.CustomizeSchemaPath(emptyCtx, m, "output_schema_name").SetRequired()
+			common.CustomizeSchemaPath(emptyCtx, m, "table_name").SetRequired()
+			common.CustomizeSchemaPath(emptyCtx, m).AddNewField("skip_builtin_dashboard", &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Required: false,
 			})
-			common.CustomizeSchemaPath(m).AddNewField("warehouse_id", &schema.Schema{
+			common.CustomizeSchemaPath(emptyCtx, m).AddNewField("warehouse_id", &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Required: false,
 			})
-			common.CustomizeSchemaPath(m, "monitor_version").SetReadOnly()
-			common.CustomizeSchemaPath(m, "drift_metrics_table_name").SetReadOnly()
-			common.CustomizeSchemaPath(m, "profile_metrics_table_name").SetReadOnly()
-			common.CustomizeSchemaPath(m, "status").SetReadOnly()
-			common.CustomizeSchemaPath(m, "dashboard_id").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, m, "monitor_version").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, m, "drift_metrics_table_name").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, m, "profile_metrics_table_name").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, m, "status").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, m, "dashboard_id").SetReadOnly()
 			return m
 		},
 	)

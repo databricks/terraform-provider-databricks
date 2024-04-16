@@ -80,7 +80,7 @@ func getNonPointerType(t reflect.Type) reflect.Type {
 type ResourceProvider interface {
 	// The first input is the schema we would like to customize, the second input is a slice representing the
 	// path leading to the current resource, this is used as inputs for functions like SetExactlyOneOf() or SetConflictsWith()
-	CustomizeSchema(map[string]*schema.Schema, []string) map[string]*schema.Schema
+	CustomizeSchema(map[string]*schema.Schema, SchemaPathContext) map[string]*schema.Schema
 }
 
 // Interface for ResourceProvider instances that need aliases for fields.
@@ -115,7 +115,7 @@ type RecursiveResourceProvider interface {
 }
 
 // Takes in a ResourceProvider and converts that into a map from string to schema.
-func resourceProviderStructToSchema(v ResourceProvider, path []string) map[string]*schema.Schema {
+func resourceProviderStructToSchema(v ResourceProvider, scp SchemaPathContext) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	var scm map[string]*schema.Schema
 	aliases := map[string]map[string]string{}
@@ -123,11 +123,11 @@ func resourceProviderStructToSchema(v ResourceProvider, path []string) map[strin
 		aliases = rpwa.Aliases()
 	}
 	if rrp, ok := v.(RecursiveResourceProvider); ok {
-		scm = typeToSchema(rv, aliases, getRecursionTrackingContext(rrp))
+		scm = typeToSchema(rv, aliases, getRecursionTrackingContext(rrp), scp)
 	} else {
-		scm = typeToSchema(rv, aliases, getEmptyRecursionTrackingContext())
+		scm = typeToSchema(rv, aliases, getEmptyRecursionTrackingContext(), scp)
 	}
-	scm = v.CustomizeSchema(scm, path)
+	scm = v.CustomizeSchema(scm, scp)
 	return scm
 }
 
@@ -224,10 +224,10 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		if customize != nil {
 			panic("customize should be nil if the input implements the ResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
 		}
-		return resourceProviderStructToSchema(rp, []string{})
+		return resourceProviderStructToSchema(rp, getEmptySchemaPathContext())
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyRecursionTrackingContext())
+	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyRecursionTrackingContext(), getEmptySchemaPathContext())
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -378,9 +378,9 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext, scp SchemaPathContext) map[string]*schema.Schema {
 	if rpStruct, ok := resourceProviderRegistry[getNonPointerType(v.Type())]; ok {
-		return resourceProviderStructToSchema(rpStruct, rt.path)
+		return resourceProviderStructToSchema(rpStruct, scp)
 	}
 
 	scm := map[string]*schema.Schema{}
@@ -467,7 +467,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, aliases, rt.addToPath(fieldName))
+			nestedSchema := typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -486,7 +486,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			if fieldName == "new_cluster" && strings.TrimPrefix(v.Type().String(), "*") == "jobs.JobCluster" {
 				println("processing new_cluster in JobCluster")
 			}
-			nestedSchema := typeToSchema(sv, aliases, rt.addToPath(fieldName))
+			nestedSchema := typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -515,7 +515,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, aliases, rt.addToPath(fieldName)),
+					Schema: typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName])),
 				}
 			}
 		default:

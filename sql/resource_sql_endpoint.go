@@ -54,9 +54,10 @@ func resolveDataSourceID(ctx context.Context, w *databricks.WorkspaceClient, war
 func ResourceSqlEndpoint() common.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
+		emptyCtx := common.SchemaPathContext{}
 		m["id"].Computed = true
 		common.SetDefault(m["auto_stop_mins"], 120)
-		common.CustomizeSchemaPath(m, "channel").SetSuppressDiff()
+		common.CustomizeSchemaPath(emptyCtx, m, "channel").SetSuppressDiff()
 		common.MustSchemaPath(m, "channel", "name").Default = "CHANNEL_NAME_CURRENT"
 		common.SetRequired(m["cluster_size"])
 		common.SetReadOnly(m["creator_name"])
@@ -69,17 +70,17 @@ func ResourceSqlEndpoint() common.Resource {
 		common.SetDefault(m["max_num_clusters"], 1)
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
-		common.CustomizeSchemaPath(m, "min_num_clusters").SetSuppressDiff()
+		common.CustomizeSchemaPath(emptyCtx, m, "min_num_clusters").SetSuppressDiff()
 		common.SetRequired(m["name"])
 		common.SetReadOnly(m["num_active_sessions"])
 		common.SetReadOnly(m["num_clusters"])
 		common.SetReadOnly(m["odbc_params"])
 		common.SetDefault(m["spot_instance_policy"], "COST_OPTIMIZED")
 		common.SetReadOnly(m["state"])
-		common.CustomizeSchemaPath(m, "tags").SetSuppressDiff()
+		common.CustomizeSchemaPath(emptyCtx, m, "tags").SetSuppressDiff()
 		common.SetRequired(common.MustSchemaPath(m, "tags", "custom_tags", "key"))
 		common.SetRequired(common.MustSchemaPath(m, "tags", "custom_tags", "value"))
-		common.CustomizeSchemaPath(m, "warehouse_type").
+		common.CustomizeSchemaPath(emptyCtx, m, "warehouse_type").
 			SetSuppressDiff().
 			SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"PRO", "CLASSIC"}, false)))
 		return m

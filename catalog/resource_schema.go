@@ -31,11 +31,12 @@ func ResourceSchema() common.Resource {
 				Optional: true,
 				Default:  false,
 			}
-			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
+			emptyCtx := common.SchemaPathContext{}
+			common.CustomizeSchemaPath(emptyCtx, s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
 			s["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
-			common.CustomizeSchemaPath(s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-			common.CustomizeSchemaPath(s, "catalog_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
+			common.CustomizeSchemaPath(emptyCtx, s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(emptyCtx, s, "catalog_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(emptyCtx, s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
 			return s

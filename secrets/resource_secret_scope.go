@@ -17,9 +17,9 @@ import (
 // SecretScope is a struct that encapsulates the secret scope
 type SecretScope workspace.CreateScope
 
-func (s SecretScope) CustomizeSchema(m map[string]*schema.Schema, path []string) map[string]*schema.Schema {
-	common.CustomizeSchemaPath(m, "name").SetValidateFunc(validScope)
-	common.CustomizeSchemaPath(m, "backend_type").SetComputed()
+func (s SecretScope) CustomizeSchema(m map[string]*schema.Schema, ctx common.SchemaPathContext) map[string]*schema.Schema {
+	common.CustomizeSchemaPath(ctx, m, "name").SetValidateFunc(validScope)
+	common.CustomizeSchemaPath(ctx, m, "backend_type").SetComputed()
 	return m
 }
 

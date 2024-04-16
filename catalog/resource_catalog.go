@@ -45,14 +45,15 @@ type CatalogInfo struct {
 func ResourceCatalog() common.Resource {
 	catalogSchema := common.StructToSchema(CatalogInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			emptyCtx := common.SchemaPathContext{}
 			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			}
-			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
-			common.CustomizeSchemaPath(s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
+			common.CustomizeSchemaPath(emptyCtx, s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
+			common.CustomizeSchemaPath(emptyCtx, s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(emptyCtx, s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
 			return s

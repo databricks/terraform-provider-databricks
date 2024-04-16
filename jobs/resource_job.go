@@ -216,7 +216,7 @@ type JobTaskSettings struct {
 	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	Libraries         []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries         []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -289,7 +289,7 @@ type JobSettings struct {
 	PythonWheelTask        *PythonWheelTask  `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask          `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask             *RunJobTask       `json:"run_job_task,omitempty" tf:"group:task_type"`
-	Libraries              []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries              []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 	TimeoutSeconds         int32             `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32             `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32             `json:"min_retry_interval_millis,omitempty"`
@@ -485,7 +485,7 @@ type JobSettingsResource struct {
 	PythonWheelTask        *PythonWheelTask     `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask             `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask             *RunJobTask          `json:"run_job_task,omitempty" tf:"group:task_type"`
-	Libraries              []compute.Library    `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries              []compute.Library    `json:"libraries,omitempty" tf:"alias:library"`
 	TimeoutSeconds         int32                `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32                `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32                `json:"min_retry_interval_millis,omitempty"`
@@ -514,16 +514,16 @@ func (JobSettingsResource) Aliases() map[string]map[string]string {
 	return aliases
 }
 
-func (JobSettingsResource) CustomizeSchema(s map[string]*schema.Schema, path []string) map[string]*schema.Schema {
+func (JobSettingsResource) CustomizeSchema(s map[string]*schema.Schema, ctx common.SchemaPathContext) map[string]*schema.Schema {
 	// TODO make this function take in path
 	jobSettingsSchema(s, "")
 	jobSettingsSchema(common.MustSchemaMap(s, "task"), "task.0.")
 	jobSettingsSchema(common.MustSchemaMap(s, "job_cluster"), "job_cluster.0.")
 	gitSourceSchema(common.MustSchemaMap(s, "git_source"), "")
 
-	common.CustomizeSchemaPath(s, "format").SetComputed()
-	common.CustomizeSchemaPath(s, "dbt_task").SetDeprecated("should be used inside a task block and not inside a job block")
-	common.CustomizeSchemaPath(s).AddNewField("url", &schema.Schema{
+	common.CustomizeSchemaPath(ctx, s, "format").SetComputed()
+	common.CustomizeSchemaPath(ctx, s, "dbt_task").SetDeprecated("should be used inside a task block and not inside a job block")
+	common.CustomizeSchemaPath(ctx, s).AddNewField("url", &schema.Schema{
 		Computed: true,
 		Type:     schema.TypeString,
 	}).AddNewField("always_running", &schema.Schema{
@@ -537,77 +537,77 @@ func (JobSettingsResource) CustomizeSchema(s map[string]*schema.Schema, path []s
 		Type:     schema.TypeBool,
 	})
 
-	common.CustomizeSchemaPath(s, "always_running").SetConflictsWith(path, []string{"control_run_state", "continuous"})
-	common.CustomizeSchemaPath(s, "control_run_state").SetConflictsWith(path, []string{"always_running"})
+	common.CustomizeSchemaPath(ctx, s, "always_running").SetConflictsWith([]string{"control_run_state", "continuous"})
+	common.CustomizeSchemaPath(ctx, s, "control_run_state").SetConflictsWith([]string{"always_running"})
 
-	common.CustomizeSchemaPath(s, "task", "library").Schema.Type = schema.TypeSet
-	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "library").Schema.Type = schema.TypeSet
+	common.CustomizeSchemaPath(ctx, s, "task", "library").Schema.Type = schema.TypeSet
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task", "task", "library").Schema.Type = schema.TypeSet
 
-	common.CustomizeSchemaPath(s, "task", "task_key").SetOptional()
-	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "task_key").SetOptional()
+	common.CustomizeSchemaPath(ctx, s, "task", "task_key").SetOptional()
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task", "task", "task_key").SetOptional()
 
-	common.CustomizeSchemaPath(s, "trigger", "table_update", "table_names").SetRequired()
+	common.CustomizeSchemaPath(ctx, s, "trigger", "table_update", "table_names").SetRequired()
 
-	common.CustomizeSchemaPath(s, "task", "notebook_task").AddNewField("warehouse_id", &schema.Schema{
+	common.CustomizeSchemaPath(ctx, s, "task", "notebook_task").AddNewField("warehouse_id", &schema.Schema{
 		Optional: true,
 		Type:     schema.TypeString,
 	})
-	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "notebook_task").AddNewField("warehouse_id", &schema.Schema{
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task", "task", "notebook_task").AddNewField("warehouse_id", &schema.Schema{
 		Optional: true,
 		Type:     schema.TypeString,
 	})
-	common.CustomizeSchemaPath(s, "task", "for_each_task").AddNewField("warehouse_id", &schema.Schema{
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task").AddNewField("warehouse_id", &schema.Schema{
 		Optional: true,
 		Type:     schema.TypeString,
 	})
 
-	common.CustomizeSchemaPath(s, "task", "sql_task", "warehouse_id").SetOptional()
-	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "sql_task", "warehouse_id").SetOptional()
+	common.CustomizeSchemaPath(ctx, s, "task", "sql_task", "warehouse_id").SetOptional()
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task", "task", "sql_task", "warehouse_id").SetOptional()
 
-	common.CustomizeSchemaPath(s, "task", "python_wheel_task", "entry_point").SetOptional()
-	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "python_wheel_task", "entry_point").SetOptional()
+	common.CustomizeSchemaPath(ctx, s, "task", "python_wheel_task", "entry_point").SetOptional()
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task", "task", "python_wheel_task", "entry_point").SetOptional()
 
-	common.CustomizeSchemaPath(s, "task", "python_wheel_task", "package_name").SetOptional()
-	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "python_wheel_task", "package_name").SetOptional()
+	common.CustomizeSchemaPath(ctx, s, "task", "python_wheel_task", "package_name").SetOptional()
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task", "task", "python_wheel_task", "package_name").SetOptional()
 
-	common.CustomizeSchemaPath(s, "task", "sql_task", "alert", "subscriptions").SetRequired()
-	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "sql_task", "alert", "subscriptions").SetRequired()
+	common.CustomizeSchemaPath(ctx, s, "task", "sql_task", "alert", "subscriptions").SetRequired()
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task", "task", "sql_task", "alert", "subscriptions").SetRequired()
 
 	topLevelDeprecationMessage := "should be used inside a task block and not inside a job block"
-	common.CustomizeSchemaPath(s, "max_retries").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "min_retry_interval_millis").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "retry_on_timeout").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "notebook_task").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "spark_jar_task").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "spark_python_task").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "spark_submit_task").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "pipeline_task").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "python_wheel_task").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "dbt_task").SetDeprecated(topLevelDeprecationMessage)
-	common.CustomizeSchemaPath(s, "run_job_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "max_retries").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "min_retry_interval_millis").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "retry_on_timeout").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "notebook_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "spark_jar_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "spark_python_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "spark_submit_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "pipeline_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "python_wheel_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "dbt_task").SetDeprecated(topLevelDeprecationMessage)
+	common.CustomizeSchemaPath(ctx, s, "run_job_task").SetDeprecated(topLevelDeprecationMessage)
 
-	common.CustomizeSchemaPath(s, "schedule", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
-	common.CustomizeSchemaPath(s, "trigger", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
-	common.CustomizeSchemaPath(s, "continuous", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
-	common.CustomizeSchemaPath(s, "max_concurrent_runs").SetDefault(1).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
+	common.CustomizeSchemaPath(ctx, s, "schedule", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
+	common.CustomizeSchemaPath(ctx, s, "trigger", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
+	common.CustomizeSchemaPath(ctx, s, "continuous", "pause_status").SetValidateFunc(validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false))
+	common.CustomizeSchemaPath(ctx, s, "max_concurrent_runs").SetDefault(1).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
 
-	common.CustomizeSchemaPath(s, "schedule").SetConflictsWith(path, []string{"continuous", "trigger"})
-	common.CustomizeSchemaPath(s, "continuous").SetConflictsWith(path, []string{"schedule", "trigger"})
-	common.CustomizeSchemaPath(s, "trigger").SetConflictsWith(path, []string{"continuous", "schedule"})
+	common.CustomizeSchemaPath(ctx, s, "schedule").SetConflictsWith([]string{"continuous", "trigger"})
+	common.CustomizeSchemaPath(ctx, s, "continuous").SetConflictsWith([]string{"schedule", "trigger"})
+	common.CustomizeSchemaPath(ctx, s, "trigger").SetConflictsWith([]string{"continuous", "schedule"})
 
 	// we need to have only one of user name vs service principal in the run_as block
 	run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
-	common.CustomizeSchemaPath(s, "run_as", "user_name").SetExactlyOneOf(path, run_as_eoo)
-	common.CustomizeSchemaPath(s, "run_as", "service_principal_name").SetExactlyOneOf(path, run_as_eoo)
+	common.CustomizeSchemaPath(ctx, s, "run_as", "user_name").SetExactlyOneOf(run_as_eoo)
+	common.CustomizeSchemaPath(ctx, s, "run_as", "service_principal_name").SetExactlyOneOf(run_as_eoo)
 
 	// Clear the implied diff suppression for the webhook notification lists
 	for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
-		common.CustomizeSchemaPath(s, "webhook_notifications", n).SetCustomSuppressDiff(nil)
+		common.CustomizeSchemaPath(ctx, s, "webhook_notifications", n).SetCustomSuppressDiff(nil)
 	}
 
 	// Suppress diff if the platform returns ALL_SUCCESS for run_if in a task
-	common.CustomizeSchemaPath(s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
-	common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+	common.CustomizeSchemaPath(ctx, s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+	common.CustomizeSchemaPath(ctx, s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
 	return s
 }
@@ -912,8 +912,8 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		fixWebhookNotifications(common.MustSchemaMap(s, "task"))
 
 		// Suppress diff if the platform returns ALL_SUCCESS for run_if in a task
-		common.CustomizeSchemaPath(s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
-		common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+		common.CustomizeSchemaPath(common.SchemaPathContext{}, s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+		common.CustomizeSchemaPath(common.SchemaPathContext{}, s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
 		return s
 	})

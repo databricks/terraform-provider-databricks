@@ -53,14 +53,15 @@ func ResourceVectorSearchIndex() common.Resource {
 			s["delta_sync_index_spec"].ExactlyOneOf = exof
 			s["direct_access_index_spec"].ExactlyOneOf = exof
 			s["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
-			common.CustomizeSchemaPath(s, "delta_sync_index_spec", "source_table").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-			common.CustomizeSchemaPath(s, "endpoint_name").SetRequired()
-			common.CustomizeSchemaPath(s, "primary_key").SetRequired()
-			common.CustomizeSchemaPath(s, "status").SetReadOnly()
-			common.CustomizeSchemaPath(s, "creator").SetReadOnly()
-			common.CustomizeSchemaPath(s, "name").SetRequired()
-			common.CustomizeSchemaPath(s, "index_type").SetRequired()
-			common.CustomizeSchemaPath(s, "delta_sync_index_spec", "pipeline_id").SetReadOnly()
+			emptyCtx := common.SchemaPathContext{}
+			common.CustomizeSchemaPath(emptyCtx, s, "delta_sync_index_spec", "source_table").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(emptyCtx, s, "endpoint_name").SetRequired()
+			common.CustomizeSchemaPath(emptyCtx, s, "primary_key").SetRequired()
+			common.CustomizeSchemaPath(emptyCtx, s, "status").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, s, "creator").SetReadOnly()
+			common.CustomizeSchemaPath(emptyCtx, s, "name").SetRequired()
+			common.CustomizeSchemaPath(emptyCtx, s, "index_type").SetRequired()
+			common.CustomizeSchemaPath(emptyCtx, s, "delta_sync_index_spec", "pipeline_id").SetReadOnly()
 			return s
 		})
 

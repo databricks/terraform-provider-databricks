@@ -42,6 +42,7 @@
  * Fix integration tests for [databricks_entitlements](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/entitlements) ([#3467](https://github.com/databricks/terraform-provider-databricks/pull/3467)).
  * Switch to use structs from Go SDK for [databricks_recipient](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/recipient) resource ([#3400](https://github.com/databricks/terraform-provider-databricks/pull/3400)).
  * Make libraries in `resource_job` slice instead of set ([#3398](https://github.com/databricks/terraform-provider-databricks/pull/3398)).
+ * Fixed `TestUcAccJobRunAsMutations`
 
 
 ## 1.39.0

@@ -65,7 +65,7 @@ func RegisterResourceProvider(v any, r ResourceProvider) {
 // Generic interface for ResourceProvider. Using CustomizeSchema function to keep track of additional information
 // on top of the generated go-sdk struct.
 type ResourceProvider interface {
-	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
+	CustomizeSchema(*CustomizableSchema) *CustomizableSchema
 }
 
 // Interface for ResourceProvider instances that need aliases for fields.
@@ -100,7 +100,7 @@ type RecursiveResourceProvider interface {
 }
 
 // Takes in a ResourceProvider and converts that into a map from string to schema.
-func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
+func resourceProviderStructToSchema(v ResourceProvider, scp SchemaPathContext) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	var scm map[string]*schema.Schema
 	aliases := map[string]map[string]string{}
@@ -108,11 +108,13 @@ func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schem
 		aliases = rpwa.Aliases()
 	}
 	if rrp, ok := v.(RecursiveResourceProvider); ok {
-		scm = typeToSchema(rv, aliases, getRecursionTrackingContext(rrp))
+		scm = typeToSchema(rv, aliases, getRecursionTrackingContext(rrp), scp)
 	} else {
-		scm = typeToSchema(rv, aliases, getEmptyRecursionTrackingContext())
+		scm = typeToSchema(rv, aliases, getEmptyRecursionTrackingContext(), scp)
 	}
-	scm = v.CustomizeSchema(scm)
+	cs := CustomizeSchemaPath(scm)
+	cs.context = scp
+	scm = v.CustomizeSchema(cs).GetSchema()
 	return scm
 }
 
@@ -210,10 +212,10 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		if customize != nil {
 			panic("customize should be nil if the input implements the ResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
 		}
-		return resourceProviderStructToSchema(rp)
+		return resourceProviderStructToSchema(rp, getEmptySchemaPathContext())
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyRecursionTrackingContext())
+	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyRecursionTrackingContext(), getEmptySchemaPathContext())
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -364,7 +366,7 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext, scp SchemaPathContext) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -449,7 +451,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, aliases, rt)
+			nestedSchema := typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -466,7 +468,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, aliases, rt)
+			nestedSchema := typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -495,7 +497,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, aliases, rt),
+					Schema: typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName])),
 				}
 			}
 		default:

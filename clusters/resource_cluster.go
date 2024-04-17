@@ -123,62 +123,62 @@ type ClusterSpec struct {
 	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
-func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
-	common.CustomizeSchemaPath(s, "cluster_source").SetReadOnly()
-	common.CustomizeSchemaPath(s, "enable_elastic_disk").SetComputed()
-	common.CustomizeSchemaPath(s, "enable_local_disk_encryption").SetComputed()
-	common.CustomizeSchemaPath(s, "node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
-	common.CustomizeSchemaPath(s, "driver_node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
-	common.CustomizeSchemaPath(s, "driver_instance_pool_id").SetComputed().SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
-	common.CustomizeSchemaPath(s, "ssh_public_keys").SetMaxItems(10)
-	common.CustomizeSchemaPath(s, "init_scripts").SetMaxItems(10)
-	common.CustomizeSchemaPath(s, "init_scripts", "dbfs").SetDeprecated(DbfsDeprecationWarning)
-	common.CustomizeSchemaPath(s, "init_scripts", "dbfs", "destination").SetRequired()
-	common.CustomizeSchemaPath(s, "init_scripts", "s3", "destination").SetRequired()
-	common.CustomizeSchemaPath(s, "init_scripts", "volumes", "destination").SetRequired()
-	common.CustomizeSchemaPath(s, "init_scripts", "workspace", "destination").SetRequired()
-	common.CustomizeSchemaPath(s, "workload_type", "clients").SetRequired()
-	common.CustomizeSchemaPath(s, "workload_type", "clients", "notebooks").SetDefault(true)
-	common.CustomizeSchemaPath(s, "workload_type", "clients", "jobs").SetDefault(true)
-	s["library"].Set = func(i any) int {
+func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("cluster_source").SetReadOnly()
+	s.SchemaPath("enable_elastic_disk").SetComputed()
+	s.SchemaPath("enable_local_disk_encryption").SetComputed()
+	s.SchemaPath("node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
+	s.SchemaPath("driver_node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
+	s.SchemaPath("driver_instance_pool_id").SetComputed().SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
+	s.SchemaPath("ssh_public_keys").SetMaxItems(10)
+	s.SchemaPath("init_scripts").SetMaxItems(10)
+	s.SchemaPath("init_scripts", "dbfs").SetDeprecated(DbfsDeprecationWarning)
+	s.SchemaPath("init_scripts", "dbfs", "destination").SetRequired()
+	s.SchemaPath("init_scripts", "s3", "destination").SetRequired()
+	s.SchemaPath("init_scripts", "volumes", "destination").SetRequired()
+	s.SchemaPath("init_scripts", "workspace", "destination").SetRequired()
+	s.SchemaPath("workload_type", "clients").SetRequired()
+	s.SchemaPath("workload_type", "clients", "notebooks").SetDefault(true)
+	s.SchemaPath("workload_type", "clients", "jobs").SetDefault(true)
+	s.SchemaPath("library").Schema.Set = func(i any) int {
 		lib := libraries.NewLibraryFromInstanceState(i)
 		return schema.HashString(lib.String())
 	}
-	common.CustomizeSchemaPath(s).AddNewField("idempotency_token", &schema.Schema{
+	s.AddNewField("idempotency_token", &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		ForceNew: true,
 	})
-	common.CustomizeSchemaPath(s, "data_security_mode").SetSuppressDiff()
-	common.CustomizeSchemaPath(s, "docker_image", "url").SetRequired()
-	common.CustomizeSchemaPath(s, "docker_image", "basic_auth", "password").SetRequired().SetSensitive()
-	common.CustomizeSchemaPath(s, "docker_image", "basic_auth", "username").SetRequired()
-	common.CustomizeSchemaPath(s, "spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
-	common.CustomizeSchemaPath(s, "aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
-	common.CustomizeSchemaPath(s, "aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
-	common.CustomizeSchemaPath(s, "azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
-	common.CustomizeSchemaPath(s, "gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
-	common.CustomizeSchemaPath(s, "autotermination_minutes").SetDefault(60)
-	common.CustomizeSchemaPath(s, "autoscale", "max_workers").SetOptional()
-	common.CustomizeSchemaPath(s, "autoscale", "min_workers").SetOptional()
-	common.CustomizeSchemaPath(s, "cluster_log_conf", "dbfs", "destination").SetRequired()
-	common.CustomizeSchemaPath(s, "cluster_log_conf", "s3", "destination").SetRequired()
-	common.CustomizeSchemaPath(s, "spark_version").SetRequired()
-	common.CustomizeSchemaPath(s).AddNewField("cluster_id", &schema.Schema{
+	s.SchemaPath("data_security_mode").SetSuppressDiff()
+	s.SchemaPath("docker_image", "url").SetRequired()
+	s.SchemaPath("docker_image", "basic_auth", "password").SetRequired().SetSensitive()
+	s.SchemaPath("docker_image", "basic_auth", "username").SetRequired()
+	s.SchemaPath("spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
+	s.SchemaPath("aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
+	s.SchemaPath("aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
+	s.SchemaPath("azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
+	s.SchemaPath("gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
+	s.SchemaPath("autotermination_minutes").SetDefault(60)
+	s.SchemaPath("autoscale", "max_workers").SetOptional()
+	s.SchemaPath("autoscale", "min_workers").SetOptional()
+	s.SchemaPath("cluster_log_conf", "dbfs", "destination").SetRequired()
+	s.SchemaPath("cluster_log_conf", "s3", "destination").SetRequired()
+	s.SchemaPath("spark_version").SetRequired()
+	s.AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	})
-	common.CustomizeSchemaPath(s).AddNewField("default_tags", &schema.Schema{
+	s.AddNewField("default_tags", &schema.Schema{
 		Type:     schema.TypeMap,
 		Computed: true,
 	})
-	common.CustomizeSchemaPath(s).AddNewField("state", &schema.Schema{
+	s.AddNewField("state", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	})
-	common.CustomizeSchemaPath(s, "instance_pool_id").SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
-	common.CustomizeSchemaPath(s, "runtime_engine").SetValidateFunc(validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false))
-	common.CustomizeSchemaPath(s).AddNewField("is_pinned", &schema.Schema{
+	s.SchemaPath("instance_pool_id").SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
+	s.SchemaPath("runtime_engine").SetValidateFunc(validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false))
+	s.AddNewField("is_pinned", &schema.Schema{
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  false,
@@ -189,12 +189,12 @@ func (ClusterSpec) CustomizeSchema(s map[string]*schema.Schema) map[string]*sche
 			return old == new
 		},
 	})
-	common.CustomizeSchemaPath(s).AddNewField("url", &schema.Schema{
+	s.AddNewField("url", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	})
-	common.CustomizeSchemaPath(s, "num_workers").SetDefault(0).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
-	common.CustomizeSchemaPath(s).AddNewField("cluster_mount_info", &schema.Schema{
+	s.SchemaPath("num_workers").SetDefault(0).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
+	s.AddNewField("cluster_mount_info", &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{

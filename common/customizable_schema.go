@@ -91,11 +91,11 @@ func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *Customiza
 }
 
 func (s *CustomizableSchema) SchemaPath(path ...string) *CustomizableSchema {
-	sch := MustSchemaPath(s.GetSchema(), path...)
+	sch := MustSchemaPath(s.GetSchemaMap(), path...)
 	return &CustomizableSchema{Schema: sch, path: path, context: s.context}
 }
 
-func (s *CustomizableSchema) GetSchema(path ...string) map[string]*schema.Schema {
+func (s *CustomizableSchema) GetSchemaMap(path ...string) map[string]*schema.Schema {
 	schemaMap := s.Schema.Elem.(*schema.Resource).Schema
 	return schemaMap
 }

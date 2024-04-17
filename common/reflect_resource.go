@@ -114,7 +114,7 @@ func resourceProviderStructToSchema(v ResourceProvider, scp SchemaPathContext) m
 	}
 	cs := CustomizeSchemaPath(scm)
 	cs.context = scp
-	scm = v.CustomizeSchema(cs).GetSchema()
+	scm = v.CustomizeSchema(cs).GetSchemaMap()
 	return scm
 }
 

@@ -172,7 +172,7 @@ func TestCustomizableSchemaSetConflictsWith_PathInContext(t *testing.T) {
 		schemaPath: []*schema.Schema{},
 	}
 	CustomizeSchemaPath(fakeContextWithPath, testCustomizableSchemaScm, "float").SetConflictsWith([]string{"abc"})
-	assert.Truef(t, len(testCustomizableSchemaScm["flat"].ConflictsWith) == 1, "conflictsWith should be set in field: float")
+	assert.Truef(t, len(testCustomizableSchemaScm["float"].ConflictsWith) == 1, "conflictsWith should be set in field: float")
 	assert.Truef(t, CustomizeSchemaPath(fakeContextWithPath, testCustomizableSchemaScm, "float").Schema.ConflictsWith[0] == "a.0.b.abc", "conflictsWith should be set with the correct prefix")
 }
 

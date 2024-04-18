@@ -92,6 +92,10 @@ func TestUcAccExternalLocationUpdate(t *testing.T) {
 			externalLocationTemplateWithOwner("Managed by TF -- Updated Comment", "account users") +
 			grantsTemplateForExternalLocation,
 	}, step{
+		Template: storageCredentialTemplateWithOwner("Managed by TF -- Updated Comment", "{env.TEST_DATA_ENG_GROUP}") +
+			externalLocationTemplateWithOwner("Managed by TF -- Updated Comment", "{env.TEST_DATA_ENG_GROUP}") +
+			grantsTemplateForExternalLocation,
+	}, step{
 		Template: storageCredentialTemplateWithOwner("Managed by TF -- Updated Comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}") +
 			externalLocationTemplateWithOwner("Managed by TF -- Updated Comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}") +
 			grantsTemplateForExternalLocation,

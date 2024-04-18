@@ -1,14 +1,13 @@
-package catalog
+package sharing
 
 import (
 	"context"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceShares() *schema.Resource {
+func DataSourceShares() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		Shares []string `json:"shares,omitempty" tf:"computed,slice_set"`
 	}, w *databricks.WorkspaceClient) error {

@@ -63,9 +63,15 @@ func (a TablesAPI) deleteTable(name string) error {
 	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
 }
 
-func ResourceTable() *schema.Resource {
+func ResourceTable() common.Resource {
 	tableSchema := common.StructToSchema(TableInfo{},
-		common.NoCustomize)
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
+			for _, field := range caseInsensitiveFields {
+				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			}
+			return m
+		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
 		"owner", "name", "data_source_format", "columns", "storage_location",
 		"view_definition", "comment", "properties"})
@@ -97,5 +103,5 @@ func ResourceTable() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},
-	}.ToResource()
+	}
 }

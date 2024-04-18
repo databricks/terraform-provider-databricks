@@ -5,7 +5,6 @@ subcategory: "Workspace"
 
 This resource allows you to manage credentials for [Databricks Repos](https://docs.databricks.com/repos.html) using [Git Credentials API](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html).
 
-
 ## Example Usage
 
 You can declare Terraform-managed Git credential using following code:
@@ -19,7 +18,6 @@ resource "databricks_git_credential" "ado" {
 ```
 
 ## Argument Reference
-
 
 The following arguments are supported:
 
@@ -39,9 +37,8 @@ In addition to all arguments above, the following attributes are exported:
 The resource cluster can be imported using ID of Git credential that could be obtained via REST API:
 
 ```bash
-$ terraform import databricks_git_credential.this <git-credential-id>
+terraform import databricks_git_credential.this <git-credential-id>
 ```
-
 
 ## Related Resources
 

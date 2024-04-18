@@ -130,6 +130,8 @@ func TestUcAccUpdateShare(t *testing.T) {
 	}, step{
 		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("e", "account users"),
 	}, step{
+		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("e", "{env.TEST_DATA_ENG_GROUP}"),
+	}, step{
 		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("f", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

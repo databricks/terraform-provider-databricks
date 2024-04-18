@@ -460,7 +460,7 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 }
 
 // ResourceMwsWorkspaces manages E2 workspaces
-func ResourceMwsWorkspaces() *schema.Resource {
+func ResourceMwsWorkspaces() common.Resource {
 	workspaceSchema := common.StructToSchema(Workspace{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			for name, fieldSchema := range s {
@@ -492,6 +492,8 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old != ""
 			}
+
+			s["pricing_tier"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 
 			s["customer_managed_key_id"].Deprecated = "Use managed_services_customer_managed_key_id instead"
 			s["customer_managed_key_id"].ConflictsWith = []string{"managed_services_customer_managed_key_id", "storage_customer_managed_key_id"}
@@ -613,7 +615,7 @@ func ResourceMwsWorkspaces() *schema.Resource {
 			Read:   schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
-	}.ToResource()
+	}
 }
 
 func workspaceMigrateV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {

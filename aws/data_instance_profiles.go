@@ -6,10 +6,9 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceInstanceProfiles() *schema.Resource {
+func DataSourceInstanceProfiles() common.Resource {
 	type instanceProfileData struct {
 		Name    string `json:"name,omitempty" tf:"computed"`
 		Arn     string `json:"arn,omitempty" tf:"computed"`

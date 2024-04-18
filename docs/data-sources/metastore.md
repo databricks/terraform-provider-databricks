@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore Data Source
 
+-> **Note** This data source could be only used with account-level provider!
+
 Retrieves information about metastore for a given id of [databricks_metastore](../resources/metastore.md) object, that was created by Terraform or manually, so that special handling could be applied.
 
 -> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _authentication is not configured for provider_ errors.
@@ -32,7 +34,12 @@ output "some_metastore" {
 
 ## Argument Reference
 
-* `metastore_id` - Id of the metastore to be fetched
+Provide one of the arguments to get information about a metastore:
+
+* `metastore_id` - Id of the metastore
+* `name` - Name of the metastore
+* `region` - Region of the metastore
+
 
 ## Attribute Reference
 
@@ -42,7 +49,7 @@ This data source exports the following attributes:
   * `name` - Name of metastore.
   * `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored.
   * `owner` - Username/groupname/sp application_id of the metastore owner.
-  * `delta_sharing_scope` - Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
+  * `delta_sharing_scope` - Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL. INTERNAL only allows sharing within the same account, and INTERNAL_AND_EXTERNAL allows cross account sharing and token based sharing.
   * `delta_sharing_recipient_token_lifetime_in_seconds` - Used to set expiration duration in seconds on recipient data access tokens.
   * `delta_sharing_organization_name` - The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing.
 

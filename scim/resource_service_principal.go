@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"golang.org/x/exp/slices"
 
@@ -95,7 +96,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 }
 
 // ResourceServicePrincipal manages service principals within workspace
-func ResourceServicePrincipal() *schema.Resource {
+func ResourceServicePrincipal() common.Resource {
 	type entity struct {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
 		DisplayName   string `json:"display_name,omitempty" tf:"computed,force_new"`
@@ -104,7 +105,7 @@ func ResourceServicePrincipal() *schema.Resource {
 	}
 	servicePrincipalSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -214,29 +215,32 @@ func ResourceServicePrincipal() *schema.Resource {
 			}
 			// Disable or delete
 			if isDisable {
-				r := PatchRequest("replace", "active", "false")
+				r := PatchRequestWithValue("replace", "active", "false")
 				err = spAPI.Patch(d.Id(), r)
 			} else {
 				err = spAPI.Delete(d.Id())
+			}
+			if err != nil {
+				return err
 			}
 			// Handle force delete flags
 			if !isAccount && !isDisable && err == nil {
 				if isForceDeleteRepos {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
-					if err != nil {
-						return fmt.Errorf("force_delete_repos: %w", err)
+					if err != nil && !apierr.IsMissing(err) {
+						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
-					if err != nil {
-						return fmt.Errorf("force_delete_home_dir: %w", err)
+					if err != nil && !apierr.IsMissing(err) {
+						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}
 				}
 			}
-			return err
+			return nil
 		},
-	}.ToResource()
+	}
 }
 
 func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.ResourceData, spAPI ServicePrincipalsAPI, u User) error {

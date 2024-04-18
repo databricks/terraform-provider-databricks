@@ -12,14 +12,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceLibrary() *schema.Resource {
-	libraySdkSchema := common.StructToSchema(compute.Library{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["cluster_id"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		}
-		return m
+type LibraryResource struct {
+	compute.Library
+}
+
+func (LibraryResource) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
+	common.CustomizeSchemaPath(s).AddNewField("cluster_id", &schema.Schema{
+		Type:     schema.TypeString,
+		Required: true,
 	})
+	return s
+}
+
+func ResourceLibrary() common.Resource {
+	libraySdkSchema := common.StructToSchema(LibraryResource{}, nil)
 	parseId := func(id string) (string, string) {
 		split := strings.SplitN(id, "/", 2)
 		if len(split) != 2 {
@@ -106,5 +112,5 @@ func ResourceLibrary() *schema.Resource {
 			}
 			return apierr.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
 		},
-	}.ToResource()
+	}
 }

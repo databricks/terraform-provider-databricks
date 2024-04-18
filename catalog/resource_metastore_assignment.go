@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceMetastoreAssignment() *schema.Resource {
+func ResourceMetastoreAssignment() common.Resource {
 	s := common.StructToSchema(catalog.MetastoreAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["default_catalog_name"].Default = "hive_metastore"
@@ -115,5 +115,5 @@ func ResourceMetastoreAssignment() *schema.Resource {
 				})
 			})
 		},
-	}.ToResource()
+	}
 }

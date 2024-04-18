@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -21,7 +23,7 @@ var getSecurableName = func(d *schema.ResourceData) string {
 	return securableName.(string)
 }
 
-func ResourceCatalogWorkspaceBinding() *schema.Resource {
+func ResourceCatalogWorkspaceBinding() common.Resource {
 	workspaceBindingSchema := common.StructToSchema(catalog.WorkspaceBinding{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["catalog_name"] = &schema.Schema{
@@ -80,10 +82,28 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			if err != nil {
 				return err
 			}
+			// TODO: fix Read operation by splitting `id` into parts... Test with actual import. Remove not necessary code in exporter?
 			workspaceId := int64(d.Get("workspace_id").(int))
+			securable_name := getSecurableName(d)
+			securable_type := d.Get("securable_type").(string)
+			if workspaceId == 0 || securable_name == "" || securable_type == "" {
+				parts := strings.Split(d.Id(), "|")
+				if len(parts) != 3 {
+					return fmt.Errorf("incorrect binding id: %s. Correct format: <workspace_id>|<securable_type>|<securable_name>", d.Id())
+				}
+				securable_name = parts[2]
+				securable_type = parts[1]
+				workspaceId, err = strconv.ParseInt(parts[0], 10, 0)
+				if err != nil {
+					return fmt.Errorf("can't parse workspace_id: %w", err)
+				}
+				d.Set("securable_name", securable_name)
+				d.Set("securable_type", securable_type)
+				d.Set("workspace_id", workspaceId)
+			}
 			bindings, err := w.WorkspaceBindings.GetBindings(ctx, catalog.GetBindingsRequest{
-				SecurableName: getSecurableName(d),
-				SecurableType: d.Get("securable_type").(string),
+				SecurableName: securable_name,
+				SecurableType: securable_type,
 			})
 			if err != nil {
 				return err
@@ -109,7 +129,7 @@ func ResourceCatalogWorkspaceBinding() *schema.Resource {
 			})
 			return err
 		},
-	}.ToResource()
+	}
 }
 
 // migrate to v1 state, as catalog_name is moved to securable_name

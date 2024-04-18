@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -27,9 +27,9 @@ type awsIamPolicyStatement struct {
 }
 
 // DataAwsAssumeRolePolicy ...
-func DataAwsAssumeRolePolicy() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func DataAwsAssumeRolePolicy() common.Resource {
+	return common.Resource{
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			externalID := d.Get("external_id").(string)
 			policy := awsIamPolicy{
 				Version: "2012-10-17",
@@ -57,7 +57,7 @@ func DataAwsAssumeRolePolicy() *schema.Resource {
 			}
 			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(externalID)
 			// nolint

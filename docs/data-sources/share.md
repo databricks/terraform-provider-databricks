@@ -1,5 +1,5 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Delta Sharing"
 ---
 # databricks_share Data Source
 

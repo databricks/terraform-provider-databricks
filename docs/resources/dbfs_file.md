@@ -49,7 +49,7 @@ resource "databricks_library" "app" {
 
 ## Argument Reference
 
--> **Note** DBFS files would only be changed, if Terraform stage did change. This means that any manual changes to managed file won't be overwritten by Terraform, if there's no local change. 
+-> **Note** DBFS files would only be changed, if Terraform stage did change. This means that any manual changes to managed file won't be overwritten by Terraform, if there's no local change.
 
 The following arguments are supported:
 
@@ -65,13 +65,12 @@ In addition to all arguments above, the following attributes are exported:
 * `file_size` - The file size of the file that is being tracked by this resource in bytes.
 * `dbfs_path` - Path, but with `dbfs:` prefix.
 
-
 ## Import
 
 The resource dbfs file can be imported using the path of the file:
 
 ```bash
-$ terraform import databricks_dbfs_file.this <path>
+terraform import databricks_dbfs_file.this <path>
 ```
 
 ## Related Resources

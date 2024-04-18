@@ -30,7 +30,7 @@ func TestCreateRecipient(t *testing.T) {
 						AllowedIpAddresses: []string{"0.0.0.0/0"},
 					},
 				},
-				Response: RecipientInfo{
+				Response: sharing.RecipientInfo{
 					Name: "a",
 				},
 			},
@@ -413,4 +413,9 @@ func TestDeleteRecipientError(t *testing.T) {
 		Delete:   true,
 		ID:       "testRecipient",
 	}.ExpectError(t, "Something went wrong")
+}
+
+func TestRecipientPropsSuppressDiff(t *testing.T) {
+	assert.True(t, recepientPropertiesSuppressDiff("properties_kvpairs.0.properties.databricks.name", "test", "", nil))
+	assert.False(t, recepientPropertiesSuppressDiff("test", "test", "", nil))
 }

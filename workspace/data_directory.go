@@ -2,13 +2,14 @@ package workspace
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // DataSourceDirectory ...
-func DataSourceDirectory() *schema.Resource {
+func DataSourceDirectory() common.Resource {
 	s := map[string]*schema.Schema{
 		"path": {
 			Type:     schema.TypeString,
@@ -25,17 +26,17 @@ func DataSourceDirectory() *schema.Resource {
 			Computed: true,
 		},
 	}
-	return &schema.Resource{
+	return common.Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, m)
 			path := d.Get("path").(string)
 			data, err := notebooksAPI.Read(path)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			if data.ObjectType != Directory { // should we support Repos as well?
-				return diag.Errorf("'%s' isn't a directory", path)
+				return fmt.Errorf("'%s' isn't a directory", path)
 			}
 			d.SetId(data.Path)
 			d.Set("object_id", data.ObjectID)

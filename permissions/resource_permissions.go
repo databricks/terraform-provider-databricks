@@ -365,7 +365,7 @@ func stringInSlice(a string, list []string) bool {
 }
 
 // ResourcePermissions definition
-func ResourcePermissions() *schema.Resource {
+func ResourcePermissions() common.Resource {
 	s := common.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, mapping := range permissionsResourceIDFields() {
 			s[mapping.field] = &schema.Schema{
@@ -482,5 +482,5 @@ func ResourcePermissions() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewPermissionsAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

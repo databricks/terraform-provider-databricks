@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceGitCredential() *schema.Resource {
+func ResourceGitCredential() common.Resource {
 	s := common.StructToSchema(workspace.CreateCredentials{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["force"] = &schema.Schema{
 			Type:     schema.TypeBool,
@@ -105,5 +105,5 @@ func ResourceGitCredential() *schema.Resource {
 			}
 			return w.GitCredentials.DeleteByCredentialId(ctx, cred_id)
 		},
-	}.ToResource()
+	}
 }

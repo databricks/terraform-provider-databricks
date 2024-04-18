@@ -119,7 +119,7 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 	return split[0], split[1], split[2], nil
 }
 
-func ResourceGrant() *schema.Resource {
+func ResourceGrant() common.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 
@@ -184,7 +184,11 @@ func ResourceGrant() *schema.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(*grantsForPrincipal, s, d)
+			err = common.StructToData(*grantsForPrincipal, s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -227,5 +231,5 @@ func ResourceGrant() *schema.Resource {
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
 		},
-	}.ToResource()
+	}
 }

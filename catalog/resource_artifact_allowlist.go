@@ -21,7 +21,7 @@ type ArtifactAllowlistInfo struct {
 	MetastoreId string `json:"metastore_id,omitempty" tf:"computed"`
 }
 
-func ResourceArtifactAllowlist() *schema.Resource {
+func ResourceArtifactAllowlist() common.Resource {
 	allowlistSchema := common.StructToSchema(ArtifactAllowlistInfo{}, common.NoCustomize)
 	p := common.NewPairID("metastore_id", "artifact_type")
 
@@ -107,5 +107,5 @@ func ResourceArtifactAllowlist() *schema.Resource {
 
 			return nil
 		},
-	}.ToResource()
+	}
 }

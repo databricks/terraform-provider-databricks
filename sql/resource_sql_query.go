@@ -510,12 +510,12 @@ func (a QueryAPI) Delete(queryID string) error {
 	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil)
 }
 
-func ResourceSqlQuery() *schema.Resource {
+func ResourceSqlQuery() common.Resource {
 	s := common.StructToSchema(
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["schedule"].Deprecated = "Operations on `databricks_sql_query` schedules are deprecated. Please use `databricks_job` resource to schedule a `sql_task`."
-			schedule := m["schedule"].Elem.(*schema.Resource)
+			schedule := common.MustSchemaMap(m, "schedule")
 
 			// Make different query schedule types mutually exclusive.
 			{
@@ -525,15 +525,15 @@ func ResourceSqlQuery() *schema.Resource {
 						if n1 == n2 {
 							continue
 						}
-						schedule.Schema[n1].ConflictsWith = append(schedule.Schema[n1].ConflictsWith, fmt.Sprintf("schedule.0.%s", n2))
+						schedule[n1].ConflictsWith = append(schedule[n1].ConflictsWith, fmt.Sprintf("schedule.0.%s", n2))
 					}
 				}
 			}
 
 			// Validate week of day in weekly schedule.
 			// Manually verified that this is case sensitive.
-			weekly := schedule.Schema["weekly"].Elem.(*schema.Resource)
-			weekly.Schema["day_of_week"].ValidateFunc = validation.StringInSlice([]string{
+			weekly := common.MustSchemaMap(schedule, "weekly")
+			weekly["day_of_week"].ValidateFunc = validation.StringInSlice([]string{
 				"Sunday",
 				"Monday",
 				"Tuesday",
@@ -544,6 +544,7 @@ func ResourceSqlQuery() *schema.Resource {
 			}, false)
 
 			m["run_as_role"].ValidateFunc = validation.StringInSlice([]string{"viewer", "owner"}, false)
+			m["query"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 			return m
 		})
 
@@ -587,5 +588,5 @@ func ResourceSqlQuery() *schema.Resource {
 			return NewQueryAPI(ctx, c).Delete(data.Id())
 		},
 		Schema: s,
-	}.ToResource()
+	}
 }

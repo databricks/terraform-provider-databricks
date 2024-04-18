@@ -4,16 +4,15 @@ subcategory: "Unity Catalog"
 # databricks_grants Resource
 
 -> **Note**
-Two different resources help you manage your Unity Catalog grants for a securable. Each of these resources serves a different use case:
-
-[databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants): Authoritative. Sets the grants of a securable and replaces any existing grants defined inside or outside of Terraform.
-[databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant): Authoritative for a given principal. Updates the grants of a securable to a single principal. Other principals within the grants for the securables are preserved.
-
--> **Note**
   This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
 
 -> **Note**
   Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future. Account-level principal grants can be assigned with any valid workspace as the Unity Catalog is decoupled from specific workspaces. More information in [the official documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html).
+
+Two different resources help you manage your Unity Catalog grants for a securable. Each of these resources serves a different use case:
+
+- [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants): Authoritative. Sets the grants of a securable and replaces any existing grants defined inside or outside of Terraform.
+- [databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant): Authoritative for a given principal. Updates the grants of a securable to a single principal. Other principals within the grants for the securables are preserved.
 
 In Unity Catalog all users initially have no access to data. Only Metastore Admins can create objects and can grant/revoke access on individual objects to users and groups. Every securable object in Unity Catalog has an owner. The owner can be any account-level user or group, called principals in general. The principal that creates an object becomes its owner. Owners receive `ALL_PRIVILEGES` on the securable object (e.g., `SELECT` and `MODIFY` on a table), as well as the permission to grant privileges to other principals.
 
@@ -36,6 +35,7 @@ You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`,
 
 ```hcl
 resource "databricks_grants" "sandbox" {
+  metastore = "metastore_id"
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
@@ -213,6 +213,25 @@ resource "databricks_grants" "customers" {
 }
 ```
 
+## Function grants
+
+You can grant `ALL_PRIVILEGES` and `EXECUTE` privileges to _`catalog.schema.function`_ specified in the `function` attribute.
+
+```hcl
+resource "databricks_grants" "udf" {
+  function = "main.reporting.udf"
+
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["EXECUTE"]
+  }
+  grant {
+    principal  = "Data Analysts"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
 ## Storage credential grants
 
 You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
@@ -322,3 +341,11 @@ resource "databricks_grants" "some" {
 ## Other access control
 
 You can control Databricks General Permissions through [databricks_permissions](permissions.md) resource.
+
+## Import
+
+The resource can be imported using combination of securable type (`table`, `catalog`, `foreign_connection`, ...) and it's name:
+
+```bash
+terraform import databricks_grants.this catalog/abc
+```

@@ -5,11 +5,10 @@ import (
 	"fmt"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // DataSourceServicePrincipal returns information about the spn specified by the application_id
-func DataSourceServicePrincipal() *schema.Resource {
+func DataSourceServicePrincipal() common.Resource {
 	type spnData struct {
 		ApplicationID  string `json:"application_id,omitempty" tf:"computed"`
 		DisplayName    string `json:"display_name,omitempty" tf:"computed"`

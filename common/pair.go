@@ -88,7 +88,7 @@ type BindResource struct {
 }
 
 // BindResource creates resource that relies on binding ID pair with simple schema & importer
-func (p *Pair) BindResource(pr BindResource) *schema.Resource {
+func (p *Pair) BindResource(pr BindResource) Resource {
 	return Resource{
 		Schema: p.schema,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error {
@@ -121,5 +121,5 @@ func (p *Pair) BindResource(pr BindResource) *schema.Resource {
 			}
 			return pr.DeleteContext(ctx, left, right, c)
 		},
-	}.ToResource()
+	}
 }

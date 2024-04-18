@@ -282,7 +282,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		allow_cluster_create = true
 		databricks_sql_access = true
 		`,
-		RequiresNew: true,
+		RequiresNew: false,
 		Update:      true,
 		ID:          "abc",
 	}.Apply(t)
@@ -362,7 +362,7 @@ func TestCreateForceOverwriteCannotListGroups(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceGroup().TestResourceData()
+		d := ResourceGroup().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedGroup(
 			fmt.Errorf("Group with name abc already exists."),
@@ -402,7 +402,7 @@ func TestCreateForceOverwriteFindsAndSetsGroupID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceGroup().TestResourceData()
+		d := ResourceGroup().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("display_name", "abc")
 		err := createForceOverridesManuallyAddedGroup(

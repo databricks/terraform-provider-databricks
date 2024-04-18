@@ -153,7 +153,7 @@ func TestPairIDResource(t *testing.T) {
 				DeleteContext: func(ctx context.Context, left, right string, c *DatabricksClient) error {
 					return tt.err
 				},
-			})
+			}).ToResource()
 			ctx := context.Background()
 			d := resource.Data(&terraform.InstanceState{
 				Attributes: state,

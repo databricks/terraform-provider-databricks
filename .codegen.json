@@ -1,0 +1,14 @@
+{
+    "formatter": "make fmt",
+    "version": {
+        "common/version.go": "version = \"$VERSION\""
+    },
+    "toolchain": {
+        "required": [
+            "go"
+        ],
+        "post_generate": [
+            "make test"
+        ]
+    }
+}

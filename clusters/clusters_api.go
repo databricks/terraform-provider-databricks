@@ -194,22 +194,22 @@ type S3StorageInfo struct {
 
 // GcsStorageInfo contains the struct for when storing files in GCS
 type GcsStorageInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // AbfssStorageInfo contains the struct for when storing files in ADLS
 type AbfssStorageInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // WorkspaceFileInfo represents a file in the Databricks workspace.
 type WorkspaceFileInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
@@ -433,6 +433,8 @@ type Cluster struct {
 	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
 }
 
+// TODO: Remove this once all the resources using clusters are migrated to Go SDK.
+// They would then be using Validate(cluster compute.CreateCluster) defined in resource_cluster.go that is a duplicate of this method but uses Go SDK.
 func (cluster Cluster) Validate() error {
 	// TODO: rewrite with CustomizeDiff
 	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
@@ -447,6 +449,8 @@ func (cluster Cluster) Validate() error {
 	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
 }
 
+// TODO: Remove this once all the resources using clusters are migrated to Go SDK.
+// They would then be using ModifyRequestOnInstancePool(cluster *compute.CreateCluster) defined in resource_cluster.go that is a duplicate of this method but uses Go SDK.
 // ModifyRequestOnInstancePool helps remove all request fields that should not be submitted when instance pool is selected.
 func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	// Instance profile id does not exist or not set
@@ -477,6 +481,8 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	cluster.DriverNodeTypeID = ""
 }
 
+// TODO: Remove this once all the resources using clusters are migrated to Go SDK.
+// They would then be using FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) defined in resource_cluster.go that is a duplicate of this method but uses Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
 func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")

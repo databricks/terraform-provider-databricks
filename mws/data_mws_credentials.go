@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceMwsCredentials() *schema.Resource {
+func DataSourceMwsCredentials() common.Resource {
 	type mwsCredentialsData struct {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}

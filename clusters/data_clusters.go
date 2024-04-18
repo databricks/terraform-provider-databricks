@@ -4,16 +4,16 @@ import (
 	"context"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceClusters() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, i any) diag.Diagnostics {
+func DataSourceClusters() common.Resource {
+	return common.Resource{
+		Read: func(ctx context.Context, d *schema.ResourceData, i *common.DatabricksClient) error {
 			clusters, err := NewClustersAPI(ctx, i).List()
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			ids := schema.NewSet(schema.HashString, []any{})
 			name_contains := strings.ToLower(d.Get("cluster_name_contains").(string))

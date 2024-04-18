@@ -3,7 +3,7 @@ subcategory: "Compute"
 ---
 # databricks_pipeline Resource
 
-Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 
 ## Example Usage
 
@@ -94,13 +94,19 @@ DLT allows to specify one or more notification blocks to get notifications about
   * `on-update-fatal-failure` - a pipeline update fails with a non-retryable (fatal) error.
   * `on-flow-failure` - a single data flow fails.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Canonical unique identifier of the DLT pipeline.
+* `url` - URL of the DLT pipeline on the given workspace.
 
 ## Import
 
 The resource job can be imported using the id of the pipeline
 
 ```bash
-$ terraform import databricks_pipeline.this <pipeline-id>
+terraform import databricks_pipeline.this <pipeline-id>
 ```
 
 ## Related Resources

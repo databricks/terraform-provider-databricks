@@ -89,7 +89,7 @@ func mustInt64(s string) int64 {
 	return n
 }
 
-func ResourceMwsPermissionAssignment() *schema.Resource {
+func ResourceMwsPermissionAssignment() common.Resource {
 	type entity struct {
 		WorkspaceId int64    `json:"workspace_id"`
 		PrincipalId int64    `json:"principal_id"`
@@ -137,5 +137,5 @@ func ResourceMwsPermissionAssignment() *schema.Resource {
 			}
 			return NewPermissionAssignmentAPI(ctx, c).Remove(workspaceId, principalId)
 		},
-	}.ToResource()
+	}
 }

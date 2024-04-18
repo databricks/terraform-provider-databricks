@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceMwsWorkspaces() *schema.Resource {
+func DataSourceMwsWorkspaces() common.Resource {
 	type mwsWorkspacesData struct {
 		Ids map[string]int64 `json:"ids,omitempty" tf:"computed"`
 	}

@@ -96,7 +96,7 @@ func (a TokensAPI) Delete(tokenID string) error {
 }
 
 // ResourceToken refreshes token in case it's expired
-func ResourceToken() *schema.Resource {
+func ResourceToken() common.Resource {
 	s := map[string]*schema.Schema{
 		"lifetime_seconds": {
 			Type:     schema.TypeInt,
@@ -152,5 +152,5 @@ func ResourceToken() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTokensAPI(ctx, c).Delete(d.Id())
 		},
-	}.ToResource()
+	}
 }

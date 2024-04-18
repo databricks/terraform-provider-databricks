@@ -8,10 +8,9 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceWarehouses() *schema.Resource {
+func DataSourceWarehouses() common.Resource {
 	type warehousesData struct {
 		WarehouseNameContains string   `json:"warehouse_name_contains,omitempty"`
 		Ids                   []string `json:"ids,omitempty" tf:"computed,slice_set"`

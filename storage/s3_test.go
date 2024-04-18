@@ -21,7 +21,7 @@ func TestPreprocessS3MountOnDeletedClusterNoInstanceProfileSpecifiedError(t *tes
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.Set("uri", "s3://bucket")
 		d.Set("cluster_id", "removed-cluster")
 		err := preprocessS3MountGeneric(ctx, r.Schema, d, client)
@@ -92,7 +92,7 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
-		d := r.TestResourceData()
+		d := r.ToResource().TestResourceData()
 		d.MarkNewResource()
 		common.StructToData(GenericMount{
 			URI:       "s3://bucket",

@@ -16,15 +16,17 @@ import (
 
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
-	Create         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Read           func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Update         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Delete         func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	CustomizeDiff  func(ctx context.Context, d *schema.ResourceDiff) error
-	StateUpgraders []schema.StateUpgrader
-	Schema         map[string]*schema.Schema
-	SchemaVersion  int
-	Timeouts       *schema.ResourceTimeout
+	Create             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Read               func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Update             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Delete             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	CustomizeDiff      func(ctx context.Context, d *schema.ResourceDiff) error
+	StateUpgraders     []schema.StateUpgrader
+	Schema             map[string]*schema.Schema
+	SchemaVersion      int
+	Timeouts           *schema.ResourceTimeout
+	DeprecationMessage string
+	Importer           *schema.ResourceImporter
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -120,6 +122,8 @@ func (r Resource) ToResource() *schema.Resource {
 			}
 		}
 	}
+	// Ignore missing for read for resources, but not for data sources.
+	ignoreMissingForRead := (r.Create != nil || r.Update != nil || r.Delete != nil)
 	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
@@ -139,13 +143,19 @@ func (r Resource) ToResource() *schema.Resource {
 			return nil
 		}
 	}
-	return &schema.Resource{
-		Schema:         r.Schema,
-		SchemaVersion:  r.SchemaVersion,
-		StateUpgraders: r.StateUpgraders,
-		CustomizeDiff:  r.saferCustomizeDiff(),
-		CreateContext: func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
+	resource := &schema.Resource{
+		Schema:             r.Schema,
+		SchemaVersion:      r.SchemaVersion,
+		StateUpgraders:     r.StateUpgraders,
+		CustomizeDiff:      r.saferCustomizeDiff(),
+		ReadContext:        generateReadFunc(ignoreMissingForRead),
+		UpdateContext:      update,
+		Importer:           r.Importer,
+		Timeouts:           r.Timeouts,
+		DeprecationMessage: r.DeprecationMessage,
+	}
+	if r.Create != nil {
+		resource.CreateContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			err := recoverable(r.Create)(ctx, d, c)
 			if err != nil {
@@ -157,14 +167,12 @@ func (r Resource) ToResource() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			return nil
-		},
-		ReadContext:   generateReadFunc(true),
-		UpdateContext: update,
-		DeleteContext: func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
+		}
+	}
+	if r.Delete != nil {
+		resource.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
 			if apierr.IsMissing(err) {
-				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
 					ResourceName.GetOrUnknown(ctx), d.Id())
 				d.SetId("")
@@ -175,8 +183,10 @@ func (r Resource) ToResource() *schema.Resource {
 				return diag.FromErr(err)
 			}
 			return nil
-		},
-		Importer: &schema.ResourceImporter{
+		}
+	}
+	if resource.Importer == nil {
+		resource.Importer = &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData,
 				m any) (data []*schema.ResourceData, e error) {
 				d.MarkNewResource()
@@ -187,9 +197,9 @@ func (r Resource) ToResource() *schema.Resource {
 				}
 				return []*schema.ResourceData{d}, err
 			},
-		},
-		Timeouts: r.Timeouts,
+		}
 	}
+	return resource
 }
 
 func MustCompileKeyRE(name string) *regexp.Regexp {
@@ -199,26 +209,19 @@ func MustCompileKeyRE(name string) *regexp.Regexp {
 }
 
 // Deprecated: migrate to WorkspaceData
-func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) *schema.Resource {
+func DataResource(sc any, read func(context.Context, any, *DatabricksClient) error) Resource {
 	// TODO: migrate to go1.18 and get schema from second function argument?..
 	s := StructToSchema(sc, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		return m
 	})
-	return &schema.Resource{
+	return Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {
-			defer func() {
-				// using recoverable() would cause more complex rewrapping of DataToStructPointer & StructToData
-				if panic := recover(); panic != nil {
-					diags = diag.Errorf("panic: %v", panic)
-				}
-			}()
+		Read: func(ctx context.Context, d *schema.ResourceData, m *DatabricksClient) (err error) {
 			ptr := reflect.New(reflect.ValueOf(sc).Type())
-			DataToReflectValue(d, &schema.Resource{Schema: s}, ptr.Elem())
-			err := read(ctx, ptr.Interface(), m.(*DatabricksClient))
+			DataToReflectValue(d, s, ptr.Elem())
+			err = read(ctx, ptr.Interface(), m)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
-				diags = diag.FromErr(err)
 			}
 			StructToData(ptr.Elem().Interface(), s, d)
 			// check if the resource schema has the `id` attribute (marked with `json:"id"` in the provided structure).
@@ -244,7 +247,7 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 //		catalogs, err := w.Catalogs.ListAll(ctx)
 //		...
 //	})
-func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) *schema.Resource {
+func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
 	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
 		return read(ctx, t, wc)
 	}, false)
@@ -281,7 +284,7 @@ func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceCl
 //	         // The resource should be returned.
 //	         ...
 //	     })
-func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks.WorkspaceClient) (*T, error)) *schema.Resource {
+func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks.WorkspaceClient) (*T, error)) Resource {
 	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, o P, s *T, w *databricks.WorkspaceClient) error {
 		res, err := read(ctx, o, w)
 		if err != nil {
@@ -303,7 +306,7 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 //		metastores, err := acc.Metastores.List(ctx)
 //		...
 //	})
-func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) *schema.Resource {
+func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) Resource {
 	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, s struct{}, t *T, ac *databricks.AccountClient) error {
 		return read(ctx, t, ac)
 	}, false)
@@ -340,7 +343,7 @@ func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient
 //	         // The resource should be populated in the `workspace` parameter.
 //	         ...
 //		  })
-func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.AccountClient) (*T, error)) *schema.Resource {
+func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.AccountClient) (*T, error)) Resource {
 	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, o P, s *T, a *databricks.AccountClient) error {
 		res, err := read(ctx, o, a)
 		if err != nil {
@@ -359,7 +362,7 @@ func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.A
 func genericDatabricksData[T, P, C any](
 	getClient func(*DatabricksClient) (C, error),
 	read func(context.Context, P, *T, C) error,
-	hasOther bool) *schema.Resource {
+	hasOther bool) Resource {
 	var dummy T
 	var other P
 	otherFields := StructToSchema(other, NoCustomize)
@@ -386,29 +389,26 @@ func genericDatabricksData[T, P, C any](
 		}
 		return m
 	})
-	return &schema.Resource{
+	return Resource{
 		Schema: s,
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) (diags diag.Diagnostics) {
+		Read: func(ctx context.Context, d *schema.ResourceData, client *DatabricksClient) (err error) {
 			defer func() {
 				// using recoverable() would cause more complex rewrapping of DataToStructPointer & StructToData
 				if panic := recover(); panic != nil {
-					diags = diag.Errorf("panic: %v", panic)
+					err = fmt.Errorf("panic: %v", panic)
 				}
 			}()
 			var dummy T
 			var other P
 			DataToStructPointer(d, s, &other)
 			DataToStructPointer(d, s, &dummy)
-			client := m.(*DatabricksClient)
 			c, err := getClient(client)
 			if err != nil {
-				err = nicerError(ctx, err, "get client")
-				return diag.FromErr(err)
+				return nicerError(ctx, err, "get client")
 			}
 			err = read(ctx, other, &dummy, c)
 			if err != nil {
 				err = nicerError(ctx, err, "read data")
-				diags = diag.FromErr(err)
 			}
 			StructToData(&dummy, s, d)
 			// check if the resource schema has the `id` attribute (marked with `json:"id"` in the provided structure).
@@ -442,6 +442,7 @@ var NoAuth string = "default auth: cannot configure default credentials, " +
 func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 	s["account_id"] = &schema.Schema{
 		Type:       schema.TypeString,
+		Computed:   true,
 		Optional:   true,
 		Deprecated: "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
 	}

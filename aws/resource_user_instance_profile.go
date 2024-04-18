@@ -12,14 +12,14 @@ import (
 )
 
 // ResourceUserInstanceProfile binds user and instance profile
-func ResourceUserInstanceProfile() *schema.Resource {
+func ResourceUserInstanceProfile() common.Resource {
 	r := common.NewPairID("user_id", "instance_profile_id").Schema(func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["instance_profile_id"].ValidateDiagFunc = ValidArn
 		return m
 	}).BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
-			return scim.NewUsersAPI(ctx, c).Patch(userID, scim.PatchRequest("add", "roles", roleARN))
+			return scim.NewUsersAPI(ctx, c).Patch(userID, scim.PatchRequestWithValue("add", "roles", roleARN))
 		},
 		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
 			user, err := scim.NewUsersAPI(ctx, c).Read(userID, "roles")
@@ -31,7 +31,7 @@ func ResourceUserInstanceProfile() *schema.Resource {
 		},
 		DeleteContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient) error {
 			return scim.NewUsersAPI(ctx, c).Patch(userID, scim.PatchRequest(
-				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN), ""))
+				"remove", fmt.Sprintf(`roles[value eq "%s"]`, roleARN)))
 		},
 	})
 	r.DeprecationMessage = "Please migrate to `databricks_user_role`. This resource will be removed in v0.5.x"

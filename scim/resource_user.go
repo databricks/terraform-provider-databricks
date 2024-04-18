@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -12,9 +13,9 @@ import (
 
 func userExistsErrorMessage(userName string, isAccount bool) string {
 	if isAccount {
-		return fmt.Sprintf("User with email %s already exists in this account", userName)
+		return strings.ToLower(fmt.Sprintf("User with email %s already exists in this account", userName))
 	} else {
-		return fmt.Sprintf("User with username %s already exists.", userName)
+		return strings.ToLower(fmt.Sprintf("User with username %s already exists.", userName))
 	}
 }
 
@@ -23,7 +24,7 @@ const (
 )
 
 // ResourceUser manages users within workspace
-func ResourceUser() *schema.Resource {
+func ResourceUser() common.Resource {
 	type entity struct {
 		UserName    string `json:"user_name" tf:"force_new"`
 		DisplayName string `json:"display_name,omitempty" tf:"computed"`
@@ -32,7 +33,7 @@ func ResourceUser() *schema.Resource {
 	}
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
@@ -140,29 +141,32 @@ func ResourceUser() *schema.Resource {
 			}
 			// Disable or delete
 			if isDisable {
-				r := PatchRequest("replace", "active", "false")
+				r := PatchRequestWithValue("replace", "active", "false")
 				err = user.Patch(d.Id(), r)
 			} else {
 				err = user.Delete(d.Id())
+			}
+			if err != nil {
+				return err
 			}
 			// Handle force delete flags
 			if !isAccount && !isDisable && err == nil {
 				if isForceDeleteRepos {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
-					if err != nil {
-						return fmt.Errorf("force_delete_repos: %w", err)
+					if err != nil && !apierr.IsMissing(err) {
+						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
-					if err != nil {
-						return fmt.Errorf("force_delete_home_dir: %w", err)
+					if err != nil && !apierr.IsMissing(err) {
+						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}
 				}
 			}
-			return err
+			return nil
 		},
-	}.ToResource()
+	}
 }
 
 func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, usersAPI UsersAPI, u User) error {
@@ -172,8 +176,9 @@ func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, us
 	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
-	if (!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, false))) &&
-		(!strings.HasPrefix(err.Error(), userExistsErrorMessage(userName, true))) {
+	errStr := strings.ToLower(err.Error())
+	if (!strings.HasPrefix(errStr, userExistsErrorMessage(userName, false))) &&
+		(!strings.HasPrefix(errStr, userExistsErrorMessage(userName, true))) {
 		return err
 	}
 	userList, err := usersAPI.Filter(fmt.Sprintf(`userName eq "%s"`, userName), true)

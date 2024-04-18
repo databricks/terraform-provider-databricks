@@ -6,10 +6,9 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceViews() *schema.Resource {
+func DataSourceViews() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		CatalogName string   `json:"catalog_name"`
 		SchemaName  string   `json:"schema_name"`

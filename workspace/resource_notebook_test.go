@@ -1,16 +1,13 @@
 package workspace
 
 import (
-	"context"
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestResourceNotebookRead(t *testing.T) {
@@ -484,71 +481,8 @@ func TestResourceNotebookUpdate_DBC(t *testing.T) {
 
 func TestNotebookLanguageSuppressSourceDiff(t *testing.T) {
 	r := ResourceNotebook()
-	d := r.TestResourceData()
+	d := r.ToResource().TestResourceData()
 	d.Set("source", "this.PY")
 	suppress := r.Schema["language"].DiffSuppressFunc
 	assert.True(t, suppress("language", Python, Python, d))
-}
-
-func TestParallelListing(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2F",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   1,
-						ObjectType: Directory,
-						Path:       "/a",
-					},
-					{
-						ObjectID:   2,
-						ObjectType: Directory,
-						Path:       "/b",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2Fa",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   3,
-						ObjectType: Notebook,
-						Language:   Python,
-						Path:       "/a/e",
-					},
-				},
-			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/list?path=%2Fb",
-			Response: ObjectList{
-				Objects: []ObjectStatus{
-					{
-						ObjectID:   4,
-						ObjectType: Notebook,
-						Language:   SQL,
-						Path:       "/b/c",
-					},
-				},
-			},
-		},
-	})
-	defer server.Close()
-	require.NoError(t, err)
-
-	os.Setenv("EXPORTER_WS_LIST_PARALLLELISM", "2")
-	os.Setenv("EXPORTER_CHANNEL_SIZE", "100")
-	ctx := context.Background()
-	api := NewNotebooksAPI(ctx, client)
-	objects, err := api.ListParallel("/", nil)
-
-	require.NoError(t, err)
-	require.Equal(t, 4, len(objects))
-
 }

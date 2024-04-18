@@ -81,7 +81,7 @@ type ResourceFixture struct {
 	MockAccountClientFunc func(*mocks.MockAccountClient)
 
 	// The resource the unit test is testing.
-	Resource *schema.Resource
+	Resource common.Resource
 
 	// Set to true if the diff generated in the test will force a recreation
 	// of the resource.
@@ -104,11 +104,13 @@ type ResourceFixture struct {
 	CommandMock common.CommandMock
 
 	// Set one of them to true to test the corresponding CRUD function for the
-	// terraform resource.
-	Create bool
-	Read   bool
-	Update bool
-	Delete bool
+	// terraform resource. Or set ExpectedDiff to skip execution and only test
+	// that the diff is expected.
+	Create       bool
+	Read         bool
+	Update       bool
+	Delete       bool
+	ExpectedDiff map[string]*terraform.ResourceAttrDiff
 
 	Removed     bool
 	ID          string
@@ -138,13 +140,13 @@ func (cb resourceCRUD) withId(id string) resourceCRUD {
 	})
 }
 
-func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
+func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, error) {
 	switch {
 	case f.Create:
 		if f.ID != "" {
 			return nil, fmt.Errorf("ID is not available for Create")
 		}
-		return resourceCRUD(f.Resource.CreateContext).before(func(d *schema.ResourceData) {
+		return resourceCRUD(r.CreateContext).before(func(d *schema.ResourceData) {
 			d.MarkNewResource()
 		}), nil
 	case f.Read:
@@ -153,7 +155,7 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		}
 		preRead := f.State
 		f.State = nil
-		return resourceCRUD(f.Resource.ReadContext).before(func(d *schema.ResourceData) {
+		return resourceCRUD(r.ReadContext).before(func(d *schema.ResourceData) {
 			if f.New {
 				d.MarkNewResource()
 			}
@@ -165,14 +167,16 @@ func (f ResourceFixture) prepareExecution() (resourceCRUD, error) {
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Update")
 		}
-		return resourceCRUD(f.Resource.UpdateContext).withId(f.ID), nil
+		return resourceCRUD(r.UpdateContext).withId(f.ID), nil
 	case f.Delete:
 		if f.ID == "" {
 			return nil, fmt.Errorf("ID must be set for Delete")
 		}
-		return resourceCRUD(f.Resource.DeleteContext).withId(f.ID), nil
+		return resourceCRUD(r.DeleteContext).withId(f.ID), nil
+	case f.ExpectedDiff != nil:
+		return nil, nil
 	}
-	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
+	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` or `ExpectedDiff` specified")
 }
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
@@ -286,12 +290,13 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		f.State = fixHCL(out).(map[string]any)
 	}
 	resourceConfig := terraform.NewResourceConfigRaw(f.State)
-	execute, err := f.prepareExecution()
+	resource := f.Resource.ToResource()
+	execute, err := f.prepareExecution(resource)
 	if err != nil {
 		return nil, err
 	}
 	if f.State != nil {
-		diags := f.Resource.Validate(resourceConfig)
+		diags := resource.Validate(resourceConfig)
 		if diags.HasError() {
 			return nil, fmt.Errorf("invalid config supplied. %s",
 				strings.ReplaceAll(diagsToString(diags), "\"", ""))
@@ -302,7 +307,11 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		Attributes: f.InstanceState,
 	}
 	ctx := context.Background()
-	diff, err := f.Resource.Diff(ctx, is, resourceConfig, client)
+	diff, err := resource.Diff(ctx, is, resourceConfig, client)
+	if f.ExpectedDiff != nil {
+		assert.Equal(t, f.ExpectedDiff, diff.Attributes)
+		return nil, err
+	}
 	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err
@@ -317,7 +326,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = f.Resource.InternalValidate(f.Resource.Schema, !f.NonWritable)
+	err = resource.InternalValidate(resource.Schema, !f.NonWritable)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +341,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
-	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, f.Resource.CustomizeDiff, client, true)
+	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, resource.CustomizeDiff, client, true)
 	if err != nil {
 		return nil, err
 	}
@@ -427,17 +436,18 @@ var HTTPFailures = []HTTPFixture{
 }
 
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
-func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCase) {
+func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCase) {
 	config := map[string]string{
 		"id":           "x",
 		"expect_error": "i'm a teapot",
 		"account_id":   "",
 	}
+	r := resource.ToResource()
 	m := map[string]func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics{
-		"create": resource.CreateContext,
-		"read":   resource.ReadContext,
-		"update": resource.UpdateContext,
-		"delete": resource.DeleteContext,
+		"create": r.CreateContext,
+		"read":   r.ReadContext,
+		"update": r.UpdateContext,
+		"delete": r.DeleteContext,
 	}
 	for _, corner := range cc {
 		if corner.part == "skip_crud" {
@@ -446,7 +456,7 @@ func ResourceCornerCases(t *testing.T, resource *schema.Resource, cc ...CornerCa
 		config[corner.part] = corner.value
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
-		validData := resource.TestResourceData()
+		validData := r.TestResourceData()
 		client.Config.AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {

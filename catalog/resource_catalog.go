@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func ucDirectoryPathSlashOnlySuppressDiff(k, old, new string, d *schema.ResourceData) bool {
@@ -27,29 +28,34 @@ func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.Reso
 }
 
 type CatalogInfo struct {
-	Name           string            `json:"name"`
-	Comment        string            `json:"comment,omitempty"`
-	StorageRoot    string            `json:"storage_root,omitempty" tf:"force_new"`
-	ProviderName   string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	ShareName      string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	ConnectionName string            `json:"connection_name,omitempty" tf:"force_new,conflicts:storage_root"`
-	Options        map[string]string `json:"options,omitempty" tf:"force_new"`
-	Properties     map[string]string `json:"properties,omitempty"`
-	Owner          string            `json:"owner,omitempty" tf:"computed"`
-	IsolationMode  string            `json:"isolation_mode,omitempty" tf:"computed"`
-	MetastoreID    string            `json:"metastore_id,omitempty" tf:"computed"`
+	Name                         string            `json:"name"`
+	Comment                      string            `json:"comment,omitempty"`
+	StorageRoot                  string            `json:"storage_root,omitempty" tf:"force_new"`
+	ProviderName                 string            `json:"provider_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	ShareName                    string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	ConnectionName               string            `json:"connection_name,omitempty" tf:"force_new,conflicts:storage_root"`
+	EnablePredictiveOptimization string            `json:"enable_predictive_optimization,omitempty" tf:"computed"`
+	Options                      map[string]string `json:"options,omitempty" tf:"force_new"`
+	Properties                   map[string]string `json:"properties,omitempty"`
+	Owner                        string            `json:"owner,omitempty" tf:"computed"`
+	IsolationMode                string            `json:"isolation_mode,omitempty" tf:"computed"`
+	MetastoreID                  string            `json:"metastore_id,omitempty" tf:"computed"`
 }
 
-func ResourceCatalog() *schema.Resource {
+func ResourceCatalog() common.Resource {
 	catalogSchema := common.StructToSchema(CatalogInfo{},
-		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["force_destroy"] = &schema.Schema{
+		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			}
-			m["storage_root"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
-			return m
+			common.CustomizeSchemaPath(s, "storage_root").SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
+			common.CustomizeSchemaPath(s, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
+				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
+			)
+			return s
 		})
 	return common.Resource{
 		Schema: catalogSchema,
@@ -79,8 +85,15 @@ func ResourceCatalog() *schema.Resource {
 
 			d.SetId(ci.Name)
 
-			// Update owner or isolation mode if it is provided
-			if d.Get("owner") == "" && d.Get("isolation_mode") == "" {
+			// Update owner, isolation mode or predictive optimization if it is provided
+			updateRequired := false
+			for _, key := range []string{"owner", "isolation_mode", "enable_predictive_optimization"} {
+				if d.Get(key) != "" {
+					updateRequired = true
+					break
+				}
+			}
+			if !updateRequired {
 				return nil
 			}
 			var updateCatalogRequest catalog.UpdateCatalog
@@ -146,6 +159,10 @@ func ResourceCatalog() *schema.Resource {
 				if err != nil {
 					return err
 				}
+			}
+
+			if !d.HasChangeExcept("owner") {
+				return nil
 			}
 
 			updateCatalogRequest.Owner = ""
@@ -219,5 +236,5 @@ func ResourceCatalog() *schema.Resource {
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
-	}.ToResource()
+	}
 }

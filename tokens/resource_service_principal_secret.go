@@ -48,7 +48,7 @@ func (a ServicePrincipalSecretAPI) deleteServicePrincipalSecret(spnID, secretID 
 	return a.client.Delete(a.context, path, nil)
 }
 
-func ResourceServicePrincipalSecret() *schema.Resource {
+func ResourceServicePrincipalSecret() common.Resource {
 	spnSecretSchema := common.StructToSchema(ServicePrincipalSecret{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["id"].Computed = true
@@ -118,5 +118,5 @@ func ResourceServicePrincipalSecret() *schema.Resource {
 			spnID := d.Get("service_principal_id").(string)
 			return api.deleteServicePrincipalSecret(spnID, d.Id())
 		},
-	}.ToResource()
+	}
 }

@@ -1,13 +1,18 @@
 package common
 
 import (
+	"fmt"
+	"slices"
+
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type CustomizableSchema struct {
-	Schema *schema.Schema
+	Schema         *schema.Schema
+	path           []string
+	isSuppressDiff bool
 }
 
 func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *CustomizableSchema {
@@ -22,7 +27,7 @@ func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *Customiza
 		return &CustomizableSchema{Schema: wrappedSch}
 	}
 	sch := MustSchemaPath(s, path...)
-	return &CustomizableSchema{Schema: sch}
+	return &CustomizableSchema{Schema: sch, path: path}
 }
 
 func (s *CustomizableSchema) SetOptional() *CustomizableSchema {
@@ -33,6 +38,11 @@ func (s *CustomizableSchema) SetOptional() *CustomizableSchema {
 
 func (s *CustomizableSchema) SetComputed() *CustomizableSchema {
 	s.Schema.Computed = true
+	return s
+}
+
+func (s *CustomizableSchema) SetSliceSet() *CustomizableSchema {
+	s.Schema.Type = schema.TypeSet
 	return s
 }
 
@@ -63,7 +73,8 @@ func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
-	s.Schema.DiffSuppressFunc = diffSuppressor(s.Schema)
+	s.Schema.DiffSuppressFunc = diffSuppressor(s.path[len(s.path)-1], s.Schema)
+	s.isSuppressDiff = true
 	if s.Schema.Type == schema.TypeList && s.Schema.MaxItems == 1 {
 		// If it is a list with max items = 1, it means the corresponding sdk schema type is a struct or a ptr.
 		// In this case we would like to set the diff suppressor for the underlying fields as well.
@@ -72,9 +83,39 @@ func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 			panic("Cannot cast Elem into Resource type.")
 		}
 		nestedSchema := resource.Schema
-		for _, v := range nestedSchema {
-			v.DiffSuppressFunc = diffSuppressor(v)
+		for k, v := range nestedSchema {
+			v.DiffSuppressFunc = diffSuppressor(k, v)
 		}
+	}
+	return s
+}
+
+// SetSuppressDiffWithDefault suppresses the diff if the
+// new value (ie value from HCL config) is not set and
+// the old value (ie value from state / platform) is equal to the default value.
+//
+// Often Databricks HTTP APIs will return values for fields that were not set by
+// the author in their terraform configuration. This function allows us to suppress
+// the diff in these cases.
+func (s *CustomizableSchema) SetSuppressDiffWithDefault(dv any) *CustomizableSchema {
+	primitiveTypes := []schema.ValueType{schema.TypeBool, schema.TypeString, schema.TypeInt, schema.TypeFloat}
+	if !slices.Contains(primitiveTypes, s.Schema.Type) {
+		panic(fmt.Errorf("expected primitive type, got: %s", s.Schema.Type))
+	}
+
+	// Get zero value for the schema type
+	zero := fmt.Sprintf("%v", s.Schema.Type.Zero())
+
+	// Get string representation of the default value
+	sv := fmt.Sprintf("%v", dv)
+
+	// Suppress diff if the new value (ie value from HCL config) is not set and
+	// the old value (ie value from state / platform) is equal to the default value.
+	s.Schema.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+		if new == zero && old == sv {
+			return true
+		}
+		return false
 	}
 	return s
 }
@@ -106,9 +147,33 @@ func (s *CustomizableSchema) SetMinItems(value int) *CustomizableSchema {
 
 func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchema {
 	if len(value) == 0 {
-		panic("SetConflictsWith cannot take in empty list")
+		panic("SetConflictsWith cannot take in an empty list")
 	}
 	s.Schema.ConflictsWith = value
+	return s
+}
+
+func (s *CustomizableSchema) SetExactlyOneOf(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetExactlyOneOf cannot take in an empty list")
+	}
+	s.Schema.ExactlyOneOf = value
+	return s
+}
+
+func (s *CustomizableSchema) SetAtLeastOneOf(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetAtLeastOneOf cannot take in an empty list")
+	}
+	s.Schema.AtLeastOneOf = value
+	return s
+}
+
+func (s *CustomizableSchema) SetRequiredWith(value []string) *CustomizableSchema {
+	if len(value) == 0 {
+		panic("SetRequiredWith cannot take in an empty list")
+	}
+	s.Schema.RequiredWith = value
 	return s
 }
 
@@ -137,5 +202,8 @@ func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *C
 		panic("Cannot add new field, " + key + " already exists in the schema")
 	}
 	cv.Schema[key] = newField
+	if s.isSuppressDiff {
+		newField.DiffSuppressFunc = diffSuppressor(key, newField)
+	}
 	return s
 }

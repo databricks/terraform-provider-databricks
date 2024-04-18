@@ -1,13 +1,13 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Delta Sharing"
 ---
 # databricks_share Resource
 
 -> **Note** This resource could be only used with workspace-level provider!
 
-Within a metastore, Unity Catalog provides the ability to create a share, which is a named object that contains a collection of tables in a metastore that you want to share as a group. A share can contain tables from only a single metastore. You can add or remove tables from a share at any time.
+In Delta Sharing, a share is a read-only collection of tables and table partitions that a provider wants to share with one or more recipients. If your recipient uses a Unity Catalog-enabled Databricks workspace, you can also include notebook files, views (including dynamic views that restrict access at the row and column level), Unity Catalog volumes, and Unity Catalog models in a share.
 
-A `databricks_share` is contained within [databricks_metastore](metastore.md) and can contain a list of tables.
+In a Unity Catalog-enabled Databricks workspace, a share is a securable object registered in Unity Catalog. A `databricks_share` is contained within a [databricks_metastore](metastore.md). If you remove a share from your Unity Catalog metastore, all recipients of that share lose the ability to access it.
 
 ## Example Usage
 
@@ -29,6 +29,19 @@ resource "databricks_share" "some" {
       name             = object.value
       data_object_type = "TABLE"
     }
+  }
+}
+```
+
+Creating a Delta Sharing share and add a schema to it(including all current and future tables).
+
+```hcl
+resource "databricks_share" "schema_share" {
+  name = "schema_share"
+  object {
+    name                        = "catalog_name.schema_name"
+    data_object_type            = "SCHEMA"
+    history_data_sharing_status = "ENABLED"
   }
 }
 ```
@@ -74,8 +87,8 @@ The following arguments are required:
 
 ### object Configuration Block
 
-* `name` (Required) - Full name of the object, e.g. `catalog.schema.name` for a table.
-* `data_object_type` (Required) - Type of the object, currently only `TABLE` is allowed.
+* `name` (Required) - Full name of the object, e.g. `catalog.schema.name` for a tables, volumes and models, or `catalog.schema` for schemas.
+* `data_object_type` (Required) - Type of the data object, currently `TABLE`, `SCHEMA`, `VOLUME`, and `MODEL` are supported.
 * `comment` (Optional) -  Description about the object.
 * `shared_as` (Optional) - A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share. Change forces creation of a new resource.
 * `cdf_enabled` (Optional) - Whether to enable Change Data Feed (cdf) on the shared object. When this field is set, field `history_data_sharing_status` can not be set.
@@ -95,6 +108,7 @@ To share only part of a table when you add the table to a share, you can provide
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - the ID of the share, the same as `name`.
 * `created_at` - Time when the share was created.
 * `created_by` - The principal that created the share.
 * `status` - Status of the object, one of: `ACTIVE`, `PERMISSION_DENIED`.

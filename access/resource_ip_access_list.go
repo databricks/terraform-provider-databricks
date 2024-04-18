@@ -18,7 +18,7 @@ type ipAccessListUpdateRequest struct {
 }
 
 // ResourceIPAccessList manages IP access lists
-func ResourceIPAccessList() *schema.Resource {
+func ResourceIPAccessList() common.Resource {
 	s := common.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint
 		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
@@ -73,5 +73,5 @@ func ResourceIPAccessList() *schema.Resource {
 			}
 			return w.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
 		},
-	}.ToResource()
+	}
 }

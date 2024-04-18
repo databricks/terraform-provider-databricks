@@ -1,5 +1,212 @@
 # Version changelog
 
+## 1.39.0
+
+### New Features and Improvements
+ * Add [databricks_online_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/online_table) resource ([#3352](https://github.com/databricks/terraform-provider-databricks/pull/3352)).
+ * Add resource provider registry ([#3347](https://github.com/databricks/terraform-provider-databricks/pull/3347)).
+ * Add support for Vector Search Indexes ([#3266](https://github.com/databricks/terraform-provider-databricks/pull/3266)).
+ * Add table update trigger in terraform API ([#3401](https://github.com/databricks/terraform-provider-databricks/pull/3401)).
+ * Added `owner` attribute to [databricks_registered_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/registered_model) ([#3366](https://github.com/databricks/terraform-provider-databricks/pull/3366)).
+ * Added support for case insensitivity for id fields in UC resources ([#3164](https://github.com/databricks/terraform-provider-databricks/pull/3164)).
+ * Allow changes to `display_name` of [databricks_group](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group) resource without recreating a group ([#3334](https://github.com/databricks/terraform-provider-databricks/pull/3334)).
+ * Delete Vector Search Endpoint when we get an error while waiting for creation ([#3348](https://github.com/databricks/terraform-provider-databricks/pull/3348)).
+ * Fix Read operation in [databricks_catalog_workspace_binding](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/catalog_workspace_binding) so we can perform import ([#3276](https://github.com/databricks/terraform-provider-databricks/pull/3276)).
+ * Fix integration test for sql column update ([#3384](https://github.com/databricks/terraform-provider-databricks/pull/3384)).
+ * Fix sending `scale_to_zero_enabled` for `served_entities` in [databricks_model_serving](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/model_serving) resource ([#3387](https://github.com/databricks/terraform-provider-databricks/pull/3387)).
+ * Support persisting empty fields ([#3362](https://github.com/databricks/terraform-provider-databricks/pull/3362)).
+ * [MLOPS-596] Add Lakehouse Monitor Resource ([#3238](https://github.com/databricks/terraform-provider-databricks/pull/3238)).
+
+### Documentation Changes
+ * Clarify disable as user deletion ([#3360](https://github.com/databricks/terraform-provider-databricks/pull/3360)).
+ * Add `MODEL` to documentation about `data_object_type` in [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/share) resource ([#3380](https://github.com/databricks/terraform-provider-databricks/pull/3380)).
+ * Fix broken links in metastore-related docs ([#3356](https://github.com/databricks/terraform-provider-databricks/pull/3356)).
+ * Update documentation about databricks-managed service principals ([#3350](https://github.com/databricks/terraform-provider-databricks/pull/3350)).
+ * Fix code example for [databricks_storage_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/storage_credentials) data source ([#3327](https://github.com/databricks/terraform-provider-databricks/pull/3327)).
+ * Fix storage credential doc guide ([#3340](https://github.com/databricks/terraform-provider-databricks/pull/3340)).
+ * Improve description of depends_on block ([#3390](https://github.com/databricks/terraform-provider-databricks/pull/3390)).
+ * Improve job library documentation ([#3399](https://github.com/databricks/terraform-provider-databricks/pull/3399)).
+ * [DOCS] change master to main & GH image raw links ([#3358](https://github.com/databricks/terraform-provider-databricks/pull/3358)).
+ * [DOC] Removing NOTEBOOK_FILE from databricks_share ([#3353](https://github.com/databricks/terraform-provider-databricks/pull/3353)).
+ * [MLOPS-717] Rename Amazon Bedrock ([#3403](https://github.com/databricks/terraform-provider-databricks/pull/3403)).
+ 
+### Exporter
+ * Don't generate resources with empty names ([#3345](https://github.com/databricks/terraform-provider-databricks/pull/3345)).
+ * Remove too aggressive omitting for `volume_type` attribute of [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resource ([#3328](https://github.com/databricks/terraform-provider-databricks/pull/3328)).
+ * Add an option for exporting secret values into `terraform.tfvars` ([#3372](https://github.com/databricks/terraform-provider-databricks/pull/3372)).
+ * Add support for generation of dependencies between resources ([#3377](https://github.com/databricks/terraform-provider-databricks/pull/3377)).
+ * Change listing behavior for metastore and storage credentials ([#3367](https://github.com/databricks/terraform-provider-databricks/pull/3367)).
+ * Modify grants for some UC objects to allow handling of other owners ([#3357](https://github.com/databricks/terraform-provider-databricks/pull/3357)).
+  
+### Internal Changes
+ * Add integration test for ForEachTask ([#3283](https://github.com/databricks/terraform-provider-databricks/pull/3283)).
+ * Bump github.com/hashicorp/hcl/v2 from 2.20.0 to 2.20.1 ([#3405](https://github.com/databricks/terraform-provider-databricks/pull/3405)).
+ * Bump github.com/zclconf/go-cty from 1.14.3 to 1.14.4 ([#3393](https://github.com/databricks/terraform-provider-databricks/pull/3393)).
+ * Bump go-sdk version to 0.36.0 ([#3391](https://github.com/databricks/terraform-provider-databricks/pull/3391)).
+ * Bump go-sdk version to 0.37.0 ([#3410](https://github.com/databricks/terraform-provider-databricks/pull/3410)).
+ * Bump golang.org/x/mod from 0.15.0 to 0.16.0 ([#3329](https://github.com/databricks/terraform-provider-databricks/pull/3329)).
+ * Bump google.golang.org/protobuf from 1.32.0 to 1.33.0 ([#3368](https://github.com/databricks/terraform-provider-databricks/pull/3368)).
+ * Disable Lakehouse Monitoring integration tests on GCP ([#3355](https://github.com/databricks/terraform-provider-databricks/pull/3355)).
+ * Increase default timeout for [databricks_vector_search_endpoint](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/vector_search_endpoint) ([#3332](https://github.com/databricks/terraform-provider-databricks/pull/3332)).
+ * Make StructToSchema work for recursive data types ([#3302](https://github.com/databricks/terraform-provider-databricks/pull/3302)).
+ * Port [databricks_secret_scope](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/secret_scope), [databricks_secret](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/secret) and [databricks_secret_acl](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/secret_acl) to Go SDK ([#3373](https://github.com/databricks/terraform-provider-databricks/pull/3373)).
+ * SCIM patch to remove resources must not contain a value field ([#3374](https://github.com/databricks/terraform-provider-databricks/pull/3374)).
+ * Update Aliases function for ResourceProvider to handle recursive structures more gracefully ([#3338](https://github.com/databricks/terraform-provider-databricks/pull/3338)).
+ * Update Go SDK to latest + Fix backwards incompatible change ([#3333](https://github.com/databricks/terraform-provider-databricks/pull/3333)).
+ * Update databricks_model_serving resource to match latest API spec/SDK ([#3093](https://github.com/databricks/terraform-provider-databricks/pull/3093)).
+ * Update master to main in diff schema ([#3331](https://github.com/databricks/terraform-provider-databricks/pull/3331)).
+ * improve [databricks_aws_crossaccount_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/aws_crossaccount_policy) data source ([#3343](https://github.com/databricks/terraform-provider-databricks/pull/3343)).
+ * lock metastore assignment test ([#3386](https://github.com/databricks/terraform-provider-databricks/pull/3386)).
+ * Added support for updating columns in databricks_sql_table resource ([#3359](https://github.com/databricks/terraform-provider-databricks/pull/3359)).
+
+## 1.38.0
+
+### New Features and Improvements
+ * Use workspace-level default for `enable_serverless_compute` if not specified in [databricks_sql_global_config](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_global_config) ([#3279](https://github.com/databricks/terraform-provider-databricks/pull/3279)). Previously, this resource would disable serverless unless you set the deprecated `enable_serverless_compute` attribute to true. From this release, this resource will not modify `enable_serverless_compute`, leaving it as its default value (enabled) if unspecified.
+ * Fixed webhook_notifications diff suppression for [databricks_job](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/job) ([#3309](https://github.com/databricks/terraform-provider-databricks/pull/3309)).
+ * Perform case-insensitive error message checking when using `force` in [databricks_user](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/user) ([#3295](https://github.com/databricks/terraform-provider-databricks/pull/3295)).
+ * Use stable IDs for settings resources ([#3314](https://github.com/databricks/terraform-provider-databricks/pull/3314)).
+
+### Documentation Changes
+ * Improved documentation for INTERNAL and INTERNAL_AND_EXTERNAL delta sharing scope in terraform  ([#3287](https://github.com/databricks/terraform-provider-databricks/pull/3287)).
+ * Added user guide for new behaviours with UC by default ([#3318](https://github.com/databricks/terraform-provider-databricks/pull/3318)).
+ * Expanded the note about private link in the troubleshooting guide ([#3319](https://github.com/databricks/terraform-provider-databricks/pull/3319)).
+ * Document `storage_location` attribute of the [databricks_registered_model](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/registered_model) ([#3249](https://github.com/databricks/terraform-provider-databricks/pull/3249)).
+ * Various documentation improvements ([#3288](https://github.com/databricks/terraform-provider-databricks/pull/3288)).
+ * Changed accounts_id to required ([#3244](https://github.com/databricks/terraform-provider-databricks/pull/3244)).
+
+### Exporter
+ * Improved support for Unity Catalog ([#3281](https://github.com/databricks/terraform-provider-databricks/pull/3281)).
+ * Added generation of import blocks for easier importing existing resources in Terraform 1.5+ ([#3293](https://github.com/databricks/terraform-provider-databricks/pull/3293)).
+ * Added support for [databricks_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/file) resource ([#3301](https://github.com/databricks/terraform-provider-databricks/pull/3301)).
+
+### Internal Changes
+ * Set `Computed` field to `true` for `common.Resource` `account_id` attribute ([#3310](https://github.com/databricks/terraform-provider-databricks/pull/3310)).
+ * Removed unnecessary alias from cluster resource ([#3298](https://github.com/databricks/terraform-provider-databricks/pull/3298)).
+ * Bump Go SDK ([#3296](https://github.com/databricks/terraform-provider-databricks/pull/3296)).
+ * Bump github.com/hashicorp/hcl/v2 from 2.19.1 to 2.20.0 ([#3317](https://github.com/databricks/terraform-provider-databricks/pull/3317)).
+ * Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.32.0 to 2.33.0 ([#3300](https://github.com/databricks/terraform-provider-databricks/pull/3300)).
+ * Bump github.com/stretchr/testify from 1.8.4 to 1.9.0 ([#3323](https://github.com/databricks/terraform-provider-databricks/pull/3323)).
+ * Bump github.com/zclconf/go-cty from 1.14.2 to 1.14.3 ([#3322](https://github.com/databricks/terraform-provider-databricks/pull/3322)).
+
+
+## 1.37.1
+
+### New Features and Improvements
+ * Removed `CustomizeDiff` and Client Side Validation for [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) ([#3290](https://github.com/databricks/terraform-provider-databricks/pull/3290)).
+ * Added terraform support for restrict ws admins setting ([#3243](https://github.com/databricks/terraform-provider-databricks/pull/3243)).
+
+### Internal Changes
+ * Migrated [databricks_global_init_script](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/global_init_script) to Go SDK ([#2036](https://github.com/databricks/terraform-provider-databricks/pull/2036)).
+ * Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.31.0 to 2.32.0 ([#3177](https://github.com/databricks/terraform-provider-databricks/pull/3177)).
+
+
+## 1.37.0
+
+### New Features and Improvements
+ * Add [databricks_file](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/file) resource ([#3265](https://github.com/databricks/terraform-provider-databricks/pull/3265)).
+ * Add [databricks_storage_credential](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/storage_credential) and [databricks_storage_credentials](https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/storage_credentials) data sources ([#3254](https://github.com/databricks/terraform-provider-databricks/pull/3254)).
+ * Add `source` attribute to `dbt_task` and `sql_task.file` tasks to support files from workspace ([#3208](https://github.com/databricks/terraform-provider-databricks/pull/3208)).
+ * Add computed `volume_path` attribute to [databricks_volume](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/volume) resource ([#3272](https://github.com/databricks/terraform-provider-databricks/pull/3272)).
+ * Add support for Vector Search Endpoints ([#3191](https://github.com/databricks/terraform-provider-databricks/pull/3191)).
+ * [JOBS-16324] Terraform support for Foreach tasks (private preview) ([#3252](https://github.com/databricks/terraform-provider-databricks/pull/3252)).
+ * fix: properly propagate auth_type to the databricks client ([#3273](https://github.com/databricks/terraform-provider-databricks/pull/3273)).
+
+### Documentation Changes
+ * Fix images and add note on setting multiple authorizations for workspace setup ([#3259](https://github.com/databricks/terraform-provider-databricks/pull/3259)).
+ * Remove `data_object_type=TABLE` only restriction in [databricks_share](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/share) ([#3108](https://github.com/databricks/terraform-provider-databricks/pull/3108)).
+ * Remove legacy guides ([#3282](https://github.com/databricks/terraform-provider-databricks/pull/3282)).
+ * Update `for_each_task` docs. ([#3271](https://github.com/databricks/terraform-provider-databricks/pull/3271)).
+  
+### Exporter
+ * Support for some Unity Catalog resources ([#3242](https://github.com/databricks/terraform-provider-databricks/pull/3242)).
+ * Rework handling of listings and interactive prompting ([#3241](https://github.com/databricks/terraform-provider-databricks/pull/3241)).
+ * UC exporter databricks storage credential feature ([#3219](https://github.com/databricks/terraform-provider-databricks/pull/3219)).
+
+### Internal Changes
+ * Add CustomDiffFunc for health in sql_endpoint resources ([#3227](https://github.com/databricks/terraform-provider-databricks/pull/3227)).
+ * Bump github.com/databricks/databricks-sdk-go 0.33.0 ([#3275](https://github.com/databricks/terraform-provider-databricks/pull/3275)).
+ * Suppress diff on whitespace change for resources that often use HERE-docs ([#3251](https://github.com/databricks/terraform-provider-databricks/pull/3251)).
+  
+
+## 1.36.3
+
+### New Features and Improvements
+ * Explicitly set securable field when reading [databricks_grants](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grants) or [databricks_grant](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/grant) ([#3246](https://github.com/databricks/terraform-provider-databricks/pull/3246)).
+
+### Documentation Changes
+ * Added information on `id` and other exposed attributes where appropriate ([#3237](https://github.com/databricks/terraform-provider-databricks/pull/3237)).
+ * Fixed docs in metastore `databricks_grants` example ([#3239](https://github.com/databricks/terraform-provider-databricks/pull/3239)).
+
+### Exporter
+ * Detect & handle deleted workspace objects (notebooks/files/directories) when running in incremental mode ([#3225](https://github.com/databricks/terraform-provider-databricks/pull/3225)).
+
+### Internal Changes
+ * Make IterFields take in aliases ([#3207](https://github.com/databricks/terraform-provider-databricks/pull/3207)).
+
+
+## 1.36.2
+
+### New Features and Improvements
+* Added [databricks_aws_unity_catalog_policy](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/aws_unity_catalog_policy) data source ([#2483](https://github.com/databricks/terraform-provider-databricks/pull/2483)).
+* Removed `omitempty` in `destination` fields in `clustes_api.go` ([#3232](https://github.com/databricks/terraform-provider-databricks/pull/3232)), to address ([#3231](https://github.com/databricks/terraform-provider-databricks/issues/3231))
+
+### Exporter
+* Omitted `git_provider` only for well-known Git URLs ([#3216](https://github.com/databricks/terraform-provider-databricks/pull/3216)).
+
+### Internal Changes
+* Bumped github.com/zclconf/go-cty from 1.14.1 to 1.14.2 ([#3144](https://github.com/databricks/terraform-provider-databricks/pull/3144)).
+* Bumped golang.org/x/mod from 0.14.0 to 0.15.0 ([#3229](https://github.com/databricks/terraform-provider-databricks/pull/3229)).
+
+
+## 1.36.1
+
+### New Features and Improvements
+* Fixed create storage credentials with owner for account ([#3184](https://github.com/databricks/terraform-provider-databricks/pull/3184)).
+
+### Documentation Changes
+* Removed AWS-only note for [databricks_service_principal_secret](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal_secret) resource ([#3213](https://github.com/databricks/terraform-provider-databricks/pull/3213)).
+
+### Internal Changes
+* Fixed test: TestUcAccResourceSqlTable_Managed ([#3226](https://github.com/databricks/terraform-provider-databricks/pull/3226)).
+
+## 1.36.0
+
+### New Features and Improvements
+* Added `databricks_volumes` as data source  ([#3150](https://github.com/databricks/terraform-provider-databricks/pull/3150)).
+* Fixed updating owners for UC resources ([#3189](https://github.com/databricks/terraform-provider-databricks/pull/3189)).
+* Validated metastore id for databricks_grant and databricks_grants resources ([#3159](https://github.com/databricks/terraform-provider-databricks/pull/3159)).
+* Fixed `databricks_connection` regression when creating without owner ([#3186](https://github.com/databricks/terraform-provider-databricks/pull/3186)).
+* Allow using empty strings as job parameters ([#3158](https://github.com/databricks/terraform-provider-databricks/pull/3158)).
+* Changed type of value field of `JobsHealthRule` to `int64` ([#3215](https://github.com/databricks/terraform-provider-databricks/pull/3215)).
+
+
+### Documentation Changes
+* Various documentation updates ([#3198](https://github.com/databricks/terraform-provider-databricks/pull/3198)).
+* Fixed typo in docs ([#3166](https://github.com/databricks/terraform-provider-databricks/pull/3166)).
+
+### Exporter
+* Timestamps are now added to log entries ([#3146](https://github.com/databricks/terraform-provider-databricks/pull/3146)).
+* Add retries for `Search`, `ReadContext` and `Import` operations when importing the resource ([#3202](https://github.com/databricks/terraform-provider-databricks/pull/3202)).
+* Performance improvements for big workspaces ([#3167](https://github.com/databricks/terraform-provider-databricks/pull/3167)).
+* Fix generation of cluster policy resources ([#3185](https://github.com/databricks/terraform-provider-databricks/pull/3185)).
+* Skip emitting of clusters that come from more cluster sources ([#3161](https://github.com/databricks/terraform-provider-databricks/pull/3161)).
+
+### Internal Changes
+* Migrated cluster schema to use the go-sdk struct ([#3076](https://github.com/databricks/terraform-provider-databricks/pull/3076)).
+* Updated actions/setup-go to v5 ([#3154](https://github.com/databricks/terraform-provider-databricks/pull/3154)).
+* Changed default branch from `master` to `main` ([#3174](https://github.com/databricks/terraform-provider-databricks/pull/3174)).
+* Added .codegen.json configuration ([#3180](https://github.com/databricks/terraform-provider-databricks/pull/3180)).
+* Used common.Resource consistently throughout the provider ([#3193](https://github.com/databricks/terraform-provider-databricks/pull/3193)).
+* Fixed unit test ([#3201](https://github.com/databricks/terraform-provider-databricks/pull/3201)).
+* Added test code for job task order ([#3183](https://github.com/databricks/terraform-provider-databricks/pull/3183)).
+* Added unit test for `customizable_schema.go` ([#3192](https://github.com/databricks/terraform-provider-databricks/pull/3192)).
+* Extended customizable schema with `AtLeastOneOf`, `ExactlyOneOf`, `RequiredWith` ([#3182](https://github.com/databricks/terraform-provider-databricks/pull/3182)).
+* Fixed notebook parameters in acceptance test ([#3205](https://github.com/databricks/terraform-provider-databricks/pull/3205)).
+* Introduced Generic Settings Resource ([#2997](https://github.com/databricks/terraform-provider-databricks/pull/2997)).
+* Suppress diff should apply to new fields added in the same chained call to CustomizableSchema ([#3200](https://github.com/databricks/terraform-provider-databricks/pull/3200)).
+
+
 ## 1.35.0
 
 ### New Features and Improvements:

@@ -13,9 +13,9 @@ type StorageCredentialInfo struct {
 	Name                        string                                       `json:"name" tf:"force_new"`
 	Owner                       string                                       `json:"owner,omitempty" tf:"computed"`
 	Comment                     string                                       `json:"comment,omitempty"`
-	Aws                         *catalog.AwsIamRole                          `json:"aws_iam_role,omitempty" tf:"group:access"`
+	Aws                         *catalog.AwsIamRoleResponse                  `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure                       *catalog.AzureServicePrincipal               `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI                        *catalog.AzureManagedIdentity                `json:"azure_managed_identity,omitempty" tf:"group:access"`
+	AzMI                        *catalog.AzureManagedIdentityResponse        `json:"azure_managed_identity,omitempty" tf:"group:access"`
 	GcpSAKey                    *GcpServiceAccountKey                        `json:"gcp_service_account_key,omitempty" tf:"group:access"`
 	DatabricksGcpServiceAccount *catalog.DatabricksGcpServiceAccountResponse `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
 	MetastoreID                 string                                       `json:"metastore_id,omitempty" tf:"computed"`
@@ -38,7 +38,7 @@ var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 		return adjustDataAccessSchema(m)
 	})
 
-func ResourceStorageCredential() *schema.Resource {
+func ResourceStorageCredential() common.Resource {
 	return common.Resource{
 		Schema: storageCredentialSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -53,7 +53,7 @@ func ResourceStorageCredential() *schema.Resource {
 
 			//manually add empty struct back for databricks_gcp_service_account
 			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
-				create.DatabricksGcpServiceAccount = struct{}{}
+				create.DatabricksGcpServiceAccount = &catalog.DatabricksGcpServiceAccountRequest{}
 			}
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
@@ -75,7 +75,7 @@ func ResourceStorageCredential() *schema.Resource {
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
 					MetastoreId:           metastoreId,
-					StorageCredentialName: storageCredential.CredentialInfo.Id,
+					StorageCredentialName: storageCredential.CredentialInfo.Name,
 				})
 				if err != nil {
 					return err
@@ -130,11 +130,6 @@ func ResourceStorageCredential() *schema.Resource {
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Id()
 			update.Force = force
-			// We need to set them to empty since these fields are computed
-			if _, ok := d.GetOk("aws_iam_role"); ok {
-				update.AwsIamRole.UnityCatalogIamArn = ""
-				update.AwsIamRole.ExternalId = ""
-			}
 			if _, ok := d.GetOk("azure_managed_identity"); ok {
 				update.AzureManagedIdentity.CredentialId = ""
 			}
@@ -152,6 +147,11 @@ func ResourceStorageCredential() *schema.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
@@ -191,6 +191,11 @@ func ResourceStorageCredential() *schema.Resource {
 						return err
 					}
 				}
+
+				if !d.HasChangeExcept("owner") {
+					return nil
+				}
+
 				update.Owner = ""
 				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {
@@ -229,5 +234,5 @@ func ResourceStorageCredential() *schema.Resource {
 				})
 			})
 		},
-	}.ToResource()
+	}
 }

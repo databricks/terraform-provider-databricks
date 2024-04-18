@@ -67,7 +67,7 @@ func (a ExperimentsAPI) Delete(id string) error {
 	}, nil)
 }
 
-func ResourceMlflowExperiment() *schema.Resource {
+func ResourceMlflowExperiment() common.Resource {
 	s := common.StructToSchema(
 		Experiment{},
 		common.NoCustomize)
@@ -102,5 +102,5 @@ func ResourceMlflowExperiment() *schema.Resource {
 		Schema:         s,
 		SchemaVersion:  0,
 		Timeouts:       &schema.ResourceTimeout{},
-	}.ToResource()
+	}
 }

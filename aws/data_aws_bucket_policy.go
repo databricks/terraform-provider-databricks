@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // DataAwsBucketPolicy ...
-func DataAwsBucketPolicy() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+func DataAwsBucketPolicy() common.Resource {
+	return common.Resource{
+		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			bucket := d.Get("bucket").(string)
 			policy := awsIamPolicy{
 				Version: "2012-10-17",
@@ -52,7 +52,7 @@ func DataAwsBucketPolicy() *schema.Resource {
 			}
 			policyJSON, err := json.MarshalIndent(policy, "", "  ")
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			d.SetId(bucket)
 			// nolint

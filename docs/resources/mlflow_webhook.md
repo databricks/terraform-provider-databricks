@@ -100,6 +100,12 @@ Configuration must include one of `http_url_spec` or `job_spec` blocks, but not 
 * `enable_ssl_verification` - (Optional) Enable/disable SSL certificate validation. Default is `true`. For self-signed certificates, this field must be `false` AND the destination server must disable certificate validation as well. For security purposes, it is encouraged to perform secret validation with the HMAC-encoded portion of the payload and acknowledge the risk associated with disabling hostname validation whereby it becomes more likely that requests can be maliciously routed to an unintended host.
 * `secret` - (Optional) Shared secret required for HMAC encoding payload. The HMAC-encoded payload will be sent in the header as `X-Databricks-Signature: encoded_payload`.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Unique ID of the MLflow Webhook.
+
 ## Access Control
 
 * MLflow webhooks could be configured only by workspace admins.

@@ -65,20 +65,24 @@ func TestResourceFixture_Hint(t *testing.T) {
 	assert.True(t, t2.Failed())
 }
 
-var noopResource = &schema.Resource{
+func noopContext(_ context.Context, _ *schema.ResourceData, _ *common.DatabricksClient) error {
+	return nil
+}
+
+var noopResource = common.Resource{
 	Schema: map[string]*schema.Schema{
 		"dummy": {
 			Type:     schema.TypeBool,
 			Required: true,
 		},
 	},
-	ReadContext:   schema.NoopContext,
-	CreateContext: schema.NoopContext,
-	UpdateContext: schema.NoopContext,
-	DeleteContext: schema.NoopContext,
+	Read:   noopContext,
+	Create: noopContext,
+	Update: noopContext,
+	Delete: noopContext,
 }
 
-var noopContextResource = &schema.Resource{
+var noopContextResource = common.Resource{
 	Schema: map[string]*schema.Schema{
 		"trigger": {
 			Type:     schema.TypeString,
@@ -90,19 +94,19 @@ var noopContextResource = &schema.Resource{
 			Required: true,
 		},
 	},
-	ReadContext:   schema.NoopContext,
-	CreateContext: schema.NoopContext,
-	UpdateContext: func(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
+	Read:   noopContext,
+	Create: noopContext,
+	Update: func(_ context.Context, d *schema.ResourceData, _ *common.DatabricksClient) error {
 		// nolint
 		d.Set("trigger", "corrupt")
 		return nil
 	},
-	DeleteContext: schema.NoopContext,
+	Delete: noopContext,
 }
 
 func TestResourceFixture_ID(t *testing.T) {
-	_, err := ResourceFixture{}.prepareExecution()
-	assert.EqualError(t, err, "no `Create|Read|Update|Delete: true` specificed")
+	_, err := ResourceFixture{}.prepareExecution(nil)
+	assert.EqualError(t, err, "no `Create|Read|Update|Delete: true` or `ExpectedDiff` specified")
 
 	f := ResourceFixture{
 		Resource: noopResource,
@@ -319,7 +323,7 @@ func TestResourceCornerCases(t *testing.T) {
 				Required: true,
 			},
 		},
-	}.ToResource(),
+	},
 		CornerCaseID("x"),
 		CornerCaseExpectError("i'm a teapot"),
 		CornerCaseSkipCRUD("head"))

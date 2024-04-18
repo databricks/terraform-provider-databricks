@@ -1,4 +1,4 @@
-package catalog
+package sharing
 
 import (
 	"context"
@@ -50,7 +50,7 @@ func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
 	return a.client.Patch(a.context, "/unity-catalog/providers/"+ci.Name, patch)
 }
 
-func ResourceProvider() *schema.Resource {
+func ResourceProvider() common.Resource {
 	providerSchema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
 		return m
@@ -87,5 +87,5 @@ func ResourceProvider() *schema.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewProvidersAPI(ctx, c).deleteProvider(d.Id())
 		},
-	}.ToResource()
+	}
 }

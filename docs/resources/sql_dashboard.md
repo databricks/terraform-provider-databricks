@@ -40,14 +40,19 @@ resource "databricks_permissions" "d1" {
 }
 ```
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - the unique ID of the SQL Dashboard.
+
 ## Import
 
 You can import a `databricks_sql_dashboard` resource with ID like the following:
 
 ```bash
-$ terraform import databricks_sql_dashboard.this <dashboard-id>
+terraform import databricks_sql_dashboard.this <dashboard-id>
 ```
-
 
 ## Related Resources
 

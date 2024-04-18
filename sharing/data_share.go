@@ -1,13 +1,12 @@
-package catalog
+package sharing
 
 import (
 	"context"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DataSourceShare() *schema.Resource {
+func DataSourceShare() common.Resource {
 	type ShareDetail struct {
 		Name      string             `json:"name,omitempty" tf:"computed"`
 		Objects   []SharedDataObject `json:"objects,omitempty" tf:"computed,slice_set,alias:object"`

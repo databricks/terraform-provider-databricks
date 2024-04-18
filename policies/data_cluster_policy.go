@@ -5,11 +5,10 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // DataSourceClusterPolicy returns information about cluster policy specified by name
-func DataSourceClusterPolicy() *schema.Resource {
+func DataSourceClusterPolicy() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		Id                              string `json:"id,omitempty" tf:"computed"`
 		Name                            string `json:"name,omitempty" tf:"computed"`

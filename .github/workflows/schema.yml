@@ -8,11 +8,11 @@ on:
     inputs:
       base:
         description: "Base ref"
-        default: "master"
+        default: "main"
         required: true
       head:
         description: "Head ref"
-        default: "master"
+        default: "main"
         required: true
 
 jobs:

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -17,10 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/repos"
 )
 
@@ -29,6 +28,7 @@ type NotebookTask struct {
 	NotebookPath   string            `json:"notebook_path"`
 	Source         string            `json:"source,omitempty" tf:"suppress_diff"`
 	BaseParameters map[string]string `json:"base_parameters,omitempty"`
+	WarehouseId    string            `json:"warehouse_id,omitempty"`
 }
 
 // SparkPythonTask contains the information for python jobs
@@ -87,7 +87,8 @@ type SqlAlertTask struct {
 }
 
 type SqlFileTask struct {
-	Path string `json:"path"`
+	Path   string `json:"path"`
+	Source string `json:"source,omitempty" tf:"suppress_diff"`
 }
 
 // SqlTask contains information about DBSQL task
@@ -110,12 +111,55 @@ type DbtTask struct {
 	Schema            string   `json:"schema,omitempty" tf:"default:default"`
 	Catalog           string   `json:"catalog,omitempty"`
 	WarehouseId       string   `json:"warehouse_id,omitempty"`
+	Source            string   `json:"source,omitempty" tf:"suppress_diff"`
 }
 
 // RunJobTask contains information about RunJobTask
 type RunJobTask struct {
 	JobID         int64             `json:"job_id"`
 	JobParameters map[string]string `json:"job_parameters,omitempty"`
+}
+
+// TODO: As TF does not support recursive nesting, limit the nesting depth. Example:
+// https://github.com/hashicorp/terraform-provider-aws/blob/b4a9f93a2b7323202c8904e86cff03d3f2cb006b/internal/service/wafv2/rule_group.go#L110
+type ForEachTask struct {
+	Concurrency int               `json:"concurrency,omitempty"`
+	Inputs      string            `json:"inputs"`
+	Task        ForEachNestedTask `json:"task"`
+}
+
+type ForEachNestedTask struct {
+	TaskKey     string                `json:"task_key,omitempty"`
+	Description string                `json:"description,omitempty"`
+	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
+	RunIf       string                `json:"run_if,omitempty"`
+
+	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
+
+	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
+	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
+	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+
+	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
+	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
+	NotificationSettings   *jobs.TaskNotificationSettings `json:"notification_settings,omitempty"`
+	TimeoutSeconds         int32                          `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32                          `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
+	Health                 *JobHealth                     `json:"health,omitempty"`
+
+	EnvironmentKey string `json:"environment_key,omitempty"`
 }
 
 func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
@@ -158,7 +202,7 @@ type GitSource struct {
 type JobHealthRule struct {
 	Metric    string `json:"metric,omitempty"`
 	Operation string `json:"op,omitempty"`
-	Value     int32  `json:"value,omitempty"`
+	Value     int64  `json:"value,omitempty"`
 }
 
 type JobHealth struct {
@@ -169,13 +213,12 @@ type JobTaskSettings struct {
 	TaskKey     string                `json:"task_key,omitempty"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
-	RunIf       string                `json:"run_if,omitempty" tf:"suppress_diff"`
+	RunIf       string                `json:"run_if,omitempty"`
 
-	ExistingClusterID string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
-	NewCluster        *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
-	JobClusterKey     string              `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	ComputeKey        string              `json:"compute_key,omitempty" tf:"group:cluster_type"`
-	Libraries         []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
+	Libraries         []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -187,6 +230,7 @@ type JobTaskSettings struct {
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+	ForEachTask     *ForEachTask        `json:"for_each_task,omitempty" tf:"group:task_type"`
 
 	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
@@ -196,16 +240,13 @@ type JobTaskSettings struct {
 	MinRetryIntervalMillis int32                          `json:"min_retry_interval_millis,omitempty"`
 	RetryOnTimeout         bool                           `json:"retry_on_timeout,omitempty" tf:"computed"`
 	Health                 *JobHealth                     `json:"health,omitempty"`
+
+	EnvironmentKey string `json:"environment_key,omitempty"`
 }
 
 type JobCluster struct {
 	JobClusterKey string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	NewCluster    *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
-}
-
-type JobCompute struct {
-	ComputeKey  string               `json:"compute_key,omitempty" tf:"group:cluster_type"`
-	ComputeSpec *compute.ComputeSpec `json:"spec,omitempty" tf:"group:cluster_type"`
 }
 
 type ContinuousConf struct {
@@ -223,8 +264,16 @@ type FileArrival struct {
 	WaitAfterLastChangeSeconds    int32  `json:"wait_after_last_change_seconds,omitempty"`
 }
 
+type TableUpdate struct {
+	TableNames                    []string `json:"table_names"`
+	Condition                     string   `json:"condition,omitempty"`
+	MinTimeBetweenTriggersSeconds int32    `json:"min_time_between_triggers_seconds,omitempty"`
+	WaitAfterLastChangeSeconds    int32    `json:"wait_after_last_change_seconds,omitempty"`
+}
+
 type Trigger struct {
-	FileArrival *FileArrival `json:"file_arrival"`
+	FileArrival *FileArrival `json:"file_arrival,omitempty"`
+	TableUpdate *TableUpdate `json:"table_update,omitempty"`
 	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
@@ -234,28 +283,28 @@ type JobSettings struct {
 	Description string `json:"description,omitempty"`
 
 	// BEGIN Jobs API 2.0
-	ExistingClusterID      string              `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
-	NewCluster             *clusters.Cluster   `json:"new_cluster,omitempty" tf:"group:cluster_type"`
-	NotebookTask           *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
-	SparkJarTask           *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
-	SparkPythonTask        *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
-	SparkSubmitTask        *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
-	PipelineTask           *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
-	PythonWheelTask        *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
-	DbtTask                *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
-	RunJobTask             *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
-	Libraries              []libraries.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	TimeoutSeconds         int32               `json:"timeout_seconds,omitempty"`
-	MaxRetries             int32               `json:"max_retries,omitempty"`
-	MinRetryIntervalMillis int32               `json:"min_retry_interval_millis,omitempty"`
-	RetryOnTimeout         bool                `json:"retry_on_timeout,omitempty"`
+	ExistingClusterID      string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
+	NewCluster             *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	NotebookTask           *NotebookTask     `json:"notebook_task,omitempty" tf:"group:task_type"`
+	SparkJarTask           *SparkJarTask     `json:"spark_jar_task,omitempty" tf:"group:task_type"`
+	SparkPythonTask        *SparkPythonTask  `json:"spark_python_task,omitempty" tf:"group:task_type"`
+	SparkSubmitTask        *SparkSubmitTask  `json:"spark_submit_task,omitempty" tf:"group:task_type"`
+	PipelineTask           *PipelineTask     `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PythonWheelTask        *PythonWheelTask  `json:"python_wheel_task,omitempty" tf:"group:task_type"`
+	DbtTask                *DbtTask          `json:"dbt_task,omitempty" tf:"group:task_type"`
+	RunJobTask             *RunJobTask       `json:"run_job_task,omitempty" tf:"group:task_type"`
+	Libraries              []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	TimeoutSeconds         int32             `json:"timeout_seconds,omitempty"`
+	MaxRetries             int32             `json:"max_retries,omitempty"`
+	MinRetryIntervalMillis int32             `json:"min_retry_interval_millis,omitempty"`
+	RetryOnTimeout         bool              `json:"retry_on_timeout,omitempty"`
 	// END Jobs API 2.0
 
 	// BEGIN Jobs API 2.1
-	Tasks       []JobTaskSettings `json:"tasks,omitempty" tf:"alias:task"`
-	Format      string            `json:"format,omitempty" tf:"computed"`
-	JobClusters []JobCluster      `json:"job_clusters,omitempty" tf:"alias:job_cluster"`
-	Compute     []JobCompute      `json:"compute,omitempty" tf:"alias:compute"`
+	Tasks        []JobTaskSettings     `json:"tasks,omitempty" tf:"alias:task"`
+	Format       string                `json:"format,omitempty" tf:"computed"`
+	JobClusters  []JobCluster          `json:"job_clusters,omitempty" tf:"alias:job_cluster"`
+	Environments []jobs.JobEnvironment `json:"environments,omitempty" tf:"alias:environment"`
 	// END Jobs API 2.1
 
 	// BEGIN Jobs + Repo integration preview
@@ -273,9 +322,9 @@ type JobSettings struct {
 	Queue                *jobs.QueueSettings           `json:"queue,omitempty"`
 	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"computed"`
 	Health               *JobHealth                    `json:"health,omitempty"`
-	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
+	Parameters           []jobs.JobParameterDefinition `json:"parameters,omitempty" tf:"alias:parameter"`
 	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
-	EditMode             jobs.CreateJobEditMode        `json:"edit_mode,omitempty"`
+	EditMode             jobs.JobEditMode              `json:"edit_mode,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -340,12 +389,6 @@ type JobParameter struct {
 	Name    string `json:"name,omitempty"`
 	Default string `json:"default,omitempty"`
 	Value   string `json:"value,omitempty"`
-}
-
-// Job-level parameter definitions
-type JobParameterDefinition struct {
-	Name    string `json:"name,omitempty"`
-	Default string `json:"default,omitempty"`
 }
 
 // RunState of the job
@@ -619,18 +662,18 @@ func wrapMissingJobError(err error, id string) error {
 	return err
 }
 
-func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
-	if p, err := common.SchemaPath(*s, "new_cluster", "num_workers"); err == nil {
+func jobSettingsSchema(s map[string]*schema.Schema, prefix string) {
+	if p, err := common.SchemaPath(s, "new_cluster", "num_workers"); err == nil {
 		p.Optional = true
 		p.Default = 0
 		p.Type = schema.TypeInt
 		p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 		p.Required = false
 	}
-	if p, err := common.SchemaPath(*s, "new_cluster", "init_scripts", "dbfs"); err == nil {
+	if p, err := common.SchemaPath(s, "new_cluster", "init_scripts", "dbfs"); err == nil {
 		p.Deprecated = clusters.DbfsDeprecationWarning
 	}
-	if v, err := common.SchemaPath(*s, "new_cluster", "spark_conf"); err == nil {
+	if v, err := common.SchemaPath(s, "new_cluster", "spark_conf"); err == nil {
 		reSize := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.%")
 		reConf := common.MustCompileKeyRE(prefix + "new_cluster.0.spark_conf.spark.databricks.delta.preview.enabled")
 		v.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
@@ -645,19 +688,25 @@ func jobSettingsSchema(s *map[string]*schema.Schema, prefix string) {
 	}
 }
 
-func gitSourceSchema(r *schema.Resource, prefix string) {
-	r.Schema["url"].ValidateFunc = validation.IsURLWithHTTPS
-	(*r.Schema["tag"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
-	(*r.Schema["branch"]).ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
-	(*r.Schema["commit"]).ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
+func gitSourceSchema(s map[string]*schema.Schema, prefix string) {
+	s["url"].ValidateFunc = validation.IsURLWithHTTPS
+	s["tag"].ConflictsWith = []string{"git_source.0.branch", "git_source.0.commit"}
+	s["branch"].ConflictsWith = []string{"git_source.0.commit", "git_source.0.tag"}
+	s["commit"].ConflictsWith = []string{"git_source.0.branch", "git_source.0.tag"}
+}
+
+func fixWebhookNotifications(s map[string]*schema.Schema) {
+	for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+		common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
+	}
 }
 
 var jobSchema = common.StructToSchema(JobSettings{},
 	func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		jobSettingsSchema(&s, "")
-		jobSettingsSchema(&s["task"].Elem.(*schema.Resource).Schema, "task.0.")
-		jobSettingsSchema(&s["job_cluster"].Elem.(*schema.Resource).Schema, "job_cluster.0.")
-		gitSourceSchema(s["git_source"].Elem.(*schema.Resource), "")
+		jobSettingsSchema(s, "")
+		jobSettingsSchema(common.MustSchemaMap(s, "task"), "task.0.")
+		jobSettingsSchema(common.MustSchemaMap(s, "job_cluster"), "job_cluster.0.")
+		gitSourceSchema(common.MustSchemaMap(s, "git_source"), "")
 		if p, err := common.SchemaPath(s, "schedule", "pause_status"); err == nil {
 			p.ValidateFunc = validation.StringInSlice([]string{"PAUSED", "UNPAUSED"}, false)
 		}
@@ -690,6 +739,10 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		s["continuous"].ConflictsWith = []string{"schedule", "trigger"}
 		s["trigger"].ConflictsWith = []string{"schedule", "continuous"}
 
+		trigger_eoo := []string{"trigger.0.file_arrival", "trigger.0.table_update"}
+		common.MustSchemaPath(s, "trigger", "file_arrival").ExactlyOneOf = trigger_eoo
+		common.MustSchemaPath(s, "trigger", "table_update").ExactlyOneOf = trigger_eoo
+
 		// Deprecated Job API 2.0 attributes
 		var topLevelDeprecatedAttr = []string{
 			"max_retries",
@@ -713,6 +766,14 @@ var jobSchema = common.StructToSchema(JobSettings{},
 		run_as_eoo := []string{"run_as.0.user_name", "run_as.0.service_principal_name"}
 		common.MustSchemaPath(s, "run_as", "user_name").ExactlyOneOf = run_as_eoo
 		common.MustSchemaPath(s, "run_as", "service_principal_name").ExactlyOneOf = run_as_eoo
+
+		// Clear the implied diff suppression for the webhook notification lists
+		fixWebhookNotifications(s)
+		fixWebhookNotifications(common.MustSchemaMap(s, "task"))
+
+		// Suppress diff if the platform returns ALL_SUCCESS for run_if in a task
+		common.CustomizeSchemaPath(s, "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
+		common.CustomizeSchemaPath(s, "task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
 		return s
 	})
@@ -842,7 +903,7 @@ func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 	}
 }
 
-func ResourceJob() *schema.Resource {
+func ResourceJob() common.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
 		var js JobSettings
 		common.DataToStructPointer(d, jobSchema, &js)
@@ -940,5 +1001,5 @@ func ResourceJob() *schema.Resource {
 			}
 			return w.Jobs.DeleteByJobId(ctx, jobID)
 		},
-	}.ToResource()
+	}
 }

@@ -5,7 +5,7 @@ subcategory: "Deployment"
 
 -> **Note** Initialize provider with `alias = "account"`, `host = "https://accounts.azuredatabricks.net"` and use `provider = databricks.account` for all `databricks_mws_*` resources.
 
--> **Public Preview** This feature is only available in Azure, and currently in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+-> **Note** This feature is only available in Azure.
 
 Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to [configure private connectivity from serverless compute](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link).
 

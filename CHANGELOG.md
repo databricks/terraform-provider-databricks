@@ -43,6 +43,7 @@
  * Switch to use structs from Go SDK for [databricks_recipient](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/recipient) resource ([#3400](https://github.com/databricks/terraform-provider-databricks/pull/3400)).
  * Make libraries in `resource_job` slice instead of set ([#3398](https://github.com/databricks/terraform-provider-databricks/pull/3398)).
  * Fixed `TestUcAccJobRunAsMutations`
+ * Ensure tests are only run in the selected environment ([#3476](https://github.com/databricks/terraform-provider-databricks/pull/3476))
 
 
 ## 1.39.0

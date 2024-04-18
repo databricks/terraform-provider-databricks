@@ -1,0 +1,5 @@
+ignored_tests:
+  go:
+    - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
+      test_name: TestAccGroupsUpdateDisplayName
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061

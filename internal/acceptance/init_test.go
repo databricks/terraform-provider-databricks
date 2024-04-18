@@ -38,46 +38,21 @@ func init() {
 
 func workspaceLevel(t *testing.T, steps ...step) {
 	loadWorkspaceEnv(t)
-	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
-	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
-		skipf(t)("Skipping workspace test on account level")
-	}
-	t.Parallel()
 	run(t, steps)
 }
 
 func accountLevel(t *testing.T, steps ...step) {
 	loadAccountEnv(t)
-	cfg := &config.Config{
-		AccountID: GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID"),
-	}
-	err := cfg.EnsureResolved()
-	if err != nil {
-		skipf(t)("error: %s", err)
-	}
-	if !cfg.IsAccountClient() {
-		skipf(t)("Not in account env: %s/%s", cfg.AccountID, cfg.Host)
-	}
-	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
-	t.Parallel()
 	run(t, steps)
 }
 
 func unityWorkspaceLevel(t *testing.T, steps ...step) {
 	loadUcwsEnv(t)
-	GetEnvOrSkipTest(t, "TEST_METASTORE_ID")
-	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
-		skipf(t)("Skipping workspace test on account level")
-	}
-	t.Parallel()
 	run(t, steps)
 }
 
 func unityAccountLevel(t *testing.T, steps ...step) {
 	loadUcacctEnv(t)
-	GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	GetEnvOrSkipTest(t, "TEST_METASTORE_ID")
-	t.Parallel()
 	run(t, steps)
 }
 
@@ -161,6 +136,7 @@ func run(t *testing.T, steps []step) {
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	provider := provider.DatabricksProvider()
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -361,23 +337,37 @@ func setDebugLogger() {
 }
 
 func loadWorkspaceEnv(t *testing.T) {
-	setDebugLogger()
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	initTest(t, "workspace")
+	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
+		skipf(t)("Skipping workspace test on account level")
+	}
 }
 
 func loadAccountEnv(t *testing.T) {
-	setDebugLogger()
-	loadDebugEnvIfRunsFromIDE(t, "account")
+	initTest(t, "account")
+	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
+		skipf(t)("Skipping account test on workspace level")
+	}
 }
 
 func loadUcwsEnv(t *testing.T) {
-	setDebugLogger()
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+	initTest(t, "ucws")
+	if os.Getenv("TEST_METASTORE_ID") == "" {
+		skipf(t)("Skipping non-Unity Catalog test")
+	}
+	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
+		skipf(t)("Skipping workspace test on account level")
+	}
 }
 
 func loadUcacctEnv(t *testing.T) {
-	setDebugLogger()
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	initTest(t, "ucacct")
+	if os.Getenv("TEST_METASTORE_ID") == "" {
+		skipf(t)("Skipping non-Unity Catalog test")
+	}
+	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
+		skipf(t)("Skipping account test on workspace level")
+	}
 }
 
 func isAws(t *testing.T) bool {
@@ -415,6 +405,12 @@ func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func initTest(t *testing.T, key string) {
+	setDebugLogger()
+	loadDebugEnvIfRunsFromIDE(t, key)
+	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
 }
 
 // loads debug environment from ~/.databricks/debug-env.json

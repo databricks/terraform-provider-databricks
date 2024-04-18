@@ -20,30 +20,12 @@ type schemaPathContext struct {
 	schemaPath []*schema.Schema
 }
 
-func (spc schemaPathContext) copy() schemaPathContext {
-	newPath := make([]string, len(spc.path))
-	copy(newPath, spc.path)
-	newSchemaPath := make([]*schema.Schema, len(spc.schemaPath))
-	copy(newSchemaPath, spc.schemaPath)
-	return schemaPathContext{
-		path:       newPath,
-		schemaPath: newSchemaPath,
-	}
-}
-
 func (tc trackingContext) withPath(fieldName string, schema *schema.Schema) trackingContext {
 	newTc := tc.copy()
 	// Special path element `"0"` is used to denote either arrays or sets of elements
 	newTc.pathCtx.path = append(tc.pathCtx.path, fieldName, "0")
 	newTc.pathCtx.schemaPath = append(tc.pathCtx.schemaPath, schema)
 	return newTc
-}
-
-func getEmptySchemaPathContext() schemaPathContext {
-	return schemaPathContext{
-		[]string{},
-		[]*schema.Schema{},
-	}
 }
 
 func (tc trackingContext) depthExceeded(typeField reflect.StructField) bool {
@@ -88,14 +70,18 @@ func (tc trackingContext) visit(v reflect.Value) trackingContext {
 	return newTc
 }
 
+func getEmptySchemaPathContext() schemaPathContext {
+	return schemaPathContext{
+		[]string{},
+		[]*schema.Schema{},
+	}
+}
+
 func getEmptyTrackingContext() trackingContext {
 	return trackingContext{
 		map[string]int{},
 		map[string]int{},
-		schemaPathContext{
-			[]string{},
-			[]*schema.Schema{},
-		},
+		getEmptySchemaPathContext(),
 	}
 }
 
@@ -103,10 +89,7 @@ func getTrackingContext(rp RecursiveResourceProvider) trackingContext {
 	return trackingContext{
 		map[string]int{},
 		rp.MaxDepthForTypes(),
-		schemaPathContext{
-			[]string{},
-			[]*schema.Schema{},
-		},
+		getEmptySchemaPathContext(),
 	}
 }
 

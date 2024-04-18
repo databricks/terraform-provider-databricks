@@ -64,8 +64,14 @@ func (s *CustomizableSchema) SchemaPath(path ...string) *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) GetSchemaMap() map[string]*schema.Schema {
-	schemaMap := s.Schema.Elem.(*schema.Resource).Schema
-	return schemaMap
+	if s.Schema.Elem == nil {
+		panic("Elem of Schema field for CustomizableSchema is nil.")
+	}
+	schemaResource, ok := s.Schema.Elem.(*schema.Resource)
+	if !ok {
+		panic("Elem of Schema field for CustomizableSchema is not a *schema.Resource.")
+	}
+	return schemaResource.Schema
 }
 
 func (s *CustomizableSchema) SetOptional() *CustomizableSchema {

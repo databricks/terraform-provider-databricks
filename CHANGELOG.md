@@ -24,6 +24,7 @@
  * Document `pricing_tier` of [databricks_mws_workspaces](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_workspaces) resource ([#3433](https://github.com/databricks/terraform-provider-databricks/pull/3433)).
  * Updated documentation for Delta Sharing resources; refactoring relevant resources & data sources ([#3466](https://github.com/databricks/terraform-provider-databricks/pull/3466)).
  * Added description for new fields in [databricks_lakehouse_monitor](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/lakehouse_monitor)
+ * Update about using Databricks-managed service principals in all clouds ([#3482](https://github.com/databricks/terraform-provider-databricks/pull/3482))
 
 ### Exporter
  * Decrease a need for `get-status` calls for directories when listing workspace objects ([#3470](https://github.com/databricks/terraform-provider-databricks/pull/3470)).
@@ -44,6 +45,8 @@
  * Make libraries in `resource_job` slice instead of set ([#3398](https://github.com/databricks/terraform-provider-databricks/pull/3398)).
  * Fixed `TestUcAccJobRunAsMutations`
  * Ensure tests are only run in the selected environment ([#3476](https://github.com/databricks/terraform-provider-databricks/pull/3476))
+ * Use fixture cluster for `databricks_sql_permissions` integration test ([#3483](https://github.com/databricks/terraform-provider-databricks/pull/3483))
+ * Improve integration tests for databricks_model_serving ([#3479](https://github.com/databricks/terraform-provider-databricks/pull/3479))
 
 
 ## 1.39.0

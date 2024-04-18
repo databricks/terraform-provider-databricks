@@ -650,7 +650,7 @@ func TestTypeToSchemaNoStruct(t *testing.T) {
 			fmt.Sprintf("%s", p))
 	}()
 	v := reflect.ValueOf(1)
-	typeToSchema(v, nil, getEmptyRecursionTrackingContext(), getEmptySchemaPathContext())
+	typeToSchema(v, nil, getEmptyTrackingContext())
 }
 
 func TestTypeToSchemaUnsupported(t *testing.T) {
@@ -663,7 +663,7 @@ func TestTypeToSchemaUnsupported(t *testing.T) {
 		New chan int `json:"new"`
 	}
 	v := reflect.ValueOf(nonsense{})
-	typeToSchema(v, nil, getEmptyRecursionTrackingContext(), getEmptySchemaPathContext())
+	typeToSchema(v, nil, getEmptyTrackingContext())
 }
 
 type data map[string]any

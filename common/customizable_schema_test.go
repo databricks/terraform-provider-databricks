@@ -167,7 +167,7 @@ func TestCustomizableSchemaSetConflictsWith(t *testing.T) {
 }
 
 func TestCustomizableSchemaSetConflictsWith_PathInContext(t *testing.T) {
-	fakeContextWithPath := SchemaPathContext{
+	fakeContextWithPath := schemaPathContext{
 		path:       []string{"a", "0", "b"},
 		schemaPath: []*schema.Schema{},
 	}
@@ -179,7 +179,7 @@ func TestCustomizableSchemaSetConflictsWith_PathInContext(t *testing.T) {
 }
 
 func TestCustomizableSchemaSetConflictsWith_MultiItemList(t *testing.T) {
-	fakeContextWithPath := SchemaPathContext{
+	fakeContextWithPath := schemaPathContext{
 		path: []string{"a", "0", "b"},
 		schemaPath: []*schema.Schema{
 			{

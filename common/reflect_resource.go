@@ -100,7 +100,7 @@ type RecursiveResourceProvider interface {
 }
 
 // Takes in a ResourceProvider and converts that into a map from string to schema.
-func resourceProviderStructToSchema(v ResourceProvider, scp SchemaPathContext) map[string]*schema.Schema {
+func resourceProviderStructToSchema(v ResourceProvider, scp schemaPathContext) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	var scm map[string]*schema.Schema
 	aliases := map[string]map[string]string{}
@@ -108,9 +108,9 @@ func resourceProviderStructToSchema(v ResourceProvider, scp SchemaPathContext) m
 		aliases = rpwa.Aliases()
 	}
 	if rrp, ok := v.(RecursiveResourceProvider); ok {
-		scm = typeToSchema(rv, aliases, getRecursionTrackingContext(rrp), scp)
+		scm = typeToSchema(rv, aliases, getTrackingContext(rrp).withPathContext(scp))
 	} else {
-		scm = typeToSchema(rv, aliases, getEmptyRecursionTrackingContext(), scp)
+		scm = typeToSchema(rv, aliases, getEmptyTrackingContext().withPathContext(scp))
 	}
 	cs := CustomizeSchemaPath(scm)
 	cs.context = scp
@@ -215,7 +215,7 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		return resourceProviderStructToSchema(rp, getEmptySchemaPathContext())
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyRecursionTrackingContext(), getEmptySchemaPathContext())
+	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyTrackingContext())
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -366,7 +366,7 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext, scp SchemaPathContext) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trackingContext) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -376,14 +376,13 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
-	rt = rt.copy()
-	rt.visit(v)
+	tc = tc.visit(v)
 	fields := listAllFields(v)
 	for _, field := range fields {
 		typeField := field.sf
-		if rt.depthExceeded(typeField) {
+		if tc.depthExceeded(typeField) {
 			// Skip the field if recursion depth is over the limit.
-			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", getNameForType(typeField.Type), rt.getMaxDepthForTypeField(typeField))
+			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", getNameForType(typeField.Type), tc.getMaxDepthForTypeField(typeField))
 			continue
 		}
 		tfTag := typeField.Tag.Get("tf")
@@ -451,7 +450,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName]))
+			nestedSchema := typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -468,7 +467,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName]))
+			nestedSchema := typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -497,7 +496,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, aliases, rt, scp.addToPath(fieldName, scm[fieldName])),
+					Schema: typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName])),
 				}
 			}
 		default:

@@ -15,39 +15,7 @@ type CustomizableSchema struct {
 	Schema         *schema.Schema
 	path           []string
 	isSuppressDiff bool
-	context        SchemaPathContext
-}
-
-type SchemaPathContext struct {
-	// Path is used for refernces from resourceProviderRegistry as prefix, follows the format of `[a,0,b]`
-	path       []string
-	schemaPath []*schema.Schema
-}
-
-func (spc SchemaPathContext) copy() SchemaPathContext {
-	newPath := make([]string, len(spc.path))
-	copy(newPath, spc.path)
-	newSchemaPath := make([]*schema.Schema, len(spc.schemaPath))
-	copy(newSchemaPath, spc.schemaPath)
-	return SchemaPathContext{
-		path:       newPath,
-		schemaPath: newSchemaPath,
-	}
-}
-
-func (spc SchemaPathContext) addToPath(fieldName string, schema *schema.Schema) SchemaPathContext {
-	newSpc := spc.copy()
-	// Special path element `"0"` is used to denote either arrays or sets of elements
-	newSpc.path = append(spc.path, fieldName, "0")
-	newSpc.schemaPath = append(spc.schemaPath, schema)
-	return newSpc
-}
-
-func getEmptySchemaPathContext() SchemaPathContext {
-	return SchemaPathContext{
-		[]string{},
-		[]*schema.Schema{},
-	}
+	context        schemaPathContext
 }
 
 func (s *CustomizableSchema) pathContainsMultipleItemsList() bool {
@@ -95,7 +63,7 @@ func (s *CustomizableSchema) SchemaPath(path ...string) *CustomizableSchema {
 	return &CustomizableSchema{Schema: sch, path: path, context: s.context}
 }
 
-func (s *CustomizableSchema) GetSchemaMap(path ...string) map[string]*schema.Schema {
+func (s *CustomizableSchema) GetSchemaMap() map[string]*schema.Schema {
 	schemaMap := s.Schema.Elem.(*schema.Resource).Schema
 	return schemaMap
 }

@@ -269,6 +269,58 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 	})
 }
 
+func TestUcAccResourceSqlTable_ViewDefinitionChange(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		t.Skipf("databricks_sql_table resource not available on GCP")
+	}
+	unityWorkspaceLevel(t, step{
+		Template: `
+        resource "databricks_schema" "this" {
+            name         = "{var.STICKY_RANDOM}"
+            catalog_name = "main"
+        }
+
+        resource "databricks_sql_table" "this" {
+            name               = "bar"
+            catalog_name       = "main"
+            schema_name        = databricks_schema.this.name
+            table_type         = "VIEW"
+            view_definition    = "SELECT id, name FROM somewhere WHERE condition = true"
+
+            column {
+                name      = "id"
+            }
+
+            column {
+                name      = "name"
+            }
+        }`,
+	}, step{
+		Template: `
+        resource "databricks_schema" "this" {
+            name         = "{var.STICKY_RANDOM}"
+            catalog_name = "main"
+        }
+
+        resource "databricks_sql_table" "this" {
+            name               = "bar"
+            catalog_name       = "main"
+            schema_name        = databricks_schema.this.name
+            table_type         = "VIEW"
+            // Changes in view_definition are only whitespace and newlines, which should not trigger an update
+            view_definition    = "SELECT  id, name \n\n FROM  somewhere  WHERE  condition = true  "
+
+            column {
+                name      = "id"
+            }
+
+            column {
+                name      = "name"
+            }
+        }`,
+	})
+}
+
 func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.SqlColumnInfo) string {
 	columnsTemplate := catalog.GetSqlColumnInfoHCL(columnInfos)
 

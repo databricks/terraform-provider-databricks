@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
 )
@@ -528,6 +529,76 @@ func TestResourceSqlTableUpdateView_Definition(t *testing.T) {
 		}, createClusterForSql...),
 		Resource: ResourceSqlTable(),
 		Update:   true,
+		ID:       "main.foo.barview",
+	}.ApplyNoError(t)
+}
+
+func TestResourceSqlTableUpdateView_IgnoreNewlineInDefinition(t *testing.T) {
+	qa.ResourceFixture{
+		InstanceState: map[string]string{
+			"name":            "barview",
+			"catalog_name":    "main",
+			"schema_name":     "foo",
+			"table_type":      "VIEW",
+			"cluster_id":      "existingcluster",
+			"view_definition": "SELECT * FROM main.foo.bar",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"catalog_name": {
+				Old:         "main",
+				New:         "main",
+				RequiresNew: false,
+			},
+			"cluster_id": {
+				Old:         "existingcluster",
+				New:         "existingcluster",
+				RequiresNew: false,
+			},
+			"name": {
+				Old:         "barview",
+				New:         "barview",
+				RequiresNew: false,
+			},
+			"schema_name": {
+				Old:         "foo",
+				New:         "foo",
+				RequiresNew: false,
+			},
+			"table_type": {
+				Old:         "VIEW",
+				New:         "VIEW",
+				RequiresNew: false,
+			},
+			"view_definition": {
+				Old:         "SELECT * FROM main.foo.bar",
+				New:         "SELECT * FROM main.foo.bar",
+				NewComputed: false,
+				RequiresNew: false,
+				NewRemoved:  false,
+				Sensitive:   false,
+			},
+			"column.#": {
+				Old:         "",
+				New:         "",
+				NewComputed: true,
+				RequiresNew: true,
+			},
+			"properties.%": {
+				Old:         "",
+				New:         "",
+				NewComputed: true,
+				RequiresNew: false,
+			},
+		},
+		HCL: `
+		name               = "barview"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "VIEW"
+		cluster_id         = "existingcluster"
+		view_definition    = "SELECT * FROM main.foo.bar "
+		`,
+		Resource: ResourceSqlTable(),
 		ID:       "main.foo.barview",
 	}.ApplyNoError(t)
 }

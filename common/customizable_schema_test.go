@@ -166,6 +166,34 @@ func TestCustomizableSchemaSetConflictsWith(t *testing.T) {
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].ConflictsWith) == 1, "conflictsWith should be set in field: non_optional")
 }
 
+func TestCustomizableSchemaSetConflictsWith_PathInContext(t *testing.T) {
+	fakeContextWithPath := schemaPathContext{
+		path:       []string{"a", "0", "b"},
+		schemaPath: []*schema.Schema{},
+	}
+	cs := CustomizeSchemaPath(testCustomizableSchemaScm, "float")
+	cs.context = fakeContextWithPath
+	cs.SetConflictsWith([]string{"abc"})
+	assert.Truef(t, len(testCustomizableSchemaScm["float"].ConflictsWith) == 1, "conflictsWith should be set in field: float")
+	assert.Truef(t, cs.Schema.ConflictsWith[0] == "a.0.b.abc", "conflictsWith should be set with the correct prefix")
+}
+
+func TestCustomizableSchemaSetConflictsWith_MultiItemList(t *testing.T) {
+	fakeContextWithPath := schemaPathContext{
+		path: []string{"a", "0", "b"},
+		schemaPath: []*schema.Schema{
+			{
+				Type:     schema.TypeList,
+				MaxItems: 10,
+			},
+		},
+	}
+	cs := CustomizeSchemaPath(testCustomizableSchemaScm, "bool")
+	cs.context = fakeContextWithPath
+	cs.SetConflictsWith([]string{"abc"})
+	assert.Truef(t, len(testCustomizableSchemaScm["bool"].ConflictsWith) == 0, "conflictsWith should not be set when there's multi item list in the path")
+}
+
 func TestCustomizableSchemaSetExactlyOneOf(t *testing.T) {
 	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetExactlyOneOf([]string{"abc"})
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].ExactlyOneOf) == 1, "ExactlyOneOf should be set in field: non_optional")

@@ -2472,7 +2472,10 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 					PipelineID:   "def",
 					Name:         "def",
 					LastModified: 1690156900000,
-					Spec:         &pipelines.PipelineSpec{},
+					Spec: &pipelines.PipelineSpec{
+						Target:  "default",
+						Catalog: "main",
+					},
 				},
 				ReuseRequest: true,
 			},

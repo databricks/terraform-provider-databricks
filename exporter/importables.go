@@ -1919,6 +1919,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			var pipeline pipelines.PipelineSpec
 			s := ic.Resources["databricks_pipeline"].Schema
 			common.DataToStructPointer(r.Data, s, &pipeline)
+			if pipeline.Catalog != "" && pipeline.Target != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_schema",
+					ID:       pipeline.Catalog + "." + pipeline.Target,
+				})
+			}
 			for _, lib := range pipeline.Libraries {
 				if lib.Notebook != nil {
 					ic.emitNotebookOrRepo(lib.Notebook.Path)
@@ -1983,6 +1989,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			return numLibraries == 0
 		},
 		Depends: []reference{
+			{Path: "catalog", Resource: "databricks_catalog"},
+			{Path: "target", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: dltIsMatchingCatalogAndSchema, SkipDirectLookup: true},
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "cluster.init_scripts.volumes.destination", Resource: "databricks_file"},

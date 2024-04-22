@@ -532,6 +532,69 @@ func TestResourceSqlTableUpdateView_Definition(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceSqlTableUpdateView_DefinitionSpaceDiff(t *testing.T) {
+	qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			assert.NotContains(t, commandStr, "COMMENT ON VIEW", "Changing comments on a VIEW requires new. Resource should not attempt to alter comments via SQL command")
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		// view_definition with white space(" ") and empty new line(\n\n)
+		HCL: `
+		name               = "barview"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "VIEW"
+		cluster_id         = "existingcluster"
+		view_definition    = " SELECT\ncolumn_a,\n\ncolumn_b\nFROM main.foo.bar "
+		`,
+		InstanceState: map[string]string{
+			"name":            "barview",
+			"catalog_name":    "main",
+			"schema_name":     "foo",
+			"table_type":      "VIEW",
+			"view_definition": "SELECT\ncolumn_a,\ncolumn_b\nFROM main.foo.bar",
+		},
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
+				Response: SqlTableInfo{
+					Name:           "barview",
+					CatalogName:    "main",
+					SchemaName:     "foo",
+					TableType:      "VIEW",
+					ViewDefinition: "SELECT\ncolumn_a,\ncolumn_b\nFROM main.foo.bar",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
+				Response: SqlTableInfo{
+					Name:           "barview",
+					CatalogName:    "main",
+					SchemaName:     "foo",
+					TableType:      "VIEW",
+					ViewDefinition: "SELECT\ncolumn_a,\n column_b\nFROM main.foo.bar",
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "existingcluster",
+				},
+				Status: 404,
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		Update:   true,
+		ID:       "main.foo.barview",
+	}.ApplyNoError(t)
+}
+
 func TestResourceSqlTableUpdateView_Comments(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {

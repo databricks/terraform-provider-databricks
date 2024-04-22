@@ -31,9 +31,20 @@ func IsExporter(ctx context.Context) bool {
 	return GetTerraformVersionFromContext(ctx) == "exporter"
 }
 
+func removeEmptyLines(text string) string {
+	lines := strings.Split(text, "\n")
+	var nonEmptyLines []string
+	for _, line := range lines {
+		if line != "" {
+			nonEmptyLines = append(nonEmptyLines, line)
+		}
+	}
+	return strings.Join(nonEmptyLines, "\n")
+}
+
 func SuppressDiffWhitespaceChange(k, old, new string, d *schema.ResourceData) bool {
 	log.Printf("[DEBUG] Suppressing diff for %v: old=%#v new=%#v", k, old, new)
-	return strings.TrimSpace(old) == strings.TrimSpace(new)
+	return removeEmptyLines(strings.TrimSpace(old)) == removeEmptyLines(strings.TrimSpace(new))
 }
 
 func MustInt64(s string) int64 {

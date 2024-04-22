@@ -1312,7 +1312,7 @@ func ListParallel(a workspace.NotebooksAPI, path string, shouldIncludeDir func(w
 var (
 	maxRetries        = 5
 	retryDelaySeconds = 2
-	retriableErrors   = []string{"context deadline exceeded", "Error handling request", "Timed out after "}
+	retriableErrors   = []string{"deadline exceeded", "Error handling request", "Timed out after "}
 )
 
 func isRetryableError(err string, i int) bool {

@@ -776,6 +776,24 @@ func TestResourceJobCreate_JobParameters_DefaultIsRequired(t *testing.T) {
 	}.ExpectError(t, "invalid config supplied. [parameter.#.default] Missing required argument")
 }
 
+func TestResourceJobCreate_JobParameters_SingleTasksConflict(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "JobParameterTesting"
+
+		parameter {
+				name = "key"
+				default = ""
+		}
+
+		notebook_task {
+			notebook_path = "/Shared/test"
+		}`,
+	}.ExpectError(t, "invalid config supplied. [notebook_task] Conflicting configuration arguments")
+}
+
 func TestResourceJobCreate_JobClusters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

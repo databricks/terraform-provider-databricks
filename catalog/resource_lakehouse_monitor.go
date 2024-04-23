@@ -16,7 +16,7 @@ const lakehouseMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
 	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
-		endpoint, err := w.LakehouseMonitors.GetByFullName(ctx, monitorName)
+		endpoint, err := w.LakehouseMonitors.GetByTableName(ctx, monitorName)
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -66,13 +66,13 @@ func ResourceLakehouseMonitor() common.Resource {
 
 			var create catalog.CreateMonitor
 			common.DataToStructPointer(d, monitorSchema, &create)
-			create.FullName = d.Get("table_name").(string)
+			create.TableName = d.Get("table_name").(string)
 
 			endpoint, err := w.LakehouseMonitors.Create(ctx, create)
 			if err != nil {
 				return err
 			}
-			err = WaitForMonitor(w, ctx, create.FullName)
+			err = WaitForMonitor(w, ctx, create.TableName)
 			if err != nil {
 				return err
 			}
@@ -84,7 +84,7 @@ func ResourceLakehouseMonitor() common.Resource {
 			if err != nil {
 				return err
 			}
-			endpoint, err := w.LakehouseMonitors.GetByFullName(ctx, d.Id())
+			endpoint, err := w.LakehouseMonitors.GetByTableName(ctx, d.Id())
 			if err != nil {
 				return err
 
@@ -98,19 +98,19 @@ func ResourceLakehouseMonitor() common.Resource {
 			}
 			var update catalog.UpdateMonitor
 			common.DataToStructPointer(d, monitorSchema, &update)
-			update.FullName = d.Get("table_name").(string)
+			update.TableName = d.Get("table_name").(string)
 			_, err = w.LakehouseMonitors.Update(ctx, update)
 			if err != nil {
 				return err
 			}
-			return WaitForMonitor(w, ctx, update.FullName)
+			return WaitForMonitor(w, ctx, update.TableName)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			return w.LakehouseMonitors.DeleteByFullName(ctx, d.Id())
+			return w.LakehouseMonitors.DeleteByTableName(ctx, d.Id())
 		},
 		Schema: monitorSchema,
 		Timeouts: &schema.ResourceTimeout{

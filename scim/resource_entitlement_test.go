@@ -71,23 +71,7 @@ var emptyAddRequest = PatchRequestComplexValue([]patchOperation{
 
 var updateRequest = PatchRequestComplexValue([]patchOperation{
 	{
-		"remove", "entitlements", []ComplexValue{
-			{
-				Value: "allow-cluster-create",
-			},
-			{
-				Value: "allow-instance-pool-create",
-			},
-			{
-				Value: "databricks-sql-access",
-			},
-			{
-				Value: "workspace-access",
-			},
-		},
-	},
-	{
-		"add", "entitlements", []ComplexValue{
+		"replace", "entitlements", []ComplexValue{
 			{
 				Value: "allow-cluster-create",
 			},
@@ -762,4 +746,14 @@ func TestResourceEntitlementsGroupCreateEmpty(t *testing.T) {
 	assert.Equal(t, false, d.Get("allow_instance_pool_create"))
 	assert.Equal(t, false, d.Get("databricks_sql_access"))
 	assert.Equal(t, false, d.Get("workspace_access"))
+}
+
+func TestResourceEntitlementsCreate_AccountLevelShouldError(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource:  ResourceEntitlements(),
+		HCL:       `group_id = "abc"`,
+		Create:    true,
+		AccountID: "abc-123",
+	}.Apply(t)
+	assert.Contains(t, "entitlements can only be managed with a provider configured at the workspace-level", err.Error())
 }

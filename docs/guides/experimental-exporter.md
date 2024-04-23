@@ -53,6 +53,7 @@ All arguments are optional, and they tune what code is being generated.
 * `-debug` - turn on debug output.
 * `-trace` - turn on trace output (includes debug level as well).
 * `-native-import` - turns on generation of [native import blocks](https://developer.hashicorp.com/terraform/language/import) (requires Terraform 1.5+).  This option is recommended for cases when you want to start to manage existing workspace.
+* `-export-secrets` - enables export of the secret values - they will be written into the `terraform.tfvars` file.  **Be very careful with this file!**
 
 ## Services
 
@@ -66,7 +67,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `directories` - **listing** [databricks_directory](../resources/directory.md).
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
-* `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated jobs than interactive clusters, so they get their own file in this tool's output.
+* `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
@@ -98,7 +99,7 @@ Services are just logical groups of resources used for filtering and organizatio
 
 ## Secrets
 
-For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. Importer will create a variable in `vars.tf`, with the same name as the secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.
+For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. By default importer will create a variable in `vars.tf`, with the same name as the secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.  You can use `-export-secrets` command-line option to generate the `terraform.tfvars` file with secret values.
 
 ## Parallel execution
 

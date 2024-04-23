@@ -2,8 +2,6 @@ package acceptance
 
 import (
 	"context"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -14,8 +12,8 @@ import (
 )
 
 // Application ID is mandatory in Azure today.
-func getServicePrincipalResource(cloudEnv string) string {
-	if strings.HasPrefix(cloudEnv, "azure") {
+func getServicePrincipalResource(t *testing.T) string {
+	if isAzure(t) {
 		return `
 		resource "databricks_service_principal" "this" {
 			application_id = "{var.RANDOM_UUID}"
@@ -31,9 +29,8 @@ func getServicePrincipalResource(cloudEnv string) string {
 }
 
 func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "account")
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	spResource := getServicePrincipalResource(cloudEnv)
+	loadAccountEnv(t)
+	spResource := getServicePrincipalResource(t)
 	accountLevel(t, step{
 		Template: spResource + `
 		resource "databricks_group" "this" {

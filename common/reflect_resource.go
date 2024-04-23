@@ -66,7 +66,7 @@ func RegisterResourceProvider(v any, r ResourceProvider) {
 // Generic interface for ResourceProvider. Using CustomizeSchema function to keep track of additional information
 // on top of the generated go-sdk struct.
 type ResourceProvider interface {
-	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
+	CustomizeSchema(*CustomizableSchema) *CustomizableSchema
 }
 
 // Interface for ResourceProvider instances that need aliases for fields.
@@ -81,6 +81,9 @@ type ResourceProviderWithAlias interface {
 	//	        "libraries": "library"
 	//	    }
 	//	}
+	// Note: In case the struct is derived from another struct example:
+	// type LibraryList compute.InstallLibraries
+	// The top level key would still be the name of the struct i.e. LibraryList in this example.
 	Aliases() map[string]map[string]string
 }
 
@@ -98,7 +101,7 @@ type RecursiveResourceProvider interface {
 }
 
 // Takes in a ResourceProvider and converts that into a map from string to schema.
-func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
+func resourceProviderStructToSchema(v ResourceProvider, scp schemaPathContext) map[string]*schema.Schema {
 	rv := reflect.ValueOf(v)
 	var scm map[string]*schema.Schema
 	aliases := map[string]map[string]string{}
@@ -106,11 +109,13 @@ func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schem
 		aliases = rpwa.Aliases()
 	}
 	if rrp, ok := v.(RecursiveResourceProvider); ok {
-		scm = typeToSchema(rv, aliases, getRecursionTrackingContext(rrp))
+		scm = typeToSchema(rv, aliases, getTrackingContext(rrp).withPathContext(scp))
 	} else {
-		scm = typeToSchema(rv, aliases, getEmptyRecursionTrackingContext())
+		scm = typeToSchema(rv, aliases, getEmptyTrackingContext().withPathContext(scp))
 	}
-	scm = v.CustomizeSchema(scm)
+	cs := CustomizeSchemaPath(scm)
+	cs.context = scp
+	scm = v.CustomizeSchema(cs).GetSchemaMap()
 	return scm
 }
 
@@ -173,8 +178,28 @@ func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, er
 	return nil, fmt.Errorf("%v does not compute", path)
 }
 
+func SchemaMap(s map[string]*schema.Schema, path ...string) (map[string]*schema.Schema, error) {
+	sch, err := SchemaPath(s, path...)
+	if err != nil {
+		return nil, err
+	}
+	cv, ok := sch.Elem.(*schema.Resource)
+	if !ok {
+		return nil, fmt.Errorf("%s is not nested resource", path[len(path)-1])
+	}
+	return cv.Schema, nil
+}
+
 func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema {
 	sch, err := SchemaPath(s, path...)
+	if err != nil {
+		panic(err)
+	}
+	return sch
+}
+
+func MustSchemaMap(s map[string]*schema.Schema, path ...string) map[string]*schema.Schema {
+	sch, err := SchemaMap(s, path...)
 	if err != nil {
 		panic(err)
 	}
@@ -188,10 +213,10 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		if customize != nil {
 			panic("customize should be nil if the input implements the ResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
 		}
-		return resourceProviderStructToSchema(rp)
+		return resourceProviderStructToSchema(rp, getEmptySchemaPathContext())
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyRecursionTrackingContext())
+	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyTrackingContext())
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -346,7 +371,7 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trackingContext) map[string]*schema.Schema {
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -356,14 +381,13 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
-	rt = rt.copy()
-	rt.visit(v)
+	tc = tc.visit(v)
 	fields := listAllFields(v)
 	for _, field := range fields {
 		typeField := field.sf
-		if rt.depthExceeded(typeField) {
+		if tc.depthExceeded(typeField) {
 			// Skip the field if recursion depth is over the limit.
-			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", getNameForType(typeField.Type), rt.getMaxDepthForTypeField(typeField))
+			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", getNameForType(typeField.Type), tc.getMaxDepthForTypeField(typeField))
 			continue
 		}
 		tfTag := typeField.Tag.Get("tf")
@@ -431,7 +455,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, aliases, rt)
+			nestedSchema := typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -448,7 +472,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, aliases, rt)
+			nestedSchema := typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -477,7 +501,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, aliases, rt),
+					Schema: typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName])),
 				}
 			}
 		default:
@@ -509,6 +533,9 @@ func IsRequestEmpty(v any) (bool, error) {
 }
 
 // isGoSdk returns true if the struct is from databricks-sdk-go or embeds a struct from databricks-sdk-go.
+// Note: In case the struct doesn't explicitly embed a struct from databricks-sdk-go, this would return false, example:
+// type LibraryList compute.InstallLibraries --> isGoSDK(LibraryList) would return false whereas
+// type LibraryList struct { compute.InstallLibraries } --> isGoSDK(LibraryList) would return true
 func isGoSdk(v reflect.Value) bool {
 	if strings.Contains(v.Type().PkgPath(), "databricks-sdk-go") {
 		return true

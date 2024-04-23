@@ -502,7 +502,7 @@ func TestResourceUserforce_delete_reposError(t *testing.T) {
 	require.Error(t, err, err)
 }
 func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -529,8 +529,7 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 			user_name    = "abc"
 			force_delete_repos = true
 		`,
-	}.Apply(t)
-	assert.EqualError(t, err, "force_delete_repos: Path (/Repos/abc) doesn't exist.")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserDelete_DirError(t *testing.T) {
@@ -561,7 +560,7 @@ func TestResourceUserDelete_DirError(t *testing.T) {
 	require.Error(t, err, err)
 }
 func TestResourceUserDelete_NonExistingDir(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -588,8 +587,7 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 			user_name    = "abc"
 			force_delete_home_dir = true
 		`,
-	}.Apply(t)
-	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
+	}.ApplyNoError(t)
 }
 
 func TestResourceUserDelete_ForceDeleteHomeDir(t *testing.T) {

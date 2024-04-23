@@ -55,6 +55,8 @@ func waitForOnlineTableDeletion(w *databricks.WorkspaceClient, ctx context.Conte
 func ResourceOnlineTable() common.Resource {
 	s := common.StructToSchema(catalog.OnlineTable{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			common.CustomizeSchemaPath(m, "spec", "source_table_full_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 			common.CustomizeSchemaPath(m, "name").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(m, "status").SetReadOnly()
 			common.CustomizeSchemaPath(m, "spec", "pipeline_id").SetReadOnly()
@@ -71,7 +73,7 @@ func ResourceOnlineTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			var req catalog.ViewData
+			var req catalog.CreateOnlineTableRequest
 			common.DataToStructPointer(d, s, &req)
 			res, err := w.OnlineTables.Create(ctx, req)
 			if err != nil {

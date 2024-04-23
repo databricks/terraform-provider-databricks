@@ -20,7 +20,7 @@ func TestCreateDac(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "bcd",
-					AwsIamRole: &catalog.AwsIamRole{
+					AwsIamRole: &catalog.AwsIamRoleRequest{
 						RoleArn: "def",
 					},
 				},
@@ -40,7 +40,7 @@ func TestCreateDac(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/bcd?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
-					AwsIamRole: &catalog.AwsIamRole{
+					AwsIamRole: &catalog.AwsIamRoleResponse{
 						RoleArn: "def",
 					},
 				},
@@ -74,7 +74,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "bcd",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityRequest{
 						AccessConnectorId: "def",
 						ManagedIdentityId: "/..../subscription",
 					},
@@ -95,7 +95,7 @@ func TestCreateDacWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/bcd?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "bcd",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "def",
 						ManagedIdentityId: "/..../subscription",
 					},
@@ -186,7 +186,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 					MetastoreId: "abc",
 					CredentialInfo: &catalog.CreateStorageCredential{
 						Name: "bcd",
-						AwsIamRole: &catalog.AwsIamRole{
+						AwsIamRole: &catalog.AwsIamRoleRequest{
 							RoleArn: "def",
 						},
 					},
@@ -213,7 +213,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 				Response: catalog.AccountsStorageCredentialInfo{
 					CredentialInfo: &catalog.StorageCredentialInfo{
 						Name: "bcd",
-						AwsIamRole: &catalog.AwsIamRole{
+						AwsIamRole: &catalog.AwsIamRoleResponse{
 							RoleArn: "def",
 						},
 					},
@@ -253,7 +253,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 					MetastoreId: "abc",
 					CredentialInfo: &catalog.CreateStorageCredential{
 						Name: "bcd",
-						AzureManagedIdentity: &catalog.AzureManagedIdentity{
+						AzureManagedIdentity: &catalog.AzureManagedIdentityRequest{
 							AccessConnectorId: "def",
 						},
 					},
@@ -280,7 +280,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 				Response: catalog.AccountsStorageCredentialInfo{
 					CredentialInfo: &catalog.StorageCredentialInfo{
 						Name: "bcd",
-						AzureManagedIdentity: &catalog.AzureManagedIdentity{
+						AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 							AccessConnectorId: "def",
 						},
 					},

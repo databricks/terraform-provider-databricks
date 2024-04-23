@@ -1,4 +1,4 @@
-package catalog
+package sharing
 
 import (
 	"context"
@@ -175,6 +175,7 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 
 func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 		return m
 	})
 	return common.Resource{

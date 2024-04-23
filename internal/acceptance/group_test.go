@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/terraform-provider-databricks/common"

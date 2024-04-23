@@ -15,15 +15,15 @@ resource "databricks_model_serving" "this" {
   config {
     served_entities {
       name                  = "prod_model"
-      entity_name            = "ads-model"
-      entity_version         = "2"
+      entity_name           = "ads-model"
+      entity_version        = "2"
       workload_size         = "Small"
       scale_to_zero_enabled = true
     }
     served_entities {
       name                  = "candidate_model"
-      entity_name            = "ads-model"
-      entity_version         = "4"
+      entity_name           = "ads-model"
+      entity_version        = "4"
       workload_size         = "Small"
       scale_to_zero_enabled = false
     }
@@ -58,7 +58,7 @@ The following arguments are supported:
 
 * `name` - The name of a served entity. It must be unique across an endpoint. A served entity name can consist of alphanumeric characters, dashes, and underscores. If not specified for an external model, this field defaults to `external_model.name`, with '.' and ':' replaced with '-', and if not specified for other entities, it defaults to -.
 * `external_model` - The external model to be served. NOTE: Only one of `external_model` and (`entity_name`, `entity_version`, `workload_size`, `workload_type`, and `scale_to_zero_enabled`) can be specified with the latter set being used for custom model serving for a Databricks registered model. When an `external_model` is present, the served entities list can only have one `served_entity` object. For an existing endpoint with `external_model`, it can not be updated to an endpoint without `external_model`. If the endpoint is created without `external_model`, users cannot update it to add `external_model` later.
-  * `provider` - (Required) The name of the provider for the external model. Currently, the supported providers are `ai21labs`, `anthropic`, `aws-bedrock`, `cohere`, `databricks-model-serving`, `openai`, and `palm`.
+  * `provider` - (Required) The name of the provider for the external model. Currently, the supported providers are `ai21labs`, `anthropic`, `amazon-bedrock`, `cohere`, `databricks-model-serving`, `openai`, and `palm`.
   * `name` - The name of the external model.
   * `task` - The task type of the external model.
   * `config` - The config for the external model, which must match the provider.
@@ -67,11 +67,11 @@ The following arguments are supported:
     * `anthropic_config` - Anthropic Config
       * `anthropic_api_key` - The Databricks secret key reference for an Anthropic API key.
         The Databricks secret key reference for an Anthropic API key.
-    * `aws_bedrock_config` - AWS Bedrock Config
+    * `amazon_bedrock_config` - Amazon Bedrock Config
       * `aws_region` - The AWS region to use. Bedrock has to be enabled there.
       * `aws_access_key_id` - The Databricks secret key reference for an AWS Access Key ID with permissions to interact with Bedrock services.
       * `aws_secret_access_key` - The Databricks secret key reference for an AWS Secret Access Key paired with the access key ID, with permissions to interact with Bedrock services.
-      * `bedrock_provider` - The underlying provider in AWS Bedrock. Supported values (case insensitive) include: `Anthropic`, `Cohere`, `AI21Labs`, `Amazon`.
+      * `bedrock_provider` - The underlying provider in Amazon Bedrock. Supported values (case insensitive) include: `Anthropic`, `Cohere`, `AI21Labs`, `Amazon`.
     * `cohere_config` - Cohere Config
       * `cohere_api_key` - The Databricks secret key reference for a Cohere API key.
     * `databricks_model_serving_config` - Databricks Model Serving Config

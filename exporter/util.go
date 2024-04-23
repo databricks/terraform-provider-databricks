@@ -19,7 +19,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
@@ -33,7 +32,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (ic *importContext) emitInitScripts(initScripts []clusters.InitScriptStorageInfo) {
+// Remove this once databricks_pipeline and databricks_job resources are migrated to Go SDK
+func (ic *importContext) emitInitScriptsLegacy(initScripts []clusters.InitScriptStorageInfo) {
+	for _, is := range initScripts {
+		if is.Dbfs != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_dbfs_file",
+				ID:       is.Dbfs.Destination,
+			})
+		}
+		if is.Workspace != nil {
+			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
+		}
+		if is.Volumes != nil {
+			ic.emitIfVolumeFile(is.Volumes.Destination)
+		}
+	}
+}
+
+func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 	for _, is := range initScripts {
 		if is.Dbfs != nil {
 			ic.Emit(&resource{
@@ -66,7 +83,9 @@ func (ic *importContext) emitFilesFromMap(m map[string]string) {
 	}
 }
 
-func (ic *importContext) importCluster(c *clusters.Cluster) {
+// Remove this when databricks_job resource is migrated
+// Usage: ic.importCluster(job.NewCluster)
+func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
 	if c == nil {
 		return
 	}
@@ -93,6 +112,41 @@ func (ic *importContext) importCluster(c *clusters.Cluster) {
 		ic.Emit(&resource{
 			Resource: "databricks_cluster_policy",
 			ID:       c.PolicyID,
+		})
+	}
+	ic.emitInitScriptsLegacy(c.InitScripts)
+	ic.emitSecretsFromSecretsPath(c.SparkConf)
+	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitUserOrServicePrincipal(c.SingleUserName)
+}
+
+func (ic *importContext) importCluster(c *compute.ClusterDetails) {
+	if c == nil {
+		return
+	}
+	if c.AwsAttributes != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_instance_profile",
+			ID:       c.AwsAttributes.InstanceProfileArn,
+		})
+	}
+	if c.InstancePoolId != "" {
+		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
+		ic.Emit(&resource{
+			Resource: "databricks_instance_pool",
+			ID:       c.InstancePoolId,
+		})
+	}
+	if c.DriverInstancePoolId != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_instance_pool",
+			ID:       c.DriverInstancePoolId,
+		})
+	}
+	if c.PolicyId != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_cluster_policy",
+			ID:       c.PolicyId,
 		})
 	}
 	ic.emitInitScripts(c.InitScripts)
@@ -256,7 +310,7 @@ func (ic *importContext) emitNotebookOrRepo(path string) {
 		ic.emitRepoByPath(path)
 	} else {
 		// TODO: strip /Workspace prefix if it's provided
-		ic.maybeEmitWorkspaceObject("databricks_notebook", path)
+		ic.maybeEmitWorkspaceObject("databricks_notebook", path, nil)
 	}
 }
 
@@ -344,7 +398,7 @@ func (ic *importContext) emitRoles(objType string, id string, roles []scim.Compl
 	}
 }
 
-func (ic *importContext) emitLibraries(libs []libraries.Library) {
+func (ic *importContext) emitLibraries(libs []compute.Library) {
 	for _, lib := range libs {
 		// Files on DBFS
 		ic.emitIfDbfsFile(lib.Whl)
@@ -362,14 +416,15 @@ func (ic *importContext) emitLibraries(libs []libraries.Library) {
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	var cll libraries.ClusterLibraryList
+	var cll compute.InstallLibraries
 	common.DataToStructPointer(d, s, &cll)
 	ic.emitLibraries(cll.Libraries)
 	return nil
 }
 
 func (ic *importContext) importClusterLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
-	cll, err := libraries.NewLibrariesAPI(ic.Context, ic.Client).ClusterStatus(d.Id())
+	libraries := ic.workspaceClient.Libraries
+	cll, err := libraries.ClusterStatusByClusterId(ic.Context, d.Id())
 	if err != nil {
 		return err
 	}
@@ -822,6 +877,11 @@ func (ic *importContext) importJobs(l []jobs.Job) {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
 		}
+		if job.Settings.Deployment != nil && job.Settings.Deployment.Kind == "BUNDLE" &&
+			job.Settings.EditMode == "UI_LOCKED" {
+			log.Printf("[INFO] Skipping job '%s' because it's deployed by DABs", job.Settings.Name)
+			continue
+		}
 		ic.Emit(&resource{
 			Resource: "databricks_job",
 			ID:       job.ID(),
@@ -957,11 +1017,33 @@ func (ic *importContext) shouldEmitForPath(path string) bool {
 	return true
 }
 
-func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string) {
+func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string, obj *workspace.ObjectStatus) {
 	if ic.shouldEmitForPath(path) {
+		var data *schema.ResourceData
+		if obj != nil {
+			switch resourceType {
+			case "databricks_notebook":
+				data = workspace.ResourceNotebook().ToResource().TestResourceData()
+			case "databricks_workspace_file":
+				data = workspace.ResourceWorkspaceFile().ToResource().TestResourceData()
+			case "databricks_directory":
+				data = workspace.ResourceDirectory().ToResource().TestResourceData()
+			}
+			if data != nil {
+				scm := ic.Resources[resourceType].Schema
+				data.MarkNewResource()
+				data.SetId(path)
+				err := common.StructToData(obj, scm, data)
+				if err != nil {
+					log.Printf("[ERROR] can't convert %s object to data: %v. obj=%v", resourceType, err, obj)
+					data = nil
+				}
+			}
+		}
 		ic.Emit(&resource{
 			Resource:    resourceType,
 			ID:          path,
+			Data:        data,
 			Incremental: ic.incremental,
 		})
 	} else {
@@ -989,7 +1071,7 @@ func (ic *importContext) enableListing(listing string) {
 }
 
 func (ic *importContext) emitSqlParentDirectory(parent string) {
-	if parent == "" {
+	if parent == "" || !ic.isServiceEnabled("directories") {
 		return
 	}
 	res := sqlParentRegexp.FindStringSubmatch(parent)
@@ -1038,9 +1120,11 @@ func emitWorkpaceObject(ic *importContext, object workspace.ObjectStatus) {
 	}
 	switch object.ObjectType {
 	case workspace.Notebook:
-		ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path)
+		ic.maybeEmitWorkspaceObject("databricks_notebook", object.Path, &object)
 	case workspace.File:
-		ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+		ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path, &object)
+	case workspace.Directory:
+		ic.maybeEmitWorkspaceObject("databricks_directory", object.Path, &object)
 	default:
 		log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
 	}
@@ -1058,8 +1142,6 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			for object := range objectsChannel {
 				processedObjects.Add(1)
 				ic.waitGroup.Add(1)
-				// log.Printf("[DEBUG] channel %d for workspace objects, channel size=%d got %v",
-				// 	num, len(objectsChannel), object)
 				emitWorkpaceObject(ic, object)
 				ic.waitGroup.Done()
 			}
@@ -1071,15 +1153,19 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	updatedSinceMs := ic.getUpdatedSinceMs()
 	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
-			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
-				continue
-			}
-			object := object
-			switch object.ObjectType {
-			case workspace.Notebook, workspace.File:
+			if object.ObjectType == workspace.Directory && object.Path != "/" && !ic.incremental {
 				objectsChannel <- object
-			default:
-				log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
+			} else {
+				if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
+					continue
+				}
+				object := object
+				switch object.ObjectType {
+				case workspace.Notebook, workspace.File:
+					objectsChannel <- object
+				default:
+					log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
+				}
 			}
 		}
 	})
@@ -1226,7 +1312,7 @@ func ListParallel(a workspace.NotebooksAPI, path string, shouldIncludeDir func(w
 var (
 	maxRetries        = 5
 	retryDelaySeconds = 2
-	retriableErrors   = []string{"context deadline exceeded", "Error handling request", "Timed out after "}
+	retriableErrors   = []string{"deadline exceeded", "Error handling request", "Timed out after "}
 )
 
 func isRetryableError(err string, i int) bool {
@@ -1338,15 +1424,56 @@ func generateIgnoreObjectWithoutName(resourceType string) func(ic *importContext
 	}
 }
 
-func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) {
+func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) (string, *resource) {
 	gr := &resource{
 		Resource: "databricks_grants",
 		ID:       id,
 	}
+	var owner string
 	if parentResource.Data != nil {
-		if owner, ok := parentResource.Data.GetOk("owner"); ok {
-			gr.AddExtraData("owner", owner)
+		ignoreFunc := ic.Importables[parentResource.Resource].Ignore
+		if ignoreFunc != nil && ignoreFunc(ic, parentResource) {
+			return "", nil
+		}
+		ownerRaw, ok := parentResource.Data.GetOk("owner")
+		if ok {
+			gr.AddExtraData("owner", ownerRaw)
+			owner = ownerRaw.(string)
 		}
 	}
 	ic.Emit(gr)
+	return owner, gr
+}
+
+func (ic *importContext) addTfVar(name, value string) {
+	ic.tfvarsMutex.Lock()
+	defer ic.tfvarsMutex.Unlock()
+	ic.tfvars[name] = value
+}
+
+func (ic *importContext) emitPermissionsIfNotIgnored(r *resource, id, name string) {
+	if ic.meAdmin {
+		ignoreFunc := ic.Importables[r.Resource].Ignore
+		if ignoreFunc == nil || !ignoreFunc(ic, r) {
+			ic.Emit(&resource{
+				Resource: "databricks_permissions",
+				ID:       id,
+				Name:     name,
+			})
+		}
+	}
+}
+
+func (ic *importContext) emitWorkspaceObjectParentDirectory(r *resource) {
+	if !ic.isServiceEnabled("directories") {
+		return
+	}
+	if idx := strings.LastIndex(r.ID, "/"); idx > 0 { // not found, or directly in the root...
+		directoryPath := r.ID[:idx]
+		ic.Emit(&resource{
+			Resource: "databricks_directory",
+			ID:       directoryPath,
+		})
+		r.AddExtraData(ParentDirectoryExtraKey, directoryPath)
+	}
 }

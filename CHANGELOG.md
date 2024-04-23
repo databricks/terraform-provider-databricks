@@ -1,5 +1,21 @@
 # Version changelog
 
+## 1.41.0
+
+### New Features and Improvements
+ * Added resources for configuring Serverless network connectivity ([#3402](https://github.com/databricks/terraform-provider-databricks/pull/3402)).
+ * Data source `databricks_current_metastore` should not error out for non-UC workspaces ([#3497](https://github.com/databricks/terraform-provider-databricks/pull/3497)).
+
+### Exporter
+ * Adjust retry error on deadline exceeded ([#3491](https://github.com/databricks/terraform-provider-databricks/pull/3491)).
+
+### Internal Changes
+ * Added account workspace setting type ([#3415](https://github.com/databricks/terraform-provider-databricks/pull/3415)).
+ * Added test config ([#3487](https://github.com/databricks/terraform-provider-databricks/pull/3487)).
+ * Refactor `CustomizeSchema` for `ResourceProvider` to skip unfeasible customizations ([#3481](https://github.com/databricks/terraform-provider-databricks/pull/3481)).
+ * Bump golang.org/x/net from 0.22.0 to 0.23.0 ([#3493](https://github.com/databricks/terraform-provider-databricks/pull/3493)).
+
+
 ## 1.40.0
 
 ### New Features and Improvements

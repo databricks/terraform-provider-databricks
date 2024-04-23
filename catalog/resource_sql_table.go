@@ -489,7 +489,7 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) 
 func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
 	for i, oldCol := range oldCols {
 		oldColMap := oldCol.(map[string]interface{})
-		if oldColMap["type"] != newColumnInfos[i].Type {
+		if oldColMap["type"] != strings.ToLower(newColumnInfos[i].Type) {
 			return fmt.Errorf("changing the 'type' of an existing column is not supported")
 		}
 	}

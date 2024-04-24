@@ -621,6 +621,8 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			}
 			v = v.Elem()
 		}
+		fv := v.FieldByName("ForceSendFields")
+		forceSendFields := fv.Interface().([]string)
 		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 			fieldName := path[len(path)-1]
 			fieldValue := valueField.v.Interface()
@@ -632,6 +634,14 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 					return fmt.Errorf("%s: %v", path, err)
 				}
 				data[fieldName] = nv
+			case schema.TypeBool, schema.TypeInt:
+				// If the field is not in the force send fields, we should not store it in the state
+				// Only bool and int values are in force send fields now
+				if !slices.Contains(forceSendFields, valueField.sf.Name) {
+					log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
+					return nil
+				}
+				data[fieldName] = fieldValue
 			default:
 				if fieldSchema.Optional && isValueNilOrEmpty(valueField.v, fieldPath) {
 					return nil
@@ -704,6 +714,17 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			}
 			log.Printf("[TRACE] set %s %#v", fieldPath, nv)
 			return d.Set(fieldPath, nv)
+		case schema.TypeBool, schema.TypeInt:
+			fv := v.FieldByName("ForceSendFields")
+			forceSendFields := fv.Interface().([]string)
+			// If the field is not in the force send fields, we should not store it in the state
+			// Only bool and int values are in force send fields now
+			if !slices.Contains(forceSendFields, valueField.sf.Name) {
+				log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
+				return nil
+			}
+			log.Printf("[TRACE] set %s %#v", fieldPath, fieldValue)
+			return d.Set(fieldPath, fieldValue)
 		default:
 			log.Printf("[TRACE] set %s %#v", fieldPath, fieldValue)
 			return d.Set(fieldPath, fieldValue)

@@ -642,7 +642,7 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			case schema.TypeBool, schema.TypeInt:
 				// If the field is not in the force send fields, we should not store it in the state
 				// Only bool and int values are in force send fields now
-				if !slices.Contains(forceSendFields, valueField.sf.Name) {
+				if len(forceSendFields) > 0 && !slices.Contains(forceSendFields, valueField.sf.Name) {
 					log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
 					return nil
 				}
@@ -729,7 +729,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 
 			// If the field is not in the force send fields, we should not store it in the state
 			// Only bool and int values are in force send fields now
-			if !slices.Contains(forceSendFields, valueField.sf.Name) {
+			if len(forceSendFields) > 0 && !slices.Contains(forceSendFields, valueField.sf.Name) {
 				log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
 				return nil
 			}

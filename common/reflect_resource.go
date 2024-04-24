@@ -622,7 +622,12 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			v = v.Elem()
 		}
 		fv := v.FieldByName("ForceSendFields")
-		forceSendFields := fv.Interface().([]string)
+		forceSendFields := []string{}
+		// force send fields might not exist in struct, so checking it against zero value first
+		if fv != (reflect.Value{}) {
+			forceSendFields = fv.Interface().([]string)
+		}
+
 		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 			fieldName := path[len(path)-1]
 			fieldValue := valueField.v.Interface()
@@ -716,7 +721,12 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			return d.Set(fieldPath, nv)
 		case schema.TypeBool, schema.TypeInt:
 			fv := v.FieldByName("ForceSendFields")
-			forceSendFields := fv.Interface().([]string)
+			forceSendFields := []string{}
+			// force send fields might not exist in struct, so checking it against zero value first
+			if fv != (reflect.Value{}) {
+				forceSendFields = fv.Interface().([]string)
+			}
+
 			// If the field is not in the force send fields, we should not store it in the state
 			// Only bool and int values are in force send fields now
 			if !slices.Contains(forceSendFields, valueField.sf.Name) {

@@ -110,8 +110,9 @@ func TestResourceSQLGlobalConfigDelete(t *testing.T) {
 				Method:   "PUT",
 				Resource: "/api/2.0/sql/config/warehouses",
 				ExpectedRequest: map[string]any{
-					"data_access_config": []any{},
-					"security_policy":    "DATA_ACCESS_CONTROL",
+					"data_access_config":        []any{},
+					"security_policy":           "DATA_ACCESS_CONTROL",
+					"enable_serverless_compute": false,
 				},
 			},
 			{

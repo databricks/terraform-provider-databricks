@@ -167,6 +167,7 @@ func ResourceSqlGlobalConfig() common.Resource {
 			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{
 				SecurityPolicy:          "DATA_ACCESS_CONTROL",
 				EnableServerlessCompute: d.Get("enable_serverless_compute").(bool),
+				ForceSendFields:         []string{"EnableServerlessCompute"},
 			}, d)
 		},
 		Schema: s,

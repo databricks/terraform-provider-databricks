@@ -290,6 +290,8 @@ This block defines a job-level parameter for the job. You can define several job
 * `name` - (Required) The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`.
 * `default` - (Required) Default value of the parameter.
 
+*You can use this block only together with `task` blocks, not with the legacy tasks specification!*
+
 ### notification_settings Configuration Block (Task Level)
 
 This block controls notification settings for both email & webhook notifications on a task level:

@@ -760,6 +760,9 @@ var jobSchema = common.StructToSchema(JobSettings{},
 
 		for _, attr := range topLevelDeprecatedAttr {
 			s[attr].Deprecated = "should be used inside a task block and not inside a job block"
+			if strings.HasSuffix(attr, "_task") {
+				s[attr].ConflictsWith = []string{"parameter"}
+			}
 		}
 
 		// we need to have only one of user name vs service principal in the run_as block

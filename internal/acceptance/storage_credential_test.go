@@ -1,14 +1,12 @@
 package acceptance
 
 import (
-	"os"
 	"testing"
 )
 
 func TestUcAccStorageCredential(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	switch cloudEnv {
-	case "ucws":
+	loadUcwsEnv(t)
+	if isAws(t) {
 		unityWorkspaceLevel(t, step{
 			Template: `
 				resource "databricks_storage_credential" "external" {
@@ -20,7 +18,7 @@ func TestUcAccStorageCredential(t *testing.T) {
 					comment = "Managed by TF"
 				}`,
 		})
-	case "gcp-ucws":
+	} else if isGcp(t) {
 		unityWorkspaceLevel(t, step{
 			Template: `
 				resource "databricks_storage_credential" "external" {

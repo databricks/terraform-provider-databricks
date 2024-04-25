@@ -3,7 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_private_access_settings Resource
 
-Allows you to create a [Private Access Setting]that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or [GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html)
+Allows you to create a Private Access Setting resource that can be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) or [GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html)
 
 It is strongly recommended that customers read the [Enable AWS Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) [Enable GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) documentation before trying to leverage this resource.
 
@@ -29,7 +29,6 @@ The `databricks_mws_private_access_settings.pas.private_access_settings_id` can 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
   provider                   = databricks.mws
-  account_id                 = var.databricks_account_id
   aws_region                 = var.region
   workspace_name             = local.prefix
   credentials_id             = databricks_mws_credentials.this.credentials_id
@@ -48,7 +47,6 @@ resource "databricks_mws_workspaces" "this" {
 ```hcl
 resource "databricks_mws_workspaces" "this" {
   provider       = databricks.mws
-  account_id     = var.databricks_account_id
   workspace_name = "gcp-workspace"
   location       = var.subnet_region
   cloud_resource_container {
@@ -71,7 +69,6 @@ resource "databricks_mws_workspaces" "this" {
 
 The following arguments are available:
 
-* `account_id` - Account Id that could be found in the Accounts Console for [AWS](https://accounts.cloud.databricks.com/) or [GCP](https://accounts.gcp.databricks.com/)
 * `private_access_settings_name` - Name of Private Access Settings in Databricks Account
 * `public_access_enabled` (Boolean, Optional, `false` by default on AWS, `true` by default on GCP) - If `true`, the [databricks_mws_workspaces](mws_workspaces.md) can be accessed over the [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) as well as over the public network. In such a case, you could also configure an [databricks_ip_access_list](ip_access_list.md) for the workspace, to restrict the source networks that could be used to access it over the public network. If `false`, the workspace can be accessed only over VPC endpoints, and not over the public network. Once explicitly set, this field becomes mandatory.
 * `region` - Region of AWS VPC or the Google Cloud VPC network

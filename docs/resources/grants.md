@@ -35,7 +35,7 @@ You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`,
 
 ```hcl
 resource "databricks_grants" "sandbox" {
-  metastore    = "metastore_id"
+  metastore = "metastore_id"
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
@@ -349,4 +349,3 @@ The resource can be imported using combination of securable type (`table`, `cata
 ```bash
 terraform import databricks_grants.this catalog/abc
 ```
-

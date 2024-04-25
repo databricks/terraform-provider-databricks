@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccJobTasks(t *testing.T) {
@@ -97,6 +98,67 @@ func TestAccJobTasks(t *testing.T) {
 				}
 			}
 
+			parameter {
+				name = "empty_default"
+				default = ""
+			}
+
+			parameter {
+				name = "non_empty_default"
+				default = "non_empty"
+			}
+		}`,
+	})
+}
+
+func TestAccForEachTask(t *testing.T) {
+	t.Skip("Skipping this test because feature not enabled in Prod")
+	workspaceLevel(t, step{
+		Template: `
+		data "databricks_current_user" "me" {}
+		data "databricks_spark_version" "latest" {}
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+
+		resource "databricks_notebook" "this" {
+			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+			language = "PYTHON"
+			content_base64 = base64encode(<<-EOT
+				# created from ${abspath(path.module)}
+				display(spark.range(10))
+				EOT
+			)
+		}
+
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+
+			job_cluster {
+				job_cluster_key = "j"
+				new_cluster {
+					num_workers   = 20
+					spark_version = data.databricks_spark_version.latest.id
+					node_type_id  = data.databricks_node_type.smallest.id
+				}
+			}
+
+			task {
+				task_key = "for_each_task_key"
+				for_each_task {
+					concurrency = 1
+					inputs = "[1, 2, 3, 4, 5, 6]"
+					task {
+						task_key        = "nested_task_key"
+						job_cluster_key = "j"
+
+						notebook_task {
+							notebook_path = databricks_notebook.this.path
+						}
+					}
+				}
+			}
+			
 			parameter {
 				name = "empty_default"
 				default = ""
@@ -286,17 +348,29 @@ func TestAccJobRunAsUser(t *testing.T) {
 	})
 }
 
-func TestAccJobRunAsServicePrincipal(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+func TestUcAccJobRunAsServicePrincipal(t *testing.T) {
+	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 	unityWorkspaceLevel(t, step{
 		Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 	})
 }
 
-func TestAccJobRunAsMutations(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+func getRunAsAttribute(t *testing.T, ctx context.Context) string {
+	isSp, err := isAuthedAsWorkspaceServicePrincipal(ctx)
+	require.NoError(t, err)
+	if isSp {
+		return "service_principal_name"
+	}
+	return "user_name"
+}
+
+func TestUcAccJobRunAsMutations(t *testing.T) {
+	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+	// Note: the attribute must match the type of principal that the test is run as.
+	ctx := context.Background()
+	attribute := getRunAsAttribute(t, ctx)
 	unityWorkspaceLevel(
 		t,
 		// Provision job with service principal `run_as`
@@ -305,11 +379,30 @@ func TestAccJobRunAsMutations(t *testing.T) {
 		},
 		// Update job to a user `run_as`
 		step{
-			Template: runAsTemplate(`user_name = data.databricks_current_user.me.user_name`),
+			Template: runAsTemplate(attribute + ` = data.databricks_current_user.me.user_name`),
 		},
 		// Update job back to a service principal `run_as`
 		step{
 			Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 		},
 	)
+}
+
+func TestAccRemoveWebhooks(t *testing.T) {
+	skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
+	workspaceLevel(t, step{
+		Template: `
+		resource databricks_job test {
+			webhook_notifications {
+				on_success {
+					id = "a90cc1be-a29e-4eb7-a7e9-e4b0d4a7e7ae"
+				}
+			}
+		}
+		`,
+	}, step{
+		Template: `
+		resource databricks_job test {}
+		`,
+	})
 }

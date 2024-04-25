@@ -42,16 +42,15 @@ resource "databricks_sql_visualization" "q1v1" {
 }
 ```
 
-
 ## Separating `visualization definition` from IAC configuration
 
 Since `options` field contains the full JSON encoded string definition of how to render a visualization for the backend API - `sql/api/visualizations`, they can get quite verbose.
 
 If you have lots of visualizations to declare, it might be cleaner to separate the `options` field and store them as separate `.json` files to be referenced.
 
-### Example Usage
+### Example
 
--  directory tree
+- directory tree
 
     ```bash
     .
@@ -72,7 +71,6 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
       name        = "My Table"
       description = "Some Description"
       options     = file("${path.module}/visualizations/q1v1.json")
-      )
     }
 
     resource "databricks_sql_visualization" "q1v2" {
@@ -81,7 +79,6 @@ If you have lots of visualizations to declare, it might be cleaner to separate t
       name        = "My Chart"
       description = "Some Description"
       options     = file("${path.module}/visualizations/q1v2.json")
-      )
     }
     ```
 
@@ -97,15 +94,15 @@ In preparation for this operational scenario; you should be familiar with, and h
 You can import a `databricks_sql_visualization` resource with ID like the following:
 
 ```bash
-$ terraform import databricks_sql_visualization.this <query-id>/<visualization-id>
+terraform import databricks_sql_visualization.this <query-id>/<visualization-id>
 ```
 
 ## Related Resources
 
 The following resources are often used in the same context:
 
-* [End to end workspace management](../guides/workspace-management.md) guide.
-* [databricks_sql_dashboard](sql_dashboard.md) to manage Databricks SQL [Dashboards](https://docs.databricks.com/sql/user/dashboards/index.html).
-* [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
-* [databricks_sql_global_config](sql_global_config.md) to configure the security policy, [databricks_instance_profile](instance_profile.md), and [data access properties](https://docs.databricks.com/sql/admin/data-access-configuration.html) for all [databricks_sql_endpoint](sql_endpoint.md) of workspace.
-* [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html).
+- [End to end workspace management](../guides/workspace-management.md) guide.
+- [databricks_sql_dashboard](sql_dashboard.md) to manage Databricks SQL [Dashboards](https://docs.databricks.com/sql/user/dashboards/index.html).
+- [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
+- [databricks_sql_global_config](sql_global_config.md) to configure the security policy, [databricks_instance_profile](instance_profile.md), and [data access properties](https://docs.databricks.com/sql/admin/data-access-configuration.html) for all [databricks_sql_endpoint](sql_endpoint.md) of workspace.
+- [databricks_sql_permissions](sql_permissions.md) to manage data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html).

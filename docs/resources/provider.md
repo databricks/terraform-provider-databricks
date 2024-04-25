@@ -1,11 +1,11 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Delta Sharing"
 ---
 # databricks_provider Resource
 
 -> **Note** This resource could be only used with workspace-level provider!
 
-Within a metastore, Unity Catalog provides the ability to create a provider which contains a list of shares that have been shared with you.
+In Delta Sharing, a provider is an entity that shares data with a recipient. Within a metastore, Unity Catalog provides the ability to create a provider which contains a list of shares that have been shared with you.
 
 A `databricks_provider` is contained within [databricks_metastore](metastore.md) and can contain a list of shares that have been shared with you.
 

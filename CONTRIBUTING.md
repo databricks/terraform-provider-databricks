@@ -73,7 +73,7 @@ Additional git and GitHub resources:
 If you use Terraform 0.12, please execute the following curl command in your shell:
 
 ```bash
-curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/master/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
+curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
 ```
 
 ## Installing from source

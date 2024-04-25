@@ -3,9 +3,10 @@ subcategory: "Storage"
 ---
 # databricks_file Resource
 
-This resource allows uploading and downloading files in [databricks_volume](volume.md). 
+This resource allows uploading and downloading files in [databricks_volume](volume.md).
 
-Notes: 
+Notes:
+
 * Currently the limit is 5GiB in octet-stream.
 * Currently, only UC volumes are supported. The list of destinations may change.
 
@@ -33,11 +34,11 @@ resource "databricks_schema" "things" {
 }
 
 resource "databricks_volume" "this" {
-  name             = "quickstart_volume"
-  catalog_name     = databricks_catalog.sandbox.name
-  schema_name      = databricks_schema.things.name
-  volume_type      = "MANAGED"
-  comment          = "this volume is managed by terraform"
+  name         = "quickstart_volume"
+  catalog_name = databricks_catalog.sandbox.name
+  schema_name  = databricks_schema.things.name
+  volume_type  = "MANAGED"
+  comment      = "this volume is managed by terraform"
 }
 
 resource "databricks_file" "this" {
@@ -55,7 +56,7 @@ resource "databricks_file" "init_script" {
     echo "Hello World"
     EOT
   )
-  path   = "${databricks_volume.this.volume_path}/fileName"
+  path = "${databricks_volume.this.volume_path}/fileName"
 }
 ```
 
@@ -75,13 +76,12 @@ In addition to all arguments above, the following attributes are exported:
 * `file_size` - The file size of the file that is being tracked by this resource in bytes.
 * `modification_time` - The last time stamp when the file was modified
 
-
 ## Import
 
 The resource `databricks_file` can be imported using the path of the file:
 
 ```bash
-$ terraform import databricks_file.this <path>
+terraform import databricks_file.this <path>
 ```
 
 ## Related Resources

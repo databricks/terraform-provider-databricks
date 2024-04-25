@@ -91,13 +91,16 @@ type importContext struct {
 	incremental              bool
 	mounts                   bool
 	noFormat                 bool
+	nativeImportSupported    bool
 	services                 map[string]struct{}
 	listing                  map[string]struct{}
 	match                    string
 	lastActiveDays           int64
 	lastActiveMs             int64
 	generateDeclaration      bool
+	exportSecrets            bool
 	meAdmin                  bool
+	meUserName               string
 	prefix                   string
 	accountLevel             bool
 	shImports                map[string]bool
@@ -156,6 +159,9 @@ type importContext struct {
 
 	userOrSpDirectories      map[string]bool
 	userOrSpDirectoriesMutex sync.RWMutex
+
+	tfvarsMutex sync.Mutex
+	tfvars      map[string]string
 }
 
 type mount struct {
@@ -266,6 +272,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		userOrSpDirectories:       map[string]bool{},
 		services:                  map[string]struct{}{},
 		listing:                   map[string]struct{}{},
+		tfvars:                    map[string]string{},
 	}
 }
 
@@ -338,6 +345,7 @@ func (ic *importContext) Run() error {
 	ic.accountLevel = ic.Client.Config.IsAccountClient()
 	if ic.accountLevel {
 		ic.meAdmin = true
+		// TODO: check if we can get the current user from the account client
 		ic.accountClient, err = ic.Client.AccountClient()
 		if err != nil {
 			return err
@@ -354,6 +362,7 @@ func (ic *importContext) Run() error {
 		for _, g := range me.Groups {
 			if g.Display == "admins" {
 				ic.meAdmin = true
+				ic.meUserName = me.UserName
 				break
 			}
 		}
@@ -465,7 +474,12 @@ func (ic *importContext) Run() error {
 	ic.generateAndWriteResources(sh)
 	err = ic.generateVariables()
 	if err != nil {
-		return err
+		log.Printf("[ERROR] can't write variables file: %s", err.Error())
+	}
+
+	err = ic.generateTfvars()
+	if err != nil {
+		log.Printf("[ERROR] can't write terraform.tfvars file: %s", err.Error())
 	}
 
 	// Write stats file
@@ -782,7 +796,7 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 	}
 }
 
-func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel) {
+func (ic *importContext) writeShellImports(sh *os.File, importChan importWriteChannel) {
 	for importCommand := range importChan {
 		if importCommand != "" && sh != nil {
 			log.Printf("[DEBUG] writing import command %s", importCommand)
@@ -810,7 +824,125 @@ func (ic *importContext) writeImports(sh *os.File, importChan importWriteChannel
 	}
 }
 
-func (ic *importContext) processSingleResource(resourcesChan resourceChannel, writerChannels map[string]dataWriteChannel) {
+func extractResourceIdFromImportBlock(block *hclwrite.Block) string {
+	if block.Type() != "import" {
+		log.Print("[WARN] it's not an import block!")
+		return ""
+	}
+	idAttr := block.Body().GetAttribute("to")
+	if idAttr == nil {
+		log.Printf("[WARN] Can't find `to` attribute in the import block")
+		return ""
+	}
+	idVal := string(idAttr.Expr().BuildTokens(nil).Bytes())
+	return strings.TrimSpace(idVal)
+}
+
+func extractResourceIdFromImportBlockString(importBlock string) string {
+	block, diags := hclwrite.ParseConfig([]byte(importBlock), "test.tf", hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() {
+		log.Printf("[WARN] parsing of import block %s has failed: %s", importBlock, diags.Error())
+		return ""
+	}
+	if len(block.Body().Blocks()) == 0 {
+		log.Printf("[WARN] import block %s has 0 blocks!", importBlock)
+		return ""
+	}
+	return extractResourceIdFromImportBlock(block.Body().Blocks()[0])
+}
+
+func (ic *importContext) writeNativeImports(importChan importWriteChannel) {
+	if !ic.nativeImportSupported {
+		log.Print("[DEBUG] Native import is not enabled, skipping...")
+		return
+	}
+	importsFileName := fmt.Sprintf("%s/import.tf", ic.Directory)
+	// TODO: in incremental mode read existing file with imports and append them for not processed & not deleted resources
+	var existingFile *hclwrite.File
+	if ic.incremental {
+		log.Printf("[DEBUG] Going to read existing file %s", importsFileName)
+		content, err := os.ReadFile(importsFileName)
+		if errors.Is(err, os.ErrNotExist) {
+			log.Printf("[WARN] File %s doesn't exist when using incremental export", importsFileName)
+		} else if err != nil {
+			log.Printf("[ERROR] error opening %s", importsFileName)
+		} else {
+			log.Printf("[DEBUG] Going to parse existing file %s", importsFileName)
+			var diags hcl.Diagnostics
+			existingFile, diags = hclwrite.ParseConfig(content, importsFileName, hcl.Pos{Line: 1, Column: 1})
+			if diags.HasErrors() {
+				log.Printf("[ERROR] parsing of existing file %s failed: %s", importsFileName, diags.Error())
+			} else {
+				log.Printf("[DEBUG] There are %d objects in existing file %s",
+					len(existingFile.Body().Blocks()), importsFileName)
+			}
+		}
+	}
+	if existingFile == nil {
+		existingFile = hclwrite.NewEmptyFile()
+	}
+
+	// do actual writes
+	importsFile, err := os.Create(importsFileName)
+	if err != nil {
+		log.Printf("[ERROR] Can't create %s: %v", importsFileName, err)
+		return
+	}
+	defer importsFile.Close()
+
+	newImports := make(map[string]struct{}, 100)
+	log.Printf("[DEBUG] started processing new writes for %s", importsFileName)
+	// write native imports
+	for importBlock := range importChan {
+		if importBlock != "" {
+			log.Printf("[TRACE] writing import command %s", importBlock)
+			importsFile.WriteString(importBlock)
+			id := extractResourceIdFromImportBlockString(importBlock)
+			if id != "" {
+				newImports[id] = struct{}{}
+			}
+		} else {
+			log.Print("[WARN] got empty import command...")
+		}
+		ic.waitGroup.Done()
+	}
+	// write the rest of import blocks
+	numResources := len(newImports)
+	log.Printf("[DEBUG] finished processing new writes for %s. Wrote %d resources", importsFileName, numResources)
+	// update existing file if incremental mode
+	if ic.incremental {
+		log.Printf("[DEBUG] Starting to merge existing resources for %s", importsFileName)
+		f := hclwrite.NewEmptyFile()
+		for _, block := range existingFile.Body().Blocks() {
+			blockName := extractResourceIdFromImportBlock(block)
+			if blockName == "" {
+				log.Printf("[WARN] can't extract resource ID from import block: %s",
+					string(block.BuildTokens(nil).Bytes()))
+				continue
+			}
+			_, exists := newImports[blockName]
+			_, deleted := ic.deletedResources[blockName]
+			if exists {
+				log.Printf("[DEBUG] resource %s already generated, skipping...", blockName)
+			} else if deleted {
+				log.Printf("[DEBUG] resource %s is deleted, skipping...", blockName)
+			} else {
+				log.Printf("[DEBUG] resource %s doesn't exist, adding...", blockName)
+				f.Body().AppendBlock(block)
+				numResources = numResources + 1
+			}
+		}
+		_, err = importsFile.WriteString(string(f.Bytes()))
+		if err != nil {
+			log.Printf("[ERROR] error when writing existing resources for file %s: %v", importsFileName, err)
+		}
+		log.Printf("[DEBUG] Finished merging existing resources for %s", importsFileName)
+	}
+
+}
+
+func (ic *importContext) processSingleResource(resourcesChan resourceChannel,
+	writerChannels map[string]dataWriteChannel, nativeImportChannel importWriteChannel) {
 	processed := 0
 	generated := 0
 	ignored := 0
@@ -854,6 +986,21 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel, wr
 			}
 			if r.Mode != "data" && ic.Resources[r.Resource].Importer != nil {
 				writeData.ImportCommand = r.ImportCommand(ic)
+				if ic.nativeImportSupported { // generate import block for native import
+					imp := hclwrite.NewEmptyFile()
+					imoBlock := imp.Body().AppendNewBlock("import", []string{})
+					imoBlock.Body().SetAttributeValue("id", cty.StringVal(r.ID))
+					traversal := hcl.Traversal{
+						hcl.TraverseRoot{Name: r.Resource},
+						hcl.TraverseAttr{Name: r.Name},
+					}
+					tokens := hclwrite.TokensForTraversal(traversal)
+					imoBlock.Body().SetAttributeRaw("to", tokens)
+					formattedImp := hclwrite.Format(imp.Bytes())
+					//log.Printf("[DEBUG] Import block for %s: %s", r.ID, string(formattedImp))
+					ic.waitGroup.Add(1)
+					nativeImportChannel <- string(formattedImp)
+				}
 			}
 			ch, exists := writerChannels[ir.Service]
 			if exists {
@@ -886,22 +1033,30 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	for service := range ic.services {
 		resourceWriters[service] = make(dataWriteChannel, defaultChannelSize)
 	}
-	importChan := make(importWriteChannel, defaultChannelSize)
 	writersWaitGroup := &sync.WaitGroup{}
-	//
+	// write shell script for importing
+	shellImportChan := make(importWriteChannel, defaultChannelSize)
 	writersWaitGroup.Add(1)
 	go func() {
-		ic.writeImports(sh, importChan)
+		ic.writeShellImports(sh, shellImportChan)
 		writersWaitGroup.Done()
 	}()
+	//
+	nativeImportChan := make(importWriteChannel, defaultChannelSize)
+	writersWaitGroup.Add(1)
+	go func() {
+		ic.writeNativeImports(nativeImportChan)
+		writersWaitGroup.Done()
+	}()
+	// start resource handlers
 	for i := 0; i < resourceHandlersNumber; i++ {
 		i := i
 		go func() {
 			log.Printf("[DEBUG] Starting resource handler %d", i)
-			ic.processSingleResource(resourcesChan, resourceWriters)
+			ic.processSingleResource(resourcesChan, resourceWriters, nativeImportChan)
 		}()
 	}
-
+	// start writers for specific services
 	for service, ch := range resourceWriters {
 		service := service
 		ch := ch
@@ -909,12 +1064,11 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 		log.Printf("[DEBUG] starting writer for service %s", service)
 		writersWaitGroup.Add(1)
 		go func() {
-			ic.handleResourceWrite(generatedFile, ch, importChan)
+			ic.handleResourceWrite(generatedFile, ch, shellImportChan)
 			writersWaitGroup.Done()
 		}()
 	}
-
-	//
+	// submit all extracted resources...
 	for i, r := range resources {
 		ic.waitGroup.Add(1)
 		resourcesChan <- r
@@ -924,7 +1078,8 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	}
 	ic.waitGroup.Wait()
 	// close all channels
-	close(importChan)
+	close(shellImportChan)
+	close(nativeImportChan)
 	close(resourcesChan)
 	for service, ch := range resourceWriters {
 		log.Printf("Closing writer for service %s", service)
@@ -934,6 +1089,45 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 
 	log.Printf("[INFO] Finished generation of configuration for %d resources (took %v seconds)",
 		scopeSize, time.Since(t1).Seconds())
+}
+
+func (ic *importContext) generateGitIgnore() {
+	fileName := fmt.Sprintf("%s/.gitignore", ic.Directory)
+	vf, err := os.Create(fileName)
+	if err != nil {
+		log.Printf("[ERROR] can't create %s: %v", fileName, err)
+		return
+	}
+	defer vf.Close()
+	// nolint
+	vf.Write([]byte("terraform.tfvars\n"))
+}
+
+func (ic *importContext) generateTfvars() error {
+	// TODO: make it incremental as well...
+	if len(ic.tfvars) == 0 {
+		return nil
+	}
+	f := hclwrite.NewEmptyFile()
+	body := f.Body()
+	fileName := fmt.Sprintf("%s/terraform.tfvars", ic.Directory)
+
+	vf, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer vf.Close()
+
+	for k, v := range ic.tfvars {
+		body.SetAttributeValue(k, cty.StringVal(v))
+	}
+	// nolint
+	vf.Write(f.Bytes())
+	log.Printf("[INFO] Written %d tfvars", len(ic.tfvars))
+
+	ic.generateGitIgnore()
+
+	return nil
 }
 
 func (ic *importContext) generateVariables() error {
@@ -1007,6 +1201,18 @@ func genTraversalTokens(sr *resourceApproximation, pick string) hcl.Traversal {
 	}
 }
 
+func (ic *importContext) isIgnoredResourceApproximation(ra *resourceApproximation) bool {
+	var ignored bool
+	if ra != nil && ra.Resource != nil {
+		ignoreFunc := ic.Importables[ra.Type].Ignore
+		if ignoreFunc != nil && ignoreFunc(ic, ra.Resource) {
+			log.Printf("[WARN] Found reference to the ignored resource %s: %s", ra.Type, ra.Name)
+			return true
+		}
+	}
+	return ignored
+}
+
 func (ic *importContext) Find(value, attr string, ref reference, origResource *resource, origPath string) (string, hcl.Traversal, bool) {
 	log.Printf("[DEBUG] Starting searching for reference for resource %s, attr='%s', value='%s', ref=%v",
 		ref.Resource, attr, value, ref)
@@ -1040,7 +1246,8 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 	if (ref.MatchType == MatchExact || ref.MatchType == MatchDefault || ref.MatchType == MatchRegexp ||
 		ref.MatchType == MatchCaseInsensitive) && !ref.SkipDirectLookup {
 		sr := ic.State.Get(ref.Resource, attr, matchValue)
-		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) {
+		if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) &&
+			!ic.isIgnoredResourceApproximation(sr) {
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
 			return matchValue, genTraversalTokens(sr, attr), sr.Mode == "data"
@@ -1049,6 +1256,17 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			log.Printf("[DEBUG] Finished direct lookup for reference for resource %s, attr='%s', value='%s', ref=%v. Not found",
 				ref.Resource, attr, value, ref)
 			return "", nil, false
+		}
+	} else if ref.MatchType == MatchLongestPrefix && ref.ExtraLookupKey != "" {
+		extraKeyValue, exists := origResource.GetExtraData(ref.ExtraLookupKey)
+		if exists && extraKeyValue.(string) != "" {
+			sr := ic.State.Get(ref.Resource, attr, extraKeyValue.(string))
+			if sr != nil && (ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, sr, origPath)) &&
+				!ic.isIgnoredResourceApproximation(sr) {
+				log.Printf("[DEBUG] Finished direct lookup by key %s for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
+					ref.ExtraLookupKey, ref.Resource, attr, value, ref, sr.Type, sr.Name)
+				return extraKeyValue.(string), genTraversalTokens(sr, attr), sr.Mode == "data"
+			}
 		}
 	}
 
@@ -1067,7 +1285,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			origValue := strValue
 			if ref.SearchValueTransformFunc != nil {
 				strValue = ref.SearchValueTransformFunc(strValue)
-				log.Printf("[DEBUG] Resource %s. Transformed value from '%s' to '%s'", ref.Resource, origValue, strValue)
+				log.Printf("[TRACE] Resource %s. Transformed value from '%s' to '%s'", ref.Resource, origValue, strValue)
 			}
 			matched := false
 			switch ref.MatchType {
@@ -1076,7 +1294,7 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			case MatchPrefix:
 				matched = strings.HasPrefix(matchValue, strValue)
 			case MatchLongestPrefix:
-				if strings.HasPrefix(matchValue, strValue) && len(origValue) > maxPrefixLen {
+				if strings.HasPrefix(matchValue, strValue) && len(origValue) > maxPrefixLen && !ic.isIgnoredResourceApproximation(sr) {
 					maxPrefixLen = len(origValue)
 					maxPrefixOrigValue = origValue
 					maxPrefixResource = sr
@@ -1086,17 +1304,18 @@ func (ic *importContext) Find(value, attr string, ref reference, origResource *r
 			default:
 				log.Printf("[WARN] Unsupported match type: %s", ref.MatchType)
 			}
-			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(ic, origResource, sr, origPath)) {
+			if !matched || (ref.IsValidApproximation != nil && !ref.IsValidApproximation(ic, origResource, sr, origPath)) ||
+				ic.isIgnoredResourceApproximation(sr) {
 				continue
 			}
-			// TODO: we need to not generate traversals resources for which their Ignore function returns true...
 			log.Printf("[DEBUG] Finished searching for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 				ref.Resource, attr, value, ref, sr.Type, sr.Name)
 			return origValue, genTraversalTokens(sr, attr), sr.Mode == "data"
 		}
 	}
 	if ref.MatchType == MatchLongestPrefix && maxPrefixResource != nil &&
-		(ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, maxPrefixResource, origPath)) {
+		(ref.IsValidApproximation == nil || ref.IsValidApproximation(ic, origResource, maxPrefixResource, origPath)) &&
+		!ic.isIgnoredResourceApproximation(maxPrefixResource) {
 		log.Printf("[DEBUG] Finished searching longest prefix for reference for resource %s, attr='%s', value='%s', ref=%v. Found: type=%s name=%s",
 			ref.Resource, attr, value, ref, maxPrefixResource.Type, maxPrefixResource.Name)
 		return maxPrefixOrigValue, genTraversalTokens(maxPrefixResource, attr), maxPrefixResource.Mode == "data"
@@ -1154,10 +1373,10 @@ func (ic *importContext) Add(r *resource) {
 	inst.Attributes["id"] = r.ID
 	ic.State.Append(resourceApproximation{
 		Mode:      r.Mode,
-		Module:    ic.Module,
 		Type:      r.Resource,
 		Name:      r.Name,
 		Instances: []instanceApproximation{inst},
+		Resource:  r,
 	})
 	// in single-threaded scenario scope is toposorted
 	ic.Scope.Append(r)
@@ -1324,6 +1543,10 @@ func (ic *importContext) getTraversalTokens(ref reference, value string, origRes
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
+func (ic *importContext) generateVariableName(attrName, name string) string {
+	return fmt.Sprintf("%s_%s", attrName, name)
+}
+
 func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value, origResource *resource) hclwrite.Tokens {
 	pathString := strings.Join(path, ".")
 	match := dependsRe.ReplaceAllString(pathString, "")
@@ -1342,7 +1565,8 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 			}
 		}
 		if d.Variable {
-			return ic.variable(fmt.Sprintf("%s_%s", path[0], value), "")
+			varName := ic.generateVariableName(path[0], value)
+			return ic.variable(varName, "")
 		}
 
 		tokens, isData := ic.getTraversalTokens(d, value, origResource, pathString)
@@ -1470,6 +1694,57 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			}
 		default:
 			return fmt.Errorf("unsupported schema type: %v", path)
+		}
+	}
+	// Generate `depends_on` only for top-level resource because `dataToHcl` is called recursively
+	if len(path) == 0 && len(res.DependsOn) > 0 {
+		notIgnoredResources := []*resource{}
+		for _, dr := range res.DependsOn {
+			dr := dr
+			if dr.Data == nil {
+				tdr := ic.Scope.FindById(dr.Resource, dr.ID)
+				if tdr == nil {
+					log.Printf("[WARN] can't find resource %s in scope", dr)
+					continue
+				}
+				dr = tdr
+			}
+			if ic.Importables[dr.Resource].Ignore == nil || !ic.Importables[dr.Resource].Ignore(ic, dr) {
+				found := false
+				for _, v := range notIgnoredResources {
+					if v.ID == dr.ID && v.Resource == dr.Resource {
+						found = true
+						break
+					}
+				}
+				if !found {
+					notIgnoredResources = append(notIgnoredResources, dr)
+				}
+			}
+		}
+		if len(notIgnoredResources) > 0 {
+			toks := hclwrite.Tokens{}
+			toks = append(toks, &hclwrite.Token{
+				Type:  hclsyntax.TokenOBrack,
+				Bytes: []byte{'['},
+			})
+			for i, dr := range notIgnoredResources {
+				if i > 0 {
+					toks = append(toks, &hclwrite.Token{
+						Type:  hclsyntax.TokenComma,
+						Bytes: []byte{','},
+					})
+				}
+				toks = append(toks, hclwrite.TokensForTraversal(hcl.Traversal{
+					hcl.TraverseRoot{Name: dr.Resource},
+					hcl.TraverseAttr{Name: ic.ResourceName(dr)},
+				})...)
+			}
+			toks = append(toks, &hclwrite.Token{
+				Type:  hclsyntax.TokenCBrack,
+				Bytes: []byte{']'},
+			})
+			body.SetAttributeRaw("depends_on", toks)
 		}
 	}
 	return nil

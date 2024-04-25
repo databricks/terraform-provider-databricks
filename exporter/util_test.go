@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -18,7 +19,7 @@ import (
 func TestImportClusterEmitsInitScripts(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("storage")
-	ic.importCluster(&clusters.Cluster{
+	ic.importClusterLegacy(&clusters.Cluster{
 		InitScripts: []clusters.InitScriptStorageInfo{
 			{
 				Dbfs: &clusters.DbfsStorageInfo{
@@ -389,4 +390,42 @@ func TestParallelListing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 4, len(objects))
 
+}
+
+func TestIgnoreObjectWithEmptyName(t *testing.T) {
+	ic := importContextForTest()
+	// Test importing
+	d := tfcatalog.ResourceVolume().ToResource().TestResourceData()
+	d.SetId("vtest")
+	r := &resource{
+		ID:   "vtest",
+		Data: d,
+	}
+	//
+	ignoreFunc := resourcesMap["databricks_volume"].Ignore
+	require.NotNil(t, ignoreFunc)
+	assert.True(t, ignoreFunc(ic, r))
+	require.Equal(t, 1, len(ic.ignoredResources))
+	assert.Contains(t, ic.ignoredResources, "databricks_volume. ID=vtest")
+
+	d.Set("name", "test")
+	assert.False(t, ignoreFunc(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
+func TestEmitWorkspaceObjectParentDirectory(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,directories")
+	dirPath := "/Shared"
+	r := &resource{
+		ID:       "/Shared/abc",
+		Resource: "databricks_notebook",
+	}
+	ic.emitWorkspaceObjectParentDirectory(r)
+	assert.Equal(t, 1, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_directory[<unknown>] (id: /Shared)"])
+
+	dir, exists := r.GetExtraData(ParentDirectoryExtraKey)
+	assert.True(t, exists)
+	assert.Equal(t, dirPath, dir)
 }

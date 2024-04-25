@@ -34,7 +34,12 @@ output "some_metastore" {
 
 ## Argument Reference
 
-* `metastore_id` - Id of the metastore to be fetched
+Provide one of the arguments to get information about a metastore:
+
+* `metastore_id` - Id of the metastore
+* `name` - Name of the metastore
+* `region` - Region of the metastore
+
 
 ## Attribute Reference
 
@@ -44,7 +49,7 @@ This data source exports the following attributes:
   * `name` - Name of metastore.
   * `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored.
   * `owner` - Username/groupname/sp application_id of the metastore owner.
-  * `delta_sharing_scope` - Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
+  * `delta_sharing_scope` - Used to enable delta sharing on the metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL. INTERNAL only allows sharing within the same account, and INTERNAL_AND_EXTERNAL allows cross account sharing and token based sharing.
   * `delta_sharing_recipient_token_lifetime_in_seconds` - Used to set expiration duration in seconds on recipient data access tokens.
   * `delta_sharing_organization_name` - The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing.
 

@@ -30,10 +30,9 @@ type instanceApproximation struct {
 type resourceApproximation struct {
 	Type      string                  `json:"type"`
 	Name      string                  `json:"name"`
-	Provider  string                  `json:"provider"`
 	Mode      string                  `json:"mode"`
-	Module    string                  `json:"module,omitempty"`
 	Instances []instanceApproximation `json:"instances"`
+	Resource  *resource
 }
 
 func (ra *resourceApproximation) Get(attr string) (any, bool) {
@@ -204,6 +203,8 @@ type reference struct {
 	IsValidApproximation isValidAproximationFunc
 	// if we should skip direct lookups (for example, we need it for UC schemas matching)
 	SkipDirectLookup bool
+	// Extra Lookup key - if we need to search for the resource in a different way
+	ExtraLookupKey string
 }
 
 func (r reference) MatchAttribute() string {
@@ -236,6 +237,29 @@ type resource struct {
 	Incremental bool
 	// Actual Terraform data
 	Data *schema.ResourceData
+	// Arbitrary data to be used by importable
+	ExtraData map[string]any
+	// References to dependencies - it could be fully resolved resource, with Data, etc., or it could be just resource type + ID
+	DependsOn []*resource
+}
+
+func (r *resource) AddExtraData(key string, value any) {
+	if r.ExtraData == nil {
+		r.ExtraData = map[string]any{}
+	}
+	r.ExtraData[key] = value
+}
+
+func (r *resource) AddDependsOn(dep *resource) {
+	r.DependsOn = append(r.DependsOn, dep)
+}
+
+func (r *resource) GetExtraData(key string) (any, bool) {
+	if r.ExtraData == nil {
+		return nil, false
+	}
+	v, ok := r.ExtraData[key]
+	return v, ok
 }
 
 func (r *resource) MatchPair() (string, string) {
@@ -379,4 +403,16 @@ func (a *importedResources) Sorted() []*resource {
 	copy(c, a.resources)
 	sort.Sort(c)
 	return c
+}
+
+func (a *importedResources) FindById(resourceType, id string) *resource {
+	defer a.mutex.RLocker().Unlock()
+	a.mutex.RLocker().Lock()
+	for _, r := range a.resources {
+		if r.Resource == resourceType && r.ID == id {
+			return r
+		}
+	}
+
+	return nil
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
-	"github.com/databricks/terraform-provider-databricks/secrets"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -66,10 +65,17 @@ func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
 		}`,
 		Check: resourceCheck("databricks_secret_scope.app",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
-				acls, err := secretACLAPI.List(id)
+				w, err := client.WorkspaceClient()
 				require.NoError(t, err)
+				acls_resp, err := w.Secrets.ListAclsByScope(ctx, id)
+				require.NoError(t, err)
+				acls := acls_resp.Items
 				assert.Equal(t, 1, len(acls))
+				// assert does not stop execution on failure, but this test must stop if no
+				// ACLs are returned, otherwise it panics, stopping all other test executions.
+				if len(acls) == 0 {
+					t.FailNow()
+				}
 				assert.Equal(t, "users", acls[0].Principal)
 				assert.Equal(t, "READ", string(acls[0].Permission))
 				return nil

@@ -6,7 +6,7 @@ page_title: "Provisioning AWS Databricks E2"
 
 You can provision multiple Databricks workspaces with Terraform.
 
-![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
+![Simplest multiworkspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/simplest-multiworkspace.png)
 
 ## Provider initialization for E2 workspaces
 
@@ -83,6 +83,7 @@ Cross-account IAM role is registered with [databricks_mws_credentials](../resour
 
 ```hcl
 data "databricks_aws_assume_role_policy" "this" {
+  provider    = databricks.mws
   external_id = var.databricks_account_id
 }
 
@@ -93,6 +94,8 @@ resource "aws_iam_role" "cross_account_role" {
 }
 
 data "databricks_aws_crossaccount_policy" "this" {
+  provider    = databricks.mws
+  policy_type = "customer"
 }
 
 resource "aws_iam_role_policy" "this" {

@@ -116,7 +116,9 @@ func Run(args ...string) error {
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
 		"Items with older than activity specified won't be imported.")
 	flags.BoolVar(&ic.incremental, "incremental", false, "Incremental export of the data. Requires -updated-since parameter")
+	flags.BoolVar(&ic.exportSecrets, "export-secrets", false, "Generate terraform.tfvars with secrets")
 	flags.BoolVar(&ic.noFormat, "noformat", false, "Don't run `terraform fmt` on exported files")
+	flags.BoolVar(&ic.nativeImportSupported, "native-import", false, "Generate native import blocks (requires Terraform 1.5+)")
 	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
 		"Include only resources updated since a given timestamp (in ISO8601 format, i.e. 2023-07-01T00:00:00Z)")
 	flags.BoolVar(&debug, "debug", false, "Print extra debug information.")

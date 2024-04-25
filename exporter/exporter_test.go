@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"sort"
@@ -21,18 +22,16 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
-	workspaceApi "github.com/databricks/databricks-sdk-go/service/workspace"
+	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
-	"github.com/databricks/terraform-provider-databricks/secrets"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -213,8 +212,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=mount",
-				Response: libraries.ClusterLibraryList{
-					Libraries: []libraries.Library{},
+				Response: compute.InstallLibraries{
+					Libraries: []compute.Library{},
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -322,7 +321,7 @@ var emptyRecipients = qa.HTTPFixture{
 var emptyGitCredentials = qa.HTTPFixture{
 	Method:   http.MethodGet,
 	Resource: "/api/2.0/git-credentials",
-	Response: []workspaceApi.CredentialInfo{
+	Response: []sdk_workspace.CredentialInfo{
 		{},
 	},
 }
@@ -647,8 +646,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/scopes/list",
 				ReuseRequest: true,
-				Response: secrets.SecretScopeList{
-					Scopes: []secrets.SecretScope{
+				Response: sdk_workspace.ListScopesResponse{
+					Scopes: []sdk_workspace.SecretScope{
 						{Name: "a"},
 					},
 				},
@@ -657,8 +656,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/list?scope=a",
 				ReuseRequest: true,
-				Response: secrets.SecretsList{
-					Secrets: []secrets.SecretMetadata{
+				Response: sdk_workspace.ListSecretsResponse{
+					Secrets: []sdk_workspace.SecretMetadata{
 						{Key: "b"},
 					},
 				},
@@ -666,8 +665,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/list?scope=a",
-				Response: secrets.SecretScopeACL{
-					Items: []secrets.ACLItem{
+				Response: sdk_workspace.ListAclsResponse{
+					Items: []sdk_workspace.AclItem{
 						{Permission: "MANAGE", Principal: "test"},
 						{Permission: "READ", Principal: "users"},
 					},
@@ -676,8 +675,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/list?scope=a",
-				Response: secrets.SecretScopeACL{
-					Items: []secrets.ACLItem{
+				Response: sdk_workspace.ListAclsResponse{
+					Items: []sdk_workspace.AclItem{
 						{Permission: "MANAGE", Principal: "test"},
 						{Permission: "READ", Principal: "users"},
 					},
@@ -686,14 +685,23 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=test&scope=a",
-				Response: secrets.ACLItem{Permission: "MANAGE", Principal: "test"},
+				Response: sdk_workspace.AclItem{Permission: "MANAGE", Principal: "test"},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=users&scope=a",
-				Response: secrets.ACLItem{Permission: "READ", Principal: "users"},
+				Response: sdk_workspace.AclItem{Permission: "READ", Principal: "users"},
 			},
 			emptyWorkspace,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/secrets/get?key=b&scope=a",
+
+				Response: sdk_workspace.GetSecretResponse{
+					Value: "dGVzdA==",
+					Key:   "b",
+				},
+			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -702,6 +710,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			ic.Directory = tmpDir
 			_, listing := ic.allServicesAndListing()
 			ic.enableListing(listing)
+			ic.exportSecrets = true
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -765,8 +774,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/secrets/scopes/list",
 				ReuseRequest: true,
-				Response: secrets.SecretScopeList{
-					Scopes: []secrets.SecretScope{},
+				Response: sdk_workspace.ListScopesResponse{
+					Scopes: []sdk_workspace.SecretScope{},
 				},
 			},
 			emptyWorkspace,
@@ -815,7 +824,7 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				Response: clusters.EventDetails{},
+				Response: compute.GetEvents{},
 			},
 			{
 				Method:       "GET",
@@ -848,25 +857,25 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "test2",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "test2",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response:     clusters.EventDetails{},
+				Response:     compute.EventDetails{},
 				ReuseRequest: true,
 			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "test1",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "test1",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response:     clusters.EventDetails{},
+				Response:     compute.EventDetails{},
 				ReuseRequest: true,
 			},
 			{
@@ -897,13 +906,13 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/events",
-				ExpectedRequest: clusters.EventsRequest{
-					ClusterID:  "awscluster",
-					Order:      "DESC",
-					EventTypes: []clusters.ClusterEventType{"PINNED", "UNPINNED"},
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "awscluster",
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
 					Limit:      1,
 				},
-				Response: clusters.EventDetails{},
+				Response: compute.EventDetails{},
 			},
 			{
 				Method:   "GET",
@@ -965,12 +974,12 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
-				Response: libraries.ClusterLibraryStatuses{
-					ClusterID: "test2",
-					LibraryStatuses: []libraries.LibraryStatus{
+				Response: compute.ClusterLibraryStatuses{
+					ClusterId: "test2",
+					LibraryStatuses: []compute.LibraryFullStatus{
 						{
-							Library: &libraries.Library{
-								Pypi: &libraries.PyPi{
+							Library: &compute.Library{
+								Pypi: &compute.PythonPyPiLibrary{
 									Package: "chispa",
 								},
 							},
@@ -1077,7 +1086,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 						EmailNotifications: &sdk_jobs.JobEmailNotifications{
 							OnFailure: []string{"user@domain.com"},
 						},
-						Libraries: []libraries.Library{
+						Libraries: []compute.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
 							{Whl: "/Workspace/Repos/user@domain.com/repo/test.whl"},
 							{Whl: "/Workspace/Users/user@domain.com/libs/test.whl"},
@@ -1286,7 +1295,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 						Tasks: []jobs.JobTaskSettings{
 							{
 								TaskKey: "dummy",
-								Libraries: []libraries.Library{
+								Libraries: []compute.Library{
 									{Jar: "dbfs:/FileStore/jars/test.jar"},
 								},
 								NewCluster: &clusters.Cluster{
@@ -2290,6 +2299,13 @@ func TestImportingModelServing(t *testing.T) {
 								Name:         "def",
 							},
 						},
+						ServedEntities: []serving.ServedEntityOutput{
+							{
+								EntityName:    "def",
+								EntityVersion: "1",
+								Name:          "def",
+							},
+						},
 					},
 				},
 			},
@@ -2469,6 +2485,18 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 				`terraform import databricks_pipeline.abc "abc"
 terraform import databricks_pipeline.def "def"
 `), 0700)
+
+			os.WriteFile(tmpDir+"/import.tf", []byte(
+				`import {
+  id = "abc"
+  to = databricks_pipeline.abc 
+}
+import {
+  id = "def"
+  to = databricks_pipeline.def
+}
+`), 0700)
+
 			os.WriteFile(tmpDir+"/dlt.tf", []byte(`resource "databricks_pipeline" "abc" {
 }
 			
@@ -2487,6 +2515,7 @@ resource "databricks_pipeline" "def" {
 			ic.incremental = true
 			ic.updatedSinceStr = "2023-07-24T00:00:00Z"
 			ic.meAdmin = false
+			ic.nativeImportSupported = true
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2496,6 +2525,13 @@ resource "databricks_pipeline" "def" {
 			contentStr := string(content)
 			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
 			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+
+			content, err = os.ReadFile(tmpDir + "/import.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			log.Printf("[DEBUG] contentStr: %s", contentStr)
+			assert.True(t, strings.Contains(contentStr, `id = "abc"`))
+			assert.True(t, strings.Contains(contentStr, `to = databricks_pipeline.def`))
 
 			content, err = os.ReadFile(tmpDir + "/dlt.tf")
 			assert.NoError(t, err)

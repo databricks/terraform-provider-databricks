@@ -32,6 +32,10 @@ func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorN
 	})
 }
 
+func ResourceLakehouseMonitorPluginFramework() resource.Resource {
+	return &LakehouseMonitorResource{}
+}
+
 type LakehouseMonitorResource struct{}
 
 func (r *LakehouseMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

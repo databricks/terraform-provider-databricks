@@ -3,7 +3,8 @@ package provider
 import (
 	"context"
 
-	pluginframework "github.com/databricks/terraform-provider-databricks/plugin-framework"
+	"github.com/databricks/terraform-provider-databricks/pluginframework"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -22,9 +23,7 @@ var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		func() resource.Resource {
-			return &pluginframework.DatabricksResource{}
-		},
+		pluginframework.ResourceLakehouseMonitorPluginFramework,
 	}
 }
 

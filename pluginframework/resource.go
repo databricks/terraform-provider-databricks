@@ -28,3 +28,5 @@ func (r *DatabricksResource) Update(_ context.Context, req resource.UpdateReques
 
 func (r *DatabricksResource) Delete(_ context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 }
+
+type ABC struct{}

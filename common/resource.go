@@ -63,7 +63,7 @@ func (r Resource) saferCustomizeDiff() schema.CustomizeDiffFunc {
 	return func(ctx context.Context, rd *schema.ResourceDiff, _ any) (err error) {
 		defer func() {
 			// this is deliberate decision to convert a panic into error,
-			// so that any unforeseen bug would be visible to end-user
+			// so that any unforeseen bug would we visible to end-user
 			// as an error and not a provider crash, which is way less
 			// of pleasant experience.
 			if panic := recover(); panic != nil {
@@ -443,7 +443,6 @@ var NoAuth string = "default auth: cannot configure default credentials, " +
 func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 	s["account_id"] = &schema.Schema{
 		Type:       schema.TypeString,
-		Computed:   true,
 		Optional:   true,
 		Deprecated: "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
 	}

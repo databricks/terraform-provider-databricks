@@ -124,7 +124,7 @@ type ResourceFixture struct {
 	New bool
 }
 
-// wrapper type for calling resource methods
+// wrapper type for calling resource methords
 type resourceCRUD func(context.Context, *schema.ResourceData, any) diag.Diagnostics
 
 func (cb resourceCRUD) before(before func(d *schema.ResourceData)) resourceCRUD {

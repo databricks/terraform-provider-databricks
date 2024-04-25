@@ -32,7 +32,7 @@ type SqlTableInfo struct {
 	SchemaName            string            `json:"schema_name" tf:"force_new"`
 	TableType             string            `json:"table_type" tf:"force_new"`
 	DataSourceFormat      string            `json:"data_source_format,omitempty" tf:"force_new"`
-	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed,force_new"`
+	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
 	Partitions            []string          `json:"partitions,omitempty" tf:"force_new"`
 	ClusterKeys           []string          `json:"cluster_keys,omitempty" tf:"force_new"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
@@ -87,11 +87,14 @@ func sqlTableIsManagedProperty(key string) bool {
 		"delta.columnMapping.maxColumnId":                          true,
 		"delta.enableDeletionVectors":                              true,
 		"delta.enableRowTracking":                                  true,
+		"delta.feature.clustering":                                 true,
+		"delta.feature.changeDataFeed":                             true,
 		"delta.feature.deletionVectors":                            true,
 		"delta.feature.domainMetadata":                             true,
 		"delta.feature.liquid":                                     true,
 		"delta.feature.rowTracking":                                true,
 		"delta.feature.v2Checkpoint":                               true,
+		"delta.feature.timestampNtz":                               true,
 		"delta.liquid.clusteringColumns":                           true,
 		"delta.rowTracking.materializedRowCommitVersionColumnName": true,
 		"delta.rowTracking.materializedRowIdColumnName":            true,
@@ -189,7 +192,7 @@ func (ti *SqlTableInfo) serializeColumnInfo(col SqlColumnInfo) string {
 	if col.Comment != "" {
 		comment = fmt.Sprintf(" COMMENT '%s'", parseComment(col.Comment))
 	}
-	return fmt.Sprintf("%s %s%s%s", col.Name, col.Type, notNull, comment) // id INT NOT NULL COMMENT 'something'
+	return fmt.Sprintf("%s %s%s%s", col.getWrappedColumnName(), col.Type, notNull, comment) // id INT NOT NULL COMMENT 'something'
 }
 
 func (ti *SqlTableInfo) serializeColumnInfos() string {
@@ -294,20 +297,68 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	return strings.Join(statements, "")
 }
 
-// Wrapping the column name with backtiks to avoid special character messing things up.
-func getWrappedColumnName(ci SqlColumnInfo) string {
+// Wrapping the column name with backticks to avoid special character messing things up.
+func (ci SqlColumnInfo) getWrappedColumnName() string {
 	return fmt.Sprintf("`%s`", ci.Name)
 }
 
 func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
-	// TODO: take out "force_new" in `column` and add case to handle addition and removal of columns.
+	if len(ti.ColumnInfos) != len(oldti.ColumnInfos) {
+		statements = ti.addOrRemoveColumnStatements(oldti, statements, typestring)
+	} else {
+		statements = ti.alterExistingColumnStatements(oldti, statements, typestring)
+	}
+	return statements
+}
+
+func (ti *SqlTableInfo) addOrRemoveColumnStatements(oldti *SqlTableInfo, statements []string, typestring string) []string {
+	nameToOldColumn := make(map[string]SqlColumnInfo)
+	nameToNewColumn := make(map[string]SqlColumnInfo)
+	for _, ci := range oldti.ColumnInfos {
+		nameToOldColumn[ci.Name] = ci
+	}
+	for _, newCi := range ti.ColumnInfos {
+		nameToNewColumn[newCi.Name] = newCi
+	}
+
+	removeColumnStatements := make([]string, 0)
+
+	for name, oldCi := range nameToOldColumn {
+		if _, exists := nameToNewColumn[name]; !exists {
+			// Remove old column if old column is no longer found in the config.
+			removeColumnStatements = append(removeColumnStatements, oldCi.getWrappedColumnName())
+		}
+	}
+	if len(removeColumnStatements) > 0 {
+		removeColumnStatementsStr := strings.Join(removeColumnStatements, ", ")
+		statements = append(statements, fmt.Sprintf("ALTER %s %s DROP COLUMN IF EXISTS (%s)", typestring, ti.SQLFullName(), removeColumnStatementsStr))
+	}
+
+	for i, newCi := range ti.ColumnInfos {
+		if _, exists := nameToOldColumn[newCi.Name]; !exists {
+			// Add new column if new column is detected.
+			newCiStatement := ti.serializeColumnInfo(newCi)
+			if i == 0 {
+				// If this is the first column, add column with `FIRST` keyword
+				statements = append(statements, fmt.Sprintf("ALTER %s %s ADD COLUMN %s FIRST", typestring, ti.SQLFullName(), newCiStatement))
+			} else {
+				// Find out the name of the column before this column and add after the previous one.
+				statements = append(statements, fmt.Sprintf("ALTER %s %s ADD COLUMN %s AFTER %s", typestring, ti.SQLFullName(), newCiStatement, ti.ColumnInfos[i-1].Name))
+			}
+		}
+	}
+
+	return statements
+}
+
+func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, statements []string, typestring string) []string {
 	for i, ci := range ti.ColumnInfos {
 		oldCi := oldti.ColumnInfos[i]
 		if ci.Name != oldCi.Name {
-			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), getWrappedColumnName(oldCi), getWrappedColumnName(ci)))
+			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), oldCi.getWrappedColumnName(), ci.getWrappedColumnName()))
 		}
 		if ci.Comment != oldCi.Comment {
-			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), getWrappedColumnName(ci), parseComment(ci.Comment)))
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
 		}
 		if ci.Nullable != oldCi.Nullable {
 			var keyWord string
@@ -316,7 +367,7 @@ func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, stateme
 			} else {
 				keyWord = "SET"
 			}
-			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NOT NULL", typestring, ti.SQLFullName(), getWrappedColumnName(ci), keyWord))
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NOT NULL", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), keyWord))
 		}
 	}
 	return statements
@@ -415,21 +466,51 @@ func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 	return nil
 }
 
-func columnChangesCustomizeDiff(d *schema.ResourceDiff) error {
-	if d.HasChange("column") {
-		old, new := d.GetChange("column")
-		oldCols := old.([]interface{})
-		newCols := new.([]interface{})
+func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) error {
+	// Using plain type casting for oldCols because DiffToStructPointer does not support old value in the diff.
+	old, _ := d.GetChange("column")
+	oldCols := old.([]interface{})
+	newColumnInfos := newTable.ColumnInfos
 
-		// Only handling same number of columns for now, will address different number of columns as a follow-up.
-		if len(oldCols) == len(newCols) {
-			for i, oldCol := range oldCols {
-				oldColMap := oldCol.(map[string]interface{})
-				newColMap := newCols[i].(map[string]interface{})
+	if len(oldCols) == len(newColumnInfos) {
+		err := assertNoColumnTypeDiff(oldCols, newColumnInfos)
+		if err != nil {
+			return err
+		}
+	} else {
+		err := assertNoColumnMembershipAndFieldValueUpdate(oldCols, newColumnInfos)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-				if oldColMap["type"] != newColMap["type"] {
-					return fmt.Errorf("changing the 'type' of an existing column is not supported")
-				}
+func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
+	for i, oldCol := range oldCols {
+		oldColMap := oldCol.(map[string]interface{})
+		if oldColMap["type"] != newColumnInfos[i].Type {
+			return fmt.Errorf("changing the 'type' of an existing column is not supported")
+		}
+	}
+	return nil
+}
+
+// This function will throw if column addition or removal is happening together with column info field values.
+func assertNoColumnMembershipAndFieldValueUpdate(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
+	oldColsNameToMap := make(map[string]map[string]interface{})
+	newColsNameToMap := make(map[string]SqlColumnInfo)
+	for _, oldCol := range oldCols {
+		oldColMap := oldCol.(map[string]interface{})
+		oldColsNameToMap[oldColMap["name"].(string)] = oldColMap
+	}
+	for _, newCol := range newColumnInfos {
+		newColsNameToMap[newCol.Name] = newCol
+	}
+	for name, oldColMap := range oldColsNameToMap {
+		if newCol, exists := newColsNameToMap[name]; exists {
+			if oldColMap["type"] != newCol.Type || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
+				return fmt.Errorf("detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time")
 			}
 		}
 	}
@@ -439,6 +520,10 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff) error {
 func ResourceSqlTable() common.Resource {
 	tableSchema := common.StructToSchema(SqlTableInfo{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
+			for _, field := range caseInsensitiveFields {
+				s[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			}
 			s["data_source_format"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if new == "" {
 					return true
@@ -458,9 +543,13 @@ func ResourceSqlTable() common.Resource {
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			err := columnChangesCustomizeDiff(d)
-			if err != nil {
-				return err
+			if d.HasChange("column") {
+				var newTableStruct SqlTableInfo
+				common.DiffToStructPointer(d, tableSchema, &newTableStruct)
+				err := columnChangesCustomizeDiff(d, &newTableStruct)
+				if err != nil {
+					return err
+				}
 			}
 			if d.HasChange("properties") {
 				old, new := d.GetChange("properties")

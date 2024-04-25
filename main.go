@@ -48,6 +48,9 @@ func main() {
 		context.Background(),
 		sdkPluginProvider.GRPCProvider,
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	pluginFrameworkProvider := provider.GetDatabricksProviderPluginFramework()
 

@@ -451,7 +451,7 @@ func TestResourceServicePrinicpalforce_delete_reposError(t *testing.T) {
 }
 
 func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -468,7 +468,7 @@ func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/Repos/abc) doesn't exist.",
 				},
-				Status: 400,
+				Status: 404,
 			},
 		},
 		Resource: ResourceServicePrincipal(),
@@ -478,8 +478,7 @@ func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 			application_id = "abc"
 			force_delete_repos = true	
 		`,
-	}.Apply(t)
-	assert.EqualError(t, err, "force_delete_repos: Path (/Repos/abc) doesn't exist.")
+	}.ApplyNoError(t)
 }
 
 func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
@@ -511,7 +510,7 @@ func TestResourceServicePrincipalDelete_DirError(t *testing.T) {
 }
 
 func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "DELETE",
@@ -538,8 +537,7 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 		 	application_id = "abc"
 			force_delete_home_dir = true	
 		`,
-	}.Apply(t)
-	assert.EqualError(t, err, "force_delete_home_dir: Path (/Users/abc) doesn't exist.")
+	}.ApplyNoError(t)
 }
 
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {

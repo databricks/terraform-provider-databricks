@@ -20,7 +20,7 @@ We happily welcome contributions to the Databricks Terraform Provider. We use Gi
 
 ## Issues for new contributors
 
-New contributors should look for the following tags when searching for a first contribution to the TensorFlow code base. We strongly recommend that new contributors tackle “good first issue” projects first; this helps the contributor become familiar with the contribution workflow, and for the core devs to become acquainted with the contributor.
+New contributors should look for the following tags when searching for a first contribution to the Databricks code base. We strongly recommend that new contributors tackle “good first issue” projects first; this helps the contributor become familiar with the contribution workflow, and for the core devs to become acquainted with the contributor.
 
 [good first issue](https://github.com/databricks/terraform-provider-databricks/labels/good%20first%20issue)
 
@@ -90,7 +90,7 @@ Most likely, `terraform init -upgrade -verify-plugins=false -lock=false` would b
 
 ## Contributing documentation
 
-Make sure you have [`terrafmt`](https://github.com/katbyte/terrafmt) intalled to be able to run `make fmt-docs`
+Make sure you have [`terrafmt`](https://github.com/katbyte/terrafmt) installed to be able to run `make fmt-docs`
 
 ```bash
 go install github.com/katbyte/terrafmt@latest
@@ -237,7 +237,7 @@ func ResourceExample() *schema.Resource {
 
 *Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
 
-*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provdier generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field. With the help of `qa.ResourceCornerCases` and `qa.ResourceFixture` one can achieve 100% code coverage for all of the new code.
+*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provider generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field. With the help of `qa.ResourceCornerCases` and `qa.ResourceFixture` one can achieve 100% code coverage for all of the new code.
 
 A simple example:
 

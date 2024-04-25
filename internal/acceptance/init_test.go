@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -36,47 +37,22 @@ func init() {
 }
 
 func workspaceLevel(t *testing.T, steps ...step) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
-	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
-		skipf(t)("Skipping workspace test on account level")
-	}
-	t.Parallel()
+	loadWorkspaceEnv(t)
 	run(t, steps)
 }
 
 func accountLevel(t *testing.T, steps ...step) {
-	loadDebugEnvIfRunsFromIDE(t, "account")
-	cfg := &config.Config{
-		AccountID: GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID"),
-	}
-	err := cfg.EnsureResolved()
-	if err != nil {
-		skipf(t)("error: %s", err)
-	}
-	if !cfg.IsAccountClient() {
-		skipf(t)("Not in account env: %s/%s", cfg.AccountID, cfg.Host)
-	}
-	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
-	t.Parallel()
+	loadAccountEnv(t)
 	run(t, steps)
 }
 
 func unityWorkspaceLevel(t *testing.T, steps ...step) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
-	GetEnvOrSkipTest(t, "TEST_METASTORE_ID")
-	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
-		skipf(t)("Skipping workspace test on account level")
-	}
-	t.Parallel()
+	loadUcwsEnv(t)
 	run(t, steps)
 }
 
 func unityAccountLevel(t *testing.T, steps ...step) {
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
-	GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
-	GetEnvOrSkipTest(t, "TEST_METASTORE_ID")
-	t.Parallel()
+	loadUcacctEnv(t)
 	run(t, steps)
 }
 
@@ -160,6 +136,7 @@ func run(t *testing.T, steps []step) {
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	t.Parallel()
 	provider := provider.DatabricksProvider()
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -351,6 +328,89 @@ func skipf(t *testing.T) func(format string, args ...any) {
 func isInDebug() bool {
 	ex, _ := os.Executable()
 	return strings.HasPrefix(path.Base(ex), "__debug_bin")
+}
+
+func setDebugLogger() {
+	logger.DefaultLogger = &logger.SimpleLogger{
+		Level: logger.LevelDebug,
+	}
+}
+
+func loadWorkspaceEnv(t *testing.T) {
+	initTest(t, "workspace")
+	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
+		skipf(t)("Skipping workspace test on account level")
+	}
+}
+
+func loadAccountEnv(t *testing.T) {
+	initTest(t, "account")
+	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
+		skipf(t)("Skipping account test on workspace level")
+	}
+}
+
+func loadUcwsEnv(t *testing.T) {
+	initTest(t, "ucws")
+	if os.Getenv("TEST_METASTORE_ID") == "" {
+		skipf(t)("Skipping non-Unity Catalog test")
+	}
+	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
+		skipf(t)("Skipping workspace test on account level")
+	}
+}
+
+func loadUcacctEnv(t *testing.T) {
+	initTest(t, "ucacct")
+	if os.Getenv("TEST_METASTORE_ID") == "" {
+		skipf(t)("Skipping non-Unity Catalog test")
+	}
+	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
+		skipf(t)("Skipping account test on workspace level")
+	}
+}
+
+func isAws(t *testing.T) bool {
+	awsCloudEnvs := []string{"MWS", "aws", "ucws", "ucacct"}
+	return isCloudEnvInList(t, awsCloudEnvs)
+}
+
+func isAzure(t *testing.T) bool {
+	azureCloudEnvs := []string{"azure", "azure-ucacct"}
+	return isCloudEnvInList(t, azureCloudEnvs)
+}
+
+func isGcp(t *testing.T) bool {
+	gcpCloudEnvs := []string{"gcp-accounts", "gcp-ucacct", "gcp-ucws", "gcp"}
+	return isCloudEnvInList(t, gcpCloudEnvs)
+}
+
+func isCloudEnvInList(t *testing.T, cloudEnvs []string) bool {
+	cloudEnv := os.Getenv("CLOUD_ENV")
+	if cloudEnv == "" {
+		skipf(t)("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+	}
+	return slices.Contains(cloudEnvs, cloudEnv)
+}
+
+func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	user, err := w.CurrentUser.Me(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, emailValue := range user.Emails {
+		if emailValue.Primary && strings.Contains(emailValue.Value, "@") {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func initTest(t *testing.T, key string) {
+	setDebugLogger()
+	loadDebugEnvIfRunsFromIDE(t, key)
+	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
 }
 
 // loads debug environment from ~/.databricks/debug-env.json

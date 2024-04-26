@@ -39,7 +39,7 @@ func ResourceLakehouseMonitorPluginFramework() resource.Resource {
 type LakehouseMonitorResource struct{}
 
 func (r *LakehouseMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_lakehouse_monitor"
+	resp.TypeName = req.ProviderTypeName + "_lakehouse_monitor_plugin_framework"
 }
 
 func (r *LakehouseMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

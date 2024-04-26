@@ -29,9 +29,7 @@ func (p *DatabricksProviderPluginFramework) Resources(_ context.Context) []func(
 
 func (p *DatabricksProviderPluginFramework) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		func() datasource.DataSource {
-			return &pluginframework.DatabricksDataSource{}
-		},
+		pluginframework.DataSourceVolumesPluginFramework,
 	}
 }
 

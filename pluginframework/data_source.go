@@ -11,11 +11,11 @@ var _ datasource.DataSource = (*DatabricksDataSource)(nil)
 type DatabricksDataSource struct {
 }
 
-func (d *DatabricksDataSource) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DatabricksDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 }
 
-func (d *DatabricksDataSource) Read(_ context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *DatabricksDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 }
 
-func (d *DatabricksDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DatabricksDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 }

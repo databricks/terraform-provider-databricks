@@ -18,7 +18,7 @@ data "databricks_current_metastore" "this" {
 }
 
 output "some_metastore" {
-  value = data.databricks_metastore.this.metastore_info[0]
+  value = data.databricks_current_metastore.this.metastore_info[0]
 }
 ```
 

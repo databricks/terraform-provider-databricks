@@ -234,6 +234,11 @@ var resourcesMap map[string]importable = map[string]importable{
 				"inst_pool_"+ic.Importables["databricks_instance_pool"].Name(ic, r.Data))
 			return nil
 		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			isIgnored := r.Data.Get("instance_pool_name") == ""
+			ic.addIgnoredResource(fmt.Sprintf("databricks_instance_pool. id=%s", r.ID))
+			return isIgnored
+		},
 	},
 	"databricks_instance_profile": {
 		Service: "access",

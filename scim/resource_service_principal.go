@@ -99,7 +99,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 func ResourceServicePrincipal() common.Resource {
 	type entity struct {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
-		DisplayName   string `json:"display_name,omitempty" tf:"computed,force_new"`
+		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
 		Active        bool   `json:"active,omitempty"`
 		ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
 	}
@@ -155,6 +155,9 @@ func ResourceServicePrincipal() common.Resource {
 		Schema: servicePrincipalSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp := spFromData(d)
+			if sp.ApplicationID == "" && sp.DisplayName == "" {
+				return fmt.Errorf("either application_id or display_name must be set")
+			}
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			servicePrincipal, err := spAPI.Create(sp)
 			if err != nil {

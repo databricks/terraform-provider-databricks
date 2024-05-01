@@ -83,7 +83,6 @@ func (si *ShareInfo) suppressCDFEnabledDiff() {
 
 func (a SharesAPI) get(name string) (si ShareInfo, err error) {
 	err = a.client.Get(a.context, "/unity-catalog/shares/"+name+"?include_shared_data=true", nil, &si)
-	// si.sortSharesByName()
 	si.suppressCDFEnabledDiff()
 	return
 }
@@ -92,7 +91,6 @@ func (a SharesAPI) update(name string, su ShareUpdates) error {
 	if len(su.Updates) == 0 {
 		return nil
 	}
-	// su.sortSharesByName()
 	err := a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
 	return err
 }
@@ -193,7 +191,6 @@ func ResourceShare() common.Resource {
 			//can only create empty share, objects & owners have to be added using update API
 			var si ShareInfo
 			common.DataToStructPointer(d, shareSchema, &si)
-			// si.sortSharesByName()
 			shareChanges := si.shareChanges(ShareAdd)
 			shareChanges.Owner = si.Owner
 			if err := NewSharesAPI(ctx, c).update(si.Name, shareChanges); err != nil {

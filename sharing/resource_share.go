@@ -35,7 +35,7 @@ type ShareInfo struct {
 }
 
 type SharedDataObject struct {
-	Name                     string      `json:"name"`
+	Name                     string      `json:"name" tf:"force_new"`
 	DataObjectType           string      `json:"data_object_type"`
 	Comment                  string      `json:"comment,omitempty"`
 	SharedAs                 string      `json:"shared_as,omitempty" tf:"suppress_diff"`

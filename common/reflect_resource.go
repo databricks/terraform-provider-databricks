@@ -634,7 +634,7 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 				}
 				data[fieldName] = nv
 			case schema.TypeBool, schema.TypeInt:
-				if !isIntOrBoolFieldNeedToBeSent(v, valueField) {
+				if !isIntOrBoolExplicitlySet(v, valueField) {
 					return nil
 				}
 				data[fieldName] = fieldValue
@@ -680,27 +680,31 @@ func isZeroValueBoolOrInt(valueField reflect.Value) bool {
 	return false
 }
 
-func isIntOrBoolFieldNeedToBeSent(root reflect.Value, valueField field) bool {
+func isIntOrBoolExplicitlySet(root reflect.Value, valueField field) bool {
 	fv := root.FieldByName("ForceSendFields")
 	var forceSendFields []string
 	// force send fields might not exist in struct, so checking it against zero value first
-	if fv != (reflect.Value{}) {
-		forceSendFields = fv.Interface().([]string)
+	// if it does not exist, all fields in struct considered as explicitly set
+	if fv == (reflect.Value{}) {
+		return true
 	}
 
+	forceSendFields = fv.Interface().([]string)
 	isZeroValue := isZeroValueBoolOrInt(valueField.v)
+
+	// If the field is not a zero value, it is explicitly set
 	if !isZeroValue {
 		return true
 	}
 
-	// If the field is not in the force send fields, we should not store it in the state
-	// Only bool and int values are in force send fields now
-	if len(forceSendFields) > 0 && !slices.Contains(forceSendFields, valueField.sf.Name) {
-		log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
-		return false
+	// If the field is stored in the force send fields, we consider it explicitly set
+	if slices.Contains(forceSendFields, valueField.sf.Name) {
+		return true
 	}
 
-	return true
+	// otherwise, we consider it not explicitly set
+	log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
+	return false
 }
 
 // StructToData reads result using schema onto resource data
@@ -744,7 +748,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			log.Printf("[TRACE] set %s %#v", fieldPath, nv)
 			return d.Set(fieldPath, nv)
 		case schema.TypeBool, schema.TypeInt:
-			if !isIntOrBoolFieldNeedToBeSent(v, valueField) {
+			if !isIntOrBoolExplicitlySet(v, valueField) {
 				return nil
 			}
 			log.Printf("[TRACE] set %s %#v", fieldPath, fieldValue)

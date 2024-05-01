@@ -142,7 +142,7 @@ func shareTemplateWithOwner(comment string, owner string) string {
 
 func TestUcAccShare_MultipleObjects(t *testing.T) {
 	unityWorkspaceLevel(t, step{
-		Template: preTestTemplate + `		
+		Template: preTestTemplate + preTestTemplateUpdate + `		
 		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
@@ -150,19 +150,24 @@ func TestUcAccShare_MultipleObjects(t *testing.T) {
 				name = databricks_table.mytable_2.id
 				comment = "def"
 				data_object_type = "TABLE"
-			}
+			}					
 			object {
 				name = databricks_table.mytable.id
 				comment = "abc"
 				data_object_type = "TABLE"
-			}									
+			}
 		}		
 		`,
 	}, step{
-		Template: preTestTemplate + `
+		Template: preTestTemplate + preTestTemplateUpdate + `
 		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				comment = "abc"
+				data_object_type = "TABLE"
+			}
 			object {
 				name = databricks_table.mytable_3.id
 				comment = "xyz"
@@ -173,13 +178,7 @@ func TestUcAccShare_MultipleObjects(t *testing.T) {
 				comment = "def"
 				data_object_type = "TABLE"
 			}
-			object {
-				name = databricks_table.mytable.id
-				comment = "abc"
-				data_object_type = "TABLE"
-			}									
-		}
-		`,
+		}`,
 	})
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"reflect"
-	"sort"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -29,7 +28,7 @@ const (
 type ShareInfo struct {
 	Name      string             `json:"name" tf:"force_new"`
 	Owner     string             `json:"owner,omitempty" tf:"suppress_diff"`
-	Objects   []SharedDataObject `json:"objects,omitempty" tf:"alias:object"`
+	Objects   []SharedDataObject `json:"objects,omitempty" tf:"slice_set,alias:object"`
 	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 	CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
 }
@@ -58,12 +57,6 @@ type ShareUpdates struct {
 	Updates []ShareDataChange `json:"updates"`
 }
 
-func (su *ShareUpdates) sortSharesByName() {
-	sort.Slice(su.Updates, func(i, j int) bool {
-		return su.Updates[i].DataObject.Name < su.Updates[j].DataObject.Name
-	})
-}
-
 type Shares struct {
 	Shares []ShareInfo `json:"shares"`
 }
@@ -79,12 +72,6 @@ type PartitionValue struct {
 	Value                string `json:"value,omitempty"`
 }
 
-func (si *ShareInfo) sortSharesByName() {
-	sort.Slice(si.Objects, func(i, j int) bool {
-		return si.Objects[i].Name < si.Objects[j].Name
-	})
-}
-
 func (si *ShareInfo) suppressCDFEnabledDiff() {
 	//suppress diff for CDF Enabled if HistoryDataSharingStatus is enabled , as API does not accept both fields to be set
 	for i := range si.Objects {
@@ -96,7 +83,7 @@ func (si *ShareInfo) suppressCDFEnabledDiff() {
 
 func (a SharesAPI) get(name string) (si ShareInfo, err error) {
 	err = a.client.Get(a.context, "/unity-catalog/shares/"+name+"?include_shared_data=true", nil, &si)
-	si.sortSharesByName()
+	// si.sortSharesByName()
 	si.suppressCDFEnabledDiff()
 	return
 }
@@ -105,7 +92,7 @@ func (a SharesAPI) update(name string, su ShareUpdates) error {
 	if len(su.Updates) == 0 {
 		return nil
 	}
-	su.sortSharesByName()
+	// su.sortSharesByName()
 	err := a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
 	return err
 }
@@ -184,6 +171,9 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+		m["object"].Set = func(i any) int {
+			return schema.HashString(i.(map[string]any)["name"].(string))
+		}
 		return m
 	})
 	return common.Resource{
@@ -203,6 +193,7 @@ func ResourceShare() common.Resource {
 			//can only create empty share, objects & owners have to be added using update API
 			var si ShareInfo
 			common.DataToStructPointer(d, shareSchema, &si)
+			// si.sortSharesByName()
 			shareChanges := si.shareChanges(ShareAdd)
 			shareChanges.Owner = si.Owner
 			if err := NewSharesAPI(ctx, c).update(si.Name, shareChanges); err != nil {

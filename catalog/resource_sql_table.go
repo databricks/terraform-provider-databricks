@@ -491,6 +491,8 @@ func getColumnType(columnType string) string {
 	switch caseInsensitiveColumnType {
 	case "integer":
 		return "int"
+	case "long":
+		return "bigint"
 	default:
 		return caseInsensitiveColumnType
 	}

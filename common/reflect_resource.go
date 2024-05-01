@@ -622,7 +622,7 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			v = v.Elem()
 		}
 		fv := v.FieldByName("ForceSendFields")
-		forceSendFields := []string{}
+		forceSendFields := nil
 		// force send fields might not exist in struct, so checking it against zero value first
 		if fv != (reflect.Value{}) {
 			forceSendFields = fv.Interface().([]string)

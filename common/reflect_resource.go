@@ -621,12 +621,6 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			}
 			v = v.Elem()
 		}
-		fv := v.FieldByName("ForceSendFields")
-		forceSendFields := nil
-		// force send fields might not exist in struct, so checking it against zero value first
-		if fv != (reflect.Value{}) {
-			forceSendFields = fv.Interface().([]string)
-		}
 
 		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 			fieldName := path[len(path)-1]
@@ -640,10 +634,7 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 				}
 				data[fieldName] = nv
 			case schema.TypeBool, schema.TypeInt:
-				// If the field is not in the force send fields, we should not store it in the state
-				// Only bool and int values are in force send fields now
-				if len(forceSendFields) > 0 && !slices.Contains(forceSendFields, valueField.sf.Name) {
-					log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
+				if !isIntOrBoolFieldNeedToBeSent(v, valueField) {
 					return nil
 				}
 				data[fieldName] = fieldValue
@@ -677,6 +668,39 @@ func isValueNilOrEmpty(valueField reflect.Value, fieldPath string) bool {
 		}
 	}
 	return false
+}
+
+func isZeroValueBoolOrInt(valueField reflect.Value) bool {
+	switch valueField.Kind() {
+	case reflect.Bool:
+		return !valueField.Bool()
+	case reflect.Int, reflect.Int32, reflect.Int64:
+		return valueField.Int() == 0
+	}
+	return false
+}
+
+func isIntOrBoolFieldNeedToBeSent(root reflect.Value, valueField field) bool {
+	fv := root.FieldByName("ForceSendFields")
+	var forceSendFields []string
+	// force send fields might not exist in struct, so checking it against zero value first
+	if fv != (reflect.Value{}) {
+		forceSendFields = fv.Interface().([]string)
+	}
+
+	isZeroValue := isZeroValueBoolOrInt(valueField.v)
+	if !isZeroValue {
+		return true
+	}
+
+	// If the field is not in the force send fields, we should not store it in the state
+	// Only bool and int values are in force send fields now
+	if len(forceSendFields) > 0 && !slices.Contains(forceSendFields, valueField.sf.Name) {
+		log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
+		return false
+	}
+
+	return true
 }
 
 // StructToData reads result using schema onto resource data
@@ -720,17 +744,7 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			log.Printf("[TRACE] set %s %#v", fieldPath, nv)
 			return d.Set(fieldPath, nv)
 		case schema.TypeBool, schema.TypeInt:
-			fv := v.FieldByName("ForceSendFields")
-			forceSendFields := []string{}
-			// force send fields might not exist in struct, so checking it against zero value first
-			if fv != (reflect.Value{}) {
-				forceSendFields = fv.Interface().([]string)
-			}
-
-			// If the field is not in the force send fields, we should not store it in the state
-			// Only bool and int values are in force send fields now
-			if len(forceSendFields) > 0 && !slices.Contains(forceSendFields, valueField.sf.Name) {
-				log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
+			if !isIntOrBoolFieldNeedToBeSent(v, valueField) {
 				return nil
 			}
 			log.Printf("[TRACE] set %s %#v", fieldPath, fieldValue)

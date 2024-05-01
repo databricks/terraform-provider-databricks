@@ -508,7 +508,7 @@ type structWithForceSendFields struct {
 	ForceSendFields []string `json:"-"`
 }
 
-func TestDataToStructPointerWithImpplicitlyZeroFields(t *testing.T) {
+func TestDataToStructPointerWithImplicitlyZeroFields(t *testing.T) {
 	s := StructToSchema(structWithForceSendFields{}, nil)
 	d := schema.TestResourceDataRaw(t, s, map[string]any{})
 	result := structWithForceSendFields{}

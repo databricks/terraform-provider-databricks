@@ -486,10 +486,20 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) 
 	return nil
 }
 
+func getColumnType(columnType string) string {
+	caseInsensitiveColumnType := strings.ToLower(columnType)
+	switch caseInsensitiveColumnType {
+	case "integer":
+		return "int"
+	default:
+		return caseInsensitiveColumnType
+	}
+}
+
 func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
 	for i, oldCol := range oldCols {
 		oldColMap := oldCol.(map[string]interface{})
-		if oldColMap["type"] != newColumnInfos[i].Type {
+		if getColumnType(oldColMap["type"].(string)) != getColumnType(newColumnInfos[i].Type) {
 			return fmt.Errorf("changing the 'type' of an existing column is not supported")
 		}
 	}
@@ -538,6 +548,12 @@ func ResourceSqlTable() common.Resource {
 
 			s["partitions"].ConflictsWith = []string{"cluster_keys"}
 			s["cluster_keys"].ConflictsWith = []string{"partitions"}
+			common.MustSchemaPath(s, "column", "type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				if getColumnType(old) == getColumnType(new) {
+					return true
+				}
+				return false
+			}
 			return s
 		})
 	return common.Resource{

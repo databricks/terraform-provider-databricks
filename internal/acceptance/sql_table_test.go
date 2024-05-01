@@ -32,7 +32,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 
 			column {
 				name      = "id"
-				type      = "int"
+				type      = "integer"
 			}
 			column {
 				name      = "name"
@@ -59,7 +59,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 			
 			column {
 				name      = "id"
-				type      = "int"
+				type      = "integer"
 			}
 			column {
 				name      = "name"
@@ -311,6 +311,18 @@ func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "string", Nullable: true, Comment: "comment"}}),
+	})
+}
+
+func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "integer", Nullable: true, Comment: "comment"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "integer", Nullable: true, Comment: "comment"}}),
 	})
 }
 

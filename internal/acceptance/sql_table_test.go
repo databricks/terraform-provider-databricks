@@ -320,9 +320,11 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 	}
 	tableName := RandomName()
 	unityWorkspaceLevel(t, step{
-		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "integer", Nullable: true, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "INT", Nullable: true, Comment: "comment"}}),
 	}, step{
-		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "integer", Nullable: true, Comment: "comment"}}),
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "integer", Nullable: true, Comment: "comment 1"}}),
+	}, step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "integer", Nullable: true, Comment: "comment 2"}}),
 	})
 }
 

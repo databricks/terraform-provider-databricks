@@ -519,7 +519,7 @@ func assertNoColumnMembershipAndFieldValueUpdate(oldCols []interface{}, newColum
 	}
 	for name, oldColMap := range oldColsNameToMap {
 		if newCol, exists := newColsNameToMap[name]; exists {
-			if oldColMap["type"] != newCol.Type || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
+			if getColumnType(oldColMap["type"].(string)) != getColumnType(newCol.Type) || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
 				return fmt.Errorf("detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time")
 			}
 		}
@@ -549,10 +549,10 @@ func ResourceSqlTable() common.Resource {
 			s["partitions"].ConflictsWith = []string{"cluster_keys"}
 			s["cluster_keys"].ConflictsWith = []string{"partitions"}
 			common.MustSchemaPath(s, "column", "type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				if getColumnType(old) == getColumnType(new) {
+				if new == "" {
 					return true
 				}
-				return false
+				return getColumnType(old) == getColumnType(new)
 			}
 			return s
 		})

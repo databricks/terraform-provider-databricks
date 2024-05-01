@@ -291,14 +291,6 @@ func TestUpdateShare(t *testing.T) {
 				ExpectedRequest: ShareUpdates{
 					Updates: []ShareDataChange{
 						{
-							Action: "REMOVE",
-							DataObject: SharedDataObject{
-								Comment:        "d",
-								DataObjectType: "TABLE",
-								Name:           "d",
-							},
-						},
-						{
 							Action: "ADD",
 							DataObject: SharedDataObject{
 								Comment:        "c",
@@ -312,6 +304,14 @@ func TestUpdateShare(t *testing.T) {
 								Comment:        "c",
 								DataObjectType: "TABLE",
 								Name:           "b",
+							},
+						},
+						{
+							Action: "REMOVE",
+							DataObject: SharedDataObject{
+								Comment:        "d",
+								DataObjectType: "TABLE",
+								Name:           "d",
 							},
 						},
 					},
@@ -401,14 +401,6 @@ func TestUpdateShareRollback(t *testing.T) {
 				ExpectedRequest: ShareUpdates{
 					Updates: []ShareDataChange{
 						{
-							Action: "REMOVE",
-							DataObject: SharedDataObject{
-								Comment:        "d",
-								DataObjectType: "TABLE",
-								Name:           "d",
-							},
-						},
-						{
 							Action: "ADD",
 							DataObject: SharedDataObject{
 								Comment:        "c",
@@ -422,6 +414,14 @@ func TestUpdateShareRollback(t *testing.T) {
 								Comment:        "c",
 								DataObjectType: "TABLE",
 								Name:           "b",
+							},
+						},
+						{
+							Action: "REMOVE",
+							DataObject: SharedDataObject{
+								Comment:        "d",
+								DataObjectType: "TABLE",
+								Name:           "d",
 							},
 						},
 					},

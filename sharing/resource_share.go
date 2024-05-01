@@ -2,6 +2,7 @@ package sharing
 
 import (
 	"context"
+	"sort"
 
 	"reflect"
 
@@ -57,6 +58,12 @@ type ShareUpdates struct {
 	Updates []ShareDataChange `json:"updates"`
 }
 
+func (su *ShareUpdates) sortSharesByName() {
+	sort.Slice(su.Updates, func(i, j int) bool {
+		return su.Updates[i].DataObject.Name < su.Updates[j].DataObject.Name
+	})
+}
+
 type Shares struct {
 	Shares []ShareInfo `json:"shares"`
 }
@@ -72,6 +79,12 @@ type PartitionValue struct {
 	Value                string `json:"value,omitempty"`
 }
 
+func (si *ShareInfo) sortSharesByName() {
+	sort.Slice(si.Objects, func(i, j int) bool {
+		return si.Objects[i].Name < si.Objects[j].Name
+	})
+}
+
 func (si *ShareInfo) suppressCDFEnabledDiff() {
 	//suppress diff for CDF Enabled if HistoryDataSharingStatus is enabled , as API does not accept both fields to be set
 	for i := range si.Objects {
@@ -83,6 +96,7 @@ func (si *ShareInfo) suppressCDFEnabledDiff() {
 
 func (a SharesAPI) get(name string) (si ShareInfo, err error) {
 	err = a.client.Get(a.context, "/unity-catalog/shares/"+name+"?include_shared_data=true", nil, &si)
+	si.sortSharesByName()
 	si.suppressCDFEnabledDiff()
 	return
 }
@@ -91,6 +105,7 @@ func (a SharesAPI) update(name string, su ShareUpdates) error {
 	if len(su.Updates) == 0 {
 		return nil
 	}
+	su.sortSharesByName()
 	err := a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
 	return err
 }

@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -47,6 +50,17 @@ func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
 	useragent.WithProduct("databricks-tf-provider", common.Version())
+
+	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
+	out, err := parseUserAgentExtra(userAgentExtraEnv)
+
+	if err != nil {
+		panic(fmt.Errorf("failed to parse DATABRICKS_USER_AGENT_EXTRA: %s", err))
+	}
+
+	for _, extra := range out {
+		useragent.WithUserAgentExtra(extra.Key, extra.Value)
+	}
 }
 
 // DatabricksProvider returns the entire terraform provider object
@@ -276,4 +290,44 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 		return commands.NewCommandsAPI(ctx, client)
 	})
 	return pc, nil
+}
+
+type userAgentExtra struct {
+	Key   string
+	Value string
+}
+
+// Regex for product strings. See RFC 9110.
+//
+// product = token ["/" product-version]
+// product-version = token
+// token = 1*tchar
+// tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
+var productRegexRfc9110 = regexp.MustCompile("^([!#$%&'*+\\-.^_`|~0-9A-Za-z]+)(/([!#$%&'*+\\-.^_`|~0-9A-Za-z]+))?$")
+
+func parseUserAgentExtra(env string) ([]userAgentExtra, error) {
+	out := []userAgentExtra{}
+
+	products := strings.FieldsFunc(env, func(r rune) bool {
+		return unicode.IsSpace(r)
+	})
+
+	for _, product := range products {
+		match := productRegexRfc9110.FindStringSubmatch(product)
+
+		if len(match) != 4 {
+			return nil, fmt.Errorf("product string must follow RFC 9110: %s", product)
+		}
+
+		if match[3] == "" {
+			return nil, fmt.Errorf("product string must include version: %s", product)
+		}
+
+		out = append(out, userAgentExtra{
+			Key:   match[1],
+			Value: match[3],
+		})
+	}
+
+	return out, nil
 }

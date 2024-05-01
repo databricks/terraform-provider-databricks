@@ -32,7 +32,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 
 			column {
 				name      = "id"
-				type      = "integer"
+				type      = "int"
 			}
 			column {
 				name      = "name"
@@ -59,7 +59,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 			
 			column {
 				name      = "id"
-				type      = "integer"
+				type      = "int"
 			}
 			column {
 				name      = "name"

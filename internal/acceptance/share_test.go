@@ -26,7 +26,7 @@ const preTestTemplate = `
 	resource "databricks_table" "mytable" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
-		name = "bar"
+		name = "abc"
 		table_type = "MANAGED"
 		data_source_format = "DELTA"
 		
@@ -42,7 +42,23 @@ const preTestTemplate = `
 	resource "databricks_table" "mytable_2" {
 		catalog_name = databricks_catalog.sandbox.id
 		schema_name = databricks_schema.things.name
-		name = "bar_2"
+		name = "def"
+		table_type = "MANAGED"
+		data_source_format = "DELTA"
+		
+		column {
+			name      = "id"
+			position  = 0
+			type_name = "INT"
+			type_text = "int"
+			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+		}
+	}
+
+	resource "databricks_table" "mytable_3" {
+		catalog_name = databricks_catalog.sandbox.id
+		schema_name = databricks_schema.things.name
+		name = "xyz"
 		table_type = "MANAGED"
 		data_source_format = "DELTA"
 		
@@ -122,6 +138,49 @@ func shareTemplateWithOwner(comment string, owner string) string {
 				data_object_type = "TABLE"
 			}								
 		}`, owner, comment)
+}
+
+func TestUcAccShare_MultipleObjects(t *testing.T) {
+	unityWorkspaceLevel(t, step{
+		Template: preTestTemplate + `		
+		resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable_2.id
+				comment = "def"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable.id
+				comment = "abc"
+				data_object_type = "TABLE"
+			}									
+		}		
+		`,
+	}, step{
+		Template: preTestTemplate + `
+		resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable_3.id
+				comment = "xyz"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable_2.id
+				comment = "def"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable.id
+				comment = "abc"
+				data_object_type = "TABLE"
+			}									
+		}
+		`,
+	})
 }
 
 func TestUcAccUpdateShare(t *testing.T) {

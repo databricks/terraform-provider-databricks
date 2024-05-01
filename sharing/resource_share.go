@@ -58,6 +58,12 @@ type ShareUpdates struct {
 	Updates []ShareDataChange `json:"updates"`
 }
 
+func (su *ShareUpdates) sortSharesByName() {
+	sort.Slice(su.Updates, func(i, j int) bool {
+		return su.Updates[i].DataObject.Name < su.Updates[j].DataObject.Name
+	})
+}
+
 type Shares struct {
 	Shares []ShareInfo `json:"shares"`
 }
@@ -99,7 +105,9 @@ func (a SharesAPI) update(name string, su ShareUpdates) error {
 	if len(su.Updates) == 0 {
 		return nil
 	}
-	return a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
+	su.sortSharesByName()
+	err := a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
+	return err
 }
 
 func (si ShareInfo) shareChanges(action string) ShareUpdates {

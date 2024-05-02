@@ -22,7 +22,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
@@ -32,6 +31,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
+	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -326,10 +326,10 @@ func TestImportClusterLibraries(t *testing.T) {
 			Method:       "GET",
 			Status:       200,
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-			Response: libraries.ClusterLibraryStatuses{
-				LibraryStatuses: []libraries.LibraryStatus{
+			Response: compute.ClusterLibraryStatuses{
+				LibraryStatuses: []compute.LibraryFullStatus{
 					{
-						Library: &libraries.Library{
+						Library: &compute.Library{
 							Whl: "foo.whl",
 						},
 						Status: "INSTALLED",
@@ -1017,20 +1017,11 @@ func TestNotebookGeneration(t *testing.T) {
 					{
 						Path:       "/First/Second",
 						ObjectType: "NOTEBOOK",
+						ObjectID:   123,
+						Language:   "PYTHON",
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/First/Second",
-				Language:   "PYTHON",
-			},
-			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1067,22 +1058,13 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 						ObjectType: "NOTEBOOK",
 					},
 					{
-						Path:       "/First/Second",
+						ObjectID:   123,
 						ObjectType: "NOTEBOOK",
+						Path:       "/First/Second",
+						Language:   "PYTHON",
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/First/Second",
-				Language:   "PYTHON",
-			},
-			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1121,8 +1103,10 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 						ObjectType: "NOTEBOOK",
 					},
 					{
-						Path:       "/Fir\"st\\/Second",
+						ObjectID:   123,
 						ObjectType: "NOTEBOOK",
+						Path:       "/Fir\"st\\/Second",
+						Language:   "PYTHON",
 					},
 				},
 			},
@@ -1135,17 +1119,6 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 				ObjectID:   124,
 				ObjectType: "DIRECTORY",
 				Path:       "/Fir\"st\\",
-			},
-			ReuseRequest: true,
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFir%22st%5C%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/Fir\"st\\/Second",
-				Language:   "PYTHON",
 			},
 			ReuseRequest: true,
 		},
@@ -1799,11 +1772,11 @@ func TestImportSchema(t *testing.T) {
 func TestImportShare(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("uc-grants,uc-volumes,uc-models,uc-tables")
-	d := tfcatalog.ResourceShare().ToResource().TestResourceData()
-	scm := tfcatalog.ResourceShare().Schema
-	share := tfcatalog.ShareInfo{
+	d := tfsharing.ResourceShare().ToResource().TestResourceData()
+	scm := tfsharing.ResourceShare().Schema
+	share := tfsharing.ShareInfo{
 		Name: "stest",
-		Objects: []tfcatalog.SharedDataObject{
+		Objects: []tfsharing.SharedDataObject{
 			{
 				DataObjectType: "TABLE",
 				Name:           "ctest.stest.table1",
@@ -1823,7 +1796,6 @@ func TestImportShare(t *testing.T) {
 		},
 	}
 	d.MarkNewResource()
-	common.StructToData(share, scm, d)
 	err := common.StructToData(share, scm, d)
 	require.NoError(t, err)
 	err = resourcesMap["databricks_share"].Import(ic, &resource{

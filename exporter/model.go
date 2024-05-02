@@ -203,6 +203,8 @@ type reference struct {
 	IsValidApproximation isValidAproximationFunc
 	// if we should skip direct lookups (for example, we need it for UC schemas matching)
 	SkipDirectLookup bool
+	// Extra Lookup key - if we need to search for the resource in a different way
+	ExtraLookupKey string
 }
 
 func (r reference) MatchAttribute() string {

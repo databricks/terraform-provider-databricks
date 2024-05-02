@@ -9,19 +9,17 @@ Retrieves a list of [databricks_cluster](../resources/cluster.md#cluster_id) ids
 
 ## Example Usage
 
-Retrieve all clusters on this workspace on AWS or GCP:
+Retrieve cluster IDs for all clusters:
 
 ```hcl
 data "databricks_clusters" "all" {
-  depends_on = [databricks_mws_workspaces.this]
 }
 ```
 
-Retrieve all clusters with "Shared" in their cluster name on this Azure Databricks workspace:
+Retrieve cluster IDs for all clusters having "Shared" in the cluster name:
 
 ```hcl
 data "databricks_clusters" "all_shared" {
-  depends_on            = [azurerm_databricks_workspace.this]
   cluster_name_contains = "shared"
 }
 ```

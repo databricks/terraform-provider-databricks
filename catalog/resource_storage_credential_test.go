@@ -466,7 +466,7 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials",
 				ExpectedRequest: catalog.CreateStorageCredential{
 					Name: "a",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityRequest{
 						AccessConnectorId: "def",
 					},
 					Comment: "c",
@@ -479,7 +479,7 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: catalog.UpdateStorageCredential{
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "def",
 					},
 					Comment: "c",
@@ -493,7 +493,7 @@ func TestCreateStorageCredentialWithAzMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "def",
 					},
 					MetastoreId: "d",
@@ -621,7 +621,7 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
 				ExpectedRequest: catalog.UpdateStorageCredential{
 					Comment: "c",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "CHANGED",
 					},
 				},
@@ -631,7 +631,7 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
 				Response: catalog.StorageCredentialInfo{
 					Name: "a",
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "CHANGED",
 					},
 					MetastoreId: "d",
@@ -653,4 +653,55 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 		comment = "c"
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestUpdateAzStorageCredentialSpn(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: catalog.UpdateStorageCredential{
+					Comment: "c",
+					AzureServicePrincipal: &catalog.AzureServicePrincipal{
+						ApplicationId: "SAME",
+						DirectoryId:   "SAME",
+						ClientSecret:  "CHANGED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+					AzureServicePrincipal: &catalog.AzureServicePrincipal{
+						ApplicationId: "SAME",
+						DirectoryId:   "SAME",
+					},
+					MetastoreId: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+		},
+		HCL: `
+		name = "a"
+		azure_service_principal {
+			application_id = "SAME"
+			directory_id = "SAME"
+			client_secret = "CHANGED"
+		}
+		comment = "c"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"azure_service_principal.0.application_id": "SAME",
+		"azure_service_principal.0.directory_id":   "SAME",
+		"azure_service_principal.0.client_secret":  "CHANGED",
+	})
 }

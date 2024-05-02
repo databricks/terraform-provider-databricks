@@ -9,19 +9,17 @@ Retrieves a list of [databricks_sql_endpoint](../resources/sql_endpoint.md#id) i
 
 ## Example Usage
 
-Retrieve all SQL warehouses on this workspace on AWS or GCP:
+Retrieve IDs for all SQL warehouses:
 
 ```hcl
 data "databricks_sql_warehouses" "all" {
-  depends_on = [databricks_mws_workspaces.this]
 }
 ```
 
-Retrieve all clusters with "Shared" in their cluster name on this Azure Databricks workspace:
+Retrieve IDs for all clusters having "Shared" in the warehouse name:
 
 ```hcl
 data "databricks_sql_warehouses" "all_shared" {
-  depends_on              = [azurerm_databricks_workspace.this]
   warehouse_name_contains = "shared"
 }
 ```

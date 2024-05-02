@@ -29,6 +29,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
+	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
@@ -79,6 +80,7 @@ var (
 		"storage_credential": {`CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`},
 		"foreign_connection": {`CREATE_FOREIGN_CATALOG`},
 	}
+	ParentDirectoryExtraKey = "parent_directory"
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -345,7 +347,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var c clusters.Cluster
+			var c compute.ClusterDetails
 			s := ic.Resources["databricks_cluster"].Schema
 			common.DataToStructPointer(r.Data, s, &c)
 			ic.importCluster(&c)
@@ -456,7 +458,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			var job jobs.JobSettings
 			s := ic.Resources["databricks_job"].Schema
 			common.DataToStructPointer(r.Data, s, &job)
-			ic.importCluster(job.NewCluster)
+			ic.importClusterLegacy(job.NewCluster)
 			ic.Emit(&resource{
 				Resource: "databricks_cluster",
 				ID:       job.ExistingClusterID,
@@ -555,7 +557,7 @@ var resourcesMap map[string]importable = map[string]importable{
 									if object.ObjectType != workspace.File {
 										continue
 									}
-									ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path)
+									ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path, &object)
 								}
 							} else {
 								log.Printf("[WARN] Can't list directory %s for DBT task in job %s (id: %s)", directory, job.Name, r.ID)
@@ -570,7 +572,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 					ic.emitFilesFromMap(task.RunJobTask.JobParameters)
 				}
-				ic.importCluster(task.NewCluster)
+				ic.importClusterLegacy(task.NewCluster)
 				ic.Emit(&resource{
 					Resource: "databricks_cluster",
 					ID:       task.ExistingClusterID,
@@ -578,7 +580,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.emitLibraries(task.Libraries)
 			}
 			for _, jc := range job.JobClusters {
-				ic.importCluster(jc.NewCluster)
+				ic.importClusterLegacy(jc.NewCluster)
 			}
 			if job.RunAs != nil {
 				if job.RunAs.UserName != "" {
@@ -1526,24 +1528,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				"notebook_"+ic.Importables["databricks_notebook"].Name(ic, r.Data))
 			// TODO: it's not completely correct condition - we need to make emit smarter -
 			// emit only if permissions are different from their parent's permission.
-			if ic.meAdmin {
-				directorySplits := strings.Split(r.ID, "/")
-				directorySplits = directorySplits[:len(directorySplits)-1]
-				directoryPath := strings.Join(directorySplits, "/")
-
-				ic.Emit(&resource{
-					Resource: "databricks_directory",
-					ID:       directoryPath,
-				})
-			}
-
+			ic.emitWorkspaceObjectParentDirectory(r)
 			return r.Data.Set("source", fileName)
 		},
 		ShouldOmitField: shouldOmitMd5Field,
 		Depends: []reference{
 			{Path: "source", File: true},
-			{Path: "path", Resource: "databricks_directory",
-				MatchType: MatchLongestPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "path", Resource: "databricks_directory", MatchType: MatchLongestPrefix,
+				SearchValueTransformFunc: appendEndingSlashToDirName, ExtraLookupKey: ParentDirectoryExtraKey},
 			{Path: "path", Resource: "databricks_user", Match: "home",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "path", Resource: "databricks_service_principal", Match: "home",
@@ -1583,24 +1575,15 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			// TODO: it's not completely correct condition - we need to make emit smarter -
 			// emit only if permissions are different from their parent's permission.
-			if ic.meAdmin {
-				directorySplits := strings.Split(r.ID, "/")
-				directorySplits = directorySplits[:len(directorySplits)-1]
-				directoryPath := strings.Join(directorySplits, "/")
-
-				ic.Emit(&resource{
-					Resource: "databricks_directory",
-					ID:       directoryPath,
-				})
-			}
-			log.Printf("Creating %s for %s", fileName, r)
+			ic.emitWorkspaceObjectParentDirectory(r)
+			log.Printf("[TRACE] Creating %s for %s", fileName, r)
 			return r.Data.Set("source", fileName)
 		},
 		ShouldOmitField: shouldOmitMd5Field,
 		Depends: []reference{
 			{Path: "source", File: true},
-			{Path: "path", Resource: "databricks_directory",
-				MatchType: MatchLongestPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "path", Resource: "databricks_directory", MatchType: MatchLongestPrefix,
+				SearchValueTransformFunc: appendEndingSlashToDirName, ExtraLookupKey: ParentDirectoryExtraKey},
 			{Path: "path", Resource: "databricks_user", Match: "home",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "path", Resource: "databricks_service_principal", Match: "home",
@@ -1972,7 +1955,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       cluster.PolicyID,
 					})
 				}
-				ic.emitInitScripts(cluster.InitScripts)
+				ic.emitInitScriptsLegacy(cluster.InitScripts)
 				ic.emitSecretsFromSecretsPath(cluster.SparkConf)
 				ic.emitSecretsFromSecretsPath(cluster.SparkEnvVars)
 			}
@@ -2053,7 +2036,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if res := ignoreIdeFolderRegex.FindStringSubmatch(directory.Path); res != nil {
 					continue
 				}
-				ic.maybeEmitWorkspaceObject("databricks_directory", directory.Path)
+				ic.maybeEmitWorkspaceObject("databricks_directory", directory.Path, &directory)
 
 				if offset%50 == 0 {
 					log.Printf("[INFO] Scanned %d of %d directories", offset+1, len(directoryList))
@@ -2072,9 +2055,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if r.ID == "/Shared" || r.ID == "/Users" || ic.IsUserOrServicePrincipalDirectory(r.ID, "/Users", true) {
 				r.Mode = "data"
 			}
-
 			return nil
-
 		},
 		Body: resourceOrDataBlockBody,
 		Depends: []reference{
@@ -2739,7 +2720,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
-			var share tfcatalog.ShareInfo
+			var share tfsharing.ShareInfo
 			s := ic.Resources["databricks_share"].Schema
 			common.DataToStructPointer(r.Data, s, &share)
 			// TODO: how to link recipients to share?

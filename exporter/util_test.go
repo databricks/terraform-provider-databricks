@@ -19,7 +19,7 @@ import (
 func TestImportClusterEmitsInitScripts(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("storage")
-	ic.importCluster(&clusters.Cluster{
+	ic.importClusterLegacy(&clusters.Cluster{
 		InitScripts: []clusters.InitScriptStorageInfo{
 			{
 				Dbfs: &clusters.DbfsStorageInfo{
@@ -411,4 +411,21 @@ func TestIgnoreObjectWithEmptyName(t *testing.T) {
 	d.Set("name", "test")
 	assert.False(t, ignoreFunc(ic, r))
 	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
+func TestEmitWorkspaceObjectParentDirectory(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,directories")
+	dirPath := "/Shared"
+	r := &resource{
+		ID:       "/Shared/abc",
+		Resource: "databricks_notebook",
+	}
+	ic.emitWorkspaceObjectParentDirectory(r)
+	assert.Equal(t, 1, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_directory[<unknown>] (id: /Shared)"])
+
+	dir, exists := r.GetExtraData(ParentDirectoryExtraKey)
+	assert.True(t, exists)
+	assert.Equal(t, dirPath, dir)
 }

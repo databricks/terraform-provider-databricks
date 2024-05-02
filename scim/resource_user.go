@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -145,22 +146,25 @@ func ResourceUser() common.Resource {
 			} else {
 				err = user.Delete(d.Id())
 			}
+			if err != nil {
+				return err
+			}
 			// Handle force delete flags
 			if !isAccount && !isDisable && err == nil {
 				if isForceDeleteRepos {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
-					if err != nil {
-						return fmt.Errorf("force_delete_repos: %w", err)
+					if err != nil && !apierr.IsMissing(err) {
+						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
-					if err != nil {
-						return fmt.Errorf("force_delete_home_dir: %w", err)
+					if err != nil && !apierr.IsMissing(err) {
+						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}
 				}
 			}
-			return err
+			return nil
 		},
 	}
 }

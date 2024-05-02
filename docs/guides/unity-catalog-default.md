@@ -23,7 +23,7 @@ data "databricks_current_metastore" "this" {
 }
 
 resource "databricks_grants" "this" {
-  metastore = data.databricks_metastore.this.id
+  metastore = data.databricks_current_metastore.this.id
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]

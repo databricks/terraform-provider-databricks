@@ -12,20 +12,21 @@ import (
 
 func DataSourceMetastore() common.Resource {
 	type AccountMetastoreByID struct {
-		Id        string                 `json:"metastore_id,omitempty" tf:"computed"`
-		Name      string                 `json:"name,omitempty" tf:"computed"`
-		Region    string                 `json:"region,omitempty" tf:"computed"`
-		Metastore *catalog.MetastoreInfo `json:"metastore_info,omitempty" tf:"computed" `
+		Id          string                 `json:"id,omitempty" tf:"computed"`
+		MetastoreId string                 `json:"metastore_id,omitempty" tf:"computed"`
+		Name        string                 `json:"name,omitempty" tf:"computed"`
+		Region      string                 `json:"region,omitempty" tf:"computed"`
+		Metastore   *catalog.MetastoreInfo `json:"metastore_info,omitempty" tf:"computed" `
 	}
 	return common.AccountData(func(ctx context.Context, data *AccountMetastoreByID, acc *databricks.AccountClient) error {
-		if data.Id == "" && data.Name == "" && data.Region == "" {
+		if data.MetastoreId == "" && data.Name == "" && data.Region == "" {
 			return fmt.Errorf("one of metastore_id, name or region must be provided")
 		}
-		if (data.Id != "" && data.Name != "") || (data.Region != "" && data.Id != "") || (data.Region != "" && data.Name != "") {
+		if (data.MetastoreId != "" && data.Name != "") || (data.Region != "" && data.MetastoreId != "") || (data.Region != "" && data.Name != "") {
 			return fmt.Errorf("only one of metastore_id, name or region must be provided")
 		}
-		if data.Id != "" {
-			minfo, err := acc.Metastores.GetByMetastoreId(ctx, data.Id)
+		if data.MetastoreId != "" {
+			minfo, err := acc.Metastores.GetByMetastoreId(ctx, data.MetastoreId)
 			if err != nil {
 				return err
 			}
@@ -58,6 +59,7 @@ func DataSourceMetastore() common.Resource {
 			data.Metastore = &minfos[0]
 		}
 		data.Id = data.Metastore.MetastoreId
+		data.MetastoreId = data.Metastore.MetastoreId
 		data.Name = data.Metastore.Name
 		data.Region = data.Metastore.Region
 		return nil

@@ -70,6 +70,22 @@ const preTestTemplate = `
 			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
 		}
 	}
+
+	resource "databricks_table" "mytable_4" {
+		catalog_name = databricks_catalog.sandbox.id
+		schema_name = databricks_schema.things.name
+		name = "pqr"
+		table_type = "MANAGED"
+		data_source_format = "DELTA"
+		
+		column {
+			name      = "id"
+			position  = 0
+			type_name = "INT"
+			type_text = "int"
+			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+		}
+	}
 `
 
 const preTestTemplateUpdate = `
@@ -165,7 +181,7 @@ func TestUcAccShare_MultipleObjects(t *testing.T) {
 			owner = "account users"
 			object {
 				name = databricks_table.mytable.id
-				comment = "abc"
+				comment = "abc - updated"
 				data_object_type = "TABLE"
 			}
 			object {
@@ -175,7 +191,23 @@ func TestUcAccShare_MultipleObjects(t *testing.T) {
 			}
 			object {
 				name = databricks_table.mytable_2.id
-				comment = "def"
+				comment = "def - updated"
+				data_object_type = "TABLE"
+			}
+		}`,
+	}, step{
+		Template: preTestTemplate + preTestTemplateUpdate + `
+		resource "databricks_share" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable_2.id
+				comment = "def - updated 2"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable_4.id
+				comment = "xyz"
 				data_object_type = "TABLE"
 			}
 		}`,

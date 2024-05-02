@@ -35,7 +35,7 @@ type ShareInfo struct {
 }
 
 type SharedDataObject struct {
-	Name                     string      `json:"name" tf:"force_new"`
+	Name                     string      `json:"name"`
 	DataObjectType           string      `json:"data_object_type"`
 	Comment                  string      `json:"comment,omitempty"`
 	SharedAs                 string      `json:"shared_as,omitempty" tf:"suppress_diff"`
@@ -106,8 +106,7 @@ func (a SharesAPI) update(name string, su ShareUpdates) error {
 		return nil
 	}
 	su.sortSharesByName()
-	err := a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
-	return err
+	return a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
 }
 
 func (si ShareInfo) shareChanges(action string) ShareUpdates {
@@ -161,6 +160,9 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 	// not in before so add
 	// if in before but diff then update
 	for _, afterSdo := range afterSi.Objects {
+		if afterSdo.Name == "" {
+			continue
+		}
 		beforeSdo, exists := beforeMap[afterSdo.Name]
 		if exists {
 			if !beforeSdo.Equal(afterSdo) {

@@ -138,6 +138,8 @@ func ResourceServicePrincipal() common.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			m["application_id"].AtLeastOneOf = []string{"application_id", "display_name"}
+			m["display_name"].AtLeastOneOf = []string{"application_id", "display_name"}
 			return m
 		})
 	spFromData := func(d *schema.ResourceData) User {
@@ -155,9 +157,6 @@ func ResourceServicePrincipal() common.Resource {
 		Schema: servicePrincipalSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			sp := spFromData(d)
-			if sp.ApplicationID == "" && sp.DisplayName == "" {
-				return fmt.Errorf("either application_id or display_name must be set")
-			}
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			servicePrincipal, err := spAPI.Create(sp)
 			if err != nil {

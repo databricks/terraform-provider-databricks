@@ -141,6 +141,16 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceServicePrincipalCreate_ErrorNoDisplayNameOrAppId(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceServicePrincipal(),
+		Create:   true,
+		HCL: `
+		allow_cluster_create = true
+		`,
+	}.ExpectError(t, "invalid config supplied. [application_id] Missing required argument. [display_name] Missing required argument")
+}
+
 func TestResourceServicePrincipalCreate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: qa.HTTPFailures,
@@ -541,7 +551,7 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 }
 
 func TestCreateForceOverridesManuallyAddedServicePrincipalErrorNotMatched(t *testing.T) {
-	d := ResourceUser().ToResource().TestResourceData()
+	d := ResourceServicePrincipal().ToResource().TestResourceData()
 	d.Set("force", true)
 	rerr := createForceOverridesManuallyAddedServicePrincipal(
 		fmt.Errorf("nonsense"), d,
@@ -561,7 +571,7 @@ func TestCreateForceOverwriteCannotListServicePrincipals(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().ToResource().TestResourceData()
+		d := ResourceServicePrincipal().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedServicePrincipal(
 			fmt.Errorf("Service principal with application ID %s already exists.", appID),
@@ -624,7 +634,7 @@ func TestCreateForceOverwriteFindsAndSetsServicePrincipalID(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
-		d := ResourceUser().ToResource().TestResourceData()
+		d := ResourceServicePrincipal().ToResource().TestResourceData()
 		d.Set("force", true)
 		d.Set("application_id", appID)
 		err := createForceOverridesManuallyAddedServicePrincipal(

@@ -446,6 +446,9 @@ func (cluster Cluster) Validate() error {
 	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
 	}
+	if cluster.InstancePoolID != "" && strings.HasPrefix(master, "local") {
+		return nil
+	}
 	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
 }
 

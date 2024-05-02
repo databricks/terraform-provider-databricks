@@ -1487,6 +1487,85 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 	assert.Equal(t, 0, d.Get("num_workers"))
 }
 
+func TestResourceClusterCreate_SingleNodePool(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/create",
+				ExpectedRequest: Cluster{
+					AutoterminationMinutes: 60,
+					NumWorkers:             0,
+					ClusterName:            "Single Node Cluster Pool",
+					SparkVersion:           "7.3.x-scala12",
+					InstancePoolID:         "Standard_F4s",
+					SparkConf: map[string]string{
+						"spark.master": "local[*]",
+					},
+				},
+				Response: ClusterInfo{
+					ClusterID: "abc",
+					State:     ClusterStateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: EventsRequest{
+					ClusterID:  "abc",
+					Limit:      1,
+					Order:      SortDescending,
+					EventTypes: []ClusterEventType{EvTypePinned, EvTypeUnpinned},
+				},
+				Response: EventsResponse{
+					Events:     []ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Response: ClusterInfo{
+					ClusterID:              "abc",
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.3.x-scala12",
+					NodeTypeID:             "Standard_F4s",
+					AutoterminationMinutes: 120,
+					State:                  ClusterStateRunning,
+					SparkConf: map[string]string{
+						"spark.master":                     "local[*]",
+						"spark.databricks.cluster.profile": "singleNode",
+					},
+					CustomTags: map[string]string{
+						"ResourceClass": "SingleNode",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: libraries.ClusterLibraryStatuses{
+					LibraryStatuses: []libraries.LibraryStatus{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"cluster_name":     "Single Node Cluster Pool",
+			"spark_version":    "7.3.x-scala12",
+			"instance_pool_id": "Standard_F4s",
+			"is_pinned":        false,
+			"spark_conf": map[string]any{
+				"spark.master": "local[*]",
+			},
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, d.Get("num_workers"))
+}
+
 func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Create:   true,

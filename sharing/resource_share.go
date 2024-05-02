@@ -187,7 +187,9 @@ func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 		m["object"].Set = func(i any) int {
-			return schema.HashString(i.(map[string]any)["name"].(string))
+			objectStruct := i.(map[string]any)
+			hashString := objectStruct["name"].(string) + objectStruct["data_object_type"].(string)
+			return schema.HashString(hashString)
 		}
 		return m
 	})

@@ -3,6 +3,7 @@ package acceptance
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -91,28 +92,40 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 
 func TestMwsAccServicePrincipalResourceOnAzure(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	azureSpnRenamed := strings.ReplaceAll(azureSpn, `"SPN `, `"SPN Renamed `)
 	accountLevel(t, step{
 		Template: azureSpn,
+	}, step{
+		Template: azureSpnRenamed,
 	})
 }
 
 func TestAccServicePrincipalResourceOnAzure(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	azureSpnRenamed := strings.ReplaceAll(azureSpn, `"SPN `, `"SPN Renamed `)
 	workspaceLevel(t, step{
 		Template: azureSpn,
+	}, step{
+		Template: azureSpnRenamed,
 	})
 }
 
 func TestMwsAccServicePrincipalResourceOnAws(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET")
+	awsSpnRenamed := strings.ReplaceAll(awsSpn, `"SPN `, `"SPN Renamed `)
 	accountLevel(t, step{
 		Template: awsSpn,
+	}, step{
+		Template: awsSpnRenamed,
 	})
 }
 
 func TestAccServicePrincipalResourceOnAws(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
+	awsSpnRenamed := strings.ReplaceAll(awsSpn, `"SPN `, `"SPN Renamed `)
 	workspaceLevel(t, step{
 		Template: awsSpn,
+	}, step{
+		Template: awsSpnRenamed,
 	})
 }

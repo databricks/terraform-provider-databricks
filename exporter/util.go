@@ -1477,3 +1477,21 @@ func (ic *importContext) emitWorkspaceObjectParentDirectory(r *resource) {
 		r.AddExtraData(ParentDirectoryExtraKey, directoryPath)
 	}
 }
+
+func dltIsMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	res_catalog_name := res.Data.Get("catalog").(string)
+	if res_catalog_name == "" {
+		return false
+	}
+	res_schema_name := res.Data.Get("target").(string)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	return result
+}

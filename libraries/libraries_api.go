@@ -43,7 +43,7 @@ func NewLibraryFromInstanceState(i any) (lib compute.Library) {
 }
 
 // Diff returns install/uninstall lists given a cluster lib status
-func GetLibrariesToInstallAndUninstall(cll []compute.Library, cls *compute.ClusterLibraryStatuses) ([]compute.Library, []compute.Library) {
+func GetLibrariesToInstallAndUninstall(cll []compute.Library, cls *compute.ClusterStatusResponse) ([]compute.Library, []compute.Library) {
 	inConfig := map[string]compute.Library{}
 	for _, lib := range cll {
 		inConfig[lib.String()] = lib

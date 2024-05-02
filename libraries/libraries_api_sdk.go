@@ -33,7 +33,10 @@ func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceCl
 		if !wait.IsRunning {
 			log.Printf("[INFO] We don't have to wait until the libraries are installed, so just returning list of %d libraries",
 				len(libsClusterStatus.LibraryStatuses))
-			result = libsClusterStatus
+			result = &compute.ClusterLibraryStatuses{
+				ClusterId:       wait.ClusterID,
+				LibraryStatuses: libsClusterStatus.LibraryStatuses,
+			}
 			return nil
 		}
 		retry, err := libsClusterStatus.IsRetryNeeded(wait)
@@ -43,7 +46,10 @@ func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceCl
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		result = libsClusterStatus
+		result = &compute.ClusterLibraryStatuses{
+			ClusterId:       wait.ClusterID,
+			LibraryStatuses: libsClusterStatus.LibraryStatuses,
+		}
 		return nil
 	})
 	if err != nil {
@@ -67,7 +73,7 @@ func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceCl
 		// and result contains only the libraries that were successfully installed
 		result.LibraryStatuses = installed
 		if len(cleanup.Libraries) > 0 {
-			w.Libraries.Uninstall(ctx, cleanup)
+			err = w.Libraries.Uninstall(ctx, cleanup)
 			if err != nil {
 				err = fmt.Errorf("cannot cleanup libraries: %w", err)
 			}

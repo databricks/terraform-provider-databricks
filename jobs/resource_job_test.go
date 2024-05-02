@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1985,9 +1986,14 @@ func TestResourceJobRead(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Featurizer", d.Get("name"))
-	assert.Equal(t, 2, d.Get("library.#"))
-	assert.Equal(t, "dbfs://ff/gg/hh.jar", d.Get("library.1850263921.jar"))
-	assert.Equal(t, "dbfs://aa/bb/cc.jar", d.Get("library.587400796.jar"))
+	libraries := d.Get("library").(*schema.Set).List()
+	assert.Len(t, libraries, 2)
+	allDbfsLibs := []string{}
+	for _, lib := range libraries {
+		allDbfsLibs = append(allDbfsLibs, lib.(map[string]any)["jar"].(string))
+	}
+	assert.Contains(t, allDbfsLibs, "dbfs://ff/gg/hh.jar")
+	assert.Contains(t, allDbfsLibs, "dbfs://aa/bb/cc.jar")
 
 	assert.Equal(t, 2, d.Get("spark_jar_task.0.parameters.#"))
 	assert.Equal(t, "com.labs.BarMain", d.Get("spark_jar_task.0.main_class_name"))

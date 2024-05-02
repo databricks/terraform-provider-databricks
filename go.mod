@@ -2,6 +2,8 @@ module github.com/databricks/terraform-provider-databricks
 
 go 1.21
 
+replace github.com/databricks/databricks-sdk-go => /Users/miles/databricks-sdk-go
+
 require (
 	github.com/databricks/databricks-sdk-go v0.38.0
 	github.com/golang-jwt/jwt/v4 v4.5.0

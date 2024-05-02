@@ -662,7 +662,7 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 					Name: "abc",
 					Objects: []SharedDataObject{
 						{
-							Name:           "a",
+							Name:           "c",
 							DataObjectType: "TABLE",
 							Comment:        "c",
 							SharedAs:       "b",
@@ -714,11 +714,14 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 				},
 			},
 		},
-		ID:          "abc",
-		Update:      true,
-		RequiresNew: true,
+		ID:     "abc",
+		Update: true,
 		InstanceState: map[string]string{
-			"name": "abc",
+			"name":                      "abc",
+			"object.0.name":             "c",
+			"object.0.comment":          "c",
+			"object.0.data_object_type": "TABLE",
+			"object.0.partitions.#":     "0",
 		},
 		HCL: `
 			name = "abc"
@@ -730,6 +733,11 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 			object {
 				name = "b"
 				comment = "c"
+				data_object_type = "TABLE"
+			}
+			object {
+				name = "c"
+				comment = "comment"
 				data_object_type = "TABLE"
 			}
 		`,

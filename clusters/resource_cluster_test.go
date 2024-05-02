@@ -258,13 +258,13 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: compute.LibraryFullStatusStatusPending,
+							Status: compute.LibraryInstallStatusPending,
 						},
 						{
 							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -281,13 +281,13 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 						{
 							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -304,13 +304,13 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 						{
 							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -1072,13 +1072,13 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 					Library: &compute.Library{
 						Jar: "dbfs://foo.jar",
 					},
-					Status: compute.LibraryFullStatusStatusInstalled,
+					Status: compute.LibraryInstallStatusInstalled,
 				},
 				{
 					Library: &compute.Library{
 						Egg: "dbfs://bar.egg",
 					},
-					Status: compute.LibraryFullStatusStatusInstalled,
+					Status: compute.LibraryInstallStatusInstalled,
 				},
 			},
 		},
@@ -1107,7 +1107,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 							Library: &compute.Library{
 								Egg: "dbfs://bar.egg",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 						{
 							Library: &compute.Library{
@@ -1115,7 +1115,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 									Package: "requests",
 								},
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -1628,7 +1628,7 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 							Library: &compute.Library{
 								Jar: "foo.bar",
 							},
-							Status: compute.LibraryFullStatusStatusPending,
+							Status: compute.LibraryInstallStatusPending,
 						},
 					},
 				},
@@ -1665,14 +1665,14 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 							Library: &compute.Library{
 								Jar: "foo.bar",
 							},
-							Status:   compute.LibraryFullStatusStatusFailed,
+							Status:   compute.LibraryInstallStatusFailed,
 							Messages: []string{"fails for the test"},
 						},
 						{
 							Library: &compute.Library{
 								Whl: "bar.whl",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},

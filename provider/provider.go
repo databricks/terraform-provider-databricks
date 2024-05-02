@@ -279,12 +279,6 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 			cfg.AuthType = newer
 		}
 	}
-	cfg.EnsureResolved()
-	// Unless the user explicitly sets the retry timeout, don't time out retries. Terraform will cancel the operation
-	// based on the timeout set in the resource.
-	if cfg.RetryTimeoutSeconds == 0 {
-		cfg.RetryTimeoutSeconds = -1
-	}
 	client, err := client.New(cfg)
 	if err != nil {
 		return nil, diag.FromErr(err)

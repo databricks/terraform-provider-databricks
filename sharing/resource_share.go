@@ -2,6 +2,7 @@ package sharing
 
 import (
 	"context"
+	"strconv"
 
 	"reflect"
 	"sort"
@@ -38,11 +39,11 @@ type SharedDataObject struct {
 	Name                     string      `json:"name"`
 	DataObjectType           string      `json:"data_object_type"`
 	Comment                  string      `json:"comment,omitempty"`
-	SharedAs                 string      `json:"shared_as,omitempty" tf:"suppress_diff"`
-	CDFEnabled               bool        `json:"cdf_enabled,omitempty" tf:"suppress_diff"`
-	StartVersion             int64       `json:"start_version,omitempty" tf:"suppress_diff"`
-	HistoryDataSharingStatus string      `json:"history_data_sharing_status,omitempty" tf:"suppress_diff"`
-	Partitions               []Partition `json:"partitions,omitempty" tf:"alias:partition"`
+	SharedAs                 string      `json:"shared_as,omitempty" tf:"computed"`
+	CDFEnabled               bool        `json:"cdf_enabled,omitempty" tf:"computed"`
+	StartVersion             int64       `json:"start_version,omitempty" tf:"computed"`
+	HistoryDataSharingStatus string      `json:"history_data_sharing_status,omitempty" tf:"computed"`
+	Partitions               []Partition `json:"partitions,omitempty" tf:"computed,alias:partition"`
 	Status                   string      `json:"status,omitempty" tf:"computed"`
 	AddedAt                  int64       `json:"added_at,omitempty" tf:"computed"`
 	AddedBy                  string      `json:"added_by,omitempty" tf:"computed"`
@@ -173,6 +174,15 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 	return changes
 }
 
+func getSharedDataObjectsList(objects interface{}, objectSchemaMap map[string]*schema.Schema) []map[string]interface{} {
+	objectsInterface := objects.([]interface{})
+	objectsList := make([]map[string]interface{}, len(objectsInterface))
+	for i, object := range objectsInterface {
+		objectsList[i] = object.(map[string]interface{})
+	}
+	return objectsList
+}
+
 func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
@@ -180,6 +190,47 @@ func ResourceShare() common.Resource {
 	})
 	return common.Resource{
 		Schema: shareSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			objectSchemaMap := common.MustSchemaMap(shareSchema, "object")
+			objectsOld, objectsNew := d.GetChange("object")
+			objectsListOld := getSharedDataObjectsList(objectsOld, objectSchemaMap)
+			objectsListNew := getSharedDataObjectsList(objectsNew, objectSchemaMap)
+			for i, newObject := range objectsListNew {
+				if i >= len(objectsListOld) {
+					break
+				}
+				if newObject["name"] == objectsListOld[i]["name"] && newObject["data_object_type"] == objectsListOld[i]["data_object_type"] {
+					for k := range objectSchemaMap {
+						oldFieldVal := objectsListOld[i][k]
+						// To Discuss:
+						// It doesn't seem like we can use this because:
+						// 1.	SetNew or SetNewComputed checks the key first but it sets "nested" to false.
+						// 		Due to this it only takes the top level key in ResourceDiff schema which in this case will have the whole "object" as the key
+						// 		followed by checking if the schema of key has computed set to true.
+						// 	    Note: This isn't true for d.Clear() as it passes nested to true so d.Clear(object.0.some_field_name) will work.
+						// 2. 	In ResourceDiff we only have SetNew / SetNewComputed, from docs : The object functions similar to ResourceData, however most notably lacks
+						// 		Set, SetPartial, and Partial, as it should be used to change diff values only.
+						key := "object." + strconv.Itoa(i) + "." + k
+						// Below d.SetNew() will fail when TestUcAccShare_MultipleObjects is run with the erro:
+						// Error: SetNew: invalid key: object.0.start_version
+						// since top level schema "shareSchema" only has "object" as the key
+						err := d.SetNew(key, oldFieldVal)
+						if err != nil {
+							return err
+						}
+					}
+				} else {
+					for k := range objectSchemaMap {
+						key := "object." + strconv.Itoa(i) + "." + k
+						err := d.Clear(key)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+			return nil
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {

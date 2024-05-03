@@ -113,6 +113,7 @@ This block describes individual tasks:
 * `*_task` - (Required) one of the specific task blocks described below:
   * `condition_task`
   * `dbt_task`
+  * `for_each_task`
   * `notebook_task`
   * `pipeline_task`
   * `python_wheel_task`
@@ -121,7 +122,6 @@ This block describes individual tasks:
   * `spark_python_task`
   * `spark_submit_task`
   * `sql_task`
-  * `for_each_task`
 * `library` - (Optional) (Set) An optional list of libraries to be installed on the cluster that will execute the job.
 * `depends_on` - (Optional) block specifying dependency(-ies) for a given task.
 * `job_cluster_key` - (Optional) Identifier of the Job cluster specified in the `job_cluster` block.
@@ -138,22 +138,35 @@ This block describes individual tasks:
 
 -> **Note** If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
 
-#### spark_jar_task Configuration Block
+#### condition_task Configuration Block
 
-* `parameters` - (Optional) (List) Parameters passed to the main method.
-* `main_class_name` - (Optional) The full name of the class containing the main method to be executed. This class must be contained in a JAR provided as a library. The code should use `SparkContext.getOrCreate` to obtain a Spark context; otherwise, runs of the job will fail.
+The `condition_task` specifies a condition with an outcome that can be used to control the execution of dependent tasks.
 
-#### spark_submit_task Configuration Block
+* `left` - The left operand of the condition task. It could be a string value, job state, or a parameter reference.
+* `right` - The right operand of the condition task. It could be a string value, job state, or parameter reference.
+* `op` - The string specifying the operation used to compare operands.  Currently, following operators are supported: `EQUAL_TO`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`. (Check the [API docs](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
 
-You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` specification, `libraries` and `spark_conf` are not supported**. Instead, use --jars and --py-files to add Java and Python libraries and `--conf` to set the Spark configuration. By default, the Spark submit job uses all available memory (excluding reserved memory for Databricks services). You can set `--driver-memory`, and `--executor-memory` to a smaller value to leave some room for off-heap usage. **Please use `spark_jar_task`, `spark_python_task` or `notebook_task` wherever possible**.
+This task does not require a cluster to execute and does not support retries or notifications.
 
-* `parameters` - (Optional) (List) Command-line parameters passed to spark submit.
+#### dbt_task Configuration Block
 
-#### spark_python_task Configuration Block
+* `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
+* `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.  Defaults to `GIT` if a `git_source` block is present in the job definition.
+* `project_directory` - (Required when `source` is `WORKSPACE`) The path where dbt should look for `dbt_project.yml`. Equivalent to passing `--project-dir` to the dbt CLI.
+  * If `source` is `GIT`: Relative path to the directory in the repository specified in the `git_source` block. Defaults to the repository's root directory when not specified.
+  * If `source` is `WORKSPACE`: Absolute path to the folder in the workspace.
+* `profiles_directory` - (Optional) The relative path to the directory in the repository specified by `git_source` where dbt should look in for the `profiles.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--profile-dir` to a dbt command.
+* `catalog` - (Optional) The name of the catalog to use inside Unity Catalog.
+* `schema` - (Optional) The name of the schema dbt should run in. Defaults to `default`.
+* `warehouse_id` - (Optional) The ID of the SQL warehouse that dbt should execute against.
 
-* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/Repos`. For files stored in a remote repository, the path must be relative. This field is required.
-* `source` - (Optional) Location type of the Python file, can only be `GIT`. When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
-* `parameters` - (Optional) (List) Command line parameters passed to the Python file.
+You also need to include a `git_source` block to configure the repository that contains the dbt project.
+
+#### for_each_task Configuration Block
+
+* `concurrency` - (Optional) Controls the number of active iteration task runs. Default is 20, maximum allowed is 100.
+* `inputs` - (Required) (String) Array for task to iterate on. This can be a JSON string or a reference to an array parameter.
+* `task` - (Required) Task to run against the `inputs` list.
 
 #### notebook_task Configuration Block
 
@@ -176,40 +189,27 @@ You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` s
 * `parameters` - (Optional) Parameters for the task
 * `named_parameters` - (Optional) Named parameters for the task
 
-#### dbt_task Configuration Block
-
-* `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
-* `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.  Defaults to `GIT` if a `git_source` block is present in the job definition.
-* `project_directory` - (Required when `source` is `WORKSPACE`) The path where dbt should look for `dbt_project.yml`. Equivalent to passing `--project-dir` to the dbt CLI.
-  * If `source` is `GIT`: Relative path to the directory in the repository specified in the `git_source` block. Defaults to the repository's root directory when not specified.
-  * If `source` is `WORKSPACE`: Absolute path to the folder in the workspace.
-* `profiles_directory` - (Optional) The relative path to the directory in the repository specified by `git_source` where dbt should look in for the `profiles.yml` file. If not specified, defaults to the repository's root directory. Equivalent to passing `--profile-dir` to a dbt command.
-* `catalog` - (Optional) The name of the catalog to use inside Unity Catalog.
-* `schema` - (Optional) The name of the schema dbt should run in. Defaults to `default`.
-* `warehouse_id` - (Optional) The ID of the SQL warehouse that dbt should execute against.
-
-You also need to include a `git_source` block to configure the repository that contains the dbt project.
-
 #### run_job_task Configuration Block
 
 * `job_id` - (Required)(String) ID of the job
 * `job_parameters` - (Optional)(Map) Job parameters for the task
 
-#### condition_task Configuration Block
+#### spark_jar_task Configuration Block
 
-The `condition_task` specifies a condition with an outcome that can be used to control the execution of dependent tasks.
+* `parameters` - (Optional) (List) Parameters passed to the main method.
+* `main_class_name` - (Optional) The full name of the class containing the main method to be executed. This class must be contained in a JAR provided as a library. The code should use `SparkContext.getOrCreate` to obtain a Spark context; otherwise, runs of the job will fail.
 
-* `left` - The left operand of the condition task. It could be a string value, job state, or a parameter reference.
-* `right` - The right operand of the condition task. It could be a string value, job state, or parameter reference.
-* `op` - The string specifying the operation used to compare operands.  Currently, following operators are supported: `EQUAL_TO`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`. (Check the [API docs](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
+#### spark_python_task Configuration Block
 
-This task does not require a cluster to execute and does not support retries or notifications.
+* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/Repos`. For files stored in a remote repository, the path must be relative. This field is required.
+* `source` - (Optional) Location type of the Python file, can only be `GIT`. When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
+* `parameters` - (Optional) (List) Command line parameters passed to the Python file.
 
-#### for_each_task Configuration Block
+#### spark_submit_task Configuration Block
 
-* `concurrency` - (Optional) Controls the number of active iteration task runs. Default is 20, maximum allowed is 100.
-* `inputs` - (Required) (String) Array for task to iterate on. This can be a JSON string or a reference to an array parameter.
-* `task` - (Required) Task to run against the `inputs` list.
+You can invoke Spark submit tasks only on new clusters. **In the `new_cluster` specification, `libraries` and `spark_conf` are not supported**. Instead, use --jars and --py-files to add Java and Python libraries and `--conf` to set the Spark configuration. By default, the Spark submit job uses all available memory (excluding reserved memory for Databricks services). You can set `--driver-memory`, and `--executor-memory` to a smaller value to leave some room for off-heap usage. **Please use `spark_jar_task`, `spark_python_task` or `notebook_task` wherever possible**.
+
+* `parameters` - (Optional) (List) Command-line parameters passed to spark submit.
 
 #### sql_task Configuration Block
 

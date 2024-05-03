@@ -19,7 +19,7 @@
 * Added warning about depends_on order ([#3489](https://github.com/databricks/terraform-provider-databricks/pull/3489)).
 * Fixed various doc typos ([#3512](https://github.com/databricks/terraform-provider-databricks/pull/3512)).
 * Fixed `databricks_current_metastore` data source names in docs examples ([#3515](https://github.com/databricks/terraform-provider-databricks/pull/3515)).
-* Improved Job documentation structure ([#3511](https://github.com/databricks/terraform-provider-databricks/pull/3511)).
+* Improved Job documentation structure ([#3511](https://github.com/databricks/terraform-provider-databricks/pull/3511), [#3536](https://github.com/databricks/terraform-provider-databricks/pull/3536), [#3535](https://github.com/databricks/terraform-provider-databricks/pull/3535)).
 * Removed confusing mention of cloud types for `databricks_clusters` and `databricks_sql_warehouses` data sources ([#3518](https://github.com/databricks/terraform-provider-databricks/pull/3518)).
 
 ### Exporter

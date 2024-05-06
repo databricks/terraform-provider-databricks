@@ -49,6 +49,10 @@ func DataSourceNotebook() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			w, err := m.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			notebooksAPI := NewNotebooksAPI(ctx, m)
 			path := d.Get("path").(string)
 			format := d.Get("format").(string)
@@ -59,7 +63,7 @@ func DataSourceNotebook() common.Resource {
 			d.SetId(path)
 			// nolint
 			d.Set("content", notebookContent)
-			objectStatus, err := notebooksAPI.Read(d.Id())
+			objectStatus, err := robustGetStatus(ctx, w, d.Id())
 			if err != nil {
 				return err
 			}

@@ -72,7 +72,7 @@ func ResourceWorkspaceFile() common.Resource {
 			if err != nil {
 				return err
 			}
-			objectStatus, err := client.Workspace.GetStatusByPath(ctx, d.Id())
+			objectStatus, err := robustGetStatus(ctx, client, d.Id())
 			if err != nil {
 				return err
 			}

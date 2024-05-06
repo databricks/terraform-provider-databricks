@@ -293,8 +293,11 @@ func ResourceNotebook() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			notebooksAPI := NewNotebooksAPI(ctx, c)
-			objectStatus, err := notebooksAPI.Read(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			objectStatus, err := robustGetStatus(ctx, w, d.Id())
 			if err != nil {
 				return err
 			}

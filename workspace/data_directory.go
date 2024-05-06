@@ -18,7 +18,7 @@ func DataSourceDirectory() common.Resource {
 		WorkspacePath string `json:"workspace_path,omitempty" tf:"computed"`
 	}
 	return common.WorkspaceData(func(ctx context.Context, d *Directory, client *databricks.WorkspaceClient) error {
-		data, err := client.Workspace.GetStatusByPath(ctx, d.Path)
+		data, err := robustGetStatus(ctx, client, d.Path)
 		if err != nil {
 			return err
 		}

@@ -61,7 +61,7 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 // This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
 // Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func Validate(cluster ClusterSpec) error {
+func Validate(cluster compute.CreateCluster) error {
 	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
 		return nil
 	}
@@ -76,7 +76,7 @@ func Validate(cluster ClusterSpec) error {
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func ModifyRequestOnInstancePool(cluster *ClusterSpec) {
+func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
 	// Instance profile id does not exist or not set
 	if cluster.InstancePoolId == "" {
 		// Worker must use an instance pool if driver uses an instance pool,
@@ -108,7 +108,7 @@ func ModifyRequestOnInstancePool(cluster *ClusterSpec) {
 // This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
 // Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
-func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster ClusterSpec) {
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
 	if oldInstancePool != newInstancePool &&
@@ -219,12 +219,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	clusters := w.Clusters
 	var cluster ClusterSpec
 	common.DataToStructPointer(d, clusterSchema, &cluster)
-	if err := Validate(cluster); err != nil {
-		return err
-	}
-	ModifyRequestOnInstancePool(&cluster)
 	var createClusterRequest compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &createClusterRequest)
+	if err := Validate(createClusterRequest); err != nil {
+		return err
+	}
+	ModifyRequestOnInstancePool(&createClusterRequest)
 	if createClusterRequest.Autoscale == nil {
 		createClusterRequest.ForceSendFields = []string{"NumWorkers"}
 	}
@@ -338,7 +338,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	clusters := w.Clusters
-	var cluster ClusterSpec
+	var cluster compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	clusterId := d.Id()
 	var clusterInfo *compute.ClusterDetails
@@ -445,7 +445,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 
-	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(cluster.Libraries, libsClusterStatus)
+	var clusterLibraries ClusterSpec
+	common.DataToStructPointer(d, clusterSchema, &clusterLibraries)
+	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(clusterLibraries.Libraries, libsClusterStatus)
 
 	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
 	if err != nil {

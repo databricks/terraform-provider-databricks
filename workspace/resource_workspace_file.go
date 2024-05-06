@@ -6,6 +6,7 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -72,7 +73,9 @@ func ResourceWorkspaceFile() common.Resource {
 			if err != nil {
 				return err
 			}
-			objectStatus, err := robustGetStatus(ctx, client, d.Id())
+			objectStatus, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
+				return client.Workspace.GetStatusByPath(ctx, d.Id())
+			})
 			if err != nil {
 				return err
 			}

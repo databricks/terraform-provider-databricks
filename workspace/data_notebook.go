@@ -3,6 +3,7 @@ package workspace
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -63,7 +64,9 @@ func DataSourceNotebook() common.Resource {
 			d.SetId(path)
 			// nolint
 			d.Set("content", notebookContent)
-			objectStatus, err := robustGetStatus(ctx, w, d.Id())
+			objectStatus, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
+				return w.Workspace.GetStatusByPath(ctx, d.Id())
+			})
 			if err != nil {
 				return err
 			}

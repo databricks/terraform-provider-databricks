@@ -67,5 +67,23 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 				"ResourceClass" = "SingleNode"
 			}
 		}`,
+	}, step{
+		Template: `
+		data "databricks_spark_version" "latest" {
+		}
+		resource "databricks_cluster" "this" {
+			cluster_name = "singlenode-{var.RANDOM}"
+			spark_version = data.databricks_spark_version.latest.id
+			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+			num_workers = 0
+			autotermination_minutes = 20
+			spark_conf = {
+				"spark.databricks.cluster.profile" = "singleNode"
+				"spark.master" = "local[*]"
+			}
+			custom_tags = {
+				"ResourceClass" = "SingleNode"
+			}
+		}`,
 	})
 }

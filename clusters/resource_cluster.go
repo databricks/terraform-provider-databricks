@@ -217,8 +217,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	clusters := w.Clusters
-	var cluster ClusterSpec
-	common.DataToStructPointer(d, clusterSchema, &cluster)
 	var createClusterRequest compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &createClusterRequest)
 	if err := Validate(createClusterRequest); err != nil {
@@ -246,6 +244,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 	}
 
+	var cluster ClusterSpec
+	common.DataToStructPointer(d, clusterSchema, &cluster)
 	if len(cluster.Libraries) > 0 {
 		if err = w.Libraries.Install(ctx, compute.InstallLibraries{
 			ClusterId: d.Id(),
@@ -410,8 +410,19 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			})
 		} else {
 			var editCluster compute.EditCluster
-			editCluster.ClusterId = clusterId
 			common.DataToStructPointer(d, clusterSchema, &editCluster)
+
+			// We should have the an interface for all cluster structures so that we can use common modification among different structs. This should be done in OpenAPI spec.
+			// For now, manually modifying the fields here to mitigate the issue: https://github.com/databricks/terraform-provider-databricks/issues/3533
+			editCluster.ClusterId = clusterId
+			editCluster.DriverInstancePoolId = cluster.DriverInstancePoolId
+			editCluster.AwsAttributes = cluster.AwsAttributes
+			editCluster.AzureAttributes = cluster.AzureAttributes
+			editCluster.GcpAttributes = cluster.GcpAttributes
+			editCluster.EnableElasticDisk = cluster.EnableElasticDisk
+			editCluster.NodeTypeId = cluster.NodeTypeId
+			editCluster.DriverNodeTypeId = cluster.DriverNodeTypeId
+
 			_, err = clusters.Edit(ctx, editCluster)
 		}
 		if err != nil {

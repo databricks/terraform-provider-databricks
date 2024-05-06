@@ -60,7 +60,7 @@ func TestDataAwsCrossAccountRestrictedPolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 5691, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 5725, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsCrossAccountInvalidPolicy(t *testing.T) {

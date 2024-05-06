@@ -187,8 +187,8 @@ func DataAwsCrossaccountPolicy() common.Resource {
 					Effect:  "Allow",
 					Actions: "ec2:RunInstances",
 					Resources: []string{
-						"arn:aws:ec2:%s:%s:volume/*",
-						"arn:aws:ec2:%s:%s:instance/*",
+						fmt.Sprintf("arn:aws:ec2:%s:%s:volume/*", region, aws_account_id),
+						fmt.Sprintf("arn:aws:ec2:%s:%s:instance/*", region, aws_account_id),
 					},
 					Condition: map[string]map[string]string{
 						"StringEquals": {

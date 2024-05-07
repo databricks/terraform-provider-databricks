@@ -126,13 +126,8 @@ type RecursiveResourceProvider interface {
 	MaxDepthForTypes() map[string]int
 }
 
-// Takes in a ResourceProvider and converts that into a map from string to schema.
-// Used by typeToSchema when encountering types registered in the resourceProviderRegistry.
-func resourceProviderStructToSchemaNestedResource(v ResourceProvider, scp schemaPathContext) map[string]*schema.Schema {
-	return resourceProviderStructToSchemaInternal(v, scp).GetSchemaMap()
-}
-
-// Used only by StructToSchema because it tries to apply resource specific customizations.
+// Used by StructToSchema, after executing typeToSchema and applying the standard customizations,
+// it also applies the resource specific customizations, if applicable.
 func resourceProviderStructToSchema(v ResourceProvider, scp schemaPathContext) map[string]*schema.Schema {
 	customizedScm := resourceProviderStructToSchemaInternal(v, scp)
 	if rps, ok := v.(ResourceProviderWithResourceSpecificCustomization); ok {
@@ -414,7 +409,7 @@ func listAllFields(v reflect.Value) []field {
 
 func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trackingContext) map[string]*schema.Schema {
 	if rpStruct, ok := resourceProviderRegistry[getNonPointerType(v.Type())]; ok {
-		return resourceProviderStructToSchemaNestedResource(rpStruct, tc.pathCtx)
+		return resourceProviderStructToSchemaInternal(rpStruct, tc.pathCtx).GetSchemaMap()
 	}
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()

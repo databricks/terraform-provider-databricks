@@ -165,7 +165,7 @@ func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error
 		if apierr.IsMissing(err) {
 			err = errors.New(err.Error())
 		}
-		return "", fmt.Errorf("failed to get mouting cluster: %w", err)
+		return "", fmt.Errorf("failed to get mounting cluster: %w", err)
 	}
 	return cluster.ClusterID, nil
 }

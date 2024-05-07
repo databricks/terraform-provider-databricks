@@ -587,6 +587,9 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 	s.SchemaPath("task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
+	s.SchemaPath("task", "for_each_task", "task", "new_cluster", "cluster_id").Schema.Computed = false
+	s.SchemaPath("task", "for_each_task", "task", "new_cluster").RemoveField("cluster_source")
+
 	// ======= To keep consistency with the manually maintained schema, should be reverted once full migration is done. ======
 	s.SchemaPath("task", "task_key").SetOptional()
 	s.SchemaPath("task", "for_each_task", "task", "task_key").SetOptional()
@@ -867,6 +870,14 @@ func jobSettingsSchema(s map[string]*schema.Schema, prefix string) {
 		p.Type = schema.TypeInt
 		p.ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 		p.Required = false
+	}
+	if p, err := common.SchemaPath(s, "new_cluster", "cluster_id"); err == nil {
+		p.Computed = false
+	}
+	if p, err := common.SchemaPath(s, "new_cluster"); err == nil {
+		if r, ok := p.Elem.(*schema.Resource); ok {
+			delete(r.Schema, "cluster_source")
+		}
 	}
 	if p, err := common.SchemaPath(s, "new_cluster", "init_scripts", "dbfs"); err == nil {
 		p.Deprecated = clusters.DbfsDeprecationWarning

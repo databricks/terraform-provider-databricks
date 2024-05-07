@@ -2007,7 +2007,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest%20DLT",
+				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest+DLT",
 				Response: workspace.ObjectStatus{
 					Language:   workspace.Python,
 					ObjectID:   123,

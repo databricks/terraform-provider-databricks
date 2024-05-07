@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/databricks/databricks-sdk-go/service/workspace"
-	ws_api "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,9 +42,9 @@ func ResourceWorkspaceFile() common.Resource {
 				return err
 			}
 			path := d.Get("path").(string)
-			importReq := ws_api.Import{
+			importReq := workspace.Import{
 				Content:         base64.StdEncoding.EncodeToString(content),
-				Format:          ws_api.ImportFormatAuto,
+				Format:          workspace.ImportFormatAuto,
 				Path:            path,
 				Overwrite:       true,
 				ForceSendFields: []string{"Content"},
@@ -92,9 +91,9 @@ func ResourceWorkspaceFile() common.Resource {
 			if err != nil {
 				return err
 			}
-			return client.Workspace.Import(ctx, ws_api.Import{
+			return client.Workspace.Import(ctx, workspace.Import{
 				Content:         base64.StdEncoding.EncodeToString(content),
-				Format:          ws_api.ImportFormatAuto,
+				Format:          workspace.ImportFormatAuto,
 				Overwrite:       true,
 				Path:            d.Id(),
 				ForceSendFields: []string{"Content"},
@@ -105,7 +104,7 @@ func ResourceWorkspaceFile() common.Resource {
 			if err != nil {
 				return err
 			}
-			return client.Workspace.Delete(ctx, ws_api.Delete{Path: d.Id(), Recursive: false})
+			return client.Workspace.Delete(ctx, workspace.Delete{Path: d.Id(), Recursive: false})
 		},
 	}
 }

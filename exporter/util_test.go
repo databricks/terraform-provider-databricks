@@ -406,7 +406,7 @@ func TestIgnoreObjectWithEmptyName(t *testing.T) {
 	require.NotNil(t, ignoreFunc)
 	assert.True(t, ignoreFunc(ic, r))
 	require.Equal(t, 1, len(ic.ignoredResources))
-	assert.Contains(t, ic.ignoredResources, "databricks_volume. ID=vtest")
+	assert.Contains(t, ic.ignoredResources, "databricks_volume. id=vtest")
 
 	d.Set("name", "test")
 	assert.False(t, ignoreFunc(ic, r))

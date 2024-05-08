@@ -978,6 +978,30 @@ func TestRepoListFails(t *testing.T) {
 	})
 }
 
+func TestNotebookWorkspaceFileImportNotFound(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			MatchAny:     true,
+			Status:       404,
+			Response:     apierr.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_notebook"].Import(ic, &resource{
+			ID: "/abc",
+		})
+		assert.EqualError(t, err, "nope")
+		assert.Contains(t, ic.ignoredResources, "databricks_notebook. path=/abc")
+
+		err = resourcesMap["databricks_workspace_file"].Import(ic, &resource{
+			ID: "/def",
+		})
+		assert.EqualError(t, err, "nope")
+		assert.Contains(t, ic.ignoredResources, "databricks_workspace_file. path=/def")
+	})
+}
+
 func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAdmin bool, cb func(*importContext)) {
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)

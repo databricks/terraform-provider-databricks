@@ -1418,7 +1418,7 @@ func generateIgnoreObjectWithoutName(resourceType string) func(ic *importContext
 	return func(ic *importContext, r *resource) bool {
 		res := (r.Data != nil && r.Data.Get("name").(string) == "")
 		if res {
-			ic.addIgnoredResource(fmt.Sprintf("%s. ID=%s", resourceType, r.ID))
+			ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", resourceType, r.ID))
 		}
 		return res
 	}

@@ -163,6 +163,34 @@ type ClusterSpec struct {
 	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
+func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("autotermination_minutes").SetDefault(60)
+	s.AddNewField("default_tags", &schema.Schema{
+		Type:     schema.TypeMap,
+		Computed: true,
+	})
+	s.AddNewField("is_pinned", &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "" && new == "false" {
+				return true
+			}
+			return old == new
+		},
+	})
+	s.AddNewField("state", &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	})
+	s.AddNewField("url", &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	})
+	return s
+}
+
 func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 	s.SchemaPath("cluster_source").SetReadOnly()
 	s.SchemaPath("enable_elastic_disk").SetComputed()
@@ -198,7 +226,6 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 	s.SchemaPath("aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
 	s.SchemaPath("azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
 	s.SchemaPath("gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
-	s.SchemaPath("autotermination_minutes").SetDefault(60)
 	s.SchemaPath("autoscale", "max_workers").SetOptional()
 	s.SchemaPath("autoscale", "min_workers").SetOptional()
 	s.SchemaPath("cluster_log_conf", "dbfs", "destination").SetRequired()
@@ -208,31 +235,8 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 		Type:     schema.TypeString,
 		Computed: true,
 	})
-	s.AddNewField("default_tags", &schema.Schema{
-		Type:     schema.TypeMap,
-		Computed: true,
-	})
-	s.AddNewField("state", &schema.Schema{
-		Type:     schema.TypeString,
-		Computed: true,
-	})
 	s.SchemaPath("instance_pool_id").SetConflictsWith([]string{"driver_node_type_id", "node_type_id"})
 	s.SchemaPath("runtime_engine").SetValidateFunc(validation.StringInSlice([]string{"PHOTON", "STANDARD"}, false))
-	s.AddNewField("is_pinned", &schema.Schema{
-		Type:     schema.TypeBool,
-		Optional: true,
-		Default:  false,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			if old == "" && new == "false" {
-				return true
-			}
-			return old == new
-		},
-	})
-	s.AddNewField("url", &schema.Schema{
-		Type:     schema.TypeString,
-		Computed: true,
-	})
 	s.SchemaPath("num_workers").SetDefault(0).SetValidateDiagFunc(validation.ToDiagFunc(validation.IntAtLeast(0)))
 	s.AddNewField("cluster_mount_info", &schema.Schema{
 		Type:     schema.TypeList,

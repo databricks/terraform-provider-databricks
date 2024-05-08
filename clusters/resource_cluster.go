@@ -20,7 +20,7 @@ const DefaultProvisionTimeout = 30 * time.Minute
 const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
 
 var clusterSchema = resourceClusterSchema()
-var clusterSchemaVersion = 2
+var clusterSchemaVersion = 3
 
 func ResourceCluster() common.Resource {
 	return common.Resource{

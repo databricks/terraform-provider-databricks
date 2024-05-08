@@ -127,7 +127,7 @@ This block describes individual tasks:
 * `job_cluster_key` - (Optional) Identifier of the Job cluster specified in the `job_cluster` block.
 * `existing_cluster_id` - (Optional) Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*
 * `new_cluster` - (Optional) Task will run on a dedicated cluster.  See [databricks_cluster](cluster.md) documentation for specification.
-* `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. When omitted, defaults to `ALL_SUCCESS`.
+* `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. One of `ALL_SUCCESS`, `AT_LEAST_ONE_SUCCESS`, `NONE_FAILED`, `ALL_DONE`, `AT_LEAST_ONE_FAILED` or `ALL_FAILED`. When omitted, defaults to `ALL_SUCCESS`.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
 * `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.

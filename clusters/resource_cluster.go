@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -19,7 +20,7 @@ const DefaultProvisionTimeout = 30 * time.Minute
 const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
 
 var clusterSchema = resourceClusterSchema()
-var clusterSchemaVersion = 2
+var clusterSchemaVersion = 3
 
 func ResourceCluster() common.Resource {
 	return common.Resource{
@@ -30,7 +31,46 @@ func ResourceCluster() common.Resource {
 		Schema:        clusterSchema,
 		SchemaVersion: clusterSchemaVersion,
 		Timeouts:      resourceClusterTimeouts(),
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    clusterSchemaV0(),
+				Version: 2,
+				Upgrade: removeZeroAwsEbsVolumeAttributes,
+			},
+		},
 	}
+}
+
+func clusterSchemaV0() cty.Type {
+	return (&schema.Resource{
+		Schema: clusterSchema}).CoreConfigSchema().ImpliedType()
+}
+
+func removeZeroAwsEbsVolumeAttributes(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	newState := map[string]any{}
+	for k, v := range rawState {
+		switch k {
+		case "aws_attributes":
+			awsAttributes, ok := v.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			if awsAttributes["ebs_volume_count"] == 0 {
+				log.Printf("[INFO] remove zero ebs_volume_count")
+				delete(awsAttributes, "ebs_volume_count")
+			}
+			if awsAttributes["ebs_volume_size"] == 0 {
+				log.Printf("[INFO] remove zero ebs_volume_size")
+				delete(awsAttributes, "ebs_volume_size")
+			}
+
+			newState[k] = awsAttributes
+		default:
+			newState[k] = v
+		}
+	}
+	return newState, nil
 }
 
 func resourceClusterTimeouts() *schema.ResourceTimeout {

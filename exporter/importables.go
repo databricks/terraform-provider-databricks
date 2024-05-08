@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -233,11 +234,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/instance-pools/%s", r.ID),
 				"inst_pool_"+ic.Importables["databricks_instance_pool"].Name(ic, r.Data))
 			return nil
-		},
-		Ignore: func(ic *importContext, r *resource) bool {
-			isIgnored := r.Data.Get("instance_pool_name") == ""
-			ic.addIgnoredResource(fmt.Sprintf("databricks_instance_pool. id=%s", r.ID))
-			return isIgnored
 		},
 	},
 	"databricks_instance_profile": {
@@ -1511,6 +1507,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
 			contentB64, err := notebooksAPI.Export(r.ID, ic.notebooksFormat)
 			if err != nil {
+				if apierr.IsMissing(err) {
+					ic.addIgnoredResource(fmt.Sprintf("databricks_notebook. path=%s", r.ID))
+				}
 				return err
 			}
 			var fileExtension string
@@ -1558,6 +1557,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
 			contentB64, err := notebooksAPI.Export(r.ID, "AUTO")
 			if err != nil {
+				if apierr.IsMissing(err) {
+					ic.addIgnoredResource(fmt.Sprintf("databricks_workspace_file. path=%s", r.ID))
+				}
 				return err
 			}
 			objectId := r.Data.Get("object_id").(int)
@@ -2600,9 +2602,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return common.StructToData(pList, s, r.Data)
-		},
-		Ignore: func(ic *importContext, r *resource) bool {
-			return r.Data.Get("grant.#").(int) == 0
 		},
 		Depends: []reference{
 			{Path: "catalog", Resource: "databricks_catalog"},

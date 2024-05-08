@@ -100,15 +100,6 @@ func TestInstancePool(t *testing.T) {
 	err := resourcesMap["databricks_instance_pool"].Import(ic, r)
 	assert.NoError(t, err)
 	assert.True(t, ic.testEmits["databricks_permissions[inst_pool_def] (id: /instance-pools/abc)"])
-
-	// Check ignore function
-	assert.True(t, resourcesMap["databricks_instance_pool"].Ignore(ic, r))
-	assert.Equal(t, 1, len(ic.ignoredResources))
-	assert.Contains(t, ic.ignoredResources, "databricks_instance_pool. id=abc")
-	//
-	d.Set("instance_pool_name", "test")
-	assert.False(t, resourcesMap["databricks_instance_pool"].Ignore(ic, r))
-	assert.Equal(t, 1, len(ic.ignoredResources))
 }
 
 func TestClusterPolicy(t *testing.T) {
@@ -2175,9 +2166,6 @@ func TestImportGrants(t *testing.T) {
 	r := &resource{ID: id, Data: d}
 	err := resourcesMap["databricks_grants"].Import(ic, r)
 	assert.NoError(t, err)
-
-	// Test ignore function
-	assert.True(t, resourcesMap["databricks_grants"].Ignore(ic, r))
 
 	var pList tfcatalog.PermissionsList
 	common.DataToStructPointer(r.Data, s, &pList)

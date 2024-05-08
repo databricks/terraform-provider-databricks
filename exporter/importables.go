@@ -903,10 +903,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       parent.Value,
 					})
 					if parent.Type == "direct" {
+						id := fmt.Sprintf("%s|%s", parent.Value, g.ID)
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
-							ID:       fmt.Sprintf("%s|%s", parent.Value, g.ID),
+							ID:       id,
 							Name:     fmt.Sprintf("%s_%s_%s", parent.Display, parent.Value, g.DisplayName),
+							Data:     ic.makeGroupMemberData(id, parent.Value, g.ID),
 						})
 					}
 				}
@@ -917,10 +919,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       x.Value,
 						})
 						if !builtInUserGroup {
+							id := fmt.Sprintf("%s|%s", g.ID, x.Value)
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
-								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								ID:       id,
 								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
+								Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
 							})
 						}
 					}
@@ -930,10 +934,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       x.Value,
 						})
 						if !builtInUserGroup {
+							id := fmt.Sprintf("%s|%s", g.ID, x.Value)
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
-								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								ID:       id,
 								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
+								Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
 							})
 						}
 					}
@@ -943,10 +949,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       x.Value,
 						})
 						if !builtInUserGroup {
+							id := fmt.Sprintf("%s|%s", g.ID, x.Value)
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
-								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								ID:       id,
 								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
+								Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
 							})
 						}
 					}

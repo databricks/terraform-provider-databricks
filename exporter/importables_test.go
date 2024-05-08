@@ -1641,6 +1641,7 @@ func TestImportManagedCatalog(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.enableListing("uc-schemas")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
 		d.SetId("ctest")
@@ -1697,6 +1698,7 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.enableListing("uc-schemas,uc-volumes,uc-models,uc-tables")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
 		d.SetId("ctest")
@@ -1760,6 +1762,7 @@ func TestImportSchema(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-volumes,uc-models,uc-tables")
+		ic.enableListing("uc-schemas,uc-volumes,uc-models,uc-tables")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceSchema().ToResource().TestResourceData()
 		d.SetId("ctest.stest")

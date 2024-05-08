@@ -2341,20 +2341,22 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			} else if cat.ShareName == "" {
 				// TODO: We need to be careful here if we add more catalog types... Really we need to have CatalogType in resource
-				schemas, err := ic.workspaceClient.Schemas.ListAll(ic.Context, catalog.ListSchemasRequest{CatalogName: r.ID})
-				if err != nil {
-					return err
-				}
-				ignoredSchemas := []string{"information_schema"}
-				for _, schema := range schemas {
-					if schema.CatalogType != "MANAGED_CATALOG" || slices.Contains(ignoredSchemas, schema.Name) {
-						continue
+				if ic.isServiceInListing("uc-schemas") {
+					schemas, err := ic.workspaceClient.Schemas.ListAll(ic.Context, catalog.ListSchemasRequest{CatalogName: r.ID})
+					if err != nil {
+						return err
 					}
-					ic.EmitIfUpdatedAfterMillis(&resource{
-						Resource:  "databricks_schema",
-						ID:        schema.FullName,
-						DependsOn: dependsOn,
-					}, schema.UpdatedAt, fmt.Sprintf("schema '%s'", schema.FullName))
+					ignoredSchemas := []string{"information_schema"}
+					for _, schema := range schemas {
+						if schema.CatalogType != "MANAGED_CATALOG" || slices.Contains(ignoredSchemas, schema.Name) {
+							continue
+						}
+						ic.EmitIfUpdatedAfterMillis(&resource{
+							Resource:  "databricks_schema",
+							ID:        schema.FullName,
+							DependsOn: dependsOn,
+						}, schema.UpdatedAt, fmt.Sprintf("schema '%s'", schema.FullName))
+					}
 				}
 			}
 			if cat.IsolationMode == "ISOLATED" {
@@ -2427,55 +2429,61 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			// TODO: somehow add depends on catalog's grant...
 			// TODO: emit owner? See comment in catalog resource
-			models, err := ic.workspaceClient.RegisteredModels.ListAll(ic.Context,
-				catalog.ListRegisteredModelsRequest{
-					CatalogName: catalogName,
-					SchemaName:  schemaName,
-				})
-			if err != nil { // TODO: should we continue?
-				return err
-			}
-			for _, model := range models {
-				ic.EmitIfUpdatedAfterMillis(&resource{
-					Resource:  "databricks_registered_model",
-					ID:        model.FullName,
-					DependsOn: dependsOn,
-				}, model.UpdatedAt, fmt.Sprintf("registered model '%s'", model.FullName))
-			}
-			// list volumes
-			volumes, err := ic.workspaceClient.Volumes.ListAll(ic.Context,
-				catalog.ListVolumesRequest{
-					CatalogName: catalogName,
-					SchemaName:  schemaName,
-				})
-			if err != nil {
-				return err
-			}
-			for _, volume := range volumes {
-				ic.EmitIfUpdatedAfterMillis(&resource{
-					Resource:  "databricks_volume",
-					ID:        volume.FullName,
-					DependsOn: dependsOn,
-				}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
-			}
-			// list tables
-			tables, err := ic.workspaceClient.Tables.ListAll(ic.Context, catalog.ListTablesRequest{
-				CatalogName: catalogName,
-				SchemaName:  schemaName,
-			})
-			if err != nil {
-				return err
-			}
-			for _, table := range tables {
-				switch table.TableType {
-				case "MANAGED", "EXTERNAL", "VIEW":
+			if ic.isServiceInListing("uc-models") {
+				models, err := ic.workspaceClient.RegisteredModels.ListAll(ic.Context,
+					catalog.ListRegisteredModelsRequest{
+						CatalogName: catalogName,
+						SchemaName:  schemaName,
+					})
+				if err != nil { // TODO: should we continue?
+					return err
+				}
+				for _, model := range models {
 					ic.EmitIfUpdatedAfterMillis(&resource{
-						Resource:  "databricks_sql_table",
-						ID:        table.FullName,
+						Resource:  "databricks_registered_model",
+						ID:        model.FullName,
 						DependsOn: dependsOn,
-					}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
-				default:
-					log.Printf("[DEBUG] Skipping table %s of type %s", table.FullName, table.TableType)
+					}, model.UpdatedAt, fmt.Sprintf("registered model '%s'", model.FullName))
+				}
+			}
+			if ic.isServiceInListing("uc-volumes") {
+				// list volumes
+				volumes, err := ic.workspaceClient.Volumes.ListAll(ic.Context,
+					catalog.ListVolumesRequest{
+						CatalogName: catalogName,
+						SchemaName:  schemaName,
+					})
+				if err != nil {
+					return err
+				}
+				for _, volume := range volumes {
+					ic.EmitIfUpdatedAfterMillis(&resource{
+						Resource:  "databricks_volume",
+						ID:        volume.FullName,
+						DependsOn: dependsOn,
+					}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
+				}
+			}
+			if ic.isServiceInListing("uc-tables") {
+				// list tables
+				tables, err := ic.workspaceClient.Tables.ListAll(ic.Context, catalog.ListTablesRequest{
+					CatalogName: catalogName,
+					SchemaName:  schemaName,
+				})
+				if err != nil {
+					return err
+				}
+				for _, table := range tables {
+					switch table.TableType {
+					case "MANAGED", "EXTERNAL", "VIEW":
+						ic.EmitIfUpdatedAfterMillis(&resource{
+							Resource:  "databricks_sql_table",
+							ID:        table.FullName,
+							DependsOn: dependsOn,
+						}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+					default:
+						log.Printf("[DEBUG] Skipping table %s of type %s", table.FullName, table.TableType)
+					}
 				}
 			}
 			// TODO: list VectorSearch indexes

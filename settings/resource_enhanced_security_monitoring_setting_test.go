@@ -13,7 +13,7 @@ import (
 
 var testEnhancedSecurityMonitoringSetting = AllSettingsResources()["enhanced_security_monitoring_workspace"]
 
-func TestQueryCreateEnhancedSecurityMonitoringSettingWithNoneStandard(t *testing.T) {
+func TestQueryCreateEnhancedSecurityMonitoringSetting(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockEnhancedSecurityMonitoringAPI().EXPECT()

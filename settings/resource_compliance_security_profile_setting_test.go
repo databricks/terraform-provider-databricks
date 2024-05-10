@@ -23,7 +23,7 @@ func TestQueryCreateComplianceSecurityProfileSettingWithNoneStandard(t *testing.
 				Setting: settings.ComplianceSecurityProfileSetting{
 					Etag: "",
 					ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
-						IsEnabled: true,
+						IsEnabled:           true,
 						ComplianceStandards: []settings.ComplianceStandard{"NONE"},
 					},
 					SettingName: "default",
@@ -45,7 +45,7 @@ func TestQueryCreateComplianceSecurityProfileSettingWithNoneStandard(t *testing.
 				Setting: settings.ComplianceSecurityProfileSetting{
 					Etag: "etag1",
 					ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
-						IsEnabled: true,
+						IsEnabled:           true,
 						ComplianceStandards: []settings.ComplianceStandard{"NONE"},
 					},
 					SettingName: "default",
@@ -53,7 +53,7 @@ func TestQueryCreateComplianceSecurityProfileSettingWithNoneStandard(t *testing.
 			}).Return(&settings.ComplianceSecurityProfileSetting{
 				Etag: "etag2",
 				ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
-					IsEnabled: true,
+					IsEnabled:           true,
 					ComplianceStandards: []settings.ComplianceStandard{"NONE"},
 				},
 				SettingName: "default",
@@ -63,7 +63,7 @@ func TestQueryCreateComplianceSecurityProfileSettingWithNoneStandard(t *testing.
 			}).Return(&settings.ComplianceSecurityProfileSetting{
 				Etag: "etag2",
 				ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
-					IsEnabled: true,
+					IsEnabled:           true,
 					ComplianceStandards: []settings.ComplianceStandard{"NONE"},
 				},
 				SettingName: "default",

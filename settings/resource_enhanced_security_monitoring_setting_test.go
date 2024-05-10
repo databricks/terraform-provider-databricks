@@ -89,7 +89,7 @@ func TestQueryReadEnhancedSecurityMonitoringSetting(t *testing.T) {
 			}).Return(&settings.EnhancedSecurityMonitoringSetting{
 				Etag: "etag2",
 				EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-					IsEnabled:           true,
+					IsEnabled: true,
 				},
 				SettingName: "default",
 			}, nil)
@@ -139,7 +139,7 @@ func TestQueryUpdateEnhancedSecurityMonitoringSetting(t *testing.T) {
 			}).Return(&settings.EnhancedSecurityMonitoringSetting{
 				Etag: "etag2",
 				EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-					IsEnabled:           true,
+					IsEnabled: true,
 				},
 				SettingName: "default",
 			}, nil)
@@ -173,7 +173,7 @@ func TestQueryUpdateEnhancedSecurityMonitoringSettingWithConflict(t *testing.T) 
 				Setting: settings.EnhancedSecurityMonitoringSetting{
 					Etag: "etag1",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled:           true,
+						IsEnabled: true,
 					},
 					SettingName: "default",
 				},

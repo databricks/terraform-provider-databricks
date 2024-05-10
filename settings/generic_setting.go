@@ -301,6 +301,10 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
 			// definition.
 			s["setting_name"].Computed = true
+			// this customize func is needed for automatic_cluster_update_workspace setting
+			if _, ok := s["automatic_cluster_update_workspace"]; ok {
+				common.MustSchemaPath(s, "automatic_cluster_update_workspace", "enablement_details").Computed = true
+			}
 			return s
 		})
 	createOrUpdateRetriableErrors := []error{apierr.ErrNotFound, apierr.ErrResourceConflict}

@@ -52,7 +52,7 @@ func getEtagFromError(err error) (string, error) {
 			return etag, nil
 		}
 	}
-	return "", fmt.Errorf("error fetching the settings: %w", err)
+	return "", fmt.Errorf("error fetching the default workspace namespace settings: %w", err)
 }
 
 type genericSettingDefinition[T, U any] interface {

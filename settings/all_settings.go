@@ -15,8 +15,10 @@ import (
 //  3. Add a new entry to the AllSettingsResources map below. The final resource name will be "databricks_<SETTING_NAME>_setting".
 func AllSettingsResources() map[string]common.Resource {
 	return map[string]common.Resource{
+<<<<<<< HEAD
 		"default_namespace":                      makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
 		"restrict_workspace_admins":              makeSettingResource[settings.RestrictWorkspaceAdminsSetting, *databricks.WorkspaceClient](restrictWsAdminsSetting),
+		"compliance_security_profile_workspace": makeSettingResource[settings.ComplianceSecurityProfileSetting, *databricks.WorkspaceClient](complianceSecurityProfileSetting),
 		"enhanced_security_monitoring_workspace": makeSettingResource[settings.EnhancedSecurityMonitoringSetting, *databricks.WorkspaceClient](enhancedSecurityMonitoringSetting),
 	}
 }

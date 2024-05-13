@@ -71,6 +71,7 @@ type importContext struct {
 	nameFixes         []regexFix
 	hclFixes          []regexFix
 	variables         map[string]string
+	variablesLock     sync.Mutex
 	workspaceConfKeys map[string]any
 
 	workspaceClient *databricks.WorkspaceClient
@@ -1591,7 +1592,9 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 }
 
 func (ic *importContext) variable(name, desc string) hclwrite.Tokens {
+	ic.variablesLock.Lock()
 	ic.variables[name] = desc
+	ic.variablesLock.Unlock()
 	return hclwrite.TokensForTraversal(hcl.Traversal{
 		hcl.TraverseRoot{Name: "var"},
 		hcl.TraverseAttr{Name: name},

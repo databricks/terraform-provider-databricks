@@ -15,6 +15,7 @@
 * Don't emit all UC objects when handling dependencies ([#3556](https://github.com/databricks/terraform-provider-databricks/pull/3556)).
 * Track removed objects during the `Emit` phase ([#3554](https://github.com/databricks/terraform-provider-databricks/pull/3554)).
 * Optimize generation of `databricks_group_member` resource ([#3559](https://github.com/databricks/terraform-provider-databricks/pull/3559)).
+* Include some UC objects into default listing ([#3565](https://github.com/databricks/terraform-provider-databricks/pull/3565))
 
 ### Internal Changes
 * Jobs GoSDK schema migration ([#3532](https://github.com/databricks/terraform-provider-databricks/pull/3532)).

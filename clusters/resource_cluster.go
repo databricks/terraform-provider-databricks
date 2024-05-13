@@ -22,6 +22,8 @@ const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or c
 var clusterSchema = resourceClusterSchema()
 var clusterSchemaVersion = 3
 
+const unsupportedExceptCreateOrEditErr = "unsupported type %T, must be either *compute.CreateCluster or *compute.EditCluster. Please report this issue to the GitHub repo"
+
 func ResourceCluster() common.Resource {
 	return common.Resource{
 		Create:        resourceClusterCreate,
@@ -101,54 +103,105 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 // This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
 // Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func Validate(cluster compute.CreateCluster) error {
-	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
-		return nil
+func Validate(cluster any) error {
+	numWorkerErr := "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
+	switch c := cluster.(type) {
+	case compute.CreateCluster:
+		if c.NumWorkers > 0 || c.Autoscale != nil {
+			return nil
+		}
+		profile := c.SparkConf["spark.databricks.cluster.profile"]
+		master := c.SparkConf["spark.master"]
+		resourceClass := c.CustomTags["ResourceClass"]
+		if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
+			return nil
+		}
+		return fmt.Errorf(numWorkerErr)
+	case compute.EditCluster:
+		if c.NumWorkers > 0 || c.Autoscale != nil {
+			return nil
+		}
+		profile := c.SparkConf["spark.databricks.cluster.profile"]
+		master := c.SparkConf["spark.master"]
+		resourceClass := c.CustomTags["ResourceClass"]
+		if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
+			return nil
+		}
+		return fmt.Errorf(numWorkerErr)
+	default:
+		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster)
 	}
-	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
-	master := cluster.SparkConf["spark.master"]
-	resourceClass := cluster.CustomTags["ResourceClass"]
-	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
-		return nil
-	}
-	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
 }
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
-	// Instance profile id does not exist or not set
-	if cluster.InstancePoolId == "" {
-		// Worker must use an instance pool if driver uses an instance pool,
-		// therefore empty the computed value for driver instance pool.
-		cluster.DriverInstancePoolId = ""
-		return
-	}
-	if cluster.AwsAttributes != nil {
-		// Reset AwsAttributes
-		awsAttributes := compute.AwsAttributes{
-			InstanceProfileArn: cluster.AwsAttributes.InstanceProfileArn,
+func ModifyRequestOnInstancePool(cluster any) error {
+	switch c := cluster.(type) {
+	case *compute.CreateCluster:
+		// Instance profile id does not exist or not set
+		if c.InstancePoolId == "" {
+			// Worker must use an instance pool if driver uses an instance pool,
+			// therefore empty the computed value for driver instance pool.
+			c.DriverInstancePoolId = ""
+			return nil
 		}
-		cluster.AwsAttributes = &awsAttributes
-	}
-	if cluster.AzureAttributes != nil {
-		cluster.AzureAttributes = &compute.AzureAttributes{}
-	}
-	if cluster.GcpAttributes != nil {
-		gcpAttributes := compute.GcpAttributes{
-			GoogleServiceAccount: cluster.GcpAttributes.GoogleServiceAccount,
+		if c.AwsAttributes != nil {
+			// Reset AwsAttributes
+			awsAttributes := compute.AwsAttributes{
+				InstanceProfileArn: c.AwsAttributes.InstanceProfileArn,
+			}
+			c.AwsAttributes = &awsAttributes
 		}
-		cluster.GcpAttributes = &gcpAttributes
+		if c.AzureAttributes != nil {
+			c.AzureAttributes = &compute.AzureAttributes{}
+		}
+		if c.GcpAttributes != nil {
+			gcpAttributes := compute.GcpAttributes{
+				GoogleServiceAccount: c.GcpAttributes.GoogleServiceAccount,
+			}
+			c.GcpAttributes = &gcpAttributes
+		}
+		c.EnableElasticDisk = false
+		c.NodeTypeId = ""
+		c.DriverNodeTypeId = ""
+		return nil
+	case *compute.EditCluster:
+		// Instance profile id does not exist or not set
+		if c.InstancePoolId == "" {
+			// Worker must use an instance pool if driver uses an instance pool,
+			// therefore empty the computed value for driver instance pool.
+			c.DriverInstancePoolId = ""
+			return nil
+		}
+		if c.AwsAttributes != nil {
+			// Reset AwsAttributes
+			awsAttributes := compute.AwsAttributes{
+				InstanceProfileArn: c.AwsAttributes.InstanceProfileArn,
+			}
+			c.AwsAttributes = &awsAttributes
+		}
+		if c.AzureAttributes != nil {
+			c.AzureAttributes = &compute.AzureAttributes{}
+		}
+		if c.GcpAttributes != nil {
+			gcpAttributes := compute.GcpAttributes{
+				GoogleServiceAccount: c.GcpAttributes.GoogleServiceAccount,
+			}
+			c.GcpAttributes = &gcpAttributes
+		}
+		c.EnableElasticDisk = false
+		c.NodeTypeId = ""
+		c.DriverNodeTypeId = ""
+		return nil
+	default:
+		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster)
 	}
-	cluster.EnableElasticDisk = false
-	cluster.NodeTypeId = ""
-	cluster.DriverNodeTypeId = ""
 }
 
 // This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
 // Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
-func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *compute.CreateCluster) {
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *compute.EditCluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
 	if oldInstancePool != newInstancePool &&
@@ -266,7 +319,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err := Validate(createClusterRequest); err != nil {
 		return err
 	}
-	ModifyRequestOnInstancePool(&createClusterRequest)
+	if err = ModifyRequestOnInstancePool(&createClusterRequest); err != nil {
+		return err
+	}
 	if createClusterRequest.Autoscale == nil {
 		createClusterRequest.ForceSendFields = []string{"NumWorkers"}
 	}
@@ -382,9 +437,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	clusters := w.Clusters
-	var cluster compute.CreateCluster
+	var cluster compute.EditCluster
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	clusterId := d.Id()
+	cluster.ClusterId = clusterId
 	var clusterInfo *compute.ClusterDetails
 
 	if hasClusterConfigChanged(d) {
@@ -392,7 +448,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err := Validate(cluster); err != nil {
 			return err
 		}
-		ModifyRequestOnInstancePool(&cluster)
+		if err = ModifyRequestOnInstancePool(&cluster); err != nil {
+			return err
+		}
 		FixInstancePoolChangeIfAny(d, &cluster)
 
 		// We can only call the resize api if the cluster is in the running state
@@ -453,21 +511,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
-			var editCluster compute.EditCluster
-			common.DataToStructPointer(d, clusterSchema, &editCluster)
-
-			// We should have the an interface for all cluster structures so that we can use common modification among different structs. This should be done in OpenAPI spec.
-			// For now, manually modifying the fields here to mitigate the issue: https://github.com/databricks/terraform-provider-databricks/issues/3533
-			editCluster.ClusterId = clusterId
-			editCluster.DriverInstancePoolId = cluster.DriverInstancePoolId
-			editCluster.AwsAttributes = cluster.AwsAttributes
-			editCluster.AzureAttributes = cluster.AzureAttributes
-			editCluster.GcpAttributes = cluster.GcpAttributes
-			editCluster.EnableElasticDisk = cluster.EnableElasticDisk
-			editCluster.NodeTypeId = cluster.NodeTypeId
-			editCluster.DriverNodeTypeId = cluster.DriverNodeTypeId
-
-			_, err = clusters.Edit(ctx, editCluster)
+			_, err = clusters.Edit(ctx, cluster)
 		}
 		if err != nil {
 			return err

@@ -49,7 +49,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 	})
 }
 
-func singleNodeClusterTemplate(autoTerminatinoMinutes string) string {
+func singleNodeClusterTemplate(autoTerminationMinutes string) string {
 	return fmt.Sprintf(`
 		data "databricks_spark_version" "latest" {
 		}
@@ -67,7 +67,7 @@ func singleNodeClusterTemplate(autoTerminatinoMinutes string) string {
 				"ResourceClass" = "SingleNode"
 			}
 		}
-	`, autoTerminatinoMinutes)
+	`, autoTerminationMinutes)
 }
 
 func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {

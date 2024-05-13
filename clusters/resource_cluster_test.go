@@ -1554,7 +1554,8 @@ func TestModifyClusterRequestAws(t *testing.T) {
 		NodeTypeId:        "d",
 		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, "", c.AwsAttributes.ZoneId)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)
@@ -1571,7 +1572,8 @@ func TestModifyClusterRequestAzure(t *testing.T) {
 		NodeTypeId:        "d",
 		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, &compute.AzureAttributes{}, c.AzureAttributes)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)
@@ -1588,7 +1590,8 @@ func TestModifyClusterRequestGcp(t *testing.T) {
 		NodeTypeId:        "d",
 		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, false, c.GcpAttributes.UsePreemptibleExecutors)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)

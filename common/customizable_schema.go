@@ -253,17 +253,24 @@ func (s *CustomizableSchema) SetValidateDiagFunc(validate func(interface{}, cty.
 }
 
 func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *CustomizableSchema {
-	cv, ok := s.Schema.Elem.(*schema.Resource)
-	if !ok {
-		panic("Cannot add new field, target is not nested resource")
-	}
-	_, exists := cv.Schema[key]
+	scm := s.GetSchemaMap()
+	_, exists := scm[key]
 	if exists {
 		panic("Cannot add new field, " + key + " already exists in the schema")
 	}
-	cv.Schema[key] = newField
+	scm[key] = newField
 	if s.isSuppressDiff {
 		newField.DiffSuppressFunc = diffSuppressor(key, newField)
 	}
+	return s
+}
+
+func (s *CustomizableSchema) RemoveField(key string) *CustomizableSchema {
+	scm := s.GetSchemaMap()
+	_, exists := scm[key]
+	if !exists {
+		panic("Cannot remove new field, " + key + " does not exist in the schema")
+	}
+	delete(scm, key)
 	return s
 }

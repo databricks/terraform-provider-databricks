@@ -1544,19 +1544,18 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 }
 
 func TestModifyClusterRequestAws(t *testing.T) {
-	c := ClusterSpec{
-		ClusterSpec: compute.ClusterSpec{
-			InstancePoolId: "a",
-			AwsAttributes: &compute.AwsAttributes{
-				InstanceProfileArn: "b",
-				ZoneId:             "c",
-			},
-			EnableElasticDisk: true,
-			NodeTypeId:        "d",
-			DriverNodeTypeId:  "e",
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		AwsAttributes: &compute.AwsAttributes{
+			InstanceProfileArn: "b",
+			ZoneId:             "c",
 		},
+		EnableElasticDisk: true,
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, "", c.AwsAttributes.ZoneId)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)
@@ -1564,18 +1563,17 @@ func TestModifyClusterRequestAws(t *testing.T) {
 }
 
 func TestModifyClusterRequestAzure(t *testing.T) {
-	c := ClusterSpec{
-		ClusterSpec: compute.ClusterSpec{
-			InstancePoolId: "a",
-			AzureAttributes: &compute.AzureAttributes{
-				FirstOnDemand: 1,
-			},
-			EnableElasticDisk: true,
-			NodeTypeId:        "d",
-			DriverNodeTypeId:  "e",
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		AzureAttributes: &compute.AzureAttributes{
+			FirstOnDemand: 1,
 		},
+		EnableElasticDisk: true,
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, &compute.AzureAttributes{}, c.AzureAttributes)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)
@@ -1583,18 +1581,17 @@ func TestModifyClusterRequestAzure(t *testing.T) {
 }
 
 func TestModifyClusterRequestGcp(t *testing.T) {
-	c := ClusterSpec{
-		ClusterSpec: compute.ClusterSpec{
-			InstancePoolId: "a",
-			GcpAttributes: &compute.GcpAttributes{
-				UsePreemptibleExecutors: true,
-			},
-			EnableElasticDisk: true,
-			NodeTypeId:        "d",
-			DriverNodeTypeId:  "e",
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		GcpAttributes: &compute.GcpAttributes{
+			UsePreemptibleExecutors: true,
 		},
+		EnableElasticDisk: true,
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, false, c.GcpAttributes.UsePreemptibleExecutors)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)

@@ -42,7 +42,7 @@ var kindMap = map[reflect.Kind]string{
 // Global registry for ResoureProvider, the goal is to make StructToSchema able to find pre-registered ResourceProvider for a
 // given struct so that we don't have to specify aliases and customizations redundantly if one schema references the another
 // schema.
-var resourceProviderRegistry map[string]ResourceProvider
+var resourceProviderRegistry map[reflect.Type]ResourceProvider
 
 // Pre-registered ResourceProvider for a given struct into resourceProviderRegistry.
 // This function should be called in the init() function in packages with ResourceProvider.
@@ -53,20 +53,46 @@ var resourceProviderRegistry map[string]ResourceProvider
 //	}
 func RegisterResourceProvider(v any, r ResourceProvider) {
 	if resourceProviderRegistry == nil {
-		resourceProviderRegistry = make(map[string]ResourceProvider)
+		resourceProviderRegistry = make(map[reflect.Type]ResourceProvider)
 	}
-	typeName := getNameForType(reflect.ValueOf(v).Type())
-	if _, ok := resourceProviderRegistry[typeName]; ok {
-		errMsg := fmt.Sprintf("%s has already been registered, please avoid registering the same type repeatedly.", typeName)
+	t := getResourceProviderRegistryKey(v)
+	if _, ok := resourceProviderRegistry[t]; ok {
+		errMsg := fmt.Sprintf("%s has already been registered, please avoid registering the same type repeatedly.", getNameForType(t))
 		panic(errMsg)
 	}
-	resourceProviderRegistry[typeName] = r
+	resourceProviderRegistry[t] = r
+}
+
+func getResourceProviderRegistryKey(v any) reflect.Type {
+	t := reflect.ValueOf(v).Type()
+	return getNonPointerType(t)
+}
+
+func getNonPointerType(t reflect.Type) reflect.Type {
+	if t.Kind() == reflect.Ptr {
+		return t.Elem()
+	} else {
+		return t
+	}
 }
 
 // Generic interface for ResourceProvider. Using CustomizeSchema function to keep track of additional information
 // on top of the generated go-sdk struct.
 type ResourceProvider interface {
 	CustomizeSchema(*CustomizableSchema) *CustomizableSchema
+}
+
+// Interface for ResourcePrivider that needs certain customizaitons that shouldn't be shared.
+type ResourceProviderWithResourceSpecificCustomization interface {
+	ResourceProvider
+	// Customizations in this function will not be applied when this type is referenced from another resource by resourceProviderRegistry.
+	// Example use case:
+	//    // autotermination_minutes should only have a default value of 60 for the clusters resource, but not in the nested cluster schema in jobs
+	//    func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
+	// 	      s.SchemaPath("autotermination_minutes").SetDefault(60)
+	// 	      return s
+	//    }
+	CustomizeSchemaResourceSpecific(*CustomizableSchema) *CustomizableSchema
 }
 
 // Interface for ResourceProvider instances that need aliases for fields.
@@ -100,8 +126,19 @@ type RecursiveResourceProvider interface {
 	MaxDepthForTypes() map[string]int
 }
 
-// Takes in a ResourceProvider and converts that into a map from string to schema.
+// Used by StructToSchema, after executing typeToSchema and applying the standard customizations,
+// it also applies the resource specific customizations, if applicable.
 func resourceProviderStructToSchema(v ResourceProvider, scp schemaPathContext) map[string]*schema.Schema {
+	customizedScm := resourceProviderStructToSchemaInternal(v, scp)
+	if rps, ok := v.(ResourceProviderWithResourceSpecificCustomization); ok {
+		// Apply resource specific customizations, if applicable.
+		return rps.CustomizeSchemaResourceSpecific(customizedScm).GetSchemaMap()
+	} else {
+		return customizedScm.GetSchemaMap()
+	}
+}
+
+func resourceProviderStructToSchemaInternal(v ResourceProvider, scp schemaPathContext) *CustomizableSchema {
 	rv := reflect.ValueOf(v)
 	var scm map[string]*schema.Schema
 	aliases := map[string]map[string]string{}
@@ -115,8 +152,7 @@ func resourceProviderStructToSchema(v ResourceProvider, scp schemaPathContext) m
 	}
 	cs := CustomizeSchemaPath(scm)
 	cs.context = scp
-	scm = v.CustomizeSchema(cs).GetSchemaMap()
-	return scm
+	return v.CustomizeSchema(cs)
 }
 
 func reflectKind(k reflect.Kind) string {
@@ -372,6 +408,9 @@ func listAllFields(v reflect.Value) []field {
 }
 
 func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trackingContext) map[string]*schema.Schema {
+	if rpStruct, ok := resourceProviderRegistry[getNonPointerType(v.Type())]; ok {
+		return resourceProviderStructToSchemaInternal(rpStruct, tc.pathCtx).GetSchemaMap()
+	}
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {

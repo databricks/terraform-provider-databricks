@@ -148,7 +148,7 @@ func ModifyRequestOnInstancePool(cluster *compute.CreateCluster) {
 // This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
 // Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
-func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) {
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *compute.CreateCluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
 	if oldInstancePool != newInstancePool &&
@@ -393,7 +393,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			return err
 		}
 		ModifyRequestOnInstancePool(&cluster)
-		FixInstancePoolChangeIfAny(d, cluster)
+		FixInstancePoolChangeIfAny(d, &cluster)
 
 		// We can only call the resize api if the cluster is in the running state
 		// and only the cluster size (ie num_workers OR autoscale) is being changed

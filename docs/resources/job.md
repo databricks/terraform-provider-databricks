@@ -89,6 +89,13 @@ The resource supports the following arguments:
 * `always_running` - (Optional, Deprecated) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
 * `run_as` - (Optional) The user or the service prinicipal the job runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
 * `control_run_state` - (Optional) (Bool) If true, the Databricks provider will stop and start the job as needed to ensure that the active run for the job reflects the deployed configuration. For continuous jobs, the provider respects the `pause_status` by stopping the current active run. This flag cannot be set for non-continuous jobs.
+
+  When migrating from `always_running` to `control_run_state`, set `continuous` as follows:
+
+  ```hcl
+  continuous { }
+  ```
+
 * `library` - (Optional) (List) An optional list of libraries to be installed on the cluster that will execute the job. See [library Configuration Block](#library-configuration-block) below.
 * `git_source` - (Optional) Specifices the a Git repository for task source code. See [git_source Configuration Block](#git_source-configuration-block) below.
 * `parameter` - (Optional) Specifices job parameter for the job. See [parameter Configuration Block](#parameter-configuration-block)

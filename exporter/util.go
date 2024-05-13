@@ -1159,7 +1159,7 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
 			if object.ObjectType == workspace.Directory {
-				if !ic.incremental && object.Path != "/" {
+				if !ic.incremental && object.Path != "/" && ic.isServiceEnabled("directories") {
 					objectsChannel <- object
 				}
 			} else {
@@ -1184,7 +1184,11 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
 				continue
 			}
-			emitWorkpaceObject(ic, object)
+			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceEnabled("directories") && object.Path != "/" {
+				emitWorkpaceObject(ic, object)
+			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceEnabled("notebooks") {
+				emitWorkpaceObject(ic, object)
+			}
 		}
 	}
 	return nil

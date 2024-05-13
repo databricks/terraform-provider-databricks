@@ -24,7 +24,7 @@ var clusterSchemaVersion = 3
 
 const (
 	numWorkerErr                     = "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
-	unsupportedExceptCreateOrEditErr = "unsupported type %T, must be either *compute.CreateCluster or *compute.EditCluster. Please report this issue to the GitHub repo"
+	unsupportedExceptCreateOrEditErr = "unsupported type %T, must be either %scompute.CreateCluster or %scompute.EditCluster. Please report this issue to the GitHub repo"
 )
 
 func ResourceCluster() common.Resource {
@@ -124,7 +124,7 @@ func Validate(cluster any) error {
 		master = c.SparkConf["spark.master"]
 		resourceClass = c.CustomTags["ResourceClass"]
 	default:
-		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster)
+		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster, "", "")
 	}
 	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
@@ -193,7 +193,7 @@ func ModifyRequestOnInstancePool(cluster any) error {
 		c.DriverNodeTypeId = ""
 		return nil
 	default:
-		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster)
+		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster, "*", "*")
 	}
 }
 

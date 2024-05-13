@@ -1,5 +1,27 @@
 # Version changelog
 
+## 1.43.0
+
+### New Features and Improvements
+* fix ([#3542](https://github.com/databricks/terraform-provider-databricks/pull/3542)).
+* Update data_aws_crossaccount_policy to format resource string with account and region ([#3544](https://github.com/databricks/terraform-provider-databricks/pull/3544)).
+* Robust retries for workspace get-status ([#3550](https://github.com/databricks/terraform-provider-databricks/pull/3550)).
+* Fix error message typo in mounts.go ([#3552](https://github.com/databricks/terraform-provider-databricks/pull/3552)).
+* State the options for run_if ([#3548](https://github.com/databricks/terraform-provider-databricks/pull/3548)).
+* Exporter: don't emit all UC objects when handling dependencies ([#3556](https://github.com/databricks/terraform-provider-databricks/pull/3556)).
+* Added state upgrader to remove `max_clusters_per_user` and ebs volume attributes set to zero ([#3551](https://github.com/databricks/terraform-provider-databricks/pull/3551)).
+* Exporter: track removed objects during the `Emit` phase ([#3554](https://github.com/databricks/terraform-provider-databricks/pull/3554)).
+* Jobs GoSDK schema migration ([#3532](https://github.com/databricks/terraform-provider-databricks/pull/3532)).
+* Exporter: optimize generation of `databricks_group_member` resource ([#3559](https://github.com/databricks/terraform-provider-databricks/pull/3559)).
+
+
+### Documentation Changes
+
+### Exporter
+
+### Internal Changes
+
+
 ## 1.42.0
 
 ### New Features and Improvements

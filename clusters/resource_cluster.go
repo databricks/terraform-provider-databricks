@@ -22,7 +22,10 @@ const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or c
 var clusterSchema = resourceClusterSchema()
 var clusterSchemaVersion = 3
 
-const unsupportedExceptCreateOrEditErr = "unsupported type %T, must be either *compute.CreateCluster or *compute.EditCluster. Please report this issue to the GitHub repo"
+const (
+	numWorkerErr                     = "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
+	unsupportedExceptCreateOrEditErr = "unsupported type %T, must be either *compute.CreateCluster or *compute.EditCluster. Please report this issue to the GitHub repo"
+)
 
 func ResourceCluster() common.Resource {
 	return common.Resource{
@@ -104,33 +107,29 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 // This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
 // Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func Validate(cluster any) error {
-	numWorkerErr := "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
+	var profile, master, resourceClass string
 	switch c := cluster.(type) {
 	case compute.CreateCluster:
 		if c.NumWorkers > 0 || c.Autoscale != nil {
 			return nil
 		}
-		profile := c.SparkConf["spark.databricks.cluster.profile"]
-		master := c.SparkConf["spark.master"]
-		resourceClass := c.CustomTags["ResourceClass"]
-		if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
-			return nil
-		}
-		return fmt.Errorf(numWorkerErr)
+		profile = c.SparkConf["spark.databricks.cluster.profile"]
+		master = c.SparkConf["spark.master"]
+		resourceClass = c.CustomTags["ResourceClass"]
 	case compute.EditCluster:
 		if c.NumWorkers > 0 || c.Autoscale != nil {
 			return nil
 		}
-		profile := c.SparkConf["spark.databricks.cluster.profile"]
-		master := c.SparkConf["spark.master"]
-		resourceClass := c.CustomTags["ResourceClass"]
-		if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
-			return nil
-		}
-		return fmt.Errorf(numWorkerErr)
+		profile = c.SparkConf["spark.databricks.cluster.profile"]
+		master = c.SparkConf["spark.master"]
+		resourceClass = c.CustomTags["ResourceClass"]
 	default:
 		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster)
 	}
+	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
+		return nil
+	}
+	return fmt.Errorf(numWorkerErr)
 }
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.

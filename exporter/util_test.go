@@ -429,3 +429,13 @@ func TestEmitWorkspaceObjectParentDirectory(t *testing.T) {
 	assert.True(t, exists)
 	assert.Equal(t, dirPath, dir)
 }
+
+func TestDirectoryIncrementalMode(t *testing.T) {
+	ic := importContextForTest()
+	ic.incremental = true
+
+	// test direct listing
+	assert.Nil(t, resourcesMap["databricks_directory"].List(ic))
+	// test emit during workspace listing
+	assert.True(t, ic.shouldSkipWorkspaceObject(workspace.ObjectStatus{ObjectType: workspace.Directory}, 111111))
+}

@@ -1416,6 +1416,11 @@ func (ic *importContext) isServiceEnabled(service string) bool {
 	return exists
 }
 
+func (ic *importContext) isServiceInListing(service string) bool {
+	_, exists := ic.listing[service]
+	return exists
+}
+
 func (ic *importContext) EmitIfUpdatedAfterMillis(r *resource, modifiedAt int64, message string) {
 	updatedSinceMs := ic.getUpdatedSinceMs()
 	if ic.incremental && modifiedAt < updatedSinceMs {

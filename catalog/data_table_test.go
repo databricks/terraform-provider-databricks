@@ -14,8 +14,10 @@ func TestTableData(t *testing.T) {
 		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
 			e := m.GetMockTablesAPI().EXPECT()
 			e.GetByFullName(mock.Anything, "a.b.c").Return(&catalog.TableInfo{
-				FullName: "a.b.c",
-				Name:     "c",
+				FullName:  "a.b.c",
+				Name:      "c",
+				Owner:     "account users",
+				TableType: catalog.TableTypeExternal,
 			}, nil)
 		},
 		Resource: DataSourceTable(),
@@ -25,11 +27,11 @@ func TestTableData(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
-		"name": "a.b.c",
-		"table": map[string]any{
-			"full_name": "a.b.c",
-			"name":      "c",
-		},
+		"name":                    "a.b.c",
+		"table_info.0.full_name":  "a.b.c",
+		"table_info.0.name":       "c",
+		"table_info.0.owner":      "account users",
+		"table_info.0.table_type": "EXTERNAL",
 	})
 }
 

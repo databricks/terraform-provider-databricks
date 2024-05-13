@@ -22,6 +22,11 @@ const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or c
 var clusterSchema = resourceClusterSchema()
 var clusterSchemaVersion = 3
 
+const (
+	numWorkerErr                     = "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
+	unsupportedExceptCreateOrEditErr = "unsupported type %T, must be either %scompute.CreateCluster or %scompute.EditCluster. Please report this issue to the GitHub repo"
+)
+
 func ResourceCluster() common.Resource {
 	return common.Resource{
 		Create:        resourceClusterCreate,
@@ -101,54 +106,101 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 // This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
 // Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func Validate(cluster ClusterSpec) error {
-	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
-		return nil
+func Validate(cluster any) error {
+	var profile, master, resourceClass string
+	switch c := cluster.(type) {
+	case compute.CreateCluster:
+		if c.NumWorkers > 0 || c.Autoscale != nil {
+			return nil
+		}
+		profile = c.SparkConf["spark.databricks.cluster.profile"]
+		master = c.SparkConf["spark.master"]
+		resourceClass = c.CustomTags["ResourceClass"]
+	case compute.EditCluster:
+		if c.NumWorkers > 0 || c.Autoscale != nil {
+			return nil
+		}
+		profile = c.SparkConf["spark.databricks.cluster.profile"]
+		master = c.SparkConf["spark.master"]
+		resourceClass = c.CustomTags["ResourceClass"]
+	default:
+		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster, "", "")
 	}
-	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
-	master := cluster.SparkConf["spark.master"]
-	resourceClass := cluster.CustomTags["ResourceClass"]
 	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
 	}
-	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
+	return fmt.Errorf(numWorkerErr)
 }
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func ModifyRequestOnInstancePool(cluster *ClusterSpec) {
-	// Instance profile id does not exist or not set
-	if cluster.InstancePoolId == "" {
-		// Worker must use an instance pool if driver uses an instance pool,
-		// therefore empty the computed value for driver instance pool.
-		cluster.DriverInstancePoolId = ""
-		return
-	}
-	if cluster.AwsAttributes != nil {
-		// Reset AwsAttributes
-		awsAttributes := compute.AwsAttributes{
-			InstanceProfileArn: cluster.AwsAttributes.InstanceProfileArn,
+func ModifyRequestOnInstancePool(cluster any) error {
+	switch c := cluster.(type) {
+	case *compute.CreateCluster:
+		// Instance profile id does not exist or not set
+		if c.InstancePoolId == "" {
+			// Worker must use an instance pool if driver uses an instance pool,
+			// therefore empty the computed value for driver instance pool.
+			c.DriverInstancePoolId = ""
+			return nil
 		}
-		cluster.AwsAttributes = &awsAttributes
-	}
-	if cluster.AzureAttributes != nil {
-		cluster.AzureAttributes = &compute.AzureAttributes{}
-	}
-	if cluster.GcpAttributes != nil {
-		gcpAttributes := compute.GcpAttributes{
-			GoogleServiceAccount: cluster.GcpAttributes.GoogleServiceAccount,
+		if c.AwsAttributes != nil {
+			// Reset AwsAttributes
+			awsAttributes := compute.AwsAttributes{
+				InstanceProfileArn: c.AwsAttributes.InstanceProfileArn,
+			}
+			c.AwsAttributes = &awsAttributes
 		}
-		cluster.GcpAttributes = &gcpAttributes
+		if c.AzureAttributes != nil {
+			c.AzureAttributes = &compute.AzureAttributes{}
+		}
+		if c.GcpAttributes != nil {
+			gcpAttributes := compute.GcpAttributes{
+				GoogleServiceAccount: c.GcpAttributes.GoogleServiceAccount,
+			}
+			c.GcpAttributes = &gcpAttributes
+		}
+		c.EnableElasticDisk = false
+		c.NodeTypeId = ""
+		c.DriverNodeTypeId = ""
+		return nil
+	case *compute.EditCluster:
+		// Instance profile id does not exist or not set
+		if c.InstancePoolId == "" {
+			// Worker must use an instance pool if driver uses an instance pool,
+			// therefore empty the computed value for driver instance pool.
+			c.DriverInstancePoolId = ""
+			return nil
+		}
+		if c.AwsAttributes != nil {
+			// Reset AwsAttributes
+			awsAttributes := compute.AwsAttributes{
+				InstanceProfileArn: c.AwsAttributes.InstanceProfileArn,
+			}
+			c.AwsAttributes = &awsAttributes
+		}
+		if c.AzureAttributes != nil {
+			c.AzureAttributes = &compute.AzureAttributes{}
+		}
+		if c.GcpAttributes != nil {
+			gcpAttributes := compute.GcpAttributes{
+				GoogleServiceAccount: c.GcpAttributes.GoogleServiceAccount,
+			}
+			c.GcpAttributes = &gcpAttributes
+		}
+		c.EnableElasticDisk = false
+		c.NodeTypeId = ""
+		c.DriverNodeTypeId = ""
+		return nil
+	default:
+		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster, "*", "*")
 	}
-	cluster.EnableElasticDisk = false
-	cluster.NodeTypeId = ""
-	cluster.DriverNodeTypeId = ""
 }
 
 // This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
 // Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
-func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster ClusterSpec) {
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *compute.EditCluster) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
 	if oldInstancePool != newInstancePool &&
@@ -261,14 +313,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	clusters := w.Clusters
-	var cluster ClusterSpec
-	common.DataToStructPointer(d, clusterSchema, &cluster)
-	if err := Validate(cluster); err != nil {
-		return err
-	}
-	ModifyRequestOnInstancePool(&cluster)
 	var createClusterRequest compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &createClusterRequest)
+	if err := Validate(createClusterRequest); err != nil {
+		return err
+	}
+	if err = ModifyRequestOnInstancePool(&createClusterRequest); err != nil {
+		return err
+	}
 	if createClusterRequest.Autoscale == nil {
 		createClusterRequest.ForceSendFields = []string{"NumWorkers"}
 	}
@@ -290,6 +342,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}
 	}
 
+	var cluster ClusterSpec
+	common.DataToStructPointer(d, clusterSchema, &cluster)
 	if len(cluster.Libraries) > 0 {
 		if err = w.Libraries.Install(ctx, compute.InstallLibraries{
 			ClusterId: d.Id(),
@@ -382,9 +436,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	clusters := w.Clusters
-	var cluster ClusterSpec
+	var cluster compute.EditCluster
 	common.DataToStructPointer(d, clusterSchema, &cluster)
 	clusterId := d.Id()
+	cluster.ClusterId = clusterId
 	var clusterInfo *compute.ClusterDetails
 
 	if hasClusterConfigChanged(d) {
@@ -392,8 +447,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err := Validate(cluster); err != nil {
 			return err
 		}
-		ModifyRequestOnInstancePool(&cluster)
-		FixInstancePoolChangeIfAny(d, cluster)
+		if err = ModifyRequestOnInstancePool(&cluster); err != nil {
+			return err
+		}
+		FixInstancePoolChangeIfAny(d, &cluster)
 
 		// We can only call the resize api if the cluster is in the running state
 		// and only the cluster size (ie num_workers OR autoscale) is being changed
@@ -453,10 +510,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
-			var editCluster compute.EditCluster
-			editCluster.ClusterId = clusterId
-			common.DataToStructPointer(d, clusterSchema, &editCluster)
-			_, err = clusters.Edit(ctx, editCluster)
+			_, err = clusters.Edit(ctx, cluster)
 		}
 		if err != nil {
 			return err
@@ -489,7 +543,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 
-	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(cluster.Libraries, libsClusterStatus)
+	var clusterLibraries ClusterSpec
+	common.DataToStructPointer(d, clusterSchema, &clusterLibraries)
+	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(clusterLibraries.Libraries, libsClusterStatus)
 
 	clusterInfo, err = clusters.GetByClusterId(ctx, clusterId)
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -43,6 +44,7 @@ type SqlTableInfo struct {
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
 	WarehouseID           string            `json:"warehouse_id,omitempty"`
+	Owner                 string            `json:"owner,omitempty" tf:"computed"`
 
 	exec    common.CommandExecutor
 	sqlExec sql.StatementExecutionInterface
@@ -87,11 +89,14 @@ func sqlTableIsManagedProperty(key string) bool {
 		"delta.columnMapping.maxColumnId":                          true,
 		"delta.enableDeletionVectors":                              true,
 		"delta.enableRowTracking":                                  true,
+		"delta.feature.clustering":                                 true,
+		"delta.feature.changeDataFeed":                             true,
 		"delta.feature.deletionVectors":                            true,
 		"delta.feature.domainMetadata":                             true,
 		"delta.feature.liquid":                                     true,
 		"delta.feature.rowTracking":                                true,
 		"delta.feature.v2Checkpoint":                               true,
+		"delta.feature.timestampNtz":                               true,
 		"delta.liquid.clusteringColumns":                           true,
 		"delta.rowTracking.materializedRowCommitVersionColumnName": true,
 		"delta.rowTracking.materializedRowIdColumnName":            true,
@@ -584,6 +589,19 @@ func ResourceSqlTable() common.Resource {
 			if err := ti.createTable(); err != nil {
 				return err
 			}
+			if ti.Owner != "" {
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				err = w.Tables.Update(ctx, catalog.UpdateTableRequest{
+					FullName: ti.FullName(),
+					Owner:    ti.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
 			d.SetId(ti.FullName())
 			return nil
 		},
@@ -595,6 +613,10 @@ func ResourceSqlTable() common.Resource {
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			var newti = new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, newti)
 			if err := newti.initCluster(ctx, d, c); err != nil {
@@ -604,7 +626,25 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			return newti.updateTable(&oldti)
+			err = newti.updateTable(&oldti)
+			if err != nil {
+				return err
+			}
+			if d.HasChange("owner") {
+				// if new owner is not specified, set it to the current user
+				if newti.Owner == "" {
+					currentUser, err := w.CurrentUser.Me(ctx)
+					if err != nil {
+						return err
+					}
+					newti.Owner = currentUser.UserName
+				}
+				return w.Tables.Update(ctx, catalog.UpdateTableRequest{
+					FullName: newti.FullName(),
+					Owner:    newti.Owner,
+				})
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)

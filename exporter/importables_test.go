@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
@@ -21,7 +22,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/libraries"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
@@ -31,6 +31,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/secrets"
+	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -92,10 +93,11 @@ func TestInstancePool(t *testing.T) {
 	assert.Equal(t, "def", name)
 
 	ic.meAdmin = true
-	err := resourcesMap["databricks_instance_pool"].Import(ic, &resource{
+	r := &resource{
 		ID:   "abc",
 		Data: d,
-	})
+	}
+	err := resourcesMap["databricks_instance_pool"].Import(ic, r)
 	assert.NoError(t, err)
 	assert.True(t, ic.testEmits["databricks_permissions[inst_pool_def] (id: /instance-pools/abc)"])
 }
@@ -325,10 +327,10 @@ func TestImportClusterLibraries(t *testing.T) {
 			Method:       "GET",
 			Status:       200,
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-			Response: libraries.ClusterLibraryStatuses{
-				LibraryStatuses: []libraries.LibraryStatus{
+			Response: compute.ClusterLibraryStatuses{
+				LibraryStatuses: []compute.LibraryFullStatus{
 					{
-						Library: &libraries.Library{
+						Library: &compute.Library{
 							Whl: "foo.whl",
 						},
 						Status: "INSTALLED",
@@ -434,13 +436,22 @@ func TestInstnacePoolsListWithMatch(t *testing.T) {
 	})
 }
 
-func TestJobListNoNameMatch(t *testing.T) {
+func TestJobListNoNameMatchOrFromBundles(t *testing.T) {
 	ic := importContextForTest()
 	ic.match = "bcd"
 	ic.importJobs([]jobs.Job{
 		{
 			Settings: &jobs.JobSettings{
 				Name: "abc",
+			},
+		},
+		{
+			Settings: &jobs.JobSettings{
+				Name:     "bcd",
+				EditMode: "UI_LOCKED",
+				Deployment: &sdk_jobs.JobDeployment{
+					Kind: "BUNDLE",
+				},
 			},
 		},
 	})
@@ -967,6 +978,30 @@ func TestRepoListFails(t *testing.T) {
 	})
 }
 
+func TestNotebookWorkspaceFileImportNotFound(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			MatchAny:     true,
+			Status:       404,
+			Response:     apierr.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_notebook"].Import(ic, &resource{
+			ID: "/abc",
+		})
+		assert.EqualError(t, err, "nope")
+		assert.Contains(t, ic.ignoredResources, "databricks_notebook. path=/abc")
+
+		err = resourcesMap["databricks_workspace_file"].Import(ic, &resource{
+			ID: "/def",
+		})
+		assert.EqualError(t, err, "nope")
+		assert.Contains(t, ic.ignoredResources, "databricks_workspace_file. path=/def")
+	})
+}
+
 func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAdmin bool, cb func(*importContext)) {
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -1007,20 +1042,11 @@ func TestNotebookGeneration(t *testing.T) {
 					{
 						Path:       "/First/Second",
 						ObjectType: "NOTEBOOK",
+						ObjectID:   123,
+						Language:   "PYTHON",
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/First/Second",
-				Language:   "PYTHON",
-			},
-			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1057,22 +1083,13 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 						ObjectType: "NOTEBOOK",
 					},
 					{
-						Path:       "/First/Second",
+						ObjectID:   123,
 						ObjectType: "NOTEBOOK",
+						Path:       "/First/Second",
+						Language:   "PYTHON",
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFirst%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/First/Second",
-				Language:   "PYTHON",
-			},
-			ReuseRequest: true,
 		},
 		{
 			Method:   "GET",
@@ -1111,8 +1128,10 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 						ObjectType: "NOTEBOOK",
 					},
 					{
-						Path:       "/Fir\"st\\/Second",
+						ObjectID:   123,
 						ObjectType: "NOTEBOOK",
+						Path:       "/Fir\"st\\/Second",
+						Language:   "PYTHON",
 					},
 				},
 			},
@@ -1125,17 +1144,6 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 				ObjectID:   124,
 				ObjectType: "DIRECTORY",
 				Path:       "/Fir\"st\\",
-			},
-			ReuseRequest: true,
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/workspace/get-status?path=%2FFir%22st%5C%2FSecond",
-			Response: workspace.ObjectStatus{
-				ObjectID:   123,
-				ObjectType: "NOTEBOOK",
-				Path:       "/Fir\"st\\/Second",
-				Language:   "PYTHON",
 			},
 			ReuseRequest: true,
 		},
@@ -1648,6 +1656,7 @@ func TestImportManagedCatalog(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.enableListing("uc-schemas")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
 		d.SetId("ctest")
@@ -1704,6 +1713,7 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.enableListing("uc-schemas,uc-volumes,uc-models,uc-tables")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
 		d.SetId("ctest")
@@ -1767,6 +1777,7 @@ func TestImportSchema(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-volumes,uc-models,uc-tables")
+		ic.enableListing("uc-schemas,uc-volumes,uc-models,uc-tables")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceSchema().ToResource().TestResourceData()
 		d.SetId("ctest.stest")
@@ -1789,11 +1800,11 @@ func TestImportSchema(t *testing.T) {
 func TestImportShare(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("uc-grants,uc-volumes,uc-models,uc-tables")
-	d := tfcatalog.ResourceShare().ToResource().TestResourceData()
-	scm := tfcatalog.ResourceShare().Schema
-	share := tfcatalog.ShareInfo{
+	d := tfsharing.ResourceShare().ToResource().TestResourceData()
+	scm := tfsharing.ResourceShare().Schema
+	share := tfsharing.ShareInfo{
 		Name: "stest",
-		Objects: []tfcatalog.SharedDataObject{
+		Objects: []tfsharing.SharedDataObject{
 			{
 				DataObjectType: "TABLE",
 				Name:           "ctest.stest.table1",
@@ -1813,7 +1824,6 @@ func TestImportShare(t *testing.T) {
 		},
 	}
 	d.MarkNewResource()
-	common.StructToData(share, scm, d)
 	err := common.StructToData(share, scm, d)
 	require.NoError(t, err)
 	err = resourcesMap["databricks_share"].Import(ic, &resource{
@@ -2183,9 +2193,6 @@ func TestImportGrants(t *testing.T) {
 	r := &resource{ID: id, Data: d}
 	err := resourcesMap["databricks_grants"].Import(ic, r)
 	assert.NoError(t, err)
-
-	// Test ignore function
-	assert.True(t, resourcesMap["databricks_grants"].Ignore(ic, r))
 
 	var pList tfcatalog.PermissionsList
 	common.DataToStructPointer(r.Data, s, &pList)

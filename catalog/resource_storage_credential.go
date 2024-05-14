@@ -15,7 +15,7 @@ type StorageCredentialInfo struct {
 	Comment                     string                                       `json:"comment,omitempty"`
 	Aws                         *catalog.AwsIamRoleResponse                  `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure                       *catalog.AzureServicePrincipal               `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI                        *catalog.AzureManagedIdentity                `json:"azure_managed_identity,omitempty" tf:"group:access"`
+	AzMI                        *catalog.AzureManagedIdentityResponse        `json:"azure_managed_identity,omitempty" tf:"group:access"`
 	GcpSAKey                    *GcpServiceAccountKey                        `json:"gcp_service_account_key,omitempty" tf:"group:access"`
 	DatabricksGcpServiceAccount *catalog.DatabricksGcpServiceAccountResponse `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
 	MetastoreID                 string                                       `json:"metastore_id,omitempty" tf:"computed"`
@@ -106,7 +106,6 @@ func ResourceStorageCredential() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId:           d.Get("metastore_id").(string),
@@ -115,11 +114,27 @@ func ResourceStorageCredential() common.Resource {
 				if err != nil {
 					return err
 				}
+				// azure client secret is sensitive, so we need to preserve it
+				var scOrig catalog.CreateStorageCredential
+				common.DataToStructPointer(d, storageCredentialSchema, &scOrig)
+				if scOrig.AzureServicePrincipal != nil {
+					if scOrig.AzureServicePrincipal.ClientSecret != "" {
+						storageCredential.CredentialInfo.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
+					}
+				}
 				return common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				storageCredential, err := w.StorageCredentials.GetByName(ctx, d.Id())
 				if err != nil {
 					return err
+				}
+				// azure client secret is sensitive, so we need to preserve it
+				var scOrig catalog.CreateStorageCredential
+				common.DataToStructPointer(d, storageCredentialSchema, &scOrig)
+				if scOrig.AzureServicePrincipal != nil {
+					if scOrig.AzureServicePrincipal.ClientSecret != "" {
+						storageCredential.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
+					}
 				}
 				return common.StructToData(storageCredential, storageCredentialSchema, d)
 			})

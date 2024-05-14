@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -41,7 +42,7 @@ var kindMap = map[reflect.Kind]string{
 // Global registry for ResoureProvider, the goal is to make StructToSchema able to find pre-registered ResourceProvider for a
 // given struct so that we don't have to specify aliases and customizations redundantly if one schema references the another
 // schema.
-var resourceProviderRegistry map[string]ResourceProvider
+var resourceProviderRegistry map[reflect.Type]ResourceProvider
 
 // Pre-registered ResourceProvider for a given struct into resourceProviderRegistry.
 // This function should be called in the init() function in packages with ResourceProvider.
@@ -52,20 +53,46 @@ var resourceProviderRegistry map[string]ResourceProvider
 //	}
 func RegisterResourceProvider(v any, r ResourceProvider) {
 	if resourceProviderRegistry == nil {
-		resourceProviderRegistry = make(map[string]ResourceProvider)
+		resourceProviderRegistry = make(map[reflect.Type]ResourceProvider)
 	}
-	typeName := getNameForType(reflect.ValueOf(v).Type())
-	if _, ok := resourceProviderRegistry[typeName]; ok {
-		errMsg := fmt.Sprintf("%s has already been registered, please avoid registering the same type repeatedly.", typeName)
+	t := getResourceProviderRegistryKey(v)
+	if _, ok := resourceProviderRegistry[t]; ok {
+		errMsg := fmt.Sprintf("%s has already been registered, please avoid registering the same type repeatedly.", getNameForType(t))
 		panic(errMsg)
 	}
-	resourceProviderRegistry[typeName] = r
+	resourceProviderRegistry[t] = r
+}
+
+func getResourceProviderRegistryKey(v any) reflect.Type {
+	t := reflect.ValueOf(v).Type()
+	return getNonPointerType(t)
+}
+
+func getNonPointerType(t reflect.Type) reflect.Type {
+	if t.Kind() == reflect.Ptr {
+		return t.Elem()
+	} else {
+		return t
+	}
 }
 
 // Generic interface for ResourceProvider. Using CustomizeSchema function to keep track of additional information
 // on top of the generated go-sdk struct.
 type ResourceProvider interface {
-	CustomizeSchema(map[string]*schema.Schema) map[string]*schema.Schema
+	CustomizeSchema(*CustomizableSchema) *CustomizableSchema
+}
+
+// Interface for ResourcePrivider that needs certain customizaitons that shouldn't be shared.
+type ResourceProviderWithResourceSpecificCustomization interface {
+	ResourceProvider
+	// Customizations in this function will not be applied when this type is referenced from another resource by resourceProviderRegistry.
+	// Example use case:
+	//    // autotermination_minutes should only have a default value of 60 for the clusters resource, but not in the nested cluster schema in jobs
+	//    func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
+	// 	      s.SchemaPath("autotermination_minutes").SetDefault(60)
+	// 	      return s
+	//    }
+	CustomizeSchemaResourceSpecific(*CustomizableSchema) *CustomizableSchema
 }
 
 // Interface for ResourceProvider instances that need aliases for fields.
@@ -80,6 +107,9 @@ type ResourceProviderWithAlias interface {
 	//	        "libraries": "library"
 	//	    }
 	//	}
+	// Note: In case the struct is derived from another struct example:
+	// type LibraryList compute.InstallLibraries
+	// The top level key would still be the name of the struct i.e. LibraryList in this example.
 	Aliases() map[string]map[string]string
 }
 
@@ -96,8 +126,19 @@ type RecursiveResourceProvider interface {
 	MaxDepthForTypes() map[string]int
 }
 
-// Takes in a ResourceProvider and converts that into a map from string to schema.
-func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schema {
+// Used by StructToSchema, after executing typeToSchema and applying the standard customizations,
+// it also applies the resource specific customizations, if applicable.
+func resourceProviderStructToSchema(v ResourceProvider, scp schemaPathContext) map[string]*schema.Schema {
+	customizedScm := resourceProviderStructToSchemaInternal(v, scp)
+	if rps, ok := v.(ResourceProviderWithResourceSpecificCustomization); ok {
+		// Apply resource specific customizations, if applicable.
+		return rps.CustomizeSchemaResourceSpecific(customizedScm).GetSchemaMap()
+	} else {
+		return customizedScm.GetSchemaMap()
+	}
+}
+
+func resourceProviderStructToSchemaInternal(v ResourceProvider, scp schemaPathContext) *CustomizableSchema {
 	rv := reflect.ValueOf(v)
 	var scm map[string]*schema.Schema
 	aliases := map[string]map[string]string{}
@@ -105,12 +146,13 @@ func resourceProviderStructToSchema(v ResourceProvider) map[string]*schema.Schem
 		aliases = rpwa.Aliases()
 	}
 	if rrp, ok := v.(RecursiveResourceProvider); ok {
-		scm = typeToSchema(rv, aliases, getRecursionTrackingContext(rrp))
+		scm = typeToSchema(rv, aliases, getTrackingContext(rrp).withPathContext(scp))
 	} else {
-		scm = typeToSchema(rv, aliases, getEmptyRecursionTrackingContext())
+		scm = typeToSchema(rv, aliases, getEmptyTrackingContext().withPathContext(scp))
 	}
-	scm = v.CustomizeSchema(scm)
-	return scm
+	cs := CustomizeSchemaPath(scm)
+	cs.context = scp
+	return v.CustomizeSchema(cs)
 }
 
 func reflectKind(k reflect.Kind) string {
@@ -172,8 +214,28 @@ func SchemaPath(s map[string]*schema.Schema, path ...string) (*schema.Schema, er
 	return nil, fmt.Errorf("%v does not compute", path)
 }
 
+func SchemaMap(s map[string]*schema.Schema, path ...string) (map[string]*schema.Schema, error) {
+	sch, err := SchemaPath(s, path...)
+	if err != nil {
+		return nil, err
+	}
+	cv, ok := sch.Elem.(*schema.Resource)
+	if !ok {
+		return nil, fmt.Errorf("%s is not nested resource", path[len(path)-1])
+	}
+	return cv.Schema, nil
+}
+
 func MustSchemaPath(s map[string]*schema.Schema, path ...string) *schema.Schema {
 	sch, err := SchemaPath(s, path...)
+	if err != nil {
+		panic(err)
+	}
+	return sch
+}
+
+func MustSchemaMap(s map[string]*schema.Schema, path ...string) map[string]*schema.Schema {
+	sch, err := SchemaMap(s, path...)
 	if err != nil {
 		panic(err)
 	}
@@ -187,10 +249,10 @@ func StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]
 		if customize != nil {
 			panic("customize should be nil if the input implements the ResourceProvider interface; use CustomizeSchema of ResourceProvider instead")
 		}
-		return resourceProviderStructToSchema(rp)
+		return resourceProviderStructToSchema(rp, getEmptySchemaPathContext())
 	}
 	rv := reflect.ValueOf(v)
-	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyRecursionTrackingContext())
+	scm := typeToSchema(rv, map[string]map[string]string{}, getEmptyTrackingContext())
 	if customize != nil {
 		scm = customize(scm)
 	}
@@ -324,6 +386,10 @@ type field struct {
 	v  reflect.Value
 }
 
+func (f field) isForceSendFields() bool {
+	return f.sf.Name == "ForceSendFields"
+}
+
 func listAllFields(v reflect.Value) []field {
 	t := v.Type()
 	fields := make([]field, 0, v.NumField())
@@ -341,7 +407,10 @@ func listAllFields(v reflect.Value) []field {
 	return fields
 }
 
-func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recursionTrackingContext) map[string]*schema.Schema {
+func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trackingContext) map[string]*schema.Schema {
+	if rpStruct, ok := resourceProviderRegistry[getNonPointerType(v.Type())]; ok {
+		return resourceProviderStructToSchemaInternal(rpStruct, tc.pathCtx).GetSchemaMap()
+	}
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -351,14 +420,13 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 	if rk != reflect.Struct {
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
-	rt = rt.copy()
-	rt.visit(v)
+	tc = tc.visit(v)
 	fields := listAllFields(v)
 	for _, field := range fields {
 		typeField := field.sf
-		if rt.depthExceeded(typeField) {
+		if tc.depthExceeded(typeField) {
 			// Skip the field if recursion depth is over the limit.
-			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", getNameForType(typeField.Type), rt.getMaxDepthForTypeField(typeField))
+			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", getNameForType(typeField.Type), tc.getMaxDepthForTypeField(typeField))
 			continue
 		}
 		tfTag := typeField.Tag.Get("tf")
@@ -426,7 +494,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			scm[fieldName].Type = schema.TypeList
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedSchema := typeToSchema(sv, aliases, rt)
+			nestedSchema := typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -443,7 +511,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			elem := typeField.Type  // changed from ptr
 			sv := reflect.New(elem) // changed from ptr
 
-			nestedSchema := typeToSchema(sv, aliases, rt)
+			nestedSchema := typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName]))
 			if strings.Contains(tfTag, "suppress_diff") {
 				scm[fieldName].DiffSuppressFunc = diffSuppressor(fieldName, scm[fieldName])
 				for k, v := range nestedSchema {
@@ -472,7 +540,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, rt recu
 			case reflect.Struct:
 				sv := reflect.New(elem).Elem()
 				scm[fieldName].Elem = &schema.Resource{
-					Schema: typeToSchema(sv, aliases, rt),
+					Schema: typeToSchema(sv, aliases, tc.withPath(fieldName, scm[fieldName])),
 				}
 			}
 		default:
@@ -491,11 +559,11 @@ func IsRequestEmpty(v any) (bool, error) {
 		return false, fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rv.Kind()), rv)
 	}
 	var isNotEmpty bool
-	err := iterFields(rv, []string{}, StructToSchema(v, nil), map[string]map[string]string{}, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	err := iterFields(rv, []string{}, StructToSchema(v, nil), map[string]map[string]string{}, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 		if isNotEmpty {
 			return nil
 		}
-		if !valueField.IsZero() {
+		if !valueField.v.IsZero() {
 			isNotEmpty = true
 		}
 		return nil
@@ -504,6 +572,9 @@ func IsRequestEmpty(v any) (bool, error) {
 }
 
 // isGoSdk returns true if the struct is from databricks-sdk-go or embeds a struct from databricks-sdk-go.
+// Note: In case the struct doesn't explicitly embed a struct from databricks-sdk-go, this would return false, example:
+// type LibraryList compute.InstallLibraries --> isGoSDK(LibraryList) would return false whereas
+// type LibraryList struct { compute.InstallLibraries } --> isGoSDK(LibraryList) would return true
 func isGoSdk(v reflect.Value) bool {
 	if strings.Contains(v.Type().PkgPath(), "databricks-sdk-go") {
 		return true
@@ -520,7 +591,7 @@ func isGoSdk(v reflect.Value) bool {
 // Iterate through each field of the given reflect.Value object and execute a callback function with the corresponding
 // terraform schema object as the input.
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]map[string]string,
-	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
+	cb func(fieldSchema *schema.Schema, path []string, valueField field) error) error {
 	rk := rv.Kind()
 	if rk != reflect.Struct {
 		return fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
@@ -549,8 +620,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
-		valueField := field.v
-		err := cb(fieldSchema, append(path, fieldName), &valueField)
+		err := cb(fieldSchema, append(path, fieldName), field)
 		if err != nil {
 			return fmt.Errorf("%s: %s", fieldName, err)
 		}
@@ -590,10 +660,10 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			}
 			v = v.Elem()
 		}
-		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema,
-			path []string, valueField *reflect.Value) error {
+
+		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 			fieldName := path[len(path)-1]
-			fieldValue := valueField.Interface()
+			fieldValue := valueField.v.Interface()
 			fieldPath := strings.Join(path, ".")
 			switch fieldSchema.Type {
 			case schema.TypeList, schema.TypeSet:
@@ -602,8 +672,13 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 					return fmt.Errorf("%s: %v", path, err)
 				}
 				data[fieldName] = nv
+			case schema.TypeBool, schema.TypeInt:
+				if !isIntOrBoolExplicitlySet(v, valueField) {
+					return nil
+				}
+				data[fieldName] = fieldValue
 			default:
-				if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
+				if fieldSchema.Optional && isValueNilOrEmpty(valueField.v, fieldPath) {
 					return nil
 				}
 				data[fieldName] = fieldValue
@@ -618,7 +693,7 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 	return resultList, nil
 }
 
-func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
+func isValueNilOrEmpty(valueField reflect.Value, fieldPath string) bool {
 	switch valueField.Kind() {
 	case reflect.Ptr:
 		if valueField.IsNil() {
@@ -634,6 +709,43 @@ func isValueNilOrEmpty(valueField *reflect.Value, fieldPath string) bool {
 	return false
 }
 
+func isZeroValueBoolOrInt(valueField reflect.Value) bool {
+	switch valueField.Kind() {
+	case reflect.Bool:
+		return !valueField.Bool()
+	case reflect.Int, reflect.Int32, reflect.Int64:
+		return valueField.Int() == 0
+	}
+	return false
+}
+
+func isIntOrBoolExplicitlySet(root reflect.Value, valueField field) bool {
+	fv := root.FieldByName("ForceSendFields")
+	var forceSendFields []string
+	// force send fields might not exist in struct, so checking it against zero value first
+	// if it does not exist, all fields in struct considered as explicitly set
+	if fv == (reflect.Value{}) {
+		return true
+	}
+
+	forceSendFields = fv.Interface().([]string)
+	isZeroValue := isZeroValueBoolOrInt(valueField.v)
+
+	// If the field is not a zero value, it is explicitly set
+	if !isZeroValue {
+		return true
+	}
+
+	// If the field is stored in the force send fields, we consider it explicitly set
+	if slices.Contains(forceSendFields, valueField.sf.Name) {
+		return true
+	}
+
+	// otherwise, we consider it not explicitly set
+	log.Printf("[TRACE] skipping field %s", valueField.sf.Name)
+	return false
+}
+
 // StructToData reads result using schema onto resource data
 func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceData) error {
 	aliases := getAliasesMapFromStruct(result)
@@ -641,14 +753,13 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	return iterFields(v, []string{}, s, aliases, func(
-		fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
-		fieldValue := valueField.Interface()
+	return iterFields(v, []string{}, s, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
+		fieldValue := valueField.v.Interface()
 		if fieldValue == nil {
 			return nil
 		}
 		fieldPath := strings.Join(path, ".")
-		if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
+		if fieldSchema.Optional && isValueNilOrEmpty(valueField.v, fieldPath) {
 			return nil
 		}
 		_, configured := d.GetOk(fieldPath)
@@ -675,6 +786,12 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 			}
 			log.Printf("[TRACE] set %s %#v", fieldPath, nv)
 			return d.Set(fieldPath, nv)
+		case schema.TypeBool, schema.TypeInt:
+			if !isIntOrBoolExplicitlySet(v, valueField) {
+				return nil
+			}
+			log.Printf("[TRACE] set %s %#v", fieldPath, fieldValue)
+			return d.Set(fieldPath, fieldValue)
 		default:
 			log.Printf("[TRACE] set %s %#v", fieldPath, fieldValue)
 			return d.Set(fieldPath, fieldValue)
@@ -739,8 +856,7 @@ func getAliasesMapFromStruct(s any) map[string]map[string]string {
 
 func readReflectValueFromData(path []string, d attributeGetter,
 	rv reflect.Value, s map[string]*schema.Schema, aliases map[string]map[string]string) error {
-	return iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema,
-		path []string, valueField *reflect.Value) error {
+	err := iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
@@ -749,29 +865,29 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		switch fieldSchema.Type {
 		case schema.TypeInt:
 			if v, ok := raw.(int); ok {
-				valueField.SetInt(int64(v))
+				valueField.v.SetInt(int64(v))
 			}
 		case schema.TypeString:
 			if v, ok := raw.(string); ok {
-				valueField.SetString(v)
+				valueField.v.SetString(v)
 			}
 		case schema.TypeBool:
 			if v, ok := raw.(bool); ok {
-				valueField.SetBool(v)
+				valueField.v.SetBool(v)
 			}
 		case schema.TypeFloat:
 			if v, ok := raw.(float64); ok {
-				valueField.SetFloat(v)
+				valueField.v.SetFloat(v)
 			}
 		case schema.TypeMap:
-			mapValueKind := valueField.Type().Elem().Kind()
-			valueField.Set(reflect.MakeMap(valueField.Type()))
+			mapValueKind := valueField.v.Type().Elem().Kind()
+			valueField.v.Set(reflect.MakeMap(valueField.v.Type()))
 			for key, ivalue := range raw.(map[string]any) {
 				vrv, err := primitiveReflectValueFromInterface(mapValueKind, ivalue, fieldPath, key)
 				if err != nil {
 					return err
 				}
-				valueField.SetMapIndex(reflect.ValueOf(key), vrv)
+				valueField.v.SetMapIndex(reflect.ValueOf(key), vrv)
 			}
 		case schema.TypeSet:
 			// here we rely on Terraform SDK to perform validation, so we don't to it twice
@@ -790,6 +906,54 @@ func readReflectValueFromData(path []string, d attributeGetter,
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return setForceSendFieldsIfPresent(rv, d, path, s, aliases)
+}
+
+// If the value is a structure with a field named "ForceSendFields", this function will set the value of that field
+// to a list of fields that are explicitly set to their zero value.
+//
+// For now, this only will apply to boolean and integer fields in the structure.
+func setForceSendFieldsIfPresent(rv reflect.Value, d attributeGetter, path []string, s map[string]*schema.Schema, aliases map[string]map[string]string) error {
+	if rv.Kind() != reflect.Struct {
+		return nil
+	}
+	allFields := listAllFields(rv)
+	forceSendFieldsIndex := slices.IndexFunc(allFields, field.isForceSendFields)
+	if forceSendFieldsIndex == -1 {
+		return nil
+	}
+	forceSendFields := make([]string, 0)
+	forceSendFieldsField := allFields[forceSendFieldsIndex].v
+	err := iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema, path []string, valueField field) error {
+		if fieldSchema.Type != schema.TypeBool && fieldSchema.Type != schema.TypeInt {
+			return nil
+		}
+		jsonTag := valueField.sf.Tag.Get("json")
+		if jsonTag[0] == '-' {
+			return nil
+		}
+		fieldPath := strings.Join(path, ".")
+		raw, exists := d.GetOkExists(fieldPath)
+		if !exists {
+			return nil
+		}
+		zero := fieldSchema.Type.Zero()
+		if !reflect.DeepEqual(raw, zero) {
+			return nil
+		}
+		forceSendFields = append(forceSendFields, valueField.sf.Name)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if len(forceSendFields) > 0 {
+		forceSendFieldsField.Set(reflect.ValueOf(forceSendFields))
+	}
+	return nil
 }
 
 func primitiveReflectValueFromInterface(rk reflect.Kind,
@@ -837,16 +1001,16 @@ func primitiveReflectValueFromInterface(rk reflect.Kind,
 }
 
 func readListFromData(path []string, d attributeGetter,
-	rawList []any, valueField *reflect.Value, fieldSchema *schema.Schema, aliases map[string]map[string]string,
+	rawList []any, valueField field, fieldSchema *schema.Schema, aliases map[string]map[string]string,
 	offsetConverter func(i int) string) error {
 	if len(rawList) == 0 {
 		return nil
 	}
 	fieldPath := strings.Join(path, ".")
-	switch valueField.Type().Kind() {
+	switch valueField.v.Type().Kind() {
 	case reflect.Ptr:
-		vpointer := reflect.New(valueField.Type().Elem())
-		valueField.Set(vpointer)
+		vpointer := reflect.New(valueField.v.Type().Elem())
+		valueField.v.Set(vpointer)
 		ve := vpointer.Elem()
 		// here we rely on Terraform SDK to perform validation, so we don't to it twice
 		nestedResource := fieldSchema.Elem.(*schema.Resource)
@@ -856,7 +1020,7 @@ func readListFromData(path []string, d attributeGetter,
 		// code path for setting the struct value is different from pointer value
 		// in a single way: we set the field only after readReflectValueFromData
 		// traversed the graph.
-		vstruct := reflect.New(valueField.Type())
+		vstruct := reflect.New(valueField.v.Type())
 		ve := vstruct.Elem()
 		nestedResource := fieldSchema.Elem.(*schema.Resource)
 		nestedPath := append(path, offsetConverter(0))
@@ -864,12 +1028,12 @@ func readListFromData(path []string, d attributeGetter,
 		if err != nil {
 			return err
 		}
-		valueField.Set(ve)
+		valueField.v.Set(ve)
 		return nil
 	case reflect.Slice:
-		k := valueField.Type().Elem().Kind()
-		newSlice := reflect.MakeSlice(valueField.Type(), len(rawList), len(rawList))
-		valueField.Set(newSlice)
+		k := valueField.v.Type().Elem().Kind()
+		newSlice := reflect.MakeSlice(valueField.v.Type(), len(rawList), len(rawList))
+		valueField.v.Set(newSlice)
 		for i, elem := range rawList {
 			item := newSlice.Index(i)
 			switch k {
@@ -877,7 +1041,7 @@ func readListFromData(path []string, d attributeGetter,
 				// here we rely on Terraform SDK to perform validation, so we don't to it twice
 				nestedResource := fieldSchema.Elem.(*schema.Resource)
 				nestedPath := append(path, offsetConverter(i))
-				vpointer := reflect.New(valueField.Type().Elem())
+				vpointer := reflect.New(valueField.v.Type().Elem())
 				ve := vpointer.Elem()
 				err := readReflectValueFromData(nestedPath, d, ve, nestedResource.Schema, aliases)
 				if err != nil {

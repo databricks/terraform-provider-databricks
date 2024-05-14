@@ -42,6 +42,25 @@ func TestImportContextFindSkips(t *testing.T) {
 	assert.Nil(t, traversal)
 }
 
+func TestFindRefIgnoredResource(t *testing.T) {
+	ic := &importContext{
+		Importables: map[string]importable{
+			"a": {
+				Ignore: func(ic *importContext, r *resource) bool {
+					return true
+				},
+			},
+			"b": {},
+		},
+	}
+	ra := &resourceApproximation{
+		Type:     "a",
+		Resource: &resource{},
+	}
+	assert.True(t, ic.isIgnoredResourceApproximation(ra))
+	assert.False(t, ic.isIgnoredResourceApproximation(&resourceApproximation{Type: "b"}))
+}
+
 func TestImportContextFindNoDirectLookup(t *testing.T) {
 	state := newStateApproximation([]string{"a"})
 	state.Append(resourceApproximation{

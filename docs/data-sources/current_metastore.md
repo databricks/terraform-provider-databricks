@@ -18,7 +18,7 @@ data "databricks_current_metastore" "this" {
 }
 
 output "some_metastore" {
-  value = data.databricks_metastore.this.metastore_info[0]
+  value = data.databricks_current_metastore.this.metastore_info[0]
 }
 ```
 
@@ -26,7 +26,7 @@ output "some_metastore" {
 
 This data source exports the following attributes:
 
-* `id` - metastore ID.
+* `id` - metastore ID. Will be `no_metastore` if there is no metastore assigned for the current workspace
 * `metastore_info` - summary about a metastore attached to the current workspace returned by [Get a metastore summary API](https://docs.databricks.com/api/workspace/metastores/summary). This contains the following attributes (check the API page for up-to-date details):
   * `name` - Name of metastore.
   * `metastore_id` - Metastore ID.

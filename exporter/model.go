@@ -30,10 +30,9 @@ type instanceApproximation struct {
 type resourceApproximation struct {
 	Type      string                  `json:"type"`
 	Name      string                  `json:"name"`
-	Provider  string                  `json:"provider"`
 	Mode      string                  `json:"mode"`
-	Module    string                  `json:"module,omitempty"`
 	Instances []instanceApproximation `json:"instances"`
+	Resource  *resource
 }
 
 func (ra *resourceApproximation) Get(attr string) (any, bool) {
@@ -204,6 +203,8 @@ type reference struct {
 	IsValidApproximation isValidAproximationFunc
 	// if we should skip direct lookups (for example, we need it for UC schemas matching)
 	SkipDirectLookup bool
+	// Extra Lookup key - if we need to search for the resource in a different way
+	ExtraLookupKey string
 }
 
 func (r reference) MatchAttribute() string {
@@ -342,12 +343,16 @@ func (r *resource) ImportResource(ic *importContext) {
 			return pr.ReadContext(ctx, r.Data, ic.Client)
 		},
 			fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
-		if dia != nil {
+		if dia.HasError() {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
 		if r.Data.Id() == "" {
-			r.Data.SetId(r.ID)
+			if r.Resource != "databricks_permissions" && r.Resource != "databricks_grants" {
+				log.Printf("[WARN] %s %s has empty ID because it's deleted or empty", r.Resource, r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+			}
+			return
 		}
 	}
 	r.Name = ic.ResourceName(r)

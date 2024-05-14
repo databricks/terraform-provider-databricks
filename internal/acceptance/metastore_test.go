@@ -3,59 +3,54 @@ package acceptance
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func getStorageRoot(cloudEnv string) string {
-	switch cloudEnv {
-	case "ucacct":
+func getStorageRoot(t *testing.T) string {
+	if isAws(t) {
 		return "s3://{env.TEST_BUCKET}/test{var.RANDOM}"
-	case "azure-ucacct":
+	} else if isAzure(t) {
 		return "abfss://{var.RANDOM}@{var.RANDOM}/"
-	case "gcp-accounts":
+	} else if isGcp(t) {
 		return "gs://{var.RANDOM}/metastore"
-	default:
-		return ""
 	}
+	return ""
 }
 
-func getRegion(cloudEnv string) string {
-	switch cloudEnv {
-	case "ucacct":
+func getRegion(t *testing.T) string {
+	if isAws(t) {
 		return "us-east-1"
-	case "azure-ucacct":
+	} else if isAzure(t) {
 		return "eastus"
-	case "gcp-accounts":
+	} else if isGcp(t) {
 		return "us-east1"
-	default:
-		return ""
 	}
+	return ""
 }
 
 func TestUcAccRootlessMetastore(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	loadUcacctEnv(t)
 	runMetastoreTest(t, map[string]any{
-		"region": getRegion(os.Getenv("CLOUD_ENV")),
+		"region": getRegion(t),
 	})
 }
 
 func TestUcAccMetastore(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	loadUcacctEnv(t)
 	runMetastoreTest(t, map[string]any{
-		"storage_root": getStorageRoot(os.Getenv("CLOUD_ENV")),
-		"region":       getRegion(os.Getenv("CLOUD_ENV")),
+		"storage_root": getStorageRoot(t),
+		"region":       getRegion(t),
 	})
 }
 
 func TestUcAccMetastoreDeltaSharing(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	loadUcacctEnv(t)
 	runMetastoreTest(t, map[string]any{
-		"storage_root":        getStorageRoot(os.Getenv("CLOUD_ENV")),
-		"region":              getRegion(os.Getenv("CLOUD_ENV")),
+		"storage_root":        getStorageRoot(t),
+		"region":              getRegion(t),
 		"delta_sharing_scope": "INTERNAL",
 		"delta_sharing_recipient_token_lifetime_in_seconds": 3600,
 		"delta_sharing_organization_name":                   "databricks-tf-provider-test",
@@ -63,20 +58,20 @@ func TestUcAccMetastoreDeltaSharing(t *testing.T) {
 }
 
 func TestUcAccMetastoreDeltaSharingInfiniteLifetime(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	loadUcacctEnv(t)
 	runMetastoreTest(t, map[string]any{
-		"storage_root":        getStorageRoot(os.Getenv("CLOUD_ENV")),
-		"region":              getRegion(os.Getenv("CLOUD_ENV")),
+		"storage_root":        getStorageRoot(t),
+		"region":              getRegion(t),
 		"delta_sharing_scope": "INTERNAL",
 		"delta_sharing_recipient_token_lifetime_in_seconds": 0,
 	})
 }
 
 func TestUcAccMetastoreWithOwnerUpdates(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucacct")
+	loadUcacctEnv(t)
 	runMetastoreTestWithOwnerUpdates(t, map[string]any{
-		"storage_root": getStorageRoot(os.Getenv("CLOUD_ENV")),
-		"region":       getRegion(os.Getenv("CLOUD_ENV")),
+		"storage_root": getStorageRoot(t),
+		"region":       getRegion(t),
 	})
 }
 

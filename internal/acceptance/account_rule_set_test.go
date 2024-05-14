@@ -2,11 +2,10 @@ package acceptance
 
 import (
 	"context"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -14,8 +13,8 @@ import (
 )
 
 // Application ID is mandatory in Azure today.
-func getServicePrincipalResource(cloudEnv string) string {
-	if strings.HasPrefix(cloudEnv, "azure") {
+func getServicePrincipalResource(t *testing.T) string {
+	if isAzure(t) {
 		return `
 		resource "databricks_service_principal" "this" {
 			application_id = "{var.RANDOM_UUID}"
@@ -31,9 +30,8 @@ func getServicePrincipalResource(cloudEnv string) string {
 }
 
 func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "account")
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	spResource := getServicePrincipalResource(cloudEnv)
+	loadAccountEnv(t)
+	spResource := getServicePrincipalResource(t)
 	accountLevel(t, step{
 		Template: spResource + `
 		resource "databricks_group" "this" {
@@ -48,15 +46,17 @@ func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
 				role = "roles/servicePrincipal.manager"
 			}
 		}`,
-		Check: resourceCheck("databricks_access_control_rule_set.sp_rule_set",
-			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheckWithState("databricks_access_control_rule_set.sp_rule_set",
+			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
+				id := state.ID
+				eTag := state.Attributes["etag"]
 				a, err := client.AccountClient()
 				if err != nil {
 					return err
 				}
 				ruleSetRes, err := a.AccessControl.GetRuleSet(ctx, iam.GetRuleSetRequest{
 					Name: id,
-					Etag: "",
+					Etag: eTag,
 				})
 				if err != nil {
 					return err

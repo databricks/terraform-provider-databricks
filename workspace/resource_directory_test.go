@@ -61,6 +61,34 @@ func TestResourceDirectoryDelete(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 }
 
+func TestResourceDirectoryDelete_NotFound(t *testing.T) {
+	path := "/test/path"
+	delete_recursive := true
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          http.MethodPost,
+				Resource:        "/api/2.0/workspace/delete",
+				ExpectedRequest: DeletePath{Path: path, Recursive: delete_recursive},
+				Response: apierr.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/test/path) doesn't exist.",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourceDirectory(),
+		Delete:   true,
+		ID:       path,
+		State: map[string]any{
+			"path":             "/foo/path.py",
+			"delete_recursive": delete_recursive,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, path, d.Id())
+}
+
 func TestResourceDirectoryRead_NotFound(t *testing.T) {
 	path := "/test/path"
 	qa.ResourceFixture{

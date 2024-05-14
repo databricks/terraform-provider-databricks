@@ -343,3 +343,6 @@ scripts/tt
 .metals
 
 provider/completeness.md
+
+# VS Code debugging binaries
+__debug_bin*

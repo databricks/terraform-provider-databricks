@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -48,9 +49,8 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 	})
 }
 
-func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
-	workspaceLevel(t, step{
-		Template: `
+func singleNodeClusterTemplate(autoTerminationMinutes string) string {
+	return fmt.Sprintf(`
 		data "databricks_spark_version" "latest" {
 		}
 		resource "databricks_cluster" "this" {
@@ -58,7 +58,7 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 			spark_version = data.databricks_spark_version.latest.id
 			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 			num_workers = 0
-			autotermination_minutes = 10
+			autotermination_minutes = %s
 			spark_conf = {
 				"spark.databricks.cluster.profile" = "singleNode"
 				"spark.master" = "local[*]"
@@ -66,6 +66,14 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 			custom_tags = {
 				"ResourceClass" = "SingleNode"
 			}
-		}`,
+		}
+	`, autoTerminationMinutes)
+}
+
+func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: singleNodeClusterTemplate("10"),
+	}, step{
+		Template: singleNodeClusterTemplate("20"),
 	})
 }

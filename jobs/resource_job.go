@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 
@@ -327,17 +328,17 @@ type JobSettings struct {
 	EditMode             jobs.JobEditMode              `json:"edit_mode,omitempty"`
 }
 
-func (js *JobSettings) isMultiTask() bool {
+func (js *JobSettingsResource) isMultiTask() bool {
 	return js.Format == "MULTI_TASK" || len(js.Tasks) > 0
 }
 
-func (js *JobSettings) sortTasksByKey() {
+func (js *JobSettingsResource) sortTasksByKey() {
 	sort.Slice(js.Tasks, func(i, j int) bool {
 		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
 	})
 }
 
-func (js *JobSettings) adjustTasks() {
+func (js *JobSettingsResource) adjustTasks() {
 	js.sortTasksByKey()
 	for _, task := range js.Tasks {
 		sort.Slice(task.DependsOn, func(i, j int) bool {
@@ -347,7 +348,7 @@ func (js *JobSettings) adjustTasks() {
 	}
 }
 
-func (js *JobSettings) sortWebhooksByID() {
+func (js *JobSettingsResource) sortWebhooksByID() {
 	sortWebhookNotifications(js.WebhookNotifications)
 }
 
@@ -750,6 +751,18 @@ func (a JobsAPI) Start(jobID int64, timeout time.Duration) error {
 	return a.waitForRunState(runID, "RUNNING", timeout)
 }
 
+func Start(jobID int64, timeout time.Duration, w *databricks.WorkspaceClient, ctx context.Context) error {
+	res, err := w.Jobs.RunNow(ctx, jobs.RunNow{
+		JobId: jobID,
+	})
+
+	_, err = res.GetWithTimeout(timeout)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a JobsAPI) StopActiveRun(jobID int64, timeout time.Duration) error {
 	runs, err := a.RunsList(JobRunsListRequest{JobID: jobID, ActiveOnly: true})
 	if err != nil {
@@ -764,6 +777,34 @@ func (a JobsAPI) StopActiveRun(jobID int64, timeout time.Duration) error {
 		err = a.RunsCancel(activeRun.RunID, timeout)
 		if err != nil {
 			return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunID, err)
+		}
+	}
+	return nil
+}
+
+func StopActiveRun(jobID int64, timeout time.Duration, w *databricks.WorkspaceClient, ctx context.Context) error {
+	runs, err := w.Jobs.ListRunsAll(ctx, jobs.ListRunsRequest{
+		JobId:      jobID,
+		ActiveOnly: true,
+	})
+	if err != nil {
+		return err
+	}
+	if len(runs) > 1 {
+		return fmt.Errorf("`always_running` must be specified only with "+
+			"`max_concurrent_runs = 1`. There are %d active runs", len(runs))
+	}
+	if len(runs) == 1 {
+		activeRun := runs[0]
+		res, err := w.Jobs.CancelRun(ctx, jobs.CancelRun{
+			RunId: activeRun.RunId,
+		})
+		if err != nil {
+			return fmt.Errorf("cannot cancel run %d: %v", activeRun.RunId, err)
+		}
+		_, err = res.GetWithTimeout(timeout)
+		if err != nil {
+			return fmt.Errorf("cannot cancel run, error waiting for run to be terminated %d: %v", activeRun.RunId, err)
 		}
 	}
 	return nil
@@ -830,6 +871,13 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 	}
 
 	return
+}
+
+func Read(jobID int64, w *databricks.WorkspaceClient, ctx context.Context) (job jobs.Job, err error) {
+	job, err := w.Jobs.GetByJobId(ctx, jobID)
+	if err != nil {
+		return nil, err
+	}
 }
 
 // Delete deletes the job given a job id
@@ -928,7 +976,7 @@ type jobLifecycleManager interface {
 	OnUpdate(ctx context.Context) error
 }
 
-func getJobLifecycleManager(d *schema.ResourceData, m any) jobLifecycleManager {
+func getJobLifecycleManager(d *schema.ResourceData, m *common.DatabricksClient) jobLifecycleManager {
 	if d.Get("always_running").(bool) {
 		return alwaysRunningLifecycleManager{d: d, m: m}
 	}
@@ -949,32 +997,43 @@ func (n noopLifecycleManager) OnUpdate(ctx context.Context) error {
 
 type alwaysRunningLifecycleManager struct {
 	d *schema.ResourceData
-	m any
+	m *common.DatabricksClient
 }
 
 func (a alwaysRunningLifecycleManager) OnCreate(ctx context.Context) error {
+	w, err := a.m.WorkspaceClient()
+	if err != nil {
+		return err
+	}
 	jobID, err := parseJobId(a.d.Id())
 	if err != nil {
 		return err
 	}
-	return NewJobsAPI(ctx, a.m).Start(jobID, a.d.Timeout(schema.TimeoutCreate))
+
+	return Start(jobID, a.d.Timeout(schema.TimeoutCreate), w, ctx)
 }
+
 func (a alwaysRunningLifecycleManager) OnUpdate(ctx context.Context) error {
-	api := NewJobsAPI(ctx, a.m)
+	w, err := a.m.WorkspaceClient()
+	if err != nil {
+		return err
+	}
 	jobID, err := parseJobId(a.d.Id())
 	if err != nil {
 		return err
 	}
-	err = api.StopActiveRun(jobID, a.d.Timeout(schema.TimeoutUpdate))
+
+	err = StopActiveRun(jobID, a.d.Timeout(schema.TimeoutUpdate), w, ctx)
+
 	if err != nil {
 		return err
 	}
-	return api.Start(jobID, a.d.Timeout(schema.TimeoutUpdate))
+	return Start(jobID, a.d.Timeout(schema.TimeoutUpdate), w, ctx)
 }
 
 type controlRunStateLifecycleManager struct {
 	d *schema.ResourceData
-	m any
+	m *common.DatabricksClient
 }
 
 func (c controlRunStateLifecycleManager) OnCreate(ctx context.Context) error {
@@ -991,7 +1050,10 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 		return err
 	}
 
-	api := NewJobsAPI(ctx, c.m)
+	w, err := c.m.WorkspaceClient()
+	if err != nil {
+		return err
+	}
 
 	// Only use RunNow to stop the active run if the job is unpaused.
 	pauseStatus := c.d.Get("continuous.0.pause_status").(string)
@@ -1000,7 +1062,9 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 		// on a continuous job works, cancelling the active run if there is one, and resetting
 		// the exponential backoff timer. So, we try to call RunNow() first, and if it fails,
 		// we call StopActiveRun() instead.
-		_, err = api.RunNow(jobID)
+		_, err := w.Jobs.RunNow(ctx, jobs.RunNow{
+			JobId: jobID,
+		})
 
 		if err == nil {
 			return nil
@@ -1013,24 +1077,20 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 		}
 	}
 
-	return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))
+	return StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate), w, ctx)
 }
 
-func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
-	if js.NewCluster != nil {
-		js.NewCluster.ModifyRequestOnInstancePool()
-		js.NewCluster.FixInstancePoolChangeIfAny(d)
-	}
+func prepareJobSettingsForUpdate(d *schema.ResourceData, js jobs.JobSettings) {
 	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
-			task.NewCluster.ModifyRequestOnInstancePool()
-			task.NewCluster.FixInstancePoolChangeIfAny(d)
+			clusters.ModifyRequestOnInstancePool(task.NewCluster)
+			clusters.FixInstancePoolChangeIfAny(d, *task.NewCluster) //!!!!1 NOTE: Not sure if this dereference works
 		}
 	}
 	for _, jc := range js.JobClusters {
-		if jc.NewCluster != nil {
-			jc.NewCluster.ModifyRequestOnInstancePool()
-			jc.NewCluster.FixInstancePoolChangeIfAny(d)
+		if &jc.NewCluster != nil {
+			clusters.ModifyRequestOnInstancePool(&jc.NewCluster)
+			clusters.FixInstancePoolChangeIfAny(d, jc.NewCluster) //!!!!1 NOTE: Not sure if this dereference works
 		}
 	}
 }
@@ -1038,14 +1098,14 @@ func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
 func ResourceJob() common.Resource {
-	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
-		var js JobSettings
-		common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-		if js.isMultiTask() {
-			return context.WithValue(ctx, common.Api, common.API_2_1)
-		}
-		return ctx
-	}
+	// getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
+	// 	var js JobSettings
+	// 	common.DataToStructPointer(d, jobsGoSdkSchema, &js)
+	// 	if js.isMultiTask() {
+	// 		return context.WithValue(ctx, common.Api, common.API_2_1)
+	// 	}
+	// 	return ctx
+	// }
 	return common.Resource{
 		Schema:        jobsGoSdkSchema,
 		SchemaVersion: 2,
@@ -1054,7 +1114,7 @@ func ResourceJob() common.Resource {
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			var js JobSettings
+			var js JobSettingsResource
 			common.DiffToStructPointer(d, jobsGoSdkSchema, &js)
 			alwaysRunning := d.Get("always_running").(bool)
 			if alwaysRunning && js.MaxConcurrentRuns > 1 {
@@ -1085,13 +1145,16 @@ func ResourceJob() common.Resource {
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettings
+			var js JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-			if js.isMultiTask() {
-				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
 			}
-			jobsAPI := NewJobsAPI(ctx, c)
-			job, err := jobsAPI.Create(js)
+			w.Jobs.Create(ctx, jobs.CreateJob{
+				AccessControlList: ,
+			})
+
 			if err != nil {
 				return err
 			}
@@ -1099,32 +1162,62 @@ func ResourceJob() common.Resource {
 			return getJobLifecycleManager(d, c).OnCreate(ctx)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = getReadCtx(ctx, d)
-			job, err := NewJobsAPI(ctx, c).Read(d.Id())
+			var js JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
+
+			jobID, err := parseJobId(d.Id())
 			if err != nil {
 				return err
 			}
+
+			if js.isMultiTask() {
+				// 2.1
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				job, err := w.Jobs.GetByJobId(ctx, jobID)
+			if err != nil {
+				return err
+			}
+			} else {
+				// API 2.0 TODO: Remove this branch.
+			}
+			
 			d.Set("url", c.FormatURL("#job/", d.Id()))
 			return common.StructToData(*job.Settings, jobsGoSdkSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettings
+			var js JobSettingsResource
+
 			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
+
 			if js.isMultiTask() {
 				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
 			}
 
-			prepareJobSettingsForUpdate(d, js)
+			jobID, err := parseJobId(d.Id())
+			if err != nil {
+				return err
+			}
 
-			jobsAPI := NewJobsAPI(ctx, c)
-			err := jobsAPI.Update(d.Id(), js)
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			prepareJobSettingsForUpdate(d, js.JobSettings)
+
+			err = w.Jobs.Update(ctx, jobs.UpdateJob{
+				JobId:       jobID,
+				NewSettings: &js.JobSettings,
+			})
+
 			if err != nil {
 				return err
 			}
 			return getJobLifecycleManager(d, c).OnUpdate(ctx)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = getReadCtx(ctx, d)
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

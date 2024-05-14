@@ -116,7 +116,7 @@ func Validate(cluster ClusterSpec) error {
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func ModifyRequestOnInstancePool(cluster *ClusterSpec) {
+func ModifyRequestOnInstancePool(cluster *compute.ClusterSpec) {
 	// Instance profile id does not exist or not set
 	if cluster.InstancePoolId == "" {
 		// Worker must use an instance pool if driver uses an instance pool,
@@ -148,7 +148,7 @@ func ModifyRequestOnInstancePool(cluster *ClusterSpec) {
 // This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
 // Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
-func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster ClusterSpec) {
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.ClusterSpec) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
 	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
 	if oldInstancePool != newInstancePool &&
@@ -266,7 +266,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err := Validate(cluster); err != nil {
 		return err
 	}
-	ModifyRequestOnInstancePool(&cluster)
+	ModifyRequestOnInstancePool(&cluster.ClusterSpec)
 	var createClusterRequest compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &createClusterRequest)
 	if createClusterRequest.Autoscale == nil {
@@ -392,8 +392,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err := Validate(cluster); err != nil {
 			return err
 		}
-		ModifyRequestOnInstancePool(&cluster)
-		FixInstancePoolChangeIfAny(d, cluster)
+		ModifyRequestOnInstancePool(&cluster.ClusterSpec)
+		FixInstancePoolChangeIfAny(d, cluster.ClusterSpec)
 
 		// We can only call the resize api if the cluster is in the running state
 		// and only the cluster size (ie num_workers OR autoscale) is being changed

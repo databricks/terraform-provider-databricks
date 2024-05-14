@@ -10,8 +10,8 @@ import (
 
 func DataSourceCatalog() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
-		Id    string               `json:"id,omitempty" tf:"computed"`
-		Name  string               `json:"name"`
+		Id      string               `json:"id,omitempty" tf:"computed"`
+		Name    string               `json:"name"`
 		Catalog *catalog.CatalogInfo `json:"catalog_info,omitempty" tf:"computed"`
 	}, w *databricks.WorkspaceClient) error {
 		catalog, err := w.Catalogs.GetByName(ctx, data.Name)

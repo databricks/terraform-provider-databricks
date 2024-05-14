@@ -19,9 +19,7 @@ data "databricks_table" "fct_transactions" {
 }
 
 resource "databricks_grants" "things" {
-  for_each = data.databricks_tables.things.ids
-
-  table = each.value
+  table = data.databricks_table.fct_transactions.name
 
   grant {
     principal  = "sensitive"

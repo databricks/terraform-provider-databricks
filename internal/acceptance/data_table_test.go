@@ -42,11 +42,8 @@ func TestUcAccDataSourceTable(t *testing.T) {
 			data_source_format = "DELTA"
 			
 			column {
-				name      = "id"
-				position  = 0
-				type_name = "INT"
-				type_text = "int"
-				type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+				name = "id"
+				type = "int"
 			}
 		}		
 

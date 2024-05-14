@@ -19,7 +19,7 @@ func TestUcAccDataSourceTable(t *testing.T) {
 		}
 		
 		data "databricks_catalog" "this" {
-			name = databricks_catalog.name
+			name = databricks_catalog.sandbox.name
 			depends_on = [
 				databricks_catalog.sandbox,
 			]

@@ -34,7 +34,7 @@ func TestUcAccDataSourceTable(t *testing.T) {
 			}
 		}
 		
-		resource "databricks_table" "mytable" {
+		resource "databricks_sql_table" "mytable" {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name
 			name = "bar"
@@ -51,9 +51,9 @@ func TestUcAccDataSourceTable(t *testing.T) {
 		}		
 
 		data "databricks_table" "this" {
-			name = databricks_table.mytable.full_name
+			name = databricks_sql_table.mytable.id
 			depends_on = [
-				databricks_table.mytable,
+				databricks_sql_table.mytable,
 			]
 		}
 		`,

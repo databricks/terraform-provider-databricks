@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUcAccDataSourceTable(t *testing.T) {
+func TestUcAccDataSourceCatalog(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {

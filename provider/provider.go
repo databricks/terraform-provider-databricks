@@ -74,6 +74,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster":                  clusters.DataSourceCluster().ToResource(),
 			"databricks_clusters":                 clusters.DataSourceClusters().ToResource(),
 			"databricks_cluster_policy":           policies.DataSourceClusterPolicy().ToResource(),
+			"databricks_catalog":                  catalog.DataSourceCatalog().ToResource(),
 			"databricks_catalogs":                 catalog.DataSourceCatalogs().ToResource(),
 			"databricks_current_config":           mws.DataSourceCurrentConfiguration().ToResource(),
 			"databricks_current_metastore":        catalog.DataSourceCurrentMetastore().ToResource(),

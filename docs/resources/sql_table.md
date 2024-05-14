@@ -124,6 +124,7 @@ The following arguments are supported:
 * `warehouse_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a `warehouse_id` is specified, that SQL warehouse will be used to execute SQL commands to manage this table. Conflicts with `cluster_id`.
 * `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. Conflicts with `partitions`.
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.
+* `owner` - (Optional) Username/groupname/sp application_id of the schema owner.
 * `comment` - (Optional) User-supplied free-form text. Changing comment is not currently supported on `VIEW` table_type.
 * `options` - (Optional) Map of user defined table options. Change forces creation of a new resource.
 * `properties` - (Optional) Map of table properties.

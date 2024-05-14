@@ -1,5 +1,24 @@
 # Version changelog
 
+## 1.44.0
+
+### New Features and Improvements
+* Add owner support to `databricks_sql_table` ([#3570](https://github.com/databricks/terraform-provider-databricks/pull/3570)).
+* Add `databricks_catalog` data source ([#3573](https://github.com/databricks/terraform-provider-databricks/pull/3573)).
+* Add `databricks_table` data source ([#3571](https://github.com/databricks/terraform-provider-databricks/pull/3571)).
+* Add `databricks_mlflow_experiment` data source ([#2389](https://github.com/databricks/terraform-provider-databricks/pull/2389)).
+
+### Documentation Changes
+
+### Exporter
+* Fix rare race condition with variables map ([#3568](https://github.com/databricks/terraform-provider-databricks/pull/3568)).
+
+### Internal Changes
+
+Dependency updates:
+
+ * Bump go SDK to 0.40.1 ([#3574](https://github.com/databricks/terraform-provider-databricks/pull/3574)), featuring improvements in tracing and debuggability of failed requests.
+
 ## 1.43.0
 
 ### New Features and Improvements

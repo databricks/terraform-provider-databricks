@@ -1,11 +1,13 @@
 package policies
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDataSourceClusterPolicy(t *testing.T) {
@@ -81,4 +83,22 @@ func TestDataSourceClusterPolicyNotFound(t *testing.T) {
 		ID:          ".",
 		HCL:         `name = "policy"`,
 	}.ExpectError(t, "Policy named 'policy' does not exist")
+}
+
+func TestDataSourceClusterPolicyStateUpgrader(t *testing.T) {
+	state, err := removeZeroMaxClustersPerUser(context.Background(),
+		map[string]any{
+			"max_clusters_per_user": 0,
+		}, nil)
+	assert.NoError(t, err)
+	_, ok := state["max_clusters_per_user"]
+	assert.False(t, ok)
+
+	state, err = removeZeroMaxClustersPerUser(context.Background(),
+		map[string]any{
+			"max_clusters_per_user": 1,
+		}, nil)
+	assert.NoError(t, err)
+	_, ok = state["max_clusters_per_user"]
+	assert.True(t, ok)
 }

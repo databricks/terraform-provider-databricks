@@ -130,6 +130,7 @@ func TestMetastoreByRegion(t *testing.T) {
 		region = "westus"
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
+		"id":                            "abc",
 		"name":                          "xyz",
 		"region":                        "westus",
 		"metastore_info.0.name":         "xyz",

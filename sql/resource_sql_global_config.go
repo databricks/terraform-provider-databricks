@@ -31,6 +31,7 @@ type GlobalConfig struct {
 	GoogleServiceAccount    string            `json:"google_service_account,omitempty"`
 	EnableServerlessCompute bool              `json:"enable_serverless_compute,omitempty" tf:"computed"`
 	SqlConfigParams         map[string]string `json:"sql_config_params,omitempty"`
+	ForceSendFields         []string          `json:"-"`
 }
 
 // GlobalConfigForRead used to talk to REST API
@@ -65,6 +66,7 @@ func (a globalConfigAPI) Set(gc GlobalConfig, d *schema.ResourceData) error {
 	data := GlobalConfigForRead{
 		SecurityPolicy:          gc.SecurityPolicy,
 		EnableServerlessCompute: gc.EnableServerlessCompute,
+		ForceSendFields:         gc.ForceSendFields,
 	}
 	if a.client.Config.Host == "" {
 		err := a.client.Config.EnsureResolved()
@@ -99,7 +101,6 @@ func (a globalConfigAPI) Set(gc GlobalConfig, d *schema.ResourceData) error {
 		}
 		data.SqlConfigurationParameters = &sql_params
 	}
-	common.SetForceSendFields(&data, d, []string{"enable_serverless_compute"})
 
 	return a.client.Put(a.context, "/sql/config/warehouses", data)
 }
@@ -127,6 +128,7 @@ func ResourceSqlGlobalConfig() common.Resource {
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["enable_serverless_compute"].Deprecated = "This field is intended as an internal API " +
 			"and may be removed from the Databricks Terraform provider in the future"
+		delete(m, "force_send_fields")
 		return m
 	})
 	setGlobalConfig := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -165,6 +167,7 @@ func ResourceSqlGlobalConfig() common.Resource {
 			return NewSqlGlobalConfigAPI(ctx, c).Set(GlobalConfig{
 				SecurityPolicy:          "DATA_ACCESS_CONTROL",
 				EnableServerlessCompute: d.Get("enable_serverless_compute").(bool),
+				ForceSendFields:         []string{"EnableServerlessCompute"},
 			}, d)
 		},
 		Schema: s,

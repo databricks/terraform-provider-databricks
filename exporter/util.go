@@ -371,10 +371,12 @@ func (ic *importContext) emitGroups(u scim.User) {
 			Resource: "databricks_group",
 			ID:       g.Value,
 		})
+		id := fmt.Sprintf("%s|%s", g.Value, u.ID)
 		ic.Emit(&resource{
 			Resource: "databricks_group_member",
-			ID:       fmt.Sprintf("%s|%s", g.Value, u.ID),
+			ID:       id,
 			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
+			Data:     ic.makeGroupMemberData(id, g.Value, u.ID),
 		})
 	}
 }
@@ -1418,7 +1420,7 @@ func generateIgnoreObjectWithoutName(resourceType string) func(ic *importContext
 	return func(ic *importContext, r *resource) bool {
 		res := (r.Data != nil && r.Data.Get("name").(string) == "")
 		if res {
-			ic.addIgnoredResource(fmt.Sprintf("%s. ID=%s", resourceType, r.ID))
+			ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", resourceType, r.ID))
 		}
 		return res
 	}
@@ -1476,4 +1478,31 @@ func (ic *importContext) emitWorkspaceObjectParentDirectory(r *resource) {
 		})
 		r.AddExtraData(ParentDirectoryExtraKey, directoryPath)
 	}
+}
+
+func dltIsMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	res_catalog_name := res.Data.Get("catalog").(string)
+	if res_catalog_name == "" {
+		return false
+	}
+	res_schema_name := res.Data.Get("target").(string)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	return result
+}
+
+func (ic *importContext) makeGroupMemberData(id, groupId, memberId string) *schema.ResourceData {
+	data := scim.ResourceGroupMember().ToResource().TestResourceData()
+	data.MarkNewResource()
+	data.SetId(id)
+	data.Set("group_id", groupId)
+	data.Set("member_id", memberId)
+	return data
 }

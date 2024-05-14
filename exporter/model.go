@@ -343,12 +343,16 @@ func (r *resource) ImportResource(ic *importContext) {
 			return pr.ReadContext(ctx, r.Data, ic.Client)
 		},
 			fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
-		if dia != nil {
+		if dia.HasError() {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
 		if r.Data.Id() == "" {
-			r.Data.SetId(r.ID)
+			if r.Resource != "databricks_permissions" && r.Resource != "databricks_grants" {
+				log.Printf("[WARN] %s %s has empty ID because it's deleted or empty", r.Resource, r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+			}
+			return
 		}
 	}
 	r.Name = ic.ResourceName(r)

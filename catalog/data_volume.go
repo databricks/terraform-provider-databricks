@@ -21,11 +21,11 @@ type volumeDataParams struct {
 func (volumeDataParams) Aliases() map[string]string {
 	return map[string]string{"Id": "FullName"}
 }
-func (volumeDataParams) CustomizeSchema(s map[string]*schema.Schema) map[string]*schema.Schema {
-	common.CustomizeSchemaPath(s, "full_name").SetExactlyOneOf([]string{"catalog_name"}).SetComputed()
-	common.CustomizeSchemaPath(s, "catalog_name").SetRequiredWith([]string{"schema_name", "name"}).SetComputed()
-	common.CustomizeSchemaPath(s, "schema_name").SetRequiredWith([]string{"catalog_name", "name"}).SetComputed()
-	common.CustomizeSchemaPath(s, "name").SetRequiredWith([]string{"catalog_name", "schema_name"}).SetComputed()
+func (volumeDataParams) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("full_name").SetExactlyOneOf([]string{"catalog_name"}).SetComputed()
+	s.SchemaPath("catalog_name").SetRequiredWith([]string{"schema_name", "name"}).SetComputed()
+	s.SchemaPath("schema_name").SetRequiredWith([]string{"catalog_name", "name"}).SetComputed()
+	s.SchemaPath("name").SetRequiredWith([]string{"catalog_name", "schema_name"}).SetComputed()
 	return s
 }
 

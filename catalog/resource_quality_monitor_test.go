@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestLakehouseMonitorCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceLakehouseMonitor())
+func TestQualityMonitorCornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceQualityMonitor())
 }
 
-func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
+func TestQualityMonitorCreateTimeseries(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
@@ -40,7 +40,7 @@ func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 				DriftMetricsTableName: "test_table_drift",
 			}, nil)
 		},
-		Resource: ResourceLakehouseMonitor(),
+		Resource: ResourceQualityMonitor(),
 		HCL: `
 			table_name = "test_table",
 			assets_dir = "sample.dir",
@@ -54,7 +54,7 @@ func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestLakehouseMonitorCreateInference(t *testing.T) {
+func TestQualityMonitorCreateInference(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
@@ -89,7 +89,7 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource: ResourceLakehouseMonitor(),
+		Resource: ResourceQualityMonitor(),
 		HCL: `
 			table_name = "test_table",
 			assets_dir = "sample.dir",
@@ -106,7 +106,7 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
+func TestQualityMonitorCreateSnapshot(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
@@ -129,7 +129,7 @@ func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 				Snapshot:         &catalog.MonitorSnapshot{},
 			}, nil)
 		},
-		Resource: ResourceLakehouseMonitor(),
+		Resource: ResourceQualityMonitor(),
 		HCL: `
 			table_name = "test_table",
 			assets_dir = "sample.dir",
@@ -140,7 +140,7 @@ func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestLakehouseMonitorGet(t *testing.T) {
+func TestQualityMonitorGet(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
@@ -157,13 +157,13 @@ func TestLakehouseMonitorGet(t *testing.T) {
 				},
 				DriftMetricsTableName: "test_table_drift"}, nil)
 		},
-		Resource: ResourceLakehouseMonitor(),
+		Resource: ResourceQualityMonitor(),
 		Read:     true,
 		ID:       "test_table",
 	}.ApplyNoError(t)
 }
 
-func TestLakehouseMonitorUpdate(t *testing.T) {
+func TestQualityMonitorUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
@@ -204,7 +204,7 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 				DriftMetricsTableName: "test_table_drift",
 			}, nil)
 		},
-		Resource: ResourceLakehouseMonitor(),
+		Resource: ResourceQualityMonitor(),
 		Update:   true,
 		ID:       "test_table",
 		InstanceState: map[string]string{
@@ -225,13 +225,13 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestLakehouseMonitorDelete(t *testing.T) {
+func TestQualityMonitorDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
 			e.DeleteByTableName(mock.Anything, "test_table").Return(nil)
 		},
-		Resource: ResourceLakehouseMonitor(),
+		Resource: ResourceQualityMonitor(),
 		Delete:   true,
 		ID:       "test_table",
 	}.ApplyNoError(t)

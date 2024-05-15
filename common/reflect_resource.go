@@ -669,6 +669,7 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			case schema.TypeList, schema.TypeSet:
 				_, ok := fieldSchema.Elem.(*schema.Schema)
 				if ok {
+					// If Elem is a *schema.Schema, we do not call collectionToMaps but directly populate the map with fieldValue.
 					data[fieldName] = fieldValue
 				} else {
 					nv, err := collectionToMaps(fieldValue, fieldSchema, aliases)

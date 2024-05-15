@@ -194,7 +194,7 @@ func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchem
 		panic("SetConflictsWith cannot take in an empty list")
 	}
 	if s.pathContainsMultipleItemsList() {
-		log.Printf("[DEBUG] ConflictsWith skipped for %v, path contains TypeList block with MaxItems not equal to 1", strings.Join(s.path, "."))
+		log.Printf("[DEBUG] ConflictsWith skipped for %v, path contains TypeList block with MaxItems not equal to 1", getPrefixedValue(s.context.path, value))
 		return s
 	}
 	s.Schema.ConflictsWith = getPrefixedValue(s.context.path, value)
@@ -206,7 +206,7 @@ func (s *CustomizableSchema) SetExactlyOneOf(value []string) *CustomizableSchema
 		panic("SetExactlyOneOf cannot take in an empty list")
 	}
 	if s.pathContainsMultipleItemsList() {
-		log.Printf("[DEBUG] ExactlyOneOf skipped for %v, path contains TypeList block with MaxItems not equal to 1", strings.Join(s.path, "."))
+		log.Printf("[DEBUG] ExactlyOneOf skipped for %v, path contains TypeList block with MaxItems not equal to 1", getPrefixedValue(s.context.path, value))
 		return s
 	}
 	s.Schema.ExactlyOneOf = getPrefixedValue(s.context.path, value)
@@ -218,7 +218,7 @@ func (s *CustomizableSchema) SetAtLeastOneOf(value []string) *CustomizableSchema
 		panic("SetAtLeastOneOf cannot take in an empty list")
 	}
 	if s.pathContainsMultipleItemsList() {
-		log.Printf("[DEBUG] AtLeastOneOf skipped for %v, path contains TypeList block with MaxItems not equal to 1", strings.Join(s.path, "."))
+		log.Printf("[DEBUG] AtLeastOneOf skipped for %v, path contains TypeList block with MaxItems not equal to 1", getPrefixedValue(s.context.path, value))
 		return s
 	}
 	s.Schema.AtLeastOneOf = getPrefixedValue(s.context.path, value)
@@ -230,7 +230,7 @@ func (s *CustomizableSchema) SetRequiredWith(value []string) *CustomizableSchema
 		panic("SetRequiredWith cannot take in an empty list")
 	}
 	if s.pathContainsMultipleItemsList() {
-		log.Printf("[DEBUG] SetRequiredWith skipped for %v, path contains TypeList block with MaxItems not equal to 1", strings.Join(s.path, "."))
+		log.Printf("[DEBUG] SetRequiredWith skipped for %v, path contains TypeList block with MaxItems not equal to 1", getPrefixedValue(s.context.path, value))
 		return s
 	}
 	s.Schema.RequiredWith = getPrefixedValue(s.context.path, value)

@@ -17,7 +17,7 @@ func AllSettingsResources() map[string]common.Resource {
 	return map[string]common.Resource{
 		"default_namespace":                      makeSettingResource[settings.DefaultNamespaceSetting, *databricks.WorkspaceClient](defaultNamespaceSetting),
 		"restrict_workspace_admins":              makeSettingResource[settings.RestrictWorkspaceAdminsSetting, *databricks.WorkspaceClient](restrictWsAdminsSetting),
-		"compliance_security_profile_workspace": makeSettingResource[settings.ComplianceSecurityProfileSetting, *databricks.WorkspaceClient](complianceSecurityProfileSetting),
+		"compliance_security_profile_workspace":  makeSettingResource[settings.ComplianceSecurityProfileSetting, *databricks.WorkspaceClient](complianceSecurityProfileSetting),
 		"enhanced_security_monitoring_workspace": makeSettingResource[settings.EnhancedSecurityMonitoringSetting, *databricks.WorkspaceClient](enhancedSecurityMonitoringSetting),
 	}
 }

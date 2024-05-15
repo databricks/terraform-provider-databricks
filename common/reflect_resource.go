@@ -667,11 +667,16 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			fieldPath := strings.Join(path, ".")
 			switch fieldSchema.Type {
 			case schema.TypeList, schema.TypeSet:
-				nv, err := collectionToMaps(fieldValue, fieldSchema, aliases)
-				if err != nil {
-					return fmt.Errorf("%s: %v", path, err)
+				_, ok := fieldSchema.Elem.(*schema.Schema)
+				if ok {
+					data[fieldName] = fieldValue
+				} else {
+					nv, err := collectionToMaps(fieldValue, fieldSchema, aliases)
+					if err != nil {
+						return fmt.Errorf("%s: %v", path, err)
+					}
+					data[fieldName] = nv
 				}
-				data[fieldName] = nv
 			case schema.TypeBool, schema.TypeInt:
 				if !isIntOrBoolExplicitlySet(v, valueField) {
 					return nil

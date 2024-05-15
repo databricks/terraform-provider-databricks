@@ -82,7 +82,10 @@ The resource supports the following arguments:
 * `description` - (Optional) An optional description for the job. The maximum length is 1024 characters in UTF-8 encoding.
 * `task` - (Optional) A list of task specification that the job will execute. See [task Configuration Block](#task-configuration-block) below.
 * `job_cluster` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
+* `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is [documented below](#schedule-configuration-block).
 * `trigger` - (Optional) The conditions that triggers the job to start. See [trigger Configuration Block](#trigger-configuration-block) below.
+* `continuous`- (Optional) Configuration block to configure pause status. See [continuous Configuration Block](#continuous-configuration-block). 
+* `queue` - (Optional) The queue status for the job. See [queue Configuration Block](#queue-configuration-block) below.
 * `always_running` - (Optional, Deprecated) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
 * `run_as` - (Optional) The user or the service prinicipal the job runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
 * `control_run_state` - (Optional) (Bool) If true, the Databricks provider will stop and start the job as needed to ensure that the active run for the job reflects the deployed configuration. For continuous jobs, the provider respects the `pause_status` by stopping the current active run. This flag cannot be set for non-continuous jobs.
@@ -93,16 +96,16 @@ The resource supports the following arguments:
   continuous { }
   ```
 
-* `library` - (Optional) (List) An optional list of libraries to be installed on the cluster that will execute the job. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+* `library` - (Optional) (List) An optional list of libraries to be installed on the cluster that will execute the job. See [library Configuration Block](#library-configuration-block) below.
 * `git_source` - (Optional) Specifices the a Git repository for task source code. See [git_source Configuration Block](#git_source-configuration-block) below.
+* `parameter` - (Optional) Specifices job parameter for the job. See [parameter Configuration Block](#parameter-configuration-block)
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `min_retry_interval_millis` - (Optional) (Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried.
 * `max_concurrent_runs` - (Optional) (Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*.
 * `email_notifications` - (Optional) (List) An optional set of email addresses notified when runs of this job begins, completes or fails. The default behavior is to not send any emails. This field is a block and is [documented below](#email_notifications-configuration-block).
-* `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
+* `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this job begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is [documented below](#webhook_notifications-configuration-block).
 * `notification_settings` - (Optional) An optional block controlling the notification settings on the job level [documented below](#notification_settings-configuration-block).
-* `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is documented below.
-* `health` - (Optional) An optional block that specifies the health conditions for the job (described below).
+* `health` - (Optional) An optional block that specifies the health conditions for the job [documented below](#health-configuration-block).
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
 
 ### task Configuration Block
@@ -294,22 +297,6 @@ This block describes upstream dependencies of a given task. For multiple upstrea
 
 -> **Note** Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
 
-### tags Configuration Map
-
-`tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
-
-Example
-
-```hcl
-resource "databricks_job" "this" {
-  # ...
-  tags = {
-    environment = "dev"
-    owner       = "dream-team"
-  }
-}
-```
-
 ### run_as Configuration Block
 
 The `run_as` block allows specifying the user or the service principal that the job runs as. If not specified, the job runs as the user or service
@@ -443,6 +430,21 @@ This block describes health conditions for a given job or an individual task. It
   * `op` - (Optional) string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`.
   * `value` - (Optional) integer value used to compare to the given metric.
 
+### tags Configuration Map
+
+`tags` - (Optional) (Map) An optional map of the tags associated with the job. Specified tags will be used as cluster tags for job clusters.
+
+Example
+
+```hcl
+resource "databricks_job" "this" {
+  # ...
+  tags = {
+    environment = "dev"
+    owner       = "dream-team"
+  }
+}
+```
 
 ## Attribute Reference
 
@@ -542,7 +544,7 @@ The following resources are often used in the same context:
 * [databricks_global_init_script](global_init_script.md) to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 * [databricks_instance_pool](instance_pool.md) to manage [instance pools](https://docs.databricks.com/clusters/instance-pools/index.html) to reduce [cluster](cluster.md) start and auto-scaling times by maintaining a set of idle, ready-to-use instances.
 * [databricks_instance_profile](instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md).
-* [databricks_jobs] data to get all jobs and their names from a workspace.
+* [databricks_jobs](../data-sources/jobs.md) data to get all jobs and their names from a workspace.
 * [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).
 * [databricks_node_type](../data-sources/node_type.md) data to get the smallest node type for [databricks_cluster](cluster.md) that fits search criteria, like amount of RAM or number of cores.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).

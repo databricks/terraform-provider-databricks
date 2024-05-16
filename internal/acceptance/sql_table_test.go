@@ -324,18 +324,30 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 	tableName := RandomName()
 	unityWorkspaceLevel(t, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
-			{Name: "name0", Type: "integer", Nullable: true, Comment: "comment 00"},
-			{Name: "name1", Type: "long", Nullable: true, Comment: "comment 10"},
+			{Name: "name0", Type: "integer", Comment: "comment 00"},
+			{Name: "name1", Type: "long", Comment: "comment 10"},
+			{Name: "name2", Type: "real", Comment: "comment 20"},
+			{Name: "name3", Type: "short", Comment: "comment 30"},
+			{Name: "name4", Type: "byte", Comment: "comment 40"},
+			{Name: "name4", Type: "decimal", Comment: "comment 50"},
 		}),
 	}, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
-			{Name: "name0", Type: "INTEGER", Nullable: true, Comment: "comment 01"},
-			{Name: "name1", Type: "LONG", Nullable: true, Comment: "comment 11"},
+			{Name: "name0", Type: "INTEGER", Comment: "comment 01"},
+			{Name: "name1", Type: "LONG", Comment: "comment 11"},
+			{Name: "name2", Type: "REAL", Comment: "comment 21"},
+			{Name: "name3", Type: "SHORT", Comment: "comment 31"},
+			{Name: "name4", Type: "BYTE", Comment: "comment 41"},
+			{Name: "name5", Type: "DECIMAL", Comment: "comment 51"},
 		}),
 	}, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
-			{Name: "name0", Type: "int", Nullable: true, Comment: "comment 02"},
-			{Name: "name1", Type: "bigint", Nullable: true, Comment: "comment 12"},
+			{Name: "name0", Type: "int", Comment: "comment 02"},
+			{Name: "name1", Type: "bigint", Comment: "comment 12"},
+			{Name: "name2", Type: "float", Comment: "comment 22"},
+			{Name: "name3", Type: "smallint", Comment: "comment 32"},
+			{Name: "name4", Type: "tinyint", Comment: "comment 42"},
+			{Name: "name5", Type: "decimal(10,0)", Comment: "comment 52"},
 		}),
 	})
 }

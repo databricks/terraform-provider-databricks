@@ -491,6 +491,10 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) 
 var columnTypeAliases = map[string]string{
 	"integer": "int",
 	"long":    "bigint",
+	"real":    "float",
+	"short":   "smallint",
+	"byte":    "tinyint",
+	"decimal": "decimal(10,0)",
 }
 
 func getColumnType(columnType string) string {

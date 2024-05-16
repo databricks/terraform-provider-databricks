@@ -6,6 +6,8 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Automatic Cluster Update setting
@@ -19,6 +21,12 @@ var automaticClusterUpdateFieldMask = strings.Join([]string{
 }, ",")
 var automaticClusterUpdateSetting = workspaceSetting[settings.AutomaticClusterUpdateSetting]{
 	settingStruct: settings.AutomaticClusterUpdateSetting{},
+	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		common.MustSchemaPath(s, "setting_name").Computed = true
+		common.MustSchemaPath(s, "etag").Computed = true
+		common.MustSchemaPath(s, "automatic_cluster_update_workspace", "enablement_details").Computed = true
+		return s
+	},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.AutomaticClusterUpdateSetting, error) {
 		return w.Settings.AutomaticClusterUpdate().Get(ctx, settings.GetAutomaticClusterUpdateSettingRequest{
 			Etag: etag,

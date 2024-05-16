@@ -76,6 +76,9 @@ type genericSettingDefinition[T, U any] interface {
 
 	// Generate resource ID from settings instance
 	GetId(t *T) string
+
+	// Schema customization function
+	GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
 func getEtag[T any](t T) string {
@@ -115,6 +118,9 @@ type workspaceSetting[T any] struct {
 
 	// Optional function to generate resource ID from the settings. If not provided, will use predefined value `global`
 	generateIdFunc func(setting *T) string
+
+	// Optional function to customize the schema. If not provided, will use the default customization
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
 func (w workspaceSetting[T]) SettingStruct() T {
@@ -139,6 +145,20 @@ func (w workspaceSetting[T]) GetId(t *T) string {
 		id = w.generateIdFunc(t)
 	}
 	return id
+}
+
+func (w workspaceSetting[T]) GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema {
+	if w.customizeSchemaFunc != nil {
+		return w.customizeSchemaFunc
+	}
+	return func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s[etagAttrName].Computed = true
+		// Note: this may not always be computed, but it is for the default namespace setting. If other settings
+		// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
+		// definition.
+		s["setting_name"].Computed = true
+		return s
+	}
 }
 
 func (w workspaceSetting[T]) SetETag(t *T, newEtag string) {
@@ -168,6 +188,9 @@ type accountSetting[T any] struct {
 
 	// Optional function to generate resource ID from the settings. If not provided, will use predefined value `global`
 	generateIdFunc func(setting *T) string
+
+	// Optional function to customize the schema. If not provided, will use the default customization
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
 func (w accountSetting[T]) SettingStruct() T {
@@ -195,6 +218,20 @@ func (w accountSetting[T]) GetId(t *T) string {
 		id = w.generateIdFunc(t)
 	}
 	return id
+}
+
+func (w accountSetting[T]) GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema {
+	if w.customizeSchemaFunc != nil {
+		return w.customizeSchemaFunc
+	}
+	return func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s[etagAttrName].Computed = true
+		// Note: this may not always be computed, but it is for the default namespace setting. If other settings
+		// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
+		// definition.
+		s["setting_name"].Computed = true
+		return s
+	}
 }
 
 var _ accountSettingDefinition[struct{}] = accountSetting[struct{}]{}
@@ -226,6 +263,9 @@ type accountWorkspaceSetting[T any] struct {
 
 	// Optional function to generate resource ID from the settings. If not provided, will use predefined value `global`
 	generateIdFunc func(setting *T) string
+
+	// Optional function to customize the schema. If not provided, will use the default customization
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
 func (aw accountWorkspaceSetting[T]) SettingStruct() T {
@@ -291,22 +331,25 @@ func (aw accountWorkspaceSetting[T]) GetId(t *T) string {
 	return id
 }
 
+func (aw accountWorkspaceSetting[T]) GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema {
+	if aw.customizeSchemaFunc != nil {
+		return aw.customizeSchemaFunc
+	}
+	return func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s[etagAttrName].Computed = true
+		// Note: this may not always be computed, but it is for the default namespace setting. If other settings
+		// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
+		// definition.
+		s["setting_name"].Computed = true
+		return s
+	}
+}
+
 var _ accountWorkspaceSettingDefinition[struct{}] = accountWorkspaceSetting[struct{}]{}
 
 func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.Resource {
 	resourceSchema := common.StructToSchema(defn.SettingStruct(),
-		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			s[etagAttrName].Computed = true
-			// Note: this may not always be computed, but it is for the default namespace setting. If other settings
-			// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
-			// definition.
-			s["setting_name"].Computed = true
-			// this customize func is needed for automatic_cluster_update_workspace setting
-			if _, ok := s["automatic_cluster_update_workspace"]; ok {
-				common.MustSchemaPath(s, "automatic_cluster_update_workspace", "enablement_details").Computed = true
-			}
-			return s
-		})
+		defn.GetCustomizeSchemaFunc())
 	createOrUpdateRetriableErrors := []error{apierr.ErrNotFound, apierr.ErrResourceConflict}
 	deleteRetriableErrors := []error{apierr.ErrResourceConflict}
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, setting T) error {

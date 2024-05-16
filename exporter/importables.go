@@ -2053,6 +2053,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		// TODO: think if we really need this, we need directories only for permissions,
 		// and only when they are different from parents & notebooks
 		List: func(ic *importContext) error {
+			if ic.incremental {
+				return nil
+			}
 			directoryList := ic.getAllDirectories()
 			for offset, directory := range directoryList {
 				if strings.HasPrefix(directory.Path, "/Repos") {

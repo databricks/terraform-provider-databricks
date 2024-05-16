@@ -1478,7 +1478,7 @@ func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNowFailsWith409(t 
 				Status: 409,
 				Response: apierr.APIErrorBody{
 					ErrorCode: "CONFLICT",
-					Message: "A concurrent request to run the continuous job is already in progress. Please wait for it to complete before issuing a new request.",
+					Message:   "A concurrent request to run the continuous job is already in progress. Please wait for it to complete before issuing a new request.",
 				},
 			},
 		},

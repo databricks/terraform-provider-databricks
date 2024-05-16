@@ -22,7 +22,7 @@ var MaxSqlExecWaitTimeout = 50
 
 type SqlColumnInfo struct {
 	Name     string `json:"name"`
-	Type     string `json:"type_text,omitempty" tf:"suppress_diff,alias:type"`
+	Type     string `json:"type_text,omitempty" tf:"alias:type,computed"`
 	Comment  string `json:"comment,omitempty"`
 	Nullable bool   `json:"nullable,omitempty" tf:"default:true"`
 }
@@ -488,16 +488,17 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) 
 	return nil
 }
 
+var columnTypeAliases = map[string]string{
+	"integer": "int",
+	"long":    "bigint",
+}
+
 func getColumnType(columnType string) string {
 	caseInsensitiveColumnType := strings.ToLower(columnType)
-	switch caseInsensitiveColumnType {
-	case "integer":
-		return "int"
-	case "long":
-		return "bigint"
-	default:
-		return caseInsensitiveColumnType
+	if alias, ok := columnTypeAliases[caseInsensitiveColumnType]; ok {
+		return alias
 	}
+	return caseInsensitiveColumnType
 }
 
 func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
@@ -553,9 +554,6 @@ func ResourceSqlTable() common.Resource {
 			s["partitions"].ConflictsWith = []string{"cluster_keys"}
 			s["cluster_keys"].ConflictsWith = []string{"partitions"}
 			common.MustSchemaPath(s, "column", "type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				if new == "" {
-					return true
-				}
 				return getColumnType(old) == getColumnType(new)
 			}
 			return s

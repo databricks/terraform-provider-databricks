@@ -1432,7 +1432,7 @@ func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) 
 		max_concurrent_runs = 1
 		name = "Test"
 		`,
-	}.Apply(t)
+	}.ApplyNoError(t)
 }
 
 func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNowFailsWith409(t *testing.T) {
@@ -1490,7 +1490,7 @@ func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNowFailsWith409(t 
 		max_concurrent_runs = 1
 		name = "Test"
 		`,
-	}.Apply(t)
+	}.ApplyNoError(t)
 }
 
 func TestResourceJobCreate_ControlRunState_ContinuousUpdateCancel(t *testing.T) {

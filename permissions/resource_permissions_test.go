@@ -1353,7 +1353,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/jobs/123")
+		err := p.Delete("/jobs/123", &schema.ResourceData{})
 		assert.NoError(t, err)
 	})
 }
@@ -1395,7 +1395,7 @@ func TestShouldDeleteNonExistentJob(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/jobs/123")
+		err := p.Delete("/jobs/123", &schema.ResourceData{})
 		assert.NoError(t, err)
 	})
 }
@@ -1450,7 +1450,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/pipelines/123")
+		err := p.Delete("/pipelines/123", &schema.ResourceData{})
 		assert.NoError(t, err)
 	})
 }
@@ -1831,7 +1831,7 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 		access_control {
 			group_name       = "admins"
 			permission_level = "CAN_USE"
-		}		
+		}
 		`,
 		Create: true,
 	}.Apply(t)
@@ -1888,7 +1888,7 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 		access_control {
 			user_name        = "ben"
 			permission_level = "CAN_READ"
-		}	
+		}
 		`,
 		Create: true,
 	}.Apply(t)

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 
@@ -1000,17 +1001,17 @@ func (c controlRunStateLifecycleManager) OnUpdate(ctx context.Context) error {
 		// on a continuous job works, cancelling the active run if there is one, and resetting
 		// the exponential backoff timer. So, we try to call RunNow() first, and if it fails,
 		// we call StopActiveRun() instead.
+		//
+		// If there was no active run before the update, Jobs will start a run after the update.
+		// This RunNow() call can race with this automatic trigger, in which case, a 409 Conflict
+		// is returned. The provider can safely ignore this, as a new run will have started
+		// anyways.
 		_, err = api.RunNow(jobID)
 
-		if err == nil {
+		if err == nil || errors.Is(err, databricks.ErrNotFound) || errors.Is(err, databricks.ErrResourceConflict) {
 			return nil
 		}
-
-		// RunNow() returns 404 when the feature is disabled.
-		var apiErr *apierr.APIError
-		if errors.As(err, &apiErr) && apiErr.StatusCode != 404 {
-			return err
-		}
+		return err
 	}
 
 	return api.StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate))

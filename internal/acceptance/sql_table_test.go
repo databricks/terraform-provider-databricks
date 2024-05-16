@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/catalog"
@@ -317,37 +318,51 @@ func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
 	})
 }
 
+func constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName string, columnName string, step string, columnTypes []string) string {
+	colInfos := []catalog.SqlColumnInfo{}
+	for index, colType := range columnTypes {
+		colInfos = append(colInfos, catalog.SqlColumnInfo{
+			Name:     columnName + strconv.Itoa(index),
+			Type:     colType,
+			Nullable: true,
+			Comment:  "comment" + strconv.Itoa(index) + step,
+		})
+	}
+	return constructManagedSqlTableTemplate(tableName, colInfos)
+}
+
 func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
+	columnName := RandomName()
 	unityWorkspaceLevel(t, step{
-		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
-			{Name: "name0", Type: "integer", Comment: "comment 00"},
-			{Name: "name1", Type: "long", Comment: "comment 10"},
-			{Name: "name2", Type: "real", Comment: "comment 20"},
-			{Name: "name3", Type: "short", Comment: "comment 30"},
-			{Name: "name4", Type: "byte", Comment: "comment 40"},
-			{Name: "name4", Type: "decimal", Comment: "comment 50"},
+		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "0", []string{
+			"integer",
+			"long",
+			"real",
+			"short",
+			"byte",
+			"decimal",
 		}),
 	}, step{
-		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
-			{Name: "name0", Type: "INTEGER", Comment: "comment 01"},
-			{Name: "name1", Type: "LONG", Comment: "comment 11"},
-			{Name: "name2", Type: "REAL", Comment: "comment 21"},
-			{Name: "name3", Type: "SHORT", Comment: "comment 31"},
-			{Name: "name4", Type: "BYTE", Comment: "comment 41"},
-			{Name: "name5", Type: "DECIMAL", Comment: "comment 51"},
+		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "1", []string{
+			"INTEGER",
+			"LONG",
+			"REAL",
+			"SHORT",
+			"BYTE",
+			"DECIMAL",
 		}),
 	}, step{
-		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
-			{Name: "name0", Type: "int", Comment: "comment 02"},
-			{Name: "name1", Type: "bigint", Comment: "comment 12"},
-			{Name: "name2", Type: "float", Comment: "comment 22"},
-			{Name: "name3", Type: "smallint", Comment: "comment 32"},
-			{Name: "name4", Type: "tinyint", Comment: "comment 42"},
-			{Name: "name5", Type: "decimal(10,0)", Comment: "comment 52"},
+		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "2", []string{
+			"int",
+			"bigint",
+			"float",
+			"smallint",
+			"tinyint",
+			"decimal(10,0)",
 		}),
 	})
 }

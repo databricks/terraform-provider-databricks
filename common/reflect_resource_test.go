@@ -79,7 +79,10 @@ type testStruct struct {
 	TfOptional     string            `json:"tf_optional" tf:"optional"`
 	Hidden         string            `json:"-"`
 	Hidden2        string
+	Indirect       []IndirectString `json:"indirect"`
 }
+
+type IndirectString string
 
 type testRecursiveStruct struct {
 	Task  *testJobTask `json:"task,omitempty"`
@@ -957,4 +960,13 @@ func TestStructToSchema_recursive(t *testing.T) {
 	// Should error out on the 3rd level of for_each_task.
 	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task", "task", "for_each_task")
 	assert.Error(t, err)
+}
+
+func TestStructToData_IndirectString(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, scm, map[string]any{})
+	d.MarkNewResource()
+	err := StructToData(testStruct{
+		Indirect: []IndirectString{"a"},
+	}, scm, d)
+	assert.NoError(t, err)
 }

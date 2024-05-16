@@ -148,15 +148,15 @@ func (w workspaceSetting[T]) GetId(t *T) string {
 }
 
 func (w workspaceSetting[T]) GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema {
-	if w.customizeSchemaFunc != nil {
-		return w.customizeSchemaFunc
-	}
 	return func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s[etagAttrName].Computed = true
 		// Note: this may not always be computed, but it is for the default namespace setting. If other settings
 		// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
 		// definition.
 		s["setting_name"].Computed = true
+		if w.customizeSchemaFunc != nil {
+			return w.customizeSchemaFunc(s)
+		}
 		return s
 	}
 }

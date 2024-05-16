@@ -22,8 +22,6 @@ var automaticClusterUpdateFieldMask = strings.Join([]string{
 var automaticClusterUpdateSetting = workspaceSetting[settings.AutomaticClusterUpdateSetting]{
 	settingStruct: settings.AutomaticClusterUpdateSetting{},
 	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		common.MustSchemaPath(s, "setting_name").Computed = true
-		common.MustSchemaPath(s, "etag").Computed = true
 		common.MustSchemaPath(s, "automatic_cluster_update_workspace", "enablement_details").Computed = true
 		return s
 	},

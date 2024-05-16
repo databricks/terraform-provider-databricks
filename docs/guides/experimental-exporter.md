@@ -62,7 +62,7 @@ Services are just logical groups of resources used for filtering and organizatio
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
-* `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md) and [databricks_ip_access_list](../resources/ip_access_list.md).
+* `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `directories` - **listing** [databricks_directory](../resources/directory.md).
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
@@ -143,6 +143,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes | Yes | No |
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes | Yes | No |
+| [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) | Yes | No | No | Yes |
 | [databricks_notebook](../resources/notebook.md) | Yes | Yes | Yes | No |
 | [databricks_obo_token](../resources/obo_token.md) | Not Applicable | No | No | No |
 | [databricks_permissions](../resources/permissions.md) | Yes | No | Yes | No |

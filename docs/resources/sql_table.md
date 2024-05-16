@@ -136,7 +136,7 @@ For table columns
 Currently, changing the column definitions for a table will require dropping and re-creating the table
 
 * `name` - User-visible name of column
-* `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
+* `type` - (Optional) Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 

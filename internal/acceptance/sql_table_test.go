@@ -345,6 +345,8 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 			"short",
 			"byte",
 			"decimal",
+			"dec",
+			"numeric",
 		}),
 	}, step{
 		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "1", []string{
@@ -354,6 +356,8 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 			"SHORT",
 			"BYTE",
 			"DECIMAL",
+			"DEC",
+			"NUMERIC",
 		}),
 	}, step{
 		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "2", []string{
@@ -362,6 +366,8 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 			"float",
 			"smallint",
 			"tinyint",
+			"decimal(10,0)",
+			"decimal(10,0)",
 			"decimal(10,0)",
 		}),
 	})

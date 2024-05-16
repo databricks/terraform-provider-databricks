@@ -495,6 +495,8 @@ var columnTypeAliases = map[string]string{
 	"short":   "smallint",
 	"byte":    "tinyint",
 	"decimal": "decimal(10,0)",
+	"dec":     "decimal(10,0)",
+	"numeric": "decimal(10,0)",
 }
 
 func getColumnType(columnType string) string {

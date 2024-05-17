@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/catalog"
@@ -314,6 +315,61 @@ func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	}, step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "string", Nullable: true, Comment: "comment"}}),
+	})
+}
+
+func constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName string, columnName string, step string, columnTypes []string) string {
+	colInfos := []catalog.SqlColumnInfo{}
+	for index, colType := range columnTypes {
+		colInfos = append(colInfos, catalog.SqlColumnInfo{
+			Name:     columnName + strconv.Itoa(index),
+			Type:     colType,
+			Nullable: true,
+			Comment:  "comment" + strconv.Itoa(index) + step,
+		})
+	}
+	return constructManagedSqlTableTemplate(tableName, colInfos)
+}
+
+func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+	columnName := RandomName()
+	unityWorkspaceLevel(t, step{
+		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "0", []string{
+			"integer",
+			"long",
+			"real",
+			"short",
+			"byte",
+			"decimal",
+			"dec",
+			"numeric",
+		}),
+	}, step{
+		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "1", []string{
+			"INTEGER",
+			"LONG",
+			"REAL",
+			"SHORT",
+			"BYTE",
+			"DECIMAL",
+			"DEC",
+			"NUMERIC",
+		}),
+	}, step{
+		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "2", []string{
+			"int",
+			"bigint",
+			"float",
+			"smallint",
+			"tinyint",
+			"decimal(10,0)",
+			"decimal(10,0)",
+			"decimal(10,0)",
+		}),
 	})
 }
 

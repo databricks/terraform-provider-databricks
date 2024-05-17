@@ -15,7 +15,7 @@ turned off. This setting can NOT be disabled once it is enabled.
 ```hcl
 resource "databricks_compliance_security_profile_workspace_setting" "this" {
   compliance_security_profile_workspace {
-    is_enabled = true
+    is_enabled           = true
     compliance_standards = ["HIPAA", "FEDRAMP_MODERATE"]
   }
 }

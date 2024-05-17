@@ -31,8 +31,9 @@ func TestExternalLocationDataVerify(t *testing.T) {
 		name = "abc"
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"external_location_info.0.owner":           "admin",
-		"external_location_info.0.url":             "s3://test",
+		"id":                             "abc",
+		"external_location_info.0.owner": "admin",
+		"external_location_info.0.url":   "s3://test",
 		"external_location_info.0.credential_name": "test",
 		"external_location_info.0.read_only":       true,
 	})

@@ -36,7 +36,7 @@ output "some_metastore" {
 
 Provide one of the arguments to get information about a metastore:
 
-* `metastore_id` - Id of the metastore
+* `metastore_id` - ID of the metastore
 * `name` - Name of the metastore
 * `region` - Region of the metastore
 
@@ -45,6 +45,7 @@ Provide one of the arguments to get information about a metastore:
 
 This data source exports the following attributes:
 
+* `id` - ID of the metastore
 * `metastore_info` - MetastoreInfo object for a [databricks_metastore](../resources/metastore.md). This contains the following attributes:
   * `name` - Name of metastore.
   * `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored.

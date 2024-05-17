@@ -39,6 +39,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 				type      = "string"
 			}
 			comment = "this table is managed by terraform"
+			owner = "account users"
 		}`,
 	}, step{
 		Template: `
@@ -102,6 +103,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			data_source_format = "DELTA"
 			storage_location   = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
 			comment 		   = "this table is managed by terraform"
+			owner              = "account users"
 		}`,
 	})
 }
@@ -124,6 +126,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 			table_type         = "MANAGED"
 			data_source_format = "DELTA"
 			comment 		   = "this table is managed by terraform..."
+			owner              = "account users"
 
 			column {
 				name      = "id"

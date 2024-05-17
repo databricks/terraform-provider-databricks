@@ -99,7 +99,7 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 func ResourceServicePrincipal() common.Resource {
 	type entity struct {
 		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
-		DisplayName   string `json:"display_name,omitempty" tf:"computed,force_new"`
+		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
 		Active        bool   `json:"active,omitempty"`
 		ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
 	}
@@ -138,6 +138,8 @@ func ResourceServicePrincipal() common.Resource {
 				Optional: true,
 				Computed: true,
 			}
+			m["application_id"].AtLeastOneOf = []string{"application_id", "display_name"}
+			m["display_name"].AtLeastOneOf = []string{"application_id", "display_name"}
 			return m
 		})
 	spFromData := func(d *schema.ResourceData) User {

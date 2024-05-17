@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -26,6 +27,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
@@ -902,10 +904,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       parent.Value,
 					})
 					if parent.Type == "direct" {
+						id := fmt.Sprintf("%s|%s", parent.Value, g.ID)
 						ic.Emit(&resource{
 							Resource: "databricks_group_member",
-							ID:       fmt.Sprintf("%s|%s", parent.Value, g.ID),
+							ID:       id,
 							Name:     fmt.Sprintf("%s_%s_%s", parent.Display, parent.Value, g.DisplayName),
+							Data:     ic.makeGroupMemberData(id, parent.Value, g.ID),
 						})
 					}
 				}
@@ -916,10 +920,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       x.Value,
 						})
 						if !builtInUserGroup {
+							id := fmt.Sprintf("%s|%s", g.ID, x.Value)
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
-								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								ID:       id,
 								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
+								Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
 							})
 						}
 					}
@@ -929,10 +935,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       x.Value,
 						})
 						if !builtInUserGroup {
+							id := fmt.Sprintf("%s|%s", g.ID, x.Value)
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
-								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								ID:       id,
 								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
+								Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
 							})
 						}
 					}
@@ -942,10 +950,12 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:       x.Value,
 						})
 						if !builtInUserGroup {
+							id := fmt.Sprintf("%s|%s", g.ID, x.Value)
 							ic.Emit(&resource{
 								Resource: "databricks_group_member",
-								ID:       fmt.Sprintf("%s|%s", g.ID, x.Value),
+								ID:       id,
 								Name:     fmt.Sprintf("%s_%s_%s_%s", g.DisplayName, g.ID, x.Display, x.Value),
+								Data:     ic.makeGroupMemberData(id, g.ID, x.Value),
 							})
 						}
 					}
@@ -1506,6 +1516,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
 			contentB64, err := notebooksAPI.Export(r.ID, ic.notebooksFormat)
 			if err != nil {
+				if apierr.IsMissing(err) {
+					ic.addIgnoredResource(fmt.Sprintf("databricks_notebook. path=%s", r.ID))
+				}
 				return err
 			}
 			var fileExtension string
@@ -1553,6 +1566,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
 			contentB64, err := notebooksAPI.Export(r.ID, "AUTO")
 			if err != nil {
+				if apierr.IsMissing(err) {
+					ic.addIgnoredResource(fmt.Sprintf("databricks_workspace_file. path=%s", r.ID))
+				}
 				return err
 			}
 			objectId := r.Data.Get("object_id").(int)
@@ -1919,6 +1935,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			var pipeline pipelines.PipelineSpec
 			s := ic.Resources["databricks_pipeline"].Schema
 			common.DataToStructPointer(r.Data, s, &pipeline)
+			if pipeline.Catalog != "" && pipeline.Target != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_schema",
+					ID:       pipeline.Catalog + "." + pipeline.Target,
+				})
+			}
 			for _, lib := range pipeline.Libraries {
 				if lib.Notebook != nil {
 					ic.emitNotebookOrRepo(lib.Notebook.Path)
@@ -1983,6 +2005,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			return numLibraries == 0
 		},
 		Depends: []reference{
+			{Path: "catalog", Resource: "databricks_catalog"},
+			{Path: "target", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: dltIsMatchingCatalogAndSchema, SkipDirectLookup: true},
 			{Path: "cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "cluster.init_scripts.volumes.destination", Resource: "databricks_file"},
@@ -2028,6 +2053,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		// TODO: think if we really need this, we need directories only for permissions,
 		// and only when they are different from parents & notebooks
 		List: func(ic *importContext) error {
+			if ic.incremental {
+				return nil
+			}
 			directoryList := ic.getAllDirectories()
 			for offset, directory := range directoryList {
 				if strings.HasPrefix(directory.Path, "/Repos") {
@@ -2327,20 +2355,22 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			} else if cat.ShareName == "" {
 				// TODO: We need to be careful here if we add more catalog types... Really we need to have CatalogType in resource
-				schemas, err := ic.workspaceClient.Schemas.ListAll(ic.Context, catalog.ListSchemasRequest{CatalogName: r.ID})
-				if err != nil {
-					return err
-				}
-				ignoredSchemas := []string{"information_schema"}
-				for _, schema := range schemas {
-					if schema.CatalogType != "MANAGED_CATALOG" || slices.Contains(ignoredSchemas, schema.Name) {
-						continue
+				if ic.isServiceInListing("uc-schemas") {
+					schemas, err := ic.workspaceClient.Schemas.ListAll(ic.Context, catalog.ListSchemasRequest{CatalogName: r.ID})
+					if err != nil {
+						return err
 					}
-					ic.EmitIfUpdatedAfterMillis(&resource{
-						Resource:  "databricks_schema",
-						ID:        schema.FullName,
-						DependsOn: dependsOn,
-					}, schema.UpdatedAt, fmt.Sprintf("schema '%s'", schema.FullName))
+					ignoredSchemas := []string{"information_schema"}
+					for _, schema := range schemas {
+						if schema.CatalogType != "MANAGED_CATALOG" || slices.Contains(ignoredSchemas, schema.Name) {
+							continue
+						}
+						ic.EmitIfUpdatedAfterMillis(&resource{
+							Resource:  "databricks_schema",
+							ID:        schema.FullName,
+							DependsOn: dependsOn,
+						}, schema.UpdatedAt, fmt.Sprintf("schema '%s'", schema.FullName))
+					}
 				}
 			}
 			if cat.IsolationMode == "ISOLATED" {
@@ -2413,55 +2443,61 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			// TODO: somehow add depends on catalog's grant...
 			// TODO: emit owner? See comment in catalog resource
-			models, err := ic.workspaceClient.RegisteredModels.ListAll(ic.Context,
-				catalog.ListRegisteredModelsRequest{
-					CatalogName: catalogName,
-					SchemaName:  schemaName,
-				})
-			if err != nil { // TODO: should we continue?
-				return err
-			}
-			for _, model := range models {
-				ic.EmitIfUpdatedAfterMillis(&resource{
-					Resource:  "databricks_registered_model",
-					ID:        model.FullName,
-					DependsOn: dependsOn,
-				}, model.UpdatedAt, fmt.Sprintf("registered model '%s'", model.FullName))
-			}
-			// list volumes
-			volumes, err := ic.workspaceClient.Volumes.ListAll(ic.Context,
-				catalog.ListVolumesRequest{
-					CatalogName: catalogName,
-					SchemaName:  schemaName,
-				})
-			if err != nil {
-				return err
-			}
-			for _, volume := range volumes {
-				ic.EmitIfUpdatedAfterMillis(&resource{
-					Resource:  "databricks_volume",
-					ID:        volume.FullName,
-					DependsOn: dependsOn,
-				}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
-			}
-			// list tables
-			tables, err := ic.workspaceClient.Tables.ListAll(ic.Context, catalog.ListTablesRequest{
-				CatalogName: catalogName,
-				SchemaName:  schemaName,
-			})
-			if err != nil {
-				return err
-			}
-			for _, table := range tables {
-				switch table.TableType {
-				case "MANAGED", "EXTERNAL", "VIEW":
+			if ic.isServiceInListing("uc-models") {
+				models, err := ic.workspaceClient.RegisteredModels.ListAll(ic.Context,
+					catalog.ListRegisteredModelsRequest{
+						CatalogName: catalogName,
+						SchemaName:  schemaName,
+					})
+				if err != nil { // TODO: should we continue?
+					return err
+				}
+				for _, model := range models {
 					ic.EmitIfUpdatedAfterMillis(&resource{
-						Resource:  "databricks_sql_table",
-						ID:        table.FullName,
+						Resource:  "databricks_registered_model",
+						ID:        model.FullName,
 						DependsOn: dependsOn,
-					}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
-				default:
-					log.Printf("[DEBUG] Skipping table %s of type %s", table.FullName, table.TableType)
+					}, model.UpdatedAt, fmt.Sprintf("registered model '%s'", model.FullName))
+				}
+			}
+			if ic.isServiceInListing("uc-volumes") {
+				// list volumes
+				volumes, err := ic.workspaceClient.Volumes.ListAll(ic.Context,
+					catalog.ListVolumesRequest{
+						CatalogName: catalogName,
+						SchemaName:  schemaName,
+					})
+				if err != nil {
+					return err
+				}
+				for _, volume := range volumes {
+					ic.EmitIfUpdatedAfterMillis(&resource{
+						Resource:  "databricks_volume",
+						ID:        volume.FullName,
+						DependsOn: dependsOn,
+					}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
+				}
+			}
+			if ic.isServiceInListing("uc-tables") {
+				// list tables
+				tables, err := ic.workspaceClient.Tables.ListAll(ic.Context, catalog.ListTablesRequest{
+					CatalogName: catalogName,
+					SchemaName:  schemaName,
+				})
+				if err != nil {
+					return err
+				}
+				for _, table := range tables {
+					switch table.TableType {
+					case "MANAGED", "EXTERNAL", "VIEW":
+						ic.EmitIfUpdatedAfterMillis(&resource{
+							Resource:  "databricks_sql_table",
+							ID:        table.FullName,
+							DependsOn: dependsOn,
+						}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+					default:
+						log.Printf("[DEBUG] Skipping table %s of type %s", table.FullName, table.TableType)
+					}
 				}
 			}
 			// TODO: list VectorSearch indexes
@@ -2586,9 +2622,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return common.StructToData(pList, s, r.Data)
-		},
-		Ignore: func(ic *importContext, r *resource) bool {
-			return r.Data.Get("grant.#").(int) == 0
 		},
 		Depends: []reference{
 			{Path: "catalog", Resource: "databricks_catalog"},
@@ -2954,6 +2987,71 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "source", File: true},
 			{Path: "path", Resource: "databricks_volume", Match: "volume_path", MatchType: MatchLongestPrefix},
+		},
+	},
+	"databricks_mws_permission_assignment": {
+		AccountLevel: true,
+		Service:      "access",
+		List: func(ic *importContext) error {
+			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
+			if err != nil {
+				return err
+			}
+			for _, ws := range workspaces {
+				pas, err := ic.accountClient.WorkspaceAssignment.ListByWorkspaceId(ic.Context, ws.WorkspaceId)
+				if err != nil {
+					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s", ws.WorkspaceId, err.Error())
+					continue
+				}
+				log.Printf("[DEBUG] Emitting permission assignments for workspace %d", ws.WorkspaceId)
+				for _, pa := range pas.PermissionAssignments {
+					perm := "unknown"
+					if len(pa.Permissions) > 0 {
+						perm = pa.Permissions[0].String()
+					}
+					nm := fmt.Sprintf("mws_pa_%d_%s_%s_%d", ws.WorkspaceId, pa.Principal.DisplayName,
+						perm, pa.Principal.PrincipalId)
+					// We  generate Data directly to avoid calling APIs
+					data := mws.ResourceMwsPermissionAssignment().ToResource().TestResourceData()
+					scm := ic.Resources["databricks_mws_permission_assignment"].Schema
+					data.MarkNewResource()
+					paId := fmt.Sprintf("%d|%d", ws.WorkspaceId, pa.Principal.PrincipalId)
+					data.SetId(paId)
+					common.StructToData(pa, scm, data)
+					data.Set("workspace_id", ws.WorkspaceId)
+					data.Set("principal_id", pa.Principal.PrincipalId)
+					ic.Emit(&resource{
+						Resource: "databricks_mws_permission_assignment",
+						ID:       paId,
+						Name:     nameNormalizationRegex.ReplaceAllString(nm, "_"),
+						Data:     data,
+					})
+					// Emit principals
+					strPrincipalId := fmt.Sprintf("%d", pa.Principal.PrincipalId)
+					if pa.Principal.ServicePrincipalName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_service_principal",
+							ID:       strPrincipalId,
+						})
+					} else if pa.Principal.UserName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_user",
+							ID:       strPrincipalId,
+						})
+					} else if pa.Principal.GroupName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_group",
+							ID:       strPrincipalId,
+						})
+					}
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Resource: "databricks_service_principal", Path: "principal_id"},
+			{Resource: "databricks_user", Path: "principal_id"},
+			{Resource: "databricks_group", Path: "principal_id"},
 		},
 	},
 }

@@ -16,11 +16,15 @@ type LibraryResource struct {
 	compute.Library
 }
 
-func (LibraryResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
 	s.AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	})
+	return s
+}
+
+func (LibraryResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 	return s
 }
 

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -108,9 +109,12 @@ func (a NotebooksAPI) Create(r ImportPath) error {
 // Read returns the notebook metadata and not the contents
 func (a NotebooksAPI) Read(path string) (ObjectStatus, error) {
 	var notebookInfo ObjectStatus
-	err := a.client.Get(a.context, "/workspace/get-status", map[string]string{
-		"path": path,
-	}, &notebookInfo)
+	_, err := common.RetryOnTimeout(a.context, func(ctx context.Context) (*ObjectStatus, error) {
+		err := a.client.Get(a.context, "/workspace/get-status", map[string]string{
+			"path": path,
+		}, &notebookInfo)
+		return nil, err
+	})
 	return notebookInfo, err
 }
 
@@ -293,8 +297,13 @@ func ResourceNotebook() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			notebooksAPI := NewNotebooksAPI(ctx, c)
-			objectStatus, err := notebooksAPI.Read(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			objectStatus, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
+				return w.Workspace.GetStatusByPath(ctx, d.Id())
+			})
 			if err != nil {
 				return err
 			}

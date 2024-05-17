@@ -79,7 +79,10 @@ type testStruct struct {
 	TfOptional     string            `json:"tf_optional" tf:"optional"`
 	Hidden         string            `json:"-"`
 	Hidden2        string
+	Indirect       []IndirectString `json:"indirect"`
 }
+
+type IndirectString string
 
 type testRecursiveStruct struct {
 	Task  *testJobTask `json:"task,omitempty"`
@@ -416,7 +419,7 @@ func TestIterFields(t *testing.T) {
 			Default:  "_",
 			Optional: true,
 		},
-	}, nil, func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+	}, nil, func(fieldSchema *schema.Schema, path []string, valueField field) error {
 		return fmt.Errorf("test error")
 	})
 	assert.EqualError(t, err, "non_optional: test error")
@@ -500,6 +503,33 @@ func TestDataToStructPointerWithResourceProviderStruct(t *testing.T) {
 	assert.NoError(t, err)
 
 	DataToStructPointer(d, s, &dummyCopy)
+}
+
+type structWithForceSendFields struct {
+	BoolOpt         bool     `json:"bool_opt,omitempty"`
+	NonJson         bool     `json:"-,omitempty"`
+	ForceSendFields []string `json:"-"`
+}
+
+func TestDataToStructPointerWithImplicitlyZeroFields(t *testing.T) {
+	s := StructToSchema(structWithForceSendFields{}, nil)
+	d := schema.TestResourceDataRaw(t, s, map[string]any{})
+	result := structWithForceSendFields{}
+	DataToStructPointer(d, s, &result)
+	assert.False(t, result.BoolOpt)
+	assert.Nil(t, result.ForceSendFields)
+}
+
+func TestDataToStructPointerWithExplicitlyZeroFields(t *testing.T) {
+	s := StructToSchema(structWithForceSendFields{}, nil)
+	d := schema.TestResourceDataRaw(t, s, map[string]any{
+		"bool_opt": false,
+		"non_json": false,
+	})
+	result := structWithForceSendFields{}
+	DataToStructPointer(d, s, &result)
+	assert.False(t, result.BoolOpt)
+	assert.Contains(t, result.ForceSendFields, "BoolOpt")
 }
 
 func TestStructToData_EmptyField(t *testing.T) {
@@ -711,11 +741,11 @@ func TestDiffToStructPointer(t *testing.T) {
 }
 
 func TestReadListFromData(t *testing.T) {
-	err := readListFromData([]string{}, data{}, []any{}, nil, nil, nil, nil)
+	err := readListFromData([]string{}, data{}, []any{}, field{}, nil, nil, nil)
 	assert.NoError(t, err)
 
 	x := reflect.ValueOf(0)
-	err = readListFromData([]string{}, data{}, []any{1}, &x, nil, nil, nil)
+	err = readListFromData([]string{}, data{}, []any{1}, field{v: x}, nil, nil, nil)
 	assert.EqualError(t, err, "[[1]] unknown collection field")
 }
 
@@ -930,4 +960,13 @@ func TestStructToSchema_recursive(t *testing.T) {
 	// Should error out on the 3rd level of for_each_task.
 	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task", "task", "for_each_task")
 	assert.Error(t, err)
+}
+
+func TestStructToData_IndirectString(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, scm, map[string]any{})
+	d.MarkNewResource()
+	err := StructToData(testStruct{
+		Indirect: []IndirectString{"a"},
+	}, scm, d)
+	assert.NoError(t, err)
 }

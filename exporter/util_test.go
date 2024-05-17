@@ -406,7 +406,7 @@ func TestIgnoreObjectWithEmptyName(t *testing.T) {
 	require.NotNil(t, ignoreFunc)
 	assert.True(t, ignoreFunc(ic, r))
 	require.Equal(t, 1, len(ic.ignoredResources))
-	assert.Contains(t, ic.ignoredResources, "databricks_volume. ID=vtest")
+	assert.Contains(t, ic.ignoredResources, "databricks_volume. id=vtest")
 
 	d.Set("name", "test")
 	assert.False(t, ignoreFunc(ic, r))
@@ -428,4 +428,14 @@ func TestEmitWorkspaceObjectParentDirectory(t *testing.T) {
 	dir, exists := r.GetExtraData(ParentDirectoryExtraKey)
 	assert.True(t, exists)
 	assert.Equal(t, dirPath, dir)
+}
+
+func TestDirectoryIncrementalMode(t *testing.T) {
+	ic := importContextForTest()
+	ic.incremental = true
+
+	// test direct listing
+	assert.Nil(t, resourcesMap["databricks_directory"].List(ic))
+	// test emit during workspace listing
+	assert.True(t, ic.shouldSkipWorkspaceObject(workspace.ObjectStatus{ObjectType: workspace.Directory}, 111111))
 }

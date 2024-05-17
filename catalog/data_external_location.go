@@ -10,6 +10,7 @@ import (
 
 func DataSourceExternalLocation() common.Resource {
 	type ExternalLocationByID struct {
+		Id               string                        `json:"id,omitempty" tf:"computed"`
 		Name             string                        `json:"name"`
 		ExternalLocation *catalog.ExternalLocationInfo `json:"external_location_info,omitempty" tf:"computed" `
 	}
@@ -19,6 +20,7 @@ func DataSourceExternalLocation() common.Resource {
 			return err
 		}
 		data.ExternalLocation = location
+		data.Id = location.Name
 		return nil
 	})
 }

@@ -62,9 +62,9 @@ Services are just logical groups of resources used for filtering and organizatio
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
-* `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md) and [databricks_ip_access_list](../resources/ip_access_list.md).
+* `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
-* `directories` - **listing** [databricks_directory](../resources/directory.md).
+* `directories` - **listing** [databricks_directory](../resources/directory.md).  *Please note that directories aren't listed when running in the incremental mode! Only directories with updated notebooks will be emitted.*
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
@@ -87,13 +87,13 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
 * `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export the list of grants is expanded to include the identity that does the export! This is done to allow to create objects in case when catalogs/schemas have different owners than current identity.*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only metastores from the workspace's region are listed!*
-* `uc-models` - [databricks_registered_model](../resources/registered_model.md)
-* `uc-schemas` -  [databricks_schema](../resources/schema.md)
+* `uc-models` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_registered_model](../resources/registered_model.md)
+* `uc-schemas` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_schema](../resources/schema.md)
 * `uc-shares` - **listing** [databricks_share](../resources/share.md) and [databricks_recipient](../resources/recipient.md)
 * `uc-storage-credentials` - **listing** exports [databricks_storage_credential](../resources/storage_credential.md) resources on workspace or account level.
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
-* `uc-tables` - [databricks_sql_table](../resources/sql_table.md) resource.
-* `uc-volumes` -  [databricks_volume](../resources/volume.md)
+* `uc-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_sql_table](../resources/sql_table.md) resource.
+* `uc-volumes` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_volume](../resources/volume.md)
 * `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
 * `workspace` - **listing** [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
 
@@ -143,6 +143,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes | Yes | No |
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes | Yes | No |
+| [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) | Yes | No | No | Yes |
 | [databricks_notebook](../resources/notebook.md) | Yes | Yes | Yes | No |
 | [databricks_obo_token](../resources/obo_token.md) | Not Applicable | No | No | No |
 | [databricks_permissions](../resources/permissions.md) | Yes | No | Yes | No |

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -45,15 +46,17 @@ func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
 				role = "roles/servicePrincipal.manager"
 			}
 		}`,
-		Check: resourceCheck("databricks_access_control_rule_set.sp_rule_set",
-			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheckWithState("databricks_access_control_rule_set.sp_rule_set",
+			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
+				id := state.ID
+				eTag := state.Attributes["etag"]
 				a, err := client.AccountClient()
 				if err != nil {
 					return err
 				}
 				ruleSetRes, err := a.AccessControl.GetRuleSet(ctx, iam.GetRuleSetRequest{
 					Name: id,
-					Etag: "",
+					Etag: eTag,
 				})
 				if err != nil {
 					return err

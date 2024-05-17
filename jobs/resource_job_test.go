@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1380,7 +1381,7 @@ func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
 	}.Apply(t)
 }
 
-func TestResourceJobCreate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
+func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
 	qa.ResourceFixture{
 		Update:   true,
 		ID:       "789",
@@ -1431,7 +1432,65 @@ func TestResourceJobCreate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) 
 		max_concurrent_runs = 1
 		name = "Test"
 		`,
-	}.Apply(t)
+	}.ApplyNoError(t)
+}
+
+func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNowFailsWith409(t *testing.T) {
+	qa.ResourceFixture{
+		Update:   true,
+		ID:       "789",
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 789,
+					NewSettings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=789",
+				Response: Job{
+					JobID: 789,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Continuous: &ContinuousConf{
+							PauseStatus: "UNPAUSED",
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/run-now",
+				ExpectedRequest: RunParameters{
+					JobID: 789,
+				},
+				Status: 409,
+				Response: apierr.APIErrorBody{
+					ErrorCode: "CONFLICT",
+					Message:   "A concurrent request to run the continuous job is already in progress. Please wait for it to complete before issuing a new request.",
+				},
+			},
+		},
+		HCL: `
+		continuous {
+			pause_status = "UNPAUSED"
+		}
+		control_run_state = true
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.ApplyNoError(t)
 }
 
 func TestResourceJobCreate_ControlRunState_ContinuousUpdateCancel(t *testing.T) {
@@ -1985,9 +2044,14 @@ func TestResourceJobRead(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Featurizer", d.Get("name"))
-	assert.Equal(t, 2, d.Get("library.#"))
-	assert.Equal(t, "dbfs://ff/gg/hh.jar", d.Get("library.1850263921.jar"))
-	assert.Equal(t, "dbfs://aa/bb/cc.jar", d.Get("library.587400796.jar"))
+	libraries := d.Get("library").(*schema.Set).List()
+	assert.Len(t, libraries, 2)
+	allDbfsLibs := []string{}
+	for _, lib := range libraries {
+		allDbfsLibs = append(allDbfsLibs, lib.(map[string]any)["jar"].(string))
+	}
+	assert.Contains(t, allDbfsLibs, "dbfs://ff/gg/hh.jar")
+	assert.Contains(t, allDbfsLibs, "dbfs://aa/bb/cc.jar")
 
 	assert.Equal(t, 2, d.Get("spark_jar_task.0.parameters.#"))
 	assert.Equal(t, "com.labs.BarMain", d.Get("spark_jar_task.0.main_class_name"))

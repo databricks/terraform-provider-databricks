@@ -20,7 +20,7 @@ const DefaultProvisionTimeout = 30 * time.Minute
 const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
 
 var clusterSchema = resourceClusterSchema()
-var clusterSchemaVersion = 3
+var clusterSchemaVersion = 4
 
 const (
 	numWorkerErr                     = "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
@@ -39,7 +39,7 @@ func ResourceCluster() common.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    clusterSchemaV0(),
-				Version: 2,
+				Version: 3,
 				Upgrade: removeZeroAwsEbsVolumeAttributes,
 			},
 		},
@@ -64,6 +64,10 @@ func removeZeroAwsEbsVolumeAttributes(ctx context.Context, rawState map[string]i
 			if awsAttributes["ebs_volume_count"] == 0 {
 				log.Printf("[INFO] remove zero ebs_volume_count")
 				delete(awsAttributes, "ebs_volume_count")
+			}
+			if awsAttributes["ebs_volume_iops"] == 0 {
+				log.Printf("[INFO] remove zero ebs_volume_iops")
+				delete(awsAttributes, "ebs_volume_iops")
 			}
 			if awsAttributes["ebs_volume_size"] == 0 {
 				log.Printf("[INFO] remove zero ebs_volume_size")

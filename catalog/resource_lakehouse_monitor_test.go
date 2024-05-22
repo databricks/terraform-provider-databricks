@@ -16,7 +16,7 @@ func TestLakehouseMonitorCornerCases(t *testing.T) {
 func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
+			e := w.GetMockQualityMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
 				TableName:        "test_table",
 				OutputSchemaName: "output.schema",
@@ -57,7 +57,7 @@ func TestLakehouseMonitorCreateTimeseries(t *testing.T) {
 func TestLakehouseMonitorCreateInference(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
+			e := w.GetMockQualityMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
 				TableName:        "test_table",
 				OutputSchemaName: "output.schema",
@@ -109,7 +109,7 @@ func TestLakehouseMonitorCreateInference(t *testing.T) {
 func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
+			e := w.GetMockQualityMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
 				TableName:        "test_table",
 				OutputSchemaName: "output.schema",
@@ -143,7 +143,7 @@ func TestLakehouseMonitorCreateSnapshot(t *testing.T) {
 func TestLakehouseMonitorGet(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
+			e := w.GetMockQualityMonitorsAPI().EXPECT()
 			e.GetByTableName(mock.Anything, "test_table").Return(&catalog.MonitorInfo{
 				TableName:        "test_table",
 				Status:           catalog.MonitorInfoStatusMonitorStatusActive,
@@ -166,7 +166,7 @@ func TestLakehouseMonitorGet(t *testing.T) {
 func TestLakehouseMonitorUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
+			e := w.GetMockQualityMonitorsAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateMonitor{
 				TableName:        "test_table",
 				OutputSchemaName: "output.schema",
@@ -228,7 +228,7 @@ func TestLakehouseMonitorUpdate(t *testing.T) {
 func TestLakehouseMonitorDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockLakehouseMonitorsAPI().EXPECT()
+			e := w.GetMockQualityMonitorsAPI().EXPECT()
 			e.DeleteByTableName(mock.Anything, "test_table").Return(nil)
 		},
 		Resource: ResourceLakehouseMonitor(),

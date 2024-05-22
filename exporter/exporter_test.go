@@ -293,7 +293,7 @@ var emptyStorageCrdentials = qa.HTTPFixture{
 
 var emptyConnections = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/connections",
+	Resource: "/api/2.1/unity-catalog/connections?",
 	Response: catalog.ListConnectionsResponse{},
 }
 

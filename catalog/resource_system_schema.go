@@ -43,7 +43,7 @@ func ResourceSystemSchema() common.Resource {
 		//enable new schema
 		err = w.SystemSchemas.Enable(ctx, catalog.EnableRequest{
 			MetastoreId: metastoreSummary.MetastoreId,
-			SchemaName:  catalog.EnableSchemaName(new),
+			SchemaName:  new,
 		})
 		//ignore "schema <schema-name> already exists" error
 		if err != nil && !strings.Contains(err.Error(), "already exists") {
@@ -53,7 +53,7 @@ func ResourceSystemSchema() common.Resource {
 		if old != "" {
 			err = w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
 				MetastoreId: metastoreSummary.MetastoreId,
-				SchemaName:  catalog.DisableSchemaName(old),
+				SchemaName:  old,
 			})
 			if err != nil {
 				return err
@@ -106,7 +106,7 @@ func ResourceSystemSchema() common.Resource {
 			}
 			return w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
 				MetastoreId: metastoreSummary.MetastoreId,
-				SchemaName:  catalog.DisableSchemaName(schemaName),
+				SchemaName:  schemaName,
 			})
 		},
 	}

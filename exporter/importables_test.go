@@ -1843,7 +1843,7 @@ func TestConnections(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/connections",
+			Resource:     "/api/2.1/unity-catalog/connections?",
 			Response: catalog.ListConnectionsResponse{
 				Connections: []catalog.ConnectionInfo{
 					{

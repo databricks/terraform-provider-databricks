@@ -2714,7 +2714,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return connectionType + "_" + connectionName
 		},
 		List: func(ic *importContext) error {
-			connections, err := ic.workspaceClient.Connections.ListAll(ic.Context)
+			connections, err := ic.workspaceClient.Connections.ListAll(ic.Context, catalog.ListConnectionsRequest{})
 			if err != nil {
 				return err
 			}

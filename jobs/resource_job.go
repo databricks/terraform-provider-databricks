@@ -589,7 +589,6 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("task", "for_each_task", "task", "run_if").SetSuppressDiffWithDefault(jobs.RunIfAllSuccess)
 
 	s.SchemaPath("task", "for_each_task", "task", "new_cluster", "cluster_id").Schema.Computed = false
-	s.SchemaPath("task", "for_each_task", "task", "new_cluster").RemoveField("cluster_source")
 
 	// ======= To keep consistency with the manually maintained schema, should be reverted once full migration is done. ======
 	s.SchemaPath("task", "task_key").SetOptional()

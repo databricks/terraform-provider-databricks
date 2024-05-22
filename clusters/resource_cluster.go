@@ -248,7 +248,6 @@ func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema)
 }
 
 func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
-	s.SchemaPath("cluster_source").SetReadOnly()
 	s.SchemaPath("enable_elastic_disk").SetComputed()
 	s.SchemaPath("enable_local_disk_encryption").SetComputed()
 	s.SchemaPath("node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})

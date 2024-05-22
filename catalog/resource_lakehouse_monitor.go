@@ -16,7 +16,7 @@ const lakehouseMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
 	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
-		endpoint, err := w.LakehouseMonitors.GetByTableName(ctx, monitorName)
+		endpoint, err := w.QualityMonitors.GetByTableName(ctx, monitorName)
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -68,7 +68,7 @@ func ResourceLakehouseMonitor() common.Resource {
 			common.DataToStructPointer(d, monitorSchema, &create)
 			create.TableName = d.Get("table_name").(string)
 
-			endpoint, err := w.LakehouseMonitors.Create(ctx, create)
+			endpoint, err := w.QualityMonitors.Create(ctx, create)
 			if err != nil {
 				return err
 			}
@@ -84,7 +84,7 @@ func ResourceLakehouseMonitor() common.Resource {
 			if err != nil {
 				return err
 			}
-			endpoint, err := w.LakehouseMonitors.GetByTableName(ctx, d.Id())
+			endpoint, err := w.QualityMonitors.GetByTableName(ctx, d.Id())
 			if err != nil {
 				return err
 
@@ -99,7 +99,7 @@ func ResourceLakehouseMonitor() common.Resource {
 			var update catalog.UpdateMonitor
 			common.DataToStructPointer(d, monitorSchema, &update)
 			update.TableName = d.Get("table_name").(string)
-			_, err = w.LakehouseMonitors.Update(ctx, update)
+			_, err = w.QualityMonitors.Update(ctx, update)
 			if err != nil {
 				return err
 			}
@@ -110,7 +110,7 @@ func ResourceLakehouseMonitor() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.LakehouseMonitors.DeleteByTableName(ctx, d.Id())
+			return w.QualityMonitors.DeleteByTableName(ctx, d.Id())
 		},
 		Schema: monitorSchema,
 		Timeouts: &schema.ResourceTimeout{

@@ -26,7 +26,9 @@ func ResourceModelServing() common.Resource {
 			common.MustSchemaPath(m, "config", "served_entities").ConflictsWith = []string{"config.served_models"}
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
 			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
+			common.MustSchemaPath(m, "config", "served_models", "workload_type").Default = "CPU"
 			// TODO: `config.served_models.workload_type` should be a `Optional+Computed` field. Also consider this for other similar fields.
 			// In this scenario, if a workspace does not have GPU serving, specifying `workload_type` = 'CPU' will get empty response from API.
 			common.MustSchemaPath(m, "config", "served_models", "workload_type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {

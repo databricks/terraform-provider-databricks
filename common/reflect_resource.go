@@ -366,7 +366,9 @@ func chooseFieldName(typeField reflect.StructField) string {
 func diffSuppressor(fieldName string, v *schema.Schema) func(k, old, new string, d *schema.ResourceData) bool {
 	zero := fmt.Sprintf("%v", v.Type.Zero())
 	return func(k, old, new string, d *schema.ResourceData) bool {
-		if new == zero && old != zero {
+		// HasChange allows to check if the field is explicitly changed in the configuration.
+		// If the field is explicitly set in the configuration, we should not suppress the diff.
+		if new == zero && old != zero && !d.HasChange(k) {
 			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
 			return true
 		}

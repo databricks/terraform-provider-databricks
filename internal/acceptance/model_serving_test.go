@@ -97,10 +97,10 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 				config {
 					served_entities{
 						name = "pt_model"
-						entity_name = "system.ai.dbrx_instruct"
+						entity_name = "system.ai.mistral_7b_instruct_v0_1"
 						entity_version = "1"
 						min_provisioned_throughput = 0
-						max_provisioned_throughput = 600
+						max_provisioned_throughput = 970
 					}
 					traffic_config {
 						routes {

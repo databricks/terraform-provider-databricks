@@ -1,13 +1,11 @@
 ---
 subcategory: "Unity Catalog"
 ---
-# databricks_lakehouse_monitor Resource
-
-NOTE: This resource has been deprecated and will be removed soon. Please use the [databricks_quality_monitor resource](./quality_monitor.md) instead.
+# databricks_quality_monitor Resource
 
 This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks. 
 
-A `databricks_lakehouse_monitor` is attached to a [databricks_sql_table](sql_table.md) and can be of type timeseries, snapshot or inference. 
+A `databricks_quality_monitor` is attached to a [databricks_sql_table](sql_table.md) and can be of type timeseries, snapshot or inference. 
 
 ## Example Usage
 
@@ -43,9 +41,9 @@ resource "databricks_sql_table" "myTestTable" {
   }
 }
 
-resource "databricks_lakehouse_monitor" "testTimeseriesMonitor" {
+resource "databricks_quality_monitor" "testTimeseriesMonitor" {
   table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_sql_table.myTestTable.name}"
-  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_sql_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTestTable.name}"
   output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
   time_series {
     granularities = ["1 hour"]
@@ -57,9 +55,9 @@ resource "databricks_lakehouse_monitor" "testTimeseriesMonitor" {
 ### Inference Monitor
 
 ```hcl
-resource "databricks_lakehouse_monitor" "testMonitorInference" {
+resource "databricks_quality_monitor" "testMonitorInference" {
   table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
-  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_quality_monitoring/${databricks_table.myTestTable.name}"
   output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
   inference_log {
     granularities  = ["1 hour"]
@@ -72,9 +70,9 @@ resource "databricks_lakehouse_monitor" "testMonitorInference" {
 ```
 ### Snapshot Monitor
 ```hcl
-resource "databricks_lakehouse_monitor" "testMonitorInference" {
+resource "databricks_quality_monitor" "testMonitorInference" {
   table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
-  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_quality_monitoring/${databricks_table.myTestTable.name}"
   output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
   snapshot {}
 }

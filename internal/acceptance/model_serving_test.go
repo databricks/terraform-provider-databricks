@@ -81,3 +81,36 @@ func TestAccModelServing(t *testing.T) {
 		},
 	)
 }
+
+func TestAccModelServingProvisionedThroughput(t *testing.T) {
+	loadWorkspaceEnv(t)
+	if isGcp(t) {
+		skipf(t)("not available on GCP")
+	}
+
+	name := fmt.Sprintf("terraform-test-model-serving-pt-%s",
+		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	workspaceLevel(t, step{
+		Template: fmt.Sprintf(`
+			resource "databricks_model_serving" "endpoint" {
+				name = "%s"
+				config {
+					served_entities{
+						name = "pt_model"
+						entity_name = "system.ai.dbrx_instruct"
+						entity_version = "1"
+						min_provisioned_throughput = 0
+						max_provisioned_throughput = 600
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, name),
+	},
+	)
+}

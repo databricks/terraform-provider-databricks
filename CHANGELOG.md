@@ -3,16 +3,13 @@
 ## 1.45.0
 
 ### New Features and Improvements
-
- * Fix bug in collectionToMaps ([#3581](https://github.com/databricks/terraform-provider-databricks/pull/3581)).
- * Added `databricks_enhanced_security_monitoring_workspace_setting ` resource for ESC (Enhanced Compliance and Security) settings ([#3563](https://github.com/databricks/terraform-provider-databricks/pull/3563)).
- * Added `databricks_automatic_cluster_update_workspace_setting` resource ([#3444](https://github.com/databricks/terraform-provider-databricks/pull/3444)).
- * Add databricks_compliance_security_profile_workspace_setting resource ([#3564](https://github.com/databricks/terraform-provider-databricks/pull/3564)).
- * Make customizable error logs more readable ([#3583](https://github.com/databricks/terraform-provider-databricks/pull/3583)).
  * Fix control run state failures for `databricks_job` resource ([#3585](https://github.com/databricks/terraform-provider-databricks/pull/3585)).
  * Added support for popular column types for `resource_sql_table` ([#3528](https://github.com/databricks/terraform-provider-databricks/pull/3528)).
  * Modify state upgrader to remove `ebs_volume_iops` set to zero ([#3601](https://github.com/databricks/terraform-provider-databricks/pull/3601)).
- * Add route optimized option to model serving terraform ([#3572](https://github.com/databricks/terraform-provider-databricks/pull/3572)).
+ * Added `databricks_enhanced_security_monitoring_workspace_setting ` resource for ESC (Enhanced Compliance and Security) settings ([#3563](https://github.com/databricks/terraform-provider-databricks/pull/3563)).
+ * Added `databricks_automatic_cluster_update_workspace_setting` resource ([#3444](https://github.com/databricks/terraform-provider-databricks/pull/3444)).
+ * Added `databricks_compliance_security_profile_workspace_setting` resource ([#3564](https://github.com/databricks/terraform-provider-databricks/pull/3564)).
+ * Added route optimized option to model serving terraform ([#3572](https://github.com/databricks/terraform-provider-databricks/pull/3572)).
  * Rename lakehouse monitor to quality monitor ([#3584](https://github.com/databricks/terraform-provider-databricks/pull/3584)).
 
 
@@ -26,7 +23,9 @@
 
 
 ### Internal Changes
- * Add TestMwsAccServicePrincipalResourceOnAws to flaky tests ([#3580](https://github.com/databricks/terraform-provider-databricks/pull/3580)).
+ * Added TestMwsAccServicePrincipalResourceOnAws to flaky tests ([#3580](https://github.com/databricks/terraform-provider-databricks/pull/3580)).
+ * Fix bug in collectionToMaps ([#3581](https://github.com/databricks/terraform-provider-databricks/pull/3581)).
+ * Make customizable error logs more readable ([#3583](https://github.com/databricks/terraform-provider-databricks/pull/3583)).
 
 
 ### Dependency updates

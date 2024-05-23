@@ -1,5 +1,38 @@
 # Version changelog
 
+## 1.45.0
+
+### New Features and Improvements
+
+ * Fix bug in collectionToMaps ([#3581](https://github.com/databricks/terraform-provider-databricks/pull/3581)).
+ * Added `databricks_enhanced_security_monitoring_workspace_setting ` resource for ESC (Enhanced Compliance and Security) settings ([#3563](https://github.com/databricks/terraform-provider-databricks/pull/3563)).
+ * Added `databricks_automatic_cluster_update_workspace_setting` resource ([#3444](https://github.com/databricks/terraform-provider-databricks/pull/3444)).
+ * Add databricks_compliance_security_profile_workspace_setting resource ([#3564](https://github.com/databricks/terraform-provider-databricks/pull/3564)).
+ * Make customizable error logs more readable ([#3583](https://github.com/databricks/terraform-provider-databricks/pull/3583)).
+ * Fix control run state failures for `databricks_job` resource ([#3585](https://github.com/databricks/terraform-provider-databricks/pull/3585)).
+ * Added support for popular column types for `resource_sql_table` ([#3528](https://github.com/databricks/terraform-provider-databricks/pull/3528)).
+ * Modify state upgrader to remove `ebs_volume_iops` set to zero ([#3601](https://github.com/databricks/terraform-provider-databricks/pull/3601)).
+ * Add route optimized option to model serving terraform ([#3572](https://github.com/databricks/terraform-provider-databricks/pull/3572)).
+ * Rename lakehouse monitor to quality monitor ([#3584](https://github.com/databricks/terraform-provider-databricks/pull/3584)).
+
+
+### Documentation Changes
+ * Fix documentation for `databricks_storage_credential` and `databricks_external_location` data sources ([#3588](https://github.com/databricks/terraform-provider-databricks/pull/3588)).
+
+
+### Exporter
+ * Add support for `databricks_mws_permission_assignment` resource ([#3562](https://github.com/databricks/terraform-provider-databricks/pull/3562)).
+ * Don't list directories in the incremental mode ([#3569](https://github.com/databricks/terraform-provider-databricks/pull/3569)).
+
+
+### Internal Changes
+ * Add TestMwsAccServicePrincipalResourceOnAws to flaky tests ([#3580](https://github.com/databricks/terraform-provider-databricks/pull/3580)).
+
+
+### Dependency updates
+ * Bump github.com/databricks/databricks-sdk-go from 0.40.1 to 0.41.0 ([#3604](https://github.com/databricks/terraform-provider-databricks/pull/3604)).
+ * Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.33.0 to 2.34.0 ([#3594](https://github.com/databricks/terraform-provider-databricks/pull/3594)).
+
 ## 1.44.0
 
 ### New Features and Improvements

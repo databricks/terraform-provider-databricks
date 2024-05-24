@@ -1885,7 +1885,6 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 				import_from_git_branch = "main"
 				dirty_state = "NOT_SYNCED"
 			}
-			provider = "gitHub"
 		}
 
 		task {

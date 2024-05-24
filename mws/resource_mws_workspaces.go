@@ -504,6 +504,11 @@ func ResourceMwsWorkspaces() common.Resource {
 				func(m map[string]*schema.Schema) map[string]*schema.Schema {
 					return m
 				})["token"]
+
+			s["gcp_workspace_sa"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
@@ -554,6 +559,10 @@ func ResourceMwsWorkspaces() common.Resource {
 			}
 			d.Set("workspace_id", workspace.WorkspaceID)
 			d.Set("workspace_url", workspace.WorkspaceURL)
+			if workspace.Cloud == "gcp" {
+				d.Set("gcp_workspace_sa", fmt.Sprintf("db-%d@prod-gcp-%s.iam.gserviceaccount.com",
+					workspace.WorkspaceID, workspace.Location))
+			}
 			p.Pack(d)
 			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		},

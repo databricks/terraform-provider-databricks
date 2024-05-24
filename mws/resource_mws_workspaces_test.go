@@ -132,6 +132,8 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 					WorkspaceStatus: WorkspaceStatusRunning,
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
+					Location:        "bcd",
+					Cloud:           "gcp",
 				},
 			},
 		},
@@ -159,7 +161,10 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		`,
 		Gcp:    true,
 		Create: true,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"cloud":            "gcp",
+		"gcp_workspace_sa": "db-1234@prod-gcp-bcd.iam.gserviceaccount.com",
+	})
 }
 
 func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {

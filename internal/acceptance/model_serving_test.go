@@ -104,7 +104,7 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 					}
 					traffic_config {
 						routes {
-							served_model_name = "prod_model"
+							served_model_name = "pt_model"
 							traffic_percentage = 100
 						}
 					}

@@ -19,6 +19,7 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 						Name: "Webhook test",
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey:           "task1",
 								ExistingClusterID: "abc",
 							},
 						},
@@ -42,6 +43,7 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 						Name: "Webhook test",
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey:           "task1",
 								ExistingClusterID: "abc",
 							},
 						},
@@ -72,6 +74,7 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 		HCL: `
 		name = "Webhook test"
 		task {
+			task_key = "task1"
 			existing_cluster_id = "abc"
 		}
 		webhook_notifications {

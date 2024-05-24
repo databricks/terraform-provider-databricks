@@ -617,7 +617,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 			return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
 		}
 		defaultEmpty := reflect.ValueOf(fieldSchema.Default).Kind() == reflect.Invalid
-		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
+		if !isGoSDK && fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
 		err := cb(fieldSchema, append(path, fieldName), field)

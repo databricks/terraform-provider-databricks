@@ -99,7 +99,7 @@ type SqlTask struct {
 	Dashboard   *SqlDashboardTask `json:"dashboard,omitempty"`
 	Alert       *SqlAlertTask     `json:"alert,omitempty"`
 	File        *SqlFileTask      `json:"file,omitempty"`
-	WarehouseID string            `json:"warehouse_id,omitempty"`
+	WarehouseID string            `json:"warehouse_id"`
 	Parameters  map[string]string `json:"parameters,omitempty"`
 }
 
@@ -130,7 +130,7 @@ type ForEachTask struct {
 }
 
 type ForEachNestedTask struct {
-	TaskKey     string                `json:"task_key,omitempty"`
+	TaskKey     string                `json:"task_key"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
 	RunIf       string                `json:"run_if,omitempty"`
@@ -201,9 +201,9 @@ type GitSource struct {
 // End Jobs + Repo integration preview
 
 type JobHealthRule struct {
-	Metric    string `json:"metric,omitempty"`
-	Operation string `json:"op,omitempty"`
-	Value     int64  `json:"value,omitempty"`
+	Metric    string `json:"metric"`
+	Operation string `json:"op"`
+	Value     int64  `json:"value"`
 }
 
 type JobHealth struct {
@@ -211,7 +211,7 @@ type JobHealth struct {
 }
 
 type JobTaskSettings struct {
-	TaskKey     string                `json:"task_key,omitempty"`
+	TaskKey     string                `json:"task_key"`
 	Description string                `json:"description,omitempty"`
 	DependsOn   []jobs.TaskDependency `json:"depends_on,omitempty"`
 	RunIf       string                `json:"run_if,omitempty"`
@@ -246,8 +246,8 @@ type JobTaskSettings struct {
 }
 
 type JobCluster struct {
-	JobClusterKey string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	NewCluster    *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
+	JobClusterKey string            `json:"job_cluster_key" tf:"group:cluster_type"`
+	NewCluster    *clusters.Cluster `json:"new_cluster" tf:"group:cluster_type"`
 }
 
 type ContinuousConf struct {
@@ -446,6 +446,42 @@ type JobsAPI struct {
 	context context.Context
 }
 
+var jobSpecAliases = map[string]string{
+	"tasks":        "task",
+	"parameters":   "parameter",
+	"job_clusters": "job_cluster",
+	"environments": "environment",
+}
+
+// JobCreate + JobSettingResource related aliases.
+var jobsAliases = map[string]map[string]string{
+	"jobs.JobSettingsResource": jobSpecAliases,
+	"jobs.JobCreateStruct":     jobSpecAliases,
+	"jobs.GitSource": {
+		"git_url":      "url",
+		"git_provider": "provider",
+		"git_branch":   "branch",
+		"git_tag":      "tag",
+		"git_commit":   "commit",
+	},
+	"jobs.Task": {
+		"libraries": "library",
+	},
+}
+
+// Need a struct for JobCreate because there are aliases we need and it'll be needed in the create method.
+type JobCreateStruct struct {
+	jobs.CreateJob
+}
+
+func (JobCreateStruct) Aliases() map[string]map[string]string {
+	return jobsAliases
+}
+
+func (JobCreateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	return s
+}
+
 type JobSettingsResource struct {
 	jobs.JobSettings
 
@@ -469,25 +505,7 @@ type JobSettingsResource struct {
 }
 
 func (JobSettingsResource) Aliases() map[string]map[string]string {
-	aliases := map[string]map[string]string{
-		"jobs.JobSettingsResource": {
-			"tasks":        "task",
-			"parameters":   "parameter",
-			"job_clusters": "job_cluster",
-			"environments": "environment",
-		},
-		"jobs.GitSource": {
-			"git_url":      "url",
-			"git_provider": "provider",
-			"git_branch":   "branch",
-			"git_tag":      "tag",
-			"git_commit":   "commit",
-		},
-		"jobs.Task": {
-			"libraries": "library",
-		},
-	}
-	return aliases
+	return jobsAliases
 }
 
 func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -591,13 +609,8 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("task", "for_each_task", "task", "new_cluster", "cluster_id").Schema.Computed = false
 
 	// ======= To keep consistency with the manually maintained schema, should be reverted once full migration is done. ======
-	s.SchemaPath("task", "task_key").SetOptional()
-	s.SchemaPath("task", "for_each_task", "task", "task_key").SetOptional()
 
 	s.SchemaPath("trigger", "table_update", "table_names").SetRequired()
-
-	s.SchemaPath("task", "sql_task", "warehouse_id").SetOptional()
-	s.SchemaPath("task", "for_each_task", "task", "sql_task", "warehouse_id").SetOptional()
 
 	s.SchemaPath("task", "python_wheel_task", "entry_point").SetOptional()
 	s.SchemaPath("task", "for_each_task", "task", "python_wheel_task", "entry_point").SetOptional()
@@ -608,10 +621,6 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("task", "sql_task", "alert", "subscriptions").SetRequired()
 	s.SchemaPath("task", "for_each_task", "task", "sql_task", "alert", "subscriptions").SetRequired()
 
-	s.SchemaPath("health", "rules", "metric").SetOptional()
-	s.SchemaPath("health", "rules", "op").SetOptional()
-	s.SchemaPath("health", "rules", "value").SetOptional()
-
 	s.SchemaPath("task", "new_cluster", "cluster_id").SetOptional()
 	s.SchemaPath("task", "for_each_task", "task", "new_cluster", "cluster_id").SetOptional()
 
@@ -619,25 +628,14 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("task", "health", "rules").SetRequired()
 	s.SchemaPath("task", "for_each_task", "task", "health", "rules").SetRequired()
 
-	s.SchemaPath("task", "health", "rules", "op").SetOptional()
-	s.SchemaPath("task", "for_each_task", "task", "health", "rules", "op").SetOptional()
-
-	s.SchemaPath("task", "health", "rules", "metric").SetOptional()
-	s.SchemaPath("task", "for_each_task", "task", "health", "rules", "metric").SetOptional()
-
-	s.SchemaPath("task", "health", "rules", "value").SetOptional()
-	s.SchemaPath("task", "for_each_task", "task", "health", "rules", "value").SetOptional()
-
-	s.SchemaPath("job_cluster", "job_cluster_key").SetOptional()
-	s.SchemaPath("job_cluster", "new_cluster").SetOptional()
 	s.SchemaPath("job_cluster", "new_cluster", "cluster_id").SetOptional()
-
 	s.SchemaPath("new_cluster", "cluster_id").SetOptional()
-
-	s.SchemaPath("git_source", "provider").SetOptional()
 
 	s.SchemaPath("library").Schema.Type = schema.TypeSet
 	s.SchemaPath("task", "library").Schema.Type = schema.TypeSet
+
+	// Technically this is required by the API, but marking it optional since we can infer it from the hostname.
+	s.SchemaPath("git_source", "provider").SetOptional()
 
 	return s
 }
@@ -959,6 +957,7 @@ func (a alwaysRunningLifecycleManager) OnCreate(ctx context.Context) error {
 	}
 	return NewJobsAPI(ctx, a.m).Start(jobID, a.d.Timeout(schema.TimeoutCreate))
 }
+
 func (a alwaysRunningLifecycleManager) OnUpdate(ctx context.Context) error {
 	api := NewJobsAPI(ctx, a.m)
 	jobID, err := parseJobId(a.d.Id())
@@ -1039,7 +1038,7 @@ var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
 func ResourceJob() common.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
-		var js JobSettings
+		var js JobSettingsResource
 		common.DataToStructPointer(d, jobsGoSdkSchema, &js)
 		if js.isMultiTask() {
 			return context.WithValue(ctx, common.Api, common.API_2_1)
@@ -1054,7 +1053,7 @@ func ResourceJob() common.Resource {
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			var js JobSettings
+			var js JobSettingsResource
 			common.DiffToStructPointer(d, jobsGoSdkSchema, &js)
 			alwaysRunning := d.Get("always_running").(bool)
 			if alwaysRunning && js.MaxConcurrentRuns > 1 {
@@ -1073,12 +1072,12 @@ func ResourceJob() common.Resource {
 				if task.NewCluster == nil {
 					continue
 				}
-				if err := task.NewCluster.Validate(); err != nil {
+				if err := clusters.Validate(*task.NewCluster); err != nil {
 					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
 				}
 			}
 			if js.NewCluster != nil {
-				if err := js.NewCluster.Validate(); err != nil {
+				if err := clusters.Validate(*js.NewCluster); err != nil {
 					return fmt.Errorf("invalid job cluster: %w", err)
 				}
 			}
@@ -1088,40 +1087,99 @@ func ResourceJob() common.Resource {
 			var js JobSettings
 			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
 			if js.isMultiTask() {
-				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+				// Api 2.1
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				var cj JobCreateStruct
+				common.DataToStructPointer(d, jobsGoSdkSchema, &cj)
+				jobId, err := Create(cj.CreateJob, w, ctx)
+				if err != nil {
+					return err
+				}
+				d.SetId(fmt.Sprintf("%d", jobId))
+				return getJobLifecycleManagerGoSdk(d, c).OnCreate(ctx)
+			} else {
+				// Api 2.0
+				// TODO: Deprecate and remove this code path
+				jobsAPI := NewJobsAPI(ctx, c)
+				job, err := jobsAPI.Create(js)
+				if err != nil {
+					return err
+				}
+				d.SetId(job.ID())
+				return getJobLifecycleManager(d, c).OnCreate(ctx)
 			}
-			jobsAPI := NewJobsAPI(ctx, c)
-			job, err := jobsAPI.Create(js)
-			if err != nil {
-				return err
-			}
-			d.SetId(job.ID())
-			return getJobLifecycleManager(d, c).OnCreate(ctx)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ctx = getReadCtx(ctx, d)
-			job, err := NewJobsAPI(ctx, c).Read(d.Id())
-			if err != nil {
-				return err
-			}
-			d.Set("url", c.FormatURL("#job/", d.Id()))
-			return common.StructToData(*job.Settings, jobsGoSdkSchema, d)
-		},
-		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettings
+			var js JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
 			if js.isMultiTask() {
-				ctx = context.WithValue(ctx, common.Api, common.API_2_1)
-			}
+				// Api 2.1
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				jobID, err := parseJobId(d.Id())
+				if err != nil {
+					return err
+				}
+				job, err := Read(jobID, w, ctx)
+				if err != nil {
+					return err
+				}
+				d.Set("url", c.FormatURL("#job/", d.Id()))
 
-			prepareJobSettingsForUpdate(d, js)
-
-			jobsAPI := NewJobsAPI(ctx, c)
-			err := jobsAPI.Update(d.Id(), js)
-			if err != nil {
-				return err
+				res := JobSettingsResource{
+					JobSettings: *job.Settings,
+				}
+				return common.StructToData(res, jobsGoSdkSchema, d)
+			} else {
+				// Api 2.0
+				// TODO: Deprecate and remove this code path
+				job, err := NewJobsAPI(ctx, c).Read(d.Id())
+				if err != nil {
+					return err
+				}
+				d.Set("url", c.FormatURL("#job/", d.Id()))
+				return common.StructToData(*job.Settings, jobsGoSdkSchema, d)
 			}
-			return getJobLifecycleManager(d, c).OnUpdate(ctx)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var jsr JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+			if jsr.isMultiTask() {
+				// Api 2.1
+				prepareJobSettingsForUpdateGoSdk(d, &jsr)
+				jobID, err := parseJobId(d.Id())
+				if err != nil {
+					return err
+				}
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				err = Update(jobID, jsr, w, ctx)
+				if err != nil {
+					return err
+				}
+				return getJobLifecycleManagerGoSdk(d, c).OnUpdate(ctx)
+			} else {
+				// Api 2.0
+				// TODO: Deprecate and remove this code path
+				var js JobSettings
+				common.DataToStructPointer(d, jobsGoSdkSchema, &js)
+
+				prepareJobSettingsForUpdate(d, js)
+
+				jobsAPI := NewJobsAPI(ctx, c)
+				err := jobsAPI.Update(d.Id(), js)
+				if err != nil {
+					return err
+				}
+				return getJobLifecycleManager(d, c).OnUpdate(ctx)
+			}
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ctx = getReadCtx(ctx, d)

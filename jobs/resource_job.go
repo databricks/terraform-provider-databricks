@@ -1151,7 +1151,10 @@ func ResourceJob() common.Resource {
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
 				// Api 2.1
-				prepareJobSettingsForUpdateGoSdk(d, &jsr)
+				err := prepareJobSettingsForUpdateGoSdk(d, &jsr)
+				if err != nil {
+					return err
+				}
 				jobID, err := parseJobId(d.Id())
 				if err != nil {
 					return err

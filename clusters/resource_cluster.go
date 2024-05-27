@@ -672,7 +672,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
-			RemoveUnnecessaryFieldsFromForceSendFields(&cluster)
+			err = RemoveUnnecessaryFieldsFromForceSendFields(&cluster)
+			if err != nil {
+				return err
+			}
 			_, err = clusters.Edit(ctx, cluster)
 		}
 		if err != nil {

@@ -426,9 +426,9 @@ The following parameter is only available on task level.
 This block describes health conditions for a given job or an individual task. It consists of the following attributes:
 
 * `rules` - (List) list of rules that are represented as objects with the following attributes:
-  * `metric` - (Optional) string specifying the metric to check.  The only supported metric is `RUN_DURATION_SECONDS` (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
-  * `op` - (Optional) string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`.
-  * `value` - (Optional) integer value used to compare to the given metric.
+  * `metric` - (Required) string specifying the metric to check.  The only supported metric is `RUN_DURATION_SECONDS` (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
+  * `op` - (Required) string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`.
+  * `value` - (Required) integer value used to compare to the given metric.
 
 ### tags Configuration Map
 

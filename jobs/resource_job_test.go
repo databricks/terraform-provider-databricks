@@ -996,19 +996,19 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/jobs/create",
-				ExpectedRequest: JobSettings{
+				ExpectedRequest: jobs.CreateJob{
 					Name:              "TF SQL task subscriptions",
 					MaxConcurrentRuns: 1,
-					Tasks: []JobTaskSettings{
+					Tasks: []jobs.Task{
 						{
 							TaskKey: "a",
-							SqlTask: &SqlTask{
-								WarehouseID: "dca3a0ba199040eb",
-								Alert: &SqlAlertTask{
-									AlertID: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
-									Subscriptions: []SqlSubscription{
+							SqlTask: &jobs.SqlTask{
+								WarehouseId: "dca3a0ba199040eb",
+								Alert: &jobs.SqlTaskAlert{
+									AlertId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+									Subscriptions: []jobs.SqlTaskSubscription{
 										{UserName: "user@domain.com"},
-										{DestinationID: "Test"},
+										{DestinationId: "Test"},
 									},
 									PauseSubscriptions: true,
 								},
@@ -1016,15 +1016,17 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 						},
 						{
 							TaskKey: "d",
-							SqlTask: &SqlTask{
-								WarehouseID: "dca3a0ba199040eb",
-								Dashboard: &SqlDashboardTask{
-									DashboardID: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
-									Subscriptions: []SqlSubscription{
+							SqlTask: &jobs.SqlTask{
+								WarehouseId: "dca3a0ba199040eb",
+								Dashboard: &jobs.SqlTaskDashboard{
+									DashboardId:        "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
+									PauseSubscriptions: false,
+									Subscriptions: []jobs.SqlTaskSubscription{
 										{UserName: "user@domain.com"},
-										{DestinationID: "Test"},
+										{DestinationId: "Test"},
 									},
-									CustomSubject: "test",
+									CustomSubject:   "test",
+									ForceSendFields: []string{"PauseSubscriptions"},
 								},
 							},
 						},
@@ -1037,20 +1039,20 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
+				Response: jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
 						Name: "TF SQL task subscriptions",
-						Tasks: []JobTaskSettings{
+						Tasks: []jobs.Task{
 							{
 								TaskKey: "a",
-								SqlTask: &SqlTask{
-									WarehouseID: "dca3a0ba199040eb",
-									Alert: &SqlAlertTask{
-										AlertID: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
-										Subscriptions: []SqlSubscription{
+								SqlTask: &jobs.SqlTask{
+									WarehouseId: "dca3a0ba199040eb",
+									Alert: &jobs.SqlTaskAlert{
+										AlertId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+										Subscriptions: []jobs.SqlTaskSubscription{
 											{UserName: "user@domain.com"},
-											{DestinationID: "Test"},
+											{DestinationId: "Test"},
 										},
 										PauseSubscriptions: true,
 									},
@@ -1058,13 +1060,13 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 							},
 							{
 								TaskKey: "d",
-								SqlTask: &SqlTask{
-									WarehouseID: "dca3a0ba199040eb",
-									Dashboard: &SqlDashboardTask{
-										DashboardID: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
-										Subscriptions: []SqlSubscription{
+								SqlTask: &jobs.SqlTask{
+									WarehouseId: "dca3a0ba199040eb",
+									Dashboard: &jobs.SqlTaskDashboard{
+										DashboardId: "d81a7760-7fd2-443e-bf41-95a60c2f4c7c",
+										Subscriptions: []jobs.SqlTaskSubscription{
 											{UserName: "user@domain.com"},
-											{DestinationID: "Test"},
+											{DestinationId: "Test"},
 										},
 										CustomSubject: "test",
 									},
@@ -1825,7 +1827,6 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.1/jobs/create",
 				ExpectedRequest: JobSettings{
-					ExistingClusterID: "abc",
 					Tasks: []JobTaskSettings{
 						{
 							TaskKey: "b",
@@ -1872,7 +1873,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 		},
 		Create:   true,
 		Resource: ResourceJob(),
-		HCL: `existing_cluster_id = "abc"
+		HCL: `
 		max_concurrent_runs = 1
 		name = "GitSourceJob"
 
@@ -1973,7 +1974,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 			}
 		}
 	`,
-	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{Url:https://custom.git.hosting.com/databricks/terraform-provider-databricks Provider: Branch: Tag:0.4.8 Commit: JobSource:<nil>}")
+	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{GitBranch: GitCommit: GitProvider: GitSnapshot:<nil> GitTag:0.4.8 GitUrl:https://custom.git.hosting.com/databricks/terraform-provider-databricks JobSource:<nil> ForceSendFields:[]}")
 }
 
 func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
@@ -2205,6 +2206,7 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 						MaxConcurrentRuns: 1,
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey: "task1",
 								NotebookTask: &NotebookTask{
 									NotebookPath: "/foo/bar",
 								},
@@ -2214,9 +2216,11 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 								RunIf: "ALL_SUCCESS",
 							},
 							{
+								TaskKey: "task2",
 								ForEachTask: &ForEachTask{
 									Inputs: "abc",
 									Task: ForEachNestedTask{
+										TaskKey:      "task3",
 										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
 										// The diff is suppressed here. Value is from
 										// the terraform state.
@@ -2238,13 +2242,16 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 						Name: "My job",
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey:      "task1",
 								NotebookTask: &NotebookTask{NotebookPath: "/foo/bar"},
 								RunIf:        "ALL_SUCCESS",
 							},
 							{
+								TaskKey: "task2",
 								ForEachTask: &ForEachTask{
 									Inputs: "abc",
 									Task: ForEachNestedTask{
+										TaskKey:      "task3",
 										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
 										RunIf:        "ALL_SUCCESS",
 									},
@@ -2265,14 +2272,17 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 		HCL: `
 		name = "My job"
 		task {
+			task_key = "task1"
 			notebook_task {
 				notebook_path = "/foo/bar"
 			}
 		}
 		task {
+			task_key = "task2"
 			for_each_task {
 				inputs = "abc"
 				task {
+					task_key = "task3"
 					notebook_task {
 						notebook_path = "/bar/foo"
 					}
@@ -2295,6 +2305,7 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 						MaxConcurrentRuns: 1,
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey: "task1",
 								NotebookTask: &NotebookTask{
 									NotebookPath: "/foo/bar",
 								},
@@ -2304,9 +2315,11 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 								// RunIf is not set, as implied from the HCL config.
 							},
 							{
+								TaskKey: "task2",
 								ForEachTask: &ForEachTask{
 									Inputs: "abc",
 									Task: ForEachNestedTask{
+										TaskKey:      "task3",
 										NotebookTask: &NotebookTask{NotebookPath: "/bar/foo"},
 										// The diff is not suppressed. RunIf is
 										// not set, as implied from the HCL config.
@@ -2327,13 +2340,16 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 						Name: "My job",
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey:      "task1",
 								NotebookTask: &NotebookTask{NotebookPath: "/foo/bar"},
 								RunIf:        "AT_LEAST_ONE_FAILED",
 							},
 							{
+								TaskKey: "task2",
 								ForEachTask: &ForEachTask{
 									Task: ForEachNestedTask{
-										RunIf: "AT_LEAST_ONE_FAILED",
+										TaskKey: "task3",
+										RunIf:   "AT_LEAST_ONE_FAILED",
 									},
 								},
 							},
@@ -2352,14 +2368,17 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 		HCL: `
 		name = "My job"
 		task {
+			task_key = "task1"
 			notebook_task {
 				notebook_path = "/foo/bar"
 			}
 		}
 		task {
+			task_key = "task2"
 			for_each_task {
 				inputs = "abc"
 				task {
+					task_key = "task3"
 					notebook_task {
 						notebook_path = "/bar/foo"
 					}
@@ -2376,58 +2395,44 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						NewCluster: &clusters.Cluster{
-							InstancePoolID:       "instance-pool-worker",
-							DriverInstancePoolID: "instance-pool-driver",
-							SparkVersion:         "spark-1",
-							NumWorkers:           1,
-						},
-						Tasks: []JobTaskSettings{
+				ExpectedRequest: jobs.ResetJob{
+					JobId: 789,
+					NewSettings: jobs.JobSettings{
+						JobClusters: []jobs.JobCluster{
 							{
-								NewCluster: &clusters.Cluster{
-									InstancePoolID:       "instance-pool-worker-task",
-									DriverInstancePoolID: "instance-pool-driver-task",
-									SparkVersion:         "spark-2",
-									NumWorkers:           2,
-								},
-							},
-						},
-						JobClusters: []JobCluster{
-							{
-								NewCluster: &clusters.Cluster{
-									InstancePoolID:       "instance-pool-worker-job",
-									DriverInstancePoolID: "instance-pool-driver-job",
+								JobClusterKey: "job_cluster_1",
+								NewCluster: compute.ClusterSpec{
+									InstancePoolId:       "instance-pool-worker-job",
+									DriverInstancePoolId: "instance-pool-driver-job",
 									SparkVersion:         "spark-3",
 									NumWorkers:           3,
 								},
 							},
 						},
-						Name:                   "Featurizer New",
-						MaxRetries:             3,
-						MinRetryIntervalMillis: 5000,
-						RetryOnTimeout:         true,
-						MaxConcurrentRuns:      1,
+						Tasks: []jobs.Task{
+							{
+								TaskKey: "task1",
+								NewCluster: &compute.ClusterSpec{
+									InstancePoolId:       "instance-pool-worker-task",
+									DriverInstancePoolId: "instance-pool-driver-task",
+									SparkVersion:         "spark-2",
+									NumWorkers:           2,
+								},
+							},
+						},
+						Name:              "Featurizer New",
+						MaxConcurrentRuns: 1,
 					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						NewCluster: &clusters.Cluster{
-							NodeTypeID:       "node-type-id",
-							DriverNodeTypeID: "driver-node-type-id",
-						},
-						Name:                   "Featurizer New",
-						MaxRetries:             3,
-						MinRetryIntervalMillis: 5000,
-						RetryOnTimeout:         true,
-						MaxConcurrentRuns:      1,
+				Response: jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
+						Name:              "Featurizer New",
+						MaxConcurrentRuns: 1,
 					},
 				},
 			},
@@ -2436,21 +2441,14 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 		Update:   true,
 		Resource: ResourceJob(),
 		InstanceState: map[string]string{
-			"new_cluster.0.node_type_id":                      "node-type-id-worker",
-			"new_cluster.0.driver_node_type_id":               "node-type-id-driver",
 			"task.0.new_cluster.0.node_type_id":               "node-type-id-worker-task",
 			"task.0.new_cluster.0.driver_node_type_id":        "node-type-id-driver-task",
 			"job_cluster.0.new_cluster.0.node_type_id":        "node-type-id-worker-job",
 			"job_cluster.0.new_cluster.0.driver_node_type_id": "node-type-id-driver-job",
 		},
 		HCL: `
-		new_cluster = {
-			instance_pool_id = "instance-pool-worker"
-			driver_instance_pool_id = "instance-pool-driver"
-			spark_version = "spark-1"
-			num_workers = 1
-		}
 		task = {
+			task_key = "task1"
 			new_cluster = {
 				instance_pool_id = "instance-pool-worker-task"
 				driver_instance_pool_id = "instance-pool-driver-task"
@@ -2459,6 +2457,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 			}
 		}
 		job_cluster = {
+			job_cluster_key = "job_cluster_1"
 			new_cluster = {
 				instance_pool_id = "instance-pool-worker-job"
 				driver_instance_pool_id = "instance-pool-driver-job"
@@ -2467,10 +2466,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 			}
 		}
 		max_concurrent_runs = 1
-		max_retries = 3
-		min_retry_interval_millis = 5000
-		name = "Featurizer New"
-		retry_on_timeout = true`,
+		name = "Featurizer New"`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
@@ -2483,57 +2479,42 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						NewCluster: &clusters.Cluster{
-							NodeTypeID:   "node-type-id-1",
-							SparkVersion: "spark-1",
-							NumWorkers:   1,
-						},
-						Tasks: []JobTaskSettings{
+				ExpectedRequest: jobs.UpdateJob{
+					JobId: 789,
+					NewSettings: &jobs.JobSettings{
+						Tasks: []jobs.Task{
 							{
-								NewCluster: &clusters.Cluster{
-									NodeTypeID:   "node-type-id-2",
+								TaskKey: "task1",
+								NewCluster: &compute.ClusterSpec{
+									NodeTypeId:   "node-type-id-2",
 									SparkVersion: "spark-2",
 									NumWorkers:   2,
 								},
 							},
 						},
-						JobClusters: []JobCluster{
+						JobClusters: []jobs.JobCluster{
 							{
-								NewCluster: &clusters.Cluster{
-									NodeTypeID:   "node-type-id-3",
+								JobClusterKey: "job_cluster_1",
+								NewCluster: compute.ClusterSpec{
+									NodeTypeId:   "node-type-id-3",
 									SparkVersion: "spark-3",
 									NumWorkers:   3,
 								},
 							},
 						},
-						Name:                   "Featurizer New",
-						MaxRetries:             3,
-						MinRetryIntervalMillis: 5000,
-						RetryOnTimeout:         true,
-						MaxConcurrentRuns:      1,
+						Name:              "Featurizer New",
+						MaxConcurrentRuns: 1,
 					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/jobs/get?job_id=789",
-				Response: Job{
-					JobID: 789,
-					Settings: &JobSettings{
-						NewCluster: &clusters.Cluster{
-							NodeTypeID:           "node-type-id",
-							DriverNodeTypeID:     "driver-node-type-id",
-							InstancePoolID:       "instance-pool-id-worker",
-							DriverInstancePoolID: "instance-pool-id-driver",
-						},
-						Name:                   "Featurizer New",
-						MaxRetries:             3,
-						MinRetryIntervalMillis: 5000,
-						RetryOnTimeout:         true,
-						MaxConcurrentRuns:      1,
+				Response: jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
+						Name:              "Featurizer New",
+						MaxConcurrentRuns: 1,
 					},
 				},
 			},
@@ -2542,9 +2523,6 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 		Update:   true,
 		Resource: ResourceJob(),
 		InstanceState: map[string]string{
-			"new_cluster.0.instance_pool_id":           "instance-pool-id-worker",
-			"new_cluster.0.driver_instance_pool_id":    "instance-pool-id-driver",
-			"new_cluster.0.node_type_id":               "node-type-id-worker",
 			"task.0.new_cluster.0.node_type_id":        "node-type-id-worker-task",
 			"task.0.instance_pool_id":                  "instance-pool-id-worker",
 			"task.0.driver_instance_pool_id":           "instance-pool-id-driver",
@@ -2553,12 +2531,8 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 			"job_cluster.0.driver_instance_pool_id":    "instance-pool-id-driver",
 		},
 		HCL: `
-		new_cluster = {
-			node_type_id = "node-type-id-1"
-			spark_version = "spark-1"
-			num_workers = 1
-		}
 		task = {
+			task_key = "task1"
 			new_cluster = {
 				node_type_id = "node-type-id-2"
 				spark_version = "spark-2"
@@ -2566,6 +2540,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 			}
 		}
 		job_cluster = {
+			job_cluster_key = "job_cluster_1"
 			new_cluster = {
 				node_type_id = "node-type-id-3"
 				spark_version = "spark-3"
@@ -2573,10 +2548,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 			}
 		}
 		max_concurrent_runs = 1
-		max_retries = 3
-		min_retry_interval_millis = 5000
-		name = "Featurizer New"
-		retry_on_timeout = true`,
+		name = "Featurizer New"`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id(), "Id should be the same as in reading")
@@ -2595,6 +2567,7 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 						Name: "Featurizer New",
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey:           "task1",
 								ExistingClusterID: "abc",
 								SparkJarTask: &SparkJarTask{
 									MainClassName: "com.labs.BarMain",
@@ -2615,6 +2588,7 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 					Settings: &JobSettings{
 						Tasks: []JobTaskSettings{
 							{
+								TaskKey:           "task1",
 								ExistingClusterID: "abc",
 								SparkJarTask: &SparkJarTask{
 									MainClassName: "com.labs.BarMain",
@@ -2631,6 +2605,7 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 		HCL: `
 		name = "Featurizer New"
 		task {
+			task_key = "task1"
 			existing_cluster_id = "abc"
 			spark_jar_task {
 				main_class_name = "com.labs.BarMain"

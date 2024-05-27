@@ -672,6 +672,36 @@ func TestDiffSuppressor(t *testing.T) {
 	assert.True(t, dsf("", "old", "", d))
 }
 
+func TestDiffSuppressorWhenNumberExplicitlyChangedToZero(t *testing.T) {
+	intSchema := &schema.Schema{
+		Type: schema.TypeInt,
+	}
+	dsf := diffSuppressor("foo", intSchema)
+	noChange := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"foo": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}, map[string]any{})
+	// no suppress
+	assert.False(t, dsf("foo", "1", "2", noChange))
+	// suppress
+	assert.True(t, dsf("foo", "1", "0", noChange))
+
+	change := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"foo": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}, map[string]any{
+		"foo": 1,
+	})
+
+	// no suppress
+	assert.False(t, dsf("foo", "1", "2", change))
+	assert.False(t, dsf("foo", "1", "0", change))
+}
+
 func TestTypeToSchemaNoStruct(t *testing.T) {
 	defer func() {
 		p := recover()

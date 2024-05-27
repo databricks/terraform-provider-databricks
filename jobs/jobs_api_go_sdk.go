@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"sort"
 	"time"
 
@@ -157,47 +156,44 @@ func (c controlRunStateLifecycleManagerGoSdk) OnUpdate(ctx context.Context) erro
 	return StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate), w, ctx)
 }
 
-// Removing unnecesary fields out of ClusterSpec's ForceSendFields because the current terraform plugin sdk
-// has a limitation that it will always set unspecified values to the zero value.
-func removeUnnecessaryFieldsFromForceSendFields(clusterSpec *compute.ClusterSpec) error {
-	if clusterSpec.AwsAttributes != nil {
-		newAwsAttributesForceSendFields := []string{}
-		// These fields should never be 0.
-		unnecessaryFieldNamesForAwsAttributes := []string{
-			"SpotBidPricePercent",
-			"EbsVolumeCount",
-			"EbsVolumeIops",
-			"EbsVolumeSize",
-			"EbsVolumeThroughput",
-		}
-		for _, field := range clusterSpec.AwsAttributes.ForceSendFields {
-			if !slices.Contains(unnecessaryFieldNamesForAwsAttributes, field) {
-				newAwsAttributesForceSendFields = append(newAwsAttributesForceSendFields, field)
-			}
-		}
-		clusterSpec.AwsAttributes.ForceSendFields = newAwsAttributesForceSendFields
+func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceData) error {
+	err := clusters.ModifyRequestOnInstancePool(clusterSpec)
+	if err != nil {
+		return err
+	}
+	err = clusters.FixInstancePoolChangeIfAny(d, clusterSpec)
+	if err != nil {
+		return err
+	}
+	err = clusters.RemoveUnnecessaryFieldsFromForceSendFields(clusterSpec)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceData) {
-	clusters.ModifyRequestOnInstancePool(clusterSpec)
-	clusters.FixInstancePoolChangeIfAny(d, clusterSpec)
-	removeUnnecessaryFieldsFromForceSendFields(clusterSpec)
-}
-
-func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsResource) {
+func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsResource) error {
 	if js.NewCluster != nil {
-		updateJobClusterSpec(js.NewCluster, d)
+		err := updateJobClusterSpec(js.NewCluster, d)
+		if err != nil {
+			return err
+		}
 	}
 	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
-			updateJobClusterSpec(task.NewCluster, d)
+			err := updateJobClusterSpec(task.NewCluster, d)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	for i := range js.JobClusters {
-		updateJobClusterSpec(&js.JobClusters[i].NewCluster, d)
+		err := updateJobClusterSpec(&js.JobClusters[i].NewCluster, d)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func Create(createJob jobs.CreateJob, w *databricks.WorkspaceClient, ctx context.Context) (int64, error) {

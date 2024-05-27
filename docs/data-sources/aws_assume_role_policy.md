@@ -50,6 +50,7 @@ resource "databricks_mws_credentials" "this" {
 
 * `external_id` (Required) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
 * `for_log_delivery` (Optional) Either or not this assume role policy should be created for usage log delivery. Defaults to false.
+* `predicted_role_arn` (Optional) Predicted ARN of the role you are about to attach this policy to. Enables this role to assume itself. Defaults to not being used.
 
 ## Attribute Reference
 

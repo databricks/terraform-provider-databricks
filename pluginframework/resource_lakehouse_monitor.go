@@ -32,7 +32,7 @@ func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorN
 	})
 }
 
-func ResourceLakehouseMonitorPluginFramework() resource.Resource {
+func ResourceLakehouseMonitor() resource.Resource {
 	return &LakehouseMonitorResource{}
 }
 

@@ -2,14 +2,36 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"reflect"
+	"sort"
+	"strings"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/useragent"
+	"github.com/databricks/terraform-provider-databricks/commands"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/pluginframework"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+var pluginFrameworkProviderName = "databricks-tf-provider-plugin-framework"
+
+func init() {
+	// IMPORTANT: this line cannot be changed, because it's used for
+	// internal purposes at Databricks.
+	useragent.WithProduct(pluginFrameworkProviderName, common.Version())
+}
 
 func GetDatabricksProviderPluginFramework() provider.Provider {
 	p := &DatabricksProviderPluginFramework{}
@@ -23,26 +45,104 @@ var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		pluginframework.ResourceLakehouseMonitorPluginFramework,
+		pluginframework.ResourceLakehouseMonitor,
 	}
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		pluginframework.DataSourceVolumesPluginFramework,
+		pluginframework.DataSourceVolumes,
 	}
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{},
-	}
+	resp.Schema = providerSchemaPluginFramework()
 }
 
 func (p *DatabricksProviderPluginFramework) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "databricks-terraform-provider-plugin-framework"
-	resp.Version = "0.0.1"
+	resp.TypeName = pluginFrameworkProviderName
+	resp.Version = common.Version()
 }
 
-func (p *DatabricksProviderPluginFramework) Configure(_ context.Context, _ provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+func (p *DatabricksProviderPluginFramework) Configure(_ context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	configureDatabricksClient_PluginFramework(context.Background(), req, resp)
+}
+
+func providerSchemaPluginFramework() schema.Schema {
+	ps := map[string]schema.Attribute{}
+	for _, attr := range config.ConfigAttributes {
+		switch attr.Kind {
+		case reflect.Bool:
+			ps[attr.Name] = schema.BoolAttribute{
+				Optional:  true,
+				Sensitive: attr.Sensitive,
+			}
+		case reflect.String:
+			ps[attr.Name] = schema.StringAttribute{
+				Optional:  true,
+				Sensitive: attr.Sensitive,
+			}
+		case reflect.Int:
+			ps[attr.Name] = schema.Int64Attribute{
+				Optional:  true,
+				Sensitive: attr.Sensitive,
+			}
+		}
+	}
+	return schema.Schema{
+		Attributes: ps,
+	}
+}
+
+func configureDatabricksClient_PluginFramework(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) any {
+	cfg := &config.Config{}
+	attrsUsed := []string{}
+	authsUsed := map[string]bool{}
+	for _, attr := range config.ConfigAttributes {
+		var attrName types.String
+		diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrName)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return nil
+		}
+		err := attr.Set(cfg, attrName)
+		if err != nil {
+			resp.Diagnostics.Append(diag.NewErrorDiagnostic("Failed to set attribute", err.Error()))
+			return nil
+		}
+		if attr.Kind == reflect.String {
+			attrsUsed = append(attrsUsed, attr.Name)
+		}
+		if attr.Auth != "" {
+			authsUsed[attr.Auth] = true
+		}
+	}
+	sort.Strings(attrsUsed)
+	tflog.Info(ctx, fmt.Sprintf("Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", ")))
+	if cfg.AuthType != "" {
+		// mapping from previous Google authentication types
+		// and current authentication types from Databricks Go SDK
+		oldToNewerAuthType := map[string]string{
+			"google-creds":     "google-credentials",
+			"google-accounts":  "google-id",
+			"google-workspace": "google-id",
+		}
+		newer, ok := oldToNewerAuthType[cfg.AuthType]
+		if ok {
+			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
+			cfg.AuthType = newer
+		}
+	}
+	client, err := client.New(cfg)
+	if err != nil {
+		resp.Diagnostics.Append(diag.NewErrorDiagnostic("Error while generating client", err.Error()))
+		return nil
+	}
+	pc := &common.DatabricksClient{
+		DatabricksClient: client,
+	}
+	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
+		return commands.NewCommandsAPI(ctx, client)
+	})
+	return pc
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func DataSourceVolumesPluginFramework() datasource.DataSource {
+func DataSourceVolumes() datasource.DataSource {
 	return &VolumesDataSource{}
 }
 

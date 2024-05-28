@@ -43,29 +43,31 @@ type DatabricksProviderPluginFramework struct {
 
 var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
-func (p *DatabricksProviderPluginFramework) Resources(_ context.Context) []func() resource.Resource {
+func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		pluginframework.ResourceLakehouseMonitor,
 	}
 }
 
-func (p *DatabricksProviderPluginFramework) DataSources(_ context.Context) []func() datasource.DataSource {
+func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		pluginframework.DataSourceVolumes,
 	}
 }
 
-func (p *DatabricksProviderPluginFramework) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = providerSchemaPluginFramework()
 }
 
-func (p *DatabricksProviderPluginFramework) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = pluginFrameworkProviderName
 	resp.Version = common.Version()
 }
 
-func (p *DatabricksProviderPluginFramework) Configure(_ context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	configureDatabricksClient_PluginFramework(context.Background(), req, resp)
+func (p *DatabricksProviderPluginFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	client := configureDatabricksClient_PluginFramework(ctx, req, resp)
+	resp.DataSourceData = client
+	resp.ResourceData = client
 }
 
 func providerSchemaPluginFramework() schema.Schema {

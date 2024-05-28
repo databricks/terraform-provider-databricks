@@ -35,8 +35,8 @@ type providerFixture struct {
 	assertAzure       bool
 }
 
-func (tt providerFixture) rawConfig() map[string]any {
-	rawConfig := map[string]any{}
+func (tt providerFixture) rawConfig() map[string]string {
+	rawConfig := map[string]string{}
 	if tt.host != "" {
 		rawConfig["host"] = tt.host
 	}
@@ -71,6 +71,24 @@ func (tt providerFixture) rawConfig() map[string]any {
 		rawConfig["auth_type"] = tt.authType
 	}
 	return rawConfig
+}
+
+func (tt providerFixture) rawConfigSDKv2() map[string]any {
+	rawConfig := tt.rawConfig()
+	rawConfigSDKv2 := map[string]any{}
+	for k, v := range rawConfig {
+		rawConfigSDKv2[k] = v
+	}
+	return rawConfigSDKv2
+}
+
+func (tt providerFixture) rawConfigPluginFramework() tftypes.Value {
+	rawConfig := tt.rawConfig()
+	pluginFrameworkMap := map[string]tftypes.Value{}
+	for k, v := range rawConfig {
+		pluginFrameworkMap[k] = tftypes.NewValue(tftypes.String, v)
+	}
+	return tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, pluginFrameworkMap)
 }
 
 func (tc providerFixture) applyWithSDKv2(t *testing.T) *common.DatabricksClient {
@@ -111,8 +129,8 @@ func configureProviderAndReturnClient_SDKv2(t *testing.T, tt providerFixture) (*
 	}
 	p := DatabricksProvider()
 	ctx := context.Background()
-	testRawConfig := tt.rawConfig()
-	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(testRawConfig))
+	testConfig := terraform.NewResourceConfigRaw(tt.rawConfigSDKv2())
+	diags := p.Configure(ctx, testConfig)
 	if len(diags) > 0 {
 		issues := []string{}
 		for _, d := range diags {
@@ -138,11 +156,10 @@ func configureProviderAndReturnClient_PluginFramework(t *testing.T, tt providerF
 	}
 	p := GetDatabricksProviderPluginFramework()
 	ctx := context.Background()
-	// tanmaytodo fill the request / response
-	testConfig := tt.rawConfig()
+	rawConfig := tt.rawConfigPluginFramework()
 	configRequest := provider.ConfigureRequest{
 		Config: tfsdk.Config{
-			Raw: tftypes.NewValue(tftypes.Map{}, testConfig),
+			Raw: rawConfig,
 		},
 	}
 	configResponse := &provider.ConfigureResponse{}
@@ -155,11 +172,7 @@ func configureProviderAndReturnClient_PluginFramework(t *testing.T, tt providerF
 		}
 		return nil, fmt.Errorf(strings.Join(issues, ", "))
 	}
-	metadataRequest := provider.MetadataRequest{}
-	metadataResponse := &provider.MetadataResponse{}
-	p.Metadata(ctx, metadataRequest, metadataResponse)
-	// Get the configured client from metadata?
-	client := &common.DatabricksClient{}
+	client := configResponse.ResourceData.(*common.DatabricksClient)
 	r, err := http.NewRequest("GET", "", nil)
 	if err != nil {
 		return nil, err

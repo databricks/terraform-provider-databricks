@@ -1,11 +1,11 @@
 ---
 subcategory: "Deployment"
 ---
-# databricks_aws_unity_catalog_policy Data Source
+# databricks_aws_unity_catalog_assume_role_policy Data Source
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws) in case of any questions.
 
-This data source constructs necessary AWS Unity Catalog policy for you.
+This data source constructs necessary AWS Unity Catalog assume role policy for you. [official documentation]
 
 ## Example Usage
 
@@ -38,7 +38,7 @@ resource "aws_iam_role" "metastore_data_access" {
 ## Argument Reference
 
 * `aws_account_id` (Required) The Account ID of the current AWS account (not your Databricks account).
-* `bucket_name` (Required) The name of the S3 bucket used as root storage location for [managed tables](https://docs.databricks.com/data-governance/unity-catalog/index.html#managed-table) in Unity Catalog.
+* `external_id` (Required) The [storage credential](../resources/storage_credential.md) external id.
 * `role_name` (Required) The name of the AWS IAM role that you created in the previous step in the [official documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws).
 * `kms_name` (Optional) If encryption is enabled, provide the name of the KMS key that encrypts the S3 bucket contents. If encryption is disabled, do not provide this argument.
 
@@ -46,4 +46,4 @@ resource "aws_iam_role" "metastore_data_access" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `json` - AWS IAM Policy JSON document
+* `json` - AWS IAM Policy JSON document for assume role

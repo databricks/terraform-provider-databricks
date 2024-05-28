@@ -1,5 +1,22 @@
 # Version changelog
 
+## 1.46.0
+
+### New Features and Improvements
+* Docs: remove usage of deprecated `azurerm` options from PL guides ([#3606](https://github.com/databricks/terraform-provider-databricks/pull/3606)).
+* Jobs Methods GoSDK Migration  ([#3577](https://github.com/databricks/terraform-provider-databricks/pull/3577)).
+* Do not suppress diff if it is explicitly changed to zero ([#3611](https://github.com/databricks/terraform-provider-databricks/pull/3611)).
+* update markdown ([#3621](https://github.com/databricks/terraform-provider-databricks/pull/3621)).
+* Fix resource_cluster bug with ebs volume fields ([#3613](https://github.com/databricks/terraform-provider-databricks/pull/3613)).
+
+
+### Documentation Changes
+
+### Exporter
+
+### Internal Changes
+
+
 ## 1.45.0
 
 ### New Features and Improvements

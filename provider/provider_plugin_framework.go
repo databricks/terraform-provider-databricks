@@ -101,13 +101,14 @@ func configureDatabricksClient_PluginFramework(ctx context.Context, req provider
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}
 	for _, attr := range config.ConfigAttributes {
-		var attrName types.String
-		diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrName)
+		var attrValue types.String
+		// tanmaytodo, failing here TerraformValueAtTerraformPath
+		diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrValue)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return nil
 		}
-		err := attr.Set(cfg, attrName)
+		err := attr.Set(cfg, attrValue)
 		if err != nil {
 			resp.Diagnostics.Append(diag.NewErrorDiagnostic("Failed to set attribute", err.Error()))
 			return nil

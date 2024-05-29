@@ -656,11 +656,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 
 		// We prefer to use the resize API in cases when only the number of
 		// workers is changed because a resizing cluster can still serve queries
+
 		if isNumWorkersResizeForNonAutoscalingCluster ||
 			isAutoScalingToNonAutoscalingResize {
 			_, err = clusters.Resize(ctx, compute.ResizeCluster{
-				ClusterId:  clusterId,
-				NumWorkers: cluster.NumWorkers,
+				ClusterId:       clusterId,
+				NumWorkers:      cluster.NumWorkers,
+				ForceSendFields: []string{"NumWorkers"},
 			})
 			if err != nil {
 				return err
@@ -676,6 +678,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			if err != nil {
 				return err
 			}
+			cluster.ForceSendFields = []string{"NumWorkers"}
 			_, err = clusters.Edit(ctx, cluster)
 		}
 		if err != nil {

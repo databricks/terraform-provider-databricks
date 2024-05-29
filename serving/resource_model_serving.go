@@ -39,9 +39,12 @@ func ResourceModelServing() common.Resource {
 
 			common.MustSchemaPath(m, "config", "served_entities", "scale_to_zero_enabled").Required = false
 			common.MustSchemaPath(m, "config", "served_entities", "scale_to_zero_enabled").Optional = true
-			common.MustSchemaPath(m, "config", "served_entities", "scale_to_zero_enabled").Default = true
+			common.MustSchemaPath(m, "config", "served_entities", "scale_to_zero_enabled").Default = false
 			common.MustSchemaPath(m, "config", "served_entities", "name").Computed = true
-			common.MustSchemaPath(m, "config", "served_entities", "workload_type").Default = "CPU"
+			common.MustSchemaPath(m, "config", "served_entities", "workload_size").Optional = true
+			common.MustSchemaPath(m, "config", "served_entities", "workload_size").Computed = true
+			common.MustSchemaPath(m, "config", "served_entities", "workload_type").Optional = true
+			common.MustSchemaPath(m, "config", "served_entities", "workload_type").Computed = true
 			common.MustSchemaPath(m, "config", "served_entities", "workload_type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old == "" && new == "CPU"
 			}

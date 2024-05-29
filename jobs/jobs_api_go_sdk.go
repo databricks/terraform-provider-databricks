@@ -165,10 +165,6 @@ func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceDa
 	if err != nil {
 		return err
 	}
-	err = clusters.RemoveUnnecessaryFieldsFromForceSendFields(clusterSpec)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

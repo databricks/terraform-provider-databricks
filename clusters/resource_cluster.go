@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 	"time"
 
@@ -440,105 +439,6 @@ func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI com
 	return d.Set("is_pinned", pinnedEvent == compute.EventTypePinned)
 }
 
-func RemoveUnnecessaryFieldsFromForceSendFields(cluster any) error {
-	switch clusterSpec := cluster.(type) {
-	case *compute.ClusterSpec:
-		if clusterSpec.AwsAttributes != nil {
-			newAwsAttributesForceSendFields := []string{}
-			// These fields should never be 0.
-			unnecessaryFieldNamesForAwsAttributes := []string{
-				"SpotBidPricePercent",
-				"EbsVolumeCount",
-				"EbsVolumeIops",
-				"EbsVolumeSize",
-				"EbsVolumeThroughput",
-			}
-			for _, field := range clusterSpec.AwsAttributes.ForceSendFields {
-				if !slices.Contains(unnecessaryFieldNamesForAwsAttributes, field) {
-					newAwsAttributesForceSendFields = append(newAwsAttributesForceSendFields, field)
-				}
-			}
-			clusterSpec.AwsAttributes.ForceSendFields = newAwsAttributesForceSendFields
-		}
-		if clusterSpec.GcpAttributes != nil {
-			newGcpAttributesForceSendFields := []string{}
-			// Should never be 0.
-			unnecessaryFieldNamesForGcpAttributes := []string{
-				"BootDiskSize",
-			}
-			for _, field := range clusterSpec.GcpAttributes.ForceSendFields {
-				if !slices.Contains(unnecessaryFieldNamesForGcpAttributes, field) {
-					newGcpAttributesForceSendFields = append(newGcpAttributesForceSendFields, field)
-				}
-			}
-			clusterSpec.GcpAttributes.ForceSendFields = newGcpAttributesForceSendFields
-		}
-		if clusterSpec.AzureAttributes != nil {
-			newAzureAttributesForceSendFields := []string{}
-			// Should never be 0.
-			unnecessaryFieldNamesForAzureAttributes := []string{
-				"FirstOnDemand",
-				"SpotBidMaxPrice",
-			}
-			for _, field := range clusterSpec.AzureAttributes.ForceSendFields {
-				if !slices.Contains(unnecessaryFieldNamesForAzureAttributes, field) {
-					newAzureAttributesForceSendFields = append(newAzureAttributesForceSendFields, field)
-				}
-			}
-			clusterSpec.AzureAttributes.ForceSendFields = newAzureAttributesForceSendFields
-		}
-		return nil
-	case *compute.EditCluster:
-		if clusterSpec.AwsAttributes != nil {
-			newAwsAttributesForceSendFields := []string{}
-			// These fields should never be 0.
-			unnecessaryFieldNamesForAwsAttributes := []string{
-				"SpotBidPricePercent",
-				"EbsVolumeCount",
-				"EbsVolumeIops",
-				"EbsVolumeSize",
-				"EbsVolumeThroughput",
-			}
-			for _, field := range clusterSpec.AwsAttributes.ForceSendFields {
-				if !slices.Contains(unnecessaryFieldNamesForAwsAttributes, field) {
-					newAwsAttributesForceSendFields = append(newAwsAttributesForceSendFields, field)
-				}
-			}
-			clusterSpec.AwsAttributes.ForceSendFields = newAwsAttributesForceSendFields
-		}
-		if clusterSpec.GcpAttributes != nil {
-			newGcpAttributesForceSendFields := []string{}
-			// Should never be 0.
-			unnecessaryFieldNamesForGcpAttributes := []string{
-				"BootDiskSize",
-			}
-			for _, field := range clusterSpec.GcpAttributes.ForceSendFields {
-				if !slices.Contains(unnecessaryFieldNamesForGcpAttributes, field) {
-					newGcpAttributesForceSendFields = append(newGcpAttributesForceSendFields, field)
-				}
-			}
-			clusterSpec.GcpAttributes.ForceSendFields = newGcpAttributesForceSendFields
-		}
-		if clusterSpec.AzureAttributes != nil {
-			newAzureAttributesForceSendFields := []string{}
-			// Should never be 0.
-			unnecessaryFieldNamesForAzureAttributes := []string{
-				"FirstOnDemand",
-				"SpotBidMaxPrice",
-			}
-			for _, field := range clusterSpec.AzureAttributes.ForceSendFields {
-				if !slices.Contains(unnecessaryFieldNamesForAzureAttributes, field) {
-					newAzureAttributesForceSendFields = append(newAzureAttributesForceSendFields, field)
-				}
-			}
-			clusterSpec.AzureAttributes.ForceSendFields = newAzureAttributesForceSendFields
-		}
-		return nil
-	default:
-		return fmt.Errorf(unsupportedExceptCreateEditClusterSpecErr, cluster, "*", "*", "*")
-	}
-}
-
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	w, err := c.WorkspaceClient()
 	if err != nil {
@@ -674,7 +574,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
-			err = RemoveUnnecessaryFieldsFromForceSendFields(&cluster)
 			if err != nil {
 				return err
 			}

@@ -17,7 +17,7 @@ import (
 const onlineTableDefaultProvisionTimeout = 45 * time.Minute
 
 func waitForOnlineTableCreation(w *databricks.WorkspaceClient, ctx context.Context, onlineTableName string) error {
-	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
+	return retry.RetryContext(ctx, onlineTableDefaultProvisionTimeout, func() *retry.RetryError {
 		endpoint, err := w.OnlineTables.GetByName(ctx, onlineTableName)
 		if err != nil {
 			return retry.NonRetryableError(err)
@@ -40,7 +40,7 @@ func waitForOnlineTableCreation(w *databricks.WorkspaceClient, ctx context.Conte
 }
 
 func waitForOnlineTableDeletion(w *databricks.WorkspaceClient, ctx context.Context, onlineTableName string) error {
-	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
+	return retry.RetryContext(ctx, onlineTableDefaultProvisionTimeout, func() *retry.RetryError {
 		_, err := w.OnlineTables.GetByName(ctx, onlineTableName)
 		if err == nil {
 			return retry.RetryableError(fmt.Errorf("online table %s is still not deleted", onlineTableName))

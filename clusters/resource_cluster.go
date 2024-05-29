@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -23,8 +24,8 @@ var clusterSchema = resourceClusterSchema()
 var clusterSchemaVersion = 4
 
 const (
-	numWorkerErr                     = "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
-	unsupportedExceptCreateOrEditErr = "unsupported type %T, must be either %scompute.CreateCluster or %scompute.EditCluster. Please report this issue to the GitHub repo"
+	numWorkerErr                              = "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
+	unsupportedExceptCreateEditClusterSpecErr = "unsupported type %T, must be one of %scompute.CreateCluster, %scompute.ClusterSpec or %scompute.EditCluster. Please report this issue to the GitHub repo"
 )
 
 func ResourceCluster() common.Resource {
@@ -127,8 +128,15 @@ func Validate(cluster any) error {
 		profile = c.SparkConf["spark.databricks.cluster.profile"]
 		master = c.SparkConf["spark.master"]
 		resourceClass = c.CustomTags["ResourceClass"]
+	case compute.ClusterSpec:
+		if c.NumWorkers > 0 || c.Autoscale != nil {
+			return nil
+		}
+		profile = c.SparkConf["spark.databricks.cluster.profile"]
+		master = c.SparkConf["spark.master"]
+		resourceClass = c.CustomTags["ResourceClass"]
 	default:
-		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster, "", "")
+		return fmt.Errorf(unsupportedExceptCreateEditClusterSpecErr, cluster, "", "", "")
 	}
 	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
@@ -140,6 +148,34 @@ func Validate(cluster any) error {
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func ModifyRequestOnInstancePool(cluster any) error {
 	switch c := cluster.(type) {
+	case *compute.ClusterSpec:
+		// Instance profile id does not exist or not set
+		if c.InstancePoolId == "" {
+			// Worker must use an instance pool if driver uses an instance pool,
+			// therefore empty the computed value for driver instance pool.
+			c.DriverInstancePoolId = ""
+			return nil
+		}
+		if c.AwsAttributes != nil {
+			// Reset AwsAttributes
+			awsAttributes := compute.AwsAttributes{
+				InstanceProfileArn: c.AwsAttributes.InstanceProfileArn,
+			}
+			c.AwsAttributes = &awsAttributes
+		}
+		if c.AzureAttributes != nil {
+			c.AzureAttributes = &compute.AzureAttributes{}
+		}
+		if c.GcpAttributes != nil {
+			gcpAttributes := compute.GcpAttributes{
+				GoogleServiceAccount: c.GcpAttributes.GoogleServiceAccount,
+			}
+			c.GcpAttributes = &gcpAttributes
+		}
+		c.EnableElasticDisk = false
+		c.NodeTypeId = ""
+		c.DriverNodeTypeId = ""
+		return nil
 	case *compute.CreateCluster:
 		// Instance profile id does not exist or not set
 		if c.InstancePoolId == "" {
@@ -197,20 +233,35 @@ func ModifyRequestOnInstancePool(cluster any) error {
 		c.DriverNodeTypeId = ""
 		return nil
 	default:
-		return fmt.Errorf(unsupportedExceptCreateOrEditErr, cluster, "*", "*")
+		return fmt.Errorf(unsupportedExceptCreateEditClusterSpecErr, cluster, "*", "*", "*")
 	}
 }
 
 // This method is a duplicate of FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters/clusters_api.go that uses Go SDK.
 // Long term, FixInstancePoolChangeIfAny(d *schema.ResourceData) in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
-func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster *compute.EditCluster) {
-	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
-	oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
-	if oldInstancePool != newInstancePool &&
-		oldDriverPool == oldInstancePool &&
-		oldDriverPool == newDriverPool {
-		cluster.DriverInstancePoolId = cluster.InstancePoolId
+func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster any) error {
+	switch c := cluster.(type) {
+	case *compute.ClusterSpec:
+		oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
+		oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
+		if oldInstancePool != newInstancePool &&
+			oldDriverPool == oldInstancePool &&
+			oldDriverPool == newDriverPool {
+			c.DriverInstancePoolId = c.InstancePoolId
+		}
+		return nil
+	case *compute.EditCluster:
+		oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
+		oldDriverPool, newDriverPool := d.GetChange("driver_instance_pool_id")
+		if oldInstancePool != newInstancePool &&
+			oldDriverPool == oldInstancePool &&
+			oldDriverPool == newDriverPool {
+			c.DriverInstancePoolId = c.InstancePoolId
+		}
+		return nil
+	default:
+		return fmt.Errorf(unsupportedExceptCreateEditClusterSpecErr, cluster, "*", "*", "*")
 	}
 }
 
@@ -220,7 +271,6 @@ type ClusterSpec struct {
 }
 
 func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
-	s.SchemaPath("autotermination_minutes").SetDefault(60)
 	s.AddNewField("default_tags", &schema.Schema{
 		Type:     schema.TypeMap,
 		Computed: true,
@@ -243,6 +293,11 @@ func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema)
 	s.AddNewField("url", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
+	})
+	s.AddNewField("autotermination_minutes", &schema.Schema{
+		Type:     schema.TypeInt,
+		Optional: true,
+		Default:  60,
 	})
 	return s
 }
@@ -300,6 +355,8 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 			Schema: common.StructToSchema(MountInfo{}, nil),
 		},
 	})
+	// Adding it back in the resource specific customization function because it is not relevant for other resources.
+	s.RemoveField("autotermination_minutes")
 
 	return s
 }
@@ -383,6 +440,105 @@ func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI com
 	return d.Set("is_pinned", pinnedEvent == compute.EventTypePinned)
 }
 
+func RemoveUnnecessaryFieldsFromForceSendFields(cluster any) error {
+	switch clusterSpec := cluster.(type) {
+	case *compute.ClusterSpec:
+		if clusterSpec.AwsAttributes != nil {
+			newAwsAttributesForceSendFields := []string{}
+			// These fields should never be 0.
+			unnecessaryFieldNamesForAwsAttributes := []string{
+				"SpotBidPricePercent",
+				"EbsVolumeCount",
+				"EbsVolumeIops",
+				"EbsVolumeSize",
+				"EbsVolumeThroughput",
+			}
+			for _, field := range clusterSpec.AwsAttributes.ForceSendFields {
+				if !slices.Contains(unnecessaryFieldNamesForAwsAttributes, field) {
+					newAwsAttributesForceSendFields = append(newAwsAttributesForceSendFields, field)
+				}
+			}
+			clusterSpec.AwsAttributes.ForceSendFields = newAwsAttributesForceSendFields
+		}
+		if clusterSpec.GcpAttributes != nil {
+			newGcpAttributesForceSendFields := []string{}
+			// Should never be 0.
+			unnecessaryFieldNamesForGcpAttributes := []string{
+				"BootDiskSize",
+			}
+			for _, field := range clusterSpec.GcpAttributes.ForceSendFields {
+				if !slices.Contains(unnecessaryFieldNamesForGcpAttributes, field) {
+					newGcpAttributesForceSendFields = append(newGcpAttributesForceSendFields, field)
+				}
+			}
+			clusterSpec.GcpAttributes.ForceSendFields = newGcpAttributesForceSendFields
+		}
+		if clusterSpec.AzureAttributes != nil {
+			newAzureAttributesForceSendFields := []string{}
+			// Should never be 0.
+			unnecessaryFieldNamesForAzureAttributes := []string{
+				"FirstOnDemand",
+				"SpotBidMaxPrice",
+			}
+			for _, field := range clusterSpec.AzureAttributes.ForceSendFields {
+				if !slices.Contains(unnecessaryFieldNamesForAzureAttributes, field) {
+					newAzureAttributesForceSendFields = append(newAzureAttributesForceSendFields, field)
+				}
+			}
+			clusterSpec.AzureAttributes.ForceSendFields = newAzureAttributesForceSendFields
+		}
+		return nil
+	case *compute.EditCluster:
+		if clusterSpec.AwsAttributes != nil {
+			newAwsAttributesForceSendFields := []string{}
+			// These fields should never be 0.
+			unnecessaryFieldNamesForAwsAttributes := []string{
+				"SpotBidPricePercent",
+				"EbsVolumeCount",
+				"EbsVolumeIops",
+				"EbsVolumeSize",
+				"EbsVolumeThroughput",
+			}
+			for _, field := range clusterSpec.AwsAttributes.ForceSendFields {
+				if !slices.Contains(unnecessaryFieldNamesForAwsAttributes, field) {
+					newAwsAttributesForceSendFields = append(newAwsAttributesForceSendFields, field)
+				}
+			}
+			clusterSpec.AwsAttributes.ForceSendFields = newAwsAttributesForceSendFields
+		}
+		if clusterSpec.GcpAttributes != nil {
+			newGcpAttributesForceSendFields := []string{}
+			// Should never be 0.
+			unnecessaryFieldNamesForGcpAttributes := []string{
+				"BootDiskSize",
+			}
+			for _, field := range clusterSpec.GcpAttributes.ForceSendFields {
+				if !slices.Contains(unnecessaryFieldNamesForGcpAttributes, field) {
+					newGcpAttributesForceSendFields = append(newGcpAttributesForceSendFields, field)
+				}
+			}
+			clusterSpec.GcpAttributes.ForceSendFields = newGcpAttributesForceSendFields
+		}
+		if clusterSpec.AzureAttributes != nil {
+			newAzureAttributesForceSendFields := []string{}
+			// Should never be 0.
+			unnecessaryFieldNamesForAzureAttributes := []string{
+				"FirstOnDemand",
+				"SpotBidMaxPrice",
+			}
+			for _, field := range clusterSpec.AzureAttributes.ForceSendFields {
+				if !slices.Contains(unnecessaryFieldNamesForAzureAttributes, field) {
+					newAzureAttributesForceSendFields = append(newAzureAttributesForceSendFields, field)
+				}
+			}
+			clusterSpec.AzureAttributes.ForceSendFields = newAzureAttributesForceSendFields
+		}
+		return nil
+	default:
+		return fmt.Errorf(unsupportedExceptCreateEditClusterSpecErr, cluster, "*", "*", "*")
+	}
+}
+
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	w, err := c.WorkspaceClient()
 	if err != nil {
@@ -453,7 +609,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		if err = ModifyRequestOnInstancePool(&cluster); err != nil {
 			return err
 		}
-		FixInstancePoolChangeIfAny(d, &cluster)
+		err = FixInstancePoolChangeIfAny(d, &cluster)
+		if err != nil {
+			return err
+		}
 
 		// We can only call the resize api if the cluster is in the running state
 		// and only the cluster size (ie num_workers OR autoscale) is being changed
@@ -513,6 +672,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
+			err = RemoveUnnecessaryFieldsFromForceSendFields(&cluster)
+			if err != nil {
+				return err
+			}
 			_, err = clusters.Edit(ctx, cluster)
 		}
 		if err != nil {

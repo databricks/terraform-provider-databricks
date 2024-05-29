@@ -77,3 +77,30 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 		Template: singleNodeClusterTemplate("20"),
 	})
 }
+
+func awsClusterTemplate(availability string) string {
+	return fmt.Sprintf(`
+		data "databricks_spark_version" "latest" {
+		}
+		resource "databricks_cluster" "this" {
+			cluster_name = "aws-cluster-{var.RANDOM}"
+			spark_version = data.databricks_spark_version.latest.id
+			num_workers = 1
+			autotermination_minutes = 10
+			aws_attributes {
+				availability     = "%s"
+			}
+			node_type_id = "i3.xlarge"
+		}
+	`, availability)
+}
+
+func TestAwsClusterResource_CreateAndUpdateAwsAttributes(t *testing.T) {
+	if isAws(t) {
+		workspaceLevel(t, step{
+			Template: awsClusterTemplate("SPOT"),
+		}, step{
+			Template: awsClusterTemplate("SPOT_WITH_FALLBACK"),
+		})
+	}
+}

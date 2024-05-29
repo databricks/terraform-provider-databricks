@@ -79,7 +79,7 @@ func ResourceModelServing() common.Resource {
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
 			for i := range e.Config.ServedEntities {
-				e.Config.ServedEntities[i].ForceSendFields = append(e.Config.ServedEntities[i].ForceSendFields, "ScaleToZeroEnabled")
+				e.Config.ServedEntities[i].ForceSendFields = append(e.Config.ServedEntities[i].ForceSendFields, "ScaleToZeroEnabled", "MinProvisionedThroughput")
 			}
 			wait, err := w.ServingEndpoints.Create(ctx, e)
 			if err != nil {

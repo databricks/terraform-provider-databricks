@@ -384,7 +384,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		createClusterRequest.ForceSendFields = []string{"NumWorkers"}
 	}
 	if createClusterRequest.GcpAttributes != nil {
-		createClusterRequest.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
+		if _, ok := d.GetOkExists("gcp_attributes.0.local_ssd_count"); ok {
+			createClusterRequest.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
+		}
 	}
 	clusterWaiter, err := clusters.Create(ctx, createClusterRequest)
 	if err != nil {
@@ -500,9 +502,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 	clusters := w.Clusters
 	var cluster compute.EditCluster
 	common.DataToStructPointer(d, clusterSchema, &cluster)
-	if cluster.GcpAttributes != nil {
-		cluster.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
-	}
 	clusterId := d.Id()
 	cluster.ClusterId = clusterId
 	var clusterInfo *compute.ClusterDetails

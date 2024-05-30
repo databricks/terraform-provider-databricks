@@ -6,6 +6,7 @@ import (
 
 	"reflect"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,6 +29,7 @@ const (
 
 type ShareInfo struct {
 	Name      string             `json:"name" tf:"force_new"`
+	Comment   string             `json:"comment,omitempty"`
 	Owner     string             `json:"owner,omitempty" tf:"suppress_diff"`
 	Objects   []SharedDataObject `json:"objects,omitempty" tf:"slice_set,alias:object"`
 	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
@@ -183,6 +185,40 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 	return changes
 }
 
+func UpdateShareMeta(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient, oldShareInfo ShareInfo, newShareInfo ShareInfo) error {
+	if d.HasChange("owner") {
+		if !d.HasChangeExcept("comment") {
+			_, err := w.Shares.Update(ctx, sharing.UpdateShare{
+				Name:    newShareInfo.Name,
+				Owner:   newShareInfo.Owner,
+				Comment: oldShareInfo.Comment,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			_, err := w.Shares.Update(ctx, sharing.UpdateShare{
+				Name:    newShareInfo.Name,
+				Owner:   newShareInfo.Owner,
+				Comment: newShareInfo.Comment,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	} else if d.HasChange("comment") {
+		_, err := w.Shares.Update(ctx, sharing.UpdateShare{
+			Name:    oldShareInfo.Name,
+			Owner:   oldShareInfo.Owner,
+			Comment: newShareInfo.Comment,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
@@ -243,17 +279,12 @@ func ResourceShare() common.Resource {
 				return err
 			}
 
-			if d.HasChange("owner") {
-				_, err = w.Shares.Update(ctx, sharing.UpdateShare{
-					Name:  afterSi.Name,
-					Owner: afterSi.Owner,
-				})
-				if err != nil {
-					return err
-				}
+			err = UpdateShareMeta(ctx, d, w, beforeSi, afterSi)
+			if err != nil {
+				return err
 			}
 
-			if !d.HasChangeExcept("owner") {
+			if len(changes) == 0 {
 				return nil
 			}
 
@@ -261,16 +292,11 @@ func ResourceShare() common.Resource {
 				Updates: changes,
 			})
 			if err != nil {
-				if d.HasChange("owner") {
-					// Rollback
-					old, new := d.GetChange("owner")
-					_, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
-						Name:  beforeSi.Name,
-						Owner: old.(string),
-					})
-					if rollbackErr != nil {
-						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
-					}
+				// Rollback
+				rollbackErr := UpdateShareMeta(ctx, d, w, afterSi, beforeSi)
+				if rollbackErr != nil {
+					// @TODO: just just owner update failed. could be the comment
+					return common.OwnerRollbackError(err, rollbackErr, beforeSi.Owner, afterSi.Owner)
 				}
 				return err
 			}

@@ -386,6 +386,7 @@ func TestUpdateShareRollback(t *testing.T) {
 							AddedBy:        "",
 						},
 					},
+					Owner: "admin",
 				},
 			},
 			{
@@ -543,6 +544,78 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 					comment = "c"
 					data_object_type = "TABLE"
 				}
+		`,
+		Resource: ResourceShare(),
+	}.ApplyNoError(t)
+}
+
+func TestUpdateShare_CommentChanges(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+					Owner:   "admin",
+					Comment: "Original Comment",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Owner:   "updatedOwner",
+					Comment: "Added Comment",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "c",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+					Owner:   "updatedOwner",
+					Comment: "Added Comment",
+				},
+			},
+		},
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":    "abc",
+			"owner":   "admin",
+			"comment": "Original Comment",
+		},
+		HCL: `
+			name = "abc"
+				object {
+					name = "d"
+					comment = "c"
+					data_object_type = "TABLE"
+				}
+                                owner = "updatedOwner"
+                                comment = "Added Comment"
 		`,
 		Resource: ResourceShare(),
 	}.ApplyNoError(t)

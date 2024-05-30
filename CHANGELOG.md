@@ -1,5 +1,23 @@
 # Version changelog
 
+## 1.46.0
+
+### New Features and Improvements
+* Do not suppress diff if it is explicitly changed to zero ([#3611](https://github.com/databricks/terraform-provider-databricks/pull/3611)).
+* Fixed `resource_cluster` bug with ebs volume fields ([#3613](https://github.com/databricks/terraform-provider-databricks/pull/3613)).
+* Remove and update default params for `resource_model_serving` ([#3608](https://github.com/databricks/terraform-provider-databricks/pull/3608)).
+* Added `LocalSsdCount` in `GcpAttributes` to ForceSendFields for [databricks_cluster](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster) resource ([#3631](https://github.com/databricks/terraform-provider-databricks/pull/3631)).
+
+### Documentation Changes
+* Remove usage of deprecated `azurerm` options from PL guides ([#3606](https://github.com/databricks/terraform-provider-databricks/pull/3606)).
+* Remove table update trigger from `job.md` ([#3621](https://github.com/databricks/terraform-provider-databricks/pull/3621)). 
+
+### Internal Changes
+* Jobs Methods GoSDK Migration  ([#3577](https://github.com/databricks/terraform-provider-databricks/pull/3577)).
+* Revert "Set ForceSendFields for boolean/integer values explicitly set to false/0 ([#3385](https://github.com/databricks/terraform-provider-databricks/pull/3385))" ([#3627](https://github.com/databricks/terraform-provider-databricks/pull/3627)).
+ * Revert `RemoveUnnecessaryFieldsFromForceSendFields` ([#3626](https://github.com/databricks/terraform-provider-databricks/pull/3626)).
+
+
 ## 1.45.0
 
 ### New Features and Improvements

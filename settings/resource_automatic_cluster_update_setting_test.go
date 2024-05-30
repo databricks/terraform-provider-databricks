@@ -156,9 +156,8 @@ func TestQueryUpdateAutomaticClusterUpdateSetting(t *testing.T) {
 								DayOfWeek: "MONDAY",
 								Frequency: "EVERY_WEEK",
 								WindowStartTime: &settings.ClusterAutoRestartMessageMaintenanceWindowWindowStartTime{
-									Hours:           1,
-									Minutes:         0,
-									ForceSendFields: []string{"Minutes"},
+									Hours:   1,
+									Minutes: 0,
 								},
 							},
 						},

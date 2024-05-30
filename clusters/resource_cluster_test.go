@@ -1737,7 +1737,8 @@ func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 					SparkVersion:           "7.1-scala12",
 					NodeTypeId:             "i3.xlarge",
 					GcpAttributes: &compute.GcpAttributes{
-						LocalSsdCount: 0,
+						LocalSsdCount:   0,
+						ForceSendFields: []string{"LocalSsdCount"},
 					},
 				},
 			},

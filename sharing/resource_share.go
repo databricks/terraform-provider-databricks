@@ -29,7 +29,7 @@ const (
 type ShareInfo struct {
 	Name      string             `json:"name" tf:"force_new"`
 	Owner     string             `json:"owner,omitempty" tf:"suppress_diff"`
-	Objects   []SharedDataObject `json:"objects,omitempty" tf:"alias:object"`
+	Objects   []SharedDataObject `json:"objects,omitempty" tf:"slice_set,alias:object"`
 	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 	CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
 }
@@ -115,14 +115,6 @@ func (si ShareInfo) shareChanges(action string) ShareUpdates {
 	}
 }
 
-func (si ShareInfo) resourceShareMap() map[string]SharedDataObject {
-	m := make(map[string]SharedDataObject, len(si.Objects))
-	for _, sdo := range si.Objects {
-		m[sdo.Name] = sdo
-	}
-	return m
-}
-
 func (sdo SharedDataObject) Equal(other SharedDataObject) bool {
 	if other.SharedAs == "" {
 		other.SharedAs = sdo.SharedAs
@@ -132,45 +124,6 @@ func (sdo SharedDataObject) Equal(other SharedDataObject) bool {
 	other.AddedBy = sdo.AddedBy
 	other.Status = sdo.Status
 	return reflect.DeepEqual(sdo, other)
-}
-
-func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
-	beforeMap := beforeSi.resourceShareMap()
-	afterMap := afterSi.resourceShareMap()
-	changes := []ShareDataChange{}
-	// not in after so remove
-	for _, beforeSdo := range beforeSi.Objects {
-		_, exists := afterMap[beforeSdo.Name]
-		if exists {
-			continue
-		}
-		changes = append(changes, ShareDataChange{
-			Action:     ShareRemove,
-			DataObject: beforeSdo,
-		})
-	}
-
-	// not in before so add
-	// if in before but diff then update
-	for _, afterSdo := range afterSi.Objects {
-		beforeSdo, exists := beforeMap[afterSdo.Name]
-		if exists {
-			if !beforeSdo.Equal(afterSdo) {
-				// do not send SharedAs
-				afterSdo.SharedAs = ""
-				changes = append(changes, ShareDataChange{
-					Action:     ShareUpdate,
-					DataObject: afterSdo,
-				})
-			}
-			continue
-		}
-		changes = append(changes, ShareDataChange{
-			Action:     ShareAdd,
-			DataObject: afterSdo,
-		})
-	}
-	return changes
 }
 
 func ResourceShare() common.Resource {
@@ -219,9 +172,6 @@ func ResourceShare() common.Resource {
 			if err != nil {
 				return err
 			}
-			var afterSi ShareInfo
-			common.DataToStructPointer(d, shareSchema, &afterSi)
-			changes := beforeSi.Diff(afterSi)
 
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -230,33 +180,134 @@ func ResourceShare() common.Resource {
 
 			if d.HasChange("owner") {
 				_, err = w.Shares.Update(ctx, sharing.UpdateShare{
-					Name:  afterSi.Name,
-					Owner: afterSi.Owner,
+					Name:  d.Get("name").(string),
+					Owner: d.Get("owner").(string),
 				})
-				if err != nil {
-					return err
-				}
 			}
 
-			if !d.HasChangeExcept("owner") {
+			if err != nil {
+				return err
+			}
+
+			if !d.HasChange("object") {
 				return nil
 			}
 
-			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
-				Updates: changes,
-			})
-			if err != nil {
-				if d.HasChange("owner") {
-					// Rollback
-					old, new := d.GetChange("owner")
-					_, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
-						Name:  beforeSi.Name,
-						Owner: old.(string),
-					})
-					if rollbackErr != nil {
-						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
+			oldObjects, newObjects := d.GetChange("object")
+			tfOldObjects := oldObjects.(*schema.Set)
+			tfNewObjects := newObjects.(*schema.Set)
+
+			objectsToRemove := tfOldObjects.Difference(tfNewObjects).List()
+			objectsToAdd := tfNewObjects.Difference(tfOldObjects).List()
+
+			apiChanges := []ShareDataChange{}
+
+			for _, raw := range objectsToRemove {
+				rawMap := raw.(map[string]interface{})
+				var partitions []Partition
+				if rawMap["partitions"] != nil {
+					partitions = rawMap["partitions"].([]Partition)
+				}
+				removal := SharedDataObject{
+					Name:                     rawMap["name"].(string),
+					Comment:                  rawMap["comment"].(string),
+					DataObjectType:           rawMap["data_object_type"].(string),
+					SharedAs:                 rawMap["shared_as"].(string),
+					CDFEnabled:               rawMap["cdf_enabled"].(bool),
+					HistoryDataSharingStatus: rawMap["history_data_sharing_status"].(string),
+					Partitions:               partitions,
+				}
+
+				apiChanges = append(apiChanges, ShareDataChange{
+					Action:     ShareRemove,
+					DataObject: removal,
+				})
+			}
+
+			terraformShares := d.Get("object").(*schema.Set).List()
+			for _, existingShare := range beforeSi.Objects {
+				keepShare := false
+
+				for _, rawTfShare := range terraformShares {
+					rawMap := rawTfShare.(map[string]interface{})
+
+					var partitions []Partition
+					if rawMap["partitions"] != nil {
+						partitions = rawMap["partitions"].([]Partition)
+					}
+
+					tfObject := SharedDataObject{
+						Name:                     rawMap["name"].(string),
+						Comment:                  rawMap["comment"].(string),
+						DataObjectType:           rawMap["data_object_type"].(string),
+						SharedAs:                 rawMap["shared_as"].(string),
+						CDFEnabled:               rawMap["cdf_enabled"].(bool),
+						HistoryDataSharingStatus: rawMap["history_data_sharing_status"].(string),
+						Partitions:               partitions,
+					}
+					if existingShare.Equal(tfObject) {
+						keepShare = true
 					}
 				}
+				if !keepShare {
+					apiChanges = append(apiChanges, ShareDataChange{
+						Action:     ShareRemove,
+						DataObject: existingShare,
+					})
+				}
+			}
+
+			for _, raw := range objectsToAdd {
+				rawMap := raw.(map[string]interface{})
+				var partitions []Partition
+				if rawMap["partitions"] != nil {
+					partitions = rawMap["partitions"].([]Partition)
+				}
+				updateObject := SharedDataObject{
+					Name:                     rawMap["name"].(string),
+					Comment:                  rawMap["comment"].(string),
+					DataObjectType:           rawMap["data_object_type"].(string),
+					SharedAs:                 rawMap["shared_as"].(string),
+					CDFEnabled:               rawMap["cdf_enabled"].(bool),
+					HistoryDataSharingStatus: rawMap["history_data_sharing_status"].(string),
+					Partitions:               partitions,
+				}
+
+				// Look at the api call back result and see if the share already exists
+				exists := false
+				for _, existingDataObject := range beforeSi.Objects {
+					// This is an exact match. What should happen when the match is partial
+					// updateObject doesn't have the SharedAs field, and thus Equal behaves differently
+					if existingDataObject.Equal(updateObject) {
+						exists = true
+						break
+					}
+				}
+
+				if !exists {
+					apiChanges = append(apiChanges, ShareDataChange{
+						Action:     ShareAdd,
+						DataObject: updateObject,
+					})
+				}
+			}
+
+			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
+				Updates: apiChanges,
+			})
+			if err != nil {
+				// Rollback
+				if d.HasChanges("owner", "comment") {
+					oldOwner, _ := d.GetChange("owner")
+					_, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
+						Name:  d.Get("name").(string),
+						Owner: oldOwner.(string),
+					})
+					if rollbackErr != nil {
+						return common.OwnerRollbackError(err, rollbackErr, beforeSi.Owner, d.Get("owner").(string))
+					}
+				}
+
 				return err
 			}
 			return nil

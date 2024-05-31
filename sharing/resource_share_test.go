@@ -573,3 +573,278 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 		Resource: ResourceShare(),
 	}.ApplyNoError(t)
 }
+
+func TestUpdateCommentOnShare(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "d",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Owner: "admin",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: ShareUpdates{
+					Updates: []ShareDataChange{
+						{
+							Action: "ADD",
+							DataObject: SharedDataObject{
+								Comment:        "updated comment",
+								DataObjectType: "TABLE",
+								Name:           "d",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "d",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+		},
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name": "abc",
+		},
+		HCL: `
+			name  = "abc"
+			owner = "admin"
+			object {
+				name = "d"
+				comment = "updated comment"
+				data_object_type = "TABLE"
+			}
+		`,
+		Resource: ResourceShare(),
+	}.ApplyNoError(t)
+}
+
+func TestUpdateShareAsOnShare(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "d",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Owner: "admin",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: ShareUpdates{
+					Updates: []ShareDataChange{
+						{
+							Action: "ADD",
+							DataObject: SharedDataObject{
+								Comment:        "updated comment",
+								DataObjectType: "TABLE",
+								Name:           "d",
+								SharedAs:       "delta-test-table",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "d",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+		},
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name": "abc",
+		},
+		HCL: `
+			name  = "abc"
+			owner = "admin"
+			object {
+				name = "d"
+				comment = "updated comment"
+				data_object_type = "TABLE"
+                                shared_as = "delta-test-table"
+			}
+		`,
+		Resource: ResourceShare(),
+	}.ApplyNoError(t)
+}
+
+func TestUpdateSharePartition(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "d",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: sharing.UpdateShare{
+					Owner: "admin",
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/shares/abc",
+				ExpectedRequest: ShareUpdates{
+					Updates: []ShareDataChange{
+						{
+							Action: "ADD",
+							DataObject: SharedDataObject{
+								Comment:        "updated comment",
+								DataObjectType: "TABLE",
+								Name:           "d",
+								SharedAs:       "delta-test-table",
+								Partitions: []Partition{
+									{
+										Values: []PartitionValue{
+											{
+												Name:                 "month",
+												Op:                   "EQUAL",
+												RecipientPropertyKey: "",
+												Value:                "12",
+											},
+											{
+												Name:                 "year",
+												Op:                   "EQUAL",
+												RecipientPropertyKey: "",
+												Value:                "2009",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
+				Response: ShareInfo{
+					Name: "abc",
+					Objects: []SharedDataObject{
+						{
+							Name:           "d",
+							DataObjectType: "TABLE",
+							Comment:        "d",
+							SharedAs:       "",
+							AddedAt:        0,
+							AddedBy:        "",
+						},
+					},
+				},
+			},
+		},
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name": "abc",
+		},
+		HCL: `
+			name  = "abc"
+			owner = "admin"
+			object {
+				name = "d"
+				comment = "updated comment"
+				data_object_type = "TABLE"
+                                shared_as = "delta-test-table"
+
+                                partition {
+                                         value {
+                                            name  = "year"
+                                            op    = "EQUAL"
+                                            value = "2009"
+                                         }
+                                         value {
+                                             name  = "month"
+                                             op    = "EQUAL"
+                                             value = "12"
+                                         }
+                                }
+                      }
+		`,
+		Resource: ResourceShare(),
+	}.ApplyNoError(t)
+}

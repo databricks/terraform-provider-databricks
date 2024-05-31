@@ -42,7 +42,7 @@ type SharedDataObject struct {
 	CDFEnabled               bool        `json:"cdf_enabled,omitempty" tf:"suppress_diff"`
 	StartVersion             int64       `json:"start_version,omitempty" tf:"suppress_diff"`
 	HistoryDataSharingStatus string      `json:"history_data_sharing_status,omitempty" tf:"suppress_diff"`
-	Partitions               []Partition `json:"partitions,omitempty" tf:"alias:partition"`
+	Partitions               []Partition `json:"partitions,omitempty" tf:"slice_set,alias:partition"`
 	Status                   string      `json:"status,omitempty" tf:"computed"`
 	AddedAt                  int64       `json:"added_at,omitempty" tf:"computed"`
 	AddedBy                  string      `json:"added_by,omitempty" tf:"computed"`
@@ -63,7 +63,7 @@ type Shares struct {
 }
 
 type Partition struct {
-	Values []PartitionValue `json:"values" tf:"alias:value"`
+	Values []PartitionValue `json:"values" tf:"slice_set,alias:value"`
 }
 
 type PartitionValue struct {
@@ -124,6 +124,23 @@ func (sdo SharedDataObject) Equal(other SharedDataObject) bool {
 	other.AddedBy = sdo.AddedBy
 	other.Status = sdo.Status
 	return reflect.DeepEqual(sdo, other)
+}
+
+func parsePartition(plainPartition map[string]interface{}) []PartitionValue {
+	var partitionValues []PartitionValue
+	for _, valueSetRaw := range plainPartition {
+		valueSet := valueSetRaw.(*schema.Set)
+		for _, value := range valueSet.List() {
+			valueMap := value.(map[string]interface{})
+			partitionValues = append(partitionValues, PartitionValue{
+				Name:                 valueMap["name"].(string),
+				Op:                   valueMap["op"].(string),
+				RecipientPropertyKey: valueMap["recipient_property_key"].(string),
+				Value:                valueMap["value"].(string),
+			})
+		}
+	}
+	return partitionValues
 }
 
 func ResourceShare() common.Resource {
@@ -205,9 +222,16 @@ func ResourceShare() common.Resource {
 			for _, raw := range objectsToRemove {
 				rawMap := raw.(map[string]interface{})
 				var partitions []Partition
-				if rawMap["partitions"] != nil {
-					partitions = rawMap["partitions"].([]Partition)
+				if rawMap["partition"] != nil {
+					rawPartitions := rawMap["partition"].(*schema.Set).List()
+					for _, plainPartitionRaw := range rawPartitions {
+						plainPartition := plainPartitionRaw.(map[string]interface{})
+						partitions = append(partitions, Partition{
+							Values: parsePartition(plainPartition),
+						})
+					}
 				}
+
 				removal := SharedDataObject{
 					Name:                     rawMap["name"].(string),
 					Comment:                  rawMap["comment"].(string),
@@ -232,8 +256,14 @@ func ResourceShare() common.Resource {
 					rawMap := rawTfShare.(map[string]interface{})
 
 					var partitions []Partition
-					if rawMap["partitions"] != nil {
-						partitions = rawMap["partitions"].([]Partition)
+					if rawMap["partition"] != nil {
+						rawPartitions := rawMap["partition"].(*schema.Set).List()
+						for _, plainPartitionRaw := range rawPartitions {
+							plainPartition := plainPartitionRaw.(map[string]interface{})
+							partitions = append(partitions, Partition{
+								Values: parsePartition(plainPartition),
+							})
+						}
 					}
 
 					tfObject := SharedDataObject{
@@ -245,10 +275,12 @@ func ResourceShare() common.Resource {
 						HistoryDataSharingStatus: rawMap["history_data_sharing_status"].(string),
 						Partitions:               partitions,
 					}
-					if existingShare.Equal(tfObject) {
+					if existingShare.Name == tfObject.Name {
 						keepShare = true
 					}
+
 				}
+
 				if !keepShare {
 					apiChanges = append(apiChanges, ShareDataChange{
 						Action:     ShareRemove,
@@ -260,8 +292,14 @@ func ResourceShare() common.Resource {
 			for _, raw := range objectsToAdd {
 				rawMap := raw.(map[string]interface{})
 				var partitions []Partition
-				if rawMap["partitions"] != nil {
-					partitions = rawMap["partitions"].([]Partition)
+				if rawMap["partition"] != nil {
+					rawPartitions := rawMap["partition"].(*schema.Set).List()
+					for _, plainPartitionRaw := range rawPartitions {
+						plainPartition := plainPartitionRaw.(map[string]interface{})
+						partitions = append(partitions, Partition{
+							Values: parsePartition(plainPartition),
+						})
+					}
 				}
 				updateObject := SharedDataObject{
 					Name:                     rawMap["name"].(string),

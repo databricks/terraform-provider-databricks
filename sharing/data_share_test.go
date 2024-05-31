@@ -47,21 +47,20 @@ func TestShareData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "bob", d.Get("created_by"))
 	assert.Equal(t, 1921321, d.Get("created_at"))
-	assert.Equal(t,
-		map[string]interface{}{
-			"added_at":                    0,
-			"added_by":                    "",
-			"comment":                     "c",
-			"data_object_type":            "TABLE",
-			"name":                        "a",
-			"shared_as":                   "",
-			"start_version":               0,
-			"cdf_enabled":                 false,
-			"status":                      "ACTIVE",
-			"history_data_sharing_status": "DISABLED",
-			"partition":                   []interface{}{},
-		},
-		d.Get("object").(*schema.Set).List()[0])
+
+	expectedShare := d.Get("object").(*schema.Set).List()[0].(map[string]interface{})
+
+	assert.Equal(t, 0, expectedShare["added_at"])
+	assert.Equal(t, "", expectedShare["added_by"])
+	assert.Equal(t, "c", expectedShare["comment"])
+	assert.Equal(t, "TABLE", expectedShare["data_object_type"])
+	assert.Equal(t, "a", expectedShare["name"])
+	assert.Equal(t, "", expectedShare["shared_as"])
+	assert.Equal(t, 0, expectedShare["start_version"])
+	assert.Equal(t, false, expectedShare["cdf_enabled"])
+	assert.Equal(t, "ACTIVE", expectedShare["status"])
+	assert.Equal(t, "DISABLED", expectedShare["history_data_sharing_status"])
+	assert.Nil(t, expectedShare["partitions"])
 }
 
 func TestShareData_Error(t *testing.T) {

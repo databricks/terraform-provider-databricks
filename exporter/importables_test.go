@@ -93,10 +93,11 @@ func TestInstancePool(t *testing.T) {
 	assert.Equal(t, "def", name)
 
 	ic.meAdmin = true
-	err := resourcesMap["databricks_instance_pool"].Import(ic, &resource{
+	r := &resource{
 		ID:   "abc",
 		Data: d,
-	})
+	}
+	err := resourcesMap["databricks_instance_pool"].Import(ic, r)
 	assert.NoError(t, err)
 	assert.True(t, ic.testEmits["databricks_permissions[inst_pool_def] (id: /instance-pools/abc)"])
 }
@@ -977,6 +978,30 @@ func TestRepoListFails(t *testing.T) {
 	})
 }
 
+func TestNotebookWorkspaceFileImportNotFound(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			MatchAny:     true,
+			Status:       404,
+			Response:     apierr.NotFound("nope"),
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		err := resourcesMap["databricks_notebook"].Import(ic, &resource{
+			ID: "/abc",
+		})
+		assert.EqualError(t, err, "nope")
+		assert.Contains(t, ic.ignoredResources, "databricks_notebook. path=/abc")
+
+		err = resourcesMap["databricks_workspace_file"].Import(ic, &resource{
+			ID: "/def",
+		})
+		assert.EqualError(t, err, "nope")
+		assert.Contains(t, ic.ignoredResources, "databricks_workspace_file. path=/def")
+	})
+}
+
 func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAdmin bool, cb func(*importContext)) {
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -1631,6 +1656,7 @@ func TestImportManagedCatalog(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.enableListing("uc-schemas")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
 		d.SetId("ctest")
@@ -1687,6 +1713,7 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas")
+		ic.enableListing("uc-schemas,uc-volumes,uc-models,uc-tables")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceCatalog().ToResource().TestResourceData()
 		d.SetId("ctest")
@@ -1750,6 +1777,7 @@ func TestImportSchema(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-volumes,uc-models,uc-tables")
+		ic.enableListing("uc-schemas,uc-volumes,uc-models,uc-tables")
 		ic.currentMetastore = currentMetastoreResponse
 		d := tfcatalog.ResourceSchema().ToResource().TestResourceData()
 		d.SetId("ctest.stest")
@@ -1815,7 +1843,7 @@ func TestConnections(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/connections",
+			Resource:     "/api/2.1/unity-catalog/connections?",
 			Response: catalog.ListConnectionsResponse{
 				Connections: []catalog.ConnectionInfo{
 					{
@@ -2165,9 +2193,6 @@ func TestImportGrants(t *testing.T) {
 	r := &resource{ID: id, Data: d}
 	err := resourcesMap["databricks_grants"].Import(ic, r)
 	assert.NoError(t, err)
-
-	// Test ignore function
-	assert.True(t, resourcesMap["databricks_grants"].Ignore(ic, r))
 
 	var pList tfcatalog.PermissionsList
 	common.DataToStructPointer(r.Data, s, &pList)

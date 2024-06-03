@@ -35,6 +35,10 @@ func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*sche
 
 var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["storage_credential_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		return adjustDataAccessSchema(m)
 	})
 
@@ -106,7 +110,6 @@ func ResourceStorageCredential() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId:           d.Get("metastore_id").(string),
@@ -115,13 +118,39 @@ func ResourceStorageCredential() common.Resource {
 				if err != nil {
 					return err
 				}
-				return common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
+				// azure client secret is sensitive, so we need to preserve it
+				var scOrig catalog.CreateStorageCredential
+				common.DataToStructPointer(d, storageCredentialSchema, &scOrig)
+				if scOrig.AzureServicePrincipal != nil {
+					if scOrig.AzureServicePrincipal.ClientSecret != "" {
+						storageCredential.CredentialInfo.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
+					}
+				}
+				err = common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
+				if err != nil {
+					return err
+				}
+				d.Set("storage_credential_id", storageCredential.CredentialInfo.Id)
+				return nil
 			}, func(w *databricks.WorkspaceClient) error {
 				storageCredential, err := w.StorageCredentials.GetByName(ctx, d.Id())
 				if err != nil {
 					return err
 				}
-				return common.StructToData(storageCredential, storageCredentialSchema, d)
+				// azure client secret is sensitive, so we need to preserve it
+				var scOrig catalog.CreateStorageCredential
+				common.DataToStructPointer(d, storageCredentialSchema, &scOrig)
+				if scOrig.AzureServicePrincipal != nil {
+					if scOrig.AzureServicePrincipal.ClientSecret != "" {
+						storageCredential.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
+					}
+				}
+				err = common.StructToData(storageCredential, storageCredentialSchema, d)
+				if err != nil {
+					return err
+				}
+				d.Set("storage_credential_id", storageCredential.Id)
+				return nil
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -21,7 +22,7 @@ var MaxSqlExecWaitTimeout = 50
 
 type SqlColumnInfo struct {
 	Name     string `json:"name"`
-	Type     string `json:"type_text,omitempty" tf:"suppress_diff,alias:type"`
+	Type     string `json:"type_text,omitempty" tf:"alias:type,computed"`
 	Comment  string `json:"comment,omitempty"`
 	Nullable bool   `json:"nullable,omitempty" tf:"default:true"`
 }
@@ -43,6 +44,7 @@ type SqlTableInfo struct {
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
 	WarehouseID           string            `json:"warehouse_id,omitempty"`
+	Owner                 string            `json:"owner,omitempty" tf:"computed"`
 
 	exec    common.CommandExecutor
 	sqlExec sql.StatementExecutionInterface
@@ -486,10 +488,29 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) 
 	return nil
 }
 
+var columnTypeAliases = map[string]string{
+	"integer": "int",
+	"long":    "bigint",
+	"real":    "float",
+	"short":   "smallint",
+	"byte":    "tinyint",
+	"decimal": "decimal(10,0)",
+	"dec":     "decimal(10,0)",
+	"numeric": "decimal(10,0)",
+}
+
+func getColumnType(columnType string) string {
+	caseInsensitiveColumnType := strings.ToLower(columnType)
+	if alias, ok := columnTypeAliases[caseInsensitiveColumnType]; ok {
+		return alias
+	}
+	return caseInsensitiveColumnType
+}
+
 func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
 	for i, oldCol := range oldCols {
 		oldColMap := oldCol.(map[string]interface{})
-		if oldColMap["type"] != strings.ToLower(newColumnInfos[i].Type) {
+		if getColumnType(oldColMap["type"].(string)) != getColumnType(newColumnInfos[i].Type) {
 			return fmt.Errorf("changing the 'type' of an existing column is not supported")
 		}
 	}
@@ -509,7 +530,7 @@ func assertNoColumnMembershipAndFieldValueUpdate(oldCols []interface{}, newColum
 	}
 	for name, oldColMap := range oldColsNameToMap {
 		if newCol, exists := newColsNameToMap[name]; exists {
-			if oldColMap["type"] != newCol.Type || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
+			if getColumnType(oldColMap["type"].(string)) != getColumnType(newCol.Type) || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
 				return fmt.Errorf("detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time")
 			}
 		}
@@ -538,6 +559,9 @@ func ResourceSqlTable() common.Resource {
 
 			s["partitions"].ConflictsWith = []string{"cluster_keys"}
 			s["cluster_keys"].ConflictsWith = []string{"partitions"}
+			common.MustSchemaPath(s, "column", "type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				return getColumnType(old) == getColumnType(new)
+			}
 			return s
 		})
 	return common.Resource{
@@ -587,6 +611,19 @@ func ResourceSqlTable() common.Resource {
 			if err := ti.createTable(); err != nil {
 				return err
 			}
+			if ti.Owner != "" {
+				w, err := c.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				err = w.Tables.Update(ctx, catalog.UpdateTableRequest{
+					FullName: ti.FullName(),
+					Owner:    ti.Owner,
+				})
+				if err != nil {
+					return err
+				}
+			}
 			d.SetId(ti.FullName())
 			return nil
 		},
@@ -598,6 +635,10 @@ func ResourceSqlTable() common.Resource {
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			var newti = new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, newti)
 			if err := newti.initCluster(ctx, d, c); err != nil {
@@ -607,7 +648,25 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			return newti.updateTable(&oldti)
+			err = newti.updateTable(&oldti)
+			if err != nil {
+				return err
+			}
+			if d.HasChange("owner") {
+				// if new owner is not specified, set it to the current user
+				if newti.Owner == "" {
+					currentUser, err := w.CurrentUser.Me(ctx)
+					if err != nil {
+						return err
+					}
+					newti.Owner = currentUser.UserName
+				}
+				return w.Tables.Update(ctx, catalog.UpdateTableRequest{
+					FullName: newti.FullName(),
+					Owner:    newti.Owner,
+				})
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var ti = new(SqlTableInfo)

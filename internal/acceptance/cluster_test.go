@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -48,9 +49,8 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 	})
 }
 
-func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
-	workspaceLevel(t, step{
-		Template: `
+func singleNodeClusterTemplate(autoTerminationMinutes string) string {
+	return fmt.Sprintf(`
 		data "databricks_spark_version" "latest" {
 		}
 		resource "databricks_cluster" "this" {
@@ -58,7 +58,7 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 			spark_version = data.databricks_spark_version.latest.id
 			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 			num_workers = 0
-			autotermination_minutes = 10
+			autotermination_minutes = %s
 			spark_conf = {
 				"spark.databricks.cluster.profile" = "singleNode"
 				"spark.master" = "local[*]"
@@ -66,6 +66,42 @@ func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
 			custom_tags = {
 				"ResourceClass" = "SingleNode"
 			}
-		}`,
+		}
+	`, autoTerminationMinutes)
+}
+
+func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: singleNodeClusterTemplate("10"),
+	}, step{
+		Template: singleNodeClusterTemplate("20"),
 	})
+}
+
+func awsClusterTemplate(availability string) string {
+	return fmt.Sprintf(`
+		data "databricks_spark_version" "latest" {
+		}
+		resource "databricks_cluster" "this" {
+			cluster_name = "aws-cluster-{var.RANDOM}"
+			spark_version = data.databricks_spark_version.latest.id
+			num_workers = 1
+			autotermination_minutes = 10
+			aws_attributes {
+				availability     = "%s"
+			}
+			node_type_id = "i3.xlarge"
+		}
+	`, availability)
+}
+
+func TestAccClusterResource_CreateAndUpdateAwsAttributes(t *testing.T) {
+	loadWorkspaceEnv(t)
+	if isAws(t) {
+		workspaceLevel(t, step{
+			Template: awsClusterTemplate("SPOT"),
+		}, step{
+			Template: awsClusterTemplate("SPOT_WITH_FALLBACK"),
+		})
+	}
 }

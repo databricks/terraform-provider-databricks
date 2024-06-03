@@ -64,6 +64,7 @@
 | [databricks_permissions](docs/resources/permissions.md)
 | [databricks_pipeline](docs/resources/pipeline.md)
 | [databricks_pipelines](docs/data-sources/pipelines.md) data
+| [databricks_quality_monitor](docs/resources/quality_monitor.md)
 | [databricks_repo](docs/resources/repo.md)
 | [databricks_schema](docs/resources/schema.md)
 | [databricks_schemas](docs/data-sources/schema.md) data

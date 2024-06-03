@@ -193,3 +193,25 @@ func TestNoCustomize(t *testing.T) {
 	}
 	assert.Equal(t, dummySchema, NoCustomize(dummySchema))
 }
+
+func fakeDataSource() Resource {
+	type Test struct {
+		SomeId string `json:"some_id" tf:"computed"`
+		Id     string `json:"id" tf:"computed"`
+	}
+	return NoClientData(func(ctx context.Context, data *Test) error {
+		data.SomeId = "abc"
+		data.Id = "def"
+		return nil
+	})
+}
+
+func TestFakeDataSource(t *testing.T) {
+	r := fakeDataSource().ToResource()
+	d := r.TestResourceData()
+	client := &DatabricksClient{}
+	diags := r.ReadContext(context.Background(), d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, "abc", d.Get("some_id"))
+	assert.Equal(t, "def", d.Id())
+}

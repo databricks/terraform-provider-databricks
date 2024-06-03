@@ -293,7 +293,7 @@ var emptyStorageCrdentials = qa.HTTPFixture{
 
 var emptyConnections = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/connections",
+	Resource: "/api/2.1/unity-catalog/connections?",
 	Response: catalog.ListConnectionsResponse{},
 }
 
@@ -2007,7 +2007,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest%20DLT",
+				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest+DLT",
 				Response: workspace.ObjectStatus{
 					Language:   workspace.Python,
 					ObjectID:   123,
@@ -2472,7 +2472,10 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 					PipelineID:   "def",
 					Name:         "def",
 					LastModified: 1690156900000,
-					Spec:         &pipelines.PipelineSpec{},
+					Spec: &pipelines.PipelineSpec{
+						Target:  "default",
+						Catalog: "main",
+					},
 				},
 				ReuseRequest: true,
 			},

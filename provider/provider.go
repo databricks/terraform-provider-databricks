@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -47,6 +50,17 @@ func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
 	useragent.WithProduct("databricks-tf-provider", common.Version())
+
+	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
+	out, err := parseUserAgentExtra(userAgentExtraEnv)
+
+	if err != nil {
+		panic(fmt.Errorf("failed to parse DATABRICKS_USER_AGENT_EXTRA: %s", err))
+	}
+
+	for _, extra := range out {
+		useragent.WithUserAgentExtra(extra.Key, extra.Value)
+	}
 }
 
 // DatabricksProvider returns the entire terraform provider object
@@ -60,6 +74,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_cluster":                  clusters.DataSourceCluster().ToResource(),
 			"databricks_clusters":                 clusters.DataSourceClusters().ToResource(),
 			"databricks_cluster_policy":           policies.DataSourceClusterPolicy().ToResource(),
+			"databricks_catalog":                  catalog.DataSourceCatalog().ToResource(),
 			"databricks_catalogs":                 catalog.DataSourceCatalogs().ToResource(),
 			"databricks_current_config":           mws.DataSourceCurrentConfiguration().ToResource(),
 			"databricks_current_metastore":        catalog.DataSourceCurrentMetastore().ToResource(),
@@ -76,6 +91,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_job":                      jobs.DataSourceJob().ToResource(),
 			"databricks_metastore":                catalog.DataSourceMetastore().ToResource(),
 			"databricks_metastores":               catalog.DataSourceMetastores().ToResource(),
+			"databricks_mlflow_experiment":        mlflow.DataSourceExperiment().ToResource(),
 			"databricks_mlflow_model":             mlflow.DataSourceModel().ToResource(),
 			"databricks_mws_credentials":          mws.DataSourceMwsCredentials().ToResource(),
 			"databricks_mws_workspaces":           mws.DataSourceMwsWorkspaces().ToResource(),
@@ -93,6 +109,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_sql_warehouses":           sql.DataSourceWarehouses().ToResource(),
 			"databricks_storage_credential":       catalog.DataSourceStorageCredential().ToResource(),
 			"databricks_storage_credentials":      catalog.DataSourceStorageCredentials().ToResource(),
+			"databricks_table":                    catalog.DataSourceTable().ToResource(),
 			"databricks_tables":                   catalog.DataSourceTables().ToResource(),
 			"databricks_views":                    catalog.DataSourceViews().ToResource(),
 			"databricks_volumes":                  catalog.DataSourceVolumes().ToResource(),
@@ -157,6 +174,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_permissions":                     permissions.ResourcePermissions().ToResource(),
 			"databricks_pipeline":                        pipelines.ResourcePipeline().ToResource(),
 			"databricks_provider":                        sharing.ResourceProvider().ToResource(),
+			"databricks_quality_monitor":                 catalog.ResourceQualityMonitor().ToResource(),
 			"databricks_recipient":                       sharing.ResourceRecipient().ToResource(),
 			"databricks_registered_model":                catalog.ResourceRegisteredModel().ToResource(),
 			"databricks_repo":                            repos.ResourceRepo().ToResource(),
@@ -265,6 +283,12 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 			cfg.AuthType = newer
 		}
 	}
+	cfg.EnsureResolved()
+	// Unless set explicitly, the provider will retry indefinitely until context is cancelled
+	// by either a timeout or interrupt.
+	if cfg.RetryTimeoutSeconds == 0 {
+		cfg.RetryTimeoutSeconds = -1
+	}
 	client, err := client.New(cfg)
 	if err != nil {
 		return nil, diag.FromErr(err)
@@ -276,4 +300,44 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 		return commands.NewCommandsAPI(ctx, client)
 	})
 	return pc, nil
+}
+
+type userAgentExtra struct {
+	Key   string
+	Value string
+}
+
+// Regex for product strings. See RFC 9110.
+//
+// product = token ["/" product-version]
+// product-version = token
+// token = 1*tchar
+// tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
+var productRegexRfc9110 = regexp.MustCompile("^([!#$%&'*+\\-.^_`|~0-9A-Za-z]+)(/([!#$%&'*+\\-.^_`|~0-9A-Za-z]+))?$")
+
+func parseUserAgentExtra(env string) ([]userAgentExtra, error) {
+	out := []userAgentExtra{}
+
+	products := strings.FieldsFunc(env, func(r rune) bool {
+		return unicode.IsSpace(r)
+	})
+
+	for _, product := range products {
+		match := productRegexRfc9110.FindStringSubmatch(product)
+
+		if len(match) != 4 {
+			return nil, fmt.Errorf("product string must follow RFC 9110: %s", product)
+		}
+
+		if match[3] == "" {
+			return nil, fmt.Errorf("product string must include version: %s", product)
+		}
+
+		out = append(out, userAgentExtra{
+			Key:   match[1],
+			Value: match[3],
+		})
+	}
+
+	return out, nil
 }

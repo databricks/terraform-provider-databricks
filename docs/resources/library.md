@@ -83,6 +83,19 @@ resource "databricks_library" "fbprophet" {
 }
 ```
 
+## Python requirements files
+
+Installing Python libraries listed in the `requirements.txt` file.  Only Workspace paths and Unity Catalog Volumes paths are supported.  Requires a cluster with DBR 15.0+.
+
+
+```hcl
+resource "databricks_library" "libraries" {
+  cluster_id   = databricks_cluster.this.id
+  requirements = "/Workspace/path/to/requirements.txt"
+}
+```
+
+
 ## Python EGG
 
 ```hcl
@@ -109,6 +122,7 @@ resource "databricks_library" "rkeops" {
   }
 }
 ```
+
 
 ## Import
 

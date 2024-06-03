@@ -216,6 +216,7 @@ func ResourceShare() common.Resource {
 
 			objectsToRemove := tfOldObjects.Difference(tfNewObjects).List()
 			objectsToAdd := tfNewObjects.Difference(tfOldObjects).List()
+			terraformShares := d.Get("object").(*schema.Set).List()
 
 			apiChanges := []ShareDataChange{}
 
@@ -232,23 +233,33 @@ func ResourceShare() common.Resource {
 					}
 				}
 
-				removal := SharedDataObject{
-					Name:                     rawMap["name"].(string),
-					Comment:                  rawMap["comment"].(string),
-					DataObjectType:           rawMap["data_object_type"].(string),
-					SharedAs:                 rawMap["shared_as"].(string),
-					CDFEnabled:               rawMap["cdf_enabled"].(bool),
-					HistoryDataSharingStatus: rawMap["history_data_sharing_status"].(string),
-					Partitions:               partitions,
+				keepShare := false
+				for _, rawTfShare := range terraformShares {
+					targetShare := rawTfShare.(map[string]interface{})
+					if rawMap["name"].(string) == targetShare["name"].(string) {
+						keepShare = true
+						break
+					}
 				}
 
-				apiChanges = append(apiChanges, ShareDataChange{
-					Action:     ShareRemove,
-					DataObject: removal,
-				})
+				if !keepShare {
+					removal := SharedDataObject{
+						Name:                     rawMap["name"].(string),
+						Comment:                  rawMap["comment"].(string),
+						DataObjectType:           rawMap["data_object_type"].(string),
+						SharedAs:                 rawMap["shared_as"].(string),
+						CDFEnabled:               rawMap["cdf_enabled"].(bool),
+						HistoryDataSharingStatus: rawMap["history_data_sharing_status"].(string),
+						Partitions:               partitions,
+					}
+
+					apiChanges = append(apiChanges, ShareDataChange{
+						Action:     ShareRemove,
+						DataObject: removal,
+					})
+				}
 			}
 
-			terraformShares := d.Get("object").(*schema.Set).List()
 			for _, existingShare := range beforeSi.Objects {
 				keepShare := false
 
@@ -291,6 +302,13 @@ func ResourceShare() common.Resource {
 
 			for _, raw := range objectsToAdd {
 				rawMap := raw.(map[string]interface{})
+
+				rawName, ok := rawMap["name"]
+				name := rawName.(string)
+				if !ok || name == "" {
+					continue
+				}
+
 				var partitions []Partition
 				if rawMap["partition"] != nil {
 					rawPartitions := rawMap["partition"].(*schema.Set).List()

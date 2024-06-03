@@ -17,6 +17,10 @@ func ResourceSystemSchema() common.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		}
+		m["full_name"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		m["state"].Computed = true
 		return m
 	})
@@ -85,7 +89,12 @@ func ResourceSystemSchema() common.Resource {
 			}
 			for _, schema := range systemSchemaInfo.Schemas {
 				if schema.Schema == schemaName {
-					return common.StructToData(schema, systemSchema, d)
+					err = common.StructToData(schema, systemSchema, d)
+					if err != nil {
+						return err
+					}
+					d.Set("full_name", fmt.Sprintf("system.%s", schemaName))
+					return nil
 				}
 			}
 			return nil

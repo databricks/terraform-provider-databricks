@@ -106,6 +106,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this storage credential - same as the `name`.
+- `storage_credential_id` - Unique ID of storage credential.
 
 ## Import
 

@@ -35,6 +35,10 @@ func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*sche
 
 var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["storage_credential_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		return adjustDataAccessSchema(m)
 	})
 
@@ -122,7 +126,12 @@ func ResourceStorageCredential() common.Resource {
 						storageCredential.CredentialInfo.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
 					}
 				}
-				return common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
+				err = common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
+				if err != nil {
+					return err
+				}
+				d.Set("storage_credential_id", storageCredential.CredentialInfo.Id)
+				return nil
 			}, func(w *databricks.WorkspaceClient) error {
 				storageCredential, err := w.StorageCredentials.GetByName(ctx, d.Id())
 				if err != nil {
@@ -136,7 +145,12 @@ func ResourceStorageCredential() common.Resource {
 						storageCredential.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
 					}
 				}
-				return common.StructToData(storageCredential, storageCredentialSchema, d)
+				err = common.StructToData(storageCredential, storageCredentialSchema, d)
+				if err != nil {
+					return err
+				}
+				d.Set("storage_credential_id", storageCredential.Id)
+				return nil
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

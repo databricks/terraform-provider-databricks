@@ -934,6 +934,33 @@ func TestResourceSqlTableUpdateTable_ColumnsTypeThrowsError(t *testing.T) {
 	)
 }
 
+func TestResourceSqlTableUpdateTable_ColumnsTypeUpperLowerCaseThrowsError(t *testing.T) {
+	resourceSqlTableUpdateColumnHelper(t,
+		resourceSqlTableUpdateColumnTestMetaData{
+			oldColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "string", // Lower Case.
+					Comment:  "old comment",
+					Nullable: false,
+				},
+			},
+			newColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "STRING", // Upper Case.
+					Comment:  "old comment",
+					Nullable: true,
+				},
+			},
+			allowedCommands: []string{
+				"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` DROP NOT NULL",
+			},
+			expectedErrorMsg: "",
+		},
+	)
+}
+
 func TestResourceSqlTableUpdateTable_ColumnsAdditionAndUpdateThrowsError(t *testing.T) {
 	resourceSqlTableUpdateColumnHelper(t,
 		resourceSqlTableUpdateColumnTestMetaData{

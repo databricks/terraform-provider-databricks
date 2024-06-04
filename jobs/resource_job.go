@@ -1036,19 +1036,16 @@ func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 
 func prepareJobSettingsForCreate(d *schema.ResourceData, js JobSettings) {
 	if js.NewCluster != nil {
-		getPrefix := "new_cluster"
-		js.NewCluster.SetForceSendFieldsForClusterCreate(d, getPrefix)
+		js.NewCluster.SetForceSendFieldsForClusterCreate(d)
 	}
-	for i, task := range js.Tasks {
+	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
-			getPrefix := fmt.Sprintf("task.%d.new_cluster", i)
-			task.NewCluster.SetForceSendFieldsForClusterCreate(d, getPrefix)
+			task.NewCluster.SetForceSendFieldsForClusterCreate(d)
 		}
 	}
-	for i, jc := range js.JobClusters {
+	for _, jc := range js.JobClusters {
 		if jc.NewCluster != nil {
-			getPrefix := fmt.Sprintf("job_cluster.%d.new_cluster", i)
-			jc.NewCluster.SetForceSendFieldsForClusterCreate(d, getPrefix)
+			jc.NewCluster.SetForceSendFieldsForClusterCreate(d)
 		}
 	}
 }

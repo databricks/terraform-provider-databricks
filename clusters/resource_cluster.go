@@ -264,26 +264,16 @@ func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster any) error {
 	}
 }
 
-func SetForceSendFieldsForClusterCreate(cluster any, d *schema.ResourceData, getPrefix string) error {
+func SetForceSendFieldsForClusterCreate(cluster any, d *schema.ResourceData) error {
 	switch c := cluster.(type) {
 	case *compute.ClusterSpec:
 		if c.Autoscale == nil {
 			c.ForceSendFields = []string{"NumWorkers"}
 		}
-		if c.GcpAttributes != nil {
-			if _, ok := d.GetOkExists(fmt.Sprintf("%s.gcp_attributes.0.local_ssd_count", getPrefix)); ok {
-				c.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
-			}
-		}
 		return nil
 	case *compute.CreateCluster:
 		if c.Autoscale == nil {
 			c.ForceSendFields = []string{"NumWorkers"}
-		}
-		if c.GcpAttributes != nil {
-			if _, ok := d.GetOkExists(getPrefix + fmt.Sprintf("%s.gcp_attributes.0.local_ssd_count", getPrefix)); ok {
-				c.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
-			}
 		}
 		return nil
 	default:
@@ -407,7 +397,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err = ModifyRequestOnInstancePool(&createClusterRequest); err != nil {
 		return err
 	}
-	SetForceSendFieldsForClusterCreate(&createClusterRequest, d, "")
+	SetForceSendFieldsForClusterCreate(&createClusterRequest, d)
 	clusterWaiter, err := clusters.Create(ctx, createClusterRequest)
 	if err != nil {
 		return err

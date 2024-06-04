@@ -193,18 +193,16 @@ func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsRes
 }
 
 func prepareJobSettingsForCreateGoSdk(d *schema.ResourceData, jc *JobCreateStruct) error {
-	for i, task := range jc.Tasks {
+	for _, task := range jc.Tasks {
 		if task.NewCluster != nil {
-			getPrefix := fmt.Sprintf("task.%d.new_cluster", i)
-			err := clusters.SetForceSendFieldsForClusterCreate(task.NewCluster, d, getPrefix)
+			err := clusters.SetForceSendFieldsForClusterCreate(task.NewCluster, d)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	for i := range jc.JobClusters {
-		getPrefix := fmt.Sprintf("job_cluster.%d.new_cluster", i)
-		err := clusters.SetForceSendFieldsForClusterCreate(&jc.JobClusters[i].NewCluster, d, getPrefix)
+		err := clusters.SetForceSendFieldsForClusterCreate(&jc.JobClusters[i].NewCluster, d)
 		if err != nil {
 			return err
 		}

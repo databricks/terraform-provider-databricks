@@ -497,14 +497,9 @@ func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
 }
 
 // TODO: Remove this once we fully migrate away from jobs api 2.0
-func (cluster *Cluster) SetForceSendFieldsForClusterCreate(d *schema.ResourceData, getPrefix string) {
+func (cluster *Cluster) SetForceSendFieldsForClusterCreate(d *schema.ResourceData) {
 	if cluster.Autoscale == nil {
 		cluster.ForceSendFields = []string{"NumWorkers"}
-	}
-	if cluster.GcpAttributes != nil {
-		if _, ok := d.GetOkExists(fmt.Sprintf("%s.gcp_attributes.0.local_ssd_count", getPrefix)); ok {
-			cluster.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
-		}
 	}
 }
 

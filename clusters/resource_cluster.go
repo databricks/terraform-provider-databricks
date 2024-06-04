@@ -268,12 +268,12 @@ func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 	switch c := cluster.(type) {
 	case *compute.ClusterSpec:
 		if c.Autoscale == nil {
-			c.ForceSendFields = []string{"NumWorkers"}
+			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
 		}
 		return nil
 	case *compute.CreateCluster:
 		if c.Autoscale == nil {
-			c.ForceSendFields = []string{"NumWorkers"}
+			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
 		}
 		return nil
 	default:

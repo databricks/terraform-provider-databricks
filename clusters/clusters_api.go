@@ -431,7 +431,6 @@ type Cluster struct {
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
 	RuntimeEngine    string        `json:"runtime_engine,omitempty"`
 	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
-	ForceSendFields  []string      `json:"-"`
 }
 
 // TODO: Remove this once all the resources using clusters are migrated to Go SDK.
@@ -492,13 +491,6 @@ func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
 		oldDriverPool == oldInstancePool &&
 		oldDriverPool == newDriverPool {
 		cluster.DriverInstancePoolID = cluster.InstancePoolID
-	}
-}
-
-// TODO: Remove this once we fully migrate away from jobs api 2.0
-func (cluster *Cluster) SetForceSendFieldsForClusterCreate(d *schema.ResourceData) {
-	if cluster.Autoscale == nil {
-		cluster.ForceSendFields = []string{"NumWorkers"}
 	}
 }
 

@@ -1034,22 +1034,6 @@ func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 	}
 }
 
-func prepareJobSettingsForCreate(d *schema.ResourceData, js JobSettings) {
-	if js.NewCluster != nil {
-		js.NewCluster.SetForceSendFieldsForClusterCreate(d)
-	}
-	for _, task := range js.Tasks {
-		if task.NewCluster != nil {
-			task.NewCluster.SetForceSendFieldsForClusterCreate(d)
-		}
-	}
-	for _, jc := range js.JobClusters {
-		if jc.NewCluster != nil {
-			jc.NewCluster.SetForceSendFieldsForClusterCreate(d)
-		}
-	}
-}
-
 var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
 func ResourceJob() common.Resource {
@@ -1124,7 +1108,6 @@ func ResourceJob() common.Resource {
 				// Api 2.0
 				// TODO: Deprecate and remove this code path
 				jobsAPI := NewJobsAPI(ctx, c)
-				prepareJobSettingsForCreate(d, js)
 				job, err := jobsAPI.Create(js)
 				if err != nil {
 					return err

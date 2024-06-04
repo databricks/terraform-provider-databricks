@@ -264,6 +264,23 @@ func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster any) error {
 	}
 }
 
+func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
+	switch c := cluster.(type) {
+	case *compute.ClusterSpec:
+		if c.Autoscale == nil {
+			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
+		}
+		return nil
+	case *compute.CreateCluster:
+		if c.Autoscale == nil {
+			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
+		}
+		return nil
+	default:
+		return fmt.Errorf(unsupportedExceptCreateEditClusterSpecErr, cluster, "*", "*", "*")
+	}
+}
+
 type ClusterSpec struct {
 	compute.ClusterSpec
 	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
@@ -380,9 +397,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err = ModifyRequestOnInstancePool(&createClusterRequest); err != nil {
 		return err
 	}
-	if createClusterRequest.Autoscale == nil {
-		createClusterRequest.ForceSendFields = []string{"NumWorkers"}
-	}
+	SetForceSendFieldsForCluster(&createClusterRequest, d)
 	if createClusterRequest.GcpAttributes != nil {
 		if _, ok := d.GetOkExists("gcp_attributes.0.local_ssd_count"); ok {
 			createClusterRequest.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}

@@ -165,6 +165,10 @@ func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceDa
 	if err != nil {
 		return err
 	}
+	err = clusters.SetForceSendFieldsForCluster(clusterSpec, d)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -185,6 +189,26 @@ func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsRes
 	}
 	for i := range js.JobClusters {
 		err := updateJobClusterSpec(&js.JobClusters[i].NewCluster, d)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func prepareJobSettingsForCreateGoSdk(d *schema.ResourceData, jc *JobCreateStruct) error {
+	// We always need to add NumWorkers into ForceSendField for the go-sdk client.
+	// Before the go-sdk migration, the field `num_workers` was required, so we always sent it.
+	for _, task := range jc.Tasks {
+		if task.NewCluster != nil {
+			err := clusters.SetForceSendFieldsForCluster(task.NewCluster, d)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	for i := range jc.JobClusters {
+		err := clusters.SetForceSendFieldsForCluster(&jc.JobClusters[i].NewCluster, d)
 		if err != nil {
 			return err
 		}

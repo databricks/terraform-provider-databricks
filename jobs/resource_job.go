@@ -1094,6 +1094,10 @@ func ResourceJob() common.Resource {
 				}
 				var cj JobCreateStruct
 				common.DataToStructPointer(d, jobsGoSdkSchema, &cj)
+				err = prepareJobSettingsForCreateGoSdk(d, &cj)
+				if err != nil {
+					return err
+				}
 				jobId, err := Create(cj.CreateJob, w, ctx)
 				if err != nil {
 					return err

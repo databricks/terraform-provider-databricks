@@ -192,6 +192,26 @@ func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsRes
 	return nil
 }
 
+func prepareJobSettingsForCreateGoSdk(d *schema.ResourceData, jc *JobCreateStruct) error {
+	for i, task := range jc.Tasks {
+		if task.NewCluster != nil {
+			getPrefix := fmt.Sprintf("task.%d.new_cluster", i)
+			err := clusters.SetForceSendFieldsForClusterCreate(task.NewCluster, d, getPrefix)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	for i := range jc.JobClusters {
+		getPrefix := fmt.Sprintf("job_cluster.%d.new_cluster", i)
+		err := clusters.SetForceSendFieldsForClusterCreate(&jc.JobClusters[i].NewCluster, d, getPrefix)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func Create(createJob jobs.CreateJob, w *databricks.WorkspaceClient, ctx context.Context) (int64, error) {
 	adjustTasks(&createJob)
 	sortWebhooksByID(&createJob)

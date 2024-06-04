@@ -173,6 +173,7 @@ type GcpAttributes struct {
 	BootDiskSize            int32        `json:"boot_disk_size,omitempty"`
 	ZoneId                  string       `json:"zone_id,omitempty"`
 	LocalSsdCount           int32        `json:"local_ssd_count,omitempty"`
+	ForceSendFields         []string     `json:"-"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS
@@ -431,6 +432,7 @@ type Cluster struct {
 	WorkloadType     *WorkloadType `json:"workload_type,omitempty"`
 	RuntimeEngine    string        `json:"runtime_engine,omitempty"`
 	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
+	ForceSendFields  []string      `json:"-"`
 }
 
 // TODO: Remove this once all the resources using clusters are migrated to Go SDK.
@@ -491,6 +493,18 @@ func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
 		oldDriverPool == oldInstancePool &&
 		oldDriverPool == newDriverPool {
 		cluster.DriverInstancePoolID = cluster.InstancePoolID
+	}
+}
+
+// TODO: Remove this once we fully migrate away from jobs api 2.0
+func (cluster *Cluster) SetForceSendFieldsForClusterCreate(d *schema.ResourceData, getPrefix string) {
+	if cluster.Autoscale == nil {
+		cluster.ForceSendFields = []string{"NumWorkers"}
+	}
+	if cluster.GcpAttributes != nil {
+		if _, ok := d.GetOkExists(fmt.Sprintf("%s.gcp_attributes.0.local_ssd_count", getPrefix)); ok {
+			cluster.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
+		}
 	}
 }
 

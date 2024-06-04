@@ -1034,6 +1034,25 @@ func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 	}
 }
 
+func prepareJobSettingsForCreate(d *schema.ResourceData, js JobSettings) {
+	if js.NewCluster != nil {
+		getPrefix := "new_cluster"
+		js.NewCluster.SetForceSendFieldsForClusterCreate(d, getPrefix)
+	}
+	for i, task := range js.Tasks {
+		if task.NewCluster != nil {
+			getPrefix := fmt.Sprintf("task.%d.new_cluster", i)
+			task.NewCluster.SetForceSendFieldsForClusterCreate(d, getPrefix)
+		}
+	}
+	for i, jc := range js.JobClusters {
+		if jc.NewCluster != nil {
+			getPrefix := fmt.Sprintf("job_cluster.%d.new_cluster", i)
+			jc.NewCluster.SetForceSendFieldsForClusterCreate(d, getPrefix)
+		}
+	}
+}
+
 var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
 func ResourceJob() common.Resource {
@@ -1094,6 +1113,10 @@ func ResourceJob() common.Resource {
 				}
 				var cj JobCreateStruct
 				common.DataToStructPointer(d, jobsGoSdkSchema, &cj)
+				err = prepareJobSettingsForCreateGoSdk(d, &cj)
+				if err != nil {
+					return err
+				}
 				jobId, err := Create(cj.CreateJob, w, ctx)
 				if err != nil {
 					return err
@@ -1104,6 +1127,7 @@ func ResourceJob() common.Resource {
 				// Api 2.0
 				// TODO: Deprecate and remove this code path
 				jobsAPI := NewJobsAPI(ctx, c)
+				prepareJobSettingsForCreate(d, js)
 				job, err := jobsAPI.Create(js)
 				if err != nil {
 					return err

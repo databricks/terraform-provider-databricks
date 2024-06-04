@@ -397,9 +397,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err = ModifyRequestOnInstancePool(&createClusterRequest); err != nil {
 		return err
 	}
-	if createClusterRequest.Autoscale == nil {
-		createClusterRequest.ForceSendFields = []string{"NumWorkers"}
-	}
+	SetForceSendFieldsForCluster(&createClusterRequest, d)
 	if createClusterRequest.GcpAttributes != nil {
 		if _, ok := d.GetOkExists("gcp_attributes.0.local_ssd_count"); ok {
 			createClusterRequest.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}

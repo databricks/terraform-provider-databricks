@@ -173,7 +173,6 @@ type GcpAttributes struct {
 	BootDiskSize            int32        `json:"boot_disk_size,omitempty"`
 	ZoneId                  string       `json:"zone_id,omitempty"`
 	LocalSsdCount           int32        `json:"local_ssd_count,omitempty"`
-	ForceSendFields         []string     `json:"-"`
 }
 
 // DbfsStorageInfo contains the destination string for DBFS

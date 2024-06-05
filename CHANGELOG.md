@@ -15,8 +15,9 @@
 
 * Document support of `requirements.txt` specification in cluster libraries ([#3637](https://github.com/databricks/terraform-provider-databricks/pull/3637)).
 * Clarify about trailing slash character in file arrival trigger URL in `databricks_job` resource ([#3635](https://github.com/databricks/terraform-provider-databricks/pull/3635)).
+* Clarify about `autotermination_minutes` in `databricks_job` clusters ([#3641](https://github.com/databricks/terraform-provider-databricks/pull/3641)).
 
-Dependency updates:
+### Dependency updates:
 
  * Bump golang.org/x/mod from 0.17.0 to 0.18.0 ([#3643](https://github.com/databricks/terraform-provider-databricks/pull/3643)).
 

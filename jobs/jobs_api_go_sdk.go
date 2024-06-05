@@ -156,7 +156,8 @@ func (c controlRunStateLifecycleManagerGoSdk) OnUpdate(ctx context.Context) erro
 	return StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate), w, ctx)
 }
 
-func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceData) error {
+func updateAndValidateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceData) error {
+	clusters.Validate(clusterSpec)
 	err := clusters.ModifyRequestOnInstancePool(clusterSpec)
 	if err != nil {
 		return err
@@ -174,21 +175,21 @@ func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceDa
 
 func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsResource) error {
 	if js.NewCluster != nil {
-		err := updateJobClusterSpec(js.NewCluster, d)
+		err := updateAndValidateJobClusterSpec(js.NewCluster, d)
 		if err != nil {
 			return err
 		}
 	}
 	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
-			err := updateJobClusterSpec(task.NewCluster, d)
+			err := updateAndValidateJobClusterSpec(task.NewCluster, d)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	for i := range js.JobClusters {
-		err := updateJobClusterSpec(&js.JobClusters[i].NewCluster, d)
+		err := updateAndValidateJobClusterSpec(&js.JobClusters[i].NewCluster, d)
 		if err != nil {
 			return err
 		}
@@ -201,14 +202,14 @@ func prepareJobSettingsForCreateGoSdk(d *schema.ResourceData, jc *JobCreateStruc
 	// Before the go-sdk migration, the field `num_workers` was required, so we always sent it.
 	for _, task := range jc.Tasks {
 		if task.NewCluster != nil {
-			err := clusters.SetForceSendFieldsForCluster(task.NewCluster, d)
+			err := updateAndValidateJobClusterSpec(task.NewCluster, d)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	for i := range jc.JobClusters {
-		err := clusters.SetForceSendFieldsForCluster(&jc.JobClusters[i].NewCluster, d)
+		err := updateAndValidateJobClusterSpec(&jc.JobClusters[i].NewCluster, d)
 		if err != nil {
 			return err
 		}

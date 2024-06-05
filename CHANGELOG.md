@@ -1,5 +1,26 @@
 # Version changelog
 
+## 1.47.0
+
+### New Features and Improvements
+
+* Added `gcp_workspace_sa` computed attribute to `databricks_mws_workspaces` ([#3617](https://github.com/databricks/terraform-provider-databricks/pull/3617)).
+* Added `storage_credential_id` attribute to `databricks_storage_credential` resource ([#3636](https://github.com/databricks/terraform-provider-databricks/pull/3636)).
+* Added `full_name` attribute to `databricks_system_schema` resource ([#3634](https://github.com/databricks/terraform-provider-databricks/pull/3634)).
+* Fix SQL table column type throws error ([#3501](https://github.com/databricks/terraform-provider-databricks/pull/3501)).
+* Add `aws_unity_catalog_assume_role_policy` data source ([#3622](https://github.com/databricks/terraform-provider-databricks/pull/3622)).
+* Fix bug for job creation with `num_workers = 0` ([#3642](https://github.com/databricks/terraform-provider-databricks/pull/3642)).
+
+### Documentation Changes
+
+* Document support of `requirements.txt` specification in cluster libraries ([#3637](https://github.com/databricks/terraform-provider-databricks/pull/3637)).
+* Clarify about trailing slash character in file arrival trigger URL in `databricks_job` resource ([#3635](https://github.com/databricks/terraform-provider-databricks/pull/3635)).
+* Clarify about `autotermination_minutes` in `databricks_job` clusters ([#3641](https://github.com/databricks/terraform-provider-databricks/pull/3641)).
+
+### Dependency updates:
+
+ * Bump golang.org/x/mod from 0.17.0 to 0.18.0 ([#3643](https://github.com/databricks/terraform-provider-databricks/pull/3643)).
+
 ## 1.46.0
 
 ### New Features and Improvements

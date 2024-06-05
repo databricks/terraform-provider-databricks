@@ -39,7 +39,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           version: ~> v2
-          args: release --clean ${{ !startsWith(github.ref, 'refs/tags/v') && '--snapshot' }}
+          args: release --clean ${{ !startsWith(github.ref, 'refs/tags/v') && '--snapshot' || '' }}
         env:
           # use GITHUB_TOKEN that is already available in secrets.GITHUB_TOKEN
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token

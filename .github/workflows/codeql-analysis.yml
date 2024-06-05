@@ -7,7 +7,7 @@ on:
     branches: [ main ]
   schedule:
     - cron: '41 1 * * 0'
-      
+
 
 jobs:
   analyze:
@@ -22,6 +22,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.22.x
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2

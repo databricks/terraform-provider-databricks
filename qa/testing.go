@@ -18,6 +18,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/common/environment"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -181,20 +182,20 @@ func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, err
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
 	if f.Azure || f.AzureSPN {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
-			Cloud:              config.CloudAzure,
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:              environment.CloudAzure,
 			DnsZone:            host,
 			AzureApplicationID: "azure-login-application-id",
-			AzureEnvironment:   &config.AzurePublicCloud,
+			AzureEnvironment:   &environment.AzurePublicCloud,
 		}
 	} else if f.Gcp {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
-			Cloud:   config.CloudGCP,
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:   environment.CloudGCP,
 			DnsZone: host,
 		}
 	} else {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
-			Cloud:   config.CloudAWS,
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:   environment.CloudAWS,
 			DnsZone: host,
 		}
 	}

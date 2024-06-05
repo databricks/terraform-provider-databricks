@@ -129,7 +129,7 @@ This block describes individual tasks:
 * `depends_on` - (Optional) block specifying dependency(-ies) for a given task.
 * `job_cluster_key` - (Optional) Identifier of the Job cluster specified in the `job_cluster` block.
 * `existing_cluster_id` - (Optional) Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*
-* `new_cluster` - (Optional) Task will run on a dedicated cluster.  See [databricks_cluster](cluster.md) documentation for specification.
+* `new_cluster` - (Optional) Task will run on a dedicated cluster.  See [databricks_cluster](cluster.md) documentation for specification. *Some parameters, such as `autotermination_minutes`, `is_pinned`, `workload_type` aren't supported!*
 * `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. One of `ALL_SUCCESS`, `AT_LEAST_ONE_SUCCESS`, `NONE_FAILED`, `ALL_DONE`, `AT_LEAST_ONE_FAILED` or `ALL_FAILED`. When omitted, defaults to `ALL_SUCCESS`.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
 * `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`.
@@ -321,7 +321,10 @@ resource "databricks_job" "this" {
 [Shared job cluster](https://docs.databricks.com/jobs.html#use-shared-job-clusters) specification. Allows multiple tasks in the same job run to reuse the cluster.
 
 * `job_cluster_key` - (Required) Identifier that can be referenced in `task` block, so that cluster is shared between tasks
-* `new_cluster` - Same set of parameters as for [databricks_cluster](cluster.md) resource.
+* `new_cluster` - Block with almost the same set of parameters as for [databricks_cluster](cluster.md) resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):
+  * `autotermination_minutes` - isn't supported
+  * `is_pinned` - isn't supported
+  * `workload_type` - isn't supported
 
 ### schedule Configuration Block
 
@@ -343,12 +346,7 @@ This block describes the queue settings of the job:
 
 * `pause_status` - (Optional) Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 * `file_arrival` - (Optional) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
-  * `url` - (Required) string with URL under the Unity Catalog external location that will be monitored for new files. Please note that have a trailing slash character (`/`).
-  * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
-  * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
-* `table_update` - (Optional) configuration block to define a trigger for Table Update events consisting of following attributes:
-  * `table_names` - (Required) A list of Delta tables to monitor for changes. The table name must be in the format `catalog_name.schema_name.table_name`.
-  * `condition` - (Optional) The table(s) condition based on which to trigger a job run. Valid values are `ANY_UPDATED` or `ALL_UPDATED`.
+  * `url` - (Required) URL to be monitored for file arrivals. The path must point to the root or a subpath of the external location. Please note that the URL must have a trailing slash character (`/`).
   * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
   * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
 
@@ -426,9 +424,9 @@ The following parameter is only available on task level.
 This block describes health conditions for a given job or an individual task. It consists of the following attributes:
 
 * `rules` - (List) list of rules that are represented as objects with the following attributes:
-  * `metric` - (Optional) string specifying the metric to check.  The only supported metric is `RUN_DURATION_SECONDS` (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
-  * `op` - (Optional) string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`.
-  * `value` - (Optional) integer value used to compare to the given metric.
+  * `metric` - (Required) string specifying the metric to check.  The only supported metric is `RUN_DURATION_SECONDS` (check [Jobs REST API documentation](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
+  * `op` - (Required) string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`.
+  * `value` - (Required) integer value used to compare to the given metric.
 
 ### tags Configuration Map
 

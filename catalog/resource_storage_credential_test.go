@@ -39,6 +39,7 @@ func TestCreateStorageCredentials(t *testing.T) {
 						ExternalId: "123",
 					},
 					MetastoreId: "d",
+					Id:          "1234-5678",
 				},
 			},
 		},
@@ -55,6 +56,7 @@ func TestCreateStorageCredentials(t *testing.T) {
 		"aws_iam_role.0.external_id": "123",
 		"aws_iam_role.0.role_arn":    "def",
 		"name":                       "a",
+		"storage_credential_id":      "1234-5678",
 	})
 }
 
@@ -163,6 +165,7 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 						AwsIamRole: &catalog.AwsIamRoleResponse{
 							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
 						},
+						Id: "1234-5678",
 					},
 				},
 			},
@@ -178,7 +181,9 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 		}
 		owner = "administrators"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"storage_credential_id": "1234-5678",
+	})
 }
 
 func TestCreateStorageCredentialsReadOnly(t *testing.T) {

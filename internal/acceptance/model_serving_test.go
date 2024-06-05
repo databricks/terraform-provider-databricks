@@ -81,3 +81,36 @@ func TestAccModelServing(t *testing.T) {
 		},
 	)
 }
+
+func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
+	loadWorkspaceEnv(t)
+	if isGcp(t) {
+		skipf(t)("not available on GCP")
+	}
+
+	name := fmt.Sprintf("terraform-test-model-serving-pt-%s",
+		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	unityWorkspaceLevel(t, step{
+		Template: fmt.Sprintf(`
+			resource "databricks_model_serving" "endpoint" {
+				name = "%s"
+				config {
+					served_entities{
+						name = "pt_model"
+						entity_name = "system.ai.mistral_7b_instruct_v0_1"
+						entity_version = "1"
+						min_provisioned_throughput = 0
+						max_provisioned_throughput = 970
+					}
+					traffic_config {
+						routes {
+							served_model_name = "pt_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, name),
+	},
+	)
+}

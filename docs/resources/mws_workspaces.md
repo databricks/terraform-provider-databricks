@@ -368,6 +368,7 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
 * `custom_tags` - (Map) Custom Tags (if present) added to workspace
+* `gcp_workspace_sa` - (String, GCP only) identifier of a service account created for the workspace in form of `db-<workspace-id>@prod-gcp-<region>.iam.gserviceaccount.com`
 
 ## Timeouts
 

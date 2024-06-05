@@ -53,6 +53,7 @@ The following arguments are supported:
   * `auto_capture_config` - Configuration for Inference Tables which automatically logs requests and responses to Unity Catalog.
 * `tags` - Tags to be attached to the serving endpoint and automatically propagated to billing logs.
 * `rate_limits` - A list of rate limits to be applied to the serving endpoint. NOTE: only external and foundation model endpoints are supported as of now.
+* `route_optimized` - (Optional) A boolean enabling route optimization for the endpoint. NOTE: only available for custom models.
 
 ### served_entities Configuration Block
 

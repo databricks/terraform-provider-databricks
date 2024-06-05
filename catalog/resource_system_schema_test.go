@@ -11,7 +11,7 @@ import (
 )
 
 func TestSystemSchemaCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -52,9 +52,11 @@ func TestSystemSchemaCreate(t *testing.T) {
 		Resource: ResourceSystemSchema(),
 		HCL:      `schema = "access"`,
 		Create:   true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc|access", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"schema":    "access",
+		"id":        "abc|access",
+		"full_name": "system.access",
+	})
 }
 
 func TestSystemSchemaCreate_Error(t *testing.T) {

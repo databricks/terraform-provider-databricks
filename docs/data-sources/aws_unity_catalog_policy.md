@@ -5,7 +5,7 @@ subcategory: "Deployment"
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws) in case of any questions.
 
-This data source constructs necessary AWS Unity Catalog policy for you.
+This data source constructs the necessary AWS Unity Catalog policy for you.
 
 ## Example Usage
 

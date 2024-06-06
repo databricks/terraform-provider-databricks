@@ -418,6 +418,28 @@ func TestPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 	assert.Equal(t, catalog.Privilege("b"), diff[0].Remove[0])
 }
 
+func TestPermissionsList_Diff_CaseSensitivePrincipal(t *testing.T) {
+	diff := diffPermissions(
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
+				{
+					Principal:  "A",
+					Privileges: []catalog.Privilege{"a"},
+				},
+			},
+		},
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a"},
+				},
+			},
+		},
+	)
+	assert.Len(t, diff, 0)
+}
+
 func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	diff := diffPermissions(
 		catalog.PermissionsList{ // config

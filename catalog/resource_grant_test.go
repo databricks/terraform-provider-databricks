@@ -532,6 +532,37 @@ func TestResourceGrantPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T
 	assert.Len(t, diff, 0)
 }
 
+func TestResourceGrantPermissionsList_Diff_CaseSensitive(t *testing.T) {
+	diff := diffPermissionsForPrincipal(
+		"a",
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a"},
+				},
+				{
+					Principal:  "c",
+					Privileges: []catalog.Privilege{"a"},
+				},
+			},
+		},
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
+				{
+					Principal:  "A",
+					Privileges: []catalog.Privilege{"a"},
+				},
+				{
+					Principal:  "b",
+					Privileges: []catalog.Privilege{"a"},
+				},
+			},
+		},
+	)
+	assert.Len(t, diff, 0)
+}
+
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 	diff := diffPermissionsForPrincipal(
 		"a",

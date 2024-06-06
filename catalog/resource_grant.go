@@ -20,15 +20,15 @@ func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsLi
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
 	for _, v := range desired.PrivilegeAssignments {
-		if v.Principal == principal {
-			configured[v.Principal] = permissions.SliceToSet(v.Privileges)
+		if strings.EqualFold(v.Principal, principal) {
+			configured[strings.ToLower(v.Principal)] = permissions.SliceToSet(v.Privileges)
 		}
 	}
 	// existing permissions that needs removal for principal
 	remote := map[string]*schema.Set{}
 	for _, v := range existing.PrivilegeAssignments {
-		if v.Principal == principal {
-			remote[v.Principal] = permissions.SliceToSet(v.Privileges)
+		if strings.EqualFold(v.Principal, principal) {
+			remote[strings.ToLower(v.Principal)] = permissions.SliceToSet(v.Privileges)
 		}
 	}
 	// STEP 1: detect overlaps

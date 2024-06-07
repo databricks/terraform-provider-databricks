@@ -121,7 +121,7 @@ var Mappings = SecurableMapping{
 }
 
 func normalizePrivilege(privilege string) string {
-	return strings.Replace(privilege, " ", "_", -1)
+	return strings.ToUpper(strings.Replace(privilege, " ", "_", -1))
 }
 
 // Utils for Slice and Set

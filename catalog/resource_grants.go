@@ -31,12 +31,12 @@ func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsLis
 	// diffs change sets
 	configured := map[string]*schema.Set{}
 	for _, v := range pl.PrivilegeAssignments {
-		configured[v.Principal] = permissions.SliceToSet(v.Privileges)
+		configured[strings.ToLower(v.Principal)] = permissions.SliceToSet(v.Privileges)
 	}
 	// existing permissions that needs removal
 	remote := map[string]*schema.Set{}
 	for _, v := range existing.PrivilegeAssignments {
-		remote[v.Principal] = permissions.SliceToSet(v.Privileges)
+		remote[strings.ToLower(v.Principal)] = permissions.SliceToSet(v.Privileges)
 	}
 	// STEP 1: detect overlaps
 	for principal, confPrivs := range configured {
@@ -128,6 +128,21 @@ func parseId(d *schema.ResourceData) (string, string, error) {
 func ResourceGrants() common.Resource {
 	s := common.StructToSchema(PermissionsList{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			// set custom hash function for principal and privileges
+			common.MustSchemaPath(s, "grant", "privileges").Set = func(i any) int {
+				privilege := i.(string)
+				return schema.HashString(permissions.NormalizePrivilege(privilege))
+			}
+			common.MustSchemaPath(s, "grant").Set = func(i any) int {
+				objectStruct := i.(map[string]any)
+				principal := objectStruct["principal"].(string)
+				privileges := objectStruct["privileges"].(*schema.Set)
+				hashString := strings.ToLower(principal)
+				for _, privilege := range privileges.List() {
+					hashString += "|" + permissions.NormalizePrivilege(privilege.(string))
+				}
+				return schema.HashString(hashString)
+			}
 			alof := []string{}
 			for field := range permissions.Mappings {
 				s[field] = &schema.Schema{

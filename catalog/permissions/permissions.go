@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -119,18 +120,23 @@ var Mappings = SecurableMapping{
 	"volume":             catalog.SecurableType("volume"),
 }
 
+// Unity Catalog accepts privileges with spaces, but will automatically convert them to underscores
+func NormalizePrivilege(privilege string) string {
+	return strings.ToUpper(strings.Replace(privilege, " ", "_", -1))
+}
+
 // Utils for Slice and Set
 func SliceToSet(in []catalog.Privilege) *schema.Set {
 	var out []any
 	for _, v := range in {
-		out = append(out, v.String())
+		out = append(out, NormalizePrivilege(v.String()))
 	}
 	return schema.NewSet(schema.HashString, out)
 }
 
 func SetToSlice(set *schema.Set) (ss []catalog.Privilege) {
 	for _, v := range set.List() {
-		ss = append(ss, catalog.Privilege(v.(string)))
+		ss = append(ss, catalog.Privilege(NormalizePrivilege(v.(string))))
 	}
 	return
 }

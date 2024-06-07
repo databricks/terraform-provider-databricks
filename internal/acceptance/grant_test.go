@@ -103,6 +103,8 @@ func TestUcAccGrant(t *testing.T) {
 		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_ENG_GROUP}"),
 	}, step{
 		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
+	}, step{
+		Template: strings.ReplaceAll(strings.ReplaceAll(grantTemplate, "ALL_PRIVILEGES", "ALL PRIVILEGES"), `"%s"`, `upper("{env.TEST_DATA_SCI_GROUP}")`),
 	})
 }
 
@@ -131,6 +133,6 @@ func TestUcAccGrantForIdChange(t *testing.T) {
 		Template: grantTemplateForNamePermissionChange("-new", "ALL_PRIVILEGES"),
 	}, step{
 		Template:    grantTemplateForNamePermissionChange("-fail", "abc"),
-		ExpectError: regexp.MustCompile(`cannot create grant: Privilege abc is not applicable to this entity`),
+		ExpectError: regexp.MustCompile(`cannot create grant: Privilege ABC is not applicable to this entity`),
 	})
 }

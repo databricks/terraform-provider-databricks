@@ -20,15 +20,15 @@ func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsLi
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
 	for _, v := range desired.PrivilegeAssignments {
-		if v.Principal == principal {
-			configured[v.Principal] = permissions.SliceToSet(v.Privileges)
+		if strings.EqualFold(v.Principal, principal) {
+			configured[strings.ToLower(v.Principal)] = permissions.SliceToSet(v.Privileges)
 		}
 	}
 	// existing permissions that needs removal for principal
 	remote := map[string]*schema.Set{}
 	for _, v := range existing.PrivilegeAssignments {
-		if v.Principal == principal {
-			remote[v.Principal] = permissions.SliceToSet(v.Privileges)
+		if strings.EqualFold(v.Principal, principal) {
+			remote[strings.ToLower(v.Principal)] = permissions.SliceToSet(v.Privileges)
 		}
 	}
 	// STEP 1: detect overlaps
@@ -87,7 +87,7 @@ func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string)
 	grantsForPrincipal := []permissions.UnityCatalogPrivilegeAssignment{}
 	for _, v := range in.PrivilegeAssignments {
 		privileges := []string{}
-		if v.Principal == principal {
+		if strings.EqualFold(v.Principal, principal) {
 			for _, p := range v.Privileges {
 				privileges = append(privileges, p.String())
 			}
@@ -122,8 +122,13 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 func ResourceGrant() common.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			common.CustomizeSchemaPath(m, "principal").SetForceNew().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 
-			m["principal"].ForceNew = true
+			// set custom hash function for privileges
+			common.MustSchemaPath(m, "privileges").Set = func(i any) int {
+				privilege := i.(string)
+				return schema.HashString(permissions.NormalizePrivilege(privilege))
+			}
 
 			allFields := []string{}
 			for field := range permissions.Mappings {

@@ -87,7 +87,7 @@ func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string)
 	grantsForPrincipal := []permissions.UnityCatalogPrivilegeAssignment{}
 	for _, v := range in.PrivilegeAssignments {
 		privileges := []string{}
-		if v.Principal == principal {
+		if strings.EqualFold(v.Principal, principal) {
 			for _, p := range v.Privileges {
 				privileges = append(privileges, p.String())
 			}

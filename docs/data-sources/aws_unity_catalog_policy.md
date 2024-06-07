@@ -5,7 +5,7 @@ subcategory: "Deployment"
 
 -> **Note** This resource has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws) in case of any questions.
 
-This data source constructs necessary AWS Unity Catalog policy for you.
+This data source constructs the necessary AWS Unity Catalog policy for you.
 
 ## Example Usage
 
@@ -30,7 +30,7 @@ resource "aws_iam_policy" "unity_metastore" {
 
 resource "aws_iam_role" "metastore_data_access" {
   name                = "${var.prefix}-uc-access"
-  assume_role_policy  = data.aws_iam_policy_document.passrole_for_uc.json
+  assume_role_policy  = data.aws_iam_policy_document.this.json
   managed_policy_arns = [aws_iam_policy.unity_metastore.arn]
 }
 ```

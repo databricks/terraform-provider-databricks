@@ -120,6 +120,7 @@ var Mappings = SecurableMapping{
 	"volume":             catalog.SecurableType("volume"),
 }
 
+// Unity Catalog accepts privileges with spaces, but will automatically convert them to underscores
 func NormalizePrivilege(privilege string) string {
 	return strings.ToUpper(strings.Replace(privilege, " ", "_", -1))
 }

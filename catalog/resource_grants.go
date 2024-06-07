@@ -128,6 +128,7 @@ func parseId(d *schema.ResourceData) (string, string, error) {
 func ResourceGrants() common.Resource {
 	s := common.StructToSchema(PermissionsList{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
+			// set custom hash function for principal and privileges
 			common.MustSchemaPath(s, "grant", "privileges").Set = func(i any) int {
 				privilege := i.(string)
 				return schema.HashString(permissions.NormalizePrivilege(privilege))

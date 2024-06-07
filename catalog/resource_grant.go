@@ -123,8 +123,8 @@ func ResourceGrant() common.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "principal").SetForceNew().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-			common.MustSchemaPath(m, "principal").DiffSuppressFunc = common.EqualFoldDiffSuppress
 
+			// set custom hash function for privileges
 			common.MustSchemaPath(m, "privileges").Set = func(i any) int {
 				privilege := i.(string)
 				return schema.HashString(permissions.NormalizePrivilege(privilege))

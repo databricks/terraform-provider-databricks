@@ -120,7 +120,7 @@ var Mappings = SecurableMapping{
 	"volume":             catalog.SecurableType("volume"),
 }
 
-func normalizePrivilege(privilege string) string {
+func NormalizePrivilege(privilege string) string {
 	return strings.ToUpper(strings.Replace(privilege, " ", "_", -1))
 }
 
@@ -128,14 +128,14 @@ func normalizePrivilege(privilege string) string {
 func SliceToSet(in []catalog.Privilege) *schema.Set {
 	var out []any
 	for _, v := range in {
-		out = append(out, normalizePrivilege(v.String()))
+		out = append(out, NormalizePrivilege(v.String()))
 	}
 	return schema.NewSet(schema.HashString, out)
 }
 
 func SetToSlice(set *schema.Set) (ss []catalog.Privilege) {
 	for _, v := range set.List() {
-		ss = append(ss, catalog.Privilege(normalizePrivilege(v.(string))))
+		ss = append(ss, catalog.Privilege(NormalizePrivilege(v.(string))))
 	}
 	return
 }

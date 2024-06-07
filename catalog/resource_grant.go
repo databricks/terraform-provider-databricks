@@ -124,6 +124,7 @@ func ResourceGrant() common.Resource {
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 
 			m["principal"].ForceNew = true
+			m["principal"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 
 			allFields := []string{}
 			for field := range permissions.Mappings {

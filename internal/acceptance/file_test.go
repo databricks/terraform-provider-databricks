@@ -213,6 +213,64 @@ func TestUcAccFileUpdateOnLocalFileChange(t *testing.T) {
 	})
 }
 
+func TestUcAccFileNoUpdateIfFileDoesNotChange(t *testing.T) {
+	createdTime := ""
+	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+	fileName := tmpDir + "/upload_file"
+	template := fmt.Sprintf(`
+	resource "databricks_schema" "this" {
+		name 		 = "schema-{var.STICKY_RANDOM}"
+		catalog_name = "main"
+	}
+
+	resource "databricks_volume" "this" {
+		name = "name-abc"
+		comment = "comment-abc"
+		catalog_name = "main"
+		schema_name = databricks_schema.this.name 
+		volume_type = "MANAGED"
+	}
+	
+	resource "databricks_file" "this" {
+		source = "%s"
+		path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
+	}`, fileName)
+	unityWorkspaceLevel(t, step{
+		PreConfig: func() {
+			os.Mkdir(tmpDir, 0755)
+			os.WriteFile(fileName, []byte("abc\n"), 0644)
+		},
+		Template: template,
+		Check: resourceCheck("databricks_file.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			m, err := w.Files.GetMetadata(ctx, files.GetMetadataRequest{FilePath: id})
+			if err != nil {
+				return err
+			}
+			require.True(t, m.LastModified != "")
+			createdTime = m.LastModified
+			return nil
+		}),
+	}, step{
+		Template: template,
+		Check: resourceCheck("databricks_file.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			m, err := w.Files.GetMetadata(ctx, files.GetMetadataRequest{FilePath: id})
+			if err != nil {
+				return err
+			}
+			require.Equal(t, m.LastModified, createdTime)
+			return nil
+		}),
+	})
+}
+
 func TestUcAccFileUpdateServerChange(t *testing.T) {
 	createdTime := ""
 	unityWorkspaceLevel(t, step{

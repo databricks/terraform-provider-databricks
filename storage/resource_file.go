@@ -6,7 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
+	"hash"
 	"io"
 	"os"
 
@@ -16,60 +16,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func calculateMD5(filePath string) (string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	hash := md5.New()
-	buf := make([]byte, 4096) // Read in 4KB chunks
-
-	for {
-		n, err := file.Read(buf)
-		if n > 0 {
-			hash.Write(buf[:n])
-		}
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return hex.EncodeToString(hash.Sum(nil)), nil
+type readCloser struct {
+	io.Reader
+	io.Closer
 }
 
-func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
+func getContentReader(data *schema.ResourceData) (*readCloser, *hash.Hash, error) {
 	source := data.Get("source").(string)
 	var reader io.ReadCloser
 	var err error
 	if source != "" {
 		reader, err = os.Open(source)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		md5, err := calculateMD5(source)
-		if err != nil {
-			return nil, err
-		}
-		data.Set("md5", md5)
 	}
 	contentBase64 := data.Get("content_base64").(string)
 	if contentBase64 != "" {
 		decodedString, err := base64.StdEncoding.DecodeString(contentBase64)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		reader = io.NopCloser(bytes.NewReader(decodedString))
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		data.Set("md5", fmt.Sprintf("%x", md5.Sum(decodedString)))
 	}
-	return reader, err
+	hash := md5.New()
+	tee := io.TeeReader(reader, hash)
+	teeCloser := readCloser{tee, reader}
+	return &teeCloser, &hash, err
 }
 
 func upload(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient, path string) error {
@@ -77,7 +53,7 @@ func upload(ctx context.Context, data *schema.ResourceData, c *common.Databricks
 	if err != nil {
 		return err
 	}
-	reader, err := getContentReader(data)
+	reader, hash, err := getContentReader(data)
 	if err != nil {
 		return err
 	}
@@ -93,6 +69,7 @@ func upload(ctx context.Context, data *schema.ResourceData, c *common.Databricks
 	data.Set("modification_time", metadata.LastModified)
 	data.Set("file_size", metadata.ContentLength)
 	data.Set("remote_file_modified", false)
+	data.Set("md5", hex.EncodeToString((*hash).Sum(nil)))
 	data.SetId(path)
 	return nil
 }

@@ -16,36 +16,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type readCloser struct {
+type hashReadCloser struct {
 	io.Reader
 	io.Closer
+	hash.Hash
 }
 
-func getContentReader(data *schema.ResourceData) (*readCloser, *hash.Hash, error) {
+// Note: we don't use workspace.ReadContent here because that one reads all the content into memory,
+// and `resource_file` supports files of up to 5GB.
+func getContentReader(data *schema.ResourceData) (*hashReadCloser, error) {
 	source := data.Get("source").(string)
 	var reader io.ReadCloser
 	var err error
 	if source != "" {
 		reader, err = os.Open(source)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 	contentBase64 := data.Get("content_base64").(string)
 	if contentBase64 != "" {
 		decodedString, err := base64.StdEncoding.DecodeString(contentBase64)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		reader = io.NopCloser(bytes.NewReader(decodedString))
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 	hash := md5.New()
 	tee := io.TeeReader(reader, hash)
-	teeCloser := readCloser{tee, reader}
-	return &teeCloser, &hash, err
+	teeCloser := hashReadCloser{tee, reader, hash}
+	return &teeCloser, err
 }
 
 func upload(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient, path string) error {
@@ -53,7 +56,7 @@ func upload(ctx context.Context, data *schema.ResourceData, c *common.Databricks
 	if err != nil {
 		return err
 	}
-	reader, hash, err := getContentReader(data)
+	reader, err := getContentReader(data)
 	if err != nil {
 		return err
 	}
@@ -69,7 +72,7 @@ func upload(ctx context.Context, data *schema.ResourceData, c *common.Databricks
 	data.Set("modification_time", metadata.LastModified)
 	data.Set("file_size", metadata.ContentLength)
 	data.Set("remote_file_modified", false)
-	data.Set("md5", hex.EncodeToString((*hash).Sum(nil)))
+	data.Set("md5", hex.EncodeToString((*reader).Sum(nil)))
 	data.SetId(path)
 	return nil
 }

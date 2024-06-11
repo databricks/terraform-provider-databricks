@@ -3,7 +3,10 @@ package storage
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
+	"hash"
 	"io"
 	"os"
 
@@ -13,7 +16,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
+type hashReadCloser struct {
+	io.Reader
+	io.Closer
+	hash.Hash
+}
+
+// Note: we don't use workspace.ReadContent here because that one reads all the content into memory,
+// and `resource_file` supports files of up to 5GB.
+func getContentReader(data *schema.ResourceData) (*hashReadCloser, error) {
 	source := data.Get("source").(string)
 	var reader io.ReadCloser
 	var err error
@@ -34,7 +45,10 @@ func getContentReader(data *schema.ResourceData) (io.ReadCloser, error) {
 			return nil, err
 		}
 	}
-	return reader, err
+	hash := md5.New()
+	tee := io.TeeReader(reader, hash)
+	teeCloser := hashReadCloser{tee, reader, hash}
+	return &teeCloser, err
 }
 
 func upload(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient, path string) error {
@@ -58,6 +72,7 @@ func upload(ctx context.Context, data *schema.ResourceData, c *common.Databricks
 	data.Set("modification_time", metadata.LastModified)
 	data.Set("file_size", metadata.ContentLength)
 	data.Set("remote_file_modified", false)
+	data.Set("md5", hex.EncodeToString((*reader).Sum(nil)))
 	data.SetId(path)
 	return nil
 }

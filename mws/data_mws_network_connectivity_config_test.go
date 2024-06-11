@@ -2,8 +2,9 @@ package mws
 
 import (
 	"fmt"
-	"github.com/databricks/databricks-sdk-go/service/settings"
 	"testing"
+
+	"github.com/databricks/databricks-sdk-go/service/settings"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 )

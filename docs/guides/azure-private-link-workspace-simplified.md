@@ -271,7 +271,7 @@ resource "azurerm_private_endpoint" "auth" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-auth"
-    private_dns_zone_ids = [azurerm_private_dns_zone.dnsdpcp.id]
+    private_dns_zone_ids = [azurerm_private_dns_zone.dnsuiapi.id]
   }
 }
 ```

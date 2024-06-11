@@ -1320,7 +1320,7 @@ func TestResourceJobCreate_ControlRunState_ContinuousCreate(t *testing.T) {
 		max_concurrent_runs = 1
 		name = "Test"
 		`,
-	}.Apply(t)
+	}.ApplyNoError(t)
 }
 
 func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
@@ -1330,7 +1330,7 @@ func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.0/jobs/create",
 				ExpectedRequest: JobSettings{
 					MaxConcurrentRuns: 1,
 					Name:              "Test",
@@ -1348,7 +1348,7 @@ func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.0/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -1369,17 +1369,17 @@ func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
 		trigger {
 			pause_status = "UNPAUSED"
 			table_update {
-				table_names = {
+				table_names = [
 					"catalog.schema.table1",
 					"catalog.schema.table2"
-				}
+				]
 				condition = "ALL_UPDATED"
 			}
 		}
 		max_concurrent_runs = 1
 		name = "Test"
 		`,
-	}.Apply(t)
+	}.ApplyNoError(t)
 }
 
 func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
@@ -1574,7 +1574,7 @@ func TestResourceJobCreate_ControlRunState_ContinuousUpdateCancel(t *testing.T) 
 		max_concurrent_runs = 1
 		name = "Test"
 		`,
-	}.Apply(t)
+	}.ApplyNoError(t)
 }
 
 func TestResourceJobCreateSingleNode(t *testing.T) {

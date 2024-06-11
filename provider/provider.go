@@ -95,6 +95,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mlflow_experiment":                    mlflow.DataSourceExperiment().ToResource(),
 			"databricks_mlflow_model":                         mlflow.DataSourceModel().ToResource(),
 			"databricks_mws_credentials":                      mws.DataSourceMwsCredentials().ToResource(),
+			"databricks_mws_network_connectivity_config":      mws.DataSourceMwsNetworkConnectivityConfig().ToResource(),
 			"databricks_mws_workspaces":                       mws.DataSourceMwsWorkspaces().ToResource(),
 			"databricks_node_type":                            clusters.DataSourceNodeType().ToResource(),
 			"databricks_notebook":                             workspace.DataSourceNotebook().ToResource(),

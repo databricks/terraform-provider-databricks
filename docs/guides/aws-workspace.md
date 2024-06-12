@@ -1,14 +1,16 @@
 ---
-page_title: "Provisioning AWS Databricks E2"
+page_title: "Provisioning AWS Databricks workspace"
 ---
 
-# Provisioning AWS Databricks E2
+# Provisioning AWS Databricks workspace
+
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
 
 You can provision multiple Databricks workspaces with Terraform.
 
 ![Simplest multiworkspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/simplest-multiworkspace.png)
 
-## Provider initialization for E2 workspaces
+## Provider initialization for AWS workspaces
 
 This guide assumes you have the `client_id`, which is the `application_id` of the [Service Principal](resources/service_principal.md), `client_secret`, which is its secret, and `databricks_account_id`, which can be found in the top right corner of the [Account Console](https://accounts.cloud.databricks.com). (see [instruction](https://docs.databricks.com/dev-tools/authentication-oauth.html#step-2-create-an-oauth-secret-for-a-service-principal)). This guide is provided as is and assumes you will use it as the basis for your setup.
 
@@ -45,7 +47,7 @@ Before [managing workspace](workspace-management.md), you have to create:
 - [VPC](#vpc)
 - [Root bucket](#root-bucket)
 - [Cross-account role](#cross-account-iam-role)
-- [Databricks E2 workspace](#databricks-e2-workspace)
+- [Databricks workspace](#databricks-workspace)
 - [Host and Token outputs](#provider-configuration)
 
 > Initialize provider with `alias = "mws"` and use `provider = databricks.mws` for all `databricks_mws_*` resources. We require all `databricks_mws_*` resources to be created within a dedicated terraform module of your environment. Usually, this module creates VPC and IAM roles as well.
@@ -258,9 +260,9 @@ resource "databricks_mws_storage_configurations" "this" {
 }
 ```
 
-## Databricks E2 Workspace
+## Databricks Workspace
 
-Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are set up, you can create Databricks AWS E2 workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
+Once  [VPC](#vpc), [cross-account role](#cross-account-iam-role), and [root bucket](#root-bucket) are set up, you can create Databricks AWS workspace through [databricks_mws_workspaces](../resources/mws_workspaces.md) resource.
 
 Code that creates workspaces and code that [manages workspaces](workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. We specify `databricks_host` and `databricks_token` outputs, which must be used in the latter modules.
 
@@ -313,7 +315,7 @@ provider "databricks" {
 }
 ```
 
-We assume that you have a terraform module in your project that creates a workspace (using [Databricks E2 Workspace](#databricks-e2-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
+We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#databricks-workspace) section) and you named it as `e2` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
 
 ### Credentials validation checks errors
 

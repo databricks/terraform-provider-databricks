@@ -38,5 +38,5 @@ This data source exports the following attributes:
 
 The following resources are used in the same context:
 
-* [databricks_mws_workspaces](../resources/mws_workspaces.md) to manage Databricks E2 Workspaces.
+* [databricks_mws_workspaces](../resources/mws_workspaces.md) to manage Databricks Workspaces on AWS and GCP.
 * [databricks_metastore_assignment](../resources/metastore_assignment.md) to assign [databricks_metastore](docs/resources/metastore.md) to [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace)

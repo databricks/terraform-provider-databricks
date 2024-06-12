@@ -4,11 +4,11 @@ page_title: "Provisioning Azure Databricks with Private Link - Standard deployme
 
 # Deploying pre-requisite resources and enabling Private Link connections - Standard deployment
 
--> **Note**
+-> **Note** Refer to [adb-with-private-link-standard](https://github.com/databricks/terraform-databricks-examples/tree/main/modules/adb-with-private-link-standard), a Terraform module that contains code used to deploy an Azure Databricks workspace with Azure Private Link using the Standard deployment approach.
 
-- Refer to [adb-with-private-link-standard](https://github.com/databricks/terraform-databricks-examples/tree/main/modules/adb-with-private-link-standard), a Terraform module that contains code used to deploy an Azure Databricks workspace with Azure Private Link using the Standard deployment approach.
-- Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for more Terraform modules and examples to deploy Azure Databricks resources.
-- This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for more Terraform modules and examples to deploy Azure Databricks resources.
+
+-> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
 
 [Azure Private Link](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview) support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure.
 

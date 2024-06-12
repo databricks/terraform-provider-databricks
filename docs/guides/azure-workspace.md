@@ -4,6 +4,8 @@ page_title: "Provisioning Azure Databricks Workspace"
 
 # Provisioning Azure Databricks
 
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+
 The following sample configuration assumes you have been authorized with `az login` on your local machine and have `Contributor` rights to your subscription.
 
 ## Simple setup

@@ -5,8 +5,13 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	newschema "github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -972,4 +977,101 @@ func TestStructToData_IndirectString(t *testing.T) {
 		Indirect: []IndirectString{"a"},
 	}, scm, d)
 	assert.NoError(t, err)
+}
+
+type DummyNew struct {
+	Enabled     types.Bool    `tfsdk:"enabled"`
+	Workers     types.Int64   `tfsdk:"workers"`
+	Description types.String  `tfsdk:"description"`
+	Tasks       types.String  `tfsdk:"task"`
+	Nested      *DummyNested  `tfsdk:"nested"`
+	Repeated    []types.Int64 `tfsdk:"repeated"`
+	Irrelevant  types.String  `tfsdk:"-"`
+}
+
+type DummyNested struct {
+	Name types.String `tfsdk:"name"`
+}
+
+// Optional --> should be able to get from the openapispec
+//   For something we cannot, we need to extend it
+
+// type DummyNew struct {
+// 	Enabled     bool   `json:"enabled" tf:"conflicts:workers"`
+// 	Workers     int  `json:"workers,omitempty" tf:"suppress_diff"`
+// 	Description string `json:"description,omitempty"`
+// 	ForceSendFields
+// }
+
+type emptyCtx struct{}
+
+func (emptyCtx) Deadline() (deadline time.Time, ok bool) {
+	return
+}
+
+func (emptyCtx) Done() <-chan struct{} {
+	return nil
+}
+
+func (emptyCtx) Err() error {
+	return nil
+}
+
+func (emptyCtx) Value(key any) any {
+	return nil
+}
+
+func TestGetAndSetPluginFramework(t *testing.T) {
+	ctx := emptyCtx{}
+	scm := newschema.Schema{
+		Attributes: map[string]newschema.Attribute{
+			"enabled": newschema.BoolAttribute{
+				Required: true,
+			},
+			"workers": newschema.Int64Attribute{
+				Optional: true,
+			},
+			"description": newschema.StringAttribute{
+				Optional: true,
+			},
+			"task": newschema.StringAttribute{
+				Optional: true,
+			},
+			"repeated": newschema.ListAttribute{
+				ElementType: types.Int64Type,
+				Optional:    true,
+			},
+			"nested": newschema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]newschema.Attribute{
+					"name": newschema.StringAttribute{
+						Optional: true,
+					},
+				},
+			},
+		},
+	}
+	state := tfsdk.State{
+		Schema: scm,
+	}
+
+	goVal := DummyNew{
+		Enabled:     types.BoolValue(true),
+		Workers:     types.Int64Value(12),
+		Description: types.StringValue("abc"),
+		Tasks:       types.StringNull(),
+		Nested: &DummyNested{
+			Name: types.StringValue("def"),
+		},
+		Repeated: []types.Int64{types.Int64Value(12)},
+	}
+
+	diags := state.Set(ctx, goVal)
+	assert.Len(t, diags, 0)
+
+	var enabled types.Bool
+	state.GetAttribute(ctx, path.Root("enabled"), &enabled)
+	assert.True(t, !enabled.IsNull())
+	assert.True(t, !enabled.IsUnknown())
+	assert.True(t, enabled.ValueBool())
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -20,6 +21,7 @@ type ExternalLocationInfo struct {
 	ReadOnly       bool                       `json:"read_only,omitempty"`
 	AccessPoint    string                     `json:"access_point,omitempty"`
 	EncDetails     *catalog.EncryptionDetails `json:"encryption_details,omitempty"`
+	IsolationMode  string                     `json:"isolation_mode,omitempty" tf:"computed"`
 }
 
 func ResourceExternalLocation() common.Resource {
@@ -71,7 +73,9 @@ func ResourceExternalLocation() common.Resource {
 			if err != nil {
 				return err
 			}
-			return nil
+
+			// Bind the current workspace if the external location is isolated, otherwise the read will fail
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, el.Name, "external-locations")
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -129,7 +133,8 @@ func ResourceExternalLocation() common.Resource {
 				}
 				return err
 			}
-			return nil
+			// Bind the current workspace if the external location is isolated, otherwise the read will fail
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateExternalLocationRequest.Name, "external-locations")
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)

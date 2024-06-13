@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -21,6 +22,7 @@ type StorageCredentialInfo struct {
 	MetastoreID                 string                                       `json:"metastore_id,omitempty" tf:"computed"`
 	ReadOnly                    bool                                         `json:"read_only,omitempty"`
 	SkipValidation              bool                                         `json:"skip_validation,omitempty"`
+	IsolationMode               string                                       `json:"isolation_mode,omitempty" tf:"computed"`
 }
 
 func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {
@@ -106,7 +108,8 @@ func ResourceStorageCredential() common.Resource {
 				if err != nil {
 					return err
 				}
-				return nil
+				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredential.Name, "storage-credentials")
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -241,7 +244,8 @@ func ResourceStorageCredential() common.Resource {
 					}
 					return err
 				}
-				return nil
+				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, update.Name, "storage-credentials")
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -4,6 +4,8 @@ page_title: "Provisioning Databricks on Google Cloud with Private Service Connec
 
 # Provisioning Databricks workspaces on GCP with Private Service Connect
 
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+
 Secure a workspace with private connectivity and mitigate data exfiltration risks by [enabling Google Private Service Connect (PSC) on the workspace](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html). This guide assumes that you are already familiar with Hashicorp Terraform and provisioned some of the Google Compute Cloud infrastructure with it.
 
 ## Creating a GCP service account for Databricks Provisioning and Authenticate with Databricks account API

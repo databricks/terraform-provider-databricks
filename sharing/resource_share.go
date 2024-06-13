@@ -126,6 +126,18 @@ func (sdo SharedDataObject) Equal(other SharedDataObject) bool {
 	return reflect.DeepEqual(sdo, other)
 }
 
+func parsePartitions(rawPartitions []interface{}) []Partition {
+	var partitions []Partition
+
+	for _, plainPartitionRaw := range rawPartitions {
+		plainPartition := plainPartitionRaw.(map[string]interface{})
+		partitions = append(partitions, Partition{
+			Values: parsePartition(plainPartition),
+		})
+	}
+	return partitions
+}
+
 func parsePartition(plainPartition map[string]interface{}) []PartitionValue {
 	var partitionValues []PartitionValue
 	for _, valueSetRaw := range plainPartition {
@@ -185,7 +197,7 @@ func ResourceShare() common.Resource {
 			return common.StructToData(si, shareSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			beforeSi, err := NewSharesAPI(ctx, c).get(d.Id())
+			apiShares, err := NewSharesAPI(ctx, c).get(d.Id())
 			if err != nil {
 				return err
 			}
@@ -214,35 +226,35 @@ func ResourceShare() common.Resource {
 			tfOldObjects := oldObjects.(*schema.Set)
 			tfNewObjects := newObjects.(*schema.Set)
 
-			objectsToRemove := tfOldObjects.Difference(tfNewObjects).List()
+			updatedObjects := tfOldObjects.Difference(tfNewObjects).List()
 			objectsToAdd := tfNewObjects.Difference(tfOldObjects).List()
 			terraformShares := d.Get("object").(*schema.Set).List()
 
+			// This is the collection of Changes that will be sent to the API
 			apiChanges := []ShareDataChange{}
 
-			for _, raw := range objectsToRemove {
+			// Iterate through all the objects that have changed
+			for _, raw := range updatedObjects {
 				rawMap := raw.(map[string]interface{})
-				var partitions []Partition
-				if rawMap["partition"] != nil {
-					rawPartitions := rawMap["partition"].(*schema.Set).List()
-					for _, plainPartitionRaw := range rawPartitions {
-						plainPartition := plainPartitionRaw.(map[string]interface{})
-						partitions = append(partitions, Partition{
-							Values: parsePartition(plainPartition),
-						})
-					}
-				}
 
-				keepShare := false
+				isObjectUpdate := false
 				for _, rawTfShare := range terraformShares {
 					targetShare := rawTfShare.(map[string]interface{})
+					// If the object shares a name, treat it as an update
 					if rawMap["name"].(string) == targetShare["name"].(string) {
-						keepShare = true
+						isObjectUpdate = true
 						break
 					}
 				}
 
-				if !keepShare {
+				// For updated objects that are not updates, queue them up for removal
+				if !isObjectUpdate {
+					var partitions []Partition
+					if rawMap["partition"] != nil {
+						rawPartitions := rawMap["partition"].(*schema.Set).List()
+						partitions = parsePartitions(rawPartitions)
+					}
+
 					removal := SharedDataObject{
 						Name:                     rawMap["name"].(string),
 						Comment:                  rawMap["comment"].(string),
@@ -260,51 +272,51 @@ func ResourceShare() common.Resource {
 				}
 			}
 
-			for _, existingShare := range beforeSi.Objects {
+			// Look at objects from Databricks API
+			for _, existingShare := range apiShares.Objects {
 				keepShare := false
 
+				// iterate over each of the objects in the plan and check to see if the share remains in the
+				// plan
 				for _, rawTfShare := range terraformShares {
 					rawMap := rawTfShare.(map[string]interface{})
 
-					var partitions []Partition
-					if rawMap["partition"] != nil {
-						rawPartitions := rawMap["partition"].(*schema.Set).List()
-						for _, plainPartitionRaw := range rawPartitions {
-							plainPartition := plainPartitionRaw.(map[string]interface{})
-							partitions = append(partitions, Partition{
-								Values: parsePartition(plainPartition),
-							})
-						}
-					}
-
-					tfObject := SharedDataObject{
-						Name:                     rawMap["name"].(string),
-						Comment:                  rawMap["comment"].(string),
-						DataObjectType:           rawMap["data_object_type"].(string),
-						SharedAs:                 rawMap["shared_as"].(string),
-						CDFEnabled:               rawMap["cdf_enabled"].(bool),
-						HistoryDataSharingStatus: rawMap["history_data_sharing_status"].(string),
-						Partitions:               partitions,
-					}
-					if existingShare.Name == tfObject.Name {
+					// Found the share in terraform plan
+					if existingShare.Name == rawMap["name"].(string) {
 						keepShare = true
+						break
 					}
 
 				}
 
 				if !keepShare {
-					apiChanges = append(apiChanges, ShareDataChange{
-						Action:     ShareRemove,
-						DataObject: existingShare,
-					})
+					// look at all the shares already queued for removal to see if the object is already
+					// present
+					objectAlreadyRemoved := false
+					for _, removalChange := range apiChanges {
+						if removalChange.DataObject.Name == existingShare.Name {
+							objectAlreadyRemoved = true
+							break
+						}
+					}
+
+					if !objectAlreadyRemoved {
+						apiChanges = append(apiChanges, ShareDataChange{
+							Action:     ShareRemove,
+							DataObject: existingShare,
+						})
+					}
 				}
 			}
 
+			// Iterate over at the added and updated objects
 			for _, raw := range objectsToAdd {
 				rawMap := raw.(map[string]interface{})
 
 				rawName, ok := rawMap["name"]
 				name := rawName.(string)
+
+				// Not clear why this occurs
 				if !ok || name == "" {
 					continue
 				}
@@ -312,12 +324,7 @@ func ResourceShare() common.Resource {
 				var partitions []Partition
 				if rawMap["partition"] != nil {
 					rawPartitions := rawMap["partition"].(*schema.Set).List()
-					for _, plainPartitionRaw := range rawPartitions {
-						plainPartition := plainPartitionRaw.(map[string]interface{})
-						partitions = append(partitions, Partition{
-							Values: parsePartition(plainPartition),
-						})
-					}
+					partitions = parsePartitions(rawPartitions)
 				}
 				updateObject := SharedDataObject{
 					Name:                     rawMap["name"].(string),
@@ -331,15 +338,15 @@ func ResourceShare() common.Resource {
 
 				// Look at the api call back result and see if the share already exists
 				exists := false
-				for _, existingDataObject := range beforeSi.Objects {
-					// This is an exact match. What should happen when the match is partial
-					// updateObject doesn't have the SharedAs field, and thus Equal behaves differently
+				for _, existingDataObject := range apiShares.Objects {
+					// This checks if the objects match ignoring the SharedAs property
 					if existingDataObject.Equal(updateObject) {
 						exists = true
 						break
 					}
 				}
 
+				// If the share matches all fields already, do no make an API Call
 				if !exists {
 					apiChanges = append(apiChanges, ShareDataChange{
 						Action:     ShareAdd,
@@ -360,7 +367,7 @@ func ResourceShare() common.Resource {
 						Owner: oldOwner.(string),
 					})
 					if rollbackErr != nil {
-						return common.OwnerRollbackError(err, rollbackErr, beforeSi.Owner, d.Get("owner").(string))
+						return common.OwnerRollbackError(err, rollbackErr, apiShares.Owner, d.Get("owner").(string))
 					}
 				}
 

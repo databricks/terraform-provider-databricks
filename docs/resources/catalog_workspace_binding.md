@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_catalog_workspace_binding Resource
 
--> **Note** This resource could be only used with workspace-level provider!
+NOTE: This resource has been deprecated and will be removed soon. Please use the [databricks_workspace_binding resource](./workspace_binding.md) instead.
 
 If you use workspaces to isolate user data access, you may want to limit catalog access to specific workspaces in your account, also known as workspace-catalog binding
 

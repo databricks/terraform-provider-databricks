@@ -43,6 +43,13 @@ func TestAccJobTasks(t *testing.T) {
 					num_workers   = 0  // Setting it to zero intentionally to cover edge case.
 					spark_version = data.databricks_spark_version.latest.id
 					node_type_id  = data.databricks_node_type.smallest.id
+					custom_tags = {
+						"ResourceClass" = "SingleNode"
+					}
+					spark_conf = {
+						"spark.databricks.cluster.profile" : "singleNode"
+						"spark.master" : "local[*,4]"
+					}
 				}
 			}
 

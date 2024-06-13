@@ -360,7 +360,7 @@ func ResourceShare() common.Resource {
 			})
 			if err != nil {
 				// Rollback
-				if d.HasChanges("owner", "comment") {
+				if d.HasChange("owner") {
 					oldOwner, _ := d.GetChange("owner")
 					_, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
 						Name:  d.Get("name").(string),

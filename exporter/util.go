@@ -62,6 +62,7 @@ func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 		if is.Volumes != nil {
+			// TODO: we should emit allow list for init scripts as well
 			ic.emitIfVolumeFile(is.Volumes.Destination)
 		}
 	}
@@ -412,6 +413,7 @@ func (ic *importContext) emitLibraries(libs []compute.Library) {
 		ic.emitIfWsfsFile(lib.Egg)
 		// Files on UC Volumes
 		ic.emitIfVolumeFile(lib.Whl)
+		// TODO: we should emit UC allow list as well
 		ic.emitIfVolumeFile(lib.Jar)
 	}
 
@@ -1159,7 +1161,7 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
 			if object.ObjectType == workspace.Directory {
-				if !ic.incremental && object.Path != "/" && ic.isServiceEnabled("directories") {
+				if !ic.incremental && object.Path != "/" && ic.isServiceInListing("directories") {
 					objectsChannel <- object
 				}
 			} else {
@@ -1184,9 +1186,9 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
 				continue
 			}
-			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceEnabled("directories") && object.Path != "/" {
+			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceInListing("directories") && object.Path != "/" {
 				emitWorkpaceObject(ic, object)
-			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceEnabled("notebooks") {
+			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceInListing("notebooks") {
 				emitWorkpaceObject(ic, object)
 			}
 		}

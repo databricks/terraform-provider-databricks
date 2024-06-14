@@ -502,11 +502,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	libList := libsClusterStatus.ToLibraryList()
-	return common.StructToData(InstallLibraryWithAlias{
-		ClusterId: libList.ClusterId,
-		LibraryWithAlias: LibraryWithAlias{
-			Libraries: libList.Libraries,
-		},
+	return common.StructToData(LibraryWithAlias{
+		Libraries: libList.Libraries,
 	}, clusterSchema, d)
 }
 

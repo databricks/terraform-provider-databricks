@@ -286,6 +286,16 @@ type ClusterSpec struct {
 	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
+var clusterAliases = map[string]map[string]string{
+	"clusters.ClusterSpec": {
+		"libraries": "library",
+	},
+}
+
+func (ClusterSpec) Aliases() map[string]map[string]string {
+	return clusterAliases
+}
+
 func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
 	s.AddNewField("default_tags", &schema.Schema{
 		Type:     schema.TypeMap,

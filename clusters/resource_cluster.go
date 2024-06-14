@@ -285,11 +285,6 @@ type LibraryWithAlias struct {
 	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
-type InstallLibraryWithAlias struct {
-	ClusterId string `json:"cluster_id"`
-	LibraryWithAlias
-}
-
 type ClusterSpec struct {
 	compute.ClusterSpec
 	LibraryWithAlias

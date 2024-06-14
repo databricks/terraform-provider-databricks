@@ -281,19 +281,18 @@ func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 	}
 }
 
-type ClusterSpec struct {
-	compute.ClusterSpec
+type LibraryWithAlias struct {
 	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
 }
 
-var clusterAliases = map[string]map[string]string{
-	"clusters.ClusterSpec": {
-		"libraries": "library",
-	},
+type InstallLibraryWithAlias struct {
+	ClusterId string `json:"cluster_id"`
+	LibraryWithAlias
 }
 
-func (ClusterSpec) Aliases() map[string]map[string]string {
-	return clusterAliases
+type ClusterSpec struct {
+	compute.ClusterSpec
+	LibraryWithAlias
 }
 
 func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -503,7 +502,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	libList := libsClusterStatus.ToLibraryList()
-	return common.StructToData(libList, clusterSchema, d)
+	return common.StructToData(InstallLibraryWithAlias{
+		ClusterId: libList.ClusterId,
+		LibraryWithAlias: LibraryWithAlias{
+			Libraries: libList.Libraries,
+		},
+	}, clusterSchema, d)
 }
 
 func hasClusterConfigChanged(d *schema.ResourceData) bool {

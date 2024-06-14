@@ -645,7 +645,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 
-	var clusterLibraries ClusterSpec
+	var clusterLibraries LibraryWithAlias
 	common.DataToStructPointer(d, clusterSchema, &clusterLibraries)
 	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(clusterLibraries.Libraries, libsClusterStatus)
 

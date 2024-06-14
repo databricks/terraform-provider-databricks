@@ -12,56 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type GcpServiceAccountKey struct {
-	Email        string `json:"email"`
-	PrivateKeyId string `json:"private_key_id"`
-	PrivateKey   string `json:"private_key" tf:"sensitive"`
-}
-
-var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity",
-	"gcp_service_account_key", "databricks_gcp_service_account"}
-
-func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
-	//ignore changes in private_key
-	return !d.HasChanges("gcp_service_account_key.0.email", "gcp_service_account_key.0.private_key_id")
-}
-
-// it's used by both ResourceMetastoreDataAccess & ResourceStorageCredential
-func adjustDataAccessSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
-	m["aws_iam_role"].AtLeastOneOf = alofCred
-	m["azure_service_principal"].AtLeastOneOf = alofCred
-	m["azure_managed_identity"].AtLeastOneOf = alofCred
-	m["gcp_service_account_key"].AtLeastOneOf = alofCred
-	m["databricks_gcp_service_account"].AtLeastOneOf = alofCred
-
-	// suppress changes for private_key
-	m["gcp_service_account_key"].DiffSuppressFunc = SuppressGcpSAKeyDiff
-
-	common.MustSchemaPath(m, "aws_iam_role", "external_id").Computed = true
-	common.MustSchemaPath(m, "aws_iam_role", "unity_catalog_iam_arn").Computed = true
-	common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
-	common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
-	common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
-
-	m["force_destroy"] = &schema.Schema{
-		Type:     schema.TypeBool,
-		Optional: true,
-	}
-
-	m["force_update"] = &schema.Schema{
-		Type:     schema.TypeBool,
-		Optional: true,
-	}
-
-	m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-		return old == "false" && new == "true"
-	}
-
-	m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
-
-	return m
-}
-
 var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["is_default"] = &schema.Schema{
@@ -70,6 +20,7 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 			// on every apply.
 			Type:     schema.TypeBool,
 			Optional: true,
+			ForceNew: true,
 		}
 
 		return adjustDataAccessSchema(m)
@@ -115,6 +66,11 @@ func ResourceMetastoreDataAccess() common.Resource {
 						},
 					})
 					if err != nil {
+						// Rollback
+						rollback_err := acc.StorageCredentials.DeleteByMetastoreIdAndStorageCredentialName(ctx, metastoreId, dac.CredentialInfo.Name)
+						if rollback_err != nil {
+							return fmt.Errorf("failed to rollback: %v", rollback_err)
+						}
 						return err
 					}
 				}
@@ -130,9 +86,14 @@ func ResourceMetastoreDataAccess() common.Resource {
 						Id:                      metastoreId,
 						StorageRootCredentialId: dac.Id,
 					})
-				}
-				if err != nil {
-					return err
+					if err != nil {
+						// Rollback
+						rollback_err := w.StorageCredentials.DeleteByName(ctx, dac.Name)
+						if rollback_err != nil {
+							return fmt.Errorf("failed to rollback: %v", rollback_err)
+						}
+						return err
+					}
 				}
 				p.Pack(d)
 				return nil
@@ -147,10 +108,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				var storageCredential *catalog.AccountsStorageCredentialInfo
-				storageCredential, err = acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
-					MetastoreId:           metastoreId,
-					StorageCredentialName: dacName,
-				})
+				storageCredential, err = acc.StorageCredentials.GetByMetastoreIdAndStorageCredentialName(ctx, metastoreId, dacName)
 				if err != nil {
 					return err
 				}
@@ -177,24 +135,27 @@ func ResourceMetastoreDataAccess() common.Resource {
 				return common.StructToData(storageCredential, dacSchema, d)
 			})
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var update catalog.UpdateStorageCredential
+			force := d.Get("force_update").(bool)
 			metastoreId, dacName, err := p.Unpack(d)
-			force := d.Get("force_destroy").(bool)
 			if err != nil {
 				return err
 			}
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
-					MetastoreId:           metastoreId,
-					StorageCredentialName: dacName,
-					Force:                 force,
-				})
-			}, func(w *databricks.WorkspaceClient) error {
-				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
-					Name:  dacName,
-					Force: force,
-				})
-			})
+			common.DataToStructPointer(d, storageCredentialSchema, &update)
+			update.Name = dacName
+			update.Force = force
+			if _, ok := d.GetOk("azure_managed_identity"); ok {
+				update.AzureManagedIdentity.CredentialId = ""
+			}
+			return updateStorageCredential(ctx, d, c, metastoreId, dacName, update)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			metastoreId, dacName, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
+			return deleteStorageCredential(ctx, c, metastoreId, dacName, d.Get("force_destroy").(bool))
 		},
 	}
 }

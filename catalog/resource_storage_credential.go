@@ -9,30 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type StorageCredentialInfo struct {
-	Name                        string                                       `json:"name" tf:"force_new"`
-	Owner                       string                                       `json:"owner,omitempty" tf:"computed"`
-	Comment                     string                                       `json:"comment,omitempty"`
-	Aws                         *catalog.AwsIamRoleResponse                  `json:"aws_iam_role,omitempty" tf:"group:access"`
-	Azure                       *catalog.AzureServicePrincipal               `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI                        *catalog.AzureManagedIdentityResponse        `json:"azure_managed_identity,omitempty" tf:"group:access"`
-	GcpSAKey                    *GcpServiceAccountKey                        `json:"gcp_service_account_key,omitempty" tf:"group:access"`
-	DatabricksGcpServiceAccount *catalog.DatabricksGcpServiceAccountResponse `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
-	MetastoreID                 string                                       `json:"metastore_id,omitempty" tf:"computed"`
-	ReadOnly                    bool                                         `json:"read_only,omitempty"`
-	SkipValidation              bool                                         `json:"skip_validation,omitempty"`
-}
-
-func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {
-	//common.DataToStructPointer(d, s, &create) will error out because of DatabricksGcpServiceAccount any
-	tmpSchema := make(map[string]*schema.Schema)
-	for k, v := range originalSchema {
-		tmpSchema[k] = v
-	}
-	delete(tmpSchema, "databricks_gcp_service_account")
-	return tmpSchema
-}
-
 var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["storage_credential_id"] = &schema.Schema{
@@ -162,106 +138,10 @@ func ResourceStorageCredential() common.Resource {
 			if _, ok := d.GetOk("azure_managed_identity"); ok {
 				update.AzureManagedIdentity.CredentialId = ""
 			}
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				if d.HasChange("owner") {
-					_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-						CredentialInfo: &catalog.UpdateStorageCredential{
-							Name:  update.Name,
-							Owner: update.Owner,
-						},
-						MetastoreId:           d.Get("metastore_id").(string),
-						StorageCredentialName: d.Id(),
-					})
-					if err != nil {
-						return err
-					}
-				}
-
-				if !d.HasChangeExcept("owner") {
-					return nil
-				}
-
-				update.Owner = ""
-				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-					CredentialInfo:        &update,
-					MetastoreId:           d.Get("metastore_id").(string),
-					StorageCredentialName: d.Id(),
-				})
-				if err != nil {
-					if d.HasChange("owner") {
-						// Rollback
-						old, new := d.GetChange("owner")
-						_, rollbackErr := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
-							CredentialInfo: &catalog.UpdateStorageCredential{
-								Name:  update.Name,
-								Owner: old.(string),
-							},
-							MetastoreId:           d.Get("metastore_id").(string),
-							StorageCredentialName: d.Id(),
-						})
-						if rollbackErr != nil {
-							return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
-						}
-					}
-					return err
-				}
-				return nil
-			}, func(w *databricks.WorkspaceClient) error {
-				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
-				if err != nil {
-					return err
-				}
-				if d.HasChange("owner") {
-					_, err := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
-						Name:  update.Name,
-						Owner: update.Owner,
-					})
-					if err != nil {
-						return err
-					}
-				}
-
-				if !d.HasChangeExcept("owner") {
-					return nil
-				}
-
-				update.Owner = ""
-				_, err = w.StorageCredentials.Update(ctx, update)
-				if err != nil {
-					if d.HasChange("owner") {
-						// Rollback
-						old, new := d.GetChange("owner")
-						_, rollbackErr := w.StorageCredentials.Update(ctx, catalog.UpdateStorageCredential{
-							Name:  update.Name,
-							Owner: old.(string),
-						})
-						if rollbackErr != nil {
-							return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
-						}
-					}
-					return err
-				}
-				return nil
-			})
+			return updateStorageCredential(ctx, d, c, d.Get("metastore_id").(string), d.Id(), update)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			force := d.Get("force_destroy").(bool)
-			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
-				return acc.StorageCredentials.Delete(ctx, catalog.DeleteAccountStorageCredentialRequest{
-					Force:                 force,
-					StorageCredentialName: d.Id(),
-					MetastoreId:           d.Get("metastore_id").(string),
-				})
-			}, func(w *databricks.WorkspaceClient) error {
-				err := validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
-				if err != nil {
-					return err
-				}
-				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
-					Force: force,
-					Name:  d.Id(),
-				})
-			})
+			return deleteStorageCredential(ctx, c, d.Get("metastore_id").(string), d.Id(), d.Get("force_destroy").(bool))
 		},
 	}
 }

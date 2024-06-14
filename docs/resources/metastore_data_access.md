@@ -5,7 +5,9 @@ subcategory: "Unity Catalog"
 
 -> **Note** This resource could be used with account or workspace-level provider.
 
-Optionally, each [databricks_metastore](metastore.md) can have a default [databricks_storage_credential](storage_credential.md) defined as `databricks_metastore_data_access`. This will be used by Unity Catalog to access data in the root storage location if defined.
+Databricks recommends that you create a separate managed storage location for each catalog in your metastore (and you can do the same for schemas). Instead of creating a `databricks_metastore_data_access`, you should create a [databricks_storage_credential](storage_credential.md) instead.
+
+However, if you opt to create a managed location at the metastore level and use it as the default storage for multiple catalogs and schemas, a default [databricks_storage_credential](storage_credential.md) can be defined as `databricks_metastore_data_access`. This will be used by Unity Catalog to access data in the root storage location if defined. Creating this resource requires account admin & metastore admin privileges.
 
 ## Example Usage
 

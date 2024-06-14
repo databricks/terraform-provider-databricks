@@ -281,9 +281,13 @@ func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 	}
 }
 
+type LibraryWithAlias struct {
+	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+}
+
 type ClusterSpec struct {
 	compute.ClusterSpec
-	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	LibraryWithAlias
 }
 
 func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -493,7 +497,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	libList := libsClusterStatus.ToLibraryList()
-	return common.StructToData(libList, clusterSchema, d)
+	return common.StructToData(LibraryWithAlias{
+		Libraries: libList.Libraries,
+	}, clusterSchema, d)
 }
 
 func hasClusterConfigChanged(d *schema.ResourceData) bool {
@@ -631,7 +637,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 
-	var clusterLibraries ClusterSpec
+	var clusterLibraries LibraryWithAlias
 	common.DataToStructPointer(d, clusterSchema, &clusterLibraries)
 	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(clusterLibraries.Libraries, libsClusterStatus)
 

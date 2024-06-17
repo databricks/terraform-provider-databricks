@@ -35,6 +35,7 @@ func ResourceWorkspaceBinding() common.Resource {
 			m["securable_name"] = &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ExactlyOneOf: []string{"catalog_name", "securable_name"},
 			}
 			m["securable_type"] = &schema.Schema{

@@ -42,7 +42,7 @@ func ResourceWorkspaceBinding() common.Resource {
 				Optional: true,
 				Default:  "catalog",
 			}
-			common.CustomizeSchemaPath(m, "securable_type").SetValidateFunc(validation.StringInSlice([]string{"catalog", "external-locations", "storage-credentials"}, false))
+			common.CustomizeSchemaPath(m, "securable_type").SetValidateFunc(validation.StringInSlice([]string{"catalog", "external-location", "storage-credential"}, false))
 			common.CustomizeSchemaPath(m, "binding_type").SetDefault(catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite).SetValidateFunc(validation.StringInSlice([]string{
 				string(catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite),
 				string(catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly),
@@ -67,14 +67,14 @@ func ResourceWorkspaceBinding() common.Resource {
 			}
 			var update catalog.WorkspaceBinding
 			common.DataToStructPointer(d, workspaceBindingSchema, &update)
-
 			securableName := getSecurableName(d)
+			securableType := d.Get("securable_type").(string)
 			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
 				Add:           []catalog.WorkspaceBinding{update},
 				SecurableName: securableName,
-				SecurableType: d.Get("securable_type").(string),
+				SecurableType: securableType,
 			})
-			d.SetId(fmt.Sprintf("%d|%s|%s", update.WorkspaceId, d.Get("securable_type").(string), securableName))
+			d.SetId(fmt.Sprintf("%d|%s|%s", update.WorkspaceId, securableType, securableName))
 			return err
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -82,29 +82,20 @@ func ResourceWorkspaceBinding() common.Resource {
 			if err != nil {
 				return err
 			}
-			// TODO: fix Read operation by splitting `id` into parts... Test with actual import. Remove not necessary code in exporter?
-			workspaceId := int64(d.Get("workspace_id").(int))
-			securableName := getSecurableName(d)
-			securableType := d.Get("securable_type").(string)
-			if workspaceId == 0 || securableName == "" || securableType == "" {
-				parts := strings.Split(d.Id(), "|")
-				if len(parts) != 3 {
-					return fmt.Errorf("incorrect binding id: %s. Correct format: <workspace_id>|<securable_type>|<securable_name>", d.Id())
-				}
-				securableName = parts[2]
-				securableType = parts[1]
-				workspaceId, err = strconv.ParseInt(parts[0], 10, 0)
-				if err != nil {
-					return fmt.Errorf("can't parse workspace_id: %w", err)
-				}
-				d.Set("securable_name", securableName)
-				d.Set("securable_type", securableType)
-				d.Set("workspace_id", workspaceId)
+			parts := strings.Split(d.Id(), "|")
+			if len(parts) != 3 {
+				return fmt.Errorf("incorrect binding id: %s. Correct format: <workspace_id>|<securable_type>|<securable_name>", d.Id())
 			}
-			bindings, err := w.WorkspaceBindings.GetBindings(ctx, catalog.GetBindingsRequest{
-				SecurableName: securableName,
-				SecurableType: securableType,
-			})
+			securableName := parts[2]
+			securableType := parts[1]
+			workspaceId, err := strconv.ParseInt(parts[0], 10, 0)
+			if err != nil {
+				return fmt.Errorf("can't parse workspace_id: %w", err)
+			}
+			d.Set("securable_name", securableName)
+			d.Set("securable_type", securableType)
+			d.Set("workspace_id", workspaceId)
+			bindings, err := w.WorkspaceBindings.GetBindingsBySecurableTypeAndSecurableName(ctx, securableType, securableName)
 			if err != nil {
 				return err
 			}

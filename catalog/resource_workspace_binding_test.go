@@ -3,8 +3,10 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestWorkspaceBindingsCornerCases(t *testing.T) {
@@ -150,6 +152,44 @@ func TestSecurableWorkspaceBindings_Create(t *testing.T) {
 		securable_type = "catalog"
 		workspace_id   = "1234567890101112"
 		binding_type   = "BINDING_TYPE_READ_ONLY"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestSecurableWorkspaceBindings_CreateExtLocation(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockWorkspaceBindingsAPI().EXPECT()
+			e.UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
+				Add: []catalog.WorkspaceBinding{{
+					BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					WorkspaceId: int64(1234567890101112),
+				},
+				},
+				SecurableName: "external_location",
+				SecurableType: "external-location",
+			}).Return(&catalog.WorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+						WorkspaceId: int64(1234567890101112),
+					},
+				},
+			}, nil)
+			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, "external-location", "external_location").Return(&catalog.WorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(1234567890101112),
+					},
+				},
+			}, nil)
+		},
+		Resource: ResourceWorkspaceBinding(),
+		Create:   true,
+		HCL: `
+		securable_name = "external_location"
+		securable_type = "external-location"
+		workspace_id   = "1234567890101112"
 		`,
 	}.ApplyNoError(t)
 }

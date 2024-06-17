@@ -34,9 +34,9 @@ resource "databricks_catalog_workspace_binding" "sandbox" {
 The following arguments are required:
 
 * `workspace_id` - ID of the workspace. Change forces creation of a new resource.
-* `securable_name` - Name of securable. Change forces creation of a new resource. Can be `catalog`, `external-locations` or `storage-credentials`.
-* `securable_type` - Type of securable. Default to `catalog`. Change forces creation of a new resource.
-* `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. For `catalog`, possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`. For `external-locations` or `storage-credentials`, no binding mode needs to be specified
+* `securable_name` - Name of securable. Change forces creation of a new resource.
+* `securable_type` - Type of securable. Can be `catalog`, `external-locations` or `storage-credentials`. Default to `catalog`. Change forces creation of a new resource.
+* `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. For `catalog`, possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`. For `external-location` or `storage-credential`, no binding mode needs to be specified
 
 ## Import
 

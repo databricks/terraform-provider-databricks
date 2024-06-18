@@ -621,7 +621,7 @@ resource "databricks_permissions" "token_usage" {
 
 ## SQL warehouse usage
 
-[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have three possible permissions: `IS_OWNER`, `CAN_USE` and `CAN_MANAGE`:
+[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have four possible permissions: `IS_OWNER`, `CAN_USE`, `CAN_MONITOR` and `CAN_MANAGE`:
 
 ```hcl
 data "databricks_current_user" "me" {}

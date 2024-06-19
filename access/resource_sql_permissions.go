@@ -263,7 +263,7 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 		return
 	}
 	if v, ok := clusterInfo.SparkConf["spark.databricks.acl.dfAclsEnabled"]; (!ok || v != "true") && clusterInfo.DataSecurityMode != "USER_ISOLATION" && clusterInfo.DataSecurityMode != "LEGACY_TABLE_ACL" {
-		err = fmt.Errorf("cluster_id: not a High-Concurrency cluster: %s (%s)",
+		err = fmt.Errorf("Specified cluster does not support setting Table ACL: %s (%s)",
 			clusterInfo.ClusterName, clusterInfo.ClusterID)
 		return
 	}
@@ -282,11 +282,10 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 			SparkVersion:           sparkVersion,
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
+			DataSecurityMode:       "LEGACY_TABLE_ACL",
 			SparkConf: map[string]string{
-				"spark.databricks.acl.dfAclsEnabled":     "true",
-				"spark.databricks.repl.allowedLanguages": "python,sql",
-				"spark.databricks.cluster.profile":       "singleNode",
-				"spark.master":                           "local[*]",
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
 			},
 			CustomTags: map[string]string{
 				"ResourceClass": "SingleNode",
@@ -305,8 +304,7 @@ func tableAclForUpdate(ctx context.Context, d *schema.ResourceData,
 	return
 }
 
-func tableAclForLoad(ctx context.Context, d *schema.ResourceData,
-	s map[string]*schema.Schema, c *common.DatabricksClient) (ta SqlPermissions, err error) {
+func tableAclForLoad(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (ta SqlPermissions, err error) {
 	ta, err = loadTableACL(d.Id())
 	if err != nil {
 		return
@@ -345,7 +343,7 @@ func ResourceSqlPermissions() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ta, err := tableAclForLoad(ctx, d, s, c)
+			ta, err := tableAclForLoad(ctx, d, c)
 			if err != nil {
 				return err
 			}
@@ -370,7 +368,7 @@ func ResourceSqlPermissions() common.Resource {
 			return ta.enforce()
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ta, err := tableAclForLoad(ctx, d, s, c)
+			ta, err := tableAclForLoad(ctx, d, c)
 			if err != nil {
 				return err
 			}

@@ -227,11 +227,10 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 				"ResourceClass": "SingleNode",
 			},
 			SparkConf: map[string]string{
-				"spark.databricks.acl.dfAclsEnabled":     "true",
-				"spark.databricks.repl.allowedLanguages": "python,sql",
-				"spark.databricks.cluster.profile":       "singleNode",
-				"spark.master":                           "local[*]",
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
 			},
+			DataSecurityMode: "LEGACY_TABLE_ACL",
 		},
 		Response: clusters.ClusterID{
 			ClusterID: "bcd",
@@ -242,11 +241,11 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/get?cluster_id=bcd",
 		Response: clusters.ClusterInfo{
-			ClusterID: "bcd",
-			State:     "RUNNING",
+			ClusterID:        "bcd",
+			State:            "RUNNING",
+			DataSecurityMode: "LEGACY_TABLE_ACL",
 			SparkConf: map[string]string{
-				"spark.databricks.acl.dfAclsEnabled": "true",
-				"spark.databricks.cluster.profile":   "singleNode",
+				"spark.databricks.cluster.profile": "singleNode",
 			},
 		},
 	},
@@ -304,11 +303,10 @@ var createSharedCluster = []qa.HTTPFixture{
 			CustomTags: map[string]string{
 				"ResourceClass": "SingleNode",
 			},
+			DataSecurityMode: "LEGACY_TABLE_ACL",
 			SparkConf: map[string]string{
-				"spark.databricks.acl.dfAclsEnabled":     "true",
-				"spark.databricks.repl.allowedLanguages": "python,sql",
-				"spark.databricks.cluster.profile":       "singleNode",
-				"spark.master":                           "local[*]",
+				"spark.databricks.cluster.profile": "singleNode",
+				"spark.master":                     "local[*]",
 			},
 		},
 		Response: clusters.ClusterID{

@@ -881,7 +881,6 @@ var getOrCreateClusterMutex sync.Mutex
 
 // GetOrCreateRunningCluster creates an autoterminating cluster if it doesn't exist
 func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (c ClusterInfo, err error) {
-	w, err := a.client.WorkspaceClient()
 	getOrCreateClusterMutex.Lock()
 	defer getOrCreateClusterMutex.Unlock()
 
@@ -915,14 +914,13 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 		LocalDisk: true,
 	})
 	log.Printf("[INFO] Creating an autoterminating cluster with node type %s", smallestNodeType)
-	latestVersion, _ := w.Clusters.SelectSparkVersion(a.context, compute.SparkVersionRequest{
-		Latest:          true,
-		LongTermSupport: true,
-	})
 	r := Cluster{
-		NumWorkers:             1,
-		ClusterName:            name,
-		SparkVersion:           latestVersion,
+		NumWorkers:  1,
+		ClusterName: name,
+		SparkVersion: LatestSparkVersionOrDefault(a.Context(), a.WorkspaceClient(), compute.SparkVersionRequest{
+			Latest:          true,
+			LongTermSupport: true,
+		}),
 		NodeTypeID:             smallestNodeType,
 		AutoterminationMinutes: 10,
 	}

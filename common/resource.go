@@ -250,20 +250,20 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
 	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
 		return read(ctx, t, wc)
-	}, false)
+	}, false, NoCustomize)
 }
 
 // WorkspaceDataWithParams defines a data source that can be used to read data from the workspace API.
 // It differs from WorkspaceData in that it separates the definition of the computed fields (the resource type)
 // from the definition of the user-supplied parameters.
 //
-// The first type parameter is the type of the resource. This can be a type directly from the SDK, or a custom
-// type defined in the provider that embeds the SDK type.
-//
-// The second type parameter is the type representing parameters that a user may provide to the data source. These
+// The first type parameter is the type representing parameters that a user may provide to the data source. These
 // are the attributes that the user can specify in the data source configuration, but are not part of the resource
 // type. If there are no extra attributes, this should be `struct{}`. If there are any fields with the same JSON
 // name as fields in the resource type, these fields will override the values from the resource type.
+//
+// The second type parameter is the type of the resource. This can be a type directly from the SDK, or a custom
+// type defined in the provider that embeds the SDK type.
 //
 // The single argument is a function that will be called to read the data from the workspace API, returning the
 // value of the resource type. The function should return an error if the data cannot be read or the resource cannot
@@ -292,7 +292,21 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 		}
 		*s = *res
 		return nil
-	}, true)
+	}, true, NoCustomize)
+}
+
+// WorkspaceDataWithCustomizeFunc defines a data source that can be used to read data from the workspace API.
+// It differs from WorkspaceData in that it allows the schema to be customized further using a
+// customizeSchemaFunc function.
+//
+// The additional argument is a function that will be called to customize the schema of the data source.
+
+func WorkspaceDataWithCustomizeFunc[T any](
+	read func(context.Context, *T, *databricks.WorkspaceClient) error,
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
+	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
+		return read(ctx, t, wc)
+	}, false, customizeSchemaFunc)
 }
 
 // AccountData is a generic way to define account data resources in Terraform provider.
@@ -309,7 +323,7 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) Resource {
 	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, s struct{}, t *T, ac *databricks.AccountClient) error {
 		return read(ctx, t, ac)
-	}, false)
+	}, false, NoCustomize)
 }
 
 // AccountDataWithParams defines a data source that can be used to read data from the account API.
@@ -351,7 +365,7 @@ func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.A
 		}
 		*s = *res
 		return nil
-	}, true)
+	}, true, NoCustomize)
 }
 
 // genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients.
@@ -362,7 +376,8 @@ func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.A
 func genericDatabricksData[T, P, C any](
 	getClient func(*DatabricksClient) (C, error),
 	read func(context.Context, P, *T, C) error,
-	hasOther bool) Resource {
+	hasOther bool,
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
 	var dummy T
 	var other P
 	otherFields := StructToSchema(other, NoCustomize)
@@ -387,7 +402,8 @@ func genericDatabricksData[T, P, C any](
 			v.Computed = true
 			v.Required = false
 		}
-		return m
+		// allow c
+		return customizeSchemaFunc(m)
 	})
 	return Resource{
 		Schema: s,
@@ -455,5 +471,5 @@ func NoClientData[T any](read func(context.Context, *T) error) Resource {
 	return genericDatabricksData(func(*DatabricksClient) (any, error) { return nil, nil },
 		func(ctx context.Context, s struct{}, t *T, ac any) error {
 			return read(ctx, t)
-		}, false)
+		}, false, NoCustomize)
 }

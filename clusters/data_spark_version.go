@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"golang.org/x/mod/semver"
@@ -125,25 +127,21 @@ func (a ClustersAPI) LatestSparkVersionOrDefault(svr SparkVersionRequest) string
 
 // DataSourceSparkVersion returns DBR version matching to the specification
 func DataSourceSparkVersion() common.Resource {
-	s := common.StructToSchema(SparkVersionRequest{}, func(
-		s map[string]*schema.Schema) map[string]*schema.Schema {
-
-		s["photon"].Deprecated = "Specify runtime_engine=\"PHOTON\" in the cluster configuration"
-		s["graviton"].Deprecated = "Not required anymore - it's automatically enabled on the Graviton-based node types"
+	return common.WorkspaceDataWithCustomizeFunc(func(ctx context.Context, data *compute.SparkVersionRequest, w *databricks.WorkspaceClient) error {
+		data.Id = ""
+		version, err := w.Clusters.SelectSparkVersion(ctx, *data)
+		if err != nil {
+			return err
+		}
+		data.Id = version
+		return nil
+	}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		common.CustomizeSchemaPath(s, "photon").SetDeprecated("Specify runtime_engine=\"PHOTON\" in the cluster configuration")
+		common.CustomizeSchemaPath(s).AddNewField("graviton", &schema.Schema{
+			Type:       schema.TypeBool,
+			Optional:   true,
+			Deprecated: "Not required anymore - it's automatically enabled on the Graviton-based node types",
+		})
 		return s
 	})
-
-	return common.Resource{
-		Schema: s,
-		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			var this SparkVersionRequest
-			common.DataToStructPointer(d, s, &this)
-			version, err := NewClustersAPI(ctx, m).LatestSparkVersion(this)
-			if err != nil {
-				return err
-			}
-			d.SetId(version)
-			return nil
-		},
-	}
 }

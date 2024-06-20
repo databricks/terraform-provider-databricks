@@ -2,7 +2,7 @@
 subcategory: "Settings"
 ---
 
-# databricks_namespace_setting Resource
+# databricks_default_namespace_setting Resource
 
 -> **Note** This resource could be only used with workspace-level provider!
 

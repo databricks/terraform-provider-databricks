@@ -22,6 +22,7 @@ func ResourceModelServing() common.Resource {
 			common.MustSchemaPath(m, "config", "served_models").ConflictsWith = []string{"config.served_entities"}
 			common.MustSchemaPath(m, "config", "served_entities").ConflictsWith = []string{"config.served_models"}
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
+			common.MustSchemaPath(m, "config", "auto_capture_config", "table_name_prefix").Computed = true
 
 			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
 			common.MustSchemaPath(m, "config", "served_models", "workload_type").Computed = true

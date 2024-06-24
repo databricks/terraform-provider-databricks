@@ -219,7 +219,7 @@ type JobTaskSettings struct {
 	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	Libraries         []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries         []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -294,7 +294,7 @@ type JobSettings struct {
 	PythonWheelTask        *PythonWheelTask  `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask          `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask             *RunJobTask       `json:"run_job_task,omitempty" tf:"group:task_type"`
-	Libraries              []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries              []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 	TimeoutSeconds         int32             `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32             `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32             `json:"min_retry_interval_millis,omitempty"`
@@ -630,9 +630,6 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 
 	s.SchemaPath("job_cluster", "new_cluster", "cluster_id").SetOptional()
 	s.SchemaPath("new_cluster", "cluster_id").SetOptional()
-
-	s.SchemaPath("library").Schema.Type = schema.TypeSet
-	s.SchemaPath("task", "library").Schema.Type = schema.TypeSet
 
 	// Technically this is required by the API, but marking it optional since we can infer it from the hostname.
 	s.SchemaPath("git_source", "provider").SetOptional()

@@ -87,16 +87,10 @@ func ResourceCatalog() common.Resource {
 			d.SetId(ci.Name)
 
 			// Update owner, isolation mode or predictive optimization if it is provided
-			updateRequired := false
-			for _, key := range []string{"owner", "isolation_mode", "enable_predictive_optimization"} {
-				if d.Get(key) != "" {
-					updateRequired = true
-					break
-				}
-			}
-			if !updateRequired {
+			if !updateRequired(d, []string{"owner", "isolation_mode", "enable_predictive_optimization"}) {
 				return nil
 			}
+
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()

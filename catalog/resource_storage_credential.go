@@ -73,10 +73,11 @@ func ResourceStorageCredential() common.Resource {
 				}
 				d.SetId(storageCredential.CredentialInfo.Name)
 
-				// Don't update owner if it is not provided
-				if d.Get("owner") == "" {
+				// Update owner or isolation mode if it is provided
+				if !updateRequired(d, []string{"owner", "isolation_mode"}) {
 					return nil
 				}
+
 				update.Name = d.Id()
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
@@ -98,8 +99,8 @@ func ResourceStorageCredential() common.Resource {
 				}
 				d.SetId(storageCredential.Name)
 
-				// Don't update owner if it is not provided
-				if d.Get("owner") == "" {
+				// Update owner or isolation mode if it is provided
+				if !updateRequired(d, []string{"owner", "isolation_mode"}) {
 					return nil
 				}
 

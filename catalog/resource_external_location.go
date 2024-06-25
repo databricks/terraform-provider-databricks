@@ -61,8 +61,8 @@ func ResourceExternalLocation() common.Resource {
 			}
 			d.SetId(el.Name)
 
-			// Don't update owner if it is not provided
-			if d.Get("owner") == "" {
+			// Update owner or isolation mode if it is provided
+			if !updateRequired(d, []string{"owner", "isolation_mode"}) {
 				return nil
 			}
 

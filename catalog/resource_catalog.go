@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -86,16 +87,10 @@ func ResourceCatalog() common.Resource {
 			d.SetId(ci.Name)
 
 			// Update owner, isolation mode or predictive optimization if it is provided
-			updateRequired := false
-			for _, key := range []string{"owner", "isolation_mode", "enable_predictive_optimization"} {
-				if d.Get(key) != "" {
-					updateRequired = true
-					break
-				}
-			}
-			if !updateRequired {
+			if !updateRequired(d, []string{"owner", "isolation_mode", "enable_predictive_optimization"}) {
 				return nil
 			}
+
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
@@ -104,25 +99,8 @@ func ResourceCatalog() common.Resource {
 				return err
 			}
 
-			if d.Get("isolation_mode") != "ISOLATED" {
-				return nil
-			}
 			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
-			currentMetastoreAssignment, err := w.Metastores.Current(ctx)
-			if err != nil {
-				return err
-			}
-			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
-				SecurableName: ci.Name,
-				SecurableType: "catalog",
-				Add: []catalog.WorkspaceBinding{
-					{
-						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
-						WorkspaceId: currentMetastoreAssignment.WorkspaceId,
-					},
-				},
-			})
-			return err
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, "catalog")
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -187,25 +165,8 @@ func ResourceCatalog() common.Resource {
 			// So if we don't update the field then the requests would be made to old Name which doesn't exists.
 			d.SetId(ci.Name)
 
-			if d.Get("isolation_mode") != "ISOLATED" {
-				return nil
-			}
 			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
-			currentMetastoreAssignment, err := w.Metastores.Current(ctx)
-			if err != nil {
-				return err
-			}
-			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
-				SecurableName: ci.Name,
-				SecurableType: "catalog",
-				Add: []catalog.WorkspaceBinding{
-					{
-						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
-						WorkspaceId: currentMetastoreAssignment.WorkspaceId,
-					},
-				},
-			})
-			return err
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, "catalog")
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

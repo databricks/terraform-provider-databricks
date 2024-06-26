@@ -31,12 +31,12 @@ func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsLis
 	// diffs change sets
 	configured := map[string]*schema.Set{}
 	for _, v := range pl.PrivilegeAssignments {
-		configured[strings.ToLower(v.Principal)] = permissions.SliceToSet(v.Privileges)
+		configured[v.Principal] = permissions.SliceToSet(v.Privileges)
 	}
 	// existing permissions that needs removal
 	remote := map[string]*schema.Set{}
 	for _, v := range existing.PrivilegeAssignments {
-		remote[strings.ToLower(v.Principal)] = permissions.SliceToSet(v.Privileges)
+		remote[v.Principal] = permissions.SliceToSet(v.Privileges)
 	}
 	// STEP 1: detect overlaps
 	for principal, confPrivs := range configured {

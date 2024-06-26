@@ -184,7 +184,6 @@ func TestWorkspaceConfDelete(t *testing.T) {
 					"enableFancyThing":     "false",
 					"enableSomething":      "false",
 					"enforceSomethingElse": "false",
-					"someProperty":         "",
 				},
 			},
 		},
@@ -192,7 +191,7 @@ func TestWorkspaceConfDelete(t *testing.T) {
 			enableSomething = true
 			enforceSomethingElse = "true"
 			enableFancyThing = "false"
-			someProperty = "thing"
+			someProperty = "does-not-start-with-enable-or-enforce"
 		}`,
 		Resource: ResourceWorkspaceConf(),
 		Delete:   true,

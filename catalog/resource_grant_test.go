@@ -538,7 +538,7 @@ func TestResourceGrantPermissionsList_Diff_CaseSensitive(t *testing.T) {
 		catalog.PermissionsList{ // config
 			PrivilegeAssignments: []catalog.PrivilegeAssignment{
 				{
-					Principal:  "a",
+					Principal:  "A",
 					Privileges: []catalog.Privilege{"a"},
 				},
 				{
@@ -550,7 +550,7 @@ func TestResourceGrantPermissionsList_Diff_CaseSensitive(t *testing.T) {
 		catalog.PermissionsList{
 			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
 				{
-					Principal:  "A",
+					Principal:  "a",
 					Privileges: []catalog.Privilege{"a"},
 				},
 				{
@@ -560,7 +560,7 @@ func TestResourceGrantPermissionsList_Diff_CaseSensitive(t *testing.T) {
 			},
 		},
 	)
-	assert.Len(t, diff, 0)
+	assert.Len(t, diff, 1)
 }
 
 func TestResourceGrantPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {

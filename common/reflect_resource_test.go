@@ -949,6 +949,8 @@ func TestStructToData_go_sdk_field(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc123", d.Get("warehouse.0.cluster_size"))
 	assert.Equal(t, "extra", d.Get("extra"))
+	assert.Equal(t, "extra", d.Get("extra"))
+
 }
 
 func TestStructToSchema_recursive(t *testing.T) {

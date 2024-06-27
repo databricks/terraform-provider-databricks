@@ -1,5 +1,19 @@
 # Version changelog
 
+## 1.48.1
+
+### New Features and Improvements
+* Fixed case sensitivity for principals in `databricks_grants` and `databricks_grant` ([#3708](https://github.com/databricks/terraform-provider-databricks/pull/3708)).
+
+
+### Documentation Changes
+* Update cluster policy doc ([#3707](https://github.com/databricks/terraform-provider-databricks/pull/3707)).
+
+
+### Internal Changes
+* Refactor some common functions for workspace bindings ([#3702](https://github.com/databricks/terraform-provider-databricks/pull/3702)).
+
+
 ## 1.48.0
 
 ### New Features and Improvements

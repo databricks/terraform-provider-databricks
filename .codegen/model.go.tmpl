@@ -1,0 +1,75 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
+
+package {{.Name}}
+
+import (
+	{{range .ImportedPackages}}
+	"github.com/databricks/databricks-sdk-go/service/{{.}}"{{end}}
+	"io"
+	"github.com/databricks/databricks-sdk-go/marshal"
+    "github.com/hashicorp/terraform-plugin-framework/types"
+)
+{{range .Types}}
+{{- if or .Fields .IsEmpty}}
+{{.Comment "// " 80}}
+type {{.PascalName}} struct {
+    {{- range .Fields}}
+    {{.Comment "    // " 80}}
+    {{.PascalName}} {{if .IsOptionalObject}}*{{end}}{{template "type" .Entity}} `{{template "field-tag" . }}`{{end}}
+}
+{{else if .MapValue}}{{.Comment "// " 80}}
+type {{.PascalName}} {{template "type" .}}
+{{else if .Enum}}{{.Comment "// " 80}}
+type {{.PascalName}} string
+{{range .Enum }}
+{{.Comment "// " 80}}
+const {{.Entity.PascalName}}{{.PascalName}} {{.Entity.PascalName}} = `{{.Content}}`{{end}}
+
+// String representation for [fmt.Print]
+func (f *{{.PascalName}}) String() string {
+    return string(*f)
+}
+
+// Set raw string value and validate it against allowed values
+func (f *{{.PascalName}}) Set(v string) error {
+    switch v {
+    case {{range $i, $e := .Enum }}{{if $i}}, {{end}}`{{.Content}}`{{end}}:
+        *f = {{.PascalName}}(v)
+        return nil
+    default:
+        return fmt.Errorf(`value "%s" is not one of {{range $i, $e := .Enum }}{{if $i}}, {{end}}"{{.Content}}"{{end}}`, v)
+    }
+}
+
+// Type always returns {{.PascalName}} to satisfy [pflag.Value] interface
+func (f *{{.PascalName}}) Type() string {
+    return "{{.PascalName}}"
+}
+{{end}}
+{{end}}
+
+{{- define "field-tag" -}}
+	{{if .IsJson}}tfsdk:"{{.Name}}"{{else}}tfsdk:"-"{{end -}}
+	{{if .IsPath}} url:"-"{{end -}}
+	{{if .IsHeader}} url:"-" header:"{{.Name}}{{if not .Required}},omitempty{{end}}"{{end -}}
+	{{if .IsQuery}} url:"{{.Name}}{{if not .Required}},omitempty{{end}}"{{end -}}
+{{- end -}}
+
+{{- define "type" -}}
+	{{- if not . }}any /* ERROR */
+	{{- else if .IsExternal }}{{.Package.Name}}.{{.PascalName}}
+	{{- else if .IsAny}}any
+	{{- else if .IsEmpty}}{{.PascalName}}
+	{{- else if .IsString}}types.String
+	{{- else if .IsBool}}types.Bool
+	{{- else if .IsInt64}}types.Int64
+	{{- else if .IsFloat64}}types.Float64
+	{{- else if .IsInt}}types.Int64
+	{{- else if .IsByteStream}}io.ReadCloser
+	{{- else if .ArrayValue }}[]{{template "type" .ArrayValue}}
+	{{- else if .MapValue }}map[types.String] {{template "type" .MapValue}}
+	{{- else if .IsObject }}{{.PascalName}}
+	{{- else if .Enum }}{{.PascalName}}
+	{{- else}}any /* MISSING TYPE */
+	{{- end -}}
+{{- end -}}

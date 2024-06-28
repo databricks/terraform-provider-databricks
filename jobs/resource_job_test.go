@@ -1415,7 +1415,7 @@ func TestResourceJobCreate_Trigger_PeriodicCreate(t *testing.T) {
 						Trigger: &Trigger{
 							PauseStatus: "UNPAUSED",
 							Periodic: &Periodic{
-								Interval: 42,
+								Interval: 4,
 								Unit:     "HOURS",
 							},
 						},

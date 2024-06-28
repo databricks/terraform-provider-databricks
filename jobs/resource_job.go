@@ -219,7 +219,7 @@ type JobTaskSettings struct {
 	ExistingClusterID string            `json:"existing_cluster_id,omitempty" tf:"group:cluster_type"`
 	NewCluster        *clusters.Cluster `json:"new_cluster,omitempty" tf:"group:cluster_type"`
 	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
-	Libraries         []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries         []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
@@ -272,9 +272,15 @@ type TableUpdate struct {
 	WaitAfterLastChangeSeconds    int32    `json:"wait_after_last_change_seconds,omitempty"`
 }
 
+type Periodic struct {
+	Interval int32  `json:"interval"`
+	Unit     string `json:"unit"`
+}
+
 type Trigger struct {
 	FileArrival *FileArrival `json:"file_arrival,omitempty"`
 	TableUpdate *TableUpdate `json:"table_update,omitempty"`
+	Periodic    *Periodic    `json:"periodic,omitempty"`
 	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
@@ -294,7 +300,7 @@ type JobSettings struct {
 	PythonWheelTask        *PythonWheelTask  `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	DbtTask                *DbtTask          `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask             *RunJobTask       `json:"run_job_task,omitempty" tf:"group:task_type"`
-	Libraries              []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	Libraries              []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 	TimeoutSeconds         int32             `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32             `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32             `json:"min_retry_interval_millis,omitempty"`
@@ -566,9 +572,10 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("continuous").SetConflictsWith([]string{"schedule", "trigger"})
 	s.SchemaPath("trigger").SetConflictsWith([]string{"continuous", "schedule"})
 
-	trigger_eoo := []string{"trigger.0.file_arrival", "trigger.0.table_update"}
+	trigger_eoo := []string{"trigger.0.file_arrival", "trigger.0.table_update", "trigger.0.periodic"}
 	s.SchemaPath("trigger", "file_arrival").SetExactlyOneOf(trigger_eoo)
 	s.SchemaPath("trigger", "table_update").SetExactlyOneOf(trigger_eoo)
+	s.SchemaPath("trigger", "periodic").SetExactlyOneOf(trigger_eoo)
 
 	// Deprecated Job API 2.0 attributes
 	var topLevelDeprecatedAttr = []string{
@@ -630,9 +637,6 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 
 	s.SchemaPath("job_cluster", "new_cluster", "cluster_id").SetOptional()
 	s.SchemaPath("new_cluster", "cluster_id").SetOptional()
-
-	s.SchemaPath("library").Schema.Type = schema.TypeSet
-	s.SchemaPath("task", "library").Schema.Type = schema.TypeSet
 
 	// Technically this is required by the API, but marking it optional since we can infer it from the hostname.
 	s.SchemaPath("git_source", "provider").SetOptional()

@@ -13,7 +13,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,10 +31,10 @@ func TestResourceJobCreate(t *testing.T) {
 					},
 					Libraries: []compute.Library{
 						{
-							Jar: "dbfs://ff/gg/hh.jar",
+							Jar: "dbfs://aa/bb/cc.jar",
 						},
 						{
-							Jar: "dbfs://aa/bb/cc.jar",
+							Jar: "dbfs://ff/gg/hh.jar",
 						},
 					},
 					Schedule: &CronSchedule{
@@ -77,10 +76,10 @@ func TestResourceJobCreate(t *testing.T) {
 						},
 						Libraries: []compute.Library{
 							{
-								Jar: "dbfs://ff/gg/hh.jar",
+								Jar: "dbfs://aa/bb/cc.jar",
 							},
 							{
-								Jar: "dbfs://aa/bb/cc.jar",
+								Jar: "dbfs://ff/gg/hh.jar",
 							},
 						},
 						Name:                   "Featurizer",
@@ -1382,6 +1381,62 @@ func TestResourceJobCreate_Trigger_TableUpdateCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceJobCreate_Trigger_PeriodicCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					MaxConcurrentRuns: 1,
+					Name:              "Test",
+					Trigger: &Trigger{
+						PauseStatus: "UNPAUSED",
+						Periodic: &Periodic{
+							Interval: 4,
+							Unit:     "HOURS",
+						},
+					},
+				},
+				Response: Job{
+					JobID: 1042,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=1042",
+				Response: Job{
+					JobID: 1042,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Trigger: &Trigger{
+							PauseStatus: "UNPAUSED",
+							Periodic: &Periodic{
+								Interval: 4,
+								Unit:     "HOURS",
+							},
+						},
+					},
+				},
+			},
+		},
+		HCL: `
+		trigger {
+			pause_status = "UNPAUSED"
+			periodic {
+				interval = 4
+				unit = "HOURS"
+			}
+		}
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
 	qa.ResourceFixture{
 		Update:   true,
@@ -2021,10 +2076,10 @@ func TestResourceJobRead(t *testing.T) {
 						},
 						Libraries: []compute.Library{
 							{
-								Jar: "dbfs://ff/gg/hh.jar",
+								Jar: "dbfs://aa/bb/cc.jar",
 							},
 							{
-								Jar: "dbfs://aa/bb/cc.jar",
+								Jar: "dbfs://ff/gg/hh.jar",
 							},
 						},
 						Name:                   "Featurizer",
@@ -2044,7 +2099,7 @@ func TestResourceJobRead(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Featurizer", d.Get("name"))
-	libraries := d.Get("library").(*schema.Set).List()
+	libraries := d.Get("library").([]interface{})
 	assert.Len(t, libraries, 2)
 	allDbfsLibs := []string{}
 	for _, lib := range libraries {
@@ -2125,10 +2180,10 @@ func TestResourceJobUpdate(t *testing.T) {
 						},
 						Libraries: []compute.Library{
 							{
-								Jar: "dbfs://ff/gg/hh.jar",
+								Jar: "dbfs://aa/bb/cc.jar",
 							},
 							{
-								Jar: "dbfs://aa/bb/cc.jar",
+								Jar: "dbfs://ff/gg/hh.jar",
 							},
 						},
 						Name:                   "Featurizer New",
@@ -2152,10 +2207,10 @@ func TestResourceJobUpdate(t *testing.T) {
 						},
 						Libraries: []compute.Library{
 							{
-								Jar: "dbfs://ff/gg/hh.jar",
+								Jar: "dbfs://aa/bb/cc.jar",
 							},
 							{
-								Jar: "dbfs://aa/bb/cc.jar",
+								Jar: "dbfs://ff/gg/hh.jar",
 							},
 						},
 						Name:                   "Featurizer New",

@@ -104,7 +104,7 @@ func TestUcAccGrant(t *testing.T) {
 	}, step{
 		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
 	}, step{
-		Template: strings.ReplaceAll(strings.ReplaceAll(grantTemplate, "ALL_PRIVILEGES", "ALL PRIVILEGES"), `"%s"`, `upper("{env.TEST_DATA_SCI_GROUP}")`),
+		Template: strings.ReplaceAll(strings.ReplaceAll(grantTemplate, "ALL_PRIVILEGES", "ALL PRIVILEGES"), "%s", "{env.TEST_DATA_ENG_GROUP}"),
 	})
 }
 

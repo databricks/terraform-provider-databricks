@@ -31,7 +31,7 @@ To get started with Unity Catalog, this guide takes you through the following hi
 
 ## Provider initialization
 
-Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authenticating-with-hostname,-username,-and-password), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
+Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authenticating-with-databricks-managed-service-principal), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
 
 Define the required variables, and calculate the local values
 

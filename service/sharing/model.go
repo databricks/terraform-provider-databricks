@@ -5,7 +5,6 @@ package sharing
 import (
 	"fmt"
 
-	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -40,9 +39,9 @@ func (f *AuthenticationType) Type() string {
 type CentralCleanRoomInfo struct {
 	// All assets from all collaborators that are available in the clean room.
 	// Only one of table_info or notebook_info will be filled in.
-	CleanRoomAssets []CleanRoomAssetInfo `tfsdk:"clean_room_assets"`
+	CleanRoomAssets types.List `tfsdk:"clean_room_assets"`
 	// All collaborators who are in the clean room.
-	Collaborators []CleanRoomCollaboratorInfo `tfsdk:"collaborators"`
+	Collaborators types.List `tfsdk:"collaborators"`
 	// The collaborator who created the clean room.
 	Creator *CleanRoomCollaboratorInfo `tfsdk:"creator"`
 	// The cloud where clean room tasks will be run.
@@ -68,9 +67,9 @@ type CleanRoomCatalog struct {
 	// Name of the catalog in the clean room station. Empty for notebooks.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The details of the shared notebook files.
-	NotebookFiles []SharedDataObject `tfsdk:"notebook_files"`
+	NotebookFiles types.List `tfsdk:"notebook_files"`
 	// The details of the shared tables.
-	Tables []SharedDataObject `tfsdk:"tables"`
+	Tables types.List `tfsdk:"tables"`
 }
 
 type CleanRoomCatalogUpdate struct {
@@ -99,7 +98,7 @@ type CleanRoomInfo struct {
 	// Username of clean room creator.
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Catalog aliases shared by the current collaborator with asset details.
-	LocalCatalogs []CleanRoomCatalog `tfsdk:"local_catalogs"`
+	LocalCatalogs types.List `tfsdk:"local_catalogs"`
 	// Name of the clean room.
 	Name types.String `tfsdk:"name"`
 	// Username of current owner of clean room.
@@ -123,7 +122,7 @@ type CleanRoomTableInfo struct {
 	// Name of parent catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The array of __ColumnInfo__ definitions of the table's columns.
-	Columns []ColumnInfo `tfsdk:"columns"`
+	Columns types.List `tfsdk:"columns"`
 	// Full name of table, in form of
 	// __catalog_name__.__schema_name__.__table_name__
 	FullName types.String `tfsdk:"full_name"`
@@ -167,7 +166,7 @@ type ColumnMask struct {
 	// mask function. The first arg of the mask function should be of the type
 	// of the column being masked and the types of the rest of the args should
 	// match the types of columns in 'using_column_names'.
-	UsingColumnNames []types.String `tfsdk:"using_column_names"`
+	UsingColumnNames types.List `tfsdk:"using_column_names"`
 }
 
 // Name of type (INT, STRUCT, MAP, etc.).
@@ -347,7 +346,7 @@ type GetRecipientRequest struct {
 
 type GetRecipientSharePermissionsResponse struct {
 	// An array of data share permissions for a recipient.
-	PermissionsOut []ShareToPrivilegeAssignment `tfsdk:"permissions_out"`
+	PermissionsOut types.List `tfsdk:"permissions_out"`
 }
 
 // Get a share
@@ -360,7 +359,7 @@ type GetShareRequest struct {
 
 type IpAccessList struct {
 	// Allowed IP Addresses in CIDR notation. Limit of 100.
-	AllowedIpAddresses []types.String `tfsdk:"allowed_ip_addresses"`
+	AllowedIpAddresses types.List `tfsdk:"allowed_ip_addresses"`
 }
 
 // List clean rooms
@@ -378,7 +377,7 @@ type ListCleanRoomsRequest struct {
 
 type ListCleanRoomsResponse struct {
 	// An array of clean rooms. Remote details (central) are not included.
-	CleanRooms []CleanRoomInfo `tfsdk:"clean_rooms"`
+	CleanRooms types.List `tfsdk:"clean_rooms"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -387,7 +386,7 @@ type ListCleanRoomsResponse struct {
 
 type ListProviderSharesResponse struct {
 	// An array of provider shares.
-	Shares []ProviderShare `tfsdk:"shares"`
+	Shares types.List `tfsdk:"shares"`
 }
 
 // List providers
@@ -399,7 +398,7 @@ type ListProvidersRequest struct {
 
 type ListProvidersResponse struct {
 	// An array of provider information objects.
-	Providers []ProviderInfo `tfsdk:"providers"`
+	Providers types.List `tfsdk:"providers"`
 }
 
 // List share recipients
@@ -411,7 +410,7 @@ type ListRecipientsRequest struct {
 
 type ListRecipientsResponse struct {
 	// An array of recipient information objects.
-	Recipients []RecipientInfo `tfsdk:"recipients"`
+	Recipients types.List `tfsdk:"recipients"`
 }
 
 // List shares by Provider
@@ -422,12 +421,12 @@ type ListSharesRequest struct {
 
 type ListSharesResponse struct {
 	// An array of data share information objects.
-	Shares []ShareInfo `tfsdk:"shares"`
+	Shares types.List `tfsdk:"shares"`
 }
 
 type Partition struct {
 	// An array of partition values.
-	Values []PartitionValue `tfsdk:"values"`
+	Values types.List `tfsdk:"values"`
 }
 
 type PartitionValue struct {
@@ -586,7 +585,7 @@ type PrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal"`
 	// The privileges assigned to the principal.
-	Privileges []Privilege `tfsdk:"privileges"`
+	Privileges types.List `tfsdk:"privileges"`
 }
 
 type ProviderInfo struct {
@@ -673,7 +672,7 @@ type RecipientInfo struct {
 	// only present when the __authentication_type__ is **DATABRICKS**.
 	SharingCode types.String `tfsdk:"sharing_code"`
 	// This field is only present when the __authentication_type__ is **TOKEN**.
-	Tokens []RecipientTokenInfo `tfsdk:"tokens"`
+	Tokens types.List `tfsdk:"tokens"`
 	// Time at which the recipient was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of recipient updater.
@@ -738,11 +737,11 @@ type RotateRecipientToken struct {
 // to the securable.
 type SecurablePropertiesKvPairs struct {
 	// A map of key-value properties attached to the securable.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 }
 
 // A map of key-value properties attached to the securable.
-type SecurablePropertiesMap map[types.String]types.String
+type SecurablePropertiesMap types.Map
 
 type ShareInfo struct {
 	// User-provided free-form text description.
@@ -754,7 +753,7 @@ type ShareInfo struct {
 	// Name of the share.
 	Name types.String `tfsdk:"name"`
 	// A list of shared data objects within the share.
-	Objects []SharedDataObject `tfsdk:"objects"`
+	Objects types.List `tfsdk:"objects"`
 	// Username of current owner of share.
 	Owner types.String `tfsdk:"owner"`
 	// Storage Location URL (full path) for the share.
@@ -775,7 +774,7 @@ type SharePermissionsRequest struct {
 
 type ShareToPrivilegeAssignment struct {
 	// The privileges assigned to the principal.
-	PrivilegeAssignments []PrivilegeAssignment `tfsdk:"privilege_assignments"`
+	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
 	// The share name.
 	ShareName types.String `tfsdk:"share_name"`
 }
@@ -806,7 +805,7 @@ type SharedDataObject struct {
 	// `<catalog>.<schema>.<table>`.
 	Name types.String `tfsdk:"name"`
 	// Array of partitions for the shared data.
-	Partitions []Partition `tfsdk:"partitions"`
+	Partitions types.List `tfsdk:"partitions"`
 	// A user-provided new name for the data object within the share. If this
 	// new name is not provided, the object's original name will be used as the
 	// `shared_as` name. The `shared_as` name must be unique within a share. For
@@ -964,7 +963,7 @@ func (f *SharedDataObjectUpdateAction) Type() string {
 
 type UpdateCleanRoom struct {
 	// Array of shared data object updates.
-	CatalogUpdates []CleanRoomCatalogUpdate `tfsdk:"catalog_updates"`
+	CatalogUpdates types.List `tfsdk:"catalog_updates"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
 	// The name of the clean room.
@@ -1023,12 +1022,12 @@ type UpdateShare struct {
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root"`
 	// Array of shared data object updates.
-	Updates []SharedDataObjectUpdate `tfsdk:"updates"`
+	Updates types.List `tfsdk:"updates"`
 }
 
 type UpdateSharePermissions struct {
 	// Array of permission changes.
-	Changes []catalog.PermissionsChange `tfsdk:"changes"`
+	Changes types.List `tfsdk:"changes"`
 	// The name of the share.
 	Name types.String `tfsdk:"-" url:"-"`
 }

@@ -182,7 +182,7 @@ type ListDirectoryContentsRequest struct {
 
 type ListDirectoryResponse struct {
 	// Array of DirectoryEntry.
-	Contents []DirectoryEntry `tfsdk:"contents"`
+	Contents types.List `tfsdk:"contents"`
 	// A token, which can be sent as `page_token` to retrieve the next page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -190,7 +190,7 @@ type ListDirectoryResponse struct {
 type ListStatusResponse struct {
 	// A list of FileInfo's that describe contents of directory or file. See
 	// example above.
-	Files []FileInfo `tfsdk:"files"`
+	Files types.List `tfsdk:"files"`
 }
 
 type MkDirs struct {

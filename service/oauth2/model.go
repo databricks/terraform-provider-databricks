@@ -12,10 +12,10 @@ type CreateCustomAppIntegration struct {
 	// name of the custom oauth app
 	Name types.String `tfsdk:"name"`
 	// List of oauth redirect urls
-	RedirectUrls []types.String `tfsdk:"redirect_urls"`
+	RedirectUrls types.List `tfsdk:"redirect_urls"`
 	// OAuth scopes granted to the application. Supported scopes: all-apis, sql,
 	// offline_access, openid, profile, email.
-	Scopes []types.String `tfsdk:"scopes"`
+	Scopes types.List `tfsdk:"scopes"`
 	// Token access policy
 	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy"`
 }
@@ -110,7 +110,7 @@ type GetCustomAppIntegrationOutput struct {
 	// name of the custom oauth app
 	Name types.String `tfsdk:"name"`
 	// List of oauth redirect urls
-	RedirectUrls []types.String `tfsdk:"redirect_urls"`
+	RedirectUrls types.List `tfsdk:"redirect_urls"`
 	// Token access policy
 	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy"`
 }
@@ -123,7 +123,7 @@ type GetCustomAppIntegrationRequest struct {
 
 type GetCustomAppIntegrationsOutput struct {
 	// Array of Custom OAuth App Integrations defined for the account.
-	Apps []GetCustomAppIntegrationOutput `tfsdk:"apps"`
+	Apps types.List `tfsdk:"apps"`
 }
 
 type GetPublishedAppIntegrationOutput struct {
@@ -145,12 +145,12 @@ type GetPublishedAppIntegrationRequest struct {
 
 type GetPublishedAppIntegrationsOutput struct {
 	// Array of Published OAuth App Integrations defined for the account.
-	Apps []GetPublishedAppIntegrationOutput `tfsdk:"apps"`
+	Apps types.List `tfsdk:"apps"`
 }
 
 type GetPublishedAppsOutput struct {
 	// Array of Published OAuth Apps.
-	Apps []PublishedAppOutput `tfsdk:"apps"`
+	Apps types.List `tfsdk:"apps"`
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -172,7 +172,7 @@ type ListServicePrincipalSecretsRequest struct {
 
 type ListServicePrincipalSecretsResponse struct {
 	// List of the secrets
-	Secrets []SecretInfo `tfsdk:"secrets"`
+	Secrets types.List `tfsdk:"secrets"`
 }
 
 type PublishedAppOutput struct {
@@ -189,9 +189,9 @@ type PublishedAppOutput struct {
 	// Name of the published OAuth app.
 	Name types.String `tfsdk:"name"`
 	// Redirect URLs of the published OAuth app.
-	RedirectUrls []types.String `tfsdk:"redirect_urls"`
+	RedirectUrls types.List `tfsdk:"redirect_urls"`
 	// Required scopes for the published OAuth app.
-	Scopes []types.String `tfsdk:"scopes"`
+	Scopes types.List `tfsdk:"scopes"`
 }
 
 type SecretInfo struct {
@@ -219,7 +219,7 @@ type UpdateCustomAppIntegration struct {
 	IntegrationId types.String `tfsdk:"-" url:"-"`
 	// List of oauth redirect urls to be updated in the custom oauth app
 	// integration
-	RedirectUrls []types.String `tfsdk:"redirect_urls"`
+	RedirectUrls types.List `tfsdk:"redirect_urls"`
 	// Token access policy to be updated in the custom oauth app integration
 	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy"`
 }

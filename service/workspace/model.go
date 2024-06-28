@@ -271,7 +271,7 @@ type GetAclRequest struct {
 }
 
 type GetCredentialsResponse struct {
-	Credentials []CredentialInfo `tfsdk:"credentials"`
+	Credentials types.List `tfsdk:"credentials"`
 }
 
 // Get a credential entry
@@ -288,7 +288,7 @@ type GetRepoPermissionLevelsRequest struct {
 
 type GetRepoPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []RepoPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Get repo permissions
@@ -334,7 +334,7 @@ type GetWorkspaceObjectPermissionLevelsRequest struct {
 
 type GetWorkspaceObjectPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []WorkspaceObjectPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Get workspace object permissions
@@ -476,7 +476,7 @@ type ListAclsRequest struct {
 
 type ListAclsResponse struct {
 	// The associated ACLs rule applied to principals in the given scope.
-	Items []AclItem `tfsdk:"items"`
+	Items types.List `tfsdk:"items"`
 }
 
 // Get repos
@@ -495,17 +495,17 @@ type ListReposResponse struct {
 	// endpoint to retrieve the next page of results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Repos []RepoInfo `tfsdk:"repos"`
+	Repos types.List `tfsdk:"repos"`
 }
 
 type ListResponse struct {
 	// List of objects.
-	Objects []ObjectInfo `tfsdk:"objects"`
+	Objects types.List `tfsdk:"objects"`
 }
 
 type ListScopesResponse struct {
 	// The available secret scopes.
-	Scopes []SecretScope `tfsdk:"scopes"`
+	Scopes types.List `tfsdk:"scopes"`
 }
 
 // List secret keys
@@ -516,7 +516,7 @@ type ListSecretsRequest struct {
 
 type ListSecretsResponse struct {
 	// Metadata information of all secrets contained within the given scope.
-	Secrets []SecretMetadata `tfsdk:"secrets"`
+	Secrets types.List `tfsdk:"secrets"`
 }
 
 // List contents
@@ -647,7 +647,7 @@ type RepoAccessControlRequest struct {
 
 type RepoAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []RepoPermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -683,7 +683,7 @@ type RepoInfo struct {
 type RepoPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel RepoPermissionLevel `tfsdk:"permission_level"`
 }
@@ -721,7 +721,7 @@ func (f *RepoPermissionLevel) Type() string {
 }
 
 type RepoPermissions struct {
-	AccessControlList []RepoAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -735,7 +735,7 @@ type RepoPermissionsDescription struct {
 }
 
 type RepoPermissionsRequest struct {
-	AccessControlList []RepoAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The repo for which to get or manage permissions.
 	RepoId types.String `tfsdk:"-" url:"-"`
 }
@@ -785,12 +785,12 @@ type SecretScope struct {
 
 type SparseCheckout struct {
 	// List of patterns to include for sparse checkout.
-	Patterns []types.String `tfsdk:"patterns"`
+	Patterns types.List `tfsdk:"patterns"`
 }
 
 type SparseCheckoutUpdate struct {
 	// List of patterns to include for sparse checkout.
-	Patterns []types.String `tfsdk:"patterns"`
+	Patterns types.List `tfsdk:"patterns"`
 }
 
 type UpdateCredentials struct {
@@ -849,7 +849,7 @@ type WorkspaceObjectAccessControlRequest struct {
 
 type WorkspaceObjectAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []WorkspaceObjectPermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -863,7 +863,7 @@ type WorkspaceObjectAccessControlResponse struct {
 type WorkspaceObjectPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel WorkspaceObjectPermissionLevel `tfsdk:"permission_level"`
 }
@@ -901,7 +901,7 @@ func (f *WorkspaceObjectPermissionLevel) Type() string {
 }
 
 type WorkspaceObjectPermissions struct {
-	AccessControlList []WorkspaceObjectAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -915,7 +915,7 @@ type WorkspaceObjectPermissionsDescription struct {
 }
 
 type WorkspaceObjectPermissionsRequest struct {
-	AccessControlList []WorkspaceObjectAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-" url:"-"`
 	// The workspace object type for which to get or manage permissions.

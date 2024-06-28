@@ -11,7 +11,7 @@ import (
 
 // Budget configuration to be created.
 type Budget struct {
-	Alerts []BudgetAlert `tfsdk:"alerts"`
+	Alerts types.List `tfsdk:"alerts"`
 	// Optional end date of the budget.
 	EndDate types.String `tfsdk:"end_date"`
 	// SQL-like filter expression with workspaceId, SKU and tag. Usage in your
@@ -45,7 +45,7 @@ type Budget struct {
 type BudgetAlert struct {
 	// List of email addresses to be notified when budget percentage is exceeded
 	// in the given period.
-	EmailNotifications []types.String `tfsdk:"email_notifications"`
+	EmailNotifications types.List `tfsdk:"email_notifications"`
 	// Percentage of the target amount used in the currect period that will
 	// trigger a notification.
 	MinPercentage types.Int64 `tfsdk:"min_percentage"`
@@ -53,12 +53,12 @@ type BudgetAlert struct {
 
 // List of budgets.
 type BudgetList struct {
-	Budgets []BudgetWithStatus `tfsdk:"budgets"`
+	Budgets types.List `tfsdk:"budgets"`
 }
 
 // Budget configuration with daily status.
 type BudgetWithStatus struct {
-	Alerts []BudgetAlert `tfsdk:"alerts"`
+	Alerts types.List `tfsdk:"alerts"`
 
 	BudgetId types.String `tfsdk:"budget_id"`
 
@@ -90,7 +90,7 @@ type BudgetWithStatus struct {
 	// Start date of the budget period calculation.
 	StartDate types.String `tfsdk:"start_date"`
 	// Amount used in the budget for each day (noncumulative).
-	StatusDaily []BudgetWithStatusStatusDailyItem `tfsdk:"status_daily"`
+	StatusDaily types.List `tfsdk:"status_daily"`
 	// Target amount of the budget per period in USD.
 	TargetAmount types.String `tfsdk:"target_amount"`
 
@@ -173,7 +173,7 @@ type CreateLogDeliveryConfigurationParams struct {
 	// delivery won't include account level logs. For some types of Databricks
 	// deployments there is only one workspace per account ID, so this field is
 	// unnecessary.
-	WorkspaceIdsFilter []types.Int64 `tfsdk:"workspace_ids_filter"`
+	WorkspaceIdsFilter types.List `tfsdk:"workspace_ids_filter"`
 }
 
 // Delete budget
@@ -388,7 +388,7 @@ type LogDeliveryConfiguration struct {
 	// delivery won't include account level logs. For some types of Databricks
 	// deployments there is only one workspace per account ID, so this field is
 	// unnecessary.
-	WorkspaceIdsFilter []types.Int64 `tfsdk:"workspace_ids_filter"`
+	WorkspaceIdsFilter types.List `tfsdk:"workspace_ids_filter"`
 }
 
 // Databricks log delivery status.
@@ -528,5 +528,5 @@ type WrappedLogDeliveryConfiguration struct {
 }
 
 type WrappedLogDeliveryConfigurations struct {
-	LogDeliveryConfigurations []LogDeliveryConfiguration `tfsdk:"log_delivery_configurations"`
+	LogDeliveryConfigurations types.List `tfsdk:"log_delivery_configurations"`
 }

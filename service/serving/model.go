@@ -197,7 +197,7 @@ type AppDeploymentStatus struct {
 }
 
 type AppEnvironment struct {
-	Env []EnvVariable `tfsdk:"env"`
+	Env types.List `tfsdk:"env"`
 }
 
 type AppState string
@@ -366,12 +366,12 @@ type CreateServingEndpoint struct {
 	Name types.String `tfsdk:"name"`
 	// Rate limits to be applied to the serving endpoint. NOTE: only external
 	// and foundation model endpoints are supported as of now.
-	RateLimits []RateLimit `tfsdk:"rate_limits"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 	// Enable route optimization for the serving endpoint.
 	RouteOptimized types.Bool `tfsdk:"route_optimized"`
 	// Tags to be attached to the serving endpoint and automatically propagated
 	// to billing logs.
-	Tags []EndpointTag `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 type DatabricksModelServingConfig struct {
@@ -385,11 +385,11 @@ type DatabricksModelServingConfig struct {
 }
 
 type DataframeSplitInput struct {
-	Columns []any `tfsdk:"columns"`
+	Columns types.List `tfsdk:"columns"`
 
-	Data []any `tfsdk:"data"`
+	Data types.List `tfsdk:"data"`
 
-	Index []types.Int64 `tfsdk:"index"`
+	Index types.List `tfsdk:"index"`
 }
 
 // Delete an app
@@ -408,7 +408,7 @@ type DeleteServingEndpointRequest struct {
 }
 
 type EmbeddingsV1ResponseEmbeddingElement struct {
-	Embedding []types.Float64 `tfsdk:"embedding"`
+	Embedding types.List `tfsdk:"embedding"`
 	// The index of the embedding in the response.
 	Index types.Int64 `tfsdk:"index"`
 	// This will always be 'embedding'.
@@ -449,10 +449,10 @@ type EndpointCoreConfigInput struct {
 	Name types.String `tfsdk:"-" url:"-"`
 	// A list of served entities for the endpoint to serve. A serving endpoint
 	// can have up to 15 served entities.
-	ServedEntities []ServedEntityInput `tfsdk:"served_entities"`
+	ServedEntities types.List `tfsdk:"served_entities"`
 	// (Deprecated, use served_entities instead) A list of served models for the
 	// endpoint to serve. A serving endpoint can have up to 15 served models.
-	ServedModels []ServedModelInput `tfsdk:"served_models"`
+	ServedModels types.List `tfsdk:"served_models"`
 	// The traffic config defining how invocations to the serving endpoint
 	// should be routed.
 	TrafficConfig *TrafficConfig `tfsdk:"traffic_config"`
@@ -465,20 +465,20 @@ type EndpointCoreConfigOutput struct {
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version"`
 	// The list of served entities under the serving endpoint config.
-	ServedEntities []ServedEntityOutput `tfsdk:"served_entities"`
+	ServedEntities types.List `tfsdk:"served_entities"`
 	// (Deprecated, use served_entities instead) The list of served models under
 	// the serving endpoint config.
-	ServedModels []ServedModelOutput `tfsdk:"served_models"`
+	ServedModels types.List `tfsdk:"served_models"`
 	// The traffic configuration associated with the serving endpoint config.
 	TrafficConfig *TrafficConfig `tfsdk:"traffic_config"`
 }
 
 type EndpointCoreConfigSummary struct {
 	// The list of served entities under the serving endpoint config.
-	ServedEntities []ServedEntitySpec `tfsdk:"served_entities"`
+	ServedEntities types.List `tfsdk:"served_entities"`
 	// (Deprecated, use served_entities instead) The list of served models under
 	// the serving endpoint config.
-	ServedModels []ServedModelSpec `tfsdk:"served_models"`
+	ServedModels types.List `tfsdk:"served_models"`
 }
 
 type EndpointPendingConfig struct {
@@ -489,10 +489,10 @@ type EndpointPendingConfig struct {
 	ConfigVersion types.Int64 `tfsdk:"config_version"`
 	// The list of served entities belonging to the last issued update to the
 	// serving endpoint.
-	ServedEntities []ServedEntityOutput `tfsdk:"served_entities"`
+	ServedEntities types.List `tfsdk:"served_entities"`
 	// (Deprecated, use served_entities instead) The list of served models
 	// belonging to the last issued update to the serving endpoint.
-	ServedModels []ServedModelOutput `tfsdk:"served_models"`
+	ServedModels types.List `tfsdk:"served_models"`
 	// The timestamp when the update to the pending config started.
 	StartTime types.Int64 `tfsdk:"start_time"`
 	// The traffic config defining how invocations to the serving endpoint
@@ -731,7 +731,7 @@ type GetServingEndpointPermissionLevelsRequest struct {
 
 type GetServingEndpointPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []ServingEndpointPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Get serving endpoint permissions
@@ -759,7 +759,7 @@ type ListAppDeploymentsRequest struct {
 
 type ListAppDeploymentsResponse struct {
 	// Deployment history of the app.
-	AppDeployments []AppDeployment `tfsdk:"app_deployments"`
+	AppDeployments types.List `tfsdk:"app_deployments"`
 	// Pagination token to request the next page of apps.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -774,14 +774,14 @@ type ListAppsRequest struct {
 }
 
 type ListAppsResponse struct {
-	Apps []App `tfsdk:"apps"`
+	Apps types.List `tfsdk:"apps"`
 	// Pagination token to request the next page of apps.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 type ListEndpointsResponse struct {
 	// The list of endpoints.
-	Endpoints []ServingEndpoint `tfsdk:"endpoints"`
+	Endpoints types.List `tfsdk:"endpoints"`
 }
 
 // Get the latest logs for a served model
@@ -841,9 +841,9 @@ type PaLmConfig struct {
 
 type PatchServingEndpointTags struct {
 	// List of endpoint tags to add
-	AddTags []EndpointTag `tfsdk:"add_tags"`
+	AddTags types.List `tfsdk:"add_tags"`
 	// List of tag keys to delete
-	DeleteTags []types.String `tfsdk:"delete_tags"`
+	DeleteTags types.List `tfsdk:"delete_tags"`
 	// The name of the serving endpoint who's tags to patch. This field is
 	// required.
 	Name types.String `tfsdk:"-" url:"-"`
@@ -864,24 +864,24 @@ type PutRequest struct {
 	// This field is required.
 	Name types.String `tfsdk:"-" url:"-"`
 	// The list of endpoint rate limits.
-	RateLimits []RateLimit `tfsdk:"rate_limits"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 }
 
 type PutResponse struct {
 	// The list of endpoint rate limits.
-	RateLimits []RateLimit `tfsdk:"rate_limits"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 }
 
 type QueryEndpointInput struct {
 	// Pandas Dataframe input in the records orientation.
-	DataframeRecords []any `tfsdk:"dataframe_records"`
+	DataframeRecords types.List `tfsdk:"dataframe_records"`
 	// Pandas Dataframe input in the split orientation.
 	DataframeSplit *DataframeSplitInput `tfsdk:"dataframe_split"`
 	// The extra parameters field used ONLY for __completions, chat,__ and
 	// __embeddings external & foundation model__ serving endpoints. This is a
 	// map of strings and should only be used with other external/foundation
 	// model query fields.
-	ExtraParams map[types.String]types.String `tfsdk:"extra_params"`
+	ExtraParams types.Map `tfsdk:"extra_params"`
 	// The input string (or array of strings) field used ONLY for __embeddings
 	// external & foundation model__ serving endpoints and is the only field
 	// (along with extra_params if needed) used by embeddings queries.
@@ -889,7 +889,7 @@ type QueryEndpointInput struct {
 	// Tensor-based input in columnar format.
 	Inputs any `tfsdk:"inputs"`
 	// Tensor-based input in row format.
-	Instances []any `tfsdk:"instances"`
+	Instances types.List `tfsdk:"instances"`
 	// The max tokens field used ONLY for __completions__ and __chat external &
 	// foundation model__ serving endpoints. This is an integer and should only
 	// be used with other chat/completions query fields.
@@ -897,7 +897,7 @@ type QueryEndpointInput struct {
 	// The messages field used ONLY for __chat external & foundation model__
 	// serving endpoints. This is a map of strings and should only be used with
 	// other chat query fields.
-	Messages []ChatMessage `tfsdk:"messages"`
+	Messages types.List `tfsdk:"messages"`
 	// The n (number of candidates) field used ONLY for __completions__ and
 	// __chat external & foundation model__ serving endpoints. This is an
 	// integer between 1 and 5 with a default of 1 and should only be used with
@@ -912,7 +912,7 @@ type QueryEndpointInput struct {
 	// The stop sequences field used ONLY for __completions__ and __chat
 	// external & foundation model__ serving endpoints. This is a list of
 	// strings and should only be used with other chat/completions query fields.
-	Stop []types.String `tfsdk:"stop"`
+	Stop types.List `tfsdk:"stop"`
 	// The stream field used ONLY for __completions__ and __chat external &
 	// foundation model__ serving endpoints. This is a boolean defaulting to
 	// false and should only be used with other chat/completions query fields.
@@ -927,13 +927,13 @@ type QueryEndpointInput struct {
 type QueryEndpointResponse struct {
 	// The list of choices returned by the __chat or completions
 	// external/foundation model__ serving endpoint.
-	Choices []V1ResponseChoiceElement `tfsdk:"choices"`
+	Choices types.List `tfsdk:"choices"`
 	// The timestamp in seconds when the query was created in Unix time returned
 	// by a __completions or chat external/foundation model__ serving endpoint.
 	Created types.Int64 `tfsdk:"created"`
 	// The list of the embeddings returned by the __embeddings
 	// external/foundation model__ serving endpoint.
-	Data []EmbeddingsV1ResponseEmbeddingElement `tfsdk:"data"`
+	Data types.List `tfsdk:"data"`
 	// The ID of the query that may be returned by a __completions or chat
 	// external/foundation model__ serving endpoint.
 	Id types.String `tfsdk:"id"`
@@ -945,7 +945,7 @@ type QueryEndpointResponse struct {
 	// embeddings)].
 	Object QueryEndpointResponseObject `tfsdk:"object"`
 	// The predictions returned by the serving endpoint.
-	Predictions []any `tfsdk:"predictions"`
+	Predictions types.List `tfsdk:"predictions"`
 	// The name of the served model that served the request. This is useful when
 	// there are multiple models behind the same endpoint with traffic split.
 	ServedModelName types.String `tfsdk:"-" url:"-" header:"served-model-name,omitempty"`
@@ -1079,7 +1079,7 @@ type ServedEntityInput struct {
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars map[types.String]types.String `tfsdk:"environment_vars"`
+	EnvironmentVars types.Map `tfsdk:"environment_vars"`
 	// The external model to be served. NOTE: Only one of external_model and
 	// (entity_name, entity_version, workload_size, workload_type, and
 	// scale_to_zero_enabled) can be specified with the latter set being used
@@ -1145,7 +1145,7 @@ type ServedEntityOutput struct {
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars map[types.String]types.String `tfsdk:"environment_vars"`
+	EnvironmentVars types.Map `tfsdk:"environment_vars"`
 	// The external model that is served. NOTE: Only one of external_model,
 	// foundation_model, and (entity_name, entity_version, workload_size,
 	// workload_type, and scale_to_zero_enabled) is returned based on the
@@ -1217,7 +1217,7 @@ type ServedModelInput struct {
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars map[types.String]types.String `tfsdk:"environment_vars"`
+	EnvironmentVars types.Map `tfsdk:"environment_vars"`
 	// ARN of the instance profile that the served model will use to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
@@ -1341,7 +1341,7 @@ type ServedModelOutput struct {
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars map[types.String]types.String `tfsdk:"environment_vars"`
+	EnvironmentVars types.Map `tfsdk:"environment_vars"`
 	// ARN of the instance profile that the served model will use to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
@@ -1472,7 +1472,7 @@ type ServingEndpoint struct {
 	// Information corresponding to the state of the serving endpoint.
 	State *EndpointState `tfsdk:"state"`
 	// Tags attached to the serving endpoint.
-	Tags []EndpointTag `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
 	Task types.String `tfsdk:"task"`
 }
@@ -1490,7 +1490,7 @@ type ServingEndpointAccessControlRequest struct {
 
 type ServingEndpointAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []ServingEndpointPermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -1529,7 +1529,7 @@ type ServingEndpointDetailed struct {
 	// Information corresponding to the state of the serving endpoint.
 	State *EndpointState `tfsdk:"state"`
 	// Tags attached to the serving endpoint.
-	Tags []EndpointTag `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
 	Task types.String `tfsdk:"task"`
 }
@@ -1567,7 +1567,7 @@ func (f *ServingEndpointDetailedPermissionLevel) Type() string {
 type ServingEndpointPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level"`
 }
@@ -1603,7 +1603,7 @@ func (f *ServingEndpointPermissionLevel) Type() string {
 }
 
 type ServingEndpointPermissions struct {
-	AccessControlList []ServingEndpointAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -1617,7 +1617,7 @@ type ServingEndpointPermissionsDescription struct {
 }
 
 type ServingEndpointPermissionsRequest struct {
-	AccessControlList []ServingEndpointAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-" url:"-"`
 }
@@ -1637,7 +1637,7 @@ type StopAppResponse struct {
 
 type TrafficConfig struct {
 	// The list of routes that define traffic to each served entity.
-	Routes []Route `tfsdk:"routes"`
+	Routes types.List `tfsdk:"routes"`
 }
 
 type UpdateAppRequest struct {

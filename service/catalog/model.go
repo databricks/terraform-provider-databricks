@@ -63,7 +63,7 @@ type AccountsUpdateStorageCredential struct {
 
 type ArtifactAllowlistInfo struct {
 	// A list of allowed artifact match patterns.
-	ArtifactMatchers []ArtifactMatcher `tfsdk:"artifact_matchers"`
+	ArtifactMatchers types.List `tfsdk:"artifact_matchers"`
 	// Time at which this artifact allowlist was set, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of the user who set the artifact allowlist.
@@ -210,11 +210,11 @@ type CatalogInfo struct {
 	// Name of catalog.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
-	Options map[types.String]types.String `tfsdk:"options"`
+	Options types.Map `tfsdk:"options"`
 	// Username of current owner of catalog.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 	// The name of delta sharing provider.
 	//
 	// A Delta Sharing catalog is a catalog that is based on a Delta share on a
@@ -390,7 +390,7 @@ type ColumnMask struct {
 	// mask function. The first arg of the mask function should be of the type
 	// of the column being masked and the types of the rest of the args should
 	// match the types of columns in 'using_column_names'.
-	UsingColumnNames []types.String `tfsdk:"using_column_names"`
+	UsingColumnNames types.List `tfsdk:"using_column_names"`
 }
 
 // Name of type (INT, STRUCT, MAP, etc.).
@@ -479,12 +479,12 @@ type ConnectionInfo struct {
 	// Name of the connection.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
-	Options map[types.String]types.String `tfsdk:"options"`
+	Options types.Map `tfsdk:"options"`
 	// Username of current owner of the connection.
 	Owner types.String `tfsdk:"owner"`
 	// An object containing map of key-value properties attached to the
 	// connection.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 	// Status of an asynchronously provisioned resource.
 	ProvisioningInfo *ProvisioningInfo `tfsdk:"provisioning_info"`
 	// If the connection is read only.
@@ -605,9 +605,9 @@ type CreateCatalog struct {
 	// Name of catalog.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
-	Options map[types.String]types.String `tfsdk:"options"`
+	Options types.Map `tfsdk:"options"`
 	// A map of key-value properties attached to the securable.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 	// The name of delta sharing provider.
 	//
 	// A Delta Sharing catalog is a catalog that is based on a Delta share on a
@@ -627,10 +627,10 @@ type CreateConnection struct {
 	// Name of the connection.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
-	Options map[types.String]types.String `tfsdk:"options"`
+	Options types.Map `tfsdk:"options"`
 	// An object containing map of key-value properties attached to the
 	// connection.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 }
@@ -853,7 +853,7 @@ type CreateMonitor struct {
 	// Custom metrics to compute on the monitored table. These can be aggregate
 	// metrics, derived metrics (from already computed aggregate metrics), or
 	// drift metrics (comparing metrics across time windows).
-	CustomMetrics []MonitorMetric `tfsdk:"custom_metrics"`
+	CustomMetrics types.List `tfsdk:"custom_metrics"`
 	// The data classification config for the monitor.
 	DataClassificationConfig *MonitorDataClassificationConfig `tfsdk:"data_classification_config"`
 	// Configuration for monitoring inference logs.
@@ -872,7 +872,7 @@ type CreateMonitor struct {
 	// slice for each predicate and its complements. For high-cardinality
 	// columns, only the top 100 unique values by frequency will generate
 	// slices.
-	SlicingExprs []types.String `tfsdk:"slicing_exprs"`
+	SlicingExprs types.List `tfsdk:"slicing_exprs"`
 	// Configuration for monitoring snapshot tables.
 	Snapshot *MonitorSnapshot `tfsdk:"snapshot"`
 	// Full name of the table.
@@ -917,7 +917,7 @@ type CreateSchema struct {
 	// Name of schema, relative to parent catalog.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 	// Storage root URL for managed tables within schema.
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
@@ -997,7 +997,7 @@ func (f *CredentialType) Type() string {
 // Currently assigned workspaces
 type CurrentWorkspaceBindings struct {
 	// A list of workspace IDs.
-	Workspaces []types.Int64 `tfsdk:"workspaces"`
+	Workspaces types.List `tfsdk:"workspaces"`
 }
 
 // Data source format
@@ -1231,7 +1231,7 @@ type DeleteVolumeRequest struct {
 // __TableInfo.properties__.
 type DeltaRuntimePropertiesKvPairs struct {
 	// A map of key-value properties attached to the securable.
-	DeltaRuntimeProperties map[types.String]types.String `tfsdk:"delta_runtime_properties"`
+	DeltaRuntimeProperties types.Map `tfsdk:"delta_runtime_properties"`
 }
 
 // A dependency of a SQL object. Either the __table__ field or the __function__
@@ -1246,7 +1246,7 @@ type Dependency struct {
 // A list of dependencies.
 type DependencyList struct {
 	// Array of dependencies.
-	Dependencies []Dependency `tfsdk:"dependencies"`
+	Dependencies types.List `tfsdk:"dependencies"`
 }
 
 // Disable a system schema
@@ -1263,7 +1263,7 @@ type DisableResponse struct {
 type EffectivePermissionsList struct {
 	// The privileges conveyed to each principal (either directly or via
 	// inheritance)
-	PrivilegeAssignments []EffectivePrivilegeAssignment `tfsdk:"privilege_assignments"`
+	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
 }
 
 type EffectivePredictiveOptimizationFlag struct {
@@ -1325,7 +1325,7 @@ type EffectivePrivilegeAssignment struct {
 	Principal types.String `tfsdk:"principal"`
 	// The privileges conveyed to the principal (either directly or via
 	// inheritance).
-	Privileges []EffectivePrivilege `tfsdk:"privileges"`
+	Privileges types.List `tfsdk:"privileges"`
 }
 
 // Whether predictive optimization should be enabled for this object and objects
@@ -1437,11 +1437,11 @@ type FailedStatus struct {
 
 type ForeignKeyConstraint struct {
 	// Column names for this constraint.
-	ChildColumns []types.String `tfsdk:"child_columns"`
+	ChildColumns types.List `tfsdk:"child_columns"`
 	// The name of the constraint.
 	Name types.String `tfsdk:"name"`
 	// Column names for this constraint.
-	ParentColumns []types.String `tfsdk:"parent_columns"`
+	ParentColumns types.List `tfsdk:"parent_columns"`
 	// The full name of the parent constraint.
 	ParentTable types.String `tfsdk:"parent_table"`
 }
@@ -1666,7 +1666,7 @@ type FunctionParameterInfo struct {
 type FunctionParameterInfos struct {
 	// The array of __FunctionParameterInfo__ definitions of the function's
 	// parameters.
-	Parameters []FunctionParameterInfo `tfsdk:"parameters"`
+	Parameters types.List `tfsdk:"parameters"`
 }
 
 // The mode of the function parameter.
@@ -2006,7 +2006,7 @@ type ListAccountMetastoreAssignmentsRequest struct {
 
 // The list of workspaces to which the given metastore is assigned.
 type ListAccountMetastoreAssignmentsResponse struct {
-	WorkspaceIds []types.Int64 `tfsdk:"workspace_ids"`
+	WorkspaceIds types.List `tfsdk:"workspace_ids"`
 }
 
 // Get all storage credentials assigned to a metastore
@@ -2017,7 +2017,7 @@ type ListAccountStorageCredentialsRequest struct {
 
 type ListAccountStorageCredentialsResponse struct {
 	// An array of metastore storage credentials.
-	StorageCredentials []StorageCredentialInfo `tfsdk:"storage_credentials"`
+	StorageCredentials types.List `tfsdk:"storage_credentials"`
 }
 
 // List catalogs
@@ -2041,7 +2041,7 @@ type ListCatalogsRequest struct {
 
 type ListCatalogsResponse struct {
 	// An array of catalog information objects.
-	Catalogs []CatalogInfo `tfsdk:"catalogs"`
+	Catalogs types.List `tfsdk:"catalogs"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -2063,7 +2063,7 @@ type ListConnectionsRequest struct {
 
 type ListConnectionsResponse struct {
 	// An array of connection information objects.
-	Connections []ConnectionInfo `tfsdk:"connections"`
+	Connections types.List `tfsdk:"connections"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -2088,7 +2088,7 @@ type ListExternalLocationsRequest struct {
 
 type ListExternalLocationsResponse struct {
 	// An array of external locations.
-	ExternalLocations []ExternalLocationInfo `tfsdk:"external_locations"`
+	ExternalLocations types.List `tfsdk:"external_locations"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -2117,7 +2117,7 @@ type ListFunctionsRequest struct {
 
 type ListFunctionsResponse struct {
 	// An array of function information objects.
-	Functions []FunctionInfo `tfsdk:"functions"`
+	Functions types.List `tfsdk:"functions"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -2126,7 +2126,7 @@ type ListFunctionsResponse struct {
 
 type ListMetastoresResponse struct {
 	// An array of metastore information objects.
-	Metastores []MetastoreInfo `tfsdk:"metastores"`
+	Metastores types.List `tfsdk:"metastores"`
 }
 
 // List Model Versions
@@ -2150,7 +2150,7 @@ type ListModelVersionsRequest struct {
 }
 
 type ListModelVersionsResponse struct {
-	ModelVersions []ModelVersionInfo `tfsdk:"model_versions"`
+	ModelVersions types.List `tfsdk:"model_versions"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -2201,7 +2201,7 @@ type ListRegisteredModelsResponse struct {
 	// page_token should be set to this value for fetching the next page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	RegisteredModels []RegisteredModelInfo `tfsdk:"registered_models"`
+	RegisteredModels types.List `tfsdk:"registered_models"`
 }
 
 // List schemas
@@ -2228,7 +2228,7 @@ type ListSchemasResponse struct {
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// An array of schema information objects.
-	Schemas []SchemaInfo `tfsdk:"schemas"`
+	Schemas types.List `tfsdk:"schemas"`
 }
 
 // List credentials
@@ -2250,7 +2250,7 @@ type ListStorageCredentialsResponse struct {
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	StorageCredentials []StorageCredentialInfo `tfsdk:"storage_credentials"`
+	StorageCredentials types.List `tfsdk:"storage_credentials"`
 }
 
 // List table summaries
@@ -2283,7 +2283,7 @@ type ListSystemSchemasRequest struct {
 
 type ListSystemSchemasResponse struct {
 	// An array of system schema information objects.
-	Schemas []SystemSchemaInfo `tfsdk:"schemas"`
+	Schemas types.List `tfsdk:"schemas"`
 }
 
 type ListTableSummariesResponse struct {
@@ -2292,7 +2292,7 @@ type ListTableSummariesResponse struct {
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// List of table summaries.
-	Tables []TableSummary `tfsdk:"tables"`
+	Tables types.List `tfsdk:"tables"`
 }
 
 // List tables
@@ -2327,7 +2327,7 @@ type ListTablesResponse struct {
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// An array of table information objects.
-	Tables []TableInfo `tfsdk:"tables"`
+	Tables types.List `tfsdk:"tables"`
 }
 
 // List Volumes
@@ -2363,7 +2363,7 @@ type ListVolumesResponseContent struct {
 	// request to retrieve the next page of results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Volumes []VolumeInfo `tfsdk:"volumes"`
+	Volumes types.List `tfsdk:"volumes"`
 }
 
 // The artifact pattern matching type
@@ -2603,7 +2603,7 @@ type MonitorDataClassificationConfig struct {
 type MonitorDestination struct {
 	// The list of email addresses to send the notification to. A maximum of 5
 	// email addresses is supported.
-	EmailAddresses []types.String `tfsdk:"email_addresses"`
+	EmailAddresses types.List `tfsdk:"email_addresses"`
 }
 
 type MonitorInferenceLog struct {
@@ -2611,7 +2611,7 @@ type MonitorInferenceLog struct {
 	// timestamp. Currently the following static granularities are supported:
 	// {``"5 minutes"``, ``"30 minutes"``, ``"1 hour"``, ``"1 day"``, ``"<n>
 	// week(s)"``, ``"1 month"``, ``"1 year"``}.
-	Granularities []types.String `tfsdk:"granularities"`
+	Granularities types.List `tfsdk:"granularities"`
 	// Optional column that contains the ground truth for the prediction.
 	LabelCol types.String `tfsdk:"label_col"`
 	// Column that contains the id of the model generating the predictions.
@@ -2676,7 +2676,7 @@ type MonitorInfo struct {
 	// Custom metrics to compute on the monitored table. These can be aggregate
 	// metrics, derived metrics (from already computed aggregate metrics), or
 	// drift metrics (comparing metrics across time windows).
-	CustomMetrics []MonitorMetric `tfsdk:"custom_metrics"`
+	CustomMetrics types.List `tfsdk:"custom_metrics"`
 	// Id of dashboard that visualizes the computed metrics. This can be empty
 	// if the monitor is in PENDING state.
 	DashboardId types.String `tfsdk:"dashboard_id"`
@@ -2706,7 +2706,7 @@ type MonitorInfo struct {
 	// slice for each predicate and its complements. For high-cardinality
 	// columns, only the top 100 unique values by frequency will generate
 	// slices.
-	SlicingExprs []types.String `tfsdk:"slicing_exprs"`
+	SlicingExprs types.List `tfsdk:"slicing_exprs"`
 	// Configuration for monitoring snapshot tables.
 	Snapshot *MonitorSnapshot `tfsdk:"snapshot"`
 	// The status of the monitor.
@@ -2761,7 +2761,7 @@ type MonitorMetric struct {
 	// A list of column names in the input table the metric should be computed
 	// for. Can use ``":table"`` to indicate that the metric needs information
 	// from multiple columns.
-	InputColumns []types.String `tfsdk:"input_columns"`
+	InputColumns types.List `tfsdk:"input_columns"`
 	// Name of the metric in the output tables.
 	Name types.String `tfsdk:"name"`
 	// The output type of the custom metric.
@@ -2908,7 +2908,7 @@ func (f *MonitorRefreshInfoTrigger) Type() string {
 
 type MonitorRefreshListResponse struct {
 	// List of refreshes.
-	Refreshes []MonitorRefreshInfo `tfsdk:"refreshes"`
+	Refreshes types.List `tfsdk:"refreshes"`
 }
 
 type MonitorSnapshot struct {
@@ -2919,7 +2919,7 @@ type MonitorTimeSeries struct {
 	// timestamp. Currently the following static granularities are supported:
 	// {``"5 minutes"``, ``"30 minutes"``, ``"1 hour"``, ``"1 day"``, ``"<n>
 	// week(s)"``, ``"1 month"``, ``"1 year"``}.
-	Granularities []types.String `tfsdk:"granularities"`
+	Granularities types.List `tfsdk:"granularities"`
 	// Column that contains the timestamps of requests. The column must be one
 	// of the following: - A ``TimestampType`` column - A column whose values
 	// can be converted to timestamps through the pyspark ``to_timestamp``
@@ -2960,7 +2960,7 @@ type OnlineTableSpec struct {
 	// the caller.
 	PipelineId types.String `tfsdk:"pipeline_id"`
 	// Primary Key columns to be used for data insert/update in the destination.
-	PrimaryKeyColumns []types.String `tfsdk:"primary_key_columns"`
+	PrimaryKeyColumns types.List `tfsdk:"primary_key_columns"`
 	// Pipeline runs continuously after generating the initial data.
 	RunContinuously *OnlineTableSpecContinuousSchedulingPolicy `tfsdk:"run_continuously"`
 	// Pipeline stops after generating the initial data and can be triggered
@@ -3050,16 +3050,16 @@ type OnlineTableStatus struct {
 
 type PermissionsChange struct {
 	// The set of privileges to add.
-	Add []Privilege `tfsdk:"add"`
+	Add types.List `tfsdk:"add"`
 	// The principal whose privileges we are changing.
 	Principal types.String `tfsdk:"principal"`
 	// The set of privileges to remove.
-	Remove []Privilege `tfsdk:"remove"`
+	Remove types.List `tfsdk:"remove"`
 }
 
 type PermissionsList struct {
 	// The privileges assigned to each principal
-	PrivilegeAssignments []PrivilegeAssignment `tfsdk:"privilege_assignments"`
+	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
 }
 
 // Progress information of the Online Table data synchronization pipeline.
@@ -3080,7 +3080,7 @@ type PipelineProgress struct {
 
 type PrimaryKeyConstraint struct {
 	// Column names for this constraint.
-	ChildColumns []types.String `tfsdk:"child_columns"`
+	ChildColumns types.List `tfsdk:"child_columns"`
 	// The name of the constraint.
 	Name types.String `tfsdk:"name"`
 }
@@ -3198,11 +3198,11 @@ type PrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal"`
 	// The privileges assigned to the principal.
-	Privileges []Privilege `tfsdk:"privileges"`
+	Privileges types.List `tfsdk:"privileges"`
 }
 
 // An object containing map of key-value properties attached to the connection.
-type PropertiesKvPairs map[types.String]types.String
+type PropertiesKvPairs types.Map
 
 // Status of an asynchronously provisioned resource.
 type ProvisioningInfo struct {
@@ -3269,7 +3269,7 @@ type RegisteredModelAlias struct {
 
 type RegisteredModelInfo struct {
 	// List of aliases associated with the registered model
-	Aliases []RegisteredModelAlias `tfsdk:"aliases"`
+	Aliases types.List `tfsdk:"aliases"`
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
 	// enabled in the request.
@@ -3338,7 +3338,7 @@ type SchemaInfo struct {
 	// Username of current owner of schema.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 	// The unique identifier of the schema.
 	SchemaId types.String `tfsdk:"schema_id"`
 	// Storage location for managed tables within schema.
@@ -3352,10 +3352,10 @@ type SchemaInfo struct {
 }
 
 // A map of key-value properties attached to the securable.
-type SecurableOptionsMap map[types.String]types.String
+type SecurableOptionsMap types.Map
 
 // A map of key-value properties attached to the securable.
-type SecurablePropertiesMap map[types.String]types.String
+type SecurablePropertiesMap types.Map
 
 // The type of Unity Catalog securable
 type SecurableType string
@@ -3409,7 +3409,7 @@ func (f *SecurableType) Type() string {
 
 type SetArtifactAllowlist struct {
 	// A list of allowed artifact match patterns.
-	ArtifactMatchers []ArtifactMatcher `tfsdk:"artifact_matchers"`
+	ArtifactMatchers types.List `tfsdk:"artifact_matchers"`
 	// The artifact type of the allowlist.
 	ArtifactType ArtifactType `tfsdk:"-" url:"-"`
 }
@@ -3575,7 +3575,7 @@ type TableInfo struct {
 	// Name of parent catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The array of __ColumnInfo__ definitions of the table's columns.
-	Columns []ColumnInfo `tfsdk:"columns"`
+	Columns types.List `tfsdk:"columns"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
 	// Time at which this table was created, in epoch milliseconds.
@@ -3611,7 +3611,7 @@ type TableInfo struct {
 	// (Materialized View, Streaming Table, etc.).
 	PipelineId types.String `tfsdk:"pipeline_id"`
 	// A map of key-value properties attached to the securable.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 
 	RowFilter *TableRowFilter `tfsdk:"row_filter"`
 	// Name of parent schema relative to its parent catalog.
@@ -3625,7 +3625,7 @@ type TableInfo struct {
 	StorageLocation types.String `tfsdk:"storage_location"`
 	// List of table constraints. Note: this field is not set in the output of
 	// the __listTables__ API.
-	TableConstraints []TableConstraint `tfsdk:"table_constraints"`
+	TableConstraints types.List `tfsdk:"table_constraints"`
 	// The unique identifier of the table.
 	TableId types.String `tfsdk:"table_id"`
 
@@ -3651,7 +3651,7 @@ type TableRowFilter struct {
 	// The list of table columns to be passed as input to the row filter
 	// function. The column types should match the types of the filter function
 	// arguments.
-	InputColumnNames []types.String `tfsdk:"input_column_names"`
+	InputColumnNames types.List `tfsdk:"input_column_names"`
 }
 
 type TableSummary struct {
@@ -3744,7 +3744,7 @@ type UpdateCatalog struct {
 	// Username of current owner of catalog.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 }
 
 type UpdateConnection struct {
@@ -3753,7 +3753,7 @@ type UpdateConnection struct {
 	// New name for the connection.
 	NewName types.String `tfsdk:"new_name"`
 	// A map of key-value properties attached to the securable.
-	Options map[types.String]types.String `tfsdk:"options"`
+	Options types.Map `tfsdk:"options"`
 	// Username of current owner of the connection.
 	Owner types.String `tfsdk:"owner"`
 }
@@ -3871,7 +3871,7 @@ type UpdateMonitor struct {
 	// Custom metrics to compute on the monitored table. These can be aggregate
 	// metrics, derived metrics (from already computed aggregate metrics), or
 	// drift metrics (comparing metrics across time windows).
-	CustomMetrics []MonitorMetric `tfsdk:"custom_metrics"`
+	CustomMetrics types.List `tfsdk:"custom_metrics"`
 	// Id of dashboard that visualizes the computed metrics. This can be empty
 	// if the monitor is in PENDING state.
 	DashboardId types.String `tfsdk:"dashboard_id"`
@@ -3890,7 +3890,7 @@ type UpdateMonitor struct {
 	// slice for each predicate and its complements. For high-cardinality
 	// columns, only the top 100 unique values by frequency will generate
 	// slices.
-	SlicingExprs []types.String `tfsdk:"slicing_exprs"`
+	SlicingExprs types.List `tfsdk:"slicing_exprs"`
 	// Configuration for monitoring snapshot tables.
 	Snapshot *MonitorSnapshot `tfsdk:"snapshot"`
 	// Full name of the table.
@@ -3901,7 +3901,7 @@ type UpdateMonitor struct {
 
 type UpdatePermissions struct {
 	// Array of permissions change objects.
-	Changes []PermissionsChange `tfsdk:"changes"`
+	Changes types.List `tfsdk:"changes"`
 	// Full name of securable.
 	FullName types.String `tfsdk:"-" url:"-"`
 	// Type of securable.
@@ -3935,7 +3935,7 @@ type UpdateSchema struct {
 	// Username of current owner of schema.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
-	Properties map[types.String]types.String `tfsdk:"properties"`
+	Properties types.Map `tfsdk:"properties"`
 }
 
 type UpdateStorageCredential struct {
@@ -3991,18 +3991,18 @@ type UpdateVolumeRequestContent struct {
 
 type UpdateWorkspaceBindings struct {
 	// A list of workspace IDs.
-	AssignWorkspaces []types.Int64 `tfsdk:"assign_workspaces"`
+	AssignWorkspaces types.List `tfsdk:"assign_workspaces"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-" url:"-"`
 	// A list of workspace IDs.
-	UnassignWorkspaces []types.Int64 `tfsdk:"unassign_workspaces"`
+	UnassignWorkspaces types.List `tfsdk:"unassign_workspaces"`
 }
 
 type UpdateWorkspaceBindingsParameters struct {
 	// List of workspace bindings
-	Add []WorkspaceBinding `tfsdk:"add"`
+	Add types.List `tfsdk:"add"`
 	// List of workspace bindings
-	Remove []WorkspaceBinding `tfsdk:"remove"`
+	Remove types.List `tfsdk:"remove"`
 	// The name of the securable.
 	SecurableName types.String `tfsdk:"-" url:"-"`
 	// The type of the securable.
@@ -4034,7 +4034,7 @@ type ValidateStorageCredentialResponse struct {
 	// Whether the tested location is a directory in cloud storage.
 	IsDir types.Bool `tfsdk:"isDir"`
 	// The results of the validation check.
-	Results []ValidationResult `tfsdk:"results"`
+	Results types.List `tfsdk:"results"`
 }
 
 type ValidationResult struct {
@@ -4212,5 +4212,5 @@ func (f *WorkspaceBindingBindingType) Type() string {
 // Currently assigned workspace bindings
 type WorkspaceBindingsResponse struct {
 	// List of workspace bindings
-	Bindings []WorkspaceBinding `tfsdk:"bindings"`
+	Bindings types.List `tfsdk:"bindings"`
 }

@@ -22,9 +22,9 @@ type CreatePipeline struct {
 	// DLT Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
-	Clusters []PipelineCluster `tfsdk:"clusters"`
+	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
-	Configuration map[types.String]types.String `tfsdk:"configuration"`
+	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
@@ -45,11 +45,11 @@ type CreatePipeline struct {
 	// be used with the 'libraries', 'target' or 'catalog' settings.
 	IngestionDefinition *ManagedIngestionPipelineDefinition `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
-	Libraries []PipelineLibrary `tfsdk:"libraries"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Friendly identifier for this pipeline.
 	Name types.String `tfsdk:"name"`
 	// List of notification settings for this pipeline.
-	Notifications []Notifications `tfsdk:"notifications"`
+	Notifications types.List `tfsdk:"notifications"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Whether serverless compute is enabled for this pipeline.
@@ -133,9 +133,9 @@ type EditPipeline struct {
 	// DLT Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
-	Clusters []PipelineCluster `tfsdk:"clusters"`
+	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
-	Configuration map[types.String]types.String `tfsdk:"configuration"`
+	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
@@ -158,11 +158,11 @@ type EditPipeline struct {
 	// be used with the 'libraries', 'target' or 'catalog' settings.
 	IngestionDefinition *ManagedIngestionPipelineDefinition `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
-	Libraries []PipelineLibrary `tfsdk:"libraries"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Friendly identifier for this pipeline.
 	Name types.String `tfsdk:"name"`
 	// List of notification settings for this pipeline.
-	Notifications []Notifications `tfsdk:"notifications"`
+	Notifications types.List `tfsdk:"notifications"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Unique identifier for this pipeline.
@@ -184,7 +184,7 @@ type EditPipelineResponse struct {
 
 type ErrorDetail struct {
 	// The exception thrown for this error, with its chain of cause.
-	Exceptions []SerializedException `tfsdk:"exceptions"`
+	Exceptions types.List `tfsdk:"exceptions"`
 	// Whether this error is considered fatal, that is, unrecoverable.
 	Fatal types.Bool `tfsdk:"fatal"`
 }
@@ -228,9 +228,9 @@ type FileLibrary struct {
 
 type Filters struct {
 	// Paths to exclude.
-	Exclude []types.String `tfsdk:"exclude"`
+	Exclude types.List `tfsdk:"exclude"`
 	// Paths to include.
-	Include []types.String `tfsdk:"include"`
+	Include types.List `tfsdk:"include"`
 }
 
 // Get pipeline permission levels
@@ -241,7 +241,7 @@ type GetPipelinePermissionLevelsRequest struct {
 
 type GetPipelinePermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []PipelinePermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Get pipeline permissions
@@ -268,7 +268,7 @@ type GetPipelineResponse struct {
 	LastModified types.Int64 `tfsdk:"last_modified"`
 	// Status of the latest updates for the pipeline. Ordered with the newest
 	// update first.
-	LatestUpdates []UpdateStateInfo `tfsdk:"latest_updates"`
+	LatestUpdates types.List `tfsdk:"latest_updates"`
 	// A human friendly identifier for the pipeline, taken from the `spec`.
 	Name types.String `tfsdk:"name"`
 	// The ID of the pipeline.
@@ -365,7 +365,7 @@ type ListPipelineEventsRequest struct {
 	// example, ["timestamp asc"]. The sort order can be ascending or
 	// descending. By default, events are returned in descending order by
 	// timestamp.
-	OrderBy []types.String `tfsdk:"-" url:"order_by,omitempty"`
+	OrderBy types.List `tfsdk:"-" url:"order_by,omitempty"`
 	// Page token returned by previous call. This field is mutually exclusive
 	// with all fields in this request except max_results. An error is returned
 	// if any fields other than max_results are set when this field is set.
@@ -376,7 +376,7 @@ type ListPipelineEventsRequest struct {
 
 type ListPipelineEventsResponse struct {
 	// The list of events matching the request criteria.
-	Events []PipelineEvent `tfsdk:"events"`
+	Events types.List `tfsdk:"events"`
 	// If present, a token to fetch the next page of events.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// If present, a token to fetch the previous page of events.
@@ -403,7 +403,7 @@ type ListPipelinesRequest struct {
 	MaxResults types.Int64 `tfsdk:"-" url:"max_results,omitempty"`
 	// A list of strings specifying the order of results. Supported order_by
 	// fields are id and name. The default is id asc. This field is optional.
-	OrderBy []types.String `tfsdk:"-" url:"order_by,omitempty"`
+	OrderBy types.List `tfsdk:"-" url:"order_by,omitempty"`
 	// Page token returned by previous call
 	PageToken types.String `tfsdk:"-" url:"page_token,omitempty"`
 }
@@ -412,7 +412,7 @@ type ListPipelinesResponse struct {
 	// If present, a token to fetch the next page of events.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// The list of events matching the request criteria.
-	Statuses []PipelineStateInfo `tfsdk:"statuses"`
+	Statuses types.List `tfsdk:"statuses"`
 }
 
 // List pipeline updates
@@ -435,7 +435,7 @@ type ListUpdatesResponse struct {
 	// the previous page.
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 
-	Updates []UpdateInfo `tfsdk:"updates"`
+	Updates types.List `tfsdk:"updates"`
 }
 
 type ManagedIngestionPipelineDefinition struct {
@@ -449,7 +449,7 @@ type ManagedIngestionPipelineDefinition struct {
 	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id"`
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
-	Objects []IngestionConfig `tfsdk:"objects"`
+	Objects types.List `tfsdk:"objects"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
 	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration"`
@@ -501,9 +501,9 @@ type Notifications struct {
 	// `on-update-failure`: Each time a pipeline update fails. *
 	// `on-update-fatal-failure`: A pipeline update fails with a non-retryable
 	// (fatal) error. * `on-flow-failure`: A single data flow fails.
-	Alerts []types.String `tfsdk:"alerts"`
+	Alerts types.List `tfsdk:"alerts"`
 	// A list of email addresses notified when a configured alert is triggered.
-	EmailRecipients []types.String `tfsdk:"email_recipients"`
+	EmailRecipients types.List `tfsdk:"email_recipients"`
 }
 
 type Origin struct {
@@ -557,7 +557,7 @@ type PipelineAccessControlRequest struct {
 
 type PipelineAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []PipelinePermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -597,7 +597,7 @@ type PipelineCluster struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -613,7 +613,7 @@ type PipelineCluster struct {
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []compute.InitScriptInfo `tfsdk:"init_scripts"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// A label for the cluster specification, either `default` to configure the
@@ -642,7 +642,7 @@ type PipelineCluster struct {
 	// An object containing a set of optional, user-specified Spark
 	// configuration key-value pairs. See :method:clusters/create for more
 	// details.
-	SparkConf map[types.String]types.String `tfsdk:"spark_conf"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -656,11 +656,11 @@ type PipelineCluster struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[types.String]types.String `tfsdk:"spark_env_vars"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 }
 
 type PipelineClusterAutoscale struct {
@@ -755,7 +755,7 @@ type PipelineLibrary struct {
 type PipelinePermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel PipelinePermissionLevel `tfsdk:"permission_level"`
 }
@@ -793,7 +793,7 @@ func (f *PipelinePermissionLevel) Type() string {
 }
 
 type PipelinePermissions struct {
-	AccessControlList []PipelineAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -807,7 +807,7 @@ type PipelinePermissionsDescription struct {
 }
 
 type PipelinePermissionsRequest struct {
-	AccessControlList []PipelineAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-" url:"-"`
 }
@@ -822,9 +822,9 @@ type PipelineSpec struct {
 	// DLT Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
-	Clusters []PipelineCluster `tfsdk:"clusters"`
+	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
-	Configuration map[types.String]types.String `tfsdk:"configuration"`
+	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
@@ -843,11 +843,11 @@ type PipelineSpec struct {
 	// be used with the 'libraries', 'target' or 'catalog' settings.
 	IngestionDefinition *ManagedIngestionPipelineDefinition `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
-	Libraries []PipelineLibrary `tfsdk:"libraries"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Friendly identifier for this pipeline.
 	Name types.String `tfsdk:"name"`
 	// List of notification settings for this pipeline.
-	Notifications []Notifications `tfsdk:"notifications"`
+	Notifications types.List `tfsdk:"notifications"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Whether serverless compute is enabled for this pipeline.
@@ -911,7 +911,7 @@ type PipelineStateInfo struct {
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Status of the latest updates for the pipeline. Ordered with the newest
 	// update first.
-	LatestUpdates []UpdateStateInfo `tfsdk:"latest_updates"`
+	LatestUpdates types.List `tfsdk:"latest_updates"`
 	// The user-friendly name of the pipeline.
 	Name types.String `tfsdk:"name"`
 	// The unique identifier of the pipeline.
@@ -961,7 +961,7 @@ type SerializedException struct {
 	// Exception message
 	Message types.String `tfsdk:"message"`
 	// Stack trace consisting of a list of stack frames
-	Stack []StackFrame `tfsdk:"stack"`
+	Stack types.List `tfsdk:"stack"`
 }
 
 type StackFrame struct {
@@ -983,14 +983,14 @@ type StartUpdate struct {
 	// and full_refresh_selection are empty, this is a full graph update. Full
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
-	FullRefreshSelection []types.String `tfsdk:"full_refresh_selection"`
+	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
 
 	PipelineId types.String `tfsdk:"-" url:"-"`
 	// A list of tables to update without fullRefresh. If both refresh_selection
 	// and full_refresh_selection are empty, this is a full graph update. Full
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
-	RefreshSelection []types.String `tfsdk:"refresh_selection"`
+	RefreshSelection types.List `tfsdk:"refresh_selection"`
 	// If true, this update only validates the correctness of pipeline source
 	// code but does not materialize or publish any datasets.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
@@ -1066,7 +1066,7 @@ type TableSpec struct {
 
 type TableSpecificConfig struct {
 	// The primary key of the table used to apply changes.
-	PrimaryKeys []types.String `tfsdk:"primary_keys"`
+	PrimaryKeys types.List `tfsdk:"primary_keys"`
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
@@ -1118,14 +1118,14 @@ type UpdateInfo struct {
 	// and full_refresh_selection are empty, this is a full graph update. Full
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
-	FullRefreshSelection []types.String `tfsdk:"full_refresh_selection"`
+	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
 	// The ID of the pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id"`
 	// A list of tables to update without fullRefresh. If both refresh_selection
 	// and full_refresh_selection are empty, this is a full graph update. Full
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
-	RefreshSelection []types.String `tfsdk:"refresh_selection"`
+	RefreshSelection types.List `tfsdk:"refresh_selection"`
 	// The update state.
 	State UpdateInfoState `tfsdk:"state"`
 	// The ID of this update.

@@ -269,7 +269,7 @@ type CloneCluster struct {
 }
 
 type CloudProviderNodeInfo struct {
-	Status []CloudProviderNodeStatus `tfsdk:"status"`
+	Status types.List `tfsdk:"status"`
 }
 
 type CloudProviderNodeStatus string
@@ -312,7 +312,7 @@ type ClusterAccessControlRequest struct {
 
 type ClusterAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []ClusterPermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -354,7 +354,7 @@ type ClusterAttributes struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -402,7 +402,7 @@ type ClusterAttributes struct {
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// This field encodes, through a single value, the resources available to
@@ -423,7 +423,7 @@ type ClusterAttributes struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[types.String]types.String `tfsdk:"spark_conf"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -437,7 +437,7 @@ type ClusterAttributes struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[types.String]types.String `tfsdk:"spark_env_vars"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -445,7 +445,7 @@ type ClusterAttributes struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 
 	WorkloadType *WorkloadType `tfsdk:"workload_type"`
 }
@@ -503,7 +503,7 @@ type ClusterDetails struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -539,7 +539,7 @@ type ClusterDetails struct {
 	// - ClusterId: <id_of_cluster>
 	//
 	// - Name: <Databricks internal use>
-	DefaultTags map[types.String]types.String `tfsdk:"default_tags"`
+	DefaultTags types.Map `tfsdk:"default_tags"`
 
 	DockerImage *DockerImage `tfsdk:"docker_image"`
 	// Node on which the Spark driver resides. The driver node contains the
@@ -562,7 +562,7 @@ type ClusterDetails struct {
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
 	// Nodes on which the Spark executors reside.
-	Executors []SparkNode `tfsdk:"executors"`
+	Executors types.List `tfsdk:"executors"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
 	GcpAttributes *GcpAttributes `tfsdk:"gcp_attributes"`
@@ -570,7 +570,7 @@ type ClusterDetails struct {
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// Port on which Spark JDBC server is listening, in the driver nod. No
@@ -610,7 +610,7 @@ type ClusterDetails struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[types.String]types.String `tfsdk:"spark_conf"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// A canonical SparkContext identifier. This value *does* change when the
 	// Spark driver restarts. The pair `(cluster_id, spark_context_id)` is a
 	// globally unique identifier over all Spark contexts.
@@ -628,7 +628,7 @@ type ClusterDetails struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[types.String]types.String `tfsdk:"spark_env_vars"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -641,7 +641,7 @@ type ClusterDetails struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// Time (in epoch milliseconds) when the cluster creation request was
 	// received (when the cluster entered a `PENDING` state).
 	StartTime types.Int64 `tfsdk:"start_time"`
@@ -679,7 +679,7 @@ type ClusterLibraryStatuses struct {
 	// Unique identifier for the cluster.
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// Status of all libraries on the cluster.
-	LibraryStatuses []LibraryFullStatus `tfsdk:"library_statuses"`
+	LibraryStatuses types.List `tfsdk:"library_statuses"`
 }
 
 type ClusterLogConf struct {
@@ -697,7 +697,7 @@ type ClusterLogConf struct {
 type ClusterPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel ClusterPermissionLevel `tfsdk:"permission_level"`
 }
@@ -733,7 +733,7 @@ func (f *ClusterPermissionLevel) Type() string {
 }
 
 type ClusterPermissions struct {
-	AccessControlList []ClusterAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -747,7 +747,7 @@ type ClusterPermissionsDescription struct {
 }
 
 type ClusterPermissionsRequest struct {
-	AccessControlList []ClusterAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The cluster for which to get or manage permissions.
 	ClusterId types.String `tfsdk:"-" url:"-"`
 }
@@ -765,7 +765,7 @@ type ClusterPolicyAccessControlRequest struct {
 
 type ClusterPolicyAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []ClusterPolicyPermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -779,7 +779,7 @@ type ClusterPolicyAccessControlResponse struct {
 type ClusterPolicyPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel ClusterPolicyPermissionLevel `tfsdk:"permission_level"`
 }
@@ -811,7 +811,7 @@ func (f *ClusterPolicyPermissionLevel) Type() string {
 }
 
 type ClusterPolicyPermissions struct {
-	AccessControlList []ClusterPolicyAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -825,7 +825,7 @@ type ClusterPolicyPermissionsDescription struct {
 }
 
 type ClusterPolicyPermissionsRequest struct {
-	AccessControlList []ClusterPolicyAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-" url:"-"`
 }
@@ -927,7 +927,7 @@ type ClusterSpec struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -975,7 +975,7 @@ type ClusterSpec struct {
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// This field encodes, through a single value, the resources available to
@@ -1007,7 +1007,7 @@ type ClusterSpec struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[types.String]types.String `tfsdk:"spark_conf"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -1021,7 +1021,7 @@ type ClusterSpec struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[types.String]types.String `tfsdk:"spark_env_vars"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -1029,7 +1029,7 @@ type ClusterSpec struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 
 	WorkloadType *WorkloadType `tfsdk:"workload_type"`
 }
@@ -1187,7 +1187,7 @@ type CreateCluster struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -1235,7 +1235,7 @@ type CreateCluster struct {
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// This field encodes, through a single value, the resources available to
@@ -1267,7 +1267,7 @@ type CreateCluster struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[types.String]types.String `tfsdk:"spark_conf"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -1281,7 +1281,7 @@ type CreateCluster struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[types.String]types.String `tfsdk:"spark_env_vars"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -1289,7 +1289,7 @@ type CreateCluster struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 
 	WorkloadType *WorkloadType `tfsdk:"workload_type"`
 }
@@ -1317,7 +1317,7 @@ type CreateInstancePool struct {
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec *DiskSpec `tfsdk:"disk_spec"`
@@ -1354,12 +1354,12 @@ type CreateInstancePool struct {
 	// :method:clusters/listNodeTypes API call.
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages []DockerImage `tfsdk:"preloaded_docker_images"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 }
 
 type CreateInstancePoolResponse struct {
@@ -1377,7 +1377,7 @@ type CreatePolicy struct {
 	Description types.String `tfsdk:"description"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries []Library `tfsdk:"libraries"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
 	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user"`
@@ -1754,7 +1754,7 @@ type EditCluster struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -1802,7 +1802,7 @@ type EditCluster struct {
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// This field encodes, through a single value, the resources available to
@@ -1834,7 +1834,7 @@ type EditCluster struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[types.String]types.String `tfsdk:"spark_conf"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -1848,7 +1848,7 @@ type EditCluster struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[types.String]types.String `tfsdk:"spark_env_vars"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -1856,7 +1856,7 @@ type EditCluster struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 
 	WorkloadType *WorkloadType `tfsdk:"workload_type"`
 }
@@ -1870,7 +1870,7 @@ type EditInstancePool struct {
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -1911,7 +1911,7 @@ type EditPolicy struct {
 	Description types.String `tfsdk:"description"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries []Library `tfsdk:"libraries"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
 	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user"`
@@ -1960,7 +1960,7 @@ type Environment struct {
 	// dependency could be <requirement specifier>, <archive url/path>, <local
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
-	Dependencies []types.String `tfsdk:"dependencies"`
+	Dependencies types.List `tfsdk:"dependencies"`
 }
 
 type EventDetails struct {
@@ -2198,7 +2198,7 @@ type GetClusterPermissionLevelsRequest struct {
 
 type GetClusterPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []ClusterPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Get cluster permissions
@@ -2215,7 +2215,7 @@ type GetClusterPolicyPermissionLevelsRequest struct {
 
 type GetClusterPolicyPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []ClusterPolicyPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Get cluster policy permissions
@@ -2244,7 +2244,7 @@ type GetEvents struct {
 	EndTime types.Int64 `tfsdk:"end_time"`
 	// An optional set of event types to filter on. If empty, all event types
 	// are returned.
-	EventTypes []EventType `tfsdk:"event_types"`
+	EventTypes types.List `tfsdk:"event_types"`
 	// The maximum number of events to include in a page of events. Defaults to
 	// 50, and maximum allowed value is 500.
 	Limit types.Int64 `tfsdk:"limit"`
@@ -2289,7 +2289,7 @@ func (f *GetEventsOrder) Type() string {
 
 type GetEventsResponse struct {
 	// <content needs to be added>
-	Events []ClusterEvent `tfsdk:"events"`
+	Events types.List `tfsdk:"events"`
 	// The parameters required to retrieve the next page of events. Omitted if
 	// there are no more events to read.
 	NextPage *GetEvents `tfsdk:"next_page"`
@@ -2316,7 +2316,7 @@ type GetInstancePool struct {
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
 	//
@@ -2327,7 +2327,7 @@ type GetInstancePool struct {
 	// - InstancePoolName: <name_of_pool>
 	//
 	// - InstancePoolId: <id_of_pool>
-	DefaultTags map[types.String]types.String `tfsdk:"default_tags"`
+	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec *DiskSpec `tfsdk:"disk_spec"`
@@ -2366,12 +2366,12 @@ type GetInstancePool struct {
 	// :method:clusters/listNodeTypes API call.
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages []DockerImage `tfsdk:"preloaded_docker_images"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// Current state of the instance pool.
 	State InstancePoolState `tfsdk:"state"`
 	// Usage statistics about the instance pool.
@@ -2388,7 +2388,7 @@ type GetInstancePoolPermissionLevelsRequest struct {
 
 type GetInstancePoolPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []InstancePoolPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Get instance pool permissions
@@ -2410,7 +2410,7 @@ type GetPolicyFamilyRequest struct {
 
 type GetSparkVersionsResponse struct {
 	// All the available Spark versions.
-	Versions []SparkVersion `tfsdk:"versions"`
+	Versions types.List `tfsdk:"versions"`
 }
 
 type GlobalInitScriptCreateRequest struct {
@@ -2506,9 +2506,9 @@ type GlobalInitScriptUpdateRequest struct {
 
 type InitScriptEventDetails struct {
 	// The cluster scoped init scripts associated with this cluster event
-	Cluster []InitScriptInfoAndExecutionDetails `tfsdk:"cluster"`
+	Cluster types.List `tfsdk:"cluster"`
 	// The global init scripts associated with this cluster event
-	Global []InitScriptInfoAndExecutionDetails `tfsdk:"global"`
+	Global types.List `tfsdk:"global"`
 	// The private ip address of the node where the init scripts were run.
 	ReportedForNode types.String `tfsdk:"reported_for_node"`
 }
@@ -2597,7 +2597,7 @@ type InstallLibraries struct {
 	// Unique identifier for the cluster on which to install these libraries.
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// The libraries to install.
-	Libraries []Library `tfsdk:"libraries"`
+	Libraries types.List `tfsdk:"libraries"`
 }
 
 type InstallLibrariesResponse struct {
@@ -2616,7 +2616,7 @@ type InstancePoolAccessControlRequest struct {
 
 type InstancePoolAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []InstancePoolPermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -2639,7 +2639,7 @@ type InstancePoolAndStats struct {
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags map[types.String]types.String `tfsdk:"custom_tags"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
 	//
@@ -2650,7 +2650,7 @@ type InstancePoolAndStats struct {
 	// - InstancePoolName: <name_of_pool>
 	//
 	// - InstancePoolId: <id_of_pool>
-	DefaultTags map[types.String]types.String `tfsdk:"default_tags"`
+	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
 	DiskSpec *DiskSpec `tfsdk:"disk_spec"`
@@ -2689,12 +2689,12 @@ type InstancePoolAndStats struct {
 	// :method:clusters/listNodeTypes API call.
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages []DockerImage `tfsdk:"preloaded_docker_images"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// Current state of the instance pool.
 	State InstancePoolState `tfsdk:"state"`
 	// Usage statistics about the instance pool.
@@ -2842,7 +2842,7 @@ type InstancePoolGcpAttributes struct {
 type InstancePoolPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel InstancePoolPermissionLevel `tfsdk:"permission_level"`
 }
@@ -2876,7 +2876,7 @@ func (f *InstancePoolPermissionLevel) Type() string {
 }
 
 type InstancePoolPermissions struct {
-	AccessControlList []InstancePoolAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -2890,7 +2890,7 @@ type InstancePoolPermissionsDescription struct {
 }
 
 type InstancePoolPermissionsRequest struct {
-	AccessControlList []InstancePoolAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The instance pool for which to get or manage permissions.
 	InstancePoolId types.String `tfsdk:"-" url:"-"`
 }
@@ -2941,7 +2941,7 @@ type InstancePoolStatus struct {
 	// pending_instance_errors follows FIFO with maximum length of the min_idle
 	// of the pool. The pending_instance_errors is emptied once the number of
 	// exiting available instances reaches the min_idle of the pool.
-	PendingInstanceErrors []PendingInstanceError `tfsdk:"pending_instance_errors"`
+	PendingInstanceErrors types.List `tfsdk:"pending_instance_errors"`
 }
 
 type InstanceProfile struct {
@@ -3043,7 +3043,7 @@ type LibraryFullStatus struct {
 	Library *Library `tfsdk:"library"`
 	// All the info and warning messages that have occurred so far for this
 	// library.
-	Messages []types.String `tfsdk:"messages"`
+	Messages types.List `tfsdk:"messages"`
 	// Status of installing the library on the cluster.
 	Status LibraryInstallStatus `tfsdk:"status"`
 }
@@ -3090,7 +3090,7 @@ func (f *LibraryInstallStatus) Type() string {
 
 type ListAllClusterLibraryStatusesResponse struct {
 	// A list of cluster statuses.
-	Statuses []ClusterLibraryStatuses `tfsdk:"statuses"`
+	Statuses types.List `tfsdk:"statuses"`
 }
 
 type ListAvailableZonesResponse struct {
@@ -3098,7 +3098,7 @@ type ListAvailableZonesResponse struct {
 	// request.
 	DefaultZone types.String `tfsdk:"default_zone"`
 	// The list of available zones (e.g., ['us-west-2c', 'us-east-2']).
-	Zones []types.String `tfsdk:"zones"`
+	Zones types.List `tfsdk:"zones"`
 }
 
 // List cluster policies
@@ -3122,30 +3122,30 @@ type ListClustersRequest struct {
 
 type ListClustersResponse struct {
 	// <needs content added>
-	Clusters []ClusterDetails `tfsdk:"clusters"`
+	Clusters types.List `tfsdk:"clusters"`
 }
 
 type ListGlobalInitScriptsResponse struct {
-	Scripts []GlobalInitScriptDetails `tfsdk:"scripts"`
+	Scripts types.List `tfsdk:"scripts"`
 }
 
 type ListInstancePools struct {
-	InstancePools []InstancePoolAndStats `tfsdk:"instance_pools"`
+	InstancePools types.List `tfsdk:"instance_pools"`
 }
 
 type ListInstanceProfilesResponse struct {
 	// A list of instance profiles that the user can access.
-	InstanceProfiles []InstanceProfile `tfsdk:"instance_profiles"`
+	InstanceProfiles types.List `tfsdk:"instance_profiles"`
 }
 
 type ListNodeTypesResponse struct {
 	// The list of available Spark node types.
-	NodeTypes []NodeType `tfsdk:"node_types"`
+	NodeTypes types.List `tfsdk:"node_types"`
 }
 
 type ListPoliciesResponse struct {
 	// List of policies.
-	Policies []Policy `tfsdk:"policies"`
+	Policies types.List `tfsdk:"policies"`
 }
 
 // List policy families
@@ -3161,7 +3161,7 @@ type ListPolicyFamiliesResponse struct {
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// List of policy families.
-	PolicyFamilies []PolicyFamily `tfsdk:"policy_families"`
+	PolicyFamilies types.List `tfsdk:"policy_families"`
 }
 
 type ListSortColumn string
@@ -3247,7 +3247,7 @@ type MavenLibrary struct {
 	//
 	// Maven dependency exclusions:
 	// https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html.
-	Exclusions []types.String `tfsdk:"exclusions"`
+	Exclusions types.List `tfsdk:"exclusions"`
 	// Maven repo to install the Maven package from. If omitted, both Maven
 	// Central Repository and Spark Packages are searched.
 	Repo types.String `tfsdk:"repo"`
@@ -3357,7 +3357,7 @@ type Policy struct {
 	IsDefault types.Bool `tfsdk:"is_default"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries []Library `tfsdk:"libraries"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
 	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user"`
@@ -3494,7 +3494,7 @@ type Results struct {
 	// The image filename
 	FileName types.String `tfsdk:"fileName"`
 
-	FileNames []types.String `tfsdk:"fileNames"`
+	FileNames types.List `tfsdk:"fileNames"`
 	// true if a JSON schema is returned instead of a string representation of
 	// the Hive type.
 	IsJsonSchema types.Bool `tfsdk:"isJsonSchema"`
@@ -3503,7 +3503,7 @@ type Results struct {
 
 	ResultType ResultType `tfsdk:"resultType"`
 	// The table schema
-	Schema []map[types.String]any `tfsdk:"schema"`
+	Schema types.List `tfsdk:"schema"`
 	// The summary of the error
 	Summary types.String `tfsdk:"summary"`
 	// true if partial results are returned.
@@ -3671,7 +3671,7 @@ type TerminationReason struct {
 	Code TerminationReasonCode `tfsdk:"code"`
 	// list of parameters that provide additional information about why the
 	// cluster was terminated
-	Parameters map[types.String]types.String `tfsdk:"parameters"`
+	Parameters types.Map `tfsdk:"parameters"`
 	// type of the termination
 	Type TerminationReasonType `tfsdk:"type"`
 }
@@ -3894,7 +3894,7 @@ type UninstallLibraries struct {
 	// Unique identifier for the cluster on which to uninstall these libraries.
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// The libraries to uninstall.
-	Libraries []Library `tfsdk:"libraries"`
+	Libraries types.List `tfsdk:"libraries"`
 }
 
 type UninstallLibrariesResponse struct {

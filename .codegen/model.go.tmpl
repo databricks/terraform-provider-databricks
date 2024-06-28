@@ -66,8 +66,8 @@ func (f *{{.PascalName}}) Type() string {
 	{{- else if .IsFloat64}}types.Float64
 	{{- else if .IsInt}}types.Int64
 	{{- else if .IsByteStream}}io.ReadCloser
-	{{- else if .ArrayValue }}[]{{template "type" .ArrayValue}}
-	{{- else if .MapValue }}map[types.String] {{template "type" .MapValue}}
+	{{- else if .ArrayValue }}types.List
+	{{- else if .MapValue }}types.Map
 	{{- else if .IsObject }}{{.PascalName}}
 	{{- else if .Enum }}{{.PascalName}}
 	{{- else}}any /* MISSING TYPE */

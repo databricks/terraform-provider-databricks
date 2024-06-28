@@ -158,7 +158,7 @@ type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime struct {
 // SHIELD feature: CSP
 type ComplianceSecurityProfile struct {
 	// Set by customers when they request Compliance Security Profile (CSP)
-	ComplianceStandards []ComplianceStandard `tfsdk:"compliance_standards"`
+	ComplianceStandards types.List `tfsdk:"compliance_standards"`
 
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
@@ -228,7 +228,7 @@ func (f *ComplianceStandard) Type() string {
 
 // Details required to configure a block list or allow list.
 type CreateIpAccessList struct {
-	IpAddresses []types.String `tfsdk:"ip_addresses"`
+	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
 	Label types.String `tfsdk:"label"`
 	// Type of IP access list. Valid values are as follows and are
@@ -340,7 +340,7 @@ type CreateTokenResponse struct {
 type CspEnablementAccount struct {
 	// Set by customers when they request Compliance Security Profile (CSP)
 	// Invariants are enforced in Settings policy.
-	ComplianceStandards []ComplianceStandard `tfsdk:"compliance_standards"`
+	ComplianceStandards types.List `tfsdk:"compliance_standards"`
 	// Enforced = it cannot be overriden at workspace level.
 	IsEnforced types.Bool `tfsdk:"is_enforced"`
 }
@@ -560,7 +560,7 @@ type ExchangeToken struct {
 	// User ID of the user that owns this token.
 	OwnerId types.Int64 `tfsdk:"ownerId"`
 	// The scopes of access granted in the token.
-	Scopes []types.String `tfsdk:"scopes"`
+	Scopes types.List `tfsdk:"scopes"`
 	// The type of this exchange token
 	TokenType TokenType `tfsdk:"tokenType"`
 }
@@ -570,14 +570,14 @@ type ExchangeTokenRequest struct {
 	// The partition of Credentials store
 	PartitionId PartitionId `tfsdk:"partitionId"`
 	// Array of scopes for the token request.
-	Scopes []types.String `tfsdk:"scopes"`
+	Scopes types.List `tfsdk:"scopes"`
 	// A list of token types being requested
-	TokenType []TokenType `tfsdk:"tokenType"`
+	TokenType types.List `tfsdk:"tokenType"`
 }
 
 // Exhanged tokens were successfully returned.
 type ExchangeTokenResponse struct {
-	Values []ExchangeToken `tfsdk:"values"`
+	Values types.List `tfsdk:"values"`
 }
 
 // An IP access list was successfully returned.
@@ -677,7 +677,7 @@ type GetIpAccessListResponse struct {
 
 // IP access lists were successfully returned.
 type GetIpAccessListsResponse struct {
-	IpAccessLists []IpAccessListInfo `tfsdk:"ip_access_lists"`
+	IpAccessLists types.List `tfsdk:"ip_access_lists"`
 }
 
 // Get a network connectivity configuration
@@ -731,7 +731,7 @@ type GetTokenManagementRequest struct {
 
 type GetTokenPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []TokenPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Token with specified Token ID was successfully returned.
@@ -750,7 +750,7 @@ type IpAccessListInfo struct {
 	// Specifies whether this IP access list is enabled.
 	Enabled types.Bool `tfsdk:"enabled"`
 
-	IpAddresses []types.String `tfsdk:"ip_addresses"`
+	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
 	Label types.String `tfsdk:"label"`
 	// Universally unique identifier (UUID) of the IP access list.
@@ -770,11 +770,11 @@ type IpAccessListInfo struct {
 
 // IP access lists were successfully returned.
 type ListIpAccessListResponse struct {
-	IpAccessLists []IpAccessListInfo `tfsdk:"ip_access_lists"`
+	IpAccessLists types.List `tfsdk:"ip_access_lists"`
 }
 
 type ListNccAzurePrivateEndpointRulesResponse struct {
-	Items []NccAzurePrivateEndpointRule `tfsdk:"items"`
+	Items types.List `tfsdk:"items"`
 	// A token that can be used to get the next page of results. If null, there
 	// are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -787,7 +787,7 @@ type ListNetworkConnectivityConfigurationsRequest struct {
 }
 
 type ListNetworkConnectivityConfigurationsResponse struct {
-	Items []NetworkConnectivityConfiguration `tfsdk:"items"`
+	Items types.List `tfsdk:"items"`
 	// A token that can be used to get the next page of results. If null, there
 	// are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -803,7 +803,7 @@ type ListPrivateEndpointRulesRequest struct {
 
 type ListPublicTokensResponse struct {
 	// The information for each token.
-	TokenInfos []PublicTokenInfo `tfsdk:"token_infos"`
+	TokenInfos types.List `tfsdk:"token_infos"`
 }
 
 // List all tokens
@@ -817,7 +817,7 @@ type ListTokenManagementRequest struct {
 // Tokens were successfully returned.
 type ListTokensResponse struct {
 	// Token metadata of each user-created token in the workspace
-	TokenInfos []TokenInfo `tfsdk:"token_infos"`
+	TokenInfos types.List `tfsdk:"token_infos"`
 }
 
 // Type of IP access list. Valid values are as follows and are case-sensitive:
@@ -860,7 +860,7 @@ func (f *ListType) Type() string {
 type NccAwsStableIpRule struct {
 	// The list of stable IP CIDR blocks from which Databricks network traffic
 	// originates when accessing your resources.
-	CidrBlocks []types.String `tfsdk:"cidr_blocks"`
+	CidrBlocks types.List `tfsdk:"cidr_blocks"`
 }
 
 type NccAzurePrivateEndpointRule struct {
@@ -986,11 +986,11 @@ func (f *NccAzurePrivateEndpointRuleGroupId) Type() string {
 type NccAzureServiceEndpointRule struct {
 	// The list of subnets from which Databricks network traffic originates when
 	// accessing your Azure resources.
-	Subnets []types.String `tfsdk:"subnets"`
+	Subnets types.List `tfsdk:"subnets"`
 	// The Azure region in which this service endpoint rule applies.
 	TargetRegion types.String `tfsdk:"target_region"`
 	// The Azure services to which this service endpoint rule applies to.
-	TargetServices []types.String `tfsdk:"target_services"`
+	TargetServices types.List `tfsdk:"target_services"`
 }
 
 // The network connectivity rules that apply to network traffic from your
@@ -1022,7 +1022,7 @@ type NccEgressDefaultRules struct {
 // The network connectivity rules that configured for each destinations. These
 // rules override default rules.
 type NccEgressTargetRules struct {
-	AzurePrivateEndpointRules []NccAzurePrivateEndpointRule `tfsdk:"azure_private_endpoint_rules"`
+	AzurePrivateEndpointRules types.List `tfsdk:"azure_private_endpoint_rules"`
 }
 
 type NetworkConnectivityConfiguration struct {
@@ -1136,7 +1136,7 @@ type ReplaceIpAccessList struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-" url:"-"`
 
-	IpAddresses []types.String `tfsdk:"ip_addresses"`
+	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
 	Label types.String `tfsdk:"label"`
 	// Type of IP access list. Valid values are as follows and are
@@ -1232,7 +1232,7 @@ type TokenAccessControlRequest struct {
 
 type TokenAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []TokenPermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -1264,7 +1264,7 @@ type TokenInfo struct {
 type TokenPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel TokenPermissionLevel `tfsdk:"permission_level"`
 }
@@ -1296,7 +1296,7 @@ func (f *TokenPermissionLevel) Type() string {
 }
 
 type TokenPermissions struct {
-	AccessControlList []TokenAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -1310,7 +1310,7 @@ type TokenPermissionsDescription struct {
 }
 
 type TokenPermissionsRequest struct {
-	AccessControlList []TokenAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 }
 
 // The type of token request. As of now, only `AZURE_ACTIVE_DIRECTORY_TOKEN` is
@@ -1439,7 +1439,7 @@ type UpdateIpAccessList struct {
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-" url:"-"`
 
-	IpAddresses []types.String `tfsdk:"ip_addresses"`
+	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
 	Label types.String `tfsdk:"label"`
 	// Type of IP access list. Valid values are as follows and are
@@ -1482,4 +1482,4 @@ type UpdateRestrictWorkspaceAdminsSettingRequest struct {
 	Setting RestrictWorkspaceAdminsSetting `tfsdk:"setting"`
 }
 
-type WorkspaceConf map[types.String]types.String
+type WorkspaceConf types.Map

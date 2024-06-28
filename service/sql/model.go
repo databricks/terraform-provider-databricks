@@ -139,7 +139,7 @@ type AlertQuery struct {
 	// The text of the query to be run.
 	Query types.String `tfsdk:"query"`
 
-	Tags []types.String `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 	// The timestamp at which this query was last updated.
 	UpdatedAt types.String `tfsdk:"updated_at"`
 	// The ID of the user who owns the query.
@@ -520,7 +520,7 @@ type Dashboard struct {
 	// spaces. Appears in the URL for this query.
 	Slug types.String `tfsdk:"slug"`
 
-	Tags []types.String `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 	// Timestamp when this dashboard was last updated.
 	UpdatedAt types.String `tfsdk:"updated_at"`
 
@@ -528,7 +528,7 @@ type Dashboard struct {
 	// The ID of the user who owns the dashboard.
 	UserId types.Int64 `tfsdk:"user_id"`
 
-	Widgets []Widget `tfsdk:"widgets"`
+	Widgets types.List `tfsdk:"widgets"`
 }
 
 type DashboardEditContent struct {
@@ -541,7 +541,7 @@ type DashboardEditContent struct {
 	// owner" behavior)
 	RunAsRole RunAsRole `tfsdk:"run_as_role"`
 
-	Tags []types.String `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 type DashboardOptions struct {
@@ -567,7 +567,7 @@ type DashboardPostContent struct {
 	// owner" behavior)
 	RunAsRole RunAsRole `tfsdk:"run_as_role"`
 
-	Tags []types.String `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 // A JSON object representing a DBSQL data source / SQL warehouse.
@@ -938,7 +938,7 @@ type EndpointTagPair struct {
 }
 
 type EndpointTags struct {
-	CustomTags []EndpointTagPair `tfsdk:"custom_tags"`
+	CustomTags types.List `tfsdk:"custom_tags"`
 }
 
 type ExecuteStatementRequest struct {
@@ -1057,7 +1057,7 @@ type ExecuteStatementRequest struct {
 	//
 	// [Parameter markers]: https://docs.databricks.com/sql/language-manual/sql-ref-parameter-marker.html
 	// [`cast` function]: https://docs.databricks.com/sql/language-manual/functions/cast.html
-	Parameters []StatementParameterListItem `tfsdk:"parameters"`
+	Parameters types.List `tfsdk:"parameters"`
 	// Applies the given row limit to the statement's result set, but unlike the
 	// `LIMIT` clause in SQL, it also sets the `truncated` field in the response
 	// to indicate whether the result was trimmed due to the limit or not.
@@ -1164,7 +1164,7 @@ type ExternalLink struct {
 	// typically used to pass a decryption key to the external service. The
 	// values of these headers should be considered sensitive and the client
 	// should not expose these values in a log.
-	HttpHeaders map[types.String]types.String `tfsdk:"http_headers"`
+	HttpHeaders types.Map `tfsdk:"http_headers"`
 	// When fetching, provides the `chunk_index` for the _next_ chunk. If
 	// absent, indicates there are no more chunks. The next chunk can be fetched
 	// with a :method:statementexecution/getStatementResultChunkN request.
@@ -1233,7 +1233,7 @@ type GetQueryRequest struct {
 }
 
 type GetResponse struct {
-	AccessControlList []AccessControl `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// An object's type and UUID, separated by a forward slash (/) character.
 	ObjectId types.String `tfsdk:"object_id"`
 	// A singular noun object type.
@@ -1281,7 +1281,7 @@ type GetWarehousePermissionLevelsRequest struct {
 
 type GetWarehousePermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []WarehousePermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 // Get SQL warehouse permissions
@@ -1412,14 +1412,14 @@ type GetWorkspaceWarehouseConfigResponse struct {
 	ConfigParam *RepeatedEndpointConfPairs `tfsdk:"config_param"`
 	// Spark confs for external hive metastore configuration JSON serialized
 	// size must be less than <= 512K
-	DataAccessConfig []EndpointConfPair `tfsdk:"data_access_config"`
+	DataAccessConfig types.List `tfsdk:"data_access_config"`
 	// List of Warehouse Types allowed in this workspace (limits allowed value
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
 	// cannot be disabled, they don't need to be specified in
 	// SetWorkspaceWarehouseConfig. Note: Disabling a type may cause existing
 	// warehouses to be converted to another type. Used by frontend to save
 	// specific type availability in the warehouse create and edit form UI.
-	EnabledWarehouseTypes []WarehouseTypePair `tfsdk:"enabled_warehouse_types"`
+	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types"`
 	// Deprecated: Use sql_configuration_parameters
 	GlobalParam *RepeatedEndpointConfPairs `tfsdk:"global_param"`
 	// GCP only: Google Service Account used to pass to cluster to access Google
@@ -1533,7 +1533,7 @@ type ListQueriesResponse struct {
 	// A token that can be used to get the next page of results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Res []QueryInfo `tfsdk:"res"`
+	Res types.List `tfsdk:"res"`
 }
 
 // List Queries
@@ -1558,7 +1558,7 @@ type ListResponse struct {
 	// The number of dashboards per page.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// List of dashboards returned.
-	Results []Dashboard `tfsdk:"results"`
+	Results types.List `tfsdk:"results"`
 }
 
 // List warehouses
@@ -1570,7 +1570,7 @@ type ListWarehousesRequest struct {
 
 type ListWarehousesResponse struct {
 	// A list of warehouses and their configurations.
-	Warehouses []EndpointInfo `tfsdk:"warehouses"`
+	Warehouses types.List `tfsdk:"warehouses"`
 }
 
 // If specified, allows multiple values to be selected for this parameter. Only
@@ -1877,7 +1877,7 @@ type Query struct {
 	// owner" behavior)
 	RunAsRole RunAsRole `tfsdk:"run_as_role"`
 
-	Tags []types.String `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 	// The timestamp at which this query was last updated.
 	UpdatedAt types.String `tfsdk:"updated_at"`
 
@@ -1885,7 +1885,7 @@ type Query struct {
 	// The ID of the user who owns the query.
 	UserId types.Int64 `tfsdk:"user_id"`
 
-	Visualizations []Visualization `tfsdk:"visualizations"`
+	Visualizations types.List `tfsdk:"visualizations"`
 }
 
 type QueryEditContent struct {
@@ -1913,20 +1913,20 @@ type QueryEditContent struct {
 	// owner" behavior)
 	RunAsRole RunAsRole `tfsdk:"run_as_role"`
 
-	Tags []types.String `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 // A filter to limit query history results. This field is optional.
 type QueryFilter struct {
 	QueryStartTimeRange *TimeRange `tfsdk:"query_start_time_range" url:"query_start_time_range,omitempty"`
 	// A list of statement IDs.
-	StatementIds []types.String `tfsdk:"statement_ids" url:"statement_ids,omitempty"`
+	StatementIds types.List `tfsdk:"statement_ids" url:"statement_ids,omitempty"`
 
-	Statuses []QueryStatus `tfsdk:"statuses" url:"statuses,omitempty"`
+	Statuses types.List `tfsdk:"statuses" url:"statuses,omitempty"`
 	// A list of user IDs who ran the queries.
-	UserIds []types.Int64 `tfsdk:"user_ids" url:"user_ids,omitempty"`
+	UserIds types.List `tfsdk:"user_ids" url:"user_ids,omitempty"`
 	// A list of warehouse IDs.
-	WarehouseIds []types.String `tfsdk:"warehouse_ids" url:"warehouse_ids,omitempty"`
+	WarehouseIds types.List `tfsdk:"warehouse_ids" url:"warehouse_ids,omitempty"`
 }
 
 type QueryInfo struct {
@@ -1990,7 +1990,7 @@ type QueryList struct {
 	// The number of queries per page.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// List of queries returned.
-	Results []Query `tfsdk:"results"`
+	Results types.List `tfsdk:"results"`
 }
 
 // Metrics about query execution.
@@ -2067,7 +2067,7 @@ type QueryOptions struct {
 	// days.
 	MovedToTrashAt types.String `tfsdk:"moved_to_trash_at"`
 
-	Parameters []Parameter `tfsdk:"parameters"`
+	Parameters types.List `tfsdk:"parameters"`
 	// The name of the schema to execute this query in.
 	Schema types.String `tfsdk:"schema"`
 }
@@ -2097,7 +2097,7 @@ type QueryPostContent struct {
 	// owner" behavior)
 	RunAsRole RunAsRole `tfsdk:"run_as_role"`
 
-	Tags []types.String `tfsdk:"tags"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 // Type of statement for this query
@@ -2212,9 +2212,9 @@ func (f *QueryStatus) Type() string {
 
 type RepeatedEndpointConfPairs struct {
 	// Deprecated: Use configuration_pairs
-	ConfigPair []EndpointConfPair `tfsdk:"config_pair"`
+	ConfigPair types.List `tfsdk:"config_pair"`
 
-	ConfigurationPairs []EndpointConfPair `tfsdk:"configuration_pairs"`
+	ConfigurationPairs types.List `tfsdk:"configuration_pairs"`
 }
 
 // Restore a dashboard
@@ -2245,9 +2245,9 @@ type ResultData struct {
 	// The `JSON_ARRAY` format is an array of arrays of values, where each
 	// non-null value is formatted as a string. Null values are encoded as JSON
 	// `null`.
-	DataArray [][]types.String `tfsdk:"data_array"`
+	DataArray types.List `tfsdk:"data_array"`
 
-	ExternalLinks []ExternalLink `tfsdk:"external_links"`
+	ExternalLinks types.List `tfsdk:"external_links"`
 	// When fetching, provides the `chunk_index` for the _next_ chunk. If
 	// absent, indicates there are no more chunks. The next chunk can be fetched
 	// with a :method:statementexecution/getStatementResultChunkN request.
@@ -2266,7 +2266,7 @@ type ResultData struct {
 // The result manifest provides schema and metadata for the result set.
 type ResultManifest struct {
 	// Array of result set chunk metadata.
-	Chunks []BaseChunkInfo `tfsdk:"chunks"`
+	Chunks types.List `tfsdk:"chunks"`
 
 	Format Format `tfsdk:"format"`
 	// The schema is an ordered list of column descriptions.
@@ -2287,7 +2287,7 @@ type ResultManifest struct {
 type ResultSchema struct {
 	ColumnCount types.Int64 `tfsdk:"column_count"`
 
-	Columns []ColumnInfo `tfsdk:"columns"`
+	Columns types.List `tfsdk:"columns"`
 }
 
 // Sets the **Run as** role for the object. Must be set to one of `"viewer"`
@@ -2379,7 +2379,7 @@ func (f *ServiceErrorCode) Type() string {
 
 // Set object ACL
 type SetRequest struct {
-	AccessControlList []AccessControl `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// Object ID. The ACL for the object with this UUID is overwritten by this
 	// request's POST content.
 	ObjectId types.String `tfsdk:"-" url:"-"`
@@ -2388,7 +2388,7 @@ type SetRequest struct {
 }
 
 type SetResponse struct {
-	AccessControlList []AccessControl `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// An object's type and UUID, separated by a forward slash (/) character.
 	ObjectId types.String `tfsdk:"object_id"`
 	// A singular noun object type.
@@ -2402,14 +2402,14 @@ type SetWorkspaceWarehouseConfigRequest struct {
 	ConfigParam *RepeatedEndpointConfPairs `tfsdk:"config_param"`
 	// Spark confs for external hive metastore configuration JSON serialized
 	// size must be less than <= 512K
-	DataAccessConfig []EndpointConfPair `tfsdk:"data_access_config"`
+	DataAccessConfig types.List `tfsdk:"data_access_config"`
 	// List of Warehouse Types allowed in this workspace (limits allowed value
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
 	// cannot be disabled, they don't need to be specified in
 	// SetWorkspaceWarehouseConfig. Note: Disabling a type may cause existing
 	// warehouses to be converted to another type. Used by frontend to save
 	// specific type availability in the warehouse create and edit form UI.
-	EnabledWarehouseTypes []WarehouseTypePair `tfsdk:"enabled_warehouse_types"`
+	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types"`
 	// Deprecated: Use sql_configuration_parameters
 	GlobalParam *RepeatedEndpointConfPairs `tfsdk:"global_param"`
 	// GCP only: Google Service Account used to pass to cluster to access Google
@@ -2685,7 +2685,7 @@ type TerminationReason struct {
 	Code TerminationReasonCode `tfsdk:"code"`
 	// list of parameters that provide additional information about why the
 	// cluster was terminated
-	Parameters map[types.String]types.String `tfsdk:"parameters"`
+	Parameters types.Map `tfsdk:"parameters"`
 	// type of the termination
 	Type TerminationReasonType `tfsdk:"type"`
 }
@@ -2977,7 +2977,7 @@ type WarehouseAccessControlRequest struct {
 
 type WarehouseAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []WarehousePermission `tfsdk:"all_permissions"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -2991,7 +2991,7 @@ type WarehouseAccessControlResponse struct {
 type WarehousePermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel WarehousePermissionLevel `tfsdk:"permission_level"`
 }
@@ -3027,7 +3027,7 @@ func (f *WarehousePermissionLevel) Type() string {
 }
 
 type WarehousePermissions struct {
-	AccessControlList []WarehouseAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -3041,7 +3041,7 @@ type WarehousePermissionsDescription struct {
 }
 
 type WarehousePermissionsRequest struct {
-	AccessControlList []WarehouseAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-" url:"-"`
 }

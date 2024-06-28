@@ -50,7 +50,7 @@ type CreateVectorIndexResponse struct {
 // Result of the upsert or delete operation.
 type DeleteDataResult struct {
 	// List of primary keys for rows that failed to process.
-	FailedPrimaryKeys []types.String `tfsdk:"failed_primary_keys"`
+	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys"`
 	// Count of successfully processed rows.
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
@@ -91,7 +91,7 @@ type DeleteDataVectorIndexRequest struct {
 	// Vector Access Index.
 	IndexName types.String `tfsdk:"-" url:"-"`
 	// List of primary keys for the data to be deleted.
-	PrimaryKeys []types.String `tfsdk:"primary_keys"`
+	PrimaryKeys types.List `tfsdk:"primary_keys"`
 }
 
 // Response to a delete data vector index request.
@@ -122,10 +122,10 @@ type DeleteIndexResponse struct {
 
 type DeltaSyncVectorIndexSpecRequest struct {
 	// The columns that contain the embedding source.
-	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 	// The columns that contain the embedding vectors. The format should be
 	// array[double].
-	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
 	// [Optional] Automatically sync the vector index contents and computed
 	// embeddings to the specified Delta table. The only supported table name is
 	// the index name with the suffix `_writeback_table`.
@@ -145,9 +145,9 @@ type DeltaSyncVectorIndexSpecRequest struct {
 
 type DeltaSyncVectorIndexSpecResponse struct {
 	// The columns that contain the embedding source.
-	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 	// The columns that contain the embedding vectors.
-	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
 	// [Optional] Name of the Delta table to sync the vector index contents and
 	// computed embeddings to.
 	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table"`
@@ -168,9 +168,9 @@ type DeltaSyncVectorIndexSpecResponse struct {
 
 type DirectAccessVectorIndexSpec struct {
 	// Contains the optional model endpoint to use during query time.
-	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 
-	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
 	// The schema of the index in JSON format.
 	//
 	// Supported types are `integer`, `long`, `float`, `double`, `boolean`,
@@ -293,7 +293,7 @@ type GetIndexRequest struct {
 
 type ListEndpointResponse struct {
 	// An array of Endpoint objects
-	Endpoints []EndpointInfo `tfsdk:"endpoints"`
+	Endpoints types.List `tfsdk:"endpoints"`
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -314,7 +314,7 @@ type ListIndexesRequest struct {
 }
 
 type ListValue struct {
-	Values []Value `tfsdk:"values"`
+	Values types.List `tfsdk:"values"`
 }
 
 type ListVectorIndexesResponse struct {
@@ -322,7 +322,7 @@ type ListVectorIndexesResponse struct {
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	VectorIndexes []MiniVectorIndex `tfsdk:"vector_indexes"`
+	VectorIndexes types.List `tfsdk:"vector_indexes"`
 }
 
 // Key-value pair.
@@ -406,7 +406,7 @@ type QueryVectorIndexNextPageRequest struct {
 
 type QueryVectorIndexRequest struct {
 	// List of column names to include in the response.
-	Columns []types.String `tfsdk:"columns"`
+	Columns types.List `tfsdk:"columns"`
 	// JSON string representing query filters.
 	//
 	// Example filters: - `{"id <": 5}`: Filter for id less than 5. - `{"id >":
@@ -424,7 +424,7 @@ type QueryVectorIndexRequest struct {
 	QueryType types.String `tfsdk:"query_type"`
 	// Query vector. Required for Direct Vector Access Index and Delta Sync
 	// Index using self-managed vectors.
-	QueryVector []types.Float64 `tfsdk:"query_vector"`
+	QueryVector types.List `tfsdk:"query_vector"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
 }
@@ -443,7 +443,7 @@ type QueryVectorIndexResponse struct {
 // Data returned in the query result.
 type ResultData struct {
 	// Data rows returned in the query.
-	DataArray [][]types.String `tfsdk:"data_array"`
+	DataArray types.List `tfsdk:"data_array"`
 	// Number of rows in the result set.
 	RowCount types.Int64 `tfsdk:"row_count"`
 }
@@ -453,7 +453,7 @@ type ResultManifest struct {
 	// Number of columns in the result set.
 	ColumnCount types.Int64 `tfsdk:"column_count"`
 	// Information about each column in the result set.
-	Columns []ColumnInfo `tfsdk:"columns"`
+	Columns types.List `tfsdk:"columns"`
 }
 
 // Request payload for scanning data from a vector index.
@@ -469,14 +469,14 @@ type ScanVectorIndexRequest struct {
 // Response to a scan vector index request.
 type ScanVectorIndexResponse struct {
 	// List of data entries
-	Data []Struct `tfsdk:"data"`
+	Data types.List `tfsdk:"data"`
 	// Primary key of the last entry.
 	LastPrimaryKey types.String `tfsdk:"last_primary_key"`
 }
 
 type Struct struct {
 	// Data entry, corresponding to a row in a vector index.
-	Fields []MapStringValueEntry `tfsdk:"fields"`
+	Fields types.List `tfsdk:"fields"`
 }
 
 // Synchronize an index
@@ -491,7 +491,7 @@ type SyncIndexResponse struct {
 // Result of the upsert or delete operation.
 type UpsertDataResult struct {
 	// List of primary keys for rows that failed to process.
-	FailedPrimaryKeys []types.String `tfsdk:"failed_primary_keys"`
+	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys"`
 	// Count of successfully processed rows.
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }

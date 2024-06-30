@@ -274,15 +274,15 @@ resource "databricks_grants" "some" {
   }
   grant {
     principal  = databricks_service_principal.my_sp.application_id
-    privileges = ["USE_SCHEMA", "MODIFY"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
   grant {
     principal  = databricks_group.my_group.display_name
-    privileges = ["USE_SCHEMA", "MODIFY"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
   grant {
     principal  = databricks_group.my_user.user_name
-    privileges = ["USE_SCHEMA", "MODIFY"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
 }
 ```

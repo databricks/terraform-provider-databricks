@@ -5,8 +5,13 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	newschema "github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -972,4 +977,259 @@ func TestStructToData_IndirectString(t *testing.T) {
 		Indirect: []IndirectString{"a"},
 	}, scm, d)
 	assert.NoError(t, err)
+}
+
+type DummyNewTfSdk struct {
+	Enabled     types.Bool        `tfsdk:"enabled"`
+	Workers     types.Int64       `tfsdk:"workers"`
+	Floats      types.Float64     `tfsdk:"floats"`
+	Description types.String      `tfsdk:"description"`
+	Tasks       types.String      `tfsdk:"task"`
+	Nested      *DummyNestedTfSdk `tfsdk:"nested"`
+	Repeated    []types.Int64     `tfsdk:"repeated"`
+	// Attributes  map[types.String]types.String `tfsdk:"attributes"`
+	Irrelevant types.String `tfsdk:"-"`
+}
+
+type DummyNestedTfSdk struct {
+	Name types.String `tfsdk:"name"`
+}
+
+// Optional --> should be able to get from the openapispec
+//   For something we cannot, we need to extend it
+
+type DummyNewGoSdk struct {
+	Enabled     bool              `json:"enabled"`
+	Workers     int               `json:"workers"`
+	Floats      float64           `json:"floats"`
+	Description string            `json:"description"`
+	Tasks       string            `json:"tasks"`
+	Nested      *DummyNestedGoSdk `json:"nested"`
+	Repeated    []int64           `json:"repeated"`
+	// Attributes      map[string]string `json:"attributes"`
+	ForceSendFields []string `json:"-"`
+}
+
+type DummyNestedGoSdk struct {
+	Name            string   `tfsdk:"name"`
+	ForceSendFields []string `json:"-"`
+}
+
+type emptyCtx struct{}
+
+func (emptyCtx) Deadline() (deadline time.Time, ok bool) {
+	return
+}
+
+func (emptyCtx) Done() <-chan struct{} {
+	return nil
+}
+
+func (emptyCtx) Err() error {
+	return nil
+}
+
+func (emptyCtx) Value(key any) any {
+	return nil
+}
+
+// func PopulateStruct(src interface{}, dest interface{}) error {
+// 	srcVal := reflect.ValueOf(src)
+// 	destVal := reflect.ValueOf(dest).Elem()
+
+// 	if srcVal.Kind() != reflect.Struct || destVal.Kind() != reflect.Struct {
+// 		return fmt.Errorf("src and dest should be structs")
+// 	}
+
+// 	srcType := srcVal.Type()
+// 	for i := 0; i < srcVal.NumField(); i++ {
+// 		srcField := srcVal.Field(i)
+// 		srcFieldName := srcType.Field(i).Name
+
+// 		destField := destVal.FieldByName(srcFieldName)
+// 		if destField.IsValid() && destField.CanSet() {
+// 			if srcField.Type().ConvertibleTo(destField.Type()) {
+// 				destField.Set(srcField.Convert(destField.Type()))
+// 			}
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}) error {
+	srcVal := reflect.ValueOf(tfsdk)
+	destVal := reflect.ValueOf(gosdk)
+
+	if srcVal.Kind() == reflect.Ptr {
+		srcVal = srcVal.Elem()
+	}
+
+	if destVal.Kind() != reflect.Ptr {
+		panic("Please provide a pointer for the gosdk struct")
+	}
+	destVal = destVal.Elem()
+
+	if srcVal.Kind() != reflect.Struct || destVal.Kind() != reflect.Struct {
+		panic("input should be structs")
+	}
+
+	srcType := srcVal.Type()
+	for i := 0; i < srcVal.NumField(); i++ {
+		srcField := srcVal.Field(i)
+		srcFieldName := srcType.Field(i).Name
+
+		destField := destVal.FieldByName(srcFieldName)
+
+		srcFieldTag := srcType.Field(i).Tag.Get("tfsdk")
+		if srcFieldTag == "-" {
+			continue
+		}
+
+		if !destField.IsValid() {
+			panic(fmt.Errorf("destination field is not valid: %s", srcFieldName))
+		}
+
+		if !destField.CanSet() {
+			panic(fmt.Errorf("destination field can not be set: %s", srcFieldName))
+		}
+
+		srcFieldValue := srcField.Interface()
+
+		if srcField.Kind() == reflect.Ptr && !srcField.IsNil() {
+			println("it is a pointer")
+			// Allocate new memory for the destination field
+			destField.Set(reflect.New(destField.Type().Elem()))
+
+			switch destField.Type().Elem().Kind() {
+			case reflect.Struct:
+				println("struct!")
+				// Apply the same set of things for primitive types
+			case reflect.Slice:
+				println("slice!")
+				// Need a function to deal with slices
+			case reflect.Map:
+				println("map")
+			}
+
+			// Recursively populate the nested struct
+			if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Interface()); err != nil {
+				return err
+			}
+		} else if srcField.Kind() == reflect.Slice {
+			println("it is a slice")
+			// if slice of primitive types, handle them directly
+			// if slice of ptrs
+			//   then check what are the ptrs pointing to, and apply the same things as ptrs
+			// if slice of structs
+			//   if primitive structs, handle them, otherwise, recursive calls
+			// *** you only do recursive calls on non-primitive structs
+		} else if srcField.Kind() == reflect.Struct {
+			println("it is a struct")
+			switch srcFieldValue.(type) {
+			case types.Bool:
+				boolVal := srcFieldValue.(types.Bool)
+				destField.SetBool(boolVal.ValueBool())
+				if !boolVal.IsNull() {
+					addToForceSendFields(srcFieldName, gosdk)
+				}
+			case types.Int64:
+				intVal := srcFieldValue.(types.Int64)
+				destField.SetInt(intVal.ValueInt64())
+				if !intVal.IsNull() {
+					addToForceSendFields(srcFieldName, gosdk)
+				}
+			case types.Float64:
+				floatVal := srcFieldValue.(types.Float64)
+				destField.SetFloat(floatVal.ValueFloat64())
+				if !floatVal.IsNull() {
+					addToForceSendFields(srcFieldName, gosdk)
+				}
+			case types.String:
+				destField.SetString(srcFieldValue.(types.String).ValueString())
+			default:
+				if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface()); err != nil {
+					return err
+				}
+			}
+		} else if srcField.Kind() == reflect.Map {
+
+		}
+	}
+
+	return nil
+}
+
+func addToForceSendFields(fieldName string, dest interface{}) {
+	destVal := reflect.ValueOf(dest).Elem()
+	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
+
+	forceSendFields := forceSendFieldsField.Interface().([]string)
+	forceSendFields = append(forceSendFields, fieldName)
+	forceSendFieldsField.Set(reflect.ValueOf(forceSendFields))
+}
+
+func TestGetAndSetPluginFramework(t *testing.T) {
+	ctx := emptyCtx{}
+	scm := newschema.Schema{
+		Attributes: map[string]newschema.Attribute{
+			"enabled": newschema.BoolAttribute{
+				Required: true,
+			},
+			"workers": newschema.Int64Attribute{
+				Optional: true,
+			},
+			"description": newschema.StringAttribute{
+				Optional: true,
+			},
+			"task": newschema.StringAttribute{
+				Optional: true,
+			},
+			"repeated": newschema.ListAttribute{
+				ElementType: types.Int64Type,
+				Optional:    true,
+			},
+			"floats": newschema.Float64Attribute{
+				Optional: true,
+			},
+			"nested": newschema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]newschema.Attribute{
+					"name": newschema.StringAttribute{
+						Optional: true,
+					},
+				},
+			},
+		},
+	}
+	state := tfsdk.State{
+		Schema: scm,
+	}
+
+	goVal := DummyNewTfSdk{
+		Enabled:     types.BoolValue(false),
+		Workers:     types.Int64Value(12),
+		Description: types.StringValue("abc"),
+		Tasks:       types.StringNull(),
+		Nested: &DummyNestedTfSdk{
+			Name: types.StringValue("def"),
+		},
+		Repeated: []types.Int64{types.Int64Value(12)},
+	}
+
+	diags := state.Set(ctx, goVal)
+	assert.Len(t, diags, 0)
+
+	var enabled types.Bool
+	state.GetAttribute(ctx, path.Root("enabled"), &enabled)
+	assert.True(t, !enabled.IsNull())
+	assert.True(t, !enabled.IsUnknown())
+	assert.True(t, !enabled.ValueBool())
+
+	testGoSdk := DummyNewGoSdk{}
+	TfSdkToGoSdkStruct(goVal, &testGoSdk)
+	assert.True(t, testGoSdk.Enabled == false)
+	assert.True(t, testGoSdk.Description == "abc")
+	assert.True(t, testGoSdk.Workers == 12)
+	assert.True(t, len(testGoSdk.ForceSendFields) == 1)
 }

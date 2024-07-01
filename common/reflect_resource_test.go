@@ -981,17 +981,19 @@ func TestStructToData_IndirectString(t *testing.T) {
 }
 
 type DummyNewTfSdk struct {
-	Enabled         types.Bool         `tfsdk:"enabled"`
-	Workers         types.Int64        `tfsdk:"workers"`
-	Floats          types.Float64      `tfsdk:"floats"`
-	Description     types.String       `tfsdk:"description"`
-	Tasks           types.String       `tfsdk:"task"`
-	Nested          *DummyNestedTfSdk  `tfsdk:"nested"`
-	NoPointerNested DummyNestedTfSdk   `tfsdk:"no_pointer_nested"`
-	NestedList      []DummyNestedTfSdk `tfsdk:"nested_list"`
-	Repeated        types.List         `tfsdk:"repeated"`
-	Attributes      types.Map          `tfsdk:"attributes"`
-	Irrelevant      types.String       `tfsdk:"-"`
+	Enabled           types.Bool                  `tfsdk:"enabled"`
+	Workers           types.Int64                 `tfsdk:"workers"`
+	Floats            types.Float64               `tfsdk:"floats"`
+	Description       types.String                `tfsdk:"description"`
+	Tasks             types.String                `tfsdk:"task"`
+	Nested            *DummyNestedTfSdk           `tfsdk:"nested"`
+	NoPointerNested   DummyNestedTfSdk            `tfsdk:"no_pointer_nested"`
+	NestedList        []DummyNestedTfSdk          `tfsdk:"nested_list"`
+	NestedPointerList []*DummyNestedTfSdk         `tfsdk:"nested_pointer_list"`
+	Repeated          types.List                  `tfsdk:"repeated"`
+	Attributes        types.Map                   `tfsdk:"attributes"`
+	NestedMap         map[string]DummyNestedTfSdk `tfsdk:"nested_map"`
+	Irrelevant        types.String                `tfsdk:"-"`
 }
 
 type DummyNestedTfSdk struct {
@@ -999,23 +1001,20 @@ type DummyNestedTfSdk struct {
 	Enabled types.Bool   `tfsdk:"enabled"`
 }
 
-// func (d DummyNewTfSdk) toGoSdk(g *DummyNewGoSdk) {
-// 	g.Enabled = d.Enabled.ValueBool()
-// 	g.Nested = d.Nested.toGoSdk()
-// }
-
 type DummyNewGoSdk struct {
-	Enabled         bool               `json:"enabled"`
-	Workers         int                `json:"workers"`
-	Floats          float64            `json:"floats"`
-	Description     string             `json:"description"`
-	Tasks           string             `json:"tasks"`
-	Nested          *DummyNestedGoSdk  `json:"nested"`
-	NoPointerNested DummyNestedGoSdk   `json:"no_pointer_nested"`
-	NestedList      []DummyNestedGoSdk `json:"nested_list"`
-	Repeated        []int64            `json:"repeated"`
-	Attributes      map[string]string  `json:"attributes"`
-	ForceSendFields []string           `json:"-"`
+	Enabled           bool                        `json:"enabled"`
+	Workers           int                         `json:"workers"`
+	Floats            float64                     `json:"floats"`
+	Description       string                      `json:"description"`
+	Tasks             string                      `json:"tasks"`
+	Nested            *DummyNestedGoSdk           `json:"nested"`
+	NoPointerNested   DummyNestedGoSdk            `json:"no_pointer_nested"`
+	NestedList        []DummyNestedGoSdk          `json:"nested_list"`
+	NestedPointerList []*DummyNestedGoSdk         `json:"nested_pointer_list"`
+	Repeated          []int64                     `json:"repeated"`
+	Attributes        map[string]string           `json:"attributes"`
+	NestedMap         map[string]DummyNestedTfSdk `json:"nested_map"`
+	ForceSendFields   []string                    `json:"-"`
 }
 
 type DummyNestedGoSdk struct {
@@ -1059,6 +1058,8 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Contex
 		panic("input should be structs")
 	}
 
+	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
+
 	srcType := srcVal.Type()
 	for i := 0; i < srcVal.NumField(); i++ {
 		srcField := srcVal.Field(i)
@@ -1071,73 +1072,111 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Contex
 			continue
 		}
 
-		if !destField.IsValid() {
-			panic(fmt.Errorf("destination field is not valid: %s", srcFieldName))
-		}
-
-		if !destField.CanSet() {
-			panic(fmt.Errorf("destination field can not be set: %s", srcFieldName))
-		}
-
-		srcFieldValue := srcField.Interface()
-
-		if srcFieldValue == nil {
-			continue
-		} else if srcField.Kind() == reflect.Ptr {
-			// Allocate new memory for the destination field
-			destField.Set(reflect.New(destField.Type().Elem()))
-
-			// Recursively populate the nested struct.
-			if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Interface(), ctx); err != nil {
-				return err
-			}
-		} else if srcField.Kind() == reflect.Struct {
-			switch srcFieldValue.(type) {
-			case types.Bool:
-				boolVal := srcFieldValue.(types.Bool)
-				destField.SetBool(boolVal.ValueBool())
-				if !boolVal.IsNull() {
-					addToForceSendFields(srcFieldName, gosdk)
-				}
-			case types.Int64:
-				intVal := srcFieldValue.(types.Int64)
-				destField.SetInt(intVal.ValueInt64())
-				if !intVal.IsNull() {
-					addToForceSendFields(srcFieldName, gosdk)
-				}
-			case types.Float64:
-				floatVal := srcFieldValue.(types.Float64)
-				destField.SetFloat(floatVal.ValueFloat64())
-				if !floatVal.IsNull() {
-					addToForceSendFields(srcFieldName, gosdk)
-				}
-			case types.String:
-				destField.SetString(srcFieldValue.(types.String).ValueString())
-			case types.List:
-				diag := srcFieldValue.(types.List).ElementsAs(ctx, destField.Addr().Interface(), false)
-				println(diag)
-			case types.Map:
-				srcFieldValue.(types.Map).ElementsAs(ctx, destField.Addr().Interface(), false)
-			default:
-				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
-				if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx); err != nil {
-					return err
-				}
-			}
-		} else if srcField.Kind() == reflect.Slice {
-			println("slice!")
-		} else {
-			panic("Unknown type for field")
-		}
+		populateSingleField(srcField, destField, &forceSendFieldsField, ctx)
 	}
 
 	return nil
 }
 
-func addToForceSendFields(fieldName string, dest interface{}) {
-	destVal := reflect.ValueOf(dest).Elem()
-	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
+func populateSingleField(srcField reflect.Value, destField reflect.Value, forceSendFieldsField *reflect.Value, ctx context.Context) error {
 
+	if !destField.IsValid() {
+		panic(fmt.Errorf("destination field is not valid: %s", destField.Type().Name()))
+	}
+
+	if !destField.CanSet() {
+		panic(fmt.Errorf("destination field can not be set: %s", destField.Type().Name()))
+	}
+
+	srcFieldName := srcField.Type().Name()
+
+	srcFieldValue := srcField.Interface()
+
+	if srcFieldValue == nil {
+		return nil
+	} else if srcField.Kind() == reflect.Ptr {
+		// Allocate new memory for the destination field
+		destField.Set(reflect.New(destField.Type().Elem()))
+
+		// Recursively populate the nested struct.
+		if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Interface(), ctx); err != nil {
+			return err
+		}
+	} else if srcField.Kind() == reflect.Struct {
+		switch srcFieldValue.(type) {
+		case types.Bool:
+			boolVal := srcFieldValue.(types.Bool)
+			destField.SetBool(boolVal.ValueBool())
+			if !boolVal.IsNull() {
+				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			}
+		case types.Int64:
+			intVal := srcFieldValue.(types.Int64)
+			destField.SetInt(intVal.ValueInt64())
+			if !intVal.IsNull() {
+				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			}
+		case types.Float64:
+			floatVal := srcFieldValue.(types.Float64)
+			destField.SetFloat(floatVal.ValueFloat64())
+			if !floatVal.IsNull() {
+				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			}
+		case types.String:
+			destField.SetString(srcFieldValue.(types.String).ValueString())
+		case types.List:
+			diag := srcFieldValue.(types.List).ElementsAs(ctx, destField.Addr().Interface(), false)
+			if len(diag) != 0 {
+				panic("Error")
+			}
+		case types.Map:
+			srcFieldValue.(types.Map).ElementsAs(ctx, destField.Addr().Interface(), false)
+		default:
+			// If it is a real stuct instead of a tfsdk type, recursively resolve it.
+			if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx); err != nil {
+				return err
+			}
+		}
+	} else if srcField.Kind() == reflect.Slice {
+		println("slice!")
+		destSlice := reflect.MakeSlice(destField.Type(), srcField.Len(), srcField.Cap())
+		for j := 0; j < srcField.Len(); j++ {
+			nestedSrcField := srcField.Index(j)
+			nestedSrcField.Kind()
+
+			srcElem := srcField.Index(j)
+
+			destElem := destSlice.Index(j)
+			if err := populateSingleField(srcElem, destElem, nil, ctx); err != nil {
+				return err
+			}
+		}
+		destField.Set(destSlice)
+	} else if srcField.Kind() == reflect.Map {
+		// println("map!")
+		// destMap := reflect.MakeMap(destField.Type())
+		// for _, key := range srcField.MapKeys() {
+		// 	srcMapValue := srcField.MapIndex(key).Interface()
+		// 	destMapKey := reflect.New(destField.Type().Key()).Elem()
+		// 	populateSingleField(key, destMapKey, nil, ctx)
+
+		// 	destMapValue := reflect.New(destField.Type().Elem()).Elem()
+		// 	if err := PopulateStruct(srcMapValue, destMapValue.Addr().Interface()); err != nil {
+		// 		return err
+		// 	}
+		// 	destMap.SetMapIndex(destMapKey, destMapValue)
+		// }
+		// destField.Set(destMap)
+	} else {
+		panic("Unknown type for field")
+	}
+	return nil
+}
+
+func addToForceSendFields(fieldName string, forceSendFieldsField *reflect.Value) {
+	if forceSendFieldsField == nil {
+		return
+	}
 	forceSendFields := forceSendFieldsField.Interface().([]string)
 	forceSendFields = append(forceSendFields, fieldName)
 	forceSendFieldsField.Set(reflect.ValueOf(forceSendFields))
@@ -1201,9 +1240,35 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 				},
 				Optional: true,
 			},
+			"nested_pointer_list": newschema.ListNestedAttribute{
+				NestedObject: newschema.NestedAttributeObject{
+					Attributes: map[string]newschema.Attribute{
+						"name": newschema.StringAttribute{
+							Optional: true,
+						},
+						"enabled": newschema.BoolAttribute{
+							Optional: true,
+						},
+					},
+				},
+				Optional: true,
+			},
 			"attributes": newschema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+			},
+			"nested_map": newschema.MapNestedAttribute{
+				NestedObject: newschema.NestedAttributeObject{
+					Attributes: map[string]newschema.Attribute{
+						"name": newschema.StringAttribute{
+							Optional: true,
+						},
+						"enabled": newschema.BoolAttribute{
+							Optional: true,
+						},
+					},
+				},
+				Optional: true,
 			},
 		},
 	}
@@ -1244,11 +1309,21 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 			Enabled: types.BoolValue(true),
 		},
 		NestedList: []DummyNestedTfSdk{
-			DummyNestedTfSdk{
+			{
 				Name:    types.StringValue("def"),
 				Enabled: types.BoolValue(true),
 			},
-			DummyNestedTfSdk{
+			{
+				Name:    types.StringValue("def"),
+				Enabled: types.BoolValue(true),
+			},
+		},
+		NestedPointerList: []*DummyNestedTfSdk{
+			&DummyNestedTfSdk{
+				Name:    types.StringValue("def"),
+				Enabled: types.BoolValue(true),
+			},
+			&DummyNestedTfSdk{
 				Name:    types.StringValue("def"),
 				Enabled: types.BoolValue(true),
 			},
@@ -1275,5 +1350,6 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 	assert.True(t, testGoSdk.Enabled == false)
 	assert.True(t, testGoSdk.Description == "abc")
 	assert.True(t, testGoSdk.Workers == 12)
+	println("!")
 	assert.True(t, len(testGoSdk.ForceSendFields) == 2)
 }

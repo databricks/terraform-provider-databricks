@@ -50,7 +50,15 @@ func ResourceLibrary() common.Resource {
 				return err
 			}
 			var lib compute.Library
+
+			var libTfSdk tfsdk.Library
 			common.DataToStructPointer(d, libraySdkSchema, &lib)
+
+			// d.get(&libTfSdk)
+			// libTfSdk --> gosdkLib
+			// libTfSdk.toGoSdk(goSdk)
+			// libTfSdk.fromGoSdk()
+
 			err = w.Libraries.Install(ctx, compute.InstallLibraries{
 				ClusterId: clusterID,
 				Libraries: []compute.Library{lib},

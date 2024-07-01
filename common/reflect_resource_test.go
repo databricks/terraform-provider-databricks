@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	newschema "github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -980,38 +981,46 @@ func TestStructToData_IndirectString(t *testing.T) {
 }
 
 type DummyNewTfSdk struct {
-	Enabled     types.Bool        `tfsdk:"enabled"`
-	Workers     types.Int64       `tfsdk:"workers"`
-	Floats      types.Float64     `tfsdk:"floats"`
-	Description types.String      `tfsdk:"description"`
-	Tasks       types.String      `tfsdk:"task"`
-	Nested      *DummyNestedTfSdk `tfsdk:"nested"`
-	Repeated    []types.Int64     `tfsdk:"repeated"`
-	// Attributes  map[types.String]types.String `tfsdk:"attributes"`
-	Irrelevant types.String `tfsdk:"-"`
+	Enabled         types.Bool         `tfsdk:"enabled"`
+	Workers         types.Int64        `tfsdk:"workers"`
+	Floats          types.Float64      `tfsdk:"floats"`
+	Description     types.String       `tfsdk:"description"`
+	Tasks           types.String       `tfsdk:"task"`
+	Nested          *DummyNestedTfSdk  `tfsdk:"nested"`
+	NoPointerNested DummyNestedTfSdk   `tfsdk:"no_pointer_nested"`
+	NestedList      []DummyNestedTfSdk `tfsdk:"nested_list"`
+	Repeated        types.List         `tfsdk:"repeated"`
+	Attributes      types.Map          `tfsdk:"attributes"`
+	Irrelevant      types.String       `tfsdk:"-"`
 }
 
 type DummyNestedTfSdk struct {
-	Name types.String `tfsdk:"name"`
+	Name    types.String `tfsdk:"name"`
+	Enabled types.Bool   `tfsdk:"enabled"`
 }
 
-// Optional --> should be able to get from the openapispec
-//   For something we cannot, we need to extend it
+// func (d DummyNewTfSdk) toGoSdk(g *DummyNewGoSdk) {
+// 	g.Enabled = d.Enabled.ValueBool()
+// 	g.Nested = d.Nested.toGoSdk()
+// }
 
 type DummyNewGoSdk struct {
-	Enabled     bool              `json:"enabled"`
-	Workers     int               `json:"workers"`
-	Floats      float64           `json:"floats"`
-	Description string            `json:"description"`
-	Tasks       string            `json:"tasks"`
-	Nested      *DummyNestedGoSdk `json:"nested"`
-	Repeated    []int64           `json:"repeated"`
-	// Attributes      map[string]string `json:"attributes"`
-	ForceSendFields []string `json:"-"`
+	Enabled         bool               `json:"enabled"`
+	Workers         int                `json:"workers"`
+	Floats          float64            `json:"floats"`
+	Description     string             `json:"description"`
+	Tasks           string             `json:"tasks"`
+	Nested          *DummyNestedGoSdk  `json:"nested"`
+	NoPointerNested DummyNestedGoSdk   `json:"no_pointer_nested"`
+	NestedList      []DummyNestedGoSdk `json:"nested_list"`
+	Repeated        []int64            `json:"repeated"`
+	Attributes      map[string]string  `json:"attributes"`
+	ForceSendFields []string           `json:"-"`
 }
 
 type DummyNestedGoSdk struct {
-	Name            string   `tfsdk:"name"`
+	Name            string   `json:"name"`
+	Enabled         bool     `json:"enabled"`
 	ForceSendFields []string `json:"-"`
 }
 
@@ -1033,31 +1042,7 @@ func (emptyCtx) Value(key any) any {
 	return nil
 }
 
-// func PopulateStruct(src interface{}, dest interface{}) error {
-// 	srcVal := reflect.ValueOf(src)
-// 	destVal := reflect.ValueOf(dest).Elem()
-
-// 	if srcVal.Kind() != reflect.Struct || destVal.Kind() != reflect.Struct {
-// 		return fmt.Errorf("src and dest should be structs")
-// 	}
-
-// 	srcType := srcVal.Type()
-// 	for i := 0; i < srcVal.NumField(); i++ {
-// 		srcField := srcVal.Field(i)
-// 		srcFieldName := srcType.Field(i).Name
-
-// 		destField := destVal.FieldByName(srcFieldName)
-// 		if destField.IsValid() && destField.CanSet() {
-// 			if srcField.Type().ConvertibleTo(destField.Type()) {
-// 				destField.Set(srcField.Convert(destField.Type()))
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}) error {
+func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Context) error {
 	srcVal := reflect.ValueOf(tfsdk)
 	destVal := reflect.ValueOf(gosdk)
 
@@ -1096,36 +1081,17 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}) error {
 
 		srcFieldValue := srcField.Interface()
 
-		if srcField.Kind() == reflect.Ptr && !srcField.IsNil() {
-			println("it is a pointer")
+		if srcFieldValue == nil {
+			continue
+		} else if srcField.Kind() == reflect.Ptr {
 			// Allocate new memory for the destination field
 			destField.Set(reflect.New(destField.Type().Elem()))
 
-			switch destField.Type().Elem().Kind() {
-			case reflect.Struct:
-				println("struct!")
-				// Apply the same set of things for primitive types
-			case reflect.Slice:
-				println("slice!")
-				// Need a function to deal with slices
-			case reflect.Map:
-				println("map")
-			}
-
-			// Recursively populate the nested struct
-			if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Interface()); err != nil {
+			// Recursively populate the nested struct.
+			if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Interface(), ctx); err != nil {
 				return err
 			}
-		} else if srcField.Kind() == reflect.Slice {
-			println("it is a slice")
-			// if slice of primitive types, handle them directly
-			// if slice of ptrs
-			//   then check what are the ptrs pointing to, and apply the same things as ptrs
-			// if slice of structs
-			//   if primitive structs, handle them, otherwise, recursive calls
-			// *** you only do recursive calls on non-primitive structs
 		} else if srcField.Kind() == reflect.Struct {
-			println("it is a struct")
 			switch srcFieldValue.(type) {
 			case types.Bool:
 				boolVal := srcFieldValue.(types.Bool)
@@ -1147,13 +1113,21 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}) error {
 				}
 			case types.String:
 				destField.SetString(srcFieldValue.(types.String).ValueString())
+			case types.List:
+				diag := srcFieldValue.(types.List).ElementsAs(ctx, destField.Addr().Interface(), false)
+				println(diag)
+			case types.Map:
+				srcFieldValue.(types.Map).ElementsAs(ctx, destField.Addr().Interface(), false)
 			default:
-				if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface()); err != nil {
+				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
+				if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx); err != nil {
 					return err
 				}
 			}
-		} else if srcField.Kind() == reflect.Map {
-
+		} else if srcField.Kind() == reflect.Slice {
+			println("slice!")
+		} else {
+			panic("Unknown type for field")
 		}
 	}
 
@@ -1198,7 +1172,38 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 					"name": newschema.StringAttribute{
 						Optional: true,
 					},
+					"enabled": newschema.BoolAttribute{
+						Optional: true,
+					},
 				},
+			},
+			"no_pointer_nested": newschema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]newschema.Attribute{
+					"name": newschema.StringAttribute{
+						Optional: true,
+					},
+					"enabled": newschema.BoolAttribute{
+						Optional: true,
+					},
+				},
+			},
+			"nested_list": newschema.ListNestedAttribute{
+				NestedObject: newschema.NestedAttributeObject{
+					Attributes: map[string]newschema.Attribute{
+						"name": newschema.StringAttribute{
+							Optional: true,
+						},
+						"enabled": newschema.BoolAttribute{
+							Optional: true,
+						},
+					},
+				},
+				Optional: true,
+			},
+			"attributes": newschema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 		},
 	}
@@ -1206,20 +1211,59 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 		Schema: scm,
 	}
 
+	intValues := []int64{12, 34, 56}
+	var attrValues []attr.Value
+
+	for _, v := range intValues {
+		attrValues = append(attrValues, types.Int64Value(v))
+	}
+
+	listValue, _ := types.ListValue(types.Int64Type, attrValues)
+
+	mapValues := map[string]string{"key": "value"}
+
+	attrMap := make(map[string]attr.Value)
+
+	for k, v := range mapValues {
+		attrMap[k] = types.StringValue(v)
+	}
+
+	mapValue, _ := types.MapValue(types.StringType, attrMap)
+
 	goVal := DummyNewTfSdk{
 		Enabled:     types.BoolValue(false),
 		Workers:     types.Int64Value(12),
 		Description: types.StringValue("abc"),
 		Tasks:       types.StringNull(),
 		Nested: &DummyNestedTfSdk{
-			Name: types.StringValue("def"),
+			Name:    types.StringValue("def"),
+			Enabled: types.BoolValue(true),
 		},
-		Repeated: []types.Int64{types.Int64Value(12)},
+		NoPointerNested: DummyNestedTfSdk{
+			Name:    types.StringValue("def"),
+			Enabled: types.BoolValue(true),
+		},
+		NestedList: []DummyNestedTfSdk{
+			DummyNestedTfSdk{
+				Name:    types.StringValue("def"),
+				Enabled: types.BoolValue(true),
+			},
+			DummyNestedTfSdk{
+				Name:    types.StringValue("def"),
+				Enabled: types.BoolValue(true),
+			},
+		},
+		Attributes: mapValue,
+		Repeated:   listValue,
 	}
 
 	diags := state.Set(ctx, goVal)
 	assert.Len(t, diags, 0)
 
+	getterStruct := DummyNewTfSdk{}
+	diags = state.Get(ctx, &getterStruct)
+	assert.Len(t, diags, 0)
+	println("!")
 	var enabled types.Bool
 	state.GetAttribute(ctx, path.Root("enabled"), &enabled)
 	assert.True(t, !enabled.IsNull())
@@ -1227,9 +1271,9 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 	assert.True(t, !enabled.ValueBool())
 
 	testGoSdk := DummyNewGoSdk{}
-	TfSdkToGoSdkStruct(goVal, &testGoSdk)
+	TfSdkToGoSdkStruct(goVal, &testGoSdk, ctx)
 	assert.True(t, testGoSdk.Enabled == false)
 	assert.True(t, testGoSdk.Description == "abc")
 	assert.True(t, testGoSdk.Workers == 12)
-	assert.True(t, len(testGoSdk.ForceSendFields) == 1)
+	assert.True(t, len(testGoSdk.ForceSendFields) == 2)
 }

@@ -138,8 +138,7 @@ There are currently a number of supported methods to [authenticate](https://docs
 * [PAT Tokens](#authenticating-with-hostname-and-token)
 * AWS, Azure and GCP via [Databricks-managed Service Principals](#authenticating-with-databricks-managed-service-principal)
 * GCP via [Google Cloud CLI](#special-configurations-for-gcp)
-* Azure Active Directory Tokens via [Azure CLI](#authenticating-with-azure-cli), [Azure-managed Service Principals](#authenticating-with-azure-service-principal), or [Managed Service Identities](#authenticating-with-azure-msi)
-* Username and password pair (legacy)
+* Azure Active Directory Tokens via [Azure CLI](#authenticating-with-azure-cli), [Azure-managed Service Principals](#authenticating-with-azure-managed-service-principal), or [Managed Service Identities](#authenticating-with-azure-msi)
 
 ### Authenticating with Databricks CLI credentials
 
@@ -178,20 +177,6 @@ You can use `host` and `token` parameters to supply credentials to the workspace
 provider "databricks" {
   host  = "https://abc-cdef-ghi.cloud.databricks.com"
   token = "dapitokenhere"
-}
-```
-
-### Authenticating with hostname, username, and password
-
-!> **Warning** This approach is not recommended for regular use. Instead, authenticate with [service principal](#authenticating-with-service-principal)
-
-You can use the `username` + `password` attributes to authenticate the provider for a workspace setup. Respective `DATABRICKS_USERNAME` and `DATABRICKS_PASSWORD` environment variables are applicable as well.
-
-``` hcl
-provider "databricks" {
-  host = "https://accounts.cloud.databricks.com"
-  username = var.user
-  password = var.password
 }
 ```
 
@@ -249,12 +234,10 @@ The provider block supports the following arguments:
 * `host` - (optional) This is the host of the Databricks workspace. It is a URL that you use to login to your workspace.
 Alternatively, you can provide this value as an environment variable `DATABRICKS_HOST`.
 * `token` - (optional) This is the API token to authenticate into the workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_TOKEN`.
-* `username` - (optional) This is the username of the user that can log into the workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_USERNAME`. Recommended only for [creating workspaces in AWS](resources/mws_workspaces.md).
-* `password` - (optional) This is the user's password that can log into the workspace. Alternatively, you can provide this value as an environment variable `DATABRICKS_PASSWORD`. Recommended only for [creating workspaces in AWS](resources/mws_workspaces.md).
-* `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/username/password/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`.
+* `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`.
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to
 `DEFAULT`.
-* `account_id` - (optional for workspace-level operations, but required for account-level) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well. 
+* `account_id` - (optional for workspace-level operations, but required for account-level) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
 * `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `oauth-m2m`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-credentials`, and `google-id`.
 
 ## Special configurations for Azure
@@ -378,8 +361,6 @@ The following configuration attributes can be passed via environment variables:
 |                   `auth_type` | `DATABRICKS_AUTH_TYPE`            |
 |                        `host` | `DATABRICKS_HOST`                 |
 |                       `token` | `DATABRICKS_TOKEN`                |
-|                    `username` | `DATABRICKS_USERNAME`             |
-|                    `password` | `DATABRICKS_PASSWORD`             |
 |                  `account_id` | `DATABRICKS_ACCOUNT_ID`           |
 |                 `config_file` | `DATABRICKS_CONFIG_FILE`          |
 |                     `profile` | `DATABRICKS_CONFIG_PROFILE`       |
@@ -408,12 +389,10 @@ provider "databricks" {}
 1. Provider will check all the supported environment variables and set values of relevant arguments.
 2. In case any conflicting arguments are present, the plan will end with an error.
 3. Will check for the presence of `host` + `token` pair, continue trying otherwise.
-4. Will check for `host` + `username` + `password` presence, continue trying otherwise.
-5. Will check for Azure workspace ID, `azure_client_secret` + `azure_client_id` + `azure_tenant_id` presence, continue trying otherwise.
-6. Will check for availability of Azure MSI, if enabled via `azure_use_msi`, continue trying otherwise.
-7. Will check for Azure workspace ID presence, and if `AZ CLI` returns an access token, continue trying otherwise.
-8. Will check for the `~/.databrickscfg` file in the home directory, will fail otherwise.
-9. Will check for `profile` presence and try picking from that file will fail otherwise.
-10. Will check for `host` and `token` or `username`+`password` combination, and will fail if none of these exist.
+4. Will check for Azure workspace ID, `azure_client_secret` + `azure_client_id` + `azure_tenant_id` presence, continue trying otherwise.
+5. Will check for availability of Azure MSI, if enabled via `azure_use_msi`, continue trying otherwise.
+6. Will check for Azure workspace ID presence, and if `AZ CLI` returns an access token, continue trying otherwise.
+7. Will check for the `~/.databrickscfg` file in the home directory, will fail otherwise.
+8. Will check for `profile` presence and try picking from that file will fail otherwise.
 
 Please check [Default Authentication Flow](https://github.com/databricks/databricks-sdk-go#default-authentication-flow) from [Databricks SDK for Go](https://docs.databricks.com/dev-tools/sdk-go.html) in case you need more details.

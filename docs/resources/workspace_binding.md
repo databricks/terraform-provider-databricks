@@ -23,7 +23,7 @@ resource "databricks_catalog" "sandbox" {
   isolation_mode = "ISOLATED"
 }
 
-resource "databricks_catalog_workspace_binding" "sandbox" {
+resource "databricks_workspace_binding" "sandbox" {
   securable_name = databricks_catalog.sandbox.name
   workspace_id   = databricks_mws_workspaces.other.workspace_id
 }

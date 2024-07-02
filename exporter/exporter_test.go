@@ -2596,5 +2596,8 @@ func TestImportingRunJobTask(t *testing.T) {
 			assert.True(t, strings.Contains(contentStr, `job_id = databricks_job.jartask_932035899730845.id`))
 			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "runjobtask_1047501313827425"`))
 			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "jartask_932035899730845"`))
+			assert.True(t, strings.Contains(contentStr, `run_as {
+    service_principal_name = "c1b2a35b-87c4-481a-a0fb-0508be621957"
+  }`))
 		})
 }

@@ -635,6 +635,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				if js.NotificationSettings != nil {
 					return reflect.DeepEqual(*js.NotificationSettings, sdk_jobs.JobNotificationSettings{})
 				}
+			case "run_as":
+				log.Printf("[DEBUG] Skipping run_as field in job %s", d.Id())
+				return !(js.RunAs != nil && (js.RunAs.UserName != "" || js.RunAs.ServicePrincipalName != ""))
 			}
 			if strings.HasPrefix(pathString, "task.") {
 				parts := strings.Split(pathString, ".")

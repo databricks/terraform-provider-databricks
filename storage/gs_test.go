@@ -65,7 +65,7 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 				GcpAttributes: &clusters.GcpAttributes{
 					GoogleServiceAccount: "service-account",
 				},
-				SparkVersion:           "7.3.x-scala2.12",
+				SparkVersion:           "11.3.x-scala2.12",
 				NumWorkers:             0,
 				NodeTypeID:             "i3.xlarge",
 				AutoterminationMinutes: 10,

@@ -62,7 +62,7 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 					"ResourceClass": "SingleNode",
 				},
 				ClusterName:  "terraform-mount-s3-access",
-				SparkVersion: "7.3.x-scala2.12",
+				SparkVersion: "11.3.x-scala2.12",
 				NumWorkers:   0,
 				NodeTypeID:   "i3.xlarge",
 				AwsAttributes: &clusters.AwsAttributes{

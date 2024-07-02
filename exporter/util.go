@@ -410,11 +410,12 @@ func (ic *importContext) emitLibraries(libs []compute.Library) {
 		ic.emitIfWsfsFile(lib.Whl)
 		ic.emitIfWsfsFile(lib.Jar)
 		ic.emitIfWsfsFile(lib.Egg)
+		ic.emitIfWsfsFile(lib.Requirements)
 		// Files on UC Volumes
 		ic.emitIfVolumeFile(lib.Whl)
 		ic.emitIfVolumeFile(lib.Jar)
+		ic.emitIfVolumeFile(lib.Requirements)
 	}
-
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {

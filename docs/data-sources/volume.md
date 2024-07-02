@@ -37,8 +37,9 @@ data "databricks_volume" "this" {
 
 ## Attribute Reference
 
-This data source exports the following attributes:
+In addition to all arguments above, the following attributes are exported:
 
+* `id` - ID of this Unity Catalog Volume in form of `<catalog>.<schema>.<name>`.
 * `volume_info` - TableInfo object for a Unity Catalog table. This contains the following attributes:
   * `name` - Name of table, relative to parent schema.
   * `access_point` - the AWS access point to use when accessing s3 bucket for this volume's external location

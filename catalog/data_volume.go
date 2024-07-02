@@ -2,7 +2,6 @@ package catalog
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -15,13 +14,12 @@ func DataSourceVolume() common.Resource {
 		Name   string              `json:"name"`
 		Volume *catalog.VolumeInfo `json:"volume_info,omitempty" tf:"computed"`
 	}, w *databricks.WorkspaceClient) error {
-		fmt.Println(data)
 		volume, err := w.Volumes.ReadByName(ctx, data.Name)
 		if err != nil {
 			return err
 		}
 		data.Volume = volume
-		data.Id = volume.VolumeId
+		data.Id = volume.FullName
 		return nil
 	})
 }

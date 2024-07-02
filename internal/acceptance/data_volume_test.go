@@ -44,9 +44,7 @@ func TestUcAccDataSourceVolume(t *testing.T) {
 		}
 
 		data "databricks_volume" "this" {
-			catalog_name = databricks_catalog.sandbox.name
-			schema_name = databricks_schema.things.name
-			name = "volume_data_source_test"
+			name = databricks_volume.this.id
 			depends_on = [ databricks_volume.this ] 
 		}
 		`,

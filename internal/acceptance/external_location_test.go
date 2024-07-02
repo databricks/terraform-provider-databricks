@@ -21,6 +21,10 @@ func externalLocationTemplateWithOwner(comment string, owner string) string {
 			name            = "external-{var.STICKY_RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.STICKY_RANDOM}"
 			credential_name = databricks_storage_credential.external.id
+<<<<<<< Updated upstream
+=======
+			isolation_mode  = "ISOLATION_MODE_ISOLATED"
+>>>>>>> Stashed changes
 			comment         = "%s"
 			owner = "%s"
 		}
@@ -34,9 +38,10 @@ func storageCredentialTemplateWithOwner(comment, owner string) string {
 			aws_iam_role {
 				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 			}
-			comment = "%s"
-			owner = "%s"
-			force_update = true
+			comment        = "%s"
+			owner          = "%s"
+			isolation_mode = "ISOLATION_MODE_ISOLATED"
+			force_update   = true
 		}
 	`, comment, owner)
 }

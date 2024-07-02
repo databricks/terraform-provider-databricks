@@ -25,6 +25,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/dashboards"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	tflogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
@@ -147,6 +148,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_ip_access_list":                  access.ResourceIPAccessList().ToResource(),
 			"databricks_job":                             jobs.ResourceJob().ToResource(),
 			"databricks_lakehouse_monitor":               catalog.ResourceLakehouseMonitor().ToResource(),
+			"databricks_lakeview_dashboard":              dashboards.ResourceLakeviewDashboard().ToResource(),
 			"databricks_library":                         clusters.ResourceLibrary().ToResource(),
 			"databricks_metastore":                       catalog.ResourceMetastore().ToResource(),
 			"databricks_metastore_assignment":            catalog.ResourceMetastoreAssignment().ToResource(),

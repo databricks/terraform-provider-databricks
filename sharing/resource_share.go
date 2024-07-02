@@ -2,9 +2,9 @@ package sharing
 
 import (
 	"context"
+	"sort"
 
 	"reflect"
-	"sort"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -29,7 +29,7 @@ const (
 type ShareInfo struct {
 	Name      string             `json:"name" tf:"force_new"`
 	Owner     string             `json:"owner,omitempty" tf:"suppress_diff"`
-	Objects   []SharedDataObject `json:"objects,omitempty" tf:"alias:object"`
+	Objects   []SharedDataObject `json:"objects,omitempty" tf:"slice_set,alias:object"`
 	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
 	CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
 }
@@ -56,6 +56,12 @@ type ShareDataChange struct {
 type ShareUpdates struct {
 	Owner   string            `json:"owner,omitempty"`
 	Updates []ShareDataChange `json:"updates"`
+}
+
+func (su *ShareUpdates) sortSharesByName() {
+	sort.Slice(su.Updates, func(i, j int) bool {
+		return su.Updates[i].DataObject.Name < su.Updates[j].DataObject.Name
+	})
 }
 
 type Shares struct {
@@ -99,6 +105,7 @@ func (a SharesAPI) update(name string, su ShareUpdates) error {
 	if len(su.Updates) == 0 {
 		return nil
 	}
+	su.sortSharesByName()
 	return a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
 }
 
@@ -153,6 +160,9 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 	// not in before so add
 	// if in before but diff then update
 	for _, afterSdo := range afterSi.Objects {
+		if afterSdo.Name == "" {
+			continue
+		}
 		beforeSdo, exists := beforeMap[afterSdo.Name]
 		if exists {
 			if !beforeSdo.Equal(afterSdo) {
@@ -176,6 +186,11 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 func ResourceShare() common.Resource {
 	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+		m["object"].Set = func(i any) int {
+			objectStruct := i.(map[string]any)
+			hashString := objectStruct["name"].(string) + objectStruct["data_object_type"].(string)
+			return schema.HashString(hashString)
+		}
 		return m
 	})
 	return common.Resource{

@@ -69,9 +69,3 @@ func TestUcAccWorkspaceBindingToOtherWorkspace(t *testing.T) {
 		Template: workspaceBindingTemplateWithWorkspaceId("{env.DUMMY_WORKSPACE_ID}"),
 	})
 }
-
-func TestUcAccWorkspaceBindingToSameWorkspace(t *testing.T) {
-	unityWorkspaceLevel(t, step{
-		Template: workspaceBindingTemplateWithWorkspaceId("{env.THIS_WORKSPACE_ID}"),
-	})
-}

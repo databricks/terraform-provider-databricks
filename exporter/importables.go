@@ -27,6 +27,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
+	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
@@ -2052,6 +2053,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		// TODO: think if we really need this, we need directories only for permissions,
 		// and only when they are different from parents & notebooks
 		List: func(ic *importContext) error {
+			if ic.incremental {
+				return nil
+			}
 			directoryList := ic.getAllDirectories()
 			for offset, directory := range directoryList {
 				if strings.HasPrefix(directory.Path, "/Repos") {
@@ -2710,7 +2714,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return connectionType + "_" + connectionName
 		},
 		List: func(ic *importContext) error {
-			connections, err := ic.workspaceClient.Connections.ListAll(ic.Context)
+			connections, err := ic.workspaceClient.Connections.ListAll(ic.Context, catalog.ListConnectionsRequest{})
 			if err != nil {
 				return err
 			}
@@ -2983,6 +2987,71 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "source", File: true},
 			{Path: "path", Resource: "databricks_volume", Match: "volume_path", MatchType: MatchLongestPrefix},
+		},
+	},
+	"databricks_mws_permission_assignment": {
+		AccountLevel: true,
+		Service:      "access",
+		List: func(ic *importContext) error {
+			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
+			if err != nil {
+				return err
+			}
+			for _, ws := range workspaces {
+				pas, err := ic.accountClient.WorkspaceAssignment.ListByWorkspaceId(ic.Context, ws.WorkspaceId)
+				if err != nil {
+					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s", ws.WorkspaceId, err.Error())
+					continue
+				}
+				log.Printf("[DEBUG] Emitting permission assignments for workspace %d", ws.WorkspaceId)
+				for _, pa := range pas.PermissionAssignments {
+					perm := "unknown"
+					if len(pa.Permissions) > 0 {
+						perm = pa.Permissions[0].String()
+					}
+					nm := fmt.Sprintf("mws_pa_%d_%s_%s_%d", ws.WorkspaceId, pa.Principal.DisplayName,
+						perm, pa.Principal.PrincipalId)
+					// We  generate Data directly to avoid calling APIs
+					data := mws.ResourceMwsPermissionAssignment().ToResource().TestResourceData()
+					scm := ic.Resources["databricks_mws_permission_assignment"].Schema
+					data.MarkNewResource()
+					paId := fmt.Sprintf("%d|%d", ws.WorkspaceId, pa.Principal.PrincipalId)
+					data.SetId(paId)
+					common.StructToData(pa, scm, data)
+					data.Set("workspace_id", ws.WorkspaceId)
+					data.Set("principal_id", pa.Principal.PrincipalId)
+					ic.Emit(&resource{
+						Resource: "databricks_mws_permission_assignment",
+						ID:       paId,
+						Name:     nameNormalizationRegex.ReplaceAllString(nm, "_"),
+						Data:     data,
+					})
+					// Emit principals
+					strPrincipalId := fmt.Sprintf("%d", pa.Principal.PrincipalId)
+					if pa.Principal.ServicePrincipalName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_service_principal",
+							ID:       strPrincipalId,
+						})
+					} else if pa.Principal.UserName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_user",
+							ID:       strPrincipalId,
+						})
+					} else if pa.Principal.GroupName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_group",
+							ID:       strPrincipalId,
+						})
+					}
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Resource: "databricks_service_principal", Path: "principal_id"},
+			{Resource: "databricks_user", Path: "principal_id"},
+			{Resource: "databricks_group", Path: "principal_id"},
 		},
 	},
 }

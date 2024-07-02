@@ -4,42 +4,32 @@ import (
 	"context"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func DataSourceClusters() common.Resource {
-	return common.Resource{
-		Read: func(ctx context.Context, d *schema.ResourceData, i *common.DatabricksClient) error {
-			clusters, err := NewClustersAPI(ctx, i).List()
-			if err != nil {
-				return err
+	return common.WorkspaceData(func(ctx context.Context, data *struct {
+		Id                  string   `json:"id,omitempty" tf:"computed"`
+		Ids                 []string `json:"ids,omitempty" tf:"computed,slice_set"`
+		ClusterNameContains string   `json:"cluster_name_contains"`
+	}, w *databricks.WorkspaceClient) error {
+		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
+		if err != nil {
+			return err
+		}
+		ids := make([]string, 0, len(clusters))
+		name_contains := strings.ToLower(data.ClusterNameContains)
+		for _, v := range clusters {
+			match_name := strings.Contains(strings.ToLower(v.ClusterName), name_contains)
+			if name_contains != "" && !match_name {
+				continue
 			}
-			ids := schema.NewSet(schema.HashString, []any{})
-			name_contains := strings.ToLower(d.Get("cluster_name_contains").(string))
-			for _, v := range clusters {
-				match_name := strings.Contains(strings.ToLower(v.ClusterName), name_contains)
-				if name_contains != "" && !match_name {
-					continue
-				}
-				ids.Add(v.ClusterID)
-			}
-			d.Set("ids", ids)
-			d.SetId("_")
-			return nil
-		},
-		Schema: map[string]*schema.Schema{
-			"ids": {
-				Computed: true,
-				Type:     schema.TypeSet,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"cluster_name_contains": {
-				Optional: true,
-				Type:     schema.TypeString,
-			},
-		},
-	}
+			ids = append(ids, v.ClusterId)
+		}
+		data.Ids = ids
+		data.Id = "_"
+		return nil
+	})
 }

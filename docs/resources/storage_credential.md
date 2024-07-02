@@ -80,6 +80,7 @@ The following arguments are required:
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the storage credential.
 - `force_destroy` - (Optional) Delete storage credential regardless of its dependencies.
 - `force_update` - (Optional) Update storage credential regardless of its dependents.
+- `isolation_mode` - (Optional) Whether the storage credential is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATED` or `OPEN`. Setting the credential to `ISOLATED` will automatically allow access from the current workspace.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
@@ -106,6 +107,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this storage credential - same as the `name`.
+- `storage_credential_id` - Unique ID of storage credential.
 
 ## Import
 

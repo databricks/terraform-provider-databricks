@@ -302,7 +302,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
 		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
 		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
-		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE", "IS_OWNER"}, SIMPLE},
+		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE", "CAN_MONITOR", "IS_OWNER"}, SIMPLE},
 		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
 		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
 		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},

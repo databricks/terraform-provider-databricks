@@ -3,9 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_aws_unity_catalog_policy Data Source
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/administration-guide/account-api/iam-role.html#language-Your%C2%A0VPC,%C2%A0default) in case of any questions.
+-> **Note** This resource has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws) in case of any questions.
 
-This data source constructs necessary AWS Unity Catalog policy for you, which is based on [official documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws).
+This data source constructs the necessary AWS Unity Catalog policy for you.
 
 ## Example Usage
 
@@ -13,40 +13,14 @@ This data source constructs necessary AWS Unity Catalog policy for you, which is
 data "databricks_aws_unity_catalog_policy" "this" {
   aws_account_id = var.aws_account_id
   bucket_name    = "databricks-bucket"
-  role_name      = "databricks-role"
+  role_name      = "${var.prefix}-uc-access"
   kms_name       = "databricks-kms"
 }
 
-data "aws_iam_policy_document" "passrole_for_uc" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      identifiers = [
-        "arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL" # Databricks Account ID
-      ]
-      type = "AWS"
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "sts:ExternalId"
-      values   = [var.databricks_account_id]
-    }
-  }
-  statement {
-    sid     = "ExplicitSelfRoleAssumption"
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${var.aws_account_id}:root"]
-    }
-    condition {
-      test     = "ArnLike"
-      variable = "aws:PrincipalArn"
-      values   = ["arn:aws:iam::${var.aws_account_id}:role/${var.prefix}-uc-access"]
-    }
-  }
+data "databricks_aws_unity_catalog_assume_role_policy" "this" {
+  aws_account_id = var.aws_account_id
+  role_name      = "${var.prefix}-uc-access"
+  external_id    = "12345"
 }
 
 resource "aws_iam_policy" "unity_metastore" {
@@ -56,7 +30,7 @@ resource "aws_iam_policy" "unity_metastore" {
 
 resource "aws_iam_role" "metastore_data_access" {
   name                = "${var.prefix}-uc-access"
-  assume_role_policy  = data.aws_iam_policy_document.passrole_for_uc.json
+  assume_role_policy  = data.aws_iam_policy_document.this.json
   managed_policy_arns = [aws_iam_policy.unity_metastore.arn]
 }
 ```

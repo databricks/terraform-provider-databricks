@@ -1087,6 +1087,9 @@ func (ic *importContext) emitSqlParentDirectory(parent string) {
 }
 
 func (ic *importContext) shouldSkipWorkspaceObject(object workspace.ObjectStatus, updatedSinceMs int64) bool {
+	if ic.incremental && object.ObjectType == workspace.Directory {
+		return true
+	}
 	if !(object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) ||
 		strings.HasPrefix(object.Path, "/Repos") {
 		// log.Printf("[DEBUG] Skipping unsupported entry %v", object)
@@ -1155,8 +1158,10 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	updatedSinceMs := ic.getUpdatedSinceMs()
 	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
-			if object.ObjectType == workspace.Directory && object.Path != "/" && !ic.incremental {
-				objectsChannel <- object
+			if object.ObjectType == workspace.Directory {
+				if !ic.incremental && object.Path != "/" && ic.isServiceEnabled("directories") {
+					objectsChannel <- object
+				}
 			} else {
 				if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
 					continue
@@ -1179,7 +1184,11 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
 				continue
 			}
-			emitWorkpaceObject(ic, object)
+			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceEnabled("directories") && object.Path != "/" {
+				emitWorkpaceObject(ic, object)
+			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceEnabled("notebooks") {
+				emitWorkpaceObject(ic, object)
+			}
 		}
 	}
 	return nil

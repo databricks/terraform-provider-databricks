@@ -4,11 +4,11 @@ page_title: "Provisioning Azure Databricks with Private Link - Standard deployme
 
 # Deploying pre-requisite resources and enabling Private Link connections - Standard deployment
 
--> **Note**
+-> **Note** Refer to [adb-with-private-link-standard](https://github.com/databricks/terraform-databricks-examples/tree/main/modules/adb-with-private-link-standard), a Terraform module that contains code used to deploy an Azure Databricks workspace with Azure Private Link using the Standard deployment approach.
 
-- Refer to [adb-with-private-link-standard](https://github.com/databricks/terraform-databricks-examples/tree/main/modules/adb-with-private-link-standard), a Terraform module that contains code used to deploy an Azure Databricks workspace with Azure Private Link using the Standard deployment approach.
-- Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for more Terraform modules and examples to deploy Azure Databricks resources.
-- This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for more Terraform modules and examples to deploy Azure Databricks resources.
+
+-> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
 
 [Azure Private Link](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview) support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure.
 
@@ -236,8 +236,7 @@ resource "azurerm_subnet" "transit_private" {
   virtual_network_name = azurerm_virtual_network.transit_vnet.name
   address_prefixes     = [cidrsubnet(local.cidr_transit, 6, 1)]
 
-  enforce_private_link_endpoint_network_policies = true
-  enforce_private_link_service_network_policies  = true
+  private_endpoint_network_policies_enabled = true
 
   delegation {
     name = "databricks"
@@ -260,11 +259,11 @@ resource "azurerm_subnet_network_security_group_association" "transit_private" {
 
 
 resource "azurerm_subnet" "transit_plsubnet" {
-  name                                           = "${local.prefix}-transit-privatelink"
-  resource_group_name                            = var.rg_transit
-  virtual_network_name                           = azurerm_virtual_network.transit_vnet.name
-  address_prefixes                               = [cidrsubnet(local.cidr_transit, 6, 2)]
-  enforce_private_link_endpoint_network_policies = true
+  name                                      = "${local.prefix}-transit-privatelink"
+  resource_group_name                       = var.rg_transit
+  virtual_network_name                      = azurerm_virtual_network.transit_vnet.name
+  address_prefixes                          = [cidrsubnet(local.cidr_transit, 6, 2)]
+  private_endpoint_network_policies_enabled = true
 }
 
 resource "azurerm_private_endpoint" "transit_auth" {
@@ -435,8 +434,8 @@ resource "azurerm_subnet" "app_private" {
   virtual_network_name = azurerm_virtual_network.app_vnet.name
   address_prefixes     = [cidrsubnet(local.cidr_dp, 6, 1)]
 
-  enforce_private_link_endpoint_network_policies = true
-  enforce_private_link_service_network_policies  = true
+  private_endpoint_network_policies_enabled     = true
+  private_link_service_network_policies_enabled = true
 
   delegation {
     name = "databricks"
@@ -460,12 +459,12 @@ resource "azurerm_subnet_network_security_group_association" "app_private" {
 
 
 resource "azurerm_subnet" "app_plsubnet" {
-  provider                                       = azurerm.app
-  name                                           = "${local.prefix}-app-privatelink"
-  resource_group_name                            = var.rg_dp
-  virtual_network_name                           = azurerm_virtual_network.app_vnet.name
-  address_prefixes                               = [cidrsubnet(local.cidr_dp, 6, 2)]
-  enforce_private_link_endpoint_network_policies = true
+  provider                                  = azurerm.app
+  name                                      = "${local.prefix}-app-privatelink"
+  resource_group_name                       = var.rg_dp
+  virtual_network_name                      = azurerm_virtual_network.app_vnet.name
+  address_prefixes                          = [cidrsubnet(local.cidr_dp, 6, 2)]
+  private_endpoint_network_policies_enabled = true
 }
 
 resource "azurerm_databricks_workspace" "app_workspace" {

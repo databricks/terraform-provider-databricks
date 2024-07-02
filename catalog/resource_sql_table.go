@@ -22,7 +22,7 @@ var MaxSqlExecWaitTimeout = 50
 
 type SqlColumnInfo struct {
 	Name     string `json:"name"`
-	Type     string `json:"type_text,omitempty" tf:"suppress_diff,alias:type"`
+	Type     string `json:"type_text,omitempty" tf:"alias:type,computed"`
 	Comment  string `json:"comment,omitempty"`
 	Nullable bool   `json:"nullable,omitempty" tf:"default:true"`
 }
@@ -488,10 +488,29 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) 
 	return nil
 }
 
+var columnTypeAliases = map[string]string{
+	"integer": "int",
+	"long":    "bigint",
+	"real":    "float",
+	"short":   "smallint",
+	"byte":    "tinyint",
+	"decimal": "decimal(10,0)",
+	"dec":     "decimal(10,0)",
+	"numeric": "decimal(10,0)",
+}
+
+func getColumnType(columnType string) string {
+	caseInsensitiveColumnType := strings.ToLower(columnType)
+	if alias, ok := columnTypeAliases[caseInsensitiveColumnType]; ok {
+		return alias
+	}
+	return caseInsensitiveColumnType
+}
+
 func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
 	for i, oldCol := range oldCols {
 		oldColMap := oldCol.(map[string]interface{})
-		if oldColMap["type"] != newColumnInfos[i].Type {
+		if getColumnType(oldColMap["type"].(string)) != getColumnType(newColumnInfos[i].Type) {
 			return fmt.Errorf("changing the 'type' of an existing column is not supported")
 		}
 	}
@@ -511,7 +530,7 @@ func assertNoColumnMembershipAndFieldValueUpdate(oldCols []interface{}, newColum
 	}
 	for name, oldColMap := range oldColsNameToMap {
 		if newCol, exists := newColsNameToMap[name]; exists {
-			if oldColMap["type"] != newCol.Type || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
+			if getColumnType(oldColMap["type"].(string)) != getColumnType(newCol.Type) || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
 				return fmt.Errorf("detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time")
 			}
 		}
@@ -540,6 +559,9 @@ func ResourceSqlTable() common.Resource {
 
 			s["partitions"].ConflictsWith = []string{"cluster_keys"}
 			s["cluster_keys"].ConflictsWith = []string{"partitions"}
+			common.MustSchemaPath(s, "column", "type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+				return getColumnType(old) == getColumnType(new)
+			}
 			return s
 		})
 	return common.Resource{

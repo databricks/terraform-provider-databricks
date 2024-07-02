@@ -1,10 +1,11 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package {{.Name}}
+package {{.Name}}_tf
 
 import (
 	{{range .ImportedPackages}}
 	"github.com/databricks/databricks-sdk-go/service/{{.}}"{{end}}
+	"github.com/databricks/databricks-sdk-go/service/{{.Name}}"
 	"io"
 	"github.com/databricks/databricks-sdk-go/marshal"
     "github.com/hashicorp/terraform-plugin-framework/types"
@@ -17,8 +18,16 @@ type {{.PascalName}} struct {
     {{.Comment "    // " 80}}
     {{.PascalName}} {{if .IsOptionalObject}}*{{end}}{{template "type" .Entity}} `{{template "field-tag" . }}`{{end}}
 }
+
 {{else if .MapValue}}{{.Comment "// " 80}}
 type {{.PascalName}} {{template "type" .}}
+func (tfSdkStruct *{{.PascalName}}) ToGoSdk(goSdkStruct {{.Package.Name}}.{{.PascalName}}) error {
+    return nil
+}
+
+func (tfSdkStruct *{{.PascalName}}) FromGoSdk(goSdkStruct {{.Package.Name}}.{{.PascalName}}) error {
+    return nil
+}
 {{else if .Enum}}{{.Comment "// " 80}}
 type {{.PascalName}} string
 {{range .Enum }}

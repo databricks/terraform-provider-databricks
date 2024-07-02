@@ -1,7 +1,7 @@
 {
     "formatter": "make fmt",
     "packages": {
-        ".codegen/model.go.tmpl": "service/{{.Name}}/model.go"
+        ".codegen/model.go.tmpl": "service/{{.Name}}_tf/model.go"
     },
     "version": {
         "common/version.go": "version = \"$VERSION\""

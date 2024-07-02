@@ -206,6 +206,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_vector_search_endpoint":          vectorsearch.ResourceVectorSearchEndpoint().ToResource(),
 			"databricks_vector_search_index":             vectorsearch.ResourceVectorSearchIndex().ToResource(),
 			"databricks_volume":                          catalog.ResourceVolume().ToResource(),
+			"databricks_workspace_binding":               catalog.ResourceWorkspaceBinding().ToResource(),
 			"databricks_workspace_conf":                  workspace.ResourceWorkspaceConf().ToResource(),
 			"databricks_workspace_file":                  workspace.ResourceWorkspaceFile().ToResource(),
 		},

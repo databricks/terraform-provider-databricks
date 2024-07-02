@@ -21,7 +21,7 @@ func externalLocationTemplateWithOwner(comment string, owner string) string {
 			name            = "external-{var.STICKY_RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.STICKY_RANDOM}"
 			credential_name = databricks_storage_credential.external.id
-			isolation_mode  = "ISOLATED"
+			isolation_mode  = "ISOLATION_MODE_ISOLATED"
 			comment         = "%s"
 			owner = "%s"
 		}
@@ -37,7 +37,7 @@ func storageCredentialTemplateWithOwner(comment, owner string) string {
 			}
 			comment        = "%s"
 			owner          = "%s"
-			isolation_mode = "ISOLATED"
+			isolation_mode = "ISOLATION_MODE_ISOLATED"
 			force_update   = true
 		}
 	`, comment, owner)

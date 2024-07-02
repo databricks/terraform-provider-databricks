@@ -3,105 +3,40 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestDataSourceVolume_ReadByFullName(t *testing.T) {
+func TestDataSourceVolume(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/volumes/catalog.schema.name?",
-				Response: catalog.VolumeInfo{
-					FullName:    "catalog.schema.name",
-					CatalogName: "catalog",
-					SchemaName:  "schema",
-					Name:        "name",
-				},
-			},
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockVolumesAPI().EXPECT()
+			e.ReadByName(mock.Anything, "a.b.c").Return(&catalog.VolumeInfo{
+				FullName:    "a.b.c",
+				CatalogName: "a",
+				SchemaName:  "b",
+				Name:        "c",
+				Owner:       "account users",
+				VolumeType:  catalog.VolumeTypeManaged,
+			}, nil)
 		},
 		Resource: DataSourceVolume(),
 		HCL: `
-		full_name = "catalog.schema.name"`,
+		name="a.b.c"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ApplyNoError(t)
-}
-
-func TestDataSourceVolume_InvalidConfigExclusivceInputs(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource: DataSourceVolume(),
-		HCL: `
-		full_name = "abc"
-		catalog_name = "a"
-		schema_name = "b"
-		name = "c"`,
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.Apply(t)
-	assert.Error(t, err)
-}
-
-func TestDataSourceVolume_InvalidConfigOnlyCatalogName(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource:    DataSourceVolume(),
-		HCL:         `catalog_name = "a"`,
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.Apply(t)
-	assert.Error(t, err)
-}
-
-func TestDataSourceVolume_InvalidConfigOnlySchemaName(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource:    DataSourceVolume(),
-		HCL:         `schema_name = "b"`,
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.Apply(t)
-	assert.Error(t, err)
-}
-
-func TestDataSourceVolume_InvalidConfigOnlyName(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource:    DataSourceVolume(),
-		HCL:         `name = "c"`,
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.Apply(t)
-	assert.Error(t, err)
-}
-
-func TestDataSourceVolume_ReadByCatalogSchemaName(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/volumes/catalog.schema.name?",
-				Response: catalog.VolumeInfo{
-					FullName:    "catalog.schema.name",
-					CatalogName: "catalog",
-					SchemaName:  "schema",
-					Name:        "name",
-				},
-			},
-		},
-		Resource: DataSourceVolume(),
-		HCL: `
-		catalog_name = "catalog"
-		schema_name = "schema"
-		name = "name"`,
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":                       "a.b.c",
+		"volume_info.0.full_name":    "a.b.c",
+		"volume_info.0.catalog_name": "a",
+		"volume_info.0.schema_name":  "b",
+		"volume_info.0.name":         "c",
+		"volume_info.0.owner":        "account users",
+		"volume_info.0.volume_type":  "MANAGED",
+	})
 }
 
 func TestDataSourceVolume_Error(t *testing.T) {

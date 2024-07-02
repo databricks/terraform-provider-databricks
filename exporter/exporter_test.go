@@ -2553,7 +2553,19 @@ resource "databricks_pipeline" "def" {
 func TestImportingRunJobTask(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
-			meAdminFixture,
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Response: scim.User{
+					Groups: []scim.ComplexValue{
+						{
+							Display: "admins",
+						},
+					},
+					UserName: "user@domain.com",
+				},
+			},
 			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
@@ -2598,6 +2610,9 @@ func TestImportingRunJobTask(t *testing.T) {
 			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "jartask_932035899730845"`))
 			assert.True(t, strings.Contains(contentStr, `run_as {
     service_principal_name = "c1b2a35b-87c4-481a-a0fb-0508be621957"
+  }`))
+			assert.False(t, strings.Contains(contentStr, `run_as {
+     user_name = "user@domain.com"
   }`))
 		})
 }

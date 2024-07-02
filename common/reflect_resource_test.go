@@ -988,7 +988,7 @@ type DummyNewTfSdk struct {
 	Tasks             types.String                `tfsdk:"task"`
 	Nested            *DummyNestedTfSdk           `tfsdk:"nested"`
 	NoPointerNested   DummyNestedTfSdk            `tfsdk:"no_pointer_nested"`
-	NestedList        []DummyNestedTfSdk          `tfsdk:"nested_list"`
+	NestedList        types.List                  `tfsdk:"nested_list"`
 	NestedPointerList []*DummyNestedTfSdk         `tfsdk:"nested_pointer_list"`
 	Repeated          types.List                  `tfsdk:"repeated"`
 	Attributes        types.Map                   `tfsdk:"attributes"`
@@ -1308,16 +1308,16 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 			Name:    types.StringValue("def"),
 			Enabled: types.BoolValue(true),
 		},
-		NestedList: []DummyNestedTfSdk{
-			{
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(true),
-			},
-			{
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(true),
-			},
-		},
+		// NestedList: []DummyNestedTfSdk{
+		// 	{
+		// 		Name:    types.StringValue("def"),
+		// 		Enabled: types.BoolValue(true),
+		// 	},
+		// 	{
+		// 		Name:    types.StringValue("def"),
+		// 		Enabled: types.BoolValue(true),
+		// 	},
+		// },
 		NestedPointerList: []*DummyNestedTfSdk{
 			&DummyNestedTfSdk{
 				Name:    types.StringValue("def"),

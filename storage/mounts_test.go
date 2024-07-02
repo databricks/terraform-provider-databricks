@@ -212,7 +212,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 				AutoterminationMinutes: 10,
 				ClusterName:            "terraform-mount",
 				NodeTypeID:             "Standard_F4s",
-				SparkVersion:           "7.3.x-scala2.12",
+				SparkVersion:           "11.3.x-scala2.12",
 				CustomTags: map[string]string{
 					"ResourceClass": "SingleNode",
 				},

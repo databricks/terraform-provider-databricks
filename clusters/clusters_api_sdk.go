@@ -40,7 +40,7 @@ func StartClusterAndGetInfo(ctx context.Context, w *databricks.WorkspaceClient, 
 func LatestSparkVersionOrDefault(ctx context.Context, w *databricks.WorkspaceClient, svr compute.SparkVersionRequest) string {
 	version, err := w.Clusters.SelectSparkVersion(ctx, svr)
 	if err != nil {
-		return "7.3.x-scala2.12"
+		return "11.3.x-scala2.12"
 	}
 	return version
 }

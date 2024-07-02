@@ -120,7 +120,7 @@ func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
-func (ic *importContext) importCluster(c *compute.ClusterDetails) {
+func (ic *importContext) importCluster(c *compute.ClusterSpec) {
 	if c == nil {
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
-	// "github.com/stretchr/testify/require"
 )
 
 func TestLakeviewDashboardCreate(t *testing.T) {
@@ -66,17 +65,6 @@ func TestLakeviewDashboardCreate(t *testing.T) {
 					UpdateTime:          "2125678",
 				},
 			},
-			// {
-			// 	Method:   "GET",
-			// 	Resource: "/api/2.0/lakeview/dashboards/xyz/published?",
-
-			// 	Response: dashboards.PublishedDashboard{
-			// 		DisplayName:        "Dashboard name",
-			// 		EmbedCredentials:   true,
-			// 		WarehouseId:        "abc",
-			// 		RevisionCreateTime: "823828",
-			// 	},
-			// },
 		},
 		Resource: ResourceLakeviewDashboard(),
 		Create:   true,
@@ -107,17 +95,6 @@ func TestLakeviewDashboardRead(t *testing.T) {
 					UpdateTime:          "2125678",
 				},
 			},
-			// {
-			// 	Method:   "GET",
-			// 	Resource: "/api/2.0/lakeview/dashboards/xyz/published?",
-
-			// 	Response: dashboards.PublishedDashboard{
-			// 		DisplayName:        "Dashboard name",
-			// 		EmbedCredentials:   true,
-			// 		WarehouseId:        "abc",
-			// 		RevisionCreateTime: "823828",
-			// 	},
-			// },
 		},
 		Resource: ResourceLakeviewDashboard(),
 		Read:     true,
@@ -128,7 +105,6 @@ func TestLakeviewDashboardRead(t *testing.T) {
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "12345678", d.Get("create_time"))
 	assert.Equal(t, "2125678", d.Get("update_time"))
-	// assert.Equal(t, "{\"pages\":[{\"name\":\"43622\",\"displayName\":\"New Page\"}]}", d.Get("serialized_dashboard"))
 }
 
 func TestLakeviewDashboardUpdate(t *testing.T) {

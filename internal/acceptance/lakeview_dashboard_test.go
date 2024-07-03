@@ -8,9 +8,9 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccLakeviewDashboard(t *testing.T) {
@@ -19,21 +19,34 @@ func TestAccLakeviewDashboard(t *testing.T) {
 		resource "databricks_lakeview_dashboard" "d1" {
 			display_name			= 	"Monthly Traffic Report"
 			warehouse_id			=	"{env.TEST_DEFAULT_WAREHOUSE_ID}"
-			file_path				=	"/Users/divyansh.vijayvergia/terraform-provider-databricks/Experimental-Divyansh/json_file"
-			parent_path				= 	"/Users/divyansh.vijayvergia@databricks.com"
+			serialized_dashboard	=	"{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			// require.NotEqual(t, m.LastModified, createdTime)
+
+			// raw, err := w.Files.DownloadByFilePath(ctx, id)
+			// require.NoError(t, err)
+			// contents, err := io.ReadAll(raw.Contents)
+			// require.NoError(t, err)
+			// // Check that we updated the file
+			// assert.Equal(t, "abc\n", string(contents))
+			return nil
+		}),
 	})
 }
 
@@ -48,18 +61,23 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "embed_credentials", "false"),
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			// require.NotEqual(t, m.LastModified, createdTime)
+			return nil
+		}),
 	}, step{
 		Template: `
 		resource "databricks_lakeview_dashboard" "d1" {
@@ -69,18 +87,23 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "embed_credentials", "true"),
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
+			return nil
+		}),
 	})
 }
 
@@ -100,17 +123,22 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			return nil
+		}),
 	}, step{
 		PreConfig: func() {
 			os.WriteFile("/tmp/LakeviewDashboardTest/Dashboard.json", []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
@@ -123,21 +151,30 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
+			os.Remove("/tmp/LakeviewDashboardTest/Dashboard.json")
+			os.Remove("/tmp/LakeviewDashboardTest")
+			return nil
+		}),
 	})
 }
 
 func TestAccDashboardWithNoChange(t *testing.T) {
+	initial_update_time := ""
 	workspaceLevel(t, step{
 		Template: `
 		resource "databricks_lakeview_dashboard" "d1" {
@@ -147,17 +184,23 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			initial_update_time = dashboard.UpdateTime
+			return nil
+		}),
 	}, step{
 		Template: `
 		resource "databricks_lakeview_dashboard" "d1" {
@@ -167,17 +210,23 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			require.Equal(t, dashboard.UpdateTime, initial_update_time)
+			return nil
+		}),
 	})
 }
 
@@ -195,32 +244,26 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-			func(s *terraform.State) error {
-				dashboard, ok := s.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				dashboard_id = dashboard.Primary.ID
-				assert.NotEmpty(t, dashboard_id)
-				display_name = dashboard.Primary.Attributes["display_name"]
-				assert.NotEmpty(t, display_name)
-				warehouse_id = dashboard.Primary.Attributes["warehouse_id"]
-				assert.NotEmpty(t, warehouse_id)
-				etag = dashboard.Primary.Attributes["etag"]
-				assert.NotEmpty(t, etag)
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			dashboard_id = dashboard.DashboardId
+			display_name = dashboard.DisplayName
+			warehouse_id = dashboard.WarehouseId
+			etag = dashboard.Etag
+			return nil
+		}),
 	}, step{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
@@ -246,17 +289,23 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
+			return nil
+		}),
 	})
 }
 
@@ -274,17 +323,22 @@ func TestAccDashboardTestAll(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			return nil
+		}),
 	}, step{
 		PreConfig: func() {
 			tmpDir := "/tmp/LakeviewDashboardTest"
@@ -301,18 +355,27 @@ func TestAccDashboardTestAll(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "embed_credentials", "false"),
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			publish_dash, err := w.Lakeview.GetPublished(ctx, dashboards.GetPublishedDashboardRequest{
+				DashboardId: id,
+			})
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
+			require.Equal(t, publish_dash.EmbedCredentials, false)
+			return nil
+		}),
 	}, step{
 		PreConfig: func() {
 			os.WriteFile("/tmp/LakeviewDashboardTest/Dashboard.json", []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
@@ -325,32 +388,26 @@ func TestAccDashboardTestAll(t *testing.T) {
 			parent_path				= 	"/Shared/provider-test"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-			func(s *terraform.State) error {
-				dashboard, ok := s.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				dashboard_id = dashboard.Primary.ID
-				assert.NotEmpty(t, dashboard_id)
-				display_name = dashboard.Primary.Attributes["display_name"]
-				assert.NotEmpty(t, display_name)
-				warehouse_id = dashboard.Primary.Attributes["warehouse_id"]
-				assert.NotEmpty(t, warehouse_id)
-				etag = dashboard.Primary.Attributes["etag"]
-				assert.NotEmpty(t, etag)
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			dashboard_id = dashboard.DashboardId
+			display_name = dashboard.DisplayName
+			warehouse_id = dashboard.WarehouseId
+			etag = dashboard.Etag
+			return nil
+		}),
 	}, step{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
@@ -377,17 +434,22 @@ func TestAccDashboardTestAll(t *testing.T) {
 			embed_credentials		=	false
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			return nil
+		}),
 	}, step{
 		Template: `
 		resource "databricks_lakeview_dashboard" "d1" {
@@ -397,16 +459,51 @@ func TestAccDashboardTestAll(t *testing.T) {
 			parent_path				= 	"/Shared/Teams"
 		}
 		`,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "display_name", "Monthly Traffic Report"),
-			func(state *terraform.State) error {
-				dashboard, ok := state.RootModule().Resources["databricks_lakeview_dashboard.d1"]
-				if !ok {
-					return fmt.Errorf("dashboard resource not found")
-				}
-				fmt.Println(dashboard.Primary.Attributes["serialized_dashboard"])
-				return nil
-			},
-		),
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			return nil
+		}),
+	}, step{
+		PreConfig: func() {
+			os.WriteFile("/tmp/LakeviewDashboardTest/Dashboard.json", []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified again\"}]}"), 0644)
+		},
+		Template: `
+		resource "databricks_lakeview_dashboard" "d1" {
+			display_name			= 	"Monthly Traffic Report"
+			warehouse_id			=	"{env.TEST_DEFAULT_WAREHOUSE_ID}"
+			file_path				=	"/tmp/LakeviewDashboardTest/Dashboard.json"
+			parent_path				= 	"/Shared/Teams"
+		}
+		`,
+		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			dashboard, err := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+				DashboardId: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			fmt.Println(dashboard.SerializedDashboard)
+			require.NoError(t, err)
+			os.Remove("/tmp/LakeviewDashboardTest/Dashboard.json")
+			os.Remove("/tmp/LakeviewDashboardTest")
+			return nil
+		}),
 	})
 }

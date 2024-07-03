@@ -9,8 +9,6 @@ import (
 	"log"
 	"os"
 
-	"time"
-
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -63,18 +61,15 @@ func ResourceLakeviewDashboard() common.Resource {
 			s["parent_path"].Required = true
 			s["parent_path"].ForceNew = true
 			s["path"].Computed = true
-			s["serialized_dashboard"].Optional = true
 			s["serialized_dashboard"].ConflictsWith = []string{"file_path"}
 			s["serialized_dashboard"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				_, ok := d.GetOk("file_path")
+				v, ok := d.GetOk("file_path")
 				if ok {
-					return true
+					_, new_file_hash, _ := readSerializedJsonContent("", v.(string))
+					return (new_file_hash == d.Get("md5").(string))
 				}
 				_, new_json_hash, _ := readSerializedJsonContent(new, "")
-				// fmt.Println(new_json_hash, d.Get("md5").(string))
-				// fmt.Println(new, d.Get("serialized_dashboard").(string), old)
 				return d.Get("md5").(string) == new_json_hash && !d.Get("dashboard_change_detected").(bool)
-				// return !d.Get("dashboard_change_detected").(bool)
 			}
 			s["update_time"].Computed = true
 			s["warehouse_id"].Optional = false
@@ -120,18 +115,9 @@ func ResourceLakeviewDashboard() common.Resource {
 				return err
 			}
 
-			time.Sleep(2 * time.Second)
-			dashboard := dashboards.GetDashboardRequest{
-				DashboardId: created_dashboard.DashboardId,
-			}
-			resp, err := w.Lakeview.Get(ctx, dashboard)
-			if err != nil {
-				return err
-			}
-			d.Set("etag", resp.Etag)
+			d.Set("etag", created_dashboard.Etag)
 
-			// Publish the dashboard
-			// fmt.Println("Publishing the dashboard", d.Get("embed_credentials").(bool))
+			// We need to 'Force send' the EmbedCredentials field because it is 'omitempty' and if it is not set, it will be ignored. This is a workaround to force the field to be sent if the user wants to set 'embed_credentials' to false.
 			_, err = w.Lakeview.Publish(ctx, dashboards.PublishRequest{
 				DashboardId:      created_dashboard.DashboardId,
 				WarehouseId:      d.Get("warehouse_id").(string),
@@ -157,30 +143,7 @@ func ResourceLakeviewDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			// fmt.Println(d.Get("md5").(string))
-			d.Set("dashboard_change_detected", (resp.Etag != d.Get("etag").(string)) || func() bool {
-				if v, ok := d.GetOk("file_path"); ok {
-					_, new_file_hash, _ := readSerializedJsonContent("", v.(string))
-					return (new_file_hash != d.Get("md5").(string))
-				}
-				// if v, ok := d.GetOk("serialized_dashboard"); ok {
-				// 	_, new_json_hash, _ := readSerializedJsonContent(v.(string), "")
-				// 	fmt.Println(new_json_hash, d.Get("md5").(string))
-				// 	fmt.Println(v.(string), d.Get("serialized_dashboard").(string))
-				// 	return (new_json_hash != d.Get("md5").(string))
-				// }
-				return false
-			}())
-
-			// read published dashboard
-			// published_dashboard, err := w.Lakeview.GetPublished(ctx, dashboards.GetPublishedDashboardRequest{
-			// 	DashboardId: d.Id(),
-			// })
-			// if err != nil {
-			// 	return err
-			// }
-			// fmt.Println(published_dashboard)
-
+			d.Set("dashboard_change_detected", (resp.Etag != d.Get("etag").(string)))
 			return common.StructToData(resp, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

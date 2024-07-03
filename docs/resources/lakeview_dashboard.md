@@ -1,7 +1,7 @@
 ---
 subcategory: "Workspace"
 ---
-# lakeview_dashboard Resource
+# databricks_lakeview_dashboard Resource
 
 This resource allows you to manage [Databricks Lakeview Dashboards](https://docs.databricks.com/api/workspace/lakeview). To manage [Lakeview Dashboards](https://docs.databricks.com/api/workspace/lakeview) you must have a warehouse access on your databricks workspace.
 
@@ -13,9 +13,9 @@ Dashboard using `serialized_dashboard` attribute:
 resource "databricks_lakeview_dashboard" "dashboard" {
 			display_name			= 	"New Dashboard"
 			warehouse_id			=	"{env.TEST_DEFAULT_WAREHOUSE_ID}"
-			serialized_dashboard	=	"{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+			serialized_dashboard	        =	"{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
 			embed_credentials		=	false // Optional
-			parent_path				= 	"/Shared/provider-test"
+			parent_path			= 	"/Shared/provider-test"
 		}
 ```
 
@@ -26,10 +26,11 @@ resource "databricks_lakeview_dashboard" "dashboard" {
             display_name			= 	"New Dashboard"
             warehouse_id			=	"{env.TEST_DEFAULT_WAREHOUSE_ID}"
             file_path				=	"${path.module}/dashboard.json"
-            embed_credentials		=	false // Optional
+            embed_credentials   		=	false // Optional
             parent_path				= 	"/Shared/provider-test"
         }
 ```
+
 
 ## Argument Reference
 
@@ -48,3 +49,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the Lakeview dashboard.
 
+## Notes
+* Currently, only one of `serialized_dashboard` or `file_path` can be used throughout the lifecycle of the dashboard. If you want to switch from one to the other, you must first destroy the dashboard resource and then recreate it with the new attribute.
+* Currently, all the dashboards managed by Terraform will be published by default. There is no option to keep the dashboards in draft state. If required in future, functionality to manage the publish status of the dashboard will be added.

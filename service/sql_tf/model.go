@@ -225,6 +225,7 @@ type ChannelInfo struct {
 	Name ChannelName `tfsdk:"name"`
 }
 
+// Name of the channel
 type ChannelName string
 
 const ChannelNameChannelNameCurrent ChannelName = `CHANNEL_NAME_CURRENT`

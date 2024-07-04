@@ -9,6 +9,9 @@
     "toolchain": {
         "required": [
             "go"
+        ],
+        "post_generate": [
+            "make test"
         ]
     }
 }

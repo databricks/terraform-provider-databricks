@@ -98,7 +98,7 @@ resource "databricks_service_principal" "sp" {
 The following arguments are available:
 
 - `application_id` This is the Azure Application ID of the given Azure service principal and will be their form of access and identity. For Databricks-managed service principals this value is auto-generated.
-- `display_name` - (Required) This is an alias for the service principal and can be the full name of the service principal.
+- `display_name` - (Required for Databricks-managed service principals) This is an alias for the service principal and can be the full name of the service principal.
 - `external_id` - (Optional) ID of the service principal in an external identity provider.
 - `allow_cluster_create` - (Optional) Allow the service principal to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within the boundaries of that specific policy.
 - `allow_instance_pool_create` - (Optional) Allow the service principal to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument.

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -203,6 +204,81 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestResourceSqlTableCreateTableWithOwner(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "MANAGED"
+		data_source_format = "DELTA"
+		storage_location   = "abfss:container@account/somepath"
+	  
+		column {
+		  name      = "id"
+		  type      = "int"
+		}
+		column {
+		  name      = "name"
+		  type      = "string"
+		  comment   = "name of thing"
+		}
+		comment = "this table is managed by terraform"
+		owner = "account users"
+		`,
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					Properties: map[string]string{
+						"one":   "two",
+						"three": "four",
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ExpectedRequest: catalog.UpdateTableRequest{
+					Owner: "account users",
+				},
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					Properties: map[string]string{
+						"one":   "two",
+						"three": "four",
+					},
+				},
+			},
+		}, useExistingClusterForSql...),
+		Create:   true,
+		Resource: ResourceSqlTable(),
+	}.Apply(t)
+	assert.NoError(t, err)
+}
+
 func TestResourceSqlTableCreateTable_Error(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
@@ -325,6 +401,114 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 					ClusterID: "gone",
 				},
 				Status: 404,
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", d.Get("name"))
+}
+
+func TestResourceSqlTableUpdateTableAndOwner(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "EXTERNAL"
+		data_source_format = "DELTA"
+		storage_location   = "abfss:container@account/somepath"
+		comment 		   = "this table is managed by terraform"
+		cluster_id         = "gone"
+		properties	       = {
+			"one" = "two"
+		}
+		column {
+			name      = "one"
+			type      = "string"
+			comment   = "managed comment"
+			nullable  = false
+		}
+		column {
+			name      = "two"
+			type      = "string"
+		}
+		owner = "new groups"
+		`,
+		InstanceState: map[string]string{
+			"name":               "bar",
+			"catalog_name":       "main",
+			"schema_name":        "foo",
+			"table_type":         "EXTERNAL",
+			"data_source_format": "DELTA",
+			"storage_location":   "s3://ext-main/foo/bar1",
+			"comment":            "terraform managed",
+			"column.#":           "2",
+			"column.0.name":      "one",
+			"column.0.type":      "string",
+			"column.0.comment":   "old comment",
+			"column.0.nullable":  "false",
+			"column.1.name":      "two",
+			"column.1.type":      "string",
+			"owner":              "old groups",
+		},
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ReuseRequest: true,
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					Properties: map[string]string{
+						"delta.lastCommitTimestamp": "87698768",
+						"delta.minWriterVersion":    "1",
+					},
+					ColumnInfos: []SqlColumnInfo{
+						{
+							Name:     "one",
+							Type:     "string",
+							Comment:  "managed comment",
+							Nullable: false,
+						},
+						{
+							Name: "two",
+							Type: "string",
+						},
+					},
+					Owner: "old group",
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "gone",
+				},
+				Status: 404,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ExpectedRequest: catalog.UpdateTableRequest{
+					Owner: "new groups",
+				},
 			},
 		}, createClusterForSql...),
 		Resource: ResourceSqlTable(),
@@ -746,6 +930,33 @@ func TestResourceSqlTableUpdateTable_ColumnsTypeThrowsError(t *testing.T) {
 			},
 			allowedCommands:  []string{},
 			expectedErrorMsg: "changing the 'type' of an existing column is not supported",
+		},
+	)
+}
+
+func TestResourceSqlTableUpdateTable_ColumnsTypeUpperLowerCaseThrowsError(t *testing.T) {
+	resourceSqlTableUpdateColumnHelper(t,
+		resourceSqlTableUpdateColumnTestMetaData{
+			oldColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "string", // Lower Case.
+					Comment:  "old comment",
+					Nullable: false,
+				},
+			},
+			newColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "STRING", // Upper Case.
+					Comment:  "old comment",
+					Nullable: true,
+				},
+			},
+			allowedCommands: []string{
+				"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` DROP NOT NULL",
+			},
+			expectedErrorMsg: "",
 		},
 	)
 }

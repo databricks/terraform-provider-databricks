@@ -389,7 +389,7 @@ func TestPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
 	assert.Len(t, diff[0].Add, 0)
 	assert.Len(t, diff[0].Remove, 1)
 	assert.Equal(t, "b", diff[0].Principal)
-	assert.Equal(t, catalog.Privilege("a"), diff[0].Remove[0])
+	assert.Equal(t, catalog.Privilege("A"), diff[0].Remove[0])
 	assert.Equal(t, "c", diff[1].Principal)
 }
 
@@ -415,7 +415,29 @@ func TestPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 	assert.Len(t, diff, 1)
 	assert.Len(t, diff[0].Add, 0)
 	assert.Len(t, diff[0].Remove, 1)
-	assert.Equal(t, catalog.Privilege("b"), diff[0].Remove[0])
+	assert.Equal(t, catalog.Privilege("B"), diff[0].Remove[0])
+}
+
+func TestPermissionsList_Diff_CaseSensitivePrincipal(t *testing.T) {
+	diff := diffPermissions(
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
+				{
+					Principal:  "A",
+					Privileges: []catalog.Privilege{"a"},
+				},
+			},
+		},
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a"},
+				},
+			},
+		},
+	)
+	assert.Len(t, diff, 2)
 }
 
 func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
@@ -440,8 +462,8 @@ func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	assert.Len(t, diff, 1)
 	assert.Len(t, diff[0].Add, 1)
 	assert.Len(t, diff[0].Remove, 1)
-	assert.Equal(t, catalog.Privilege("a"), diff[0].Add[0])
-	assert.Equal(t, catalog.Privilege("c"), diff[0].Remove[0])
+	assert.Equal(t, catalog.Privilege("A"), diff[0].Add[0])
+	assert.Equal(t, catalog.Privilege("C"), diff[0].Remove[0])
 }
 
 func TestShareGrantCreate(t *testing.T) {

@@ -79,7 +79,10 @@ type testStruct struct {
 	TfOptional     string            `json:"tf_optional" tf:"optional"`
 	Hidden         string            `json:"-"`
 	Hidden2        string
+	Indirect       []IndirectString `json:"indirect"`
 }
+
+type IndirectString string
 
 type testRecursiveStruct struct {
 	Task  *testJobTask `json:"task,omitempty"`
@@ -642,6 +645,36 @@ func TestDiffSuppressor(t *testing.T) {
 	assert.True(t, dsf("", "old", "", d))
 }
 
+func TestDiffSuppressorWhenNumberExplicitlyChangedToZero(t *testing.T) {
+	intSchema := &schema.Schema{
+		Type: schema.TypeInt,
+	}
+	dsf := diffSuppressor("foo", intSchema)
+	noChange := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"foo": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}, map[string]any{})
+	// no suppress
+	assert.False(t, dsf("foo", "1", "2", noChange))
+	// suppress
+	assert.True(t, dsf("foo", "1", "0", noChange))
+
+	change := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"foo": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}, map[string]any{
+		"foo": 1,
+	})
+
+	// no suppress
+	assert.False(t, dsf("foo", "1", "2", change))
+	assert.False(t, dsf("foo", "1", "0", change))
+}
+
 func TestTypeToSchemaNoStruct(t *testing.T) {
 	defer func() {
 		p := recover()
@@ -930,4 +963,13 @@ func TestStructToSchema_recursive(t *testing.T) {
 	// Should error out on the 3rd level of for_each_task.
 	_, err = SchemaPath(s, "task", "for_each_task", "task", "for_each_task", "task", "for_each_task")
 	assert.Error(t, err)
+}
+
+func TestStructToData_IndirectString(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, scm, map[string]any{})
+	d.MarkNewResource()
+	err := StructToData(testStruct{
+		Indirect: []IndirectString{"a"},
+	}, scm, d)
+	assert.NoError(t, err)
 }

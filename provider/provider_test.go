@@ -381,3 +381,101 @@ func testOAuthFetchesToken(t *testing.T, c *common.DatabricksClient) {
 		require.NoError(t, err)
 	}
 }
+
+func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
+	for k, v := range tt.env {
+		t.Setenv(k, v)
+	}
+	p := DatabricksProvider()
+	ctx := context.Background()
+	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(tt.rawConfig()))
+	if len(diags) > 0 {
+		issues := []string{}
+		for _, d := range diags {
+			issues = append(issues, d.Summary)
+		}
+		return nil, fmt.Errorf(strings.Join(issues, ", "))
+	}
+	client := p.Meta().(*common.DatabricksClient)
+	r, err := http.NewRequest("GET", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	err = client.Config.Authenticate(r)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+type parseUserAgentTestCase struct {
+	name string
+	env  string
+	err  error
+	out  []userAgentExtra
+}
+
+func Test_ParseUserAgentExtra(t *testing.T) {
+	testCases := []parseUserAgentTestCase{
+		{
+			name: "single product",
+			env:  "databricks-cli/0.1.2",
+			err:  nil,
+			out: []userAgentExtra{
+				{"databricks-cli", "0.1.2"},
+			},
+		},
+		{
+			name: "multiple products",
+			env:  "databricks-cli/0.1.2 custom-thing/0.0.1",
+			err:  nil,
+			out: []userAgentExtra{
+				{"databricks-cli", "0.1.2"},
+				{"custom-thing", "0.0.1"},
+			},
+		},
+		{
+			name: "multiple products with many separators",
+			env:  "\ta/0.0.1\tb/0.0.2 \t c/0.0.3",
+			err:  nil,
+			out: []userAgentExtra{
+				{"a", "0.0.1"},
+				{"b", "0.0.2"},
+				{"c", "0.0.3"},
+			},
+		},
+		{
+			name: "empty string",
+			env:  "",
+			err:  nil,
+			out:  []userAgentExtra{},
+		},
+		{
+			name: "product with comment",
+			env:  "a/0.0.1 (my comment)",
+			err:  fmt.Errorf("product string must follow RFC 9110: (my"),
+			out:  nil,
+		},
+		{
+			name: "no version",
+			env:  "cli",
+			err:  fmt.Errorf("product string must include version: cli"),
+			out:  nil,
+		},
+		{
+			name: "invalid format",
+			env:  "no/no/no",
+			err:  fmt.Errorf("product string must follow RFC 9110: no/no/no"),
+			out:  nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			out, err := parseUserAgentExtra(tc.env)
+
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.out, out)
+		})
+	}
+}

@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestStorageCredentialsCornerCases(t *testing.T) {
@@ -39,6 +41,7 @@ func TestCreateStorageCredentials(t *testing.T) {
 						ExternalId: "123",
 					},
 					MetastoreId: "d",
+					Id:          "1234-5678",
 				},
 			},
 		},
@@ -55,6 +58,97 @@ func TestCreateStorageCredentials(t *testing.T) {
 		"aws_iam_role.0.external_id": "123",
 		"aws_iam_role.0.role_arn":    "def",
 		"name":                       "a",
+		"storage_credential_id":      "1234-5678",
+	})
+}
+
+func TestCreateIsolatedStorageCredential(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockStorageCredentialsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateStorageCredential{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleRequest{
+					RoleArn: "def",
+				},
+				Comment: "c",
+			}).Return(&catalog.StorageCredentialInfo{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleResponse{
+					RoleArn:    "def",
+					ExternalId: "123",
+				},
+				MetastoreId: "d",
+				Id:          "1234-5678",
+				Owner:       "f",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateStorageCredential{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleRequest{
+					RoleArn: "def",
+				},
+				Comment:       "c",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
+			}).Return(&catalog.StorageCredentialInfo{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleResponse{
+					RoleArn:    "def",
+					ExternalId: "123",
+				},
+				MetastoreId:   "d",
+				Id:            "1234-5678",
+				Owner:         "f",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
+			}, nil)
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "e",
+				WorkspaceId: 123456789101112,
+			}, nil)
+			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: "a",
+				SecurableType: "storage-credential",
+				Add: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}).Return(&catalog.WorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}, nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.StorageCredentialInfo{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleResponse{
+					RoleArn:    "def",
+					ExternalId: "123",
+				},
+				MetastoreId:   "d",
+				Id:            "1234-5678",
+				Owner:         "f",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
+			}, nil)
+		},
+		Resource: ResourceStorageCredential(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		aws_iam_role {
+			role_arn = "def"
+		}
+		comment = "c"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"aws_iam_role.0.external_id": "123",
+		"aws_iam_role.0.role_arn":    "def",
+		"name":                       "a",
+		"storage_credential_id":      "1234-5678",
+		"isolation_mode":             "ISOLATION_MODE_ISOLATED",
 	})
 }
 
@@ -163,6 +257,7 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 						AwsIamRole: &catalog.AwsIamRoleResponse{
 							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
 						},
+						Id: "1234-5678",
 					},
 				},
 			},
@@ -178,7 +273,9 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 		}
 		owner = "administrators"
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"storage_credential_id": "1234-5678",
+	})
 }
 
 func TestCreateStorageCredentialsReadOnly(t *testing.T) {
@@ -653,4 +750,55 @@ func TestUpdateAzStorageCredentialMI(t *testing.T) {
 		comment = "c"
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestUpdateAzStorageCredentialSpn(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: catalog.UpdateStorageCredential{
+					Comment: "c",
+					AzureServicePrincipal: &catalog.AzureServicePrincipal{
+						ApplicationId: "SAME",
+						DirectoryId:   "SAME",
+						ClientSecret:  "CHANGED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+					AzureServicePrincipal: &catalog.AzureServicePrincipal{
+						ApplicationId: "SAME",
+						DirectoryId:   "SAME",
+					},
+					MetastoreId: "d",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":    "a",
+			"comment": "c",
+		},
+		HCL: `
+		name = "a"
+		azure_service_principal {
+			application_id = "SAME"
+			directory_id = "SAME"
+			client_secret = "CHANGED"
+		}
+		comment = "c"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"azure_service_principal.0.application_id": "SAME",
+		"azure_service_principal.0.directory_id":   "SAME",
+		"azure_service_principal.0.client_secret":  "CHANGED",
+	})
 }

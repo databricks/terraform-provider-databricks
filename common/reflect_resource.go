@@ -41,7 +41,7 @@ var kindMap = map[reflect.Kind]string{
 // Global registry for ResoureProvider, the goal is to make StructToSchema able to find pre-registered ResourceProvider for a
 // given struct so that we don't have to specify aliases and customizations redundantly if one schema references the another
 // schema.
-var resourceProviderRegistry map[string]ResourceProvider
+var resourceProviderRegistry map[reflect.Type]ResourceProvider
 
 // Pre-registered ResourceProvider for a given struct into resourceProviderRegistry.
 // This function should be called in the init() function in packages with ResourceProvider.
@@ -52,20 +52,46 @@ var resourceProviderRegistry map[string]ResourceProvider
 //	}
 func RegisterResourceProvider(v any, r ResourceProvider) {
 	if resourceProviderRegistry == nil {
-		resourceProviderRegistry = make(map[string]ResourceProvider)
+		resourceProviderRegistry = make(map[reflect.Type]ResourceProvider)
 	}
-	typeName := getNameForType(reflect.ValueOf(v).Type())
-	if _, ok := resourceProviderRegistry[typeName]; ok {
-		errMsg := fmt.Sprintf("%s has already been registered, please avoid registering the same type repeatedly.", typeName)
+	t := getResourceProviderRegistryKey(v)
+	if _, ok := resourceProviderRegistry[t]; ok {
+		errMsg := fmt.Sprintf("%s has already been registered, please avoid registering the same type repeatedly.", getNameForType(t))
 		panic(errMsg)
 	}
-	resourceProviderRegistry[typeName] = r
+	resourceProviderRegistry[t] = r
+}
+
+func getResourceProviderRegistryKey(v any) reflect.Type {
+	t := reflect.ValueOf(v).Type()
+	return getNonPointerType(t)
+}
+
+func getNonPointerType(t reflect.Type) reflect.Type {
+	if t.Kind() == reflect.Ptr {
+		return t.Elem()
+	} else {
+		return t
+	}
 }
 
 // Generic interface for ResourceProvider. Using CustomizeSchema function to keep track of additional information
 // on top of the generated go-sdk struct.
 type ResourceProvider interface {
 	CustomizeSchema(*CustomizableSchema) *CustomizableSchema
+}
+
+// Interface for ResourcePrivider that needs certain customizaitons that shouldn't be shared.
+type ResourceProviderWithResourceSpecificCustomization interface {
+	ResourceProvider
+	// Customizations in this function will not be applied when this type is referenced from another resource by resourceProviderRegistry.
+	// Example use case:
+	//    // autotermination_minutes should only have a default value of 60 for the clusters resource, but not in the nested cluster schema in jobs
+	//    func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
+	// 	      s.SchemaPath("autotermination_minutes").SetDefault(60)
+	// 	      return s
+	//    }
+	CustomizeSchemaResourceSpecific(*CustomizableSchema) *CustomizableSchema
 }
 
 // Interface for ResourceProvider instances that need aliases for fields.
@@ -99,8 +125,19 @@ type RecursiveResourceProvider interface {
 	MaxDepthForTypes() map[string]int
 }
 
-// Takes in a ResourceProvider and converts that into a map from string to schema.
+// Used by StructToSchema, after executing typeToSchema and applying the standard customizations,
+// it also applies the resource specific customizations, if applicable.
 func resourceProviderStructToSchema(v ResourceProvider, scp schemaPathContext) map[string]*schema.Schema {
+	customizedScm := resourceProviderStructToSchemaInternal(v, scp)
+	if rps, ok := v.(ResourceProviderWithResourceSpecificCustomization); ok {
+		// Apply resource specific customizations, if applicable.
+		return rps.CustomizeSchemaResourceSpecific(customizedScm).GetSchemaMap()
+	} else {
+		return customizedScm.GetSchemaMap()
+	}
+}
+
+func resourceProviderStructToSchemaInternal(v ResourceProvider, scp schemaPathContext) *CustomizableSchema {
 	rv := reflect.ValueOf(v)
 	var scm map[string]*schema.Schema
 	aliases := map[string]map[string]string{}
@@ -114,8 +151,7 @@ func resourceProviderStructToSchema(v ResourceProvider, scp schemaPathContext) m
 	}
 	cs := CustomizeSchemaPath(scm)
 	cs.context = scp
-	scm = v.CustomizeSchema(cs).GetSchemaMap()
-	return scm
+	return v.CustomizeSchema(cs)
 }
 
 func reflectKind(k reflect.Kind) string {
@@ -329,7 +365,9 @@ func chooseFieldName(typeField reflect.StructField) string {
 func diffSuppressor(fieldName string, v *schema.Schema) func(k, old, new string, d *schema.ResourceData) bool {
 	zero := fmt.Sprintf("%v", v.Type.Zero())
 	return func(k, old, new string, d *schema.ResourceData) bool {
-		if new == zero && old != zero {
+		// HasChange allows to check if the field is explicitly changed in the configuration.
+		// If the field is explicitly set in the configuration, we should not suppress the diff.
+		if new == zero && old != zero && !d.HasChange(k) {
 			log.Printf("[DEBUG] Suppressing diff for %v: platform=%#v config=%#v", k, old, new)
 			return true
 		}
@@ -367,6 +405,9 @@ func listAllFields(v reflect.Value) []field {
 }
 
 func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trackingContext) map[string]*schema.Schema {
+	if rpStruct, ok := resourceProviderRegistry[getNonPointerType(v.Type())]; ok {
+		return resourceProviderStructToSchemaInternal(rpStruct, tc.pathCtx).GetSchemaMap()
+	}
 	scm := map[string]*schema.Schema{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -573,7 +614,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 			return fmt.Errorf("inconsistency: %s has omitempty, but is not optional", fieldName)
 		}
 		defaultEmpty := reflect.ValueOf(fieldSchema.Default).Kind() == reflect.Invalid
-		if fieldSchema.Optional && defaultEmpty && !omitEmpty {
+		if !isGoSDK && fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
 		valueField := field.v
@@ -624,11 +665,17 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			fieldPath := strings.Join(path, ".")
 			switch fieldSchema.Type {
 			case schema.TypeList, schema.TypeSet:
-				nv, err := collectionToMaps(fieldValue, fieldSchema, aliases)
-				if err != nil {
-					return fmt.Errorf("%s: %v", path, err)
+				_, ok := fieldSchema.Elem.(*schema.Schema)
+				if ok {
+					// If Elem is a *schema.Schema, we do not call collectionToMaps but directly populate the map with fieldValue.
+					data[fieldName] = fieldValue
+				} else {
+					nv, err := collectionToMaps(fieldValue, fieldSchema, aliases)
+					if err != nil {
+						return fmt.Errorf("%s: %v", path, err)
+					}
+					data[fieldName] = nv
 				}
-				data[fieldName] = nv
 			default:
 				if fieldSchema.Optional && isValueNilOrEmpty(valueField, fieldPath) {
 					return nil

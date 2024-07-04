@@ -46,7 +46,9 @@ func ResourceDirectory() common.Resource {
 		if err != nil {
 			return err
 		}
-		objectStatus, err := client.Workspace.GetStatusByPath(ctx, d.Id())
+		objectStatus, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
+			return client.Workspace.GetStatusByPath(ctx, d.Id())
+		})
 		if err != nil {
 			return err
 		}

@@ -67,7 +67,7 @@ func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceCl
 		// and result contains only the libraries that were successfully installed
 		result.LibraryStatuses = installed
 		if len(cleanup.Libraries) > 0 {
-			w.Libraries.Uninstall(ctx, cleanup)
+			err = w.Libraries.Uninstall(ctx, cleanup)
 			if err != nil {
 				err = fmt.Errorf("cannot cleanup libraries: %w", err)
 			}

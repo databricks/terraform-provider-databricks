@@ -4,6 +4,8 @@ page_title: "Provisioning Databricks workspaces on GCP."
 
 # Provisioning Databricks workspaces on GCP
 
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+
 You can provision multiple Databricks workspaces with Terraform.
 
 ## Creating a GCP service account for Databricks Provisioning

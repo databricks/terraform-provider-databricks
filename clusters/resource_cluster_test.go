@@ -258,13 +258,13 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: compute.LibraryFullStatusStatusPending,
+							Status: compute.LibraryInstallStatusPending,
 						},
 						{
 							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -281,13 +281,13 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 						{
 							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -304,13 +304,13 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 									Package: "seaborn==1.2.4",
 								},
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 						{
 							Library: &compute.Library{
 								Whl: "dbfs://baz.whl",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -1072,13 +1072,13 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 					Library: &compute.Library{
 						Jar: "dbfs://foo.jar",
 					},
-					Status: compute.LibraryFullStatusStatusInstalled,
+					Status: compute.LibraryInstallStatusInstalled,
 				},
 				{
 					Library: &compute.Library{
 						Egg: "dbfs://bar.egg",
 					},
-					Status: compute.LibraryFullStatusStatusInstalled,
+					Status: compute.LibraryInstallStatusInstalled,
 				},
 			},
 		},
@@ -1107,7 +1107,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 							Library: &compute.Library{
 								Egg: "dbfs://bar.egg",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 						{
 							Library: &compute.Library{
@@ -1115,7 +1115,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 									Package: "requests",
 								},
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -1544,19 +1544,18 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 }
 
 func TestModifyClusterRequestAws(t *testing.T) {
-	c := ClusterSpec{
-		ClusterSpec: compute.ClusterSpec{
-			InstancePoolId: "a",
-			AwsAttributes: &compute.AwsAttributes{
-				InstanceProfileArn: "b",
-				ZoneId:             "c",
-			},
-			EnableElasticDisk: true,
-			NodeTypeId:        "d",
-			DriverNodeTypeId:  "e",
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		AwsAttributes: &compute.AwsAttributes{
+			InstanceProfileArn: "b",
+			ZoneId:             "c",
 		},
+		EnableElasticDisk: true,
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, "", c.AwsAttributes.ZoneId)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)
@@ -1564,18 +1563,17 @@ func TestModifyClusterRequestAws(t *testing.T) {
 }
 
 func TestModifyClusterRequestAzure(t *testing.T) {
-	c := ClusterSpec{
-		ClusterSpec: compute.ClusterSpec{
-			InstancePoolId: "a",
-			AzureAttributes: &compute.AzureAttributes{
-				FirstOnDemand: 1,
-			},
-			EnableElasticDisk: true,
-			NodeTypeId:        "d",
-			DriverNodeTypeId:  "e",
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		AzureAttributes: &compute.AzureAttributes{
+			FirstOnDemand: 1,
 		},
+		EnableElasticDisk: true,
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, &compute.AzureAttributes{}, c.AzureAttributes)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)
@@ -1583,18 +1581,17 @@ func TestModifyClusterRequestAzure(t *testing.T) {
 }
 
 func TestModifyClusterRequestGcp(t *testing.T) {
-	c := ClusterSpec{
-		ClusterSpec: compute.ClusterSpec{
-			InstancePoolId: "a",
-			GcpAttributes: &compute.GcpAttributes{
-				UsePreemptibleExecutors: true,
-			},
-			EnableElasticDisk: true,
-			NodeTypeId:        "d",
-			DriverNodeTypeId:  "e",
+	c := compute.CreateCluster{
+		InstancePoolId: "a",
+		GcpAttributes: &compute.GcpAttributes{
+			UsePreemptibleExecutors: true,
 		},
+		EnableElasticDisk: true,
+		NodeTypeId:        "d",
+		DriverNodeTypeId:  "e",
 	}
-	ModifyRequestOnInstancePool(&c)
+	err := ModifyRequestOnInstancePool(&c)
+	assert.NoError(t, err)
 	assert.Equal(t, false, c.GcpAttributes.UsePreemptibleExecutors)
 	assert.Equal(t, "", c.NodeTypeId)
 	assert.Equal(t, "", c.DriverNodeTypeId)
@@ -1628,7 +1625,7 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 							Library: &compute.Library{
 								Jar: "foo.bar",
 							},
-							Status: compute.LibraryFullStatusStatusPending,
+							Status: compute.LibraryInstallStatusPending,
 						},
 					},
 				},
@@ -1665,14 +1662,14 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 							Library: &compute.Library{
 								Jar: "foo.bar",
 							},
-							Status:   compute.LibraryFullStatusStatusFailed,
+							Status:   compute.LibraryInstallStatusFailed,
 							Messages: []string{"fails for the test"},
 						},
 						{
 							Library: &compute.Library{
 								Whl: "bar.whl",
 							},
-							Status: compute.LibraryFullStatusStatusInstalled,
+							Status: compute.LibraryInstallStatusInstalled,
 						},
 					},
 				},
@@ -1693,4 +1690,82 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 		Read: true,
 		ID:   "foo",
 	}.ApplyNoError(t)
+}
+
+func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Non Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+					GcpAttributes: &compute.GcpAttributes{
+						LocalSsdCount: 2,
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
+					Limit:      1,
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
+				},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/edit",
+				ExpectedRequest: compute.ClusterDetails{
+					AutoterminationMinutes: 15,
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Non Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					GcpAttributes: &compute.GcpAttributes{
+						LocalSsdCount: 0,
+					},
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "100",
+			"gcp_attributes": `"{
+				local_ssd_count = 2
+			}"`,
+		},
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Non Autoscaling Cluster"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		num_workers =             100
+		gcp_attributes = {
+			local_ssd_count = 0
+		},
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err)
 }

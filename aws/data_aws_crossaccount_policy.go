@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"slices"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
@@ -22,7 +21,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 		Region          string   `json:"region,omitempty"`
 		SecurityGroupId string   `json:"security_group_id,omitempty"`
 	}
-	return common.AccountData(func(ctx context.Context, data *AwsCrossAccountPolicy, w *databricks.AccountClient) error {
+	return common.NoClientData(func(ctx context.Context, data *AwsCrossAccountPolicy) error {
 		if !slices.Contains([]string{"managed", "customer", "restricted"}, data.PolicyType) {
 			return fmt.Errorf("policy_type must be either 'managed', 'customer' or 'restricted'")
 		}
@@ -188,8 +187,8 @@ func DataAwsCrossaccountPolicy() common.Resource {
 					Effect:  "Allow",
 					Actions: "ec2:RunInstances",
 					Resources: []string{
-						"arn:aws:ec2:%s:%s:volume/*",
-						"arn:aws:ec2:%s:%s:instance/*",
+						fmt.Sprintf("arn:aws:ec2:%s:%s:volume/*", region, aws_account_id),
+						fmt.Sprintf("arn:aws:ec2:%s:%s:instance/*", region, aws_account_id),
 					},
 					Condition: map[string]map[string]string{
 						"StringEquals": {

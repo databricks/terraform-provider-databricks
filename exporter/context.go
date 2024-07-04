@@ -71,6 +71,7 @@ type importContext struct {
 	nameFixes         []regexFix
 	hclFixes          []regexFix
 	variables         map[string]string
+	variablesLock     sync.Mutex
 	workspaceConfKeys map[string]any
 
 	workspaceClient *databricks.WorkspaceClient
@@ -359,10 +360,10 @@ func (ic *importContext) Run() error {
 		if err != nil {
 			return err
 		}
+		ic.meUserName = me.UserName
 		for _, g := range me.Groups {
 			if g.Display == "admins" {
 				ic.meAdmin = true
-				ic.meUserName = me.UserName
 				break
 			}
 		}
@@ -1416,6 +1417,11 @@ func (ic *importContext) isServiceEnabled(service string) bool {
 	return exists
 }
 
+func (ic *importContext) isServiceInListing(service string) bool {
+	_, exists := ic.listing[service]
+	return exists
+}
+
 func (ic *importContext) EmitIfUpdatedAfterMillis(r *resource, modifiedAt int64, message string) {
 	updatedSinceMs := ic.getUpdatedSinceMs()
 	if ic.incremental && modifiedAt < updatedSinceMs {
@@ -1586,7 +1592,9 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 }
 
 func (ic *importContext) variable(name, desc string) hclwrite.Tokens {
+	ic.variablesLock.Lock()
 	ic.variables[name] = desc
+	ic.variablesLock.Unlock()
 	return hclwrite.TokensForTraversal(hcl.Traversal{
 		hcl.TraverseRoot{Name: "var"},
 		hcl.TraverseAttr{Name: name},

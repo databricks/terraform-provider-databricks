@@ -312,7 +312,7 @@ func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient
 	}, false)
 }
 
-// AccountDataWithParams defines a data source that can be used to read data from the workspace API.
+// AccountDataWithParams defines a data source that can be used to read data from the account API.
 // It differs from AccountData in that it allows extra attributes to be provided as a separate argument,
 // so the original type used to define the resource can also be used to define the data source.
 //
@@ -365,7 +365,7 @@ func genericDatabricksData[T, P, C any](
 	hasOther bool) Resource {
 	var dummy T
 	var other P
-	otherFields := StructToSchema(other, NoCustomize)
+	otherFields := StructToSchema(other, nil)
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		// For WorkspaceData and AccountData, a single data type is used to represent all of the fields of
 		// the resource, so its configuration is correct. For the *WithParams methods, the SdkType parameter
@@ -447,4 +447,13 @@ func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 		Deprecated: "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
 	}
 	return s
+}
+
+// NoClientData is a generic way to define data resources in Terraform provider that doesn't require any client.
+// usage is similar to AccountData and WorkspaceData, but the read function doesn't take a client.
+func NoClientData[T any](read func(context.Context, *T) error) Resource {
+	return genericDatabricksData(func(*DatabricksClient) (any, error) { return nil, nil },
+		func(ctx context.Context, s struct{}, t *T, ac any) error {
+			return read(ctx, t)
+		}, false)
 }

@@ -1,4 +1,12 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
+/*
+These generated types are for terraform plugin framework to interact with the terraform state conveniently.
+
+These types follow the same structure as the types in go-sdk.
+The only difference is that the primitive types are no longer using the go-native types, but with tfsdk types.
+Plus the json tags get converted into tfsdk tags.
+We use go-native types for lists and maps intentionally for the ease for converting these types into the go-sdk types.
+*/
 
 package catalog_tf
 

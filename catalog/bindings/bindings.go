@@ -9,7 +9,7 @@ import (
 )
 
 func AddCurrentWorkspaceBindings(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient, securableName string, securableType string) error {
-	if d.Get("isolation_mode") != "ISOLATED" {
+	if d.Get("isolation_mode") != "ISOLATED" && d.Get("isolation_mode") != "ISOLATION_MODE_ISOLATED" {
 		return nil
 	}
 	// Bind the current workspace if the catalog is isolated, otherwise the read will fail

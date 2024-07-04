@@ -55,20 +55,20 @@ func (f *AssetType) Type() string {
 
 // Get one batch of listings. One may specify up to 50 IDs per request.
 type BatchGetListingsRequest struct {
-	Ids types.List `tfsdk:"-" url:"ids,omitempty"`
+	Ids []types.String `tfsdk:"-" url:"ids,omitempty"`
 }
 
 type BatchGetListingsResponse struct {
-	Listings types.List `tfsdk:"listings"`
+	Listings []Listing `tfsdk:"listings"`
 }
 
 // Get one batch of providers. One may specify up to 50 IDs per request.
 type BatchGetProvidersRequest struct {
-	Ids types.List `tfsdk:"-" url:"ids,omitempty"`
+	Ids []types.String `tfsdk:"-" url:"ids,omitempty"`
 }
 
 type BatchGetProvidersResponse struct {
-	Providers types.List `tfsdk:"providers"`
+	Providers []ProviderInfo `tfsdk:"providers"`
 }
 
 type Category string
@@ -399,11 +399,11 @@ type Exchange struct {
 
 	CreatedBy types.String `tfsdk:"created_by"`
 
-	Filters types.List `tfsdk:"filters"`
+	Filters []ExchangeFilter `tfsdk:"filters"`
 
 	Id types.String `tfsdk:"id"`
 
-	LinkedListings types.List `tfsdk:"linked_listings"`
+	LinkedListings []ExchangeListing `tfsdk:"linked_listings"`
 
 	Name types.String `tfsdk:"name"`
 
@@ -497,9 +497,9 @@ type FileInfo struct {
 }
 
 type FileParent struct {
-	FileParentType FileParentType `tfsdk:"file_parent_type" url:"file_parent_type,omitempty"`
+	FileParentType FileParentType `tfsdk:"file_parent_type"`
 	// TODO make the following fields required
-	ParentId types.String `tfsdk:"parent_id" url:"parent_id,omitempty"`
+	ParentId types.String `tfsdk:"parent_id"`
 }
 
 type FileParentType string
@@ -647,7 +647,7 @@ type GetListingContentMetadataRequest struct {
 type GetListingContentMetadataResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	SharedDataObjects types.List `tfsdk:"shared_data_objects"`
+	SharedDataObjects []SharedDataObject `tfsdk:"shared_data_objects"`
 }
 
 // Get listing
@@ -667,7 +667,7 @@ type GetListingsRequest struct {
 }
 
 type GetListingsResponse struct {
-	Listings types.List `tfsdk:"listings"`
+	Listings []Listing `tfsdk:"listings"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -678,7 +678,7 @@ type GetPersonalizationRequestRequest struct {
 }
 
 type GetPersonalizationRequestResponse struct {
-	PersonalizationRequests types.List `tfsdk:"personalization_requests"`
+	PersonalizationRequests []PersonalizationRequest `tfsdk:"personalization_requests"`
 }
 
 // Get a provider
@@ -719,7 +719,7 @@ type InstallationDetail struct {
 
 	TokenDetail *TokenDetail `tfsdk:"token_detail"`
 
-	Tokens types.List `tfsdk:"tokens"`
+	Tokens []TokenInfo `tfsdk:"tokens"`
 }
 
 type InstallationStatus string
@@ -757,7 +757,7 @@ type ListAllInstallationsRequest struct {
 }
 
 type ListAllInstallationsResponse struct {
-	Installations types.List `tfsdk:"installations"`
+	Installations []InstallationDetail `tfsdk:"installations"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -772,7 +772,7 @@ type ListAllPersonalizationRequestsRequest struct {
 type ListAllPersonalizationRequestsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	PersonalizationRequests types.List `tfsdk:"personalization_requests"`
+	PersonalizationRequests []PersonalizationRequest `tfsdk:"personalization_requests"`
 }
 
 // List exchange filters
@@ -785,7 +785,7 @@ type ListExchangeFiltersRequest struct {
 }
 
 type ListExchangeFiltersResponse struct {
-	Filters types.List `tfsdk:"filters"`
+	Filters []ExchangeFilter `tfsdk:"filters"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -800,7 +800,7 @@ type ListExchangesForListingRequest struct {
 }
 
 type ListExchangesForListingResponse struct {
-	ExchangeListing types.List `tfsdk:"exchange_listing"`
+	ExchangeListing []ExchangeListing `tfsdk:"exchange_listing"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -813,7 +813,7 @@ type ListExchangesRequest struct {
 }
 
 type ListExchangesResponse struct {
-	Exchanges types.List `tfsdk:"exchanges"`
+	Exchanges []Exchange `tfsdk:"exchanges"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -828,7 +828,7 @@ type ListFilesRequest struct {
 }
 
 type ListFilesResponse struct {
-	FileInfos types.List `tfsdk:"file_infos"`
+	FileInfos []FileInfo `tfsdk:"file_infos"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -843,7 +843,7 @@ type ListFulfillmentsRequest struct {
 }
 
 type ListFulfillmentsResponse struct {
-	Fulfillments types.List `tfsdk:"fulfillments"`
+	Fulfillments []ListingFulfillment `tfsdk:"fulfillments"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -858,7 +858,7 @@ type ListInstallationsRequest struct {
 }
 
 type ListInstallationsResponse struct {
-	Installations types.List `tfsdk:"installations"`
+	Installations []InstallationDetail `tfsdk:"installations"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -873,7 +873,7 @@ type ListListingsForExchangeRequest struct {
 }
 
 type ListListingsForExchangeResponse struct {
-	ExchangeListings types.List `tfsdk:"exchange_listings"`
+	ExchangeListings []ExchangeListing `tfsdk:"exchange_listings"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -881,9 +881,9 @@ type ListListingsForExchangeResponse struct {
 // List listings
 type ListListingsRequest struct {
 	// Matches any of the following asset types
-	Assets types.List `tfsdk:"-" url:"assets,omitempty"`
+	Assets []AssetType `tfsdk:"-" url:"assets,omitempty"`
 	// Matches any of the following categories
-	Categories types.List `tfsdk:"-" url:"categories,omitempty"`
+	Categories []Category `tfsdk:"-" url:"categories,omitempty"`
 
 	IsAscending types.Bool `tfsdk:"-" url:"is_ascending,omitempty"`
 	// Filters each listing based on if it is free.
@@ -897,15 +897,15 @@ type ListListingsRequest struct {
 
 	PageToken types.String `tfsdk:"-" url:"page_token,omitempty"`
 	// Matches any of the following provider ids
-	ProviderIds types.List `tfsdk:"-" url:"provider_ids,omitempty"`
+	ProviderIds []types.String `tfsdk:"-" url:"provider_ids,omitempty"`
 	// Criteria for sorting the resulting set of listings.
 	SortBy SortBy `tfsdk:"-" url:"sort_by,omitempty"`
 	// Matches any of the following tags
-	Tags types.List `tfsdk:"-" url:"tags,omitempty"`
+	Tags []ListingTag `tfsdk:"-" url:"tags,omitempty"`
 }
 
 type ListListingsResponse struct {
-	Listings types.List `tfsdk:"listings"`
+	Listings []Listing `tfsdk:"listings"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
@@ -931,7 +931,7 @@ type ListProvidersRequest struct {
 type ListProvidersResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Providers types.List `tfsdk:"providers"`
+	Providers []ProviderInfo `tfsdk:"providers"`
 }
 
 type Listing struct {
@@ -948,7 +948,7 @@ type Listing struct {
 type ListingDetail struct {
 	// Type of assets included in the listing. eg. GIT_REPO, DATA_TABLE, MODEL,
 	// NOTEBOOK
-	Assets types.List `tfsdk:"assets"`
+	Assets []AssetType `tfsdk:"assets"`
 	// The ending date timestamp for when the data spans
 	CollectionDateEnd types.Int64 `tfsdk:"collection_date_end"`
 	// The starting date timestamp for when the data spans
@@ -964,9 +964,9 @@ type ListingDetail struct {
 
 	DocumentationLink types.String `tfsdk:"documentation_link"`
 
-	EmbeddedNotebookFileInfos types.List `tfsdk:"embedded_notebook_file_infos"`
+	EmbeddedNotebookFileInfos []FileInfo `tfsdk:"embedded_notebook_file_infos"`
 
-	FileIds types.List `tfsdk:"file_ids"`
+	FileIds []types.String `tfsdk:"file_ids"`
 	// Which geo region the listing data is collected from
 	GeographicalCoverage types.String `tfsdk:"geographical_coverage"`
 	// ID 20, 21 removed don't use License of the data asset - Required for
@@ -989,7 +989,7 @@ type ListingDetail struct {
 	// the field is optional and won't need to have NOT NULL integrity check 2.
 	// The value is fairly fixed, static and low cardinality (eg. enums). 3. The
 	// value won't be used in filters or joins with other tables.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ListingTag `tfsdk:"tags"`
 
 	TermsOfService types.String `tfsdk:"terms_of_service"`
 	// How often data is updated
@@ -1010,7 +1010,7 @@ type ListingFulfillment struct {
 
 type ListingSetting struct {
 	// filters are joined with `or` conjunction.
-	Filters types.List `tfsdk:"filters"`
+	Filters []VisibilityFilter `tfsdk:"filters"`
 
 	Visibility Visibility `tfsdk:"visibility"`
 }
@@ -1076,7 +1076,7 @@ func (f *ListingStatus) Type() string {
 
 // Next Number: 26
 type ListingSummary struct {
-	Categories types.List `tfsdk:"categories"`
+	Categories []Category `tfsdk:"categories"`
 
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 
@@ -1084,7 +1084,7 @@ type ListingSummary struct {
 
 	CreatedById types.Int64 `tfsdk:"created_by_id"`
 
-	ExchangeIds types.List `tfsdk:"exchange_ids"`
+	ExchangeIds []types.String `tfsdk:"exchange_ids"`
 	// if a git repo is being created, a listing will be initialized with this
 	// field as opposed to a share
 	GitRepo *RepoInfo `tfsdk:"git_repo"`
@@ -1123,7 +1123,7 @@ type ListingTag struct {
 	TagName ListingTagType `tfsdk:"tag_name"`
 	// String representation of the tag value. Values should be string literals
 	// (no complex types)
-	TagValues types.List `tfsdk:"tag_values"`
+	TagValues []types.String `tfsdk:"tag_values"`
 }
 
 type ListingTagType string
@@ -1351,7 +1351,7 @@ type ProviderInfo struct {
 type ProviderListingSummaryInfo struct {
 	Description types.String `tfsdk:"description"`
 
-	IconFiles types.List `tfsdk:"icon_files"`
+	IconFiles []ProviderIconFile `tfsdk:"icon_files"`
 
 	Name types.String `tfsdk:"name"`
 }
@@ -1387,9 +1387,9 @@ type RepoInstallation struct {
 // Search listings
 type SearchListingsRequest struct {
 	// Matches any of the following asset types
-	Assets types.List `tfsdk:"-" url:"assets,omitempty"`
+	Assets []AssetType `tfsdk:"-" url:"assets,omitempty"`
 	// Matches any of the following categories
-	Categories types.List `tfsdk:"-" url:"categories,omitempty"`
+	Categories []Category `tfsdk:"-" url:"categories,omitempty"`
 
 	IsAscending types.Bool `tfsdk:"-" url:"is_ascending,omitempty"`
 
@@ -1401,7 +1401,7 @@ type SearchListingsRequest struct {
 
 	PageToken types.String `tfsdk:"-" url:"page_token,omitempty"`
 	// Matches any of the following provider ids
-	ProviderIds types.List `tfsdk:"-" url:"provider_ids,omitempty"`
+	ProviderIds []types.String `tfsdk:"-" url:"provider_ids,omitempty"`
 	// Fuzzy matches query
 	Query types.String `tfsdk:"-" url:"query"`
 
@@ -1409,7 +1409,7 @@ type SearchListingsRequest struct {
 }
 
 type SearchListingsResponse struct {
-	Listings types.List `tfsdk:"listings"`
+	Listings []Listing `tfsdk:"listings"`
 
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }

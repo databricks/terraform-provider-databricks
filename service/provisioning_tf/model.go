@@ -5,7 +5,6 @@ package provisioning_tf
 import (
 	"fmt"
 
-	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -73,7 +72,7 @@ type CreateCustomerManagedKeyRequest struct {
 
 	GcpKeyInfo *CreateGcpKeyInfo `tfsdk:"gcp_key_info"`
 	// The cases that the key can be used for.
-	UseCases types.List `tfsdk:"use_cases"`
+	UseCases []KeyUseCase `tfsdk:"use_cases"`
 }
 
 type CreateGcpKeyInfo struct {
@@ -89,10 +88,10 @@ type CreateNetworkRequest struct {
 	NetworkName types.String `tfsdk:"network_name"`
 	// IDs of one to five security groups associated with this network. Security
 	// group IDs **cannot** be used in multiple network configurations.
-	SecurityGroupIds types.List `tfsdk:"security_group_ids"`
+	SecurityGroupIds []types.String `tfsdk:"security_group_ids"`
 	// IDs of at least two subnets associated with this network. Subnet IDs
 	// **cannot** be used in multiple network configurations.
-	SubnetIds types.List `tfsdk:"subnet_ids"`
+	SubnetIds []types.String `tfsdk:"subnet_ids"`
 	// If specified, contains the VPC endpoints used to allow cluster
 	// communication from this VPC over [AWS PrivateLink].
 	//
@@ -137,7 +136,7 @@ type CreateWorkspaceRequest struct {
 	// key-value pair is a string of utf-8 characters. The value can be an empty
 	// string, with maximum length of 255 characters. The key can be of maximum
 	// length of 127 characters, and cannot be empty.
-	CustomTags types.Map `tfsdk:"custom_tags"`
+	CustomTags map[string]types.String `tfsdk:"custom_tags"`
 	// The deployment name defines part of the subdomain for the workspace. The
 	// workspace URL for the web application and REST APIs is
 	// `<workspace-deployment-name>.cloud.databricks.com`. For example, if the
@@ -250,15 +249,7 @@ type Credential struct {
 // key-value pair is a string of utf-8 characters. The value can be an empty
 // string, with maximum length of 255 characters. The key can be of maximum
 // length of 127 characters, and cannot be empty.
-type CustomTags types.Map
-
-func (tfSdkStruct *CustomTags) ToGoSdk(goSdkStruct provisioning.CustomTags) error {
-	return nil
-}
-
-func (tfSdkStruct *CustomTags) FromGoSdk(goSdkStruct provisioning.CustomTags) error {
-	return nil
-}
+type CustomTags map[string]types.String
 
 // The general workspace configurations that are specific to Google Cloud.
 type CustomerFacingGcpCloudResourceContainer struct {
@@ -279,7 +270,7 @@ type CustomerManagedKey struct {
 
 	GcpKeyInfo *GcpKeyInfo `tfsdk:"gcp_key_info"`
 	// The cases that the key can be used for.
-	UseCases types.List `tfsdk:"use_cases"`
+	UseCases []KeyUseCase `tfsdk:"use_cases"`
 }
 
 // Delete credential configuration
@@ -606,7 +597,7 @@ type Network struct {
 	// Time in epoch milliseconds when the network was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Array of error messages about the network configuration.
-	ErrorMessages types.List `tfsdk:"error_messages"`
+	ErrorMessages []NetworkHealth `tfsdk:"error_messages"`
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
 	GcpNetworkInfo *GcpNetworkInfo `tfsdk:"gcp_network_info"`
@@ -615,9 +606,9 @@ type Network struct {
 	// The human-readable name of the network configuration.
 	NetworkName types.String `tfsdk:"network_name"`
 
-	SecurityGroupIds types.List `tfsdk:"security_group_ids"`
+	SecurityGroupIds []types.String `tfsdk:"security_group_ids"`
 
-	SubnetIds types.List `tfsdk:"subnet_ids"`
+	SubnetIds []types.String `tfsdk:"subnet_ids"`
 	// If specified, contains the VPC endpoints used to allow cluster
 	// communication from this VPC over [AWS PrivateLink].
 	//
@@ -631,7 +622,7 @@ type Network struct {
 	// Broken. * `WARNED`: Warned.
 	VpcStatus VpcStatus `tfsdk:"vpc_status"`
 	// Array of warning messages about the network configuration.
-	WarningMessages types.List `tfsdk:"warning_messages"`
+	WarningMessages []NetworkWarning `tfsdk:"warning_messages"`
 	// Workspace ID associated with this network configuration.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
@@ -651,10 +642,10 @@ type NetworkHealth struct {
 type NetworkVpcEndpoints struct {
 	// The VPC endpoint ID used by this network to access the Databricks secure
 	// cluster connectivity relay.
-	DataplaneRelay types.List `tfsdk:"dataplane_relay"`
+	DataplaneRelay []types.String `tfsdk:"dataplane_relay"`
 	// The VPC endpoint ID used by this network to access the Databricks REST
 	// API.
-	RestApi types.List `tfsdk:"rest_api"`
+	RestApi []types.String `tfsdk:"rest_api"`
 }
 
 type NetworkWarning struct {
@@ -741,7 +732,7 @@ type PrivateAccessSettings struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id"`
 	// An array of Databricks VPC endpoint IDs.
-	AllowedVpcEndpointIds types.List `tfsdk:"allowed_vpc_endpoint_ids"`
+	AllowedVpcEndpointIds []types.String `tfsdk:"allowed_vpc_endpoint_ids"`
 	// The private access level controls which VPC endpoints can connect to the
 	// UI or API of any workspace that attaches this private access settings
 	// object. * `ACCOUNT` level access (the default) allows only VPC endpoints
@@ -808,7 +799,7 @@ type UpdateWorkspaceRequest struct {
 	// key-value pair is a string of utf-8 characters. The value can be an empty
 	// string, with maximum length of 255 characters. The key can be of maximum
 	// length of 127 characters, and cannot be empty.
-	CustomTags types.Map `tfsdk:"custom_tags"`
+	CustomTags map[string]types.String `tfsdk:"custom_tags"`
 	// The ID of the workspace's managed services encryption key configuration
 	// object. This parameter is available only for updating failed workspaces.
 	ManagedServicesCustomerManagedKeyId types.String `tfsdk:"managed_services_customer_managed_key_id"`
@@ -844,7 +835,7 @@ type UpsertPrivateAccessSettingsRequest struct {
 	// public internet, see [IP access lists].
 	//
 	// [IP access lists]: https://docs.databricks.com/security/network/ip-access-list.html
-	AllowedVpcEndpointIds types.List `tfsdk:"allowed_vpc_endpoint_ids"`
+	AllowedVpcEndpointIds []types.String `tfsdk:"allowed_vpc_endpoint_ids"`
 	// The private access level controls which VPC endpoints can connect to the
 	// UI or API of any workspace that attaches this private access settings
 	// object. * `ACCOUNT` level access (the default) allows only VPC endpoints
@@ -991,7 +982,7 @@ type Workspace struct {
 	// key-value pair is a string of utf-8 characters. The value can be an empty
 	// string, with maximum length of 255 characters. The key can be of maximum
 	// length of 127 characters, and cannot be empty.
-	CustomTags types.Map `tfsdk:"custom_tags"`
+	CustomTags map[string]types.String `tfsdk:"custom_tags"`
 	// The deployment name defines part of the subdomain for the workspace. The
 	// workspace URL for web application and REST APIs is
 	// `<deployment-name>.cloud.databricks.com`.

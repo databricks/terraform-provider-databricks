@@ -21,13 +21,6 @@ type {{.PascalName}} struct {
 
 {{else if .MapValue}}{{.Comment "// " 80}}
 type {{.PascalName}} {{template "type" .}}
-func (tfSdkStruct *{{.PascalName}}) ToGoSdk(goSdkStruct {{.Package.Name}}.{{.PascalName}}) error {
-    return nil
-}
-
-func (tfSdkStruct *{{.PascalName}}) FromGoSdk(goSdkStruct {{.Package.Name}}.{{.PascalName}}) error {
-    return nil
-}
 {{else if .Enum}}{{.Comment "// " 80}}
 type {{.PascalName}} string
 {{range .Enum }}
@@ -75,8 +68,8 @@ func (f *{{.PascalName}}) Type() string {
 	{{- else if .IsFloat64}}types.Float64
 	{{- else if .IsInt}}types.Int64
 	{{- else if .IsByteStream}}io.ReadCloser
-	{{- else if .ArrayValue }}types.List
-	{{- else if .MapValue }}types.Map
+	{{- else if .ArrayValue }}[]{{template "type" .ArrayValue}}
+	{{- else if .MapValue }}map[string]{{template "type" .MapValue}}
 	{{- else if .IsObject }}{{.PascalName}}
 	{{- else if .Enum }}{{.PascalName}}
 	{{- else}}any /* MISSING TYPE */

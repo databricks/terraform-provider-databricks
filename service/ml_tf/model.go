@@ -223,7 +223,7 @@ func (f *CommentActivityAction) Type() string {
 // Comment details.
 type CommentObject struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions types.List `tfsdk:"available_actions"`
+	AvailableActions []CommentActivityAction `tfsdk:"available_actions"`
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
@@ -261,7 +261,7 @@ type CreateExperiment struct {
 	// backends are guaranteed to support tag keys up to 250 bytes in size and
 	// tag values up to 5000 bytes in size. All storage backends are also
 	// guaranteed to support up to 20 tags per request.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ExperimentTag `tfsdk:"tags"`
 }
 
 type CreateExperimentResponse struct {
@@ -275,7 +275,7 @@ type CreateModelRequest struct {
 	// Register models under this name
 	Name types.String `tfsdk:"name"`
 	// Additional metadata for registered model.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ModelTag `tfsdk:"tags"`
 }
 
 type CreateModelResponse struct {
@@ -296,7 +296,7 @@ type CreateModelVersionRequest struct {
 	// URI indicating the location of the model artifacts.
 	Source types.String `tfsdk:"source"`
 	// Additional metadata for model version.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ModelVersionTag `tfsdk:"tags"`
 }
 
 type CreateModelVersionResponse struct {
@@ -340,7 +340,7 @@ type CreateRegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events types.List `tfsdk:"events"`
+	Events []RegistryWebhookEvent `tfsdk:"events"`
 
 	HttpUrlSpec *HttpUrlSpec `tfsdk:"http_url_spec"`
 
@@ -364,7 +364,7 @@ type CreateRun struct {
 	// Unix timestamp in milliseconds of when the run started.
 	StartTime types.Int64 `tfsdk:"start_time"`
 	// Additional metadata for run.
-	Tags types.List `tfsdk:"tags"`
+	Tags []RunTag `tfsdk:"tags"`
 	// ID of the user executing the run. This field is deprecated as of MLflow
 	// 1.0, and will be removed in a future MLflow release. Use 'mlflow.user'
 	// tag instead.
@@ -432,7 +432,7 @@ type DatasetInput struct {
 	Dataset *Dataset `tfsdk:"dataset"`
 	// A list of tags for the dataset input, e.g. a “context” tag with value
 	// “training”
-	Tags types.List `tfsdk:"tags"`
+	Tags []InputTag `tfsdk:"tags"`
 }
 
 // Delete a comment
@@ -614,7 +614,7 @@ type Experiment struct {
 	// Human readable name that identifies the experiment.
 	Name types.String `tfsdk:"name"`
 	// Tags: Additional metadata key-value pairs.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ExperimentTag `tfsdk:"tags"`
 }
 
 type ExperimentAccessControlRequest struct {
@@ -630,7 +630,7 @@ type ExperimentAccessControlRequest struct {
 
 type ExperimentAccessControlResponse struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions"`
+	AllPermissions []ExperimentPermission `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -644,7 +644,7 @@ type ExperimentAccessControlResponse struct {
 type ExperimentPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel ExperimentPermissionLevel `tfsdk:"permission_level"`
 }
@@ -680,7 +680,7 @@ func (f *ExperimentPermissionLevel) Type() string {
 }
 
 type ExperimentPermissions struct {
-	AccessControlList types.List `tfsdk:"access_control_list"`
+	AccessControlList []ExperimentAccessControlResponse `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -694,7 +694,7 @@ type ExperimentPermissionsDescription struct {
 }
 
 type ExperimentPermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list"`
+	AccessControlList []ExperimentAccessControlRequest `tfsdk:"access_control_list"`
 	// The experiment for which to get or manage permissions.
 	ExperimentId types.String `tfsdk:"-" url:"-"`
 }
@@ -729,7 +729,7 @@ type GetExperimentPermissionLevelsRequest struct {
 
 type GetExperimentPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels"`
+	PermissionLevels []ExperimentPermissionsDescription `tfsdk:"permission_levels"`
 }
 
 // Get experiment permissions
@@ -770,19 +770,19 @@ type GetLatestVersionsRequest struct {
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name"`
 	// List of stages.
-	Stages types.List `tfsdk:"stages"`
+	Stages []types.String `tfsdk:"stages"`
 }
 
 type GetLatestVersionsResponse struct {
 	// Latest version models for each requests stage. Only return models with
 	// current `READY` status. If no `stages` provided, returns the latest
 	// version for each stage, including `"None"`.
-	ModelVersions types.List `tfsdk:"model_versions"`
+	ModelVersions []ModelVersion `tfsdk:"model_versions"`
 }
 
 type GetMetricHistoryResponse struct {
 	// All logged values for this metric.
-	Metrics types.List `tfsdk:"metrics"`
+	Metrics []Metric `tfsdk:"metrics"`
 	// Token that can be used to retrieve the next page of metric history
 	// results
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -831,7 +831,7 @@ type GetRegisteredModelPermissionLevelsRequest struct {
 
 type GetRegisteredModelPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels"`
+	PermissionLevels []RegisteredModelPermissionsDescription `tfsdk:"permission_levels"`
 }
 
 // Get registered model permissions
@@ -933,7 +933,7 @@ type ListArtifactsRequest struct {
 
 type ListArtifactsResponse struct {
 	// File location and metadata for artifacts.
-	Files types.List `tfsdk:"files"`
+	Files []FileInfo `tfsdk:"files"`
 	// Token that can be used to retrieve the next page of artifact results
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Root artifact directory for the run.
@@ -958,7 +958,7 @@ type ListExperimentsRequest struct {
 type ListExperimentsResponse struct {
 	// Paginated Experiments beginning with the first item on the requested
 	// page.
-	Experiments types.List `tfsdk:"experiments"`
+	Experiments []Experiment `tfsdk:"experiments"`
 	// Token that can be used to retrieve the next page of experiments. Empty
 	// token means no more experiment is available for retrieval.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -976,14 +976,14 @@ type ListModelsResponse struct {
 	// Pagination token to request next page of models for the same query.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	RegisteredModels types.List `tfsdk:"registered_models"`
+	RegisteredModels []Model `tfsdk:"registered_models"`
 }
 
 type ListRegistryWebhooks struct {
 	// Token that can be used to retrieve the next page of artifact results
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Array of registry webhooks.
-	Webhooks types.List `tfsdk:"webhooks"`
+	Webhooks []RegistryWebhook `tfsdk:"webhooks"`
 }
 
 // List transition requests
@@ -996,7 +996,7 @@ type ListTransitionRequestsRequest struct {
 
 type ListTransitionRequestsResponse struct {
 	// Array of open transition requests.
-	Requests types.List `tfsdk:"requests"`
+	Requests []Activity `tfsdk:"requests"`
 }
 
 // List registry webhooks
@@ -1004,7 +1004,7 @@ type ListWebhooksRequest struct {
 	// If `events` is specified, any webhook with one or more of the specified
 	// trigger events is included in the output. If `events` is not specified,
 	// webhooks of all event types are included in the output.
-	Events types.List `tfsdk:"-" url:"events,omitempty"`
+	Events []RegistryWebhookEvent `tfsdk:"-" url:"events,omitempty"`
 	// If not specified, all webhooks associated with the specified events are
 	// listed, regardless of their associated model.
 	ModelName types.String `tfsdk:"-" url:"model_name,omitempty"`
@@ -1015,15 +1015,15 @@ type ListWebhooksRequest struct {
 type LogBatch struct {
 	// Metrics to log. A single request can contain up to 1000 metrics, and up
 	// to 1000 metrics, params, and tags in total.
-	Metrics types.List `tfsdk:"metrics"`
+	Metrics []Metric `tfsdk:"metrics"`
 	// Params to log. A single request can contain up to 100 params, and up to
 	// 1000 metrics, params, and tags in total.
-	Params types.List `tfsdk:"params"`
+	Params []Param `tfsdk:"params"`
 	// ID of the run to log under
 	RunId types.String `tfsdk:"run_id"`
 	// Tags to log. A single request can contain up to 100 tags, and up to 1000
 	// metrics, params, and tags in total.
-	Tags types.List `tfsdk:"tags"`
+	Tags []RunTag `tfsdk:"tags"`
 }
 
 type LogBatchResponse struct {
@@ -1031,7 +1031,7 @@ type LogBatchResponse struct {
 
 type LogInputs struct {
 	// Dataset inputs
-	Datasets types.List `tfsdk:"datasets"`
+	Datasets []DatasetInput `tfsdk:"datasets"`
 	// ID of the run to log under
 	RunId types.String `tfsdk:"run_id"`
 }
@@ -1104,11 +1104,11 @@ type Model struct {
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Collection of latest model versions for each stage. Only contains models
 	// with current `READY` status.
-	LatestVersions types.List `tfsdk:"latest_versions"`
+	LatestVersions []ModelVersion `tfsdk:"latest_versions"`
 	// Unique name for the model.
 	Name types.String `tfsdk:"name"`
 	// Tags: Additional metadata key-value pairs for this `registered_model`.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ModelTag `tfsdk:"tags"`
 	// User that created this `registered_model`
 	UserId types.String `tfsdk:"user_id"`
 }
@@ -1123,14 +1123,14 @@ type ModelDatabricks struct {
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Array of model versions, each the latest version for its stage.
-	LatestVersions types.List `tfsdk:"latest_versions"`
+	LatestVersions []ModelVersion `tfsdk:"latest_versions"`
 	// Name of the model.
 	Name types.String `tfsdk:"name"`
 	// Permission level of the requesting user on the object. For what is
 	// allowed at each level, see [MLflow Model permissions](..).
 	PermissionLevel PermissionLevel `tfsdk:"permission_level"`
 	// Array of tags associated with the model.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ModelTag `tfsdk:"tags"`
 	// The username of the user that created the object.
 	UserId types.String `tfsdk:"user_id"`
 }
@@ -1167,7 +1167,7 @@ type ModelVersion struct {
 	// Details on current `status`, if it is pending or failed.
 	StatusMessage types.String `tfsdk:"status_message"`
 	// Tags: Additional metadata key-value pairs for this `model_version`.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ModelVersionTag `tfsdk:"tags"`
 	// User that created this `model_version`.
 	UserId types.String `tfsdk:"user_id"`
 	// Model's version number.
@@ -1218,7 +1218,7 @@ type ModelVersionDatabricks struct {
 	// Details on the current status, for example why registration failed.
 	StatusMessage types.String `tfsdk:"status_message"`
 	// Array of tags that are associated with the model version.
-	Tags types.List `tfsdk:"tags"`
+	Tags []ModelVersionTag `tfsdk:"tags"`
 	// The username of the user that created the object.
 	UserId types.String `tfsdk:"user_id"`
 	// Version of the model.
@@ -1317,7 +1317,7 @@ type RegisteredModelAccessControlRequest struct {
 
 type RegisteredModelAccessControlResponse struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions"`
+	AllPermissions []RegisteredModelPermission `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -1331,7 +1331,7 @@ type RegisteredModelAccessControlResponse struct {
 type RegisteredModelPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel RegisteredModelPermissionLevel `tfsdk:"permission_level"`
 }
@@ -1371,7 +1371,7 @@ func (f *RegisteredModelPermissionLevel) Type() string {
 }
 
 type RegisteredModelPermissions struct {
-	AccessControlList types.List `tfsdk:"access_control_list"`
+	AccessControlList []RegisteredModelAccessControlResponse `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -1385,7 +1385,7 @@ type RegisteredModelPermissionsDescription struct {
 }
 
 type RegisteredModelPermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list"`
+	AccessControlList []RegisteredModelAccessControlRequest `tfsdk:"access_control_list"`
 	// The registered model for which to get or manage permissions.
 	RegisteredModelId types.String `tfsdk:"-" url:"-"`
 }
@@ -1428,7 +1428,7 @@ type RegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events types.List `tfsdk:"events"`
+	Events []RegistryWebhookEvent `tfsdk:"events"`
 
 	HttpUrlSpec *HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec"`
 	// Webhook ID
@@ -1617,11 +1617,11 @@ type Run struct {
 
 type RunData struct {
 	// Run metrics.
-	Metrics types.List `tfsdk:"metrics"`
+	Metrics []Metric `tfsdk:"metrics"`
 	// Run parameters.
-	Params types.List `tfsdk:"params"`
+	Params []Param `tfsdk:"params"`
 	// Additional metadata key-value pairs.
-	Tags types.List `tfsdk:"tags"`
+	Tags []RunTag `tfsdk:"tags"`
 }
 
 type RunInfo struct {
@@ -1687,7 +1687,7 @@ func (f *RunInfoStatus) Type() string {
 
 type RunInputs struct {
 	// Run metrics.
-	DatasetInputs types.List `tfsdk:"dataset_inputs"`
+	DatasetInputs []DatasetInput `tfsdk:"dataset_inputs"`
 }
 
 type RunTag struct {
@@ -1707,7 +1707,7 @@ type SearchExperiments struct {
 	// name and last updated timestamp with an optional "DESC" or "ASC"
 	// annotation, where "ASC" is the default. Tiebreaks are done by experiment
 	// id DESC.
-	OrderBy types.List `tfsdk:"order_by"`
+	OrderBy []types.String `tfsdk:"order_by"`
 	// Token indicating the page of experiments to fetch
 	PageToken types.String `tfsdk:"page_token"`
 	// Qualifier for type of experiments to be returned. If unspecified, return
@@ -1717,7 +1717,7 @@ type SearchExperiments struct {
 
 type SearchExperimentsResponse struct {
 	// Experiments that match the search criteria
-	Experiments types.List `tfsdk:"experiments"`
+	Experiments []Experiment `tfsdk:"experiments"`
 	// Token that can be used to retrieve the next page of experiments. An empty
 	// token means that no more experiments are available for retrieval.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -1765,14 +1765,14 @@ type SearchModelVersionsRequest struct {
 	// with an optional "DESC" or "ASC" annotation, where "ASC" is the default.
 	// Tiebreaks are done by latest stage transition timestamp, followed by name
 	// ASC, followed by version DESC.
-	OrderBy types.List `tfsdk:"-" url:"order_by,omitempty"`
+	OrderBy []types.String `tfsdk:"-" url:"order_by,omitempty"`
 	// Pagination token to go to next page based on previous search query.
 	PageToken types.String `tfsdk:"-" url:"page_token,omitempty"`
 }
 
 type SearchModelVersionsResponse struct {
 	// Models that match the search criteria
-	ModelVersions types.List `tfsdk:"model_versions"`
+	ModelVersions []ModelVersion `tfsdk:"model_versions"`
 	// Pagination token to request next page of models for the same search
 	// query.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -1789,7 +1789,7 @@ type SearchModelsRequest struct {
 	// List of columns for ordering search results, which can include model name
 	// and last updated timestamp with an optional "DESC" or "ASC" annotation,
 	// where "ASC" is the default. Tiebreaks are done by model name ASC.
-	OrderBy types.List `tfsdk:"-" url:"order_by,omitempty"`
+	OrderBy []types.String `tfsdk:"-" url:"order_by,omitempty"`
 	// Pagination token to go to the next page based on a previous search query.
 	PageToken types.String `tfsdk:"-" url:"page_token,omitempty"`
 }
@@ -1798,12 +1798,12 @@ type SearchModelsResponse struct {
 	// Pagination token to request the next page of models.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Registered Models that match the search criteria.
-	RegisteredModels types.List `tfsdk:"registered_models"`
+	RegisteredModels []Model `tfsdk:"registered_models"`
 }
 
 type SearchRuns struct {
 	// List of experiment IDs to search over.
-	ExperimentIds types.List `tfsdk:"experiment_ids"`
+	ExperimentIds []types.String `tfsdk:"experiment_ids"`
 	// A filter expression over params, metrics, and tags, that allows returning
 	// a subset of runs. The syntax is a subset of SQL that supports ANDing
 	// together binary operations between a param, metric, or tag and a
@@ -1825,7 +1825,7 @@ type SearchRuns struct {
 	// "metrics.rmse"] Tiebreaks are done by start_time DESC followed by run_id
 	// for runs with the same start time (and this is the default ordering
 	// criterion if order_by is not provided).
-	OrderBy types.List `tfsdk:"order_by"`
+	OrderBy []types.String `tfsdk:"order_by"`
 	// Token for the current page of runs.
 	PageToken types.String `tfsdk:"page_token"`
 	// Whether to display only active, only deleted, or all runs. Defaults to
@@ -1837,7 +1837,7 @@ type SearchRunsResponse struct {
 	// Token for the next page of runs.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Runs that match the search criteria.
-	Runs types.List `tfsdk:"runs"`
+	Runs []Run `tfsdk:"runs"`
 }
 
 // Whether to display only active, only deleted, or all runs. Defaults to only
@@ -2071,7 +2071,7 @@ type TransitionModelVersionStageDatabricks struct {
 // Transition request details.
 type TransitionRequest struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions types.List `tfsdk:"available_actions"`
+	AvailableActions []ActivityAction `tfsdk:"available_actions"`
 	// User-provided comment associated with the transition request.
 	Comment types.String `tfsdk:"comment"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
@@ -2176,7 +2176,7 @@ type UpdateRegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events types.List `tfsdk:"events"`
+	Events []RegistryWebhookEvent `tfsdk:"events"`
 
 	HttpUrlSpec *HttpUrlSpec `tfsdk:"http_url_spec"`
 	// Webhook ID

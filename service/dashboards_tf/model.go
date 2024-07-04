@@ -211,7 +211,7 @@ type ListDashboardsRequest struct {
 }
 
 type ListDashboardsResponse struct {
-	Dashboards types.List `tfsdk:"dashboards"`
+	Dashboards []Dashboard `tfsdk:"dashboards"`
 	// A token, which can be sent as `page_token` to retrieve the next page. If
 	// this field is omitted, there are no subsequent dashboards.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -234,7 +234,7 @@ type ListSchedulesResponse struct {
 	// subsequent schedules.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Schedules types.List `tfsdk:"schedules"`
+	Schedules []Schedule `tfsdk:"schedules"`
 }
 
 // List schedule subscriptions
@@ -256,7 +256,7 @@ type ListSubscriptionsResponse struct {
 	// subsequent subscriptions.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Subscriptions types.List `tfsdk:"subscriptions"`
+	Subscriptions []Subscription `tfsdk:"subscriptions"`
 }
 
 type MigrateDashboardRequest struct {

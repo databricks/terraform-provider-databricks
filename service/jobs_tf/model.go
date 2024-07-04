@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -75,11 +76,11 @@ type BaseRun struct {
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters types.List `tfsdk:"job_clusters"`
+	JobClusters []JobCluster `tfsdk:"job_clusters"`
 	// The canonical identifier of the job that contains this run.
 	JobId types.Int64 `tfsdk:"job_id"`
 	// Job-level parameters used in the run
-	JobParameters types.List `tfsdk:"job_parameters"`
+	JobParameters []JobParameter `tfsdk:"job_parameters"`
 	// A unique identifier for this job run. This is set to the same value as
 	// `run_id`.
 	NumberInJob types.Int64 `tfsdk:"number_in_job"`
@@ -91,7 +92,7 @@ type BaseRun struct {
 	// The time in milliseconds that the run has spent in the queue.
 	QueueDuration types.Int64 `tfsdk:"queue_duration"`
 	// The repair history of the run.
-	RepairHistory types.List `tfsdk:"repair_history"`
+	RepairHistory []RepairHistoryItem `tfsdk:"repair_history"`
 	// The time in milliseconds it took the job run and all of its repairs to
 	// finish.
 	RunDuration types.Int64 `tfsdk:"run_duration"`
@@ -130,7 +131,7 @@ type BaseRun struct {
 	State *RunState `tfsdk:"state"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
-	Tasks types.List `tfsdk:"tasks"`
+	Tasks []RunTask `tfsdk:"tasks"`
 	// The type of trigger that fired this run.
 	//
 	// * `PERIODIC`: Schedules that periodically trigger runs, such as a cron
@@ -197,7 +198,7 @@ type ClusterSpec struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries types.List `tfsdk:"libraries"`
+	Libraries []compute.Library `tfsdk:"libraries"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster"`
@@ -303,7 +304,7 @@ type Continuous struct {
 
 type CreateJob struct {
 	// List of permissions to set on the job.
-	AccessControlList types.List `tfsdk:"access_control_list"`
+	AccessControlList []iam.AccessControlRequest `tfsdk:"access_control_list"`
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
@@ -323,7 +324,7 @@ type CreateJob struct {
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this job.
-	Environments types.List `tfsdk:"environments"`
+	Environments []JobEnvironment `tfsdk:"environments"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
 	// always set to `"MULTI_TASK"`.
@@ -344,7 +345,7 @@ type CreateJob struct {
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters types.List `tfsdk:"job_clusters"`
+	JobClusters []JobCluster `tfsdk:"job_clusters"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
 	// job concurrently. This is useful for example if you trigger your job on a
@@ -365,7 +366,7 @@ type CreateJob struct {
 	// job.
 	NotificationSettings *JobNotificationSettings `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
-	Parameters types.List `tfsdk:"parameters"`
+	Parameters []JobParameterDefinition `tfsdk:"parameters"`
 	// The queue settings of the job.
 	Queue *QueueSettings `tfsdk:"queue"`
 	// Write-only setting, available only in Create/Update/Reset and Submit
@@ -383,9 +384,9 @@ type CreateJob struct {
 	// as cluster tags for jobs clusters, and are subject to the same
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
 	// job.
-	Tags types.Map `tfsdk:"tags"`
+	Tags map[string]types.String `tfsdk:"tags"`
 	// A list of task specifications to be executed by this job.
-	Tasks types.List `tfsdk:"tasks"`
+	Tasks []Task `tfsdk:"tasks"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
 	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
@@ -422,7 +423,7 @@ type CronSchedule struct {
 type DbtOutput struct {
 	// An optional map of headers to send when retrieving the artifact from the
 	// `artifacts_link`.
-	ArtifactsHeaders types.Map `tfsdk:"artifacts_headers"`
+	ArtifactsHeaders map[string]types.String `tfsdk:"artifacts_headers"`
 	// A pre-signed URL to download the (compressed) dbt artifacts. This link is
 	// valid for a limited time (30 minutes). This information is only available
 	// after the run has finished.
@@ -438,7 +439,7 @@ type DbtTask struct {
 	// A list of dbt commands to execute. All commands must start with `dbt`.
 	// This parameter must not be empty. A maximum of up to 10 commands can be
 	// provided.
-	Commands types.List `tfsdk:"commands"`
+	Commands []types.String `tfsdk:"commands"`
 	// Optional (relative) path to the profiles directory. Can only be specified
 	// if no warehouse_id is specified. If no warehouse_id is specified and this
 	// folder is unset, the root directory is used.
@@ -489,7 +490,7 @@ type ExportRunOutput struct {
 	// script].
 	//
 	// [Python script]: https://docs.databricks.com/en/_static/examples/extract.py
-	Views types.List `tfsdk:"views"`
+	Views []ViewItem `tfsdk:"views"`
 }
 
 // Export and retrieve a job run
@@ -517,7 +518,7 @@ type FileArrivalTriggerConfiguration struct {
 
 type ForEachStats struct {
 	// Sample of 3 most common error messages occurred during the iteration.
-	ErrorMessageStats types.List `tfsdk:"error_message_stats"`
+	ErrorMessageStats []ForEachTaskErrorMessageStats `tfsdk:"error_message_stats"`
 	// Describes stats of the iteration. Only latest retries are considered.
 	TaskRunStats *ForEachTaskTaskRunStats `tfsdk:"task_run_stats"`
 }
@@ -594,7 +595,7 @@ type GetJobPermissionLevelsRequest struct {
 
 type GetJobPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels"`
+	PermissionLevels []JobPermissionsDescription `tfsdk:"permission_levels"`
 }
 
 // Get job permissions
@@ -744,7 +745,7 @@ type JobAccessControlRequest struct {
 
 type JobAccessControlResponse struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions"`
+	AllPermissions []JobPermission `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
@@ -841,17 +842,17 @@ type JobEmailNotifications struct {
 	// exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in
 	// the `health` field. If no rule for the `RUN_DURATION_SECONDS` metric is
 	// specified in the `health` field for the job, notifications are not sent.
-	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded"`
+	OnDurationWarningThresholdExceeded []types.String `tfsdk:"on_duration_warning_threshold_exceeded"`
 	// A list of email addresses to be notified when a run unsuccessfully
 	// completes. A run is considered to have completed unsuccessfully if it
 	// ends with an `INTERNAL_ERROR` `life_cycle_state` or a `FAILED`, or
 	// `TIMED_OUT` result_state. If this is not specified on job creation,
 	// reset, or update the list is empty, and notifications are not sent.
-	OnFailure types.List `tfsdk:"on_failure"`
+	OnFailure []types.String `tfsdk:"on_failure"`
 	// A list of email addresses to be notified when a run begins. If not
 	// specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
-	OnStart types.List `tfsdk:"on_start"`
+	OnStart []types.String `tfsdk:"on_start"`
 	// A list of email addresses to notify when any streaming backlog thresholds
 	// are exceeded for any stream. Streaming backlog thresholds can be set in
 	// the `health` field using the following metrics:
@@ -859,13 +860,13 @@ type JobEmailNotifications struct {
 	// `STREAMING_BACKLOG_SECONDS`, or `STREAMING_BACKLOG_FILES`. Alerting is
 	// based on the 10-minute average of these metrics. If the issue persists,
 	// notifications are resent every 30 minutes.
-	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded"`
+	OnStreamingBacklogExceeded []types.String `tfsdk:"on_streaming_backlog_exceeded"`
 	// A list of email addresses to be notified when a run successfully
 	// completes. A run is considered to have completed successfully if it ends
 	// with a `TERMINATED` `life_cycle_state` and a `SUCCESS` result_state. If
 	// not specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
-	OnSuccess types.List `tfsdk:"on_success"`
+	OnSuccess []types.String `tfsdk:"on_success"`
 }
 
 type JobEnvironment struct {
@@ -906,7 +907,7 @@ type JobParameterDefinition struct {
 type JobPermission struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
 	// Permission level
 	PermissionLevel JobPermissionLevel `tfsdk:"permission_level"`
 }
@@ -944,7 +945,7 @@ func (f *JobPermissionLevel) Type() string {
 }
 
 type JobPermissions struct {
-	AccessControlList types.List `tfsdk:"access_control_list"`
+	AccessControlList []JobAccessControlResponse `tfsdk:"access_control_list"`
 
 	ObjectId types.String `tfsdk:"object_id"`
 
@@ -958,7 +959,7 @@ type JobPermissionsDescription struct {
 }
 
 type JobPermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list"`
+	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list"`
 	// The job for which to get or manage permissions.
 	JobId types.String `tfsdk:"-" url:"-"`
 }
@@ -998,7 +999,7 @@ type JobSettings struct {
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this job.
-	Environments types.List `tfsdk:"environments"`
+	Environments []JobEnvironment `tfsdk:"environments"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
 	// always set to `"MULTI_TASK"`.
@@ -1019,7 +1020,7 @@ type JobSettings struct {
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters types.List `tfsdk:"job_clusters"`
+	JobClusters []JobCluster `tfsdk:"job_clusters"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
 	// job concurrently. This is useful for example if you trigger your job on a
@@ -1040,7 +1041,7 @@ type JobSettings struct {
 	// job.
 	NotificationSettings *JobNotificationSettings `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
-	Parameters types.List `tfsdk:"parameters"`
+	Parameters []JobParameterDefinition `tfsdk:"parameters"`
 	// The queue settings of the job.
 	Queue *QueueSettings `tfsdk:"queue"`
 	// Write-only setting, available only in Create/Update/Reset and Submit
@@ -1058,9 +1059,9 @@ type JobSettings struct {
 	// as cluster tags for jobs clusters, and are subject to the same
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
 	// job.
-	Tags types.Map `tfsdk:"tags"`
+	Tags map[string]types.String `tfsdk:"tags"`
 	// A list of task specifications to be executed by this job.
-	Tasks types.List `tfsdk:"tasks"`
+	Tasks []Task `tfsdk:"tasks"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
 	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
@@ -1237,7 +1238,7 @@ type JobsHealthRule struct {
 
 // An optional set of health rules that can be defined for this job.
 type JobsHealthRules struct {
-	Rules types.List `tfsdk:"rules"`
+	Rules []JobsHealthRule `tfsdk:"rules"`
 }
 
 // List jobs
@@ -1265,7 +1266,7 @@ type ListJobsResponse struct {
 	HasMore types.Bool `tfsdk:"has_more"`
 	// The list of jobs. Only included in the response if there are jobs to
 	// list.
-	Jobs types.List `tfsdk:"jobs"`
+	Jobs []BaseJob `tfsdk:"jobs"`
 	// A token that can be used to list the next page of jobs (if applicable).
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// A token that can be used to list the previous page of jobs (if
@@ -1325,7 +1326,7 @@ type ListRunsResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token"`
 	// A list of runs, from most recently started to least. Only included in the
 	// response if there are runs to list.
-	Runs types.List `tfsdk:"runs"`
+	Runs []BaseRun `tfsdk:"runs"`
 }
 
 type NotebookOutput struct {
@@ -1358,7 +1359,7 @@ type NotebookTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html#dbutils-widgets
-	BaseParameters types.Map `tfsdk:"base_parameters"`
+	BaseParameters map[string]types.String `tfsdk:"base_parameters"`
 	// The path of the notebook to be run in the Databricks workspace or remote
 	// repository. For notebooks stored in the Databricks workspace, the path
 	// must be absolute and begin with a slash. For notebooks stored in a remote
@@ -1466,12 +1467,12 @@ type PythonWheelTask struct {
 	// Command-line parameters passed to Python wheel task in the form of
 	// `["--name=task", "--data=dbfs:/path/to/data.json"]`. Leave it empty if
 	// `parameters` is not null.
-	NamedParameters types.Map `tfsdk:"named_parameters"`
+	NamedParameters map[string]types.String `tfsdk:"named_parameters"`
 	// Name of the package to execute
 	PackageName types.String `tfsdk:"package_name"`
 	// Command-line parameters passed to Python wheel task. Leave it empty if
 	// `named_parameters` is not null.
-	Parameters types.List `tfsdk:"parameters"`
+	Parameters []types.String `tfsdk:"parameters"`
 }
 
 type QueueSettings struct {
@@ -1491,7 +1492,7 @@ type RepairHistoryItem struct {
 	State *RunState `tfsdk:"state"`
 	// The run IDs of the task runs that ran as part of this repair history
 	// item.
-	TaskRunIds types.List `tfsdk:"task_run_ids"`
+	TaskRunIds []types.Int64 `tfsdk:"task_run_ids"`
 	// The repair history item type. Indicates whether a run is the original run
 	// or a repair run.
 	Type RepairHistoryItemType `tfsdk:"type"`
@@ -1530,7 +1531,7 @@ type RepairRun struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
-	DbtCommands types.List `tfsdk:"dbt_commands"`
+	DbtCommands []types.String `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -1541,10 +1542,10 @@ type RepairRun struct {
 	//
 	// Use [Task parameter variables](/jobs.html\"#parameter-variables\") to set
 	// parameters containing information about job runs.
-	JarParams types.List `tfsdk:"jar_params"`
+	JarParams []types.String `tfsdk:"jar_params"`
 	// Job-level parameters used in the run. for example `"param":
 	// "overriding_val"`
-	JobParameters types.Map `tfsdk:"job_parameters"`
+	JobParameters map[string]types.String `tfsdk:"job_parameters"`
 	// The ID of the latest repair. This parameter is not required when
 	// repairing a run for the first time, but must be provided on subsequent
 	// requests to repair the same run.
@@ -1568,11 +1569,11 @@ type RepairRun struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
-	NotebookParams types.Map `tfsdk:"notebook_params"`
+	NotebookParams map[string]types.String `tfsdk:"notebook_params"`
 
 	PipelineParams *PipelineParams `tfsdk:"pipeline_params"`
 
-	PythonNamedParams types.Map `tfsdk:"python_named_params"`
+	PythonNamedParams map[string]types.String `tfsdk:"python_named_params"`
 	// A list of parameters for jobs with Python tasks, for example
 	// `"python_params": ["john doe", "35"]`. The parameters are passed to
 	// Python file as command-line parameters. If specified upon `run-now`, it
@@ -1590,7 +1591,7 @@ type RepairRun struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	PythonParams types.List `tfsdk:"python_params"`
+	PythonParams []types.String `tfsdk:"python_params"`
 	// If true, repair all failed tasks. Only one of `rerun_tasks` or
 	// `rerun_all_failed_tasks` can be used.
 	RerunAllFailedTasks types.Bool `tfsdk:"rerun_all_failed_tasks"`
@@ -1599,7 +1600,7 @@ type RepairRun struct {
 	// `rerun_all_failed_tasks`.
 	RerunDependentTasks types.Bool `tfsdk:"rerun_dependent_tasks"`
 	// The task keys of the task runs to repair.
-	RerunTasks types.List `tfsdk:"rerun_tasks"`
+	RerunTasks []types.String `tfsdk:"rerun_tasks"`
 	// The job run ID of the run to repair. The run must not be in progress.
 	RunId types.Int64 `tfsdk:"run_id"`
 	// A list of parameters for jobs with spark submit task, for example
@@ -1620,11 +1621,11 @@ type RepairRun struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
+	SparkSubmitParams []types.String `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
-	SqlParams types.Map `tfsdk:"sql_params"`
+	SqlParams map[string]types.String `tfsdk:"sql_params"`
 }
 
 // Run repair was initiated.
@@ -1655,31 +1656,31 @@ type ResolvedConditionTaskValues struct {
 }
 
 type ResolvedDbtTaskValues struct {
-	Commands types.List `tfsdk:"commands"`
+	Commands []types.String `tfsdk:"commands"`
 }
 
 type ResolvedNotebookTaskValues struct {
-	BaseParameters types.Map `tfsdk:"base_parameters"`
+	BaseParameters map[string]types.String `tfsdk:"base_parameters"`
 }
 
 type ResolvedParamPairValues struct {
-	Parameters types.Map `tfsdk:"parameters"`
+	Parameters map[string]types.String `tfsdk:"parameters"`
 }
 
 type ResolvedPythonWheelTaskValues struct {
-	NamedParameters types.Map `tfsdk:"named_parameters"`
+	NamedParameters map[string]types.String `tfsdk:"named_parameters"`
 
-	Parameters types.List `tfsdk:"parameters"`
+	Parameters []types.String `tfsdk:"parameters"`
 }
 
 type ResolvedRunJobTaskValues struct {
-	JobParameters types.Map `tfsdk:"job_parameters"`
+	JobParameters map[string]types.String `tfsdk:"job_parameters"`
 
-	Parameters types.Map `tfsdk:"parameters"`
+	Parameters map[string]types.String `tfsdk:"parameters"`
 }
 
 type ResolvedStringParamsValues struct {
-	Parameters types.List `tfsdk:"parameters"`
+	Parameters []types.String `tfsdk:"parameters"`
 }
 
 type ResolvedValues struct {
@@ -1757,11 +1758,11 @@ type Run struct {
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters types.List `tfsdk:"job_clusters"`
+	JobClusters []JobCluster `tfsdk:"job_clusters"`
 	// The canonical identifier of the job that contains this run.
 	JobId types.Int64 `tfsdk:"job_id"`
 	// Job-level parameters used in the run
-	JobParameters types.List `tfsdk:"job_parameters"`
+	JobParameters []JobParameter `tfsdk:"job_parameters"`
 	// A unique identifier for this job run. This is set to the same value as
 	// `run_id`.
 	NumberInJob types.Int64 `tfsdk:"number_in_job"`
@@ -1773,7 +1774,7 @@ type Run struct {
 	// The time in milliseconds that the run has spent in the queue.
 	QueueDuration types.Int64 `tfsdk:"queue_duration"`
 	// The repair history of the run.
-	RepairHistory types.List `tfsdk:"repair_history"`
+	RepairHistory []RepairHistoryItem `tfsdk:"repair_history"`
 	// The time in milliseconds it took the job run and all of its repairs to
 	// finish.
 	RunDuration types.Int64 `tfsdk:"run_duration"`
@@ -1812,7 +1813,7 @@ type Run struct {
 	State *RunState `tfsdk:"state"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
-	Tasks types.List `tfsdk:"tasks"`
+	Tasks []RunTask `tfsdk:"tasks"`
 	// The type of trigger that fired this run.
 	//
 	// * `PERIODIC`: Schedules that periodically trigger runs, such as a cron
@@ -1925,7 +1926,7 @@ type RunJobTask struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
-	DbtCommands types.List `tfsdk:"dbt_commands"`
+	DbtCommands []types.String `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -1936,11 +1937,11 @@ type RunJobTask struct {
 	//
 	// Use [Task parameter variables](/jobs.html\"#parameter-variables\") to set
 	// parameters containing information about job runs.
-	JarParams types.List `tfsdk:"jar_params"`
+	JarParams []types.String `tfsdk:"jar_params"`
 	// ID of the job to trigger.
 	JobId types.Int64 `tfsdk:"job_id"`
 	// Job-level parameters used to trigger the job.
-	JobParameters types.Map `tfsdk:"job_parameters"`
+	JobParameters map[string]types.String `tfsdk:"job_parameters"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
 	// to the notebook and is accessible through the [dbutils.widgets.get]
@@ -1960,11 +1961,11 @@ type RunJobTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
-	NotebookParams types.Map `tfsdk:"notebook_params"`
+	NotebookParams map[string]types.String `tfsdk:"notebook_params"`
 
 	PipelineParams *PipelineParams `tfsdk:"pipeline_params"`
 
-	PythonNamedParams types.Map `tfsdk:"python_named_params"`
+	PythonNamedParams map[string]types.String `tfsdk:"python_named_params"`
 	// A list of parameters for jobs with Python tasks, for example
 	// `"python_params": ["john doe", "35"]`. The parameters are passed to
 	// Python file as command-line parameters. If specified upon `run-now`, it
@@ -1982,7 +1983,7 @@ type RunJobTask struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	PythonParams types.List `tfsdk:"python_params"`
+	PythonParams []types.String `tfsdk:"python_params"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
 	// "org.apache.spark.examples.SparkPi"]`. The parameters are passed to
@@ -2001,11 +2002,11 @@ type RunJobTask struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
+	SparkSubmitParams []types.String `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
-	SqlParams types.Map `tfsdk:"sql_params"`
+	SqlParams map[string]types.String `tfsdk:"sql_params"`
 }
 
 // A value indicating the run's lifecycle state. The possible values are: *
@@ -2083,7 +2084,7 @@ type RunNow struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
-	DbtCommands types.List `tfsdk:"dbt_commands"`
+	DbtCommands []types.String `tfsdk:"dbt_commands"`
 	// An optional token to guarantee the idempotency of job run requests. If a
 	// run with the provided token already exists, the request does not create a
 	// new run but returns the ID of the existing run instead. If a run with the
@@ -2109,12 +2110,12 @@ type RunNow struct {
 	//
 	// Use [Task parameter variables](/jobs.html\"#parameter-variables\") to set
 	// parameters containing information about job runs.
-	JarParams types.List `tfsdk:"jar_params"`
+	JarParams []types.String `tfsdk:"jar_params"`
 	// The ID of the job to be executed
 	JobId types.Int64 `tfsdk:"job_id"`
 	// Job-level parameters used in the run. for example `"param":
 	// "overriding_val"`
-	JobParameters types.Map `tfsdk:"job_parameters"`
+	JobParameters map[string]types.String `tfsdk:"job_parameters"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
 	// to the notebook and is accessible through the [dbutils.widgets.get]
@@ -2134,11 +2135,11 @@ type RunNow struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
-	NotebookParams types.Map `tfsdk:"notebook_params"`
+	NotebookParams map[string]types.String `tfsdk:"notebook_params"`
 
 	PipelineParams *PipelineParams `tfsdk:"pipeline_params"`
 
-	PythonNamedParams types.Map `tfsdk:"python_named_params"`
+	PythonNamedParams map[string]types.String `tfsdk:"python_named_params"`
 	// A list of parameters for jobs with Python tasks, for example
 	// `"python_params": ["john doe", "35"]`. The parameters are passed to
 	// Python file as command-line parameters. If specified upon `run-now`, it
@@ -2156,7 +2157,7 @@ type RunNow struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	PythonParams types.List `tfsdk:"python_params"`
+	PythonParams []types.String `tfsdk:"python_params"`
 	// The queue settings of the run.
 	Queue *QueueSettings `tfsdk:"queue"`
 	// A list of parameters for jobs with spark submit task, for example
@@ -2177,11 +2178,11 @@ type RunNow struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
+	SparkSubmitParams []types.String `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
-	SqlParams types.Map `tfsdk:"sql_params"`
+	SqlParams map[string]types.String `tfsdk:"sql_params"`
 }
 
 // Run was started successfully.
@@ -2237,7 +2238,7 @@ type RunParameters struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
-	DbtCommands types.List `tfsdk:"dbt_commands"`
+	DbtCommands []types.String `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -2248,7 +2249,7 @@ type RunParameters struct {
 	//
 	// Use [Task parameter variables](/jobs.html\"#parameter-variables\") to set
 	// parameters containing information about job runs.
-	JarParams types.List `tfsdk:"jar_params"`
+	JarParams []types.String `tfsdk:"jar_params"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
 	// to the notebook and is accessible through the [dbutils.widgets.get]
@@ -2268,11 +2269,11 @@ type RunParameters struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
-	NotebookParams types.Map `tfsdk:"notebook_params"`
+	NotebookParams map[string]types.String `tfsdk:"notebook_params"`
 
 	PipelineParams *PipelineParams `tfsdk:"pipeline_params"`
 
-	PythonNamedParams types.Map `tfsdk:"python_named_params"`
+	PythonNamedParams map[string]types.String `tfsdk:"python_named_params"`
 	// A list of parameters for jobs with Python tasks, for example
 	// `"python_params": ["john doe", "35"]`. The parameters are passed to
 	// Python file as command-line parameters. If specified upon `run-now`, it
@@ -2290,7 +2291,7 @@ type RunParameters struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	PythonParams types.List `tfsdk:"python_params"`
+	PythonParams []types.String `tfsdk:"python_params"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
 	// "org.apache.spark.examples.SparkPi"]`. The parameters are passed to
@@ -2309,11 +2310,11 @@ type RunParameters struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
+	SparkSubmitParams []types.String `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
-	SqlParams types.Map `tfsdk:"sql_params"`
+	SqlParams map[string]types.String `tfsdk:"sql_params"`
 }
 
 // A value indicating the run's result. The possible values are: * `SUCCESS`:
@@ -2428,7 +2429,7 @@ type RunTask struct {
 	// All tasks specified in this field must complete successfully before
 	// executing this task. The key is `task_key`, and the value is the name
 	// assigned to the dependent task.
-	DependsOn types.List `tfsdk:"depends_on"`
+	DependsOn []TaskDependency `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
 	// An optional set of email addresses notified when the task run begins or
@@ -2471,7 +2472,7 @@ type RunTask struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries types.List `tfsdk:"libraries"`
+	Libraries []compute.Library `tfsdk:"libraries"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster"`
@@ -2650,7 +2651,7 @@ type SparkJarTask struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	Parameters types.List `tfsdk:"parameters"`
+	Parameters []types.String `tfsdk:"parameters"`
 }
 
 type SparkPythonTask struct {
@@ -2660,7 +2661,7 @@ type SparkPythonTask struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	Parameters types.List `tfsdk:"parameters"`
+	Parameters []types.String `tfsdk:"parameters"`
 	// The Python file to be executed. Cloud file URIs (such as dbfs:/, s3:/,
 	// adls:/, gcs:/) and workspace paths are supported. For python files stored
 	// in the Databricks workspace, the path must be absolute and begin with
@@ -2686,7 +2687,7 @@ type SparkSubmitTask struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	Parameters types.List `tfsdk:"parameters"`
+	Parameters []types.String `tfsdk:"parameters"`
 }
 
 type SqlAlertOutput struct {
@@ -2702,7 +2703,7 @@ type SqlAlertOutput struct {
 	// with the SQL alert is required to view this field.
 	QueryText types.String `tfsdk:"query_text"`
 	// Information about SQL statements executed in the run.
-	SqlStatements types.List `tfsdk:"sql_statements"`
+	SqlStatements []SqlStatementOutput `tfsdk:"sql_statements"`
 	// The canonical identifier of the SQL warehouse.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
@@ -2745,7 +2746,7 @@ type SqlDashboardOutput struct {
 	// The canonical identifier of the SQL warehouse.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 	// Widgets executed in the run. Only SQL query based widgets are listed.
-	Widgets types.List `tfsdk:"widgets"`
+	Widgets []SqlDashboardWidgetOutput `tfsdk:"widgets"`
 }
 
 type SqlDashboardWidgetOutput struct {
@@ -2820,7 +2821,7 @@ type SqlQueryOutput struct {
 	// required to view this field.
 	QueryText types.String `tfsdk:"query_text"`
 	// Information about SQL statements executed in the run.
-	SqlStatements types.List `tfsdk:"sql_statements"`
+	SqlStatements []SqlStatementOutput `tfsdk:"sql_statements"`
 	// The canonical identifier of the SQL warehouse.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
@@ -2840,7 +2841,7 @@ type SqlTask struct {
 	File *SqlTaskFile `tfsdk:"file"`
 	// Parameters to be used for each run of this job. The SQL alert task does
 	// not support custom parameters.
-	Parameters types.Map `tfsdk:"parameters"`
+	Parameters map[string]types.String `tfsdk:"parameters"`
 	// If query, indicates that this job must execute a SQL query.
 	Query *SqlTaskQuery `tfsdk:"query"`
 	// The canonical identifier of the SQL warehouse. Recommended to use with
@@ -2856,7 +2857,7 @@ type SqlTaskAlert struct {
 	// If true, the alert notifications are not sent to subscribers.
 	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions"`
 	// If specified, alert notifications are sent to subscribers.
-	Subscriptions types.List `tfsdk:"subscriptions"`
+	Subscriptions []SqlTaskSubscription `tfsdk:"subscriptions"`
 }
 
 type SqlTaskDashboard struct {
@@ -2868,7 +2869,7 @@ type SqlTaskDashboard struct {
 	// subscribers.
 	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions"`
 	// If specified, dashboard snapshots are sent to subscriptions.
-	Subscriptions types.List `tfsdk:"subscriptions"`
+	Subscriptions []SqlTaskSubscription `tfsdk:"subscriptions"`
 }
 
 type SqlTaskFile struct {
@@ -2905,13 +2906,13 @@ type SqlTaskSubscription struct {
 
 type SubmitRun struct {
 	// List of permissions to set on the job.
-	AccessControlList types.List `tfsdk:"access_control_list"`
+	AccessControlList []iam.AccessControlRequest `tfsdk:"access_control_list"`
 	// An optional set of email addresses notified when the run begins or
 	// completes.
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this run.
-	Environments types.List `tfsdk:"environments"`
+	Environments []JobEnvironment `tfsdk:"environments"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks.
@@ -2953,7 +2954,7 @@ type SubmitRun struct {
 	// An optional name for the run. The default value is `Untitled`.
 	RunName types.String `tfsdk:"run_name"`
 
-	Tasks types.List `tfsdk:"tasks"`
+	Tasks []SubmitTask `tfsdk:"tasks"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
 	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
@@ -2981,7 +2982,7 @@ type SubmitTask struct {
 	// All tasks specified in this field must complete successfully before
 	// executing this task. The key is `task_key`, and the value is the name
 	// assigned to the dependent task.
-	DependsOn types.List `tfsdk:"depends_on"`
+	DependsOn []TaskDependency `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
 	// An optional set of email addresses notified when the task run begins or
@@ -3003,7 +3004,7 @@ type SubmitTask struct {
 	Health *JobsHealthRules `tfsdk:"health"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries types.List `tfsdk:"libraries"`
+	Libraries []compute.Library `tfsdk:"libraries"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster"`
@@ -3072,7 +3073,7 @@ type TableUpdateTriggerConfiguration struct {
 	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds"`
 	// A list of Delta tables to monitor for changes. The table name must be in
 	// the format `catalog_name.schema_name.table_name`.
-	TableNames types.List `tfsdk:"table_names"`
+	TableNames []types.String `tfsdk:"table_names"`
 	// If set, the trigger starts a run only after no table updates have
 	// occurred for the specified time and can be used to wait for a series of
 	// table updates before triggering a run. The minimum allowed value is 60
@@ -3093,7 +3094,7 @@ type Task struct {
 	// All tasks specified in this field must complete before executing this
 	// task. The task will run only if the `run_if` condition is true. The key
 	// is `task_key`, and the value is the name assigned to the dependent task.
-	DependsOn types.List `tfsdk:"depends_on"`
+	DependsOn []TaskDependency `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
 	// An option to disable auto optimization in serverless
@@ -3121,7 +3122,7 @@ type Task struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries types.List `tfsdk:"libraries"`
+	Libraries []compute.Library `tfsdk:"libraries"`
 	// An optional maximum number of times to retry an unsuccessful run. A run
 	// is considered to be unsuccessful if it completes with the `FAILED`
 	// result_state or `INTERNAL_ERROR` `life_cycle_state`. The value `-1` means
@@ -3214,17 +3215,17 @@ type TaskEmailNotifications struct {
 	// exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in
 	// the `health` field. If no rule for the `RUN_DURATION_SECONDS` metric is
 	// specified in the `health` field for the job, notifications are not sent.
-	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded"`
+	OnDurationWarningThresholdExceeded []types.String `tfsdk:"on_duration_warning_threshold_exceeded"`
 	// A list of email addresses to be notified when a run unsuccessfully
 	// completes. A run is considered to have completed unsuccessfully if it
 	// ends with an `INTERNAL_ERROR` `life_cycle_state` or a `FAILED`, or
 	// `TIMED_OUT` result_state. If this is not specified on job creation,
 	// reset, or update the list is empty, and notifications are not sent.
-	OnFailure types.List `tfsdk:"on_failure"`
+	OnFailure []types.String `tfsdk:"on_failure"`
 	// A list of email addresses to be notified when a run begins. If not
 	// specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
-	OnStart types.List `tfsdk:"on_start"`
+	OnStart []types.String `tfsdk:"on_start"`
 	// A list of email addresses to notify when any streaming backlog thresholds
 	// are exceeded for any stream. Streaming backlog thresholds can be set in
 	// the `health` field using the following metrics:
@@ -3232,13 +3233,13 @@ type TaskEmailNotifications struct {
 	// `STREAMING_BACKLOG_SECONDS`, or `STREAMING_BACKLOG_FILES`. Alerting is
 	// based on the 10-minute average of these metrics. If the issue persists,
 	// notifications are resent every 30 minutes.
-	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded"`
+	OnStreamingBacklogExceeded []types.String `tfsdk:"on_streaming_backlog_exceeded"`
 	// A list of email addresses to be notified when a run successfully
 	// completes. A run is considered to have completed successfully if it ends
 	// with a `TERMINATED` `life_cycle_state` and a `SUCCESS` result_state. If
 	// not specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
-	OnSuccess types.List `tfsdk:"on_success"`
+	OnSuccess []types.String `tfsdk:"on_success"`
 }
 
 type TaskNotificationSettings struct {
@@ -3330,7 +3331,7 @@ type UpdateJob struct {
 	// Remove top-level fields in the job settings. Removing nested fields is
 	// not supported, except for tasks and job clusters (`tasks/task_1`). This
 	// field is optional.
-	FieldsToRemove types.List `tfsdk:"fields_to_remove"`
+	FieldsToRemove []types.String `tfsdk:"fields_to_remove"`
 	// The canonical identifier of the job to update. This field is required.
 	JobId types.Int64 `tfsdk:"job_id"`
 	// The new settings for the job.
@@ -3434,13 +3435,13 @@ type WebhookNotifications struct {
 	// a run exceeds the threshold specified for the `RUN_DURATION_SECONDS`
 	// metric in the `health` field. A maximum of 3 destinations can be
 	// specified for the `on_duration_warning_threshold_exceeded` property.
-	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded"`
+	OnDurationWarningThresholdExceeded []Webhook `tfsdk:"on_duration_warning_threshold_exceeded"`
 	// An optional list of system notification IDs to call when the run fails. A
 	// maximum of 3 destinations can be specified for the `on_failure` property.
-	OnFailure types.List `tfsdk:"on_failure"`
+	OnFailure []Webhook `tfsdk:"on_failure"`
 	// An optional list of system notification IDs to call when the run starts.
 	// A maximum of 3 destinations can be specified for the `on_start` property.
-	OnStart types.List `tfsdk:"on_start"`
+	OnStart []Webhook `tfsdk:"on_start"`
 	// An optional list of system notification IDs to call when any streaming
 	// backlog thresholds are exceeded for any stream. Streaming backlog
 	// thresholds can be set in the `health` field using the following metrics:
@@ -3449,9 +3450,9 @@ type WebhookNotifications struct {
 	// based on the 10-minute average of these metrics. If the issue persists,
 	// notifications are resent every 30 minutes. A maximum of 3 destinations
 	// can be specified for the `on_streaming_backlog_exceeded` property.
-	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded"`
+	OnStreamingBacklogExceeded []Webhook `tfsdk:"on_streaming_backlog_exceeded"`
 	// An optional list of system notification IDs to call when the run
 	// completes successfully. A maximum of 3 destinations can be specified for
 	// the `on_success` property.
-	OnSuccess types.List `tfsdk:"on_success"`
+	OnSuccess []Webhook `tfsdk:"on_success"`
 }

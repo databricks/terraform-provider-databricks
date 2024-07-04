@@ -76,13 +76,13 @@ func TestCreateIsolatedExternalLocation(t *testing.T) {
 				Url:            "s3://foo/bar",
 				CredentialName: "bcd",
 				Comment:        "def",
-				IsolationMode:  "ISOLATED",
+				IsolationMode:  "ISOLATION_MODE_ISOLATED",
 			}).Return(&catalog.ExternalLocationInfo{
 				Name:           "abc",
 				Url:            "s3://foo/bar",
 				CredentialName: "bcd",
 				Comment:        "def",
-				IsolationMode:  "ISOLATED",
+				IsolationMode:  "ISOLATION_MODE_ISOLATED",
 				MetastoreId:    "e",
 				Owner:          "f",
 			}, nil)
@@ -112,7 +112,7 @@ func TestCreateIsolatedExternalLocation(t *testing.T) {
 				Url:            "s3://foo/bar",
 				CredentialName: "bcd",
 				Comment:        "def",
-				IsolationMode:  "ISOLATED",
+				IsolationMode:  "ISOLATION_MODE_ISOLATED",
 				MetastoreId:    "e",
 				Owner:          "f",
 			}, nil)
@@ -124,7 +124,7 @@ func TestCreateIsolatedExternalLocation(t *testing.T) {
 		url = "s3://foo/bar"
 		credential_name = "bcd"
 		comment = "def"
-		isolation_mode = "ISOLATED"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
 		`,
 	}.ApplyNoError(t)
 }

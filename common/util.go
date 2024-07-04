@@ -1,8 +1,11 @@
 package common
 
 import (
+	"bufio"
 	"context"
+	"io"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -42,4 +45,15 @@ func MustInt64(s string) int64 {
 		panic(err)
 	}
 	return n
+}
+
+func readFileContent(source string) ([]byte, error) {
+	log.Printf("[INFO] Reading %s", source)
+	f, err := os.Open(source)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	reader := bufio.NewReader(f)
+	return io.ReadAll(reader)
 }

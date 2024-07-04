@@ -28,18 +28,6 @@ func TestLakeviewDashboardCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/lakeview/dashboards/xyz?",
-				Response: dashboards.Dashboard{
-					DashboardId:         "xyz",
-					DisplayName:         "Dashboard name",
-					SerializedDashboard: "serialized_json_2",
-					WarehouseId:         "abc",
-					CreateTime:          "12345678",
-					UpdateTime:          "2125678",
-				},
-			},
-			{
 				Method:   "POST",
 				Resource: "/api/2.0/lakeview/dashboards/xyz/published",
 				ExpectedRequest: dashboards.PublishRequest{

@@ -65,10 +65,16 @@ func ResourceLakeviewDashboard() common.Resource {
 			s["serialized_dashboard"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				v, ok := d.GetOk("file_path")
 				if ok {
-					_, new_file_hash, _ := readSerializedJsonContent("", v.(string))
+					_, new_file_hash, err := readSerializedJsonContent("", v.(string))
+					if err != nil {
+						return false
+					}
 					return (new_file_hash == d.Get("md5").(string))
 				}
-				_, new_json_hash, _ := readSerializedJsonContent(new, "")
+				_, new_json_hash, err := readSerializedJsonContent(new, "")
+				if err != nil {
+					return false
+				}
 				return d.Get("md5").(string) == new_json_hash && !d.Get("dashboard_change_detected").(bool)
 			}
 			s["update_time"].Computed = true

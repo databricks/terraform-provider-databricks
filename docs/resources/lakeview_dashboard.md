@@ -3,7 +3,7 @@ subcategory: "Workspace"
 ---
 # databricks_lakeview_dashboard Resource
 
-This resource allows you to manage [Databricks Lakeview Dashboards](https://docs.databricks.com/api/workspace/lakeview). To manage [Lakeview Dashboards](https://docs.databricks.com/api/workspace/lakeview) you must have a warehouse access on your databricks workspace.
+This resource allows you to manage Databricks [Lakeview Dashboards](https://docs.databricks.com/api/workspace/lakeview). To manage [Lakeview Dashboards](https://docs.databricks.com/api/workspace/lakeview) you must have a warehouse access on your databricks workspace.
 
 ## Example Usage
 

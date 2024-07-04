@@ -48,15 +48,7 @@ func ResourceLakeviewDashboard() common.Resource {
 			s["path"].Computed = true
 			s["serialized_dashboard"].ConflictsWith = []string{"file_path"}
 			s["serialized_dashboard"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				v, ok := d.GetOk("file_path")
-				if ok {
-					_, new_file_hash, err := readSerializedJsonContent("", v.(string))
-					if err != nil {
-						return false
-					}
-					return (new_file_hash == d.Get("md5").(string))
-				}
-				_, new_json_hash, err := readSerializedJsonContent(new, "")
+				_, new_json_hash, err := readSerializedJsonContent(new, d.Get("file_path").(string))
 				if err != nil {
 					return false
 				}
@@ -157,7 +149,7 @@ func ResourceLakeviewDashboard() common.Resource {
 			}
 			d.Set("etag", resp.Etag)
 
-			// Publish the dashboard
+			// We need to 'Force send' the EmbedCredentials field because it is 'omitempty' and if it is not set, it will be ignored. This is a workaround to force the field to be sent if the user wants to set 'embed_credentials' to false.
 			_, err = w.Lakeview.Publish(ctx, dashboards.PublishRequest{
 				DashboardId:      d.Id(),
 				WarehouseId:      d.Get("warehouse_id").(string),

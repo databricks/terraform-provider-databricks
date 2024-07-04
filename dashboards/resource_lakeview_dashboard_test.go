@@ -145,13 +145,13 @@ func TestLakeviewDashboardUpdate(t *testing.T) {
 		State: map[string]any{
 			"display_name":         "Dashboard name",
 			"warehouse_id":         "abc",
-			"parent_path":          "/path", // Ensure this is consistent
+			"parent_path":          "/path",
 			"serialized_dashboard": "serialized_dashboard_updated",
 		},
 		InstanceState: map[string]string{
 			"display_name":         "Dashboard name",
 			"warehouse_id":         "abc",
-			"parent_path":          "/path", // Ensure this is consistent
+			"parent_path":          "/path",
 			"serialized_dashboard": "serialized_dashboard",
 		},
 	}.Apply(t)

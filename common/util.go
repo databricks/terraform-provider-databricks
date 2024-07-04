@@ -47,7 +47,8 @@ func MustInt64(s string) int64 {
 	return n
 }
 
-func readFileContent(source string) ([]byte, error) {
+// Reads the file content from a given path
+func ReadFileContent(source string) ([]byte, error) {
 	log.Printf("[INFO] Reading %s", source)
 	f, err := os.Open(source)
 	if err != nil {

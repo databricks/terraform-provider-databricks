@@ -1,30 +1,15 @@
 package dashboards
 
 import (
-	"bufio"
 	"context"
 	"crypto/md5"
 	"fmt"
-	"io"
 	"log"
-	"os"
 
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// Reads the file content from a given path
-func readFileContent(source string) ([]byte, error) {
-	log.Printf("[INFO] Reading %s", source)
-	f, err := os.Open(source)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	reader := bufio.NewReader(f)
-	return io.ReadAll(reader)
-}
 
 // Calculates MD5 hash of the given content
 func calculateMd5Hash(content []byte) string {
@@ -35,7 +20,7 @@ func calculateMd5Hash(content []byte) string {
 func readSerializedJsonContent(jsonStr, filePath string) (serJSON string, md5Hash string, err error) {
 	var content []byte
 	if filePath != "" {
-		content, err = readFileContent(filePath)
+		content, err = common.ReadFileContent(filePath)
 		if err != nil {
 			return "", "", err
 		}

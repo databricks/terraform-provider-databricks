@@ -223,6 +223,30 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 	assert.Equal(t, "_", d.Id())
 }
 
+func TestWorkspaceConfDelete_MixedCaseBooleanValue(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"enableIpAccessLists": "false",
+				},
+				Response: map[string]string{
+					"enableIpAccessLists": "false",
+				},
+				Status: 200,
+			},
+		},
+		Resource: ResourceWorkspaceConf(),
+		Delete:   true,
+		HCL: `custom_config {
+			enableIpAccessLists = "TRue"
+		}`,
+		ID: "_",
+	}.ApplyNoError(t)
+}
+
 func TestWorkspaceConfDelete_SomeValuesAreNotAllowed(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -128,7 +128,7 @@ func ResourceWorkspaceConf() common.Resource {
 				default:
 					patch[k] = ""
 				case string:
-					_, err := strconv.ParseBool(r)
+					_, err := strconv.ParseBool(strings.ToLower(r))
 					if err != nil {
 						patch[k] = ""
 					} else {

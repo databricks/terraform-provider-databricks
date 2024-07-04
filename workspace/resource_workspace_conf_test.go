@@ -223,6 +223,25 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 	assert.Equal(t, "_", d.Id())
 }
 
+func TestWorkspaceConfDelete_SomeValuesAreNotAllowed(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				Response: apierr.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   `Some values are not allowed: {"enableGp3":"","enableIpAccessLists":""}`,
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceWorkspaceConf(),
+		Delete:   true,
+		ID:       "_",
+	}.ApplyNoError(t)
+}
+
 func TestWorkspaceConfUpdateOnInvalidConf(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

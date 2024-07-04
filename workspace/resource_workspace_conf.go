@@ -5,14 +5,18 @@ package workspace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -138,7 +142,17 @@ func ResourceWorkspaceConf() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.WorkspaceConf.SetStatus(ctx, patch)
+			err = w.WorkspaceConf.SetStatus(ctx, patch)
+			// Tolerate errors like the following on deletion:
+			// cannot delete workspace conf: Some values are not allowed: {"enableGp3":"","enableIpAccessLists":""}
+			// The API for workspace conf is quite limited and doesn't support a generic "reset to original state"
+			// operation. So if our attempted reset fails, don't fail resource deletion.
+			var apiErr *apierr.APIError
+			if errors.As(err, &apiErr) && strings.HasPrefix(apiErr.Message, "Some values are not allowed") {
+				tflog.Warn(ctx, fmt.Sprintf("Failed to delete databricks_workspace_conf: %s. The workspace configuration may not be fully restored to its original state. For more information, see %s", apiErr.Message, docs.ResourceDocumentationUrl("workspace_conf")))
+				return nil
+			}
+			return err
 		},
 		Schema: map[string]*schema.Schema{
 			"custom_config": {

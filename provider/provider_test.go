@@ -8,10 +8,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -388,7 +391,7 @@ func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common
 	}
 	p := DatabricksProvider()
 	ctx := context.Background()
-	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(tt.rawConfig()))
+	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(tt.rawConfigSDKv2()))
 	if len(diags) > 0 {
 		issues := []string{}
 		for _, d := range diags {

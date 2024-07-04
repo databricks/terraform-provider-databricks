@@ -17,7 +17,7 @@ const lakehouseMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
 	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
-		endpoint, err := w.LakehouseMonitors.GetByTableName(ctx, monitorName)
+		endpoint, err := w.QualityMonitors.GetByTableName(ctx, monitorName)
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -81,7 +81,7 @@ func (r *LakehouseMonitorResource) Create(ctx context.Context, req resource.Crea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	endpoint, err := w.LakehouseMonitors.Create(ctx, create)
+	endpoint, err := w.QualityMonitors.Create(ctx, create)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get create monitor", err.Error())
 		return
@@ -100,13 +100,13 @@ func (r *LakehouseMonitorResource) Read(ctx context.Context, req resource.ReadRe
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return
 	}
-	var getMonitor catalog.GetLakehouseMonitorRequest
+	var getMonitor catalog.GetQualityMonitorRequest
 	diags := req.State.Get(ctx, &getMonitor)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	endpoint, err := w.LakehouseMonitors.GetByTableName(ctx, getMonitor.TableName)
+	endpoint, err := w.QualityMonitors.GetByTableName(ctx, getMonitor.TableName)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get monitor", err.Error())
 		return
@@ -131,7 +131,7 @@ func (r *LakehouseMonitorResource) Update(ctx context.Context, req resource.Upda
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	_, err = w.LakehouseMonitors.Update(ctx, updateRequest)
+	_, err = w.QualityMonitors.Update(ctx, updateRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to update monitor", err.Error())
 		return
@@ -150,13 +150,13 @@ func (r *LakehouseMonitorResource) Delete(ctx context.Context, req resource.Dele
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return
 	}
-	var deleteRequest catalog.DeleteLakehouseMonitorRequest
+	var deleteRequest catalog.DeleteQualityMonitorRequest
 	diags := req.State.Get(ctx, &deleteRequest)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	err = w.LakehouseMonitors.DeleteByTableName(ctx, deleteRequest.TableName)
+	err = w.QualityMonitors.DeleteByTableName(ctx, deleteRequest.TableName)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to delete monitor", err.Error())
 		return

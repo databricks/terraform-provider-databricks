@@ -51,4 +51,4 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Notes
 * Currently, only one of `serialized_dashboard` or `file_path` can be used throughout the lifecycle of the dashboard. If you want to switch from one to the other, you must first destroy the dashboard resource and then recreate it with the new attribute.
-* Currently, all the dashboards managed by Terraform will be published by default. There is no option to keep the dashboards in draft state. If required in future, functionality to manage the publish status of the dashboard will be added.
+* Currently, dashboards managed by Terraform will be published automatically.

@@ -209,8 +209,6 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "etag", dashboard.Etag)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
-			os.Remove(fileName)
-			os.Remove(tmpDir)
 			return nil
 		}),
 	})
@@ -300,9 +298,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 	}, step{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
-			if err != nil {
-				fmt.Println(err)
-			}
+			require.NoError(t, err)
 			_, err = w.Lakeview.Update(context.Background(), dashboards.UpdateDashboardRequest{
 				DashboardId:         dashboard_id,
 				DisplayName:         display_name,
@@ -310,9 +306,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 				WarehouseId:         warehouse_id,
 				SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
 			})
-			if err != nil {
-				fmt.Println(err)
-			}
+			require.NoError(t, err)
 		},
 		Template: makeTemplate(template),
 		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
@@ -407,9 +401,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 	}, step{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
-			if err != nil {
-				fmt.Println(err)
-			}
+			require.NoError(t, err)
 			_, err = w.Lakeview.Update(context.Background(), dashboards.UpdateDashboardRequest{
 				DashboardId:         dashboard_id,
 				DisplayName:         display_name,
@@ -417,9 +409,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 				WarehouseId:         warehouse_id,
 				SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
 			})
-			if err != nil {
-				fmt.Println(err)
-			}
+			require.NoError(t, err)
 		},
 		Template: makeTemplate(template),
 		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
@@ -481,8 +471,6 @@ func TestAccDashboardTestAll(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "etag", dashboard.Etag)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
-			os.Remove("/tmp/LakeviewDashboardTest/Dashboard.json")
-			os.Remove("/tmp/LakeviewDashboardTest")
 			return nil
 		}),
 	})
